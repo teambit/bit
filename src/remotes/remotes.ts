@@ -4,7 +4,6 @@ import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import pMap from 'p-map';
 import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '../api/scope/lib/fetch';
-import { BitId } from '../bit-id';
 import GlobalRemotes from '../global-config/global-remotes';
 import logger from '../logger/logger';
 import { ScopeNotFound } from '../scope/exceptions';
@@ -140,7 +139,7 @@ ${failedScopesErr.join('\n')}`);
 
   _groupByScopeName(ids: ComponentID[]) {
     const byScope = groupBy(prop('scope'));
-    return byScope(ids) as { [scopeName: string]: BitId[] };
+    return byScope(ids) as { [scopeName: string]: ComponentID[] };
   }
 
   toPlainObject() {

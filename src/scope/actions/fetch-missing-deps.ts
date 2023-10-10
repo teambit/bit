@@ -1,5 +1,5 @@
+import { ComponentIdList } from '@teambit/component-id';
 import { Scope } from '..';
-import { BitIds } from '../../bit-id';
 import logger from '../../logger/logger';
 import { Action } from './action';
 
@@ -13,7 +13,7 @@ export class FetchMissingDeps implements Action<Options> {
   async execute(scope: Scope, options: Options): Promise<void> {
     logger.debugAndAddBreadCrumb('FetchMissingDeps', 'trying to importMany in case there are missing dependencies');
     const scopeComponentsImporter = scope.scopeImporter;
-    const bitIds: BitIds = BitIds.deserialize(options.ids);
+    const bitIds: ComponentIdList = ComponentIdList.deserialize(options.ids);
     options.fetchFromOriginalScopes
       ? await scopeComponentsImporter.importManyFromOriginalScopes(bitIds)
       : await scopeComponentsImporter.importMany({ ids: bitIds, cache: true, preferDependencyGraph: false });

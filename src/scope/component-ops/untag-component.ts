@@ -1,7 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 import { ComponentID } from '@teambit/component-id';
 import { Scope } from '..';
-import { BitId } from '../../bit-id';
 import { Consumer } from '../../consumer';
 import ComponentsList from '../../consumer/component/components-list';
 import GeneralError from '../../error/general-error';
@@ -89,7 +88,7 @@ export async function removeLocalVersionsForMultipleComponents(
       return bitId.changeVersion(component.getTagOfRefIfExists(headRef) || headRef.toString());
     });
     const candidateComponentsIdsStr = candidateComponentsIds.map((id) => id.toString());
-    candidateComponentsIds.forEach((bitId: BitId) => {
+    candidateComponentsIds.forEach((bitId: ComponentID) => {
       const dependents = dependencyGraph.getImmediateDependentsPerId(bitId);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependentsNotCandidates = dependents.filter((dependent) => !candidateComponentsIdsStr.includes(dependent));
