@@ -24,7 +24,7 @@ export function DocsApp({ componentId, docs = defaultDocs, compositions, context
   const withoutHash = window.location.hash.substring(1);
   const [, after] = withoutHash.split('?');
   const params = new URLSearchParams(after);
-  const isSkipInclude = params.get('skipIncludes');
+  const renderOnlyOverview = params.get('onlyOverview');
 
   return (
     <DocsTheme>
@@ -36,7 +36,7 @@ export function DocsApp({ componentId, docs = defaultDocs, compositions, context
           className={styles.compositionSection}
           compositionCardClass={styles.compositionCard}
         />
-        {(!isSkipInclude || isSkipInclude === 'false') && <PropertiesTable componentId={componentId} />}
+        {(!renderOnlyOverview || renderOnlyOverview === 'false') && <PropertiesTable componentId={componentId} />}
         <ExamplesOverview examples={Content.examples || examples} />
       </>
     </DocsTheme>

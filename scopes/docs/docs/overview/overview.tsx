@@ -60,7 +60,7 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
 
   const isScaling = component.preview?.isScaling;
 
-  const iframeQueryParams = `skipIncludes=${component.preview?.skipIncludes || 'false'}`;
+  const iframeQueryParams = `skipIncludes=${component.preview?.onlyOverview || 'false'}`;
 
   const overviewPropsValues = overviewProps && overviewProps();
 
@@ -111,8 +111,8 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
             component={component}
             style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
           />
-          {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
-          {component.preview?.skipIncludes && TaggedAPI && (
+          {component.preview?.onlyOverview && <CompositionGallery isLoading={isLoading} component={component} />}
+          {component.preview?.onlyOverview && TaggedAPI && (
             // <PropertiesTable className={styles.overviewPropsTable} componentId={component.id.toString()} />
             <TaggedAPI componentId={component.id.toString()} />
           )}

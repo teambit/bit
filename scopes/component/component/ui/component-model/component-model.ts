@@ -37,7 +37,7 @@ export type ComponentModelProps = {
 export type ComponentPreview = {
   includesEnvTemplate?: boolean;
   isScaling?: boolean;
-  skipIncludes?: boolean;
+  onlyOverview?: boolean;
   legacyHeader?: boolean;
 };
 

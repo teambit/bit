@@ -121,7 +121,7 @@ export type PreviewAnyComponentData = {
   /**
    * don't allow other aspects implementing a preview definition to be included in your preview.
    */
-  doesSkipIncludes?: boolean;
+  onlyOverview?: boolean;
 };
 
 /**
@@ -129,7 +129,7 @@ export type PreviewAnyComponentData = {
  */
 export type PreviewEnvComponentData = {
   isScaling?: boolean;
-  isSkipIncludes?: boolean;
+  onlyOverview?: boolean;
 };
 
 export type PreviewConfig = {
@@ -249,12 +249,12 @@ export class PreviewMain {
    * @param envComponent
    * @returns
    */
-  isEnvSkipIncludes(envComponent: Component): boolean {
+  doesEnvIncludesOnlyOverview(envComponent: Component): boolean {
     const previewData = this.getPreviewData(envComponent);
-    return !!previewData?.isSkipIncludes;
+    return !!previewData?.onlyOverview;
   }
 
-  private async calculateDoesSkipIncludes(component: Component): Promise<boolean> {
+  private async calculateIncludeOnlyOverview(component: Component): Promise<boolean> {
     if (this.envs.isUsingCoreEnv(component)) {
       const isNew = await component.isNew();
       if (isNew) {
@@ -262,7 +262,7 @@ export class PreviewMain {
       }
     }
     const envComponent = await this.envs.getEnvComponent(component);
-    return this.isEnvSkipIncludes(envComponent);
+    return this.doesEnvIncludesOnlyOverview(envComponent);
   }
 
   /**
@@ -274,11 +274,11 @@ export class PreviewMain {
     const doesScaling = await this.calcDoesScalingForComponent(component);
     const dataFromEnv = await this.calcPreviewDataFromEnv(component);
     const envData = (await this.calculateDataForEnvComponent(component)) || {};
-    const doesSkipIncludes = await this.calculateDoesSkipIncludes(component);
+    const onlyOverview = await this.calculateIncludeOnlyOverview(component);
 
     const data: PreviewComponentData = {
       doesScaling,
-      doesSkipIncludes,
+      onlyOverview,
       ...dataFromEnv,
       ...envData,
     };
@@ -292,7 +292,7 @@ export class PreviewMain {
    */
   async calcPreviewDataFromEnv(
     component: Component
-  ): Promise<Omit<PreviewAnyComponentData, 'doesScaling' | 'doesSkipIncludes'> | undefined> {
+  ): Promise<Omit<PreviewAnyComponentData, 'doesScaling' | 'onlyOverview'> | undefined> {
     // Prevent infinite loop that caused by the fact that the env of the aspect env or the env env is the same as the component
     // so we can't load it since during load we are trying to get env component and load it again
     if (
@@ -328,7 +328,7 @@ export class PreviewMain {
     const data = {
       // default to true if the env doesn't have a preview config
       isScaling: previewAspectConfig?.isScaling ?? true,
-      isSkipIncludes: true,
+      overviewOnly: true,
     };
     return data;
   }
@@ -452,22 +452,22 @@ export class PreviewMain {
   }
 
   /**
-   * check if the component preview should skip including other previews
+   * check if the component preview should only include the overview (skipping rendering of the compostions and properties table)
    * @param component
    * @returns
    */
-  async doesSkipIncludes(component: Component): Promise<boolean> {
+  async includesOnlyOverview(component: Component): Promise<boolean> {
     const inWorkspace = await this.workspace?.hasId(component.id);
     if (inWorkspace) {
       if (this.envs.isUsingCoreEnv(component)) {
         return true;
       }
       const envComponent = await this.envs.getEnvComponent(component);
-      const envSupportSkipIncludes = await this.isEnvSkipIncludes(envComponent);
-      return envSupportSkipIncludes ?? true;
+      const envSupportOnlyOverview = await this.doesEnvIncludesOnlyOverview(envComponent);
+      return envSupportOnlyOverview ?? true;
     }
     const previewData = this.getPreviewData(component);
-    return previewData?.doesSkipIncludes ?? false;
+    return previewData?.onlyOverview ?? false;
   }
 
   /**

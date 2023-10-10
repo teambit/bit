@@ -47,6 +47,7 @@ export const componentOverviewFields = gql`
       legacyHeader
       isScaling
       skipIncludes
+      onlyOverview
     }
     compositions {
       identifier

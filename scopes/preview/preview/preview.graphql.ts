@@ -15,6 +15,7 @@ export function previewSchema(previewExtension: PreviewMain) {
         includesEnvTemplate: Boolean
         legacyHeader: Boolean
         skipIncludes: Boolean
+        onlyOverview: Boolean
       }
 
       extend type Component {
@@ -38,9 +39,13 @@ export function previewSchema(previewExtension: PreviewMain) {
         legacyHeader: ({ component }) => {
           return previewExtension.isLegacyHeader(component);
         },
-        skipIncludes: ({ component }) => {
+        onlyOverview: ({ component }) => {
           // return true;
-          return previewExtension.doesSkipIncludes(component);
+          return previewExtension.includesOnlyOverview(component);
+        },
+        skipIncludes: () => {
+          // backwards compatibility
+          return undefined;
         },
       },
     },
