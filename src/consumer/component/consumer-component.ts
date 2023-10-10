@@ -151,6 +151,13 @@ export default class Component {
       version: this.version,
     });
   }
+  get bitId(): BitId {
+    return new BitId({
+      scope: this.scope,
+      name: this.name,
+      version: this.version,
+    });
+  }
   get componentId(): ComponentID {
     const bitId = this.id;
     if (!bitId.scope && !this.defaultScope)
