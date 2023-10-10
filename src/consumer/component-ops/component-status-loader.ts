@@ -2,7 +2,6 @@ import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { Consumer } from '..';
-import { BitId } from '../../bit-id';
 import { LATEST } from '../../constants';
 import { ModelComponent } from '../../scope/models';
 import { MissingBitMapComponent } from '../bit-map/exceptions';
@@ -116,7 +115,7 @@ export class ComponentStatusLoader {
     return status;
   }
 
-  clearOneComponentCache(id: BitId) {
+  clearOneComponentCache(id: ComponentID) {
     delete this._componentsStatusCache[id.toString()];
   }
 }

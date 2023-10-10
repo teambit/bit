@@ -1,4 +1,4 @@
-import { ComponentID } from '../../../bit-id';
+import { ComponentID } from '@teambit/component';
 import { loadScope, Scope } from '../../../scope';
 import DependencyGraph from '../../../scope/graph/scope-graph';
 

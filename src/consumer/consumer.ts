@@ -130,7 +130,7 @@ export default class Consumer {
     await Promise.all(this.onCacheClear.map((func) => func()));
   }
 
-  clearOneComponentCache(id: BitId) {
+  clearOneComponentCache(id: ComponentID) {
     this.componentLoader.clearOneComponentCache(id);
     this.componentStatusLoader.clearOneComponentCache(id);
   }
