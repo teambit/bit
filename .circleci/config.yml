@@ -1572,12 +1572,6 @@ workflows:
           filters:
             branches:
               only: yarn-supported-archs
-      - bundle_version_macos:
-          filters:
-            branches:
-              only: yarn-supported-archs
-          requires:
-            - get_darwin_arm64_packages
       # - harmony_publish_to_gcloud:
           # filters:
             # branches:
