@@ -679,7 +679,7 @@ once done, to continue working, please run "bit cc"`
     const component = await this.loadModelComponentByIdStr(id);
     const idHasScope = Boolean(component && component.scope);
     if (idHasScope) {
-      const bitId: BitId = component.toBitId();
+      const bitId: BitId = component.toComponentId();
       const version = BitId.getVersionOnlyFromString(id);
       return bitId.changeVersion(version || LATEST);
     }

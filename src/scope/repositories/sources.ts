@@ -172,7 +172,7 @@ export default class SourceRepository {
       return undefined;
     }
     // workaround an issue when a component has a dependency with the same id as the component itself
-    version.dependencies = version.dependencies.filter((d) => !d.id.isEqualWithoutVersion(component.toBitId()));
+    version.dependencies = version.dependencies.filter((d) => !d.id.isEqualWithoutVersion(component.toComponentId()));
 
     return returnComponent(version as Version);
   }

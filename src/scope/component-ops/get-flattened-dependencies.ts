@@ -85,7 +85,7 @@ export class FlattenedDependenciesGetter {
 
   private async getFlattenedFromVersion(id: ComponentID, dependentId: ComponentID): Promise<ComponentIdList> {
     if (!this.cache[id.toString()]) {
-      const versionDeps = this.versionDependencies.find(({ component }) => component.toId().isEqual(id));
+      const versionDeps = this.versionDependencies.find(({ component }) => component.toComponentId().isEqual(id));
       if (versionDeps) {
         const dependencies = await versionDeps.component.flattenedDependencies(this.scope.objects);
         this.cache[id.toString()] = dependencies;

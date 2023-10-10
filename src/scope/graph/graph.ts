@@ -107,7 +107,7 @@ export default class Graph extends GraphLib {
         const latestVersion = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
         const buildVersionP = modelComponent.listVersionsIncludeOrphaned().map(async (versionNum) => {
           if (onlyLatest && latestVersion !== versionNum) return;
-          const id = modelComponent.toBitId().changeVersion(versionNum);
+          const id = modelComponent.toComponentId().changeVersion(versionNum);
           const componentFromWorkspace = workspaceComponents
             ? workspaceComponents.find((comp) => comp.id.isEqual(id))
             : undefined;

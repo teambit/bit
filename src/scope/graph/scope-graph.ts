@@ -80,7 +80,7 @@ export default class DependencyGraph {
             graph.setNode(idWithVersion, componentVersion);
             graph.setParent(idWithVersion, component.id());
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            componentVersion.id = component.toBitId();
+            componentVersion.id = component.toComponentId();
             depObj[idWithVersion] = componentVersion;
           })
         );
@@ -106,7 +106,7 @@ export default class DependencyGraph {
       });
       versionsInfo.forEach((versionInfo) => {
         if (!versionInfo.version) return;
-        const id = modelComp.toBitId().changeVersion(versionInfo.tag || versionInfo.ref.toString());
+        const id = modelComp.toComponentId().changeVersion(versionInfo.tag || versionInfo.ref.toString());
         DependencyGraph._addDependenciesToGraph(id, graph, versionInfo.version);
       });
     });
@@ -125,7 +125,7 @@ export default class DependencyGraph {
           // a component might be in the scope with only the latest version
           return;
         }
-        const id = modelComponent.toBitId().changeVersion(versionNum);
+        const id = modelComponent.toComponentId().changeVersion(versionNum);
         this._addDependenciesToGraph(id, graph, version);
       });
       await Promise.all(buildVersionP);
@@ -144,7 +144,7 @@ export default class DependencyGraph {
       const latestVersion = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
       const buildVersionP = modelComponent.listVersionsIncludeOrphaned().map(async (versionNum) => {
         if (onlyLatest && latestVersion !== versionNum) return;
-        const id = modelComponent.toBitId().changeVersion(versionNum);
+        const id = modelComponent.toComponentId().changeVersion(versionNum);
         const componentFromWorkspace = workspaceComponents.find((comp) => comp.id.isEqual(id));
         // if the same component exists in the workspace, use it as it might be modified
         const version =

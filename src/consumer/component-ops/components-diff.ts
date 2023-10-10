@@ -148,7 +148,7 @@ export async function diffBetweenVersionsObjects(
   scope: Scope,
   diffOpts: DiffOptions
 ) {
-  const diffResult: DiffResults = { id: modelComponent.toBitId(), hasDiff: false };
+  const diffResult: DiffResults = { id: modelComponent.toComponentId(), hasDiff: false };
   const repository = scope.objects;
   const fromVersionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
   const toVersionFiles = await toVersionObject.modelFilesToSourceFiles(repository);

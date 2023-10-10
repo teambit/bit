@@ -2,8 +2,6 @@ import graphlib, { Graph } from 'graphlib';
 import semver from 'semver';
 import { ComponentIdList } from '@teambit/component-id';
 import { isTag } from '@teambit/component-version';
-
-import { BitIds } from '../../bit-id';
 import { Consumer } from '../../consumer';
 import Component from '../../consumer/component/consumer-component';
 import { Dependency } from '../../consumer/component/dependencies';
@@ -13,7 +11,7 @@ export async function getAutoTagPending(consumer: Consumer, changedComponents: C
   return autoTagInfo.map((a) => a.component);
 }
 
-export type AutoTagResult = { component: Component; triggeredBy: BitIds };
+export type AutoTagResult = { component: Component; triggeredBy: ComponentIdList };
 
 export async function getAutoTagInfo(consumer: Consumer, changedComponents: ComponentIdList): Promise<AutoTagResult[]> {
   if (!changedComponents.length) return [];
@@ -59,7 +57,7 @@ export async function getAutoTagInfo(consumer: Consumer, changedComponents: Comp
       return true;
     });
     if (triggeredDependencies.length) {
-      autoTagResults.push({ component, triggeredBy: BitIds.fromArray(triggeredDependencies) });
+      autoTagResults.push({ component, triggeredBy: ComponentIdList.fromArray(triggeredDependencies) });
     }
   });
 
@@ -68,13 +66,14 @@ export async function getAutoTagInfo(consumer: Consumer, changedComponents: Comp
 
 function buildGraph(components: Component[]): Graph {
   const graph = new Graph();
-  const componentsIds = BitIds.fromArray(components.map((c) => c.id));
+  const componentsIds = ComponentIdList.fromArray(components.map((c) => c.id));
+
   components.forEach((component) => {
     const idStr = component.id.toStringWithoutVersion();
     component.getAllDependencies().forEach((dependency: Dependency) => {
       if (componentsIds.searchWithoutVersion(dependency.id)) {
         const depId = dependency.id.toStringWithoutVersion();
-        // save the full BitId of a string id to be able to retrieve it later with no confusion
+        // save the full ComponentID of a string id to be able to retrieve it later with no confusion
         if (!graph.hasNode(idStr)) graph.setNode(idStr, component.id);
         if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);
         graph.setEdge(idStr, depId);

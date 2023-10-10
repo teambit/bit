@@ -143,13 +143,9 @@ export default class Component {
   extensions: ExtensionDataList = new ExtensionDataList();
   _capsuleDir?: string; // @todo: remove this. use CapsulePaths once it's public and available
   buildStatus?: BuildStatus;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get id(): BitId {
-    return new BitId({
-      scope: this.scope,
-      name: this.name,
-      version: this.version,
-    });
+
+  get id(): ComponentID {
+    return this.componentId;
   }
   get bitId(): BitId {
     return new BitId({
@@ -159,7 +155,7 @@ export default class Component {
     });
   }
   get componentId(): ComponentID {
-    const bitId = this.id;
+    const bitId = this.bitId;
     if (!bitId.scope && !this.defaultScope)
       throw new Error(`Component ${bitId.toString()} does not have a scope, neither a defaultScope`);
     return new ComponentID(bitId, this.defaultScope as string);

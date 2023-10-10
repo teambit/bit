@@ -5,10 +5,10 @@ import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
 import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import {
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
@@ -334,18 +334,18 @@ export default class Component extends BitObject {
     if (!this.scope) {
       return; // no remote to update. it's local.
     }
-    this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toBitId());
+    this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toComponentId());
     if (!lane) {
       return;
     }
-    this.laneHeadRemote = lane.isNew ? null : await repo.remoteLanes.getRef(lane.toLaneId(), this.toBitId());
+    this.laneHeadRemote = lane.isNew ? null : await repo.remoteLanes.getRef(lane.toLaneId(), this.toComponentId());
 
     const calculateRemote = async () => {
       if (this.laneHeadRemote) return this.laneHeadRemote;
       if (lane.isNew && lane.forkedFrom && lane.forkedFrom.scope === lane.scope) {
         // the last check is to make sure that if this lane will be exported to a different scope than the original
         // lane, all snaps of the original lane will be considered as local and will be exported later on.
-        const headFromFork = await repo.remoteLanes.getRef(lane.forkedFrom, this.toBitId());
+        const headFromFork = await repo.remoteLanes.getRef(lane.forkedFrom, this.toComponentId());
         if (headFromFork) return headFromFork;
       }
       // if no remote-ref was found, because it's checked out to a lane, it's safe to assume that
@@ -515,13 +515,16 @@ export default class Component extends BitObject {
       logger.info(`collectLogs is unable to find some objects for ${this.id()}. will try to import them`);
       try {
         const lane = await scope.getCurrentLaneObject();
-        await scope.scopeImporter.importWithoutDeps(BitIds.fromArray([this.toBitId()]).toVersionLatest(), {
-          cache: false,
-          includeVersionHistory: true,
-          collectParents: true,
-          lane: lane || undefined,
-          reason: 'to collect logs (including parents)',
-        });
+        await scope.scopeImporter.importWithoutDeps(
+          ComponentIdList.fromArray([this.toComponentId()]).toVersionLatest(),
+          {
+            cache: false,
+            includeVersionHistory: true,
+            collectParents: true,
+            lane: lane || undefined,
+            reason: 'to collect logs (including parents)',
+          }
+        );
         versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
       } catch (err) {
         logger.error(`collectLogs failed to import ${this.id()} history`, err);

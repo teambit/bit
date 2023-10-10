@@ -39,7 +39,7 @@ export async function removeLocalVersion(
     const dependencyGraph = await scope.getDependencyGraph();
 
     versionsToRemoveStr.forEach((versionToRemove) => {
-      const idWithVersion = component.toBitId().changeVersion(versionToRemove);
+      const idWithVersion = component.toComponentId().changeVersion(versionToRemove);
       const dependents = dependencyGraph.getImmediateDependentsPerId(idWithVersion);
       if (dependents.length) {
         throw new BitError(
@@ -81,7 +81,7 @@ export async function removeLocalVersionsForMultipleComponents(
   if (!force && head) {
     const dependencyGraph = await scope.getDependencyGraph();
     const candidateComponentsIds = componentsToUntag.map((component) => {
-      const bitId = component.toBitId();
+      const bitId = component.toComponentId();
       const headRef = component.getHeadRegardlessOfLane();
       if (!headRef)
         throw new Error(`component ${bitId.toString()} does not have head. it should not be a candidate for reset`);

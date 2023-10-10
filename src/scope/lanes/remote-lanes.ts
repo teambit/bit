@@ -53,7 +53,7 @@ export default class RemoteLanes {
     const remoteLane = await this.getRemoteLane(remoteLaneId);
     components.forEach((component) => {
       if (!component.remoteHead) return;
-      this.pushToRemoteLane(remoteLane, component.toBitId(), component.remoteHead, remoteLaneId);
+      this.pushToRemoteLane(remoteLane, component.toComponentId(), component.remoteHead, remoteLaneId);
     });
   }
 

@@ -1,6 +1,5 @@
 import R from 'ramda';
-
-import { BitId } from '../../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { PathLinux } from '../../../utils/path';
 import { ImportSpecifier } from './files-dependency-builder/types/dependency-tree-type';
 
@@ -22,11 +21,11 @@ export type RelativePath = {
 };
 
 export default class Dependency {
-  id: BitId;
+  id: ComponentID;
   relativePaths: RelativePath[];
   packageName?: string;
 
-  constructor(id: BitId, relativePaths: RelativePath[], packageName?: string) {
+  constructor(id: ComponentID, relativePaths: RelativePath[], packageName?: string) {
     this.id = id;
     this.relativePaths = relativePaths;
     this.packageName = packageName;
