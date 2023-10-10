@@ -655,7 +655,8 @@ jobs:
     steps:
       - attach_workspace:
             at: ./
-      - run: corepack enable && corepack prepare yarn@3.6.4 --activate
+      - run: yarn set version 3.6.4
+      - run: yarn -v
       - run: cd esbuild-linux-arm64 && tar -xvf esbuild-0.14.29-linux-arm64.tar.gz
       - set_bit_cloud_registry
       - run:
