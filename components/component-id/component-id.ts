@@ -21,6 +21,10 @@ export class ComponentID {
 
     readonly _scope?: string
   ) {
+    if (!legacyComponentId.name)
+      throw new Error(`ComponentID expects to get an object with "name" prop. got ${legacyComponentId}`);
+    if (legacyComponentId.constructor.name !== BitId.name)
+      throw new Error(`ComponentID expects to get BitId instance. got ${legacyComponentId.constructor.name}`);
     if (!_scope && !legacyComponentId.scope) throw new MissingScope(legacyComponentId);
   }
 

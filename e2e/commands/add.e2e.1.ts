@@ -84,7 +84,7 @@ describe('bit add command', function () {
 
       const addCmd = () => helper.command.addComponent('bar', { n: 'test' });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const error = new MissingMainFile('test/bar');
+      const error = new MissingMainFile(`${helper.scopes.remote}/test/bar`);
       helper.general.expectToThrow(addCmd, error);
     });
     it('Should throw error msg if -i and -n flag are used with bit add', () => {

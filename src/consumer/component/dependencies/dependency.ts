@@ -31,6 +31,21 @@ export default class Dependency {
     this.packageName = packageName;
   }
 
+  serialize() {
+    return {
+      id: this.id.toObject(),
+      relativePaths: this.relativePaths,
+      packageName: this.packageName,
+    };
+  }
+
+  static deserialize(serialized: Record<string, any>) {
+    const id = ComponentID.fromObject(serialized.id);
+    const relativePaths = serialized.relativePaths;
+    const packageName = serialized.packageName;
+    return new Dependency(id, relativePaths, packageName);
+  }
+
   static getClone(dependency: Dependency): Record<string, any> {
     return {
       id: dependency.id,

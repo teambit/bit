@@ -1261,7 +1261,7 @@ export class DependencyResolverMain {
     const dependencies = get(entry, ['data', 'dependencies'], []);
     dependencies.forEach((dep) => {
       if (dep.__type === COMPONENT_DEP_TYPE) {
-        const depId = new ComponentID(dep.componentId);
+        const depId = ComponentID.fromObject(dep.componentId);
         const newDepId = idTransformer(depId);
         dep.componentId = (newDepId || depId).serialize();
         dep.id = (newDepId || depId).toString();

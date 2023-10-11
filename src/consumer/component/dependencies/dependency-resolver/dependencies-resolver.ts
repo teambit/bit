@@ -569,7 +569,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       });
       depsPaths.importSpecifiers = importSpecifiers;
     }
-    const currentComponentsDeps: Dependency = { id: componentId, relativePaths: [depsPaths] };
+    const currentComponentsDeps = new Dependency(componentId, [depsPaths]);
     this._pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource, depsPaths);
 
     const allDependencies: Dependency[] = [
@@ -758,7 +758,7 @@ either, use the ignore file syntax or change the require statement to have a mod
           return;
         }
         this.addImportNonMainIssueIfNeeded(originFile, compDep);
-        const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [], packageName: compDep.name };
+        const currentComponentsDeps = new Dependency(existingId, [], compDep.name);
         this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, depDebug);
       } else {
         this._pushToMissingComponentsIssues(originFile, componentId);
