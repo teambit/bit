@@ -13,7 +13,7 @@ import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import chokidar, { FSWatcher } from '@teambit/chokidar';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
-import { PathLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { CompilationInitiator } from '@teambit/compiler';
 import {
   WorkspaceAspect,
@@ -57,6 +57,7 @@ export type WatchOptions = {
 };
 
 const DEBOUNCE_WAIT_MS = 100;
+type PathLinux = string; // ts fails when importing it from @teambit/legacy/dist/utils/path.
 
 export class Watcher {
   private fsWatcher: FSWatcher;

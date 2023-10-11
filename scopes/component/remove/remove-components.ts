@@ -16,7 +16,7 @@ import Component from '@teambit/legacy/dist/consumer/component/consumer-componen
 import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 import * as packageJsonUtils from '@teambit/legacy/dist/consumer/component/package-json-utils';
 import pMapSeries from 'p-map-series';
-import RemovedLocalObjects from './removed-local-objects';
+import { RemovedLocalObjects } from './removed-local-objects';
 
 export type RemoveComponentsResult = { localResult: RemovedLocalObjects; remoteResult: RemovedObjects[] };
 

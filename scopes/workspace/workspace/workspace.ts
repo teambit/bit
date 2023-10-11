@@ -370,8 +370,7 @@ export class Workspace implements ComponentFactory {
 
   async listWithInvalid(loadOpts?: ComponentLoadOptions) {
     const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
-    const ids = await this.resolveMultipleComponentIds(legacyIds);
-    return this.componentLoader.getMany(ids, loadOpts, false);
+    return this.componentLoader.getMany(legacyIds, loadOpts, false);
   }
 
   /**

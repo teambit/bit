@@ -183,7 +183,7 @@ export class ImporterMain {
       const scopeComponentImporter = ScopeComponentsImporter.getInstance(consumer.scope);
       try {
         return await scopeComponentImporter.importLanes(remoteLaneIds);
-      } catch (err) {
+      } catch (err: any) {
         if (
           err instanceof InvalidScopeName ||
           err instanceof ScopeNotFoundOrDenied ||

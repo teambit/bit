@@ -33,7 +33,7 @@ import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { compact, uniq } from 'lodash';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
-import { BitObject } from '@teambit/legacy/dist/scope/objects';
+import { BitObject, Ref } from '@teambit/legacy/dist/scope/objects';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
 import { MergeLanesAspect } from './merge-lanes.aspect';
@@ -624,7 +624,7 @@ async function filterComponentsStatus(
     if (!divergeData) {
       throw new Error(`filterComponentsStatus: unable to find divergeData for ${compId.toString()}`);
     }
-    let targetVersions = divergeData.snapsOnTargetOnly;
+    let targetVersions: Ref[] = divergeData.snapsOnTargetOnly;
     if (!targetVersions.length) {
       return;
     }
