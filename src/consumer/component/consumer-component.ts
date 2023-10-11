@@ -249,7 +249,7 @@ export default class Component {
   }
 
   getTmpFolder(workspacePrefix: PathOsBased = ''): PathOsBased {
-    let folder = path.join(workspacePrefix, BIT_WORKSPACE_TMP_DIRNAME, this.id.name);
+    let folder = path.join(workspacePrefix, BIT_WORKSPACE_TMP_DIRNAME, this.id.fullName);
     if (this.componentMap) {
       const componentDir = this.componentMap.getComponentDir();
       if (componentDir) {
@@ -568,7 +568,7 @@ export default class Component {
     };
 
     return new Component({
-      name: id.name,
+      name: id.fullName,
       scope: id._legacy.scope,
       version: id.version,
       lang: componentConfig.lang,

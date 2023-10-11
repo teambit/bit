@@ -143,7 +143,7 @@ export class RemoveMain {
   async recover(compIdStr: string, options: RecoverOptions): Promise<boolean> {
     if (!this.workspace) throw new ConsumerNotFound();
     const bitMapEntry = this.workspace.consumer.bitMap.components.find((compMap) => {
-      return compMap.id.name === compIdStr || compMap.id.toStringWithoutVersion() === compIdStr;
+      return compMap.id.fullName === compIdStr || compMap.id.toStringWithoutVersion() === compIdStr;
     });
     const importComp = async (idStr: string) => {
       await this.importer.import({

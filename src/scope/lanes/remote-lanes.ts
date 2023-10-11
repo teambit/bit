@@ -183,7 +183,7 @@ export default class RemoteLanes {
   private async writeRemoteLaneFile(remoteName: string, laneName: string) {
     if (!this.changed[remoteName]?.[laneName]) return;
     const obj = this.remotes[remoteName][laneName].map(({ id, head }) => ({
-      id: { scope: id.scope, name: id.name },
+      id: { scope: id.scope, name: id.fullName },
       head: head.toString(),
     }));
     await fs.outputFile(this.composeRemoteLanePath(remoteName, laneName), JSON.stringify(obj, null, 2));

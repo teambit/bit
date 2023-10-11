@@ -296,7 +296,7 @@ export default class Scope {
   async hasId(id: ComponentID, opts: HasIdOpts) {
     const filter = (comp: ComponentItem) => {
       const symlinkCond = opts.includeSymlink ? true : !comp.isSymlink;
-      const idMatch = comp.id.scope === id.scope && comp.id.name === id.name;
+      const idMatch = comp.id.scope === id.scope && comp.id.name === id.fullName;
       return symlinkCond && idMatch;
     };
     const modelComponentList = await this.objects.listObjectsFromIndex(IndexType.components, filter);

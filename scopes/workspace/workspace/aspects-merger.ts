@@ -256,7 +256,7 @@ export class AspectsMerger {
   }
 
   private getUnmergedData(componentId: ComponentID): UnmergedComponent | undefined {
-    return this.workspace.scope.legacyScope.objects.unmergedComponents.getEntry(componentId.name);
+    return this.workspace.scope.legacyScope.objects.unmergedComponents.getEntry(componentId.fullName);
   }
 
   private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {

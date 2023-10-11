@@ -492,6 +492,6 @@ function outputReadmeComponent(component: LaneData['readmeComponent']): string {
   if (!component) return '';
   return `\n\t${`${chalk.yellow('readme component')}\n\t  ${component.id} - ${
     component.head ||
-    `(unsnapped)\n\t("use bit snap ${component.id.name}" to snap the readme component on the lane before exporting)`
+    `(unsnapped)\n\t("use bit snap ${component.id.fullName}" to snap the readme component on the lane before exporting)`
   }`}\n`;
 }

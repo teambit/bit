@@ -343,7 +343,7 @@ export class CheckoutMain {
     if (main && !componentModel.head) {
       return returnFailure(`component ${id.toString()} is not available on main`);
     }
-    const unmerged = repo.unmergedComponents.getEntry(id.name);
+    const unmerged = repo.unmergedComponents.getEntry(id.fullName);
     if (!reset && unmerged) {
       return returnFailure(
         `component ${id.toStringWithoutVersion()} is in during-merge state, please snap/tag it first (or use bit merge --resolve/--abort)`

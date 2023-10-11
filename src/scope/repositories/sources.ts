@@ -258,7 +258,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
   private getPropsFromConsumerComp(comp: ConsumerComponent): ComponentProps {
     return {
-      name: comp.id.name,
+      name: comp.id.fullName,
       scope: comp.id.scope,
       lang: comp.lang,
       bindingPrefix: comp.bindingPrefix,

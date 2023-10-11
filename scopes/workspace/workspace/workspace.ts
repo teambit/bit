@@ -1240,7 +1240,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   async getUnmergedComponent(componentId: ComponentID): Promise<Component | undefined> {
-    const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId.name);
+    const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId.fullName);
     if (unmerged?.head) {
       return this.scope.get(componentId.changeVersion(unmerged?.head.toString()));
     }
@@ -1566,7 +1566,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         return bitId.scope;
       }
       const relativeComponentDir = this.componentDirFromLegacyId(bitId, bitMapOptions, { relative: true });
-      const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(relativeComponentDir, bitId.name);
+      const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(
+        relativeComponentDir,
+        bitId.fullName
+      );
       return defaultScope;
     };
 

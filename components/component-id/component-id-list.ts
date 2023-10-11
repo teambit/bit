@@ -26,20 +26,22 @@ export class ComponentIdList extends Array<ComponentID> {
   search(componentId: ComponentID): ComponentID | undefined {
     return this.find(
       (id) =>
-        id.name === componentId.name && id.scope === componentId.scope && id._legacy.hasSameVersion(componentId._legacy)
+        id.fullName === componentId.fullName &&
+        id.scope === componentId.scope &&
+        id._legacy.hasSameVersion(componentId._legacy)
     );
   }
 
   searchWithoutVersion(componentId: ComponentID): ComponentID | null | undefined {
-    return this.find((id) => id.name === componentId.name && id.scope === componentId.scope);
+    return this.find((id) => id.fullName === componentId.fullName && id.scope === componentId.scope);
   }
 
   searchWithoutScopeAndVersion(componentId: ComponentID): ComponentID | undefined {
-    return this.find((id) => id.name === componentId.name);
+    return this.find((id) => id.fullName === componentId.fullName);
   }
 
   searchWithoutScope(componentId: ComponentID): ComponentID | null | undefined {
-    return this.find((id) => id.name === componentId.name && id._legacy.hasSameVersion(componentId._legacy));
+    return this.find((id) => id.fullName === componentId.fullName && id._legacy.hasSameVersion(componentId._legacy));
   }
 
   searchStrWithoutVersion(idStr: string): ComponentID | null | undefined {
@@ -47,22 +49,24 @@ export class ComponentIdList extends Array<ComponentID> {
   }
 
   searchStrWithoutScopeAndVersion(idStr: string): ComponentID | null | undefined {
-    return this.find((id) => id.name === idStr);
+    return this.find((id) => id.fullName === idStr);
   }
 
   filterExact(componentId: ComponentID): ComponentID[] {
     return this.filter(
       (id) =>
-        id.name === componentId.name && id.scope === componentId.scope && id._legacy.hasSameVersion(componentId._legacy)
+        id.fullName === componentId.fullName &&
+        id.scope === componentId.scope &&
+        id._legacy.hasSameVersion(componentId._legacy)
     );
   }
 
   filterWithoutVersion(componentId: ComponentID): ComponentID[] {
-    return this.filter((id) => id.name === componentId.name && id.scope === componentId.scope);
+    return this.filter((id) => id.fullName === componentId.fullName && id.scope === componentId.scope);
   }
 
   filterWithoutScopeAndVersion(componentId: ComponentID): ComponentID[] {
-    return this.filter((id) => id.name === componentId.name);
+    return this.filter((id) => id.fullName === componentId.fullName);
   }
 
   removeIfExist(componentId: ComponentID): ComponentIdList {

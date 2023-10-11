@@ -648,7 +648,7 @@ export default class Component extends BitObject {
       }
       lane.addComponent({ id: currentBitId, head: versionToAddRef });
 
-      if (lane.readmeComponent && lane.readmeComponent.id.name === currentBitId.name) {
+      if (lane.readmeComponent && lane.readmeComponent.id.fullName === currentBitId.fullName) {
         lane.setReadmeComponent(currentBitId);
       }
       repo.add(lane);

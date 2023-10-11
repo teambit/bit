@@ -285,7 +285,7 @@ export default class AddComponents {
       const rootDir = getRootDir();
       const getDefaultScope = async () => {
         if (componentId._legacy.scope) return undefined;
-        return this.getDefaultScope(rootDir, componentId.name);
+        return this.getDefaultScope(rootDir, componentId.fullName);
       };
       const defaultScope = await getDefaultScope();
       const componentMap = this.bitMap.addComponent({
@@ -501,9 +501,13 @@ you can add the directory these files are located at and it'll change the root d
     const absoluteComponentPath = path.resolve(componentPath);
     const splitPath = absoluteComponentPath.split(path.sep);
     const lastDir = splitPath[splitPath.length - 1];
+    const idOfTrackDir = this._getIdAccordingToTrackDir(componentPath);
     if (!finalBitId) {
-      const idOfTrackDir = this._getIdAccordingToTrackDir(componentPath);
-      if (idOfTrackDir) {
+      if (this.id) {
+        const bitId = BitId.parse(this.id, false);
+        const defaultScope = await this.getDefaultScope(relativeComponentPath, bitId.name);
+        finalBitId = new ComponentID(bitId, defaultScope);
+      } else if (idOfTrackDir) {
         finalBitId = idOfTrackDir;
       } else {
         const nameSpaceOrDir = this.namespace || splitPath[splitPath.length - 2];

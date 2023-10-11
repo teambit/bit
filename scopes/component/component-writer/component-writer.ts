@@ -147,7 +147,7 @@ export default class ComponentWriter {
     const bitId = await this.replaceSnapWithTagIfNeeded();
     const defaultScope = bitId.hasScope()
       ? undefined
-      : await this.workspace.componentDefaultScopeFromComponentDirAndName(rootDir, bitId.name);
+      : await this.workspace.componentDefaultScopeFromComponentDirAndName(rootDir, bitId.fullName);
 
     return this.bitMap.addComponent({
       componentId: bitId,

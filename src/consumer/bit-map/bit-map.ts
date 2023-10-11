@@ -421,7 +421,7 @@ export default class BitMap {
     if (!this._cacheIdsAllStrWithoutScopeAndVersion) {
       const allIds = this.getAllBitIdsFromAllLanes();
       this._cacheIdsAllStrWithoutScopeAndVersion = allIds.reduce((acc, id) => {
-        acc[id.name] = id;
+        acc[id.fullName] = id;
         return acc;
       }, {});
     }
@@ -546,7 +546,7 @@ export default class BitMap {
     const allIds = this.getAllBitIdsFromAllLanes();
     const similarIds = allIds.filter((existingId) => {
       const isSimilar = compareWithoutScope
-        ? existingId.name === id.name
+        ? existingId.fullName === id.fullName
         : existingId.isEqual(id, { ignoreVersion: true });
       return isSimilar && !existingId.isEqual(id);
     });
@@ -924,14 +924,14 @@ export default class BitMap {
       const componentMapCloned = componentMap.clone();
       // no need for "exported" property as there are scope and version props
       // if not exist, we still need these properties so we know later to parse them correctly.
-      componentMapCloned.name = componentMapCloned.id.name;
+      componentMapCloned.name = componentMapCloned.id.fullName;
       componentMapCloned.scope = componentMapCloned.id._legacy.hasScope() ? componentMapCloned.id.scope : '';
       componentMapCloned.version = componentMapCloned.id.hasVersion() ? componentMapCloned.id.version : '';
       if (componentMapCloned.isAvailableOnCurrentLane && !componentMapCloned.onLanesOnly) {
         delete componentMapCloned.isAvailableOnCurrentLane;
       }
       const getKey = (): string => {
-        const name = componentMapCloned.id.name;
+        const name = componentMapCloned.id.fullName;
         const similarIds = this.findSimilarIds(componentMapCloned.id, true);
         if (!similarIds.length) return name;
         const scope = componentMapCloned.scope || componentMapCloned.defaultScope;

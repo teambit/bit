@@ -72,12 +72,12 @@ export default class Lane extends BitObject {
         name: this.name,
         scope: this.scope,
         components: this.components.map((component) => ({
-          id: { scope: component.id.scope, name: component.id.name },
+          id: { scope: component.id.scope, name: component.id.fullName },
           head: component.head.toString(),
         })),
         log: this.log,
         readmeComponent: this.readmeComponent && {
-          id: { scope: this.readmeComponent.id.scope, name: this.readmeComponent.id.name },
+          id: { scope: this.readmeComponent.id.scope, name: this.readmeComponent.id.fullName },
           head: this.readmeComponent.head?.toString() ?? null,
         },
         forkedFrom: this.forkedFrom && this.forkedFrom.toObject(),
@@ -216,7 +216,7 @@ export default class Lane extends BitObject {
     const bitIds = this.toBitIds();
     this.components.forEach((component) => {
       if (bitIds.filterWithoutVersion(component.id).length > 1) {
-        throw new ValidationError(`${message}, the following component is duplicated "${component.id.name}"`);
+        throw new ValidationError(`${message}, the following component is duplicated "${component.id.fullName}"`);
       }
       if (!isSnap(component.head.hash)) {
         throw new ValidationError(

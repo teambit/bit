@@ -28,7 +28,7 @@ export default function componentIdToPackageName({
   const fromExtensions = getNameFromExtensions(id._legacy, defaultScope, extensions, isDependency);
   if (fromExtensions) return fromExtensions;
   const allSlashes = new RegExp('/', 'g');
-  const name = id.name.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
+  const name = id.fullName.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
   const scope = id.scope || defaultScope;
   const partsToJoin = scope ? [scope, name] : [name];
   let nameWithoutPrefix = partsToJoin.join(NODE_PATH_COMPONENT_SEPARATOR);

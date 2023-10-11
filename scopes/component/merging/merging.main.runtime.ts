@@ -549,7 +549,7 @@ export class MergingMain {
     let filesStatus = {};
     const unmergedComponent: UnmergedComponent = {
       // @ts-ignore
-      id: { name: id.name, scope: id.scope },
+      id: { name: id.fullName, scope: id.scope },
       head: remoteHead,
       laneId,
     };
