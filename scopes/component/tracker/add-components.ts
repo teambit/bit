@@ -284,11 +284,8 @@ export default class AddComponents {
       }
       const rootDir = getRootDir();
       const getDefaultScope = async () => {
-        if (componentId.scope) return undefined;
-        return (
-          this.defaultScope ||
-          (await this.workspace.componentDefaultScopeFromComponentDirAndName(rootDir, componentId.name))
-        );
+        if (componentId._legacy.scope) return undefined;
+        return this.getDefaultScope(rootDir, componentId.name);
       };
       const defaultScope = await getDefaultScope();
       const componentMap = this.bitMap.addComponent({

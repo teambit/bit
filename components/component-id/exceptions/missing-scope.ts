@@ -1,6 +1,6 @@
 export class MissingScope extends Error {
   constructor(src: any) {
-    super(`scope was not defined directly or by "${src}"`);
+    super(`scope is missing from a component-id "${src}"`);
   }
   report() {
     return this.message;

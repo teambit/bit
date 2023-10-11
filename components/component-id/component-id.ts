@@ -20,7 +20,9 @@ export class ComponentID {
     private legacyComponentId: BitId,
 
     readonly _scope?: string
-  ) {}
+  ) {
+    if (!_scope && !legacyComponentId.scope) throw new MissingScope(legacyComponentId);
+  }
 
   /**
    * An access to the legacy id. DO NOT USE THIS

@@ -654,10 +654,10 @@ export default class BitMap {
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
 
-    if (!componentId.scope && !defaultScope) {
+    if (!componentId.hasScope() && !defaultScope) {
       throw new BitError(`unable to add component ${componentIdStr}, it does not have a scope nor a defaultScope`);
     }
-    if (componentId.scope && defaultScope) {
+    if (componentId.hasScope() && defaultScope) {
       throw new BitError(`unable to add component ${componentIdStr}, it has both a scope and a defaultScope`);
     }
 
