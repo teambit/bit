@@ -546,7 +546,7 @@ export default class ComponentsList {
   static sortComponentsByName<T>(components: T): T {
     const getName = (component) => {
       let name;
-      if (R.is(ModelComponent, component)) name = component.componentId();
+      if (R.is(ModelComponent, component)) name = component.id();
       else if (R.is(Component, component)) name = component.componentId.toString();
       else if (R.is(ComponentID, component)) name = component.toString();
       else name = component;
