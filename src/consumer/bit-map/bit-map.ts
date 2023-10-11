@@ -8,7 +8,7 @@ import { LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import type { Consumer } from '..';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
 import {
   AUTO_GENERATED_MSG,

@@ -8,8 +8,7 @@ import {
   MergeOptions,
   MergeStrategy,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
-import { ComponentID } from '@teambit/component-id';
-import { ComponentIdList } from '@teambit/component-id';
+import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';

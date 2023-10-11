@@ -9,7 +9,7 @@
  */
 import { Workspace } from '@teambit/workspace';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { ComponentIdList } from '@teambit/component-id';
+import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import defaultErrorHandler from '@teambit/legacy/dist/cli/default-error-handler';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -19,7 +19,6 @@ import * as packageJsonUtils from '@teambit/legacy/dist/consumer/component/packa
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { Logger } from '@teambit/logger';
-import { ComponentID } from '@teambit/component-id';
 import { InstallMain } from '@teambit/install';
 
 export type EjectResults = {
