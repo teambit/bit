@@ -192,7 +192,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       const objectToMerge = await ObjectList.fromBitObjects(objects);
       objectToMerge.addScopeName(scopeName);
       objectList.mergeObjectList(objectToMerge);
-      return ComponentID.fromLegacy(component.id);
+      return component.id;
     });
     if (lane) {
       // the components should be exported to the lane-scope, not to their original scope.

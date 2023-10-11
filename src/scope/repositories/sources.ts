@@ -246,14 +246,27 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     });
   }
 
-  findOrAddComponent(props: ComponentProps): Promise<ModelComponent> {
-    // @ts-ignore normally "props" is a consumerComponent, and when loaded from FS, it has modelComponent
-    if (props.modelComponent) return props.modelComponent;
-    const comp = ModelComponent.from(props);
+  async findOrAddComponent(consumerComponent: ConsumerComponent): Promise<ModelComponent> {
+    if (consumerComponent.modelComponent) return consumerComponent.modelComponent;
+    const propsFromComp = this.getPropsFromConsumerComp(consumerComponent);
+    const comp = ModelComponent.from(propsFromComp);
     return this._findComponent(comp).then((component) => {
       if (!component) return comp;
       return component;
     });
+  }
+
+  private getPropsFromConsumerComp(comp: ConsumerComponent): ComponentProps {
+    return {
+      name: comp.id.name,
+      versions: comp.listVersions(),
+      scope: comp.id.scope,
+      lang: comp.lang,
+      bindingPrefix: comp.bindingPrefix,
+      deprecated: comp.deprecated,
+      local: comp.local,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    };
   }
 
   /**

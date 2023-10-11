@@ -1,12 +1,11 @@
-import { Component, ComponentFS, ComponentID, Config, InvalidComponent, State, TagMap } from '@teambit/component';
-import { ComponentID } from '@teambit/component-id';
+import { Component, ComponentFS, Config, InvalidComponent, State, TagMap } from '@teambit/component';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import mapSeries from 'p-map-series';
 import { compact, fromPairs, uniq } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
 import { IssuesClasses } from '@teambit/component-issues';
-import { ComponentIdList } from '@teambit/component-id';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
@@ -114,7 +113,7 @@ export class WorkspaceComponentLoader {
     }
     const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, loadOpts));
     // in case of out-of-sync, the id may changed during the load process
-    const updatedId = consumerComponent ? ComponentID.fromLegacy(consumerComponent.id, id.scope) : id;
+    const updatedId = consumerComponent ? consumerComponent.id : id;
     const component = await this.loadOne(updatedId, consumerComponent, loadOpts);
     if (storeInCache) {
       this.addMultipleEnvsIssueIfNeeded(component); // it's in storeInCache block, otherwise, it wasn't fully loaded

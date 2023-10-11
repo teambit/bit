@@ -2,7 +2,6 @@
 import R from 'ramda';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { compact, isEmpty, cloneDeep } from 'lodash';
-import { BitId } from '../../bit-id';
 import { sortObject } from '../../utils';
 import {
   convertBuildArtifactsFromModelObject,
@@ -175,7 +174,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     return this.find((extEntry) => extEntry.name === extensionId);
   }
 
-  remove(id: BitId) {
+  remove(id: ComponentID) {
     return ExtensionDataList.fromArray(
       this.filter((entry) => {
         return entry.stringId !== id.toString() && entry.stringId !== id.toStringWithoutVersion();

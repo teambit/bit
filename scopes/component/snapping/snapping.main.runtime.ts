@@ -1028,7 +1028,7 @@ another option, in case this dependency is not in main yet is to remove all refe
         this.logger.debug(
           `updating "${componentIdStr}", extension ${ext.newExtensionId.toString()} to version ${updatedBitId.version}}`
         );
-        ext.extensionId = updatedBitId._legacy;
+        ext.extensionId = updatedBitId;
       }
     });
 

@@ -4,7 +4,7 @@ import { flatten, partition } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Component, ComponentID } from '@teambit/component';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import ComponentIdList from '@teambit/component-id/bit-ids';
+import { ComponentIdList } from '@teambit/component-id';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';

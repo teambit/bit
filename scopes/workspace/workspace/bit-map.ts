@@ -8,7 +8,6 @@ import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/con
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import EnvsAspect from '@teambit/envs';
-import { ComponentID } from '@teambit/component-id';
 import { getPathStatIfExist } from '@teambit/legacy/dist/utils/fs/last-modified';
 
 export type MergeOptions = {
@@ -187,7 +186,7 @@ export class BitMap {
     }
     if (sourceId.fullName !== targetId.fullName) {
       this.legacyBitMap.removeComponent(bitMapEntry.id);
-      bitMapEntry.id = targetId._legacy;
+      bitMapEntry.id = targetId;
       this.legacyBitMap.setComponent(bitMapEntry.id, bitMapEntry);
     }
     if (sourceId.scope !== targetId.scope) {

@@ -1,5 +1,5 @@
 import { Harmony } from '@teambit/harmony';
-import { Component, ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
@@ -321,7 +321,7 @@ export class AspectsMerger {
       const envAspectId = envAspectExt?.extensionId;
       const found = envAspectId && ids.find((id) => id.isEqualWithoutVersion(envAspectId));
       if (found) {
-        envAspectExt.extensionId = found._legacy;
+        envAspectExt.extensionId = found;
       }
     }
     return { extensionDataListFiltered: extensionDataList, envIsCurrentlySet: Boolean(envFromEnvsAspect) };

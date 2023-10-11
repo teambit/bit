@@ -28,7 +28,7 @@ import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import type { VariantsMain } from '@teambit/variants';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName } from '@teambit/legacy-bit-id';
+import { InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName, BitId } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
@@ -62,7 +62,6 @@ import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/s
 import { isHash } from '@teambit/component-version';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { GlobalConfigMain } from '@teambit/global-config';
-
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,
@@ -641,7 +640,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       const componentMap = this.consumer.bitMap.getComponent(id);
       return await ConsumerComponent.loadFromFileSystem({
         componentMap,
-        id: id,
+        id,
         consumer: this.consumer,
       });
     } catch (err) {
@@ -1237,7 +1236,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   async listComponentsDuringMerge(): Promise<ComponentID[]> {
     const unmergedComps = this.scope.legacyScope.objects.unmergedComponents.getComponents();
-    const bitIds = unmergedComps.map((u) => new ComponentID(u.id));
+    const bitIds = unmergedComps.map((u) => ComponentID.fromObject(u.id));
     return this.resolveMultipleComponentIds(bitIds);
   }
 
@@ -1557,14 +1556,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   /**
    * Transform the id to ComponentId and get the exact id as appear in bitmap
-   *
-   * @param {(string | ComponentID | ComponentID)} id
-   * @returns {Promise<ComponentID>}
-   * @memberof Workspace
    */
-  async resolveComponentId(id: string | ComponentID | ComponentID): Promise<ComponentID> {
-    if (id instanceof ComponentID && id.hasScope() && id.hasVersion()) {
-      // an optimization to make it faster when ComponentID is passed
+  async resolveComponentId(id: string | BitId | ComponentID): Promise<ComponentID> {
+    if (id instanceof BitId && id.hasScope() && id.hasVersion()) {
+      // an optimization to make it faster when BitId is passed
       return ComponentID.fromLegacy(id);
     }
     const getDefaultScope = async (bitId: ComponentID, bitMapOptions?: GetBitMapComponentOptions) => {
@@ -1594,7 +1589,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       const shouldSearchWithoutScopeInProvidedId = id.toString().startsWith(`${defaultScope}/`);
       legacyId = this.consumer.getParsedIdIfExist(id.toString(), true, shouldSearchWithoutScopeInProvidedId);
       if (legacyId) {
-        return ComponentID.fromLegacy(legacyId, defaultScope);
+        return ComponentID.fromLegacy(legacyId._legacy, defaultScope);
       }
     }
     try {
@@ -1650,7 +1645,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
           if (version) {
             _bitmapIdWithVersionForSource = _bitMapId.changeVersion(version);
           }
-          return ComponentID.fromLegacy(_bitmapIdWithVersionForSource, defaultScopeForBitmapId);
+          return ComponentID.fromLegacy(_bitmapIdWithVersionForSource._legacy, defaultScopeForBitmapId);
         };
         // a case when the given id contains the default scope
         if (idWithVersion.startsWith(`${defaultScopeForBitmapId}/${_bitMapIdWithoutVersion}`)) {
@@ -1678,8 +1673,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       // Handle use case 3
       return await this.scope.resolveComponentId(idWithVersion);
     } catch (error: any) {
-      legacyId = ComponentID.fromString(id.toString(), true);
-      return ComponentID.fromLegacy(legacyId);
+      return ComponentID.fromString(id.toString());
     }
   }
 
@@ -1703,25 +1697,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
         // Assuming extensionId always has scope - do not allow extension id without scope
         const resolvedId = await this.resolveComponentId(extensionEntry.extensionId);
-        extensionEntry.extensionId = resolvedId._legacy;
-      }
-    });
-    return Promise.all(resolveMergedExtensionsP);
-  }
-
-  /**
-   * This will mutate the original extensions list and make sure all extensions has the ids with the scope / default scope
-   *
-   * @param {ExtensionDataList} extensions
-   * @returns {Promise<void[]>}
-   * @memberof Workspace
-   */
-  addDefaultScopeToExtensionsList(extensions: ExtensionDataList): Promise<void[]> {
-    const resolveMergedExtensionsP = extensions.map(async (extensionEntry) => {
-      if (extensionEntry.extensionId && !extensionEntry.extensionId.hasScope()) {
-        const componentId = ComponentID.fromLegacy(extensionEntry.extensionId);
-        const defaultScope = await this.componentDefaultScope(componentId);
-        extensionEntry.extensionId = extensionEntry.extensionId.changeScope(defaultScope);
+        extensionEntry.extensionId = resolvedId;
       }
     });
     return Promise.all(resolveMergedExtensionsP);

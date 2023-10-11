@@ -3,7 +3,7 @@ import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain, CommandList } from '@teambit/cli';
 import { DependencyResolverAspect, DependencyResolverMain, VariantPolicy } from '@teambit/dependency-resolver';
-import type { ComponentMain, Component, ComponentID } from '@teambit/component';
+import type { ComponentMain, Component } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony, SlotRegistry } from '@teambit/harmony';
@@ -216,9 +216,7 @@ export default async function provideWorkspace(
     const extensionsWithLegacyIdsP = extensions.map(async (extension) => {
       const legacyEntry = extension.clone();
       if (legacyEntry.extensionId) {
-        const compId = await workspace.resolveComponentId(legacyEntry.extensionId);
-        legacyEntry.extensionId = compId._legacy;
-        legacyEntry.newExtensionId = compId;
+        legacyEntry.newExtensionId = legacyEntry.extensionId;
       }
 
       return legacyEntry;
