@@ -515,12 +515,12 @@ export default class Version extends BitObject {
       };
 
       return deps.map((dependency: any) => {
-        return {
-          id: ComponentID.fromLegacy(BitId.parseBackwardCompatible(dependency.id)),
-          relativePaths: Array.isArray(dependency.relativePaths)
+        return new Dependency(
+          ComponentID.fromLegacy(BitId.parseBackwardCompatible(dependency.id)),
+          Array.isArray(dependency.relativePaths)
             ? dependency.relativePaths.map(getRelativePath)
-            : dependency.relativePaths,
-        };
+            : dependency.relativePaths
+        );
       });
     };
 
