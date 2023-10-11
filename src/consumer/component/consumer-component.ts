@@ -516,7 +516,7 @@ export default class Component {
     const workspaceConfig: ILegacyWorkspaceConfig = consumer.config;
     const modelComponent = await consumer.scope.getModelComponentIfExist(id);
     const componentFromModel = await consumer.loadComponentFromModelIfExist(id);
-    if (!componentFromModel && id.scope) {
+    if (!componentFromModel && id._legacy.hasScope()) {
       const inScopeWithAnyVersion = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
       // if it's in scope with another version, the component will be synced in _handleOutOfSyncScenarios()
       if (!inScopeWithAnyVersion) throw new ComponentsPendingImport([id.toString()]);
@@ -569,7 +569,7 @@ export default class Component {
 
     return new Component({
       name: id.name,
-      scope: id.scope,
+      scope: id._legacy.scope,
       version: id.version,
       lang: componentConfig.lang,
       bindingPrefix,

@@ -351,7 +351,7 @@ export default class BitMap {
       // as consumer.defaultScope
       componentFromJson.defaultScope = defaultScope;
     }
-    return new ComponentID(componentFromJson.id, componentFromJson.defaultScope);
+    return new ComponentID(bitId, componentFromJson.defaultScope);
   }
 
   static getBitIdFromComponentJson(componentId: string, componentFromJson: Record<string, any>): BitId {
