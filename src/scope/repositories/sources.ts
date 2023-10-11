@@ -259,13 +259,10 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   private getPropsFromConsumerComp(comp: ConsumerComponent): ComponentProps {
     return {
       name: comp.id.name,
-      versions: comp.listVersions(),
       scope: comp.id.scope,
       lang: comp.lang,
       bindingPrefix: comp.bindingPrefix,
       deprecated: comp.deprecated,
-      local: comp.local,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     };
   }
 
