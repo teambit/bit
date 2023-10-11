@@ -7,7 +7,7 @@ export default async function getComponentLogs(id: string, isRemote: boolean): P
   if (isRemote) {
     const consumer = await loadConsumerIfExist();
     const bitId = ComponentID.fromString(id);
-    const remote = await getRemoteByName(bitId.scope as string, consumer);
+    const remote = await getRemoteByName(bitId.scope, consumer);
     return remote.log(bitId);
   }
   const consumer = await loadConsumer();

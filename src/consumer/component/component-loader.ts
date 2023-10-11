@@ -309,7 +309,7 @@ it was probably created on another lane and if so, consider removing this compon
   }
 
   private async _throwPendingImportIfNeeded(currentId: ComponentID) {
-    if (currentId._legacy.hasScope()) {
+    if (currentId.hasScope()) {
       const remoteComponent: ModelComponent | null | undefined = await this._getRemoteComponent(currentId);
       // @todo-lanes: make it work with lanes. It needs to go through the objects one by one and check
       // whether one of the hashes exist.

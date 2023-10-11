@@ -649,7 +649,7 @@ once done, to continue working, please run "bit cc"`
     const symlink = new Symlink({
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       scope: id.scope,
-      name: id.name,
+      name: id.fullName,
       realScope: remote,
     });
     return this.objects.add(symlink);

@@ -1217,7 +1217,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   static fromBitId(bitId: ComponentID): Component {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Component({
-      name: bitId.name,
+      name: bitId.fullName,
       scope: bitId.scope,
     });
   }

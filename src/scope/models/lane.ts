@@ -4,7 +4,6 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { isSnap } from '@teambit/component-version';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
-import { BitId } from '../../bit-id';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, PREVIOUS_DEFAULT_LANE } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
@@ -114,11 +113,14 @@ export default class Lane extends BitObject {
       scope: laneObject.scope,
       log: laneObject.log,
       components: laneObject.components.map((component) => ({
-        id: new BitId({ scope: component.id.scope, name: component.id.name }),
+        id: ComponentID.fromObject({ scope: component.id.scope, name: component.id.name }),
         head: new Ref(component.head),
       })),
       readmeComponent: laneObject.readmeComponent && {
-        id: new BitId({ scope: laneObject.readmeComponent.id.scope, name: laneObject.readmeComponent.id.name }),
+        id: ComponentID.fromObject({
+          scope: laneObject.readmeComponent.id.scope,
+          name: laneObject.readmeComponent.id.name,
+        }),
         head: laneObject.readmeComponent.head && new Ref(laneObject.readmeComponent.head),
       },
       forkedFrom: laneObject.forkedFrom && LaneId.from(laneObject.forkedFrom.name, laneObject.forkedFrom.scope),

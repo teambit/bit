@@ -32,7 +32,7 @@ export default async function getScopeComponent({
   }
 
   const consumer: Consumer | undefined = await loadConsumerIfExist();
-  const remote = await getRemoteByName(bitId.scope as string, consumer);
+  const remote = await getRemoteByName(bitId.scope, consumer);
   loader.start(BEFORE_REMOTE_SHOW);
   const component = await remote.show(bitId);
   let dependenciesInfo: DependenciesInfo[] = [];
