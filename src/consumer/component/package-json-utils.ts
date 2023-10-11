@@ -52,7 +52,7 @@ async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute,
 export async function removeComponentsFromNodeModules(consumer: Consumer, components: Component[]) {
   logger.debug(`removeComponentsFromNodeModules: ${components.map((c) => c.id.toString()).join(', ')}`);
   const pathsToRemoveWithNulls = components.map((c) => {
-    return getNodeModulesPathOfComponent({ ...c, id: c.id, allowNonScope: true });
+    return getNodeModulesPathOfComponent({ ...c, id: c.id });
   });
   const pathsToRemove = compact(pathsToRemoveWithNulls);
   logger.debug(`deleting the following paths: ${pathsToRemove.join('\n')}`);

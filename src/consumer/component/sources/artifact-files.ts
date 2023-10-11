@@ -130,7 +130,7 @@ export class ArtifactFiles {
       }
     }
     const isIdOnLane = await scope.isIdOnLane(id, lane);
-    const scopeName = isIdOnLane ? (lane?.scope as string) : (id.scope as string);
+    const scopeName = isIdOnLane ? (lane?.scope as string) : id.scope;
     try {
       await scopeComponentsImporter.importManyObjects(
         { [scopeName]: allHashes },

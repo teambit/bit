@@ -32,7 +32,7 @@ export default function validateVersionInstance(version: Version): void {
     if (validateVersion && !bitId.hasVersion()) {
       throw new VersionInvalid(`${message}, the ${field} ${bitId.toString()} does not have a version`);
     }
-    if (validateScope && !bitId.scope) {
+    if (validateScope && !bitId.hasScope()) {
       throw new VersionInvalid(`${message}, the ${field} ${bitId.toString()} does not have a scope`);
     }
   };

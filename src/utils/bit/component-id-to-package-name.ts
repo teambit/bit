@@ -29,7 +29,7 @@ export default function componentIdToPackageName({
   if (fromExtensions) return fromExtensions;
   const allSlashes = new RegExp('/', 'g');
   const name = id.fullName.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
-  const scope = id.scope || defaultScope;
+  const scope = id.scope;
   const partsToJoin = scope ? [scope, name] : [name];
   let nameWithoutPrefix = partsToJoin.join(NODE_PATH_COMPONENT_SEPARATOR);
   if (!withPrefix) return nameWithoutPrefix;

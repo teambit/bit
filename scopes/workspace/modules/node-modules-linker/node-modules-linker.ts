@@ -107,7 +107,6 @@ export default class NodeModuleLinker {
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
       bindingPrefix: legacyComponent.bindingPrefix,
       id: componentId,
-      allowNonScope: true,
       defaultScope: component.id.scope,
       extensions: legacyComponent.extensions,
     });
@@ -173,7 +172,6 @@ export default class NodeModuleLinker {
       getNodeModulesPathOfComponent({
         ...legacyComp,
         id: legacyComp.id,
-        allowNonScope: true,
       })
     );
     const packageJson = PackageJsonFile.createFromComponent(dest, legacyComp, true, true);

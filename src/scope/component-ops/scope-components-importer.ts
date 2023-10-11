@@ -582,7 +582,7 @@ export default class ScopeComponentsImporter {
    * get a single component from a remote without saving it locally
    */
   async getRemoteComponent(id: ComponentID): Promise<BitObjectList | null | undefined> {
-    if (!id.scope) {
+    if (!id.hasScope()) {
       throw new Error(`unable to get remote component "${id.toString()}", the scope is empty`);
     }
     const remotes = await getScopeRemotes(this.scope);
@@ -604,7 +604,7 @@ export default class ScopeComponentsImporter {
   async getManyRemoteComponents(ids: ComponentID[]): Promise<BitObjectList> {
     logger.debug(`getManyRemoteComponents, ids: ${ids.map((id) => id.toString()).join(', ')}`);
     ids.forEach((id) => {
-      if (!id.scope) {
+      if (!id.hasScope()) {
         throw new Error(`unable to get remote component "${id.toString()}", the scope is empty`);
       }
     });
@@ -1078,7 +1078,7 @@ export function groupByLanes(ids: ComponentID[], lanes: Lane[]): { [scopeName: s
       (grouped[lane.scope] ||= []).push(id.toString());
     } else {
       // if not found on a lane, fetch from main.
-      (grouped[id.scope as string] ||= []).push(id.toString());
+      (grouped[id.scope] ||= []).push(id.toString());
     }
   });
 

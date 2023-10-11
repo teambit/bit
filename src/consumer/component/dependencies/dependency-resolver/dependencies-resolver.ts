@@ -932,17 +932,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     // });
 
     const coreAspectIds = Object.values(coreAspects);
-    const defaultScope = this.component.defaultScope;
-
-    let id: undefined | ComponentID;
-
-    if (this.component.id.scope) {
-      id = this.component.id;
-    } else {
-      id = this.component.id.changeScope(defaultScope as string);
-    }
-
-    if (coreAspectIds.includes(id.toStringWithoutVersion())) {
+    if (coreAspectIds.includes(this.component.id.toStringWithoutVersion())) {
       return;
     }
 
