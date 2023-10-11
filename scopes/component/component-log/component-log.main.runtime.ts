@@ -1,5 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
+import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import path from 'path';
 import moment from 'moment';
 import pMap from 'p-map';
@@ -41,7 +42,7 @@ export class ComponentLogMain {
   /**
    * get component log sorted by the timestamp in ascending order (from the earliest to the latest)
    */
-  async getLogs(id: string, isRemote?: boolean, shortHash = false) {
+  async getLogs(id: string, isRemote?: boolean, shortHash = false): Promise<ComponentLog[]> {
     if (isRemote) {
       const consumer = this.workspace?.consumer;
       const bitId = ComponentID.fromString(id);

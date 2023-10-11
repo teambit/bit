@@ -22,7 +22,7 @@ import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { ModelComponent, Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { Repository } from '@teambit/legacy/dist/scope/objects';
 import LegacyScope, { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
-import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
 import { PersistOptions } from '@teambit/legacy/dist/scope/types';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
