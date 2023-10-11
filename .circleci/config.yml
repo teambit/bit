@@ -629,25 +629,7 @@ jobs:
     steps:
       - run: sleep 300;
 
-  get_linux_arm64_packages:
-    <<: *defaults
-    resource_class: small
-    steps:
-      - run: mkdir esbuild-linux-arm64
-      # in order to bring new version of esbuild, you need to install it on linux arm64 machine, tar it, and upload to the bucket
-      # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
-      - run: cd esbuild-linux-arm64 && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-linux-arm64.tar.gz
-
-      # - save_cache:
-      #     key: esbuild-0.14.29-linux-arm64-v1
-      #     paths:
-      #       - esbuild-linux-arm64/esbuild-0.14.29-linux-arm64.tar.gz
-      - persist_to_workspace:
-          root: .
-          paths:
-            - esbuild-linux-arm64
-
-  bundle_version_linux:
+  bundle_version:
     <<: *defaults
     environment:
       # do not download chromium when installing puppeteer
@@ -655,7 +637,6 @@ jobs:
     steps:
       - attach_workspace:
             at: ./
-      - run: cd esbuild-linux-arm64 && tar -xvf esbuild-0.14.29-linux-arm64.tar.gz
       - set_bit_cloud_registry
       - run:
           name: print bit version
@@ -668,184 +649,130 @@ jobs:
           command: mkdir linux
       - run:
           name: create empty folder
-          command: mkdir bit-${BIT_VERSION}
+          command: mkdir bit-${BIT_VERSION} bit-${BIT_VERSION}-install
       - run:
-          name: install bit
-          command: cd bit-${BIT_VERSION} && npm init -y && yarn config set nodeLinker node-modules && yarn config set npmRegistryServer https://node-registry.bit.cloud && yarn add @teambit/bit
+          name: install bit for Linux x64
+          command: >
+            cd bit-${BIT_VERSION}-install &&
+            npm init -y &&
+            yarn set version 3.6.4 &&
+            yarn config set nodeLinker node-modules &&
+            yarn config set npmRegistryServer https://node-registry.bit.cloud &&
+            yarn config set supportedArchitectures --json '{"os":["linux"],"cpu":["x64"]}' &&
+            yarn add @teambit/bit
+      - run:
+          name: copy node_modules
+          command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
+      - run:
+          name: compress bit for Linux x64
+          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
       - run:
           name: remove leftovers
-          command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
-      - run:
-          name: compress bit
-          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+          command: rm -rf bit-${BIT_VERSION}/node_modules
       - run:
           name: move to linux folder
           command: mv bit-${BIT_VERSION}.tar.gz linux/bit-${BIT_VERSION}.tar.gz
       - run:
+          name: install bit for Linux arm64
+          command: >
+            cd bit-${BIT_VERSION}-install &&
+            yarn config set supportedArchitectures --json '{"os":["linux"],"cpu":["arm64"]}' &&
+            yarn
+      - run:
+          name: copy node_modules
+          command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
+      - run:
           name: create linux-arm64
           command: mkdir linux-arm64
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-linux-arm64
-      - run: cp -r esbuild-linux-arm64/node_modules/* bit-${BIT_VERSION}/node_modules
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/nan
       - run:
-          name: compress bit arm64
+          name: compress bit for Linux arm64
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run:
+          name: remove leftovers
+          command: rm -rf bit-${BIT_VERSION}/node_modules
       - run:
           name: move to linux-arm64 folder
           command: mv bit-${BIT_VERSION}.tar.gz linux-arm64/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: install bit for macOS x64
+          command: >
+            cd bit-${BIT_VERSION}-install &&
+            yarn config set supportedArchitectures --json '{"os":["darwin"],"cpu":["x64"]}' &&
+            yarn
+      - run:
+          name: copy node_modules
+          command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
+      - run:
+          name: create macos
+          command: mkdir macos
+      - run:
+          name: compress bit for macOS x64
+          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run:
+          name: remove leftovers
+          command: rm -rf bit-${BIT_VERSION}/node_modules
+      - run:
+          name: move to macos folder
+          command: mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: install bit for macOS arm64
+          command: >
+            cd bit-${BIT_VERSION}-install &&
+            yarn config set supportedArchitectures --json '{"os":["darwin"],"cpu":["arm64"]}' &&
+            yarn
+      - run:
+          name: copy node_modules
+          command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
+      - run:
+          name: create macos-arm64
+          command: mkdir macos-arm64
+      - run:
+          name: compress bit for macOS arm64
+          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run:
+          name: remove leftovers
+          command: rm -rf bit-${BIT_VERSION}/node_modules
+      - run:
+          name: move to macos-arm64 folder
+          command: mv bit-${BIT_VERSION}.tar.gz macos-arm64/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: install bit for Windows x64
+          command: >
+            cd bit-${BIT_VERSION}-install &&
+            yarn config set supportedArchitectures --json '{"os":["win32"],"cpu":["x64"]}' &&
+            yarn
+      - run:
+          name: copy node_modules
+          command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
+      - run:
+          name: create windows
+          command: mkdir windows
+      - run:
+          name: compress bit for Windows x64
+          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run:
+          name: remove leftovers
+          command: rm -rf bit-${BIT_VERSION}/node_modules
+      - run:
+          name: move to windows folder
+          command: mv bit-${BIT_VERSION}.tar.gz windows/bit-${BIT_VERSION}.tar.gz
 
       - persist_to_workspace:
           root: .
           paths:
             - linux
             - linux-arm64
+            - macos
+            - macos-arm64
+            - windows
       - store_artifacts:
           path: linux
       - store_artifacts:
           path: linux-arm64
-
-  get_darwin_arm64_packages:
-    <<: *defaults
-    resource_class: small
-    steps:
-      - run: mkdir esbuild-darwin-arm64
-      # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
-      # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
-      - run: cd esbuild-darwin-arm64 && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
-
-      # - save_cache:
-      #     key: esbuild-0.14.29-darwin-arm64-v1
-      #     paths:
-      #       - esbuild-darwin-arm64/esbuild-0.14.29-darwin-arm64.tar.gz
-      - persist_to_workspace:
-          root: .
-          paths:
-            - esbuild-darwin-arm64
-
-  bundle_version_macos:
-    <<: *mac_defaults
-    environment:
-      # do not download chromium when installing puppeteer
-      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
-    steps:
-      - attach_workspace:
-            at: ./
-      - run: node -v
-      - run: rm -rf /usr/local/bin/yarn
-      - run: rm -rf /usr/local/bin/yarnpkg
-      - run: corepack enable && corepack prepare yarn@3.6.4 --activate
-      - run: yarn cache clean
-      - run: yarn -v
-      # - run: mkdir esbuild-darwin-arm64
-      # - restore_cache:
-      #     key: esbuild-0.14.29-darwin-arm64-v1
-      - run: cd esbuild-darwin-arm64 && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
-      - set_bit_cloud_registry
-      - run:
-          name: print bit version
-          command: npm view @teambit/bit version
-      - run:
-          name: Setup bit version environment variables
-          command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
-      - run:
-          name: create macos
-          command: mkdir macos
-      - run:
-          name: create empty folder
-          command: mkdir bit-${BIT_VERSION}
-      - run:
-          name: install bit
-          command: cd bit-${BIT_VERSION} && npm init -y && yarn config set nodeLinker node-modules && yarn config set npmRegistryServer https://node-registry.bit.cloud && yarn add @teambit/bit
-      - run:
-          name: remove leftovers
-          command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
-      - run:
-          name: compress bit
-          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
-      - run:
-          name: move to macos folder
-          command: mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
-      - run:
-          name: create macos-arm64
-          command: mkdir macos-arm64
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-darwin-arm64
-      - run: cp -r esbuild-darwin-arm64/node_modules/* bit-${BIT_VERSION}/node_modules
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/nan
-      - run:
-          name: compress bit arm64
-          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
-      - run:
-          name: move to macos-arm64 folder
-          command: mv bit-${BIT_VERSION}.tar.gz macos-arm64/bit-${BIT_VERSION}.tar.gz
-
-
-      - persist_to_workspace:
-          root: .
-          paths:
-            - macos
-            - macos-arm64
       - store_artifacts:
           path: macos
       - store_artifacts:
           path: macos-arm64
-
-  bundle_version_windows:
-    <<: *windows_defaults
-    environment:
-      # do not download chromium when installing puppeteer
-      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
-    steps:
-      # - run: choco install nodejs --version 16.15.1
-      # - run: cinst nodejs --version 16.16.0
-      # - run: nodejs.install v12.16.0
-      # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
-      - windows_set_node_version
-      - run: corepack enable && corepack prepare yarn@3.6.4 --activate
-      - run: 'yarn -v'
-      - set_bit_cloud_registry
-      - run:
-          name: print bit version
-          command: npm view @teambit/bit version
-      # - run:
-      #     name: Setup bit version environment variables
-      #     command: $BIT_VERSION = npm view @teambit/bit version
-      # - run:
-      #     name: print version again
-      #     command: $BIT_VERSION
-      - run:
-          name: create version file
-          command: npm view @teambit/bit version | Out-File -FilePath .\version.txt
-      - run:
-          name: create folder
-          command: New-Item -ItemType "directory" -Path ".\bundle"
-      # - run:
-      #     name: create folder
-      #     command: $BIT_VERSION = Get-Content -Path .\version.txt;New-Item -ItemType "directory" -Path ".\bit-$BIT_VERSION" -Force
-      - run: 'node -v'
-      - run:
-          name: install bit
-          command: cd bundle; npm init -y; corepack enable; corepack prepare yarn@3.6.4 --activate; yarn config set nodeLinker node-modules; yarn config set npmRegistryServer https://node-registry.bit.cloud; yarn add @teambit/bit
-      - run:
-          name: remove leftovers
-          command: Remove-Item .\bundle\package.json; Remove-Item .\bundle\yarn.lock
-      - run:
-          name: rename folder
-          command: $BIT_VERSION = Get-Content -Path .\version.txt; Rename-Item .\bundle ".\bit-$BIT_VERSION"
-      - run:
-          name: compress bit
-          command: $BIT_VERSION = Get-Content -Path .\version.txt; tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
-      - run:
-          name: create folder
-          command: New-Item -ItemType "directory" -Path ".\windows"
-      - run:
-          name: move to windows folder
-          command: $BIT_VERSION = Get-Content -Path .\version.txt;Move-Item -Path .\bit-${BIT_VERSION}.tar.gz -Destination .\windows\bit-${BIT_VERSION}.tar.gz
-      - persist_to_workspace:
-          root: .
-          paths:
-            - windows
       - store_artifacts:
           path: windows
 
@@ -1378,8 +1305,6 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_npm_registries
-      - get_darwin_arm64_packages
-      - get_linux_arm64_packages
       - setup_harmony:
           requires:
             - set_npm_registries
@@ -1393,32 +1318,16 @@ workflows:
           requires:
             - bit_tag
             - bit_export
-      - bundle_version_linux:
+      - bundle_version:
           <<: *master_only_filter
           requires:
             - bit_tag
             - bit_export
-            - get_linux_arm64_packages
-            - sleep_5_minutes
-      - bundle_version_windows:
-          <<: *master_only_filter
-          requires:
-            - bit_export
-            - bit_tag
-            - sleep_5_minutes
-      - bundle_version_macos:
-          <<: *master_only_filter
-          requires:
-            - bit_export
-            - bit_tag
-            - get_darwin_arm64_packages
             - sleep_5_minutes
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
-            - bundle_version_linux
-            - bundle_version_windows
-            - bundle_version_macos
+            - bundle_version
             - checkout_code # This is needed to generate index.json
       - bit_export:
           <<: *master_only_filter
@@ -1513,14 +1422,6 @@ workflows:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
-      - get_linux_arm64_packages:
-          <<: *master_only_filter
-          requires:
-            - harmony_deploy_approval_job
-      - get_darwin_arm64_packages:
-          <<: *master_only_filter
-          requires:
-            - harmony_deploy_approval_job
       - set_ssh_key:
           <<: *master_only_filter
           requires:
@@ -1546,36 +1447,18 @@ workflows:
             - harmony_deploy_approval_job
             - bit_tag
             - bit_export
-      - bundle_version_linux:
+      - bundle_version:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
             - bit_tag
             - bit_export
-            - get_linux_arm64_packages
-            - sleep_5_minutes
-      - bundle_version_windows:
-          <<: *master_only_filter
-          requires:
-            - harmony_deploy_approval_job
-            - bit_export
-            - bit_tag
-            - sleep_5_minutes
-      - bundle_version_macos:
-          <<: *master_only_filter
-          requires:
-            - harmony_deploy_approval_job
-            - bit_export
-            - bit_tag
-            - get_darwin_arm64_packages
             - sleep_5_minutes
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
-            - bundle_version_linux
-            - bundle_version_windows
-            - bundle_version_macos
+            - bundle_version
             - checkout_code # This is needed to generate index.json
       - bit_export:
           <<: *master_only_filter
@@ -1650,39 +1533,21 @@ workflows:
   #     - checkout_code:
   #         filters:
   #           branches:
-  #             only: circle-use-new-registry-bundle
+  #             only: fix-circle-yarn3
   #     - get_linux_arm64_packages:
   #         filters:
   #           branches:
-  #             only: circle-use-new-registry-bundle
-  #     - bundle_version_linux:
+  #             only: fix-circle-yarn3
+  #     - bundle_version:
   #         filters:
   #           branches:
-  #             only: circle-use-new-registry-bundle
-  #         requires:
-  #           - get_linux_arm64_packages
-  #     - bundle_version_windows:
-  #         filters:
-  #           branches:
-  #             only: circle-use-new-registry-bundle
-  #     - get_darwin_arm64_packages:
-  #         filters:
-  #           branches:
-  #             only: circle-use-new-registry-bundle
-  #     - bundle_version_macos:
-  #         filters:
-  #           branches:
-  #             only: circle-use-new-registry-bundle
-  #         requires:
-  #           - get_darwin_arm64_packages
+  #             only: fix-circle-yarn3
   #     - harmony_publish_to_gcloud:
   #         filters:
   #           branches:
-  #             only: circle-ci-windows-node-version
+  #             only: fix-circle-yarn3
   #         requires:
-  #           - bundle_version_macos
-  #           - bundle_version_linux
-  #           - bundle_version_windows
+  #           - bundle_version
   #           - checkout_code # This is needed to generate index.json
   #     # - docker_build:
   #     #     requires:
