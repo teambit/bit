@@ -32,7 +32,7 @@ export class APIReferenceModel {
   componentId: ComponentID;
 
   constructor(public _api: APISchema, _renderers: APINodeRenderer[]) {
-    this.componentId = _api.componentId;
+    this.componentId = _api.componentId as any;
     this.apiNodes = this.mapToAPINode(_api, _renderers, this.componentId);
     this.apiByType = this.groupByType(this.apiNodes);
     this.apiByName = this.groupByName(this.apiNodes);
@@ -114,7 +114,7 @@ export class APIReferenceModel {
       return new APIReferenceModel(apiSchema, renderers);
     } catch (e) {
       return new APIReferenceModel(
-        APISchema.empty(ComponentID.fromObject((result.getHost.getSchema as any).componentId as ComponentIdObj)),
+        APISchema.empty(ComponentID.fromObject((result.getHost.getSchema as any).componentId as ComponentIdObj) as any),
         renderers
       );
     }

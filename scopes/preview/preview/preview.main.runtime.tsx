@@ -321,14 +321,16 @@ export class PreviewMain {
    */
   private async calculateDataForEnvComponent(envComponent: Component): Promise<PreviewEnvComponentData | undefined> {
     const isEnv = this.envs.isEnv(envComponent);
+
     // If the component is not an env, we don't want to store anything in the data
     if (!isEnv) return undefined;
+
     const previewAspectConfig = this.getPreviewAspectConfig(envComponent);
 
     const data = {
       // default to true if the env doesn't have a preview config
       isScaling: previewAspectConfig?.isScaling ?? true,
-      overviewOnly: true,
+      onlyOverview: true,
     };
     return data;
   }
@@ -453,8 +455,6 @@ export class PreviewMain {
 
   /**
    * check if the component preview should only include the overview (skipping rendering of the compostions and properties table)
-   * @param component
-   * @returns
    */
   async includesOnlyOverview(component: Component): Promise<boolean> {
     const inWorkspace = await this.workspace?.hasId(component.id);
@@ -464,7 +464,7 @@ export class PreviewMain {
       }
       const envComponent = await this.envs.getEnvComponent(component);
       const envSupportOnlyOverview = await this.doesEnvIncludesOnlyOverview(envComponent);
-      return envSupportOnlyOverview ?? true;
+      return envSupportOnlyOverview;
     }
     const previewData = this.getPreviewData(component);
     return previewData?.onlyOverview ?? false;

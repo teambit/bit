@@ -337,25 +337,7 @@ export async function tagModelComponent({
     allComponentsToTag.filter((c) => !c.isRemoved())
   );
 
-  const harmonyCompIdsWithEnvId = await Promise.all(
-    harmonyComps.map(async (comp) => {
-      const envComp = await envs.getEnvComponent(comp);
-      return [comp.id.toString(), envComp.id.toString()] as [string, string];
-    })
-  );
-
-  const harmonyCompIdsWithEnvIdMap = new Map(harmonyCompIdsWithEnvId);
-  const harmonyCompsWithoutEnvsTagged = harmonyComps.filter((comp) => {
-    const envId = harmonyCompIdsWithEnvIdMap.get(comp.id.toString());
-    const hasEnvComp = envId ? harmonyCompIdsWithEnvIdMap.has(envId) : undefined;
-    return !hasEnvComp;
-  });
-
-  for (const comp of harmonyCompsWithoutEnvsTagged) {
-    const previewData = comp.state.aspects.get('teambit.preview/preview')?.data;
-    // if the env is not tagged with the component remove it from the preview data of the component
-    delete previewData?.onlyOverview;
-  }
+  await sanitizePreviewData(harmonyComps, scope, envs, workspace);
 
   if (build) {
     const onTagOpts: OnTagOpts = {
@@ -654,4 +636,55 @@ export async function updateComponentsVersions(
   await workspace.scope.legacyScope.stagedSnaps.write();
 
   return stagedConfig;
+}
+
+/**
+ * remove the onlyOverview from the preview data of the component if
+ * the env is in the workspace
+ * the env is not tagged with the component
+ * the last tagged env has onlyOverview undefined in preview data
+ *
+ * We don't want to do this but have no choice because,
+ * when we load components in workspace,
+ * we set the onlyOverview to true in the env's preview data
+ * which sets the onlyOverview to true in the component's preview data
+ * but if you don't tag the env with the component,
+ * the onlyOverview will be true in the component's preview data, since its env is in the workspace
+ * even though the env it is tagged with doesn't have onlyOverview in its preview data
+ * which will result in inconsistent preview data when exported to the scope
+ */
+export async function sanitizePreviewData(
+  harmonyComps: Component[],
+  scope: ScopeMain,
+  envs: EnvsMain,
+  workspace?: Workspace
+) {
+  const harmonyCompIdsWithEnvId = await Promise.all(
+    harmonyComps.map(async (comp) => {
+      const envComp = await envs.getEnvComponent(comp);
+      const inWs = workspace ? await workspace.hasId(envComp.id) : false;
+      const lastTaggedEnvHasOnlyOverview: boolean | undefined = (await scope.get(envComp.id, false))?.state.aspects.get(
+        'teambit.preview/preview'
+      )?.data?.onlyOverview;
+
+      return [comp.id.toString(), { envId: envComp.id.toString(), inWs, lastTaggedEnvHasOnlyOverview }] as [
+        string,
+        { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean }
+      ];
+    })
+  );
+
+  const harmonyCompIdsWithEnvIdMap = new Map(harmonyCompIdsWithEnvId);
+
+  const compsToDeleteOnlyOverviewPreviewData = harmonyComps.filter((comp) => {
+    const envData: { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean } | undefined =
+      harmonyCompIdsWithEnvIdMap.get(comp.id.toString());
+    return envData?.inWs && !envData?.lastTaggedEnvHasOnlyOverview;
+  });
+
+  for (const comp of compsToDeleteOnlyOverviewPreviewData) {
+    const previewData = comp.state.aspects.get('teambit.preview/preview')?.data;
+    // if the env is not tagged with the component remove it from the preview data of the component
+    delete previewData?.onlyOverview;
+  }
 }

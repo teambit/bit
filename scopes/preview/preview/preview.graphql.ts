@@ -14,6 +14,9 @@ export function previewSchema(previewExtension: PreviewMain) {
         isScaling: Boolean
         includesEnvTemplate: Boolean
         legacyHeader: Boolean
+        """
+        @deprecated use onlyOverview
+        """
         skipIncludes: Boolean
         onlyOverview: Boolean
       }
@@ -42,10 +45,6 @@ export function previewSchema(previewExtension: PreviewMain) {
         onlyOverview: ({ component }) => {
           // return true;
           return previewExtension.includesOnlyOverview(component);
-        },
-        skipIncludes: () => {
-          // backwards compatibility
-          return undefined;
         },
       },
     },
