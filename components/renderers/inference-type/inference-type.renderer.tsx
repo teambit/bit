@@ -3,7 +3,7 @@ import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-re
 import { InferenceTypeSchema } from '@teambit/semantics.entities.semantic-schema';
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
 import tsxSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
-import defaultTheme from 'react-syntax-highlighter/dist/esm/styles/prism/vsc-dark-plus';
+import defaultTheme from '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme';
 import classNames from 'classnames';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 
@@ -55,7 +55,6 @@ function InferenceTypeComponent(props: APINodeRenderProps) {
                 borderRadius: '8px',
                 margin: '0',
                 padding: '0',
-                fontFamily: 'roboto mono',
                 fontSize: 11,
               }}
             >

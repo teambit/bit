@@ -6,8 +6,9 @@ import {
 } from '@teambit/api-reference.utils.group-schema-node-by-signature';
 import { transformSignature } from '@teambit/api-reference.utils.schema-node-signature-transform';
 import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
-import { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { VariableNodeSummary, EnumMemberSummary } from '@teambit/api-reference.renderers.schema-node-member-summary';
+import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import defaultTheme from '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme';
 import { Link } from '@teambit/base-react.navigation.link';
@@ -92,14 +93,6 @@ export function SchemaNodesSummary({
     ? Array.from(groupByNodeSignatureType(nodes).entries()).sort(sortSignatureType)
     : (hasNodes && [['', nodes] as [string, SchemaNode[]]]) || [];
 
-  const filePath = apiNodeRendererProps.apiNode.api.location.filePath;
-  const lang = React.useMemo(() => {
-    const langFromFileEnding = filePath?.split('.').pop();
-    if (langFromFileEnding === 'scss' || langFromFileEnding === 'sass') return 'css';
-    if (langFromFileEnding === 'mdx') return 'md';
-    return langFromFileEnding;
-  }, [filePath]);
-
   const rootRef = React.useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
 
@@ -150,42 +143,135 @@ export function SchemaNodesSummary({
             )}
             {skipRenderingTable && (
               <div className={styles.methodMembers}>
-                {groupedMembersByType.map((member) => {
-                  if (!type) return null;
-                  const memberSignature =
-                    member.__schema === SetAccessorSchema.name
-                      ? `(${(member as SetAccessorSchema).param.toString()}) => void`
-                      : transformSignature(member)?.split(member.name ?? '')[1];
-
-                  return (
-                    <div className={styles.memberDetails} key={`${member.__schema}-${member.name}`}>
-                      <div className={styles.memberTitle}>{member.name}</div>
-                      {memberSignature && (
-                        <div
-                          className={styles.signature}
-                          style={{ width: dimensions.width ? `${dimensions.width - 300}px` : 'calc(100% - 300px)' }}
-                        >
-                          <SyntaxHighlighter
-                            language={lang}
-                            style={defaultTheme}
-                            customStyle={{
-                              borderRadius: '8px',
-                              marginTop: '4px',
-                              padding: '6px',
-                            }}
-                          >
-                            {memberSignature}
-                          </SyntaxHighlighter>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                {groupedMembersByType.map((member) => (
+                  <SchemaMethodMember
+                    dimensions={dimensions}
+                    key={`${member.__schema}-${member.name}`}
+                    member={member}
+                    initialState={false}
+                    apiNodeRendererProps={apiNodeRendererProps}
+                  />
+                ))}
               </div>
             )}
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function SchemaMethodMember({
+  member,
+  lang,
+  dimensions,
+  initialState,
+  apiNodeRendererProps,
+}: {
+  lang?: string;
+  member: SchemaNode;
+  dimensions: { width: number; height: number };
+  initialState?: boolean;
+  apiNodeRendererProps: APINodeRenderProps;
+}) {
+  const [isExpanded, setIsExpanded] = React.useState(initialState);
+  React.useEffect(() => {
+    setIsExpanded(initialState);
+  }, [initialState]);
+
+  const memberSignature =
+    member.__schema === SetAccessorSchema.name
+      ? `(${(member as SetAccessorSchema).param.toString()}) => void`
+      : transformSignature(member)?.split(member.name ?? '')[1];
+
+  const icon = 'https://static.bit.dev/bit-icons/thin-arrow-down.svg';
+
+  const { renderers } = apiNodeRendererProps;
+  const { doc } = member;
+  const returnType = (member as any).returnType;
+  const returnTypeRenderer = returnType && renderers.find((renderer) => renderer.predicate(returnType));
+  const paramTypeHeadings = ['Parameter', 'type', 'default', 'description'];
+  const params = (member as any).params || [(member as any).param];
+
+  return (
+    <div className={styles.memberDetails} key={`${member.__schema}-${member.name}`}>
+      <div className={styles.collapsedRow}>
+        <div className={styles.memberTitle}>{member.name}</div>
+        {memberSignature && (
+          <div
+            className={styles.signature}
+            style={{ width: dimensions.width ? `${dimensions.width * 0.5}px` : 'calc(100% - 300px)' }}
+          >
+            <SyntaxHighlighter
+              language={lang}
+              style={defaultTheme}
+              customStyle={{
+                borderRadius: '8px',
+                marginTop: '4px',
+                padding: '6px',
+              }}
+            >
+              {memberSignature}
+            </SyntaxHighlighter>
+          </div>
+        )}
+        <div className={styles.icon}>
+          <img
+            className={isExpanded ? styles.expanded : styles.collapsed}
+            src={icon}
+            alt={isExpanded ? 'collapse' : 'expand'}
+            onClick={() => setIsExpanded(!isExpanded)}
+          />
+        </div>
+      </div>
+      {isExpanded && (
+        <div className={styles.expandedRow}>
+          <div className={styles.leftPlaceholder}></div>
+          <div className={styles.expandedRowDetails}>
+            {doc?.comment && <div className={styles.description}>{doc?.comment || ''}</div>}
+            {params.length > 0 && (
+              <div className={styles.paramsContainer}>
+                <HeadingRow className={styles.paramHeading} headings={paramTypeHeadings} colNumber={4} />
+                {params.map((param) => {
+                  const paramRenderer = renderers.find((renderer) => renderer.predicate(param));
+                  if (paramRenderer?.Component) {
+                    return (
+                      <paramRenderer.Component
+                        {...apiNodeRendererProps}
+                        key={`param-${param.name}`}
+                        depth={(apiNodeRendererProps.depth ?? 0) + 1}
+                        apiNode={{ ...apiNodeRendererProps.apiNode, renderer: paramRenderer, api: param }}
+                        metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
+                      />
+                    );
+                  }
+                  return (
+                    <defaultParamRenderer.Component
+                      {...apiNodeRendererProps}
+                      key={`param-${param.name}`}
+                      depth={(apiNodeRendererProps.depth ?? 0) + 1}
+                      apiNode={{ ...apiNodeRendererProps.apiNode, renderer: defaultParamRenderer, api: param }}
+                      metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
+                    />
+                  );
+                })}
+              </div>
+            )}
+            {returnType && (
+              <div className={styles.returnContainer}>
+                <h3 className={styles.subtitle}>Returns</h3>
+                {(returnTypeRenderer && (
+                  <returnTypeRenderer.Component
+                    {...apiNodeRendererProps}
+                    apiNode={{ ...apiNodeRendererProps.apiNode, api: returnType, renderer: returnTypeRenderer }}
+                    depth={(apiNodeRendererProps.depth ?? 0) + 1}
+                  />
+                )) || <div className={nodeStyles.node}>{returnType.toString()}</div>}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

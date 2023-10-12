@@ -65,9 +65,9 @@
 .reactOverview {
   display: flex;
   flex-direction: column;
-  // @todo find token for this
-  background-color: #f7f7f5;
-  width: 100%;
+  background-color: rgba(247, 247, 245, 0.631372549);
+  min-width: fit-content;
+  max-width: 75%;
   gap: 8px;
   padding: 16px;
   border-radius: 8px;

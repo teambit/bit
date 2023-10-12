@@ -70,6 +70,8 @@
   display: flex;
   align-items: center;
   width: 100%;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .table,
@@ -77,4 +79,61 @@
   display: flex;
   flex-direction: column;
   width: calc(100% - 240px);
+}
+
+.collapsedRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.icon {
+  cursor: pointer;
+  > img {
+    height: 18px;
+    width: 18px;
+    &.collapsed {
+      transform: rotate(-90deg);
+    }
+    transition: transform 0.2s ease-in-out;
+  }
+}
+
+.expandedRow {
+  display: flex;
+  width: 100%;
+}
+
+.expandedRowDetails {
+  display: flex;
+  flex-direction: column;
+  width: calc(100% - 272px);
+  padding: 0px 16px;
+  gap: 24px;
+}
+
+.leftPlaceholder {
+  width: 240px;
+}
+
+.description {
+  font-size: 14px;
+  margin-bottom: 16px;
+  font-style: italic;
+}
+
+.subtitle {
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: var(--bit-p-xxs);
+  padding-right: 16px;
+  margin-bottom: 12px;
+}
+
+.paramHeading {
+  padding: 8px 0px 16px 0px;
+}
+
+.returnContainer {
+  margin-bottom: 16px;
 }
