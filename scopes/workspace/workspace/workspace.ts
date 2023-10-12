@@ -20,7 +20,7 @@ import {
 import { BitError } from '@teambit/bit-error';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverMain, DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
@@ -806,6 +806,24 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     await mapSeries(onBitmapChangeEntries, async ([, onBitmapChangeFunc]) => {
       await onBitmapChangeFunc();
     });
+  }
+
+  /**
+   * if needed, add a slot to let other aspects react to this event.
+   * currently, the purpose is to reload the workspace config when it changes, so entries like "defaultScope" are updated.
+   * it also updates the DependencyResolver config. I couldn't find a good way to update all aspects in workspace.jsonc.
+   */
+  async triggerOnWorkspaceConfigChange(): Promise<void> {
+    this.logger.debug('triggerOnWorkspaceConfigChange, reloading workspace config');
+    const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
+    await config.reloadWorkspaceConfig();
+    const workspaceConfig = config.workspaceConfig;
+    if (!workspaceConfig) throw new Error('workspace config is missing from Config aspect');
+    const configOfWorkspaceAspect = workspaceConfig.extensions.findExtension(WorkspaceAspect.id);
+    if (!configOfWorkspaceAspect) throw new Error('workspace extension is missing from workspace config');
+    this.config = configOfWorkspaceAspect.config as WorkspaceExtConfig;
+    const configOfDepResolverAspect = workspaceConfig.extensions.findExtension(DependencyResolverAspect.id);
+    if (configOfDepResolverAspect) this.dependencyResolver.setConfig(configOfDepResolverAspect.config as any);
   }
 
   getState(id: ComponentID, hash: string) {

@@ -5,7 +5,7 @@ import { compact, difference, partition } from 'lodash';
 import { ComponentID } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { BIT_MAP, CFG_WATCH_USE_POLLING } from '@teambit/legacy/dist/constants';
+import { BIT_MAP, CFG_WATCH_USE_POLLING, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
@@ -181,6 +181,10 @@ export class Watcher {
           this.watcherMain.logger.warn(`eventName ${eventName} is not recognized, please handle it`);
         }
         await this.watcherMain.ipcEvents.triggerGotEvent(eventName as 'onPostInstall');
+        return { results: [], files: [filePath] };
+      }
+      if (filePath.endsWith(WORKSPACE_JSONC)) {
+        await this.workspace.triggerOnWorkspaceConfigChange();
         return { results: [], files: [filePath] };
       }
       const componentId = this.getComponentIdByPath(filePath);
