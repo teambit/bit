@@ -693,6 +693,16 @@ once done, to continue working, please run "bit cc"`
       // it doesn't have any slash, so the id doesn't include the scope-name
       throw new Error(`scope.getParsedId, the component ${id} must include a scope-name`);
     }
+
+    const filter = (comp: ComponentItem) => comp.id.name === id;
+    const fromIndex = this.objects.getHashFromIndex(IndexType.components, filter);
+    if (fromIndex) {
+      // the given id is only the name, find out the full-id
+      const obj = await this.objects._getBitObjectsByHashes([fromIndex]);
+      const modelComp = obj[0] as ModelComponent;
+      return modelComp.toComponentId();
+    }
+
     const maybeScope = idSplit[0];
     const isRemoteConfiguredLocally = this.scopeJson.remotes[maybeScope];
     if (isRemoteConfiguredLocally) {
