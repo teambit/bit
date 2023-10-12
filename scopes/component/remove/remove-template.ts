@@ -12,7 +12,7 @@ export function removeTemplate(
       chalk.red('missing components:') +
       chalk(
         ` ${missingComponents.map((id) => {
-          if (!(id instanceof ComponentID)) id = new ComponentID(id); // when the id was received from a remote it's not an instance of BitId
+          if (!(id instanceof ComponentID)) id = ComponentID.fromObject(id); // when the id was received from a remote it's not an instance of BitId
           return id.version === 'latest' ? id.toStringWithoutVersion() : id.toString();
         })}\n`
       )

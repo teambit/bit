@@ -408,7 +408,10 @@ export default class SSH implements Network {
     checkVersionCompatibility(headers.version);
     return payload.map((result) => ({
       ...result,
-      components: result.components.map((component) => ({ id: new ComponentID(component.id), head: component.head })),
+      components: result.components.map((component) => ({
+        id: ComponentID.fromObject(component.id),
+        head: component.head,
+      })),
     }));
   }
 

@@ -22,7 +22,7 @@ export class RelativeComponentsAuthored extends ComponentIssue {
     Object.keys(data).forEach((fileName) => {
       data[fileName] = data[fileName].map((record) => ({
         importSource: record.importSource,
-        componentId: new ComponentID(record.componentId),
+        componentId: ComponentID.fromObject(record.componentId),
         relativePath: record.relativePath,
       }));
     });

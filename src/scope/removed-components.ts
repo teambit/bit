@@ -62,7 +62,7 @@ export default class RemovedObjects {
       : new ComponentIdList();
     const dependentBits = Object.keys(payload.dependentBits).reduce((acc, current) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      acc[current] = new ComponentIdList(...payload.dependentBits[current].map((id) => new ComponentID(id)));
+      acc[current] = new ComponentIdList(...payload.dependentBits[current].map((id) => ComponentID.fromObject(id)));
       return acc;
     }, {});
     return new RemovedObjects({

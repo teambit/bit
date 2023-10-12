@@ -28,7 +28,7 @@ export default class Symlink extends BitObject {
   }
 
   getRealComponentId(): ComponentID {
-    return new ComponentID(new BitId({ scope: this.realScope, name: this.name }));
+    return ComponentID.fromObject({ scope: this.realScope, name: this.name });
   }
 
   static parse(contents: Buffer): Symlink {

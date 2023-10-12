@@ -52,7 +52,7 @@ export default class DependencyGraph {
     graph.nodes().forEach((node) => {
       const id = graph.node(node);
       if (!(id instanceof ComponentID)) {
-        graph.setNode(node, new ComponentID(id));
+        graph.setNode(node, ComponentID.fromObject(id));
       }
     });
     return new DependencyGraph(graph);

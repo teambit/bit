@@ -461,7 +461,7 @@ export class Http implements Network {
     });
 
     data.scope.components.forEach((comp) => {
-      comp.id = new ComponentID(comp.id);
+      comp.id = ComponentID.fromObject(comp.id);
       comp.deprecated = comp.deprecation.isDeprecate;
     });
 
@@ -549,7 +549,7 @@ export class Http implements Network {
       ids: bitId ? [bitId.toString()] : [],
     });
 
-    const nodes = graph.nodes.map((node) => ({ idStr: node.id, bitId: new ComponentID(node.component.id) }));
+    const nodes = graph.nodes.map((node) => ({ idStr: node.id, bitId: ComponentID.fromObject(node.component.id) }));
     const edges = graph.edges.map((edge) => ({
       src: edge.sourceId,
       target: edge.targetId,
@@ -583,7 +583,10 @@ export class Http implements Network {
     return res.lanes.list.map((lane) => ({
       ...lane,
       id: LaneId.from(lane.id.name, lane.id.scope),
-      components: lane.components.map((laneCompId) => ({ id: new ComponentID(laneCompId), head: laneCompId.version })),
+      components: lane.components.map((laneCompId) => ({
+        id: ComponentID.fromObject(laneCompId),
+        head: laneCompId.version,
+      })),
     }));
   }
 

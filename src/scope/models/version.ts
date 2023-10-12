@@ -548,7 +548,7 @@ export default class Version extends BitObject {
       if (exts.length) {
         const newExts = exts.map((extension: any) => {
           if (extension.extensionId) {
-            const extensionId = new ComponentID(new BitId(extension.extensionId));
+            const extensionId = ComponentID.fromObject(extension.extensionId);
             const entry = new ExtensionDataEntry(undefined, extensionId, undefined, extension.config, extension.data);
             return entry;
           }

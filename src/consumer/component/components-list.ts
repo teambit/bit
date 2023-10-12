@@ -17,7 +17,6 @@ import Component from '../component';
 import { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
 import { ComponentLoadOptions } from './component-loader';
-import { BitId } from '../../bit-id';
 
 export type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
 export type ListScopeResult = {
@@ -64,13 +63,11 @@ export default class ComponentsList {
     if (!this._fromObjectsIds) {
       const modelComponents = await this.getModelComponents();
       this._fromObjectsIds = modelComponents.map((componentObjects) => {
-        return new ComponentID(
-          new BitId({
-            scope: componentObjects.scope,
-            name: componentObjects.name,
-            version: componentObjects.scope ? componentObjects.getHeadRegardlessOfLaneAsTagOrHash(true) : undefined,
-          })
-        );
+        return ComponentID.fromObject({
+          scope: componentObjects.scope,
+          name: componentObjects.name,
+          version: componentObjects.scope ? componentObjects.getHeadRegardlessOfLaneAsTagOrHash(true) : undefined,
+        });
       });
     }
     return this._fromObjectsIds;
