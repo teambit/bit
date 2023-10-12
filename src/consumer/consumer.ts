@@ -579,6 +579,7 @@ export default class Consumer {
     });
     await consumer.setBitMap();
     scope.currentLaneIdFunc = consumer.getCurrentLaneIdIfExist.bind(consumer);
+    scope.notExportedIdsFunc = consumer.getNotExportedIds.bind(consumer);
     logger.commandHistory.fileBasePath = scope.getPath();
     return consumer;
   }
@@ -594,6 +595,10 @@ export default class Consumer {
       return true;
     }
     return this.config.isLegacy;
+  }
+
+  getNotExportedIds(): ComponentIdList {
+    return ComponentIdList.fromArray(this.bitmapIdsFromCurrentLane.filter((id) => !id.hasScope()));
   }
 
   /**

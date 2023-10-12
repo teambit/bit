@@ -126,6 +126,7 @@ export default class Scope {
    * that it's always in sync with the consumer.
    */
   currentLaneIdFunc?: () => LaneId | undefined;
+  notExportedIdsFunc?: () => ComponentIdList;
   stagedSnaps: StagedSnaps;
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
@@ -149,6 +150,11 @@ export default class Scope {
   getCurrentLaneId(): LaneId | undefined {
     if (this.currentLaneIdFunc) return this.currentLaneIdFunc();
     return this.currentLaneId;
+  }
+
+  get notExportedIds(): ComponentIdList {
+    if (this.notExportedIdsFunc) return this.notExportedIdsFunc();
+    return new ComponentIdList();
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {
@@ -177,6 +183,10 @@ export default class Scope {
     if (!laneId) return;
     if (laneId.isDefault()) this.currentLaneId = undefined;
     else this.currentLaneId = laneId;
+  }
+
+  isLocal(componentId: ComponentID) {
+    return componentId.isLocal(this.name) || this.notExportedIds.has(componentId);
   }
 
   getPath() {

@@ -13,7 +13,7 @@ export default async function deleteComponentsFiles(consumer: Consumer, bitIds: 
   function getFilesToDelete(): DataToPersist {
     const dataToPersist = new DataToPersist();
     bitIds.forEach((id) => {
-      const ignoreVersion = id.isLocal() || !id.hasVersion();
+      const ignoreVersion = consumer.scope.isLocal(id) || !id.hasVersion();
       const componentMap = consumer.bitMap.getComponentIfExist(id, { ignoreVersion });
       if (!componentMap) {
         logger.warn(

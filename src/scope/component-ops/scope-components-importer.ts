@@ -125,17 +125,21 @@ export default class ScopeComponentsImporter {
     const externalsToFetch: ComponentID[] = [];
 
     const compDefs = await this.sources.getMany(idsToImport, reFetchUnBuiltVersion);
+    const checkForIncompleteHistory: ComponentDef[] = [];
     const existingDefs = compDefs.filter(({ id, component }) => {
-      if (id.isLocal(this.scope.name)) {
+      if (this.scope.isLocal(id)) {
         if (!component) throw new ComponentNotFound(id.toString());
         return true;
       }
-      if (cache && component) return true;
+      if (cache && component) {
+        checkForIncompleteHistory.push({ id, component });
+        return true;
+      }
       externalsToFetch.push(id);
       return false;
     });
 
-    const incompleteVersionHistory = await this.getIncompleteVersionHistory(existingDefs);
+    const incompleteVersionHistory = await this.getIncompleteVersionHistory(checkForIncompleteHistory);
     externalsToFetch.push(...incompleteVersionHistory);
 
     await this.findMissingExternalsRecursively(
@@ -184,7 +188,7 @@ export default class ScopeComponentsImporter {
     await pMapPool(
       existingDefs,
       async ({ id, component }) => {
-        if (id.isLocal(this.scope.name)) return;
+        if (this.scope.isLocal(id)) return;
         if (!id.hasVersion()) return;
         if (!component)
           throw new Error(`importMany, a component for ${id.toString()} is needed for version-history validation`);
@@ -229,7 +233,7 @@ export default class ScopeComponentsImporter {
     const defs = await this.sources.getMany(idsToImport);
     const existingDefs = defs.filter(({ id, component }) => {
       if (component) return true;
-      if (id.isLocal(this.scope.name)) throw new ComponentNotFound(id.toString());
+      if (this.scope.isLocal(id)) throw new ComponentNotFound(id.toString());
       externalsToFetch.push(id);
       return false;
     });
@@ -248,7 +252,7 @@ export default class ScopeComponentsImporter {
    * if not, it fetches the history from their remotes without deps.
    */
   async importMissingHistory(bitIds: ComponentIdList) {
-    const externals = bitIds.filter((bitId) => !bitId.isLocal(this.scope.name));
+    const externals = bitIds.filter((bitId) => !this.scope.isLocal(bitId));
     if (!externals.length) {
       return;
     }
@@ -378,7 +382,7 @@ export default class ScopeComponentsImporter {
     if (!idsWithoutNils.length) return;
     logger.debug(`importWithoutDeps, total ids: ${ids.length}`);
 
-    const [, externals] = partition(idsWithoutNils, (id) => id.isLocal(this.scope.name));
+    const [, externals] = partition(idsWithoutNils, (id) => this.scope.isLocal(id));
     if (!externals.length) return;
 
     const getIds = async () => {
@@ -572,7 +576,7 @@ export default class ScopeComponentsImporter {
   async loadComponent(id: ComponentID, localOnly = true): Promise<ConsumerComponent> {
     logger.debugAndAddBreadCrumb('ScopeComponentsImporter', 'loadComponent {id}', { id: id.toString() });
 
-    if (localOnly && !id.isLocal(this.scope.name)) {
+    if (localOnly && !this.scope.isLocal(id)) {
       throw new GeneralError('cannot load a component from remote scope, please import first');
     }
     return this.loadRemoteComponent(id);
@@ -649,7 +653,7 @@ export default class ScopeComponentsImporter {
     const versionComp: ComponentVersion = component.toComponentVersion(id.version);
     const version = await versionComp.getVersion(this.scope.objects, false);
     if (version) return version;
-    if (id.isLocal(this.scope.name)) {
+    if (this.scope.isLocal(id)) {
       // it should have been fetched locally, since it wasn't found, this is an error
       throw new BitError(
         `Version ${versionComp.version} of ${id.toString()} was not found in scope ${this.scope.name}`
@@ -756,7 +760,7 @@ export default class ScopeComponentsImporter {
     );
     const context = {};
     ids.forEach((id) => {
-      if (id.isLocal(this.scope.name))
+      if (this.scope.isLocal(id))
         throw new Error(`getExternalMany expects to get external ids only, got ${id.toString()}`);
     });
     enrichContextFromGlobal(Object.assign({}, { requestedBitIds: ids.map((id) => id.toString()) }));
@@ -879,7 +883,7 @@ export default class ScopeComponentsImporter {
   }
 
   private async _getComponentVersion(id: ComponentID): Promise<ComponentVersion> {
-    if (!id.isLocal(this.scope.name)) {
+    if (!this.scope.isLocal(id)) {
       await this.getExternalManyWithoutDeps([id], { localFetch: true });
       const compDefs: ComponentDef[] = await this.sources.getMany([id]);
       const componentVersions = this.componentsDefToComponentsVersion(compDefs, false, true);
@@ -920,7 +924,7 @@ export default class ScopeComponentsImporter {
       if (visited.includes(idStr)) return;
       visited.push(idStr);
       if (!component) {
-        if (id.isLocal(this.scope.name)) throw new ComponentNotFound(idStr);
+        if (this.scope.isLocal(id)) throw new ComponentNotFound(idStr);
         externalsToFetch.push(id);
         return;
       }
@@ -956,7 +960,7 @@ export default class ScopeComponentsImporter {
         return;
       }
       // some flattened are missing
-      if (!id.isLocal(this.scope.name)) {
+      if (!this.scope.isLocal(id)) {
         externalsToFetch.push(id);
         return;
       }
@@ -1037,7 +1041,7 @@ export default class ScopeComponentsImporter {
   }
 
   private throwIfExternalFound(ids: ComponentIdList) {
-    const externals = ids.filter((id) => !id.isLocal(this.scope.name));
+    const externals = ids.filter((id) => !this.scope.isLocal(id));
     if (externals.length) {
       const externalStr = externals.map((id) => id.toString()).join(', ');
       // we can't support fetching-with-dependencies of external components as we risk going into an infinite loop

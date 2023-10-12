@@ -706,8 +706,7 @@ export default class Component extends BitObject {
 
   toComponentId(): ComponentID {
     if (!this.scope) throw new Error(`ModelComponent: scope is missing from "${this.name}"`);
-    const bitId = this.scopesList.length ? this.toBitId() : this.toBitId().changeScope(null);
-    return new ComponentID(bitId, this.scope);
+    return new ComponentID(this.toBitId());
   }
 
   toBitIdWithLatestVersion(): BitId {

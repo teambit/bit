@@ -122,11 +122,7 @@ export default class SourceRepository {
     if (!bitId.hasVersion()) return component;
 
     const returnComponent = async (version: Version): Promise<ModelComponent | undefined> => {
-      if (
-        bitId._legacy.isLocal(this.scope.name) ||
-        version.buildStatus === BuildStatus.Succeed ||
-        !versionShouldBeBuilt
-      ) {
+      if (bitId.isLocal(this.scope.name) || version.buildStatus === BuildStatus.Succeed || !versionShouldBeBuilt) {
         return component;
       }
       const hash = component.getRef(bitId.version as string);
