@@ -17,7 +17,6 @@ import {
   VERSION_DELIMITER,
   BITMAP_PREFIX_MESSAGE,
 } from '../../constants';
-import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import { isDir, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
@@ -88,15 +87,13 @@ export default class BitMap {
   setComponent(bitId: BitId, componentMap: ComponentMap) {
     const id = bitId.toString();
     if (!bitId.hasVersion() && bitId.scope) {
-      throw new ShowDoctorError(
-        `invalid bitmap id ${id}, a component must have a version when a scope-name is included`
-      );
+      throw new BitError(`invalid bitmap id ${id}, a component must have a version when a scope-name is included`);
     }
     if (!isFeatureEnabled(ALLOW_SAME_NAME)) {
       // make sure there are no duplications (same name)
       const similarIds = this.findSimilarIds(bitId, true);
       if (similarIds.length) {
-        throw new ShowDoctorError(`your id ${id} is duplicated with ${similarIds.toString()}`);
+        throw new BitError(`your id ${id} is duplicated with ${similarIds.toString()}`);
       }
     }
     componentMap.id = bitId;
@@ -183,7 +180,8 @@ export default class BitMap {
     if (!mapFileContent || !currentLocation) {
       return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA);
     }
-    const bitMap = BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath);
+    const defaultScope = consumer.config.defaultScope;
+    const bitMap = BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath, defaultScope);
     await bitMap.loadFiles();
 
     return bitMap;
@@ -196,7 +194,8 @@ export default class BitMap {
   static loadFromContentWithoutLoadingFiles(
     bitMapFileContent: Buffer,
     bitMapFilePath: PathOsBasedAbsolute,
-    workspacePath: PathOsBasedAbsolute
+    workspacePath: PathOsBasedAbsolute,
+    defaultScope: string
   ) {
     let componentsJson;
     try {
@@ -215,7 +214,7 @@ export default class BitMap {
     BitMap.removeNonComponentFields(componentsJson);
 
     const bitMap = new BitMap(workspacePath, bitMapFilePath, schema, laneId, isLaneExported);
-    bitMap.loadComponents(componentsJson);
+    bitMap.loadComponents(componentsJson, defaultScope);
 
     return bitMap;
   }
@@ -331,7 +330,7 @@ export default class BitMap {
     });
   }
 
-  loadComponents(componentsJson: Record<string, any>) {
+  loadComponents(componentsJson: Record<string, any>, defaultScope: string) {
     this.throwForDuplicateRootDirs(componentsJson);
     Object.keys(componentsJson).forEach((componentId) => {
       const componentFromJson = componentsJson[componentId];
@@ -342,6 +341,11 @@ export default class BitMap {
         );
       }
       componentFromJson.id = bitId;
+      if (!bitId.hasScope() && !componentFromJson.defaultScope) {
+        // needed for backward compatibility. before scheme 17.0.0, the defaultScope wasn't written if it was the same
+        // as consumer.defaultScope
+        componentFromJson.defaultScope = defaultScope;
+      }
       const componentMap = ComponentMap.fromJson(componentFromJson);
       componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.components.push(componentMap);
@@ -701,7 +705,7 @@ export default class BitMap {
     const componentIdStr = componentId.toString();
     const componentMap = this.getComponentIfExist(componentId);
     if (!componentMap) {
-      throw new ShowDoctorError(`unable to add files to a non-exist component ${componentIdStr}`);
+      throw new BitError(`unable to add files to a non-exist component ${componentIdStr}`);
     }
     logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
     componentMap.files = files;
@@ -890,7 +894,7 @@ export default class BitMap {
       const errorMsg = isPathDir
         ? `directory ${from} is not a tracked component`
         : `the file ${existingPath} is untracked`;
-      throw new ShowDoctorError(errorMsg);
+      throw new BitError(errorMsg);
     }
 
     this.markAsChanged();

@@ -17,9 +17,8 @@ import {
   POST_EXPORT_HOOK,
   PRE_EXPORT_HOOK,
 } from '@teambit/legacy/dist/constants';
-import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy/dist/consumer';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
-import EjectComponents, { EjectResults } from '@teambit/legacy/dist/consumer/component-ops/eject-components';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import HooksManager from '@teambit/legacy/dist/hooks';
@@ -36,6 +35,7 @@ import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
+import { EjectAspect, EjectMain, EjectResults } from '@teambit/eject';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { ExportOrigin } from '@teambit/legacy/dist/scope/network/http/http';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
@@ -86,15 +86,17 @@ export class ExportMain {
     private workspace: Workspace,
     private remove: RemoveMain,
     private depResolver: DependencyResolverMain,
-    private logger: Logger
+    private logger: Logger,
+    private eject: EjectMain
   ) {}
 
   async export(params: ExportParams = {}) {
     HooksManagerInstance?.triggerHook(PRE_EXPORT_HOOK, params);
-    const { updatedIds, nonExistOnBitMap, missingScope, exported, removedIds, exportedLanes } =
+    const { nonExistOnBitMap, missingScope, exported, removedIds, exportedLanes, rippleJobs } =
       await this.exportComponents(params);
     let ejectResults;
-    if (params.eject) ejectResults = await ejectExportedComponents(updatedIds, this.logger);
+    await this.workspace.clearCache(); // needed when one process executes multiple commands, such as in "bit test" or "bit cli"
+    if (params.eject) ejectResults = await this.ejectExportedComponents(exported);
     const exportResults = {
       componentsIds: exported,
       nonExistOnBitMap,
@@ -102,6 +104,7 @@ export class ExportMain {
       missingScope,
       ejectResults,
       exportedLanes,
+      rippleJobs,
     };
     HooksManagerInstance?.triggerHook(POST_EXPORT_HOOK, exportResults);
     if (Scope.onPostExport) {
@@ -109,7 +112,6 @@ export class ExportMain {
         this.logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
       });
     }
-    await this.workspace.clearCache(); // needed when one process executes multiple commands, such as in "bit test" or "bit cli"
     return exportResults;
   }
 
@@ -127,6 +129,7 @@ export class ExportMain {
     exported: BitId[];
     exportedLanes: Lane[];
     newIdsOnRemote: BitId[];
+    rippleJobs: string[];
   }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer: Consumer = this.workspace.consumer;
@@ -144,6 +147,7 @@ export class ExportMain {
         exported: [],
         newIdsOnRemote: [],
         exportedLanes: [],
+        rippleJobs: [],
       };
     }
 
@@ -172,7 +176,7 @@ otherwise, re-run the export with "--fork-lane-new-scope" flag.
 if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
     }
     const isOnMain = consumer.isOnMain();
-    const { exported, updatedLocally, newIdsOnRemote } = await this.exportMany({
+    const { exported, updatedLocally, newIdsOnRemote, rippleJobs } = await this.exportMany({
       ...params,
       exportHeadsOnly: headOnly,
       scope: consumer.scope,
@@ -206,6 +210,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       exported,
       newIdsOnRemote,
       exportedLanes: laneObject ? [laneObject] : [],
+      rippleJobs,
     };
   }
 
@@ -240,7 +245,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     exportHeadsOnly?: boolean;
     filterOutExistingVersions?: boolean;
     exportOrigin?: ExportOrigin;
-  }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
+  }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[]; rippleJobs: string[] }> {
     this.logger.debug(`scope.exportMany, ids: ${ids.toString()}`);
     const scopeRemotes: Remotes = await getScopeRemotes(scope);
     const idsGroupedByScope = ids.toGroupByScopeName(idsWithFutureScope);
@@ -426,7 +431,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       const objectList = this.transformToOneObjectListWithScopeData(manyObjectsPerRemote);
       const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
       const pushResults = await http.pushToCentralHub(objectList, { origin: exportOrigin });
-      const { failedScopes, successIds, errors } = pushResults;
+      const { failedScopes, successIds, errors, metadata } = pushResults;
       if (failedScopes.length) {
         throw new PersistFailed(failedScopes, errors);
       }
@@ -442,6 +447,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           objectPerRemote.exportedIds = idsPerScope.map((id) => id.toString());
         });
       }
+      return { rippleJobs: metadata?.jobs };
     };
 
     const updateLocalObjects = async (
@@ -497,12 +503,13 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       });
     };
 
+    let centralHubResults;
     if (resumeExportId) {
       const remotes = manyObjectsPerRemote.map((o) => o.remote);
       await validateRemotes(remotes, resumeExportId);
       await persistRemotes(manyObjectsPerRemote, resumeExportId);
     } else if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes, originDirectly)) {
-      await pushAllToCentralHub();
+      centralHubResults = await pushAllToCentralHub();
     } else {
       // await pushToRemotes();
       await this.pushToRemotesCarefully(manyObjectsPerRemote, resumeExportId);
@@ -514,6 +521,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       newIdsOnRemote: R.flatten(results.map((r) => r.newIdsOnRemote)),
       exported: BitIds.uniqFromArray(R.flatten(results.map((r) => r.exported))),
       updatedLocally: BitIds.uniqFromArray(R.flatten(results.map((r) => r.updatedLocally))),
+      rippleJobs: centralHubResults?.rippleJobs || [],
     };
   }
 
@@ -524,6 +532,23 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       objectList.mergeObjectList(objPerRemote.objectList);
     });
     return objectList;
+  }
+
+  private async ejectExportedComponents(componentsIds: BitId[]): Promise<EjectResults> {
+    const consumer: Consumer = this.workspace.consumer;
+    let ejectResults: EjectResults;
+    try {
+      const componentIds = await this.workspace.resolveMultipleComponentIds(componentsIds);
+      ejectResults = await this.eject.eject(componentIds, { force: true });
+    } catch (err: any) {
+      const ejectErr = `The components ${componentsIds.map((c) => c.toString()).join(', ')} were exported successfully.
+      However, the eject operation has failed due to an error: ${err.msg || err}`;
+      this.logger.error(ejectErr, err);
+      throw new Error(ejectErr);
+    }
+    // run the consumer.onDestroy() again, to write the changes done by the eject action to .bitmap
+    await consumer.onDestroy();
+    return ejectResults;
   }
 
   private async pushToRemotesCarefully(manyObjectsPerRemote: ObjectsPerRemote[], resumeExportId?: string) {
@@ -786,17 +811,26 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
   }
 
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, RemoveAspect, DependencyResolverAspect, LoggerAspect];
-  static async provider([cli, scope, workspace, remove, depResolver, loggerMain]: [
+  static dependencies = [
+    CLIAspect,
+    ScopeAspect,
+    WorkspaceAspect,
+    RemoveAspect,
+    DependencyResolverAspect,
+    LoggerAspect,
+    EjectAspect,
+  ];
+  static async provider([cli, scope, workspace, remove, depResolver, loggerMain, eject]: [
     CLIMain,
     ScopeMain,
     Workspace,
     RemoveMain,
     DependencyResolverMain,
-    LoggerMain
+    LoggerMain,
+    EjectMain
   ]) {
     const logger = loggerMain.createLogger(ExportAspect.id);
-    const exportMain = new ExportMain(workspace, remove, depResolver, logger);
+    const exportMain = new ExportMain(workspace, remove, depResolver, logger, eject);
     cli.register(new ResumeExportCmd(scope), new ExportCmd(exportMain));
     return exportMain;
   }
@@ -832,23 +866,6 @@ async function getParsedId(consumer: Consumer, id: string): Promise<BitId> {
     // not in the consumer, just return the one parsed without the scope name
     return parsedId;
   }
-}
-
-async function ejectExportedComponents(componentsIds, logger: Logger): Promise<EjectResults> {
-  const consumer: Consumer = await loadConsumer(undefined, true);
-  let ejectResults: EjectResults;
-  try {
-    const ejectComponents = new EjectComponents(consumer, componentsIds);
-    ejectResults = await ejectComponents.eject();
-  } catch (err: any) {
-    const ejectErr = `The components ${componentsIds.map((c) => c.toString()).join(', ')} were exported successfully.
-    However, the eject operation has failed due to an error: ${err.msg || err}`;
-    logger.error(ejectErr, err);
-    throw new Error(ejectErr);
-  }
-  // run the consumer.onDestroy() again, to write the changes done by the eject action to .bitmap
-  await consumer.onDestroy();
-  return ejectResults;
 }
 
 function _throwForUnsnappedLaneReadme(lane: Lane) {

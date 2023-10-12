@@ -144,10 +144,8 @@ export default class SourceRepository {
       return undefined;
     };
 
-    // @ts-ignore
     const isSnap = isHash(bitId.version);
     const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (isSnap) {
       // @ts-ignore
       const snap = await this.objects().load(new Ref(bitId.version));

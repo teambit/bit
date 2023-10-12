@@ -1,7 +1,6 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
-import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { Scope } from '@teambit/legacy/dist/scope';
 import getNodeModulesPathOfComponent from '@teambit/legacy/dist/utils/bit/component-node-modules-path';
@@ -15,6 +14,7 @@ import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { isHash } from '@teambit/component-version';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { Workspace } from '@teambit/workspace';
+import { BitError } from '@teambit/bit-error';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -98,7 +98,7 @@ export default class ComponentWriter {
   async populateComponentsFilesToWrite(): Promise<Component> {
     if (this.isolated) throw new Error('for isolation, please use this.populateComponentsFilesToWriteForCapsule()');
     if (!this.component.files || !this.component.files.length) {
-      throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
+      throw new BitError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
     this.throwForImportingLegacyIntoHarmony();
     this.component.dataToPersist = new DataToPersist();

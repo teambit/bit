@@ -129,6 +129,11 @@ export default class Consumer {
     await Promise.all(this.onCacheClear.map((func) => func()));
   }
 
+  clearOneComponentCache(id: BitId) {
+    this.componentLoader.clearOneComponentCache(id);
+    this.componentStatusLoader.clearOneComponentCache(id);
+  }
+
   getTmpFolder(fullPath = false): PathOsBased {
     if (!fullPath) {
       return BIT_WORKSPACE_TMP_DIRNAME;
@@ -593,28 +598,6 @@ export default class Consumer {
   async cleanFromBitMap(componentsToRemoveFromFs: BitIds) {
     logger.debug(`consumer.cleanFromBitMap, cleaning ${componentsToRemoveFromFs.toString()} from .bitmap`);
     this.bitMap.removeComponents(componentsToRemoveFromFs);
-  }
-
-  async cleanOrRevertFromBitMapWhenOnLane(ids: BitIds) {
-    logger.debug(`consumer.cleanFromBitMapWhenOnLane, cleaning ${ids.toString()} from`);
-    const unavailableOnMain: BitId[] = [];
-    await Promise.all(
-      ids.map(async (id) => {
-        const modelComp = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
-        let updatedId = id.changeScope(undefined).changeVersion(undefined);
-        if (modelComp && modelComp.hasHead()) {
-          const head = modelComp.getHeadAsTagIfExist();
-          if (head) updatedId = id.changeVersion(head);
-        } else {
-          unavailableOnMain.push(id);
-          return;
-        }
-        this.bitMap.updateComponentId(updatedId, false, true);
-      })
-    );
-    if (unavailableOnMain.length) {
-      await this.cleanFromBitMap(BitIds.fromArray(unavailableOnMain));
-    }
   }
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {

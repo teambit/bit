@@ -86,7 +86,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
 
     const location = context.getLocation(mainAst);
 
-    return new APISchema(location, apiScheme, internals, component.id);
+    return new APISchema(location, apiScheme, internals, component.id as any);
   }
 
   async computeInternalModules(context: SchemaExtractorContext, internalFiles: AbstractVinyl[]) {

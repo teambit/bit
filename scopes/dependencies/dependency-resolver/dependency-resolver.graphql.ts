@@ -70,17 +70,23 @@ export function dependencyResolverSchema(dependencyResolver: DependencyResolverM
         dependencies: async (component: Component) => {
           const dependenciesList = await dependencyResolver.getDependencies(component);
           const serialized = dependenciesList.serialize();
-          return serialized.map((serialize) => {
-            const type = DependencyTypes[serialize.__type];
-            // @ts-ignore
-            serialize.type = serialize.__type;
-            // @ts-ignore
-            delete serialize.__type;
-            return {
-              __typename: type,
-              ...serialize,
-            };
-          });
+          return serialized
+            .map((serialize) => {
+              const type = DependencyTypes[serialize.__type];
+              // @ts-ignore
+              serialize.type = serialize.__type;
+              // @ts-ignore
+              delete serialize.__type;
+              return {
+                __typename: type,
+                ...serialize,
+              };
+            })
+            .sort((serializedDepA, serializedDepB) => {
+              const propToCompareA = serializedDepA.packageName || serializedDepA.id;
+              const propToCompareB = serializedDepB.packageName || serializedDepB.id;
+              return propToCompareA.localeCompare(propToCompareB);
+            });
         },
         Dependency: {
           __resolveType: (dependency: Dependency) => {

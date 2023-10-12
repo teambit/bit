@@ -271,7 +271,7 @@ function getMergeReducer(ignoreVersion = true) {
   return mergeReducer;
 }
 
-function getCompareExtPredicate(ignoreVersion = true) {
+export function getCompareExtPredicate(ignoreVersion = true) {
   return (extensionEntry1: ExtensionDataEntry, extensionEntry2: ExtensionDataEntry) => {
     if (extensionEntry1.extensionId && extensionEntry2.extensionId) {
       if (ignoreVersion) {

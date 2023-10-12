@@ -1,10 +1,8 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import ejectTemplate from '@teambit/legacy/dist/cli/templates/eject-template';
+import { Workspace } from '@teambit/workspace';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
-import { Logger } from '@teambit/logger';
-import { InstallMain } from '@teambit/install';
-import { ComponentsEjector } from './components-ejector';
+import { ejectTemplate } from './eject-template';
+import { EjectMain } from './eject.main.runtime';
 
 export class EjectCmd implements Command {
   name = 'eject <component-pattern>';
@@ -31,19 +29,14 @@ export class EjectCmd implements Command {
   migration = true;
   group = 'development';
 
-  constructor(private workspace: Workspace, private logger: Logger, private install: InstallMain) {}
+  constructor(private ejectMain: EjectMain, private workspace: Workspace) {}
 
   async report(
     [pattern]: [string],
     { force = false, json = false, keepFiles = false }: { force: boolean; json: boolean; keepFiles: boolean }
   ): Promise<string> {
-    if (!this.workspace) throw new OutsideWorkspaceError();
     const componentIds = await this.workspace.idsByPattern(pattern);
-    const componentEjector = new ComponentsEjector(this.workspace, this.install, this.logger, componentIds, {
-      force,
-      keepFiles,
-    });
-    const ejectResults = await componentEjector.eject();
+    const ejectResults = await this.ejectMain.eject(componentIds, { force, keepFiles });
     if (json) return JSON.stringify(ejectResults, null, 2);
     return ejectTemplate(ejectResults);
   }

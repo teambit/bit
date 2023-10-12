@@ -28,8 +28,8 @@ export type EjectResults = {
 };
 
 export type EjectOptions = {
-  force: boolean; // eject although a component is modified/staged
-  keepFiles: boolean; // keep component files on the workspace
+  force?: boolean; // eject although a component is modified/staged
+  keepFiles?: boolean; // keep component files on the workspace
 };
 
 type FailedComponents = {

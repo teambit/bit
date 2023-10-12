@@ -1,6 +1,6 @@
 import R from 'ramda';
 import { pickBy } from 'lodash';
-import { isHash } from '@teambit/component-version';
+import { isSnap } from '@teambit/component-version';
 import { LaneId } from '@teambit/lane-id';
 import { BitId, BitIds } from '../../bit-id';
 import { BuildStatus, DEFAULT_BINDINGS_PREFIX, DEFAULT_BUNDLE_FILENAME, Extensions } from '../../constants';
@@ -655,7 +655,7 @@ export default class Version extends BitObject {
       componentId: component.id,
       bitVersion: getHarmonyVersion(true),
     });
-    if (isHash(component.version)) {
+    if (isSnap(component.version)) {
       version._hash = component.version as string;
     } else {
       version.setNewHash();

@@ -1,12 +1,12 @@
 import chalk from 'chalk';
 
-import { getCloudDomain } from '../../constants';
-import { EjectResults } from '../../consumer/component-ops/eject-components';
+import { getCloudDomain } from '@teambit/legacy/dist/constants';
+import { EjectResults } from './components-ejector';
 
 export const successEjectMessage = 'successfully ejected the following components';
 export const failureEjectMessage = 'failed to eject the following components';
 
-export default function ejectTemplate(ejectResults: EjectResults): string {
+export function ejectTemplate(ejectResults: EjectResults): string {
   const getEjectedOutput = () => {
     if (!ejectResults.ejectedComponents.length) return '';
     return chalk.green(`${successEjectMessage} ${chalk.bold(ejectResults.ejectedComponents.toString())}\n`);
