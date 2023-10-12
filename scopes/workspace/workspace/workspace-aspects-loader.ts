@@ -79,7 +79,6 @@ export class WorkspaceAspectsLoader {
     neededFor?: string,
     opts: WorkspaceLoadAspectsOptions = {}
   ): Promise<string[]> {
-    console.log('🚀 ~ file: workspace-aspects-loader.ts:82 ~ WorkspaceAspectsLoader ~ ids:', ids);
     const calculatedThrowOnError: boolean = throwOnError ?? false;
     const defaultOpts: Required<WorkspaceLoadAspectsOptions> = {
       useScopeAspectsCapsule: false,

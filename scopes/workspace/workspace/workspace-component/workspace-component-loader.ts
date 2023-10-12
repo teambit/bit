@@ -62,12 +62,6 @@ export class WorkspaceComponentLoader {
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<GetManyRes> {
-    // console.log(
-    //   '🚀 ~ file: workspace-component-loader.ts:40 ~ WorkspaceComponentLoader ~ getMany ~ getMany:',
-    //   ids.map((i) => i.toString())
-    // );
-    // console.time('getMany');
-    // console.time('getMany - load comps');
     const idsWithoutEmpty = compact(ids);
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
@@ -94,19 +88,10 @@ export class WorkspaceComponentLoader {
       throwOnFailure,
       longProcessLogger
     );
-    // if (groupedByIsCoreEnvs.true) {
-    //   console.log(
-    //     '🚀 ~ file: workspace-component-loader.ts:51 ~ WorkspaceComponentLoader ~ getMany ~ groupedByIsCoreEnvs.true:',
-    //     groupedByIsCoreEnvs.true.map((id) => id.toString())
-    //   );
-    // }
 
     const components = [...loadedComponents, ...loadOrCached.fromCache];
 
     longProcessLogger.end();
-    // console.log('\n-----------------------');
-    // console.timeEnd('getMany');
-    // console.log('-----------------------');
     return { components, invalidComponents };
   }
 
@@ -117,25 +102,10 @@ export class WorkspaceComponentLoader {
     longProcessLogger
   ): Promise<GetManyRes> {
     if (!ids?.length) return { components: [], invalidComponents: [] };
-    console.log(
-      '🚀 ~ file: workspace-component-loader.ts:98 ~ WorkspaceComponentLoader ~ ids:',
-      ids.map((i) => i.toString())
-    );
 
     const workspaceScopeIdsMap: WorkspaceScopeIdsMap = await this.groupAndUpdateIds(ids);
 
     const groupsToHandle = await this.buildLoadGroups(workspaceScopeIdsMap);
-    console.log('🚀 ~ file: workspace-component-loader.ts:128 ~ WorkspaceComponentLoader ~ groupsToHandle:');
-    groupsToHandle.map((group) => {
-      console.log(
-        '🚀 ~ file: workspace-component-loader.ts:128 ~ WorkspaceComponentLoader ~ groupsToHandle ~ ws ids:',
-        group.workspaceIds.map((i) => i.toString())
-      );
-      console.log(
-        '🚀 ~ file: workspace-component-loader.ts:128 ~ WorkspaceComponentLoader ~ groupsToHandle ~ scope ids:',
-        group.scopeIds.map((i) => i.toString())
-      );
-    });
 
     const groupsRes = await mapSeries(groupsToHandle, async (group) => {
       const { scopeIds, workspaceIds } = group;
@@ -198,20 +168,6 @@ export class WorkspaceComponentLoader {
       groupedByIsExtOfAnother.true || [],
       groupedByIsExtOfAnother.false || [],
     ];
-    console.log(
-      '🚀 ~ file: workspace-component-loader.ts:190 ~ WorkspaceComponentLoader ~ extsNotFromTheList:',
-      extsNotFromTheList.map((i) => i.toString())
-    );
-    console.log(
-      '🚀 ~ file: workspace-component-loader.ts:190 ~ WorkspaceComponentLoader ~ groupedByIsExtOfAnother.true:',
-      (groupedByIsExtOfAnother.true || []).map((i) => i.toString())
-    );
-    if (groupedByIsExtOfAnother.false.length === 1) {
-      console.log(
-        '🚀 ~ file: workspace-component-loader.ts:190 ~ WorkspaceComponentLoader ~ groupedByIsExtOfAnother.false:',
-        (groupedByIsExtOfAnother.false || []).map((i) => i.toString())
-      );
-    }
     const groupsByWsScope = groupsToHandle.map((group) => {
       const groupedByWsScope = groupBy(group, (id) => {
         return workspaceScopeIdsMap.workspaceIds.has(id.toString());
@@ -231,9 +187,6 @@ export class WorkspaceComponentLoader {
     throwOnFailure = true,
     longProcessLogger
   ): Promise<GetManyRes> {
-    if (workspaceIds.length > 100) {
-      console.time('getComponentsWithoutLoadExtensions time');
-    }
     const { components, invalidComponents } = await this.getComponentsWithoutLoadExtensions(
       workspaceIds,
       scopeIds,
@@ -241,36 +194,20 @@ export class WorkspaceComponentLoader {
       throwOnFailure,
       longProcessLogger
     );
-    if (workspaceIds.length > 100) {
-      console.timeEnd('getComponentsWithoutLoadExtensions time');
-    }
 
     const allExtensions: ExtensionDataList[] = components.map((component) => {
       return component.state._consumer.extensions;
     });
-    // console.log("🚀 ~ file: workspace-component-loader.ts:108 ~ WorkspaceComponentLoader ~ allExtensions:", allExtensions)
 
     // Ensure we won't load the same extension many times
     // We don't want to ignore version here, as we do want to load different extensions with same id but different versions here
     const mergedExtensions = ExtensionDataList.mergeConfigs(allExtensions, false);
-    if (workspaceIds.length > 100) {
-      console.time('loadComponentsExtensions time');
-    }
     await this.workspace.loadComponentsExtensions(mergedExtensions);
-    if (workspaceIds.length > 100) {
-      console.timeEnd('loadComponentsExtensions time');
-    }
-    if (workspaceIds.length > 100) {
-      console.time('executeLoadSlot time');
-    }
     const withAspects = await Promise.all(
       components.map((component) => {
         return this.executeLoadSlot(component);
       })
     );
-    if (workspaceIds.length > 100) {
-      console.timeEnd('executeLoadSlot time');
-    }
     await this.warnAboutMisconfiguredEnvs(withAspects);
 
     return { components: withAspects, invalidComponents };
@@ -349,15 +286,9 @@ export class WorkspaceComponentLoader {
       legacyIdsIndex[id._legacy.toString()] = id;
       return id._legacy;
     });
-    if (workspaceIds.length > 100) {
-      console.time('consumer.loadComponents');
-    }
 
     const { components: legacyComponents, invalidComponents: legacyInvalidComponents } =
       await this.workspace.consumer.loadComponents(BitIds.fromArray(legacyIds), false, loadOptsWithDefaults);
-    if (workspaceIds.length > 100) {
-      console.timeEnd('consumer.loadComponents');
-    }
     legacyInvalidComponents.forEach((invalidComponent) => {
       const entry = { id: legacyIdsIndex[invalidComponent.id.toString()], err: invalidComponent.error };
       if (ConsumerComponent.isComponentInvalidByErrorType(invalidComponent.error)) {
