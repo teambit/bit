@@ -283,7 +283,7 @@ export default class DependencyGraph {
 
   getDependentsForAllVersions(id: ComponentID): ComponentIdList {
     const allBitIds = this.graph.nodes().map((idStr) => this.graph.node(idStr));
-    const idWithAllVersions = allBitIds.filter((bitId) => bitId.hasSameName(id) && bitId.hasSameScope(id));
+    const idWithAllVersions = allBitIds.filter((bitId) => id.isEqualWithoutVersion(bitId));
     const dependentsIds = idWithAllVersions
       .map((idWithVer) => this.getDependentsInfo(idWithVer))
       .flat()

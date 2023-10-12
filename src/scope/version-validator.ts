@@ -192,7 +192,7 @@ export default function validateVersionInstance(version: Version): void {
     });
     // before 0.0.947, there was a bug that didn't save some extensions in the flattenedDependencies for some unknown reason.
     if (version.bitVersion && gt(version.bitVersion, '0.0.947')) {
-      version.extensions.extensionsComponentIds.forEach((extensionId) => {
+      version.extensions.extensionsBitIds.forEach((extensionId) => {
         if (!dependencies.has(extensionId)) {
           throw new VersionInvalid(
             `${message}, the extension ${extensionId.toString()} is missing from the flattenedDependencies`

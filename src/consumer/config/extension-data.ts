@@ -126,18 +126,6 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     return ComponentIdList.fromArray(bitIds);
   }
 
-  /**
-   * returns only new 3rd party extension ids, not core, nor legacy.
-   */
-  get extensionsComponentIds(): ComponentIdList {
-    const bitIds = this.filter((entry) => {
-      if (entry.extensionId && !entry.newExtensionId)
-        throw new Error(`extensionId ${entry.extensionId.toString()} is missing newExtensionId`);
-      return entry.newExtensionId;
-    }).map((entry) => entry.newExtensionId) as ComponentID[];
-    return ComponentIdList.fromArray(bitIds);
-  }
-
   toModelObjects() {
     const extensionsClone = this.clone();
     extensionsClone.forEach((ext) => {

@@ -300,7 +300,7 @@ export default class Component {
   }
 
   get extensionDependencies() {
-    return new Dependencies(this.extensions.extensionsComponentIds.map((id) => new Dependency(id, [])));
+    return new Dependencies(this.extensions.extensionsBitIds.map((id) => new Dependency(id, [])));
   }
 
   getAllDependencies(): Dependency[] {
@@ -341,7 +341,7 @@ export default class Component {
     return {
       dependencies: this.dependencies.getAllIds(),
       devDependencies: this.devDependencies.getAllIds(),
-      extensionDependencies: this.extensions.extensionsComponentIds,
+      extensionDependencies: this.extensions.extensionsBitIds,
     };
   }
 
