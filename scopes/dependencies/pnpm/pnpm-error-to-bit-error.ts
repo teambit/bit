@@ -26,11 +26,11 @@ function renderErrorMessage(err: PnpmError): string {
     let output = `${err.message}
 
 ${err.hint}`;
-    if (err['pkgsStack'] != null) {
-      if (err['pkgsStack'].length > 0) {
-        output += `\n\n${formatPkgsStack(err['pkgsStack'])}`;
-      } else if (err['prefix']) {
-        output += `\n\nThis error happened while installing a direct dependency of ${err['prefix'] as string}`;
+    if (err.pkgsStack != null) {
+      if (err.pkgsStack.length > 0) {
+        output += `\n\n${formatPkgsStack(err.pkgsStack)}`;
+      } else if (err.prefix) {
+        output += `\n\nThis error happened while installing a direct dependency of ${err.prefix as string}`;
       }
     }
     return output;
