@@ -693,18 +693,18 @@ once done, to continue working, please run "bit cc"`
       const version = BitId.getVersionOnlyFromString(id);
       return bitId.changeVersion(version || LATEST);
     }
-    const [idWithoutVersion] = id.toString().split('@');
+    const [idWithoutVersion, version] = id.toString().split('@');
     if (idWithoutVersion.includes('.')) {
       // we allow . only on scope names, so if it has . it must be with scope name
       return ComponentID.fromString(id);
     }
-    const filter = (comp: ComponentItem) => comp.id.name === id;
+    const filter = (comp: ComponentItem) => comp.id.name === idWithoutVersion;
     const fromIndex = this.objects.getHashFromIndex(IndexType.components, filter);
     if (fromIndex) {
       // the given id is only the name, find out the full-id
       const obj = await this.objects._getBitObjectsByHashes([fromIndex]);
       const modelComp = obj[0] as ModelComponent;
-      return modelComp.toComponentId();
+      return modelComp.toComponentId().changeVersion(version);
     }
     const idSplit = id.split('/');
     if (idSplit.length === 1) {
