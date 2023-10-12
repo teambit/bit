@@ -706,7 +706,8 @@ export default class Component extends BitObject {
 
   toComponentId(): ComponentID {
     if (!this.scope) throw new Error(`ModelComponent: scope is missing from "${this.name}"`);
-    return new ComponentID(this.toBitId());
+    const bitId = this.scopesList.length ? this.toBitId() : this.toBitId().changeScope(null);
+    return new ComponentID(bitId, this.scope);
   }
 
   toBitIdWithLatestVersion(): BitId {
@@ -982,7 +983,8 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     const consumerComponent = new ConsumerComponent({
       name: this.name,
       version: componentVersion.version,
-      scope: this.scope,
+      scope: this.toComponentId()._legacy.scope,
+      defaultScope: this.scope,
       lang: this.lang,
       bindingPrefix,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

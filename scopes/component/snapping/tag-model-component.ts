@@ -603,7 +603,7 @@ export async function updateComponentsVersions(
 
   const updateVersions = async (modelComponent: ModelComponent) => {
     const id: ComponentID = modelComponent.toBitIdWithLatestVersionAllowNull();
-    consumer.bitMap.updateComponentId(id);
+    consumer.bitMap.updateComponentId(id, undefined, undefined, true);
     const availableOnMain = await isAvailableOnMain(modelComponent, id);
     if (!availableOnMain) {
       consumer.bitMap.setOnLanesOnly(id, true);
