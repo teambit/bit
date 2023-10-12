@@ -806,7 +806,8 @@ export default class BitMap {
       return id;
     };
     const newId = getNewId();
-    if (newId.isEqual(oldId)) {
+    const haveSameDefaultScope = (newId.hasScope() && oldId.hasScope()) || (!newId.hasScope() && !oldId.hasScope());
+    if (newId.isEqual(oldId) && haveSameDefaultScope) {
       logger.debug(`bit-map: no need to update ${oldIdStr}`);
       return oldId;
     }

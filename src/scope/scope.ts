@@ -157,6 +157,11 @@ export default class Scope {
     return new ComponentIdList();
   }
 
+  isNotExported(id: ComponentID): boolean {
+    if (!this.notExportedIdsFunc) return false;
+    return this.notExportedIds.hasWithoutVersion(id);
+  }
+
   async getDependencyGraph(): Promise<DependencyGraph> {
     if (!this._dependencyGraph) {
       this._dependencyGraph = await DependencyGraph.loadAllVersions(this);
@@ -186,7 +191,7 @@ export default class Scope {
   }
 
   isLocal(componentId: ComponentID) {
-    return componentId.isLocal(this.name) || this.notExportedIds.has(componentId);
+    return componentId.isLocal(this.name) || this.isNotExported(componentId);
   }
 
   getPath() {

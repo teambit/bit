@@ -116,7 +116,7 @@ export default class ScopeComponentsImporter {
     logger.debug(
       `importMany, cache ${cache}, preferDependencyGraph: ${preferDependencyGraph}, reFetchUnBuiltVersion: ${reFetchUnBuiltVersion}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: ${ids.toString()}, lane: ${lane?.id()}`
     );
-    const idsToImport = compact(ids.filter((id) => id.hasScope() && !this.scope.notExportedIds.has(id)));
+    const idsToImport = compact(ids.filter((id) => id.hasScope() && !this.scope.isNotExported(id)));
     if (R.isEmpty(idsToImport)) {
       logger.debug(`importMany, nothing to import`);
       return [];
@@ -924,7 +924,7 @@ export default class ScopeComponentsImporter {
       if (visited.includes(idStr)) return;
       visited.push(idStr);
       if (!component) {
-        if (this.scope.notExportedIds.has(id)) return;
+        if (this.scope.isNotExported(id)) return;
         if (this.scope.isLocal(id)) throw new ComponentNotFound(idStr);
         externalsToFetch.push(id);
         return;

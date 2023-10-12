@@ -328,7 +328,9 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     ): Promise<ObjectsPerRemoteExtended> => {
       bitIds.throwForDuplicationIgnoreVersion();
       const remote: Remote = await scopeRemotes.resolve(remoteNameStr, scope);
-      const idsToChangeLocally = ComponentIdList.fromArray(bitIds.filter((id) => !id.scope));
+      const idsToChangeLocally = ComponentIdList.fromArray(
+        bitIds.filter((id) => !id.hasScope() || scope.isNotExported(id))
+      );
       const componentsAndObjects: ModelComponentAndObjects[] = [];
       const objectList = new ObjectList();
       const objectListPerName: ObjectListPerName = {};
