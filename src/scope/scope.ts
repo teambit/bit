@@ -688,12 +688,6 @@ once done, to continue working, please run "bit cc"`
       // we allow . only on scope names, so if it has . it must be with scope name
       return ComponentID.fromString(id);
     }
-    const idSplit = id.split('/');
-    if (idSplit.length === 1) {
-      // it doesn't have any slash, so the id doesn't include the scope-name
-      throw new Error(`scope.getParsedId, the component ${id} must include a scope-name`);
-    }
-
     const filter = (comp: ComponentItem) => comp.id.name === id;
     const fromIndex = this.objects.getHashFromIndex(IndexType.components, filter);
     if (fromIndex) {
@@ -702,7 +696,11 @@ once done, to continue working, please run "bit cc"`
       const modelComp = obj[0] as ModelComponent;
       return modelComp.toComponentId();
     }
-
+    const idSplit = id.split('/');
+    if (idSplit.length === 1) {
+      // it doesn't have any slash, so the id doesn't include the scope-name
+      throw new Error(`scope.getParsedId, the component ${id} must include a scope-name`);
+    }
     const maybeScope = idSplit[0];
     const isRemoteConfiguredLocally = this.scopeJson.remotes[maybeScope];
     if (isRemoteConfiguredLocally) {
