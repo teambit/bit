@@ -84,10 +84,11 @@ export class ComponentID {
 
   /**
    * get a new component ID instance with given scope.
+   * in case "undefined"/"null" is passed, the current scope becomes defaultScope
    */
   changeScope(scopeName: string): ComponentID {
     const legacyId = this._legacy.changeScope(scopeName);
-    return ComponentID.fromLegacy(legacyId);
+    return ComponentID.fromLegacy(legacyId, this.scope);
   }
 
   changeVersion(version: string | undefined) {
