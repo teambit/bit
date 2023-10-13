@@ -679,7 +679,7 @@ once done, to continue working, please run "bit cc"`
       .then(() => this);
   }
 
-  async loadModelComponentByIdStr(id: string): Promise<ModelComponent> {
+  async loadModelComponentByIdStr(id: string): Promise<ModelComponent | Symlink> {
     // Remove the version before hashing since hashing with the version number will result a wrong hash
     const idWithoutVersion = BitId.getStringWithoutVersion(id);
     const ref = Ref.from(BitObject.makeHash(idWithoutVersion));

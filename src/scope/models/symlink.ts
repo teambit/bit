@@ -31,6 +31,10 @@ export default class Symlink extends BitObject {
     return ComponentID.fromObject({ scope: this.realScope, name: this.name });
   }
 
+  toComponentId(): ComponentID {
+    return this.getRealComponentId();
+  }
+
   static parse(contents: Buffer): Symlink {
     const rawContent = JSON.parse(contents.toString());
     if (rawContent.box) rawContent.name = `${rawContent.box}/${rawContent.name}`;
