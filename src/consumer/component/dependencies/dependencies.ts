@@ -1,6 +1,5 @@
 import R from 'ramda';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BitId } from '../../../bit-id';
 import { BitIdStr } from '../../../bit-id/bit-id';
 import ValidationError from '../../../error/validation-error';
 import Scope from '../../../scope/scope';
@@ -100,7 +99,7 @@ export default class Dependencies {
     return ComponentIdList.fromArray(this.dependencies.map((dependency) => dependency.id));
   }
 
-  getIdsMap(): Record<string, BitId> {
+  getIdsMap(): Record<string, ComponentID> {
     const result = {};
     this.dependencies.forEach((dep) => {
       result[dep.id.toString()] = dep.id;

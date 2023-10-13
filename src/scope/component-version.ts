@@ -1,5 +1,4 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BitId } from '../bit-id';
 import ConsumerComponent from '../consumer/component';
 import ModelComponent from './models/model-component';
 import Version from './models/version';
@@ -26,16 +25,12 @@ export default class ComponentVersion {
     return this.getVersion(repository).then((version) => version.flattenedDependencies);
   }
 
-  toId(): BitId {
-    return new BitId({
+  toComponentId(): ComponentID {
+    return ComponentID.fromObject({
       scope: this.component.scope,
       name: this.component.name,
       version: this.version,
     });
-  }
-
-  toComponentId(): ComponentID {
-    return new ComponentID(this.toId());
   }
 
   get id(): ComponentID {
