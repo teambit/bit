@@ -602,6 +602,13 @@ export default class Consumer {
   }
 
   /**
+   * whether a component was not exported yet. (new).
+   */
+  isExported(id: ComponentID) {
+    return id.hasScope() && !this.getNotExportedIds().hasWithoutVersion(id);
+  }
+
+  /**
    * clean up removed components from bitmap
    */
   async cleanFromBitMap(componentsToRemoveFromFs: ComponentID[]) {

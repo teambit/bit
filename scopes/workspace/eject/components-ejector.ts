@@ -90,7 +90,7 @@ export class ComponentsEjector {
     const hubExportedComponents = new ComponentIdList();
     this.componentsIds.forEach((componentId) => {
       const bitId = componentId;
-      if (!bitId.hasScope()) this.failedComponents.notExportedComponents.push(bitId);
+      if (!this.workspace.isExported(bitId)) this.failedComponents.notExportedComponents.push(bitId);
       else if (remotes.isHub(bitId.scope as string)) hubExportedComponents.push(bitId);
       else this.failedComponents.selfHostedExportedComponents.push(bitId);
     });

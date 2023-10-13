@@ -174,7 +174,7 @@ export default class NodeModuleLinker {
         id: legacyComp.id,
       })
     );
-    const packageJson = PackageJsonFile.createFromComponent(dest, legacyComp, true, true);
+    const packageJson = PackageJsonFile.createFromComponent(dest, legacyComp, true);
     await this._applyTransformers(component, packageJson);
     if (IS_WINDOWS) {
       // in the workspace, override the "types" and add the "src" prefix.

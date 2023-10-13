@@ -126,7 +126,7 @@ export class Publisher {
   }
 
   private async throwForNonStagedOrTaggedComponents(componentIds: ComponentID[]) {
-    const idsWithoutScope = componentIds.filter((id) => !id.hasScope());
+    const idsWithoutScope = componentIds.filter((id) => !this.scope.isExported(id));
     if (!idsWithoutScope.length) return;
     if (!this.options.allowStaged && !this.options.dryRun) {
       throw new BitError(

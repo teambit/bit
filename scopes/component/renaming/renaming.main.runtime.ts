@@ -136,7 +136,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     );
 
     // verify they're all new.
-    const exported = componentsUsingOldScope.filter((comp) => comp.id.hasScope());
+    const exported = componentsUsingOldScope.filter((comp) => this.workspace.isExported(comp.id));
     if (exported.length) {
       const idsStr = exported.map((comp) => comp.id.toString());
       throw new OldScopeExported(idsStr);
@@ -230,7 +230,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       throw new OldScopeNotFound(oldOwner);
     }
     // verify they're all new.
-    const exported = componentsUsingOldScope.filter((comp) => comp.id.hasScope());
+    const exported = componentsUsingOldScope.filter((comp) => this.workspace.isExported(comp.id));
     if (exported.length) {
       const idsStr = exported.map((comp) => comp.id.toString());
       throw new OldScopeExported(idsStr);

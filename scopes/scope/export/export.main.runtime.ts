@@ -264,7 +264,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       if (!laneObject) {
         return;
       }
-      const newIds = ComponentIdList.fromArray(ids.filter((id) => scope.isNotExported(id)));
+      const newIds = ComponentIdList.fromArray(ids.filter((id) => !scope.isExported(id)));
       const newIdsGrouped = newIds.toGroupByScopeName(idsWithFutureScope);
       await mapSeries(Object.keys(newIdsGrouped), async (scopeName) => {
         if (scopeName === laneObject.scope) {
@@ -328,9 +328,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     ): Promise<ObjectsPerRemoteExtended> => {
       bitIds.throwForDuplicationIgnoreVersion();
       const remote: Remote = await scopeRemotes.resolve(remoteNameStr, scope);
-      const idsToChangeLocally = ComponentIdList.fromArray(
-        bitIds.filter((id) => !id.hasScope() || scope.isNotExported(id))
-      );
+      const idsToChangeLocally = ComponentIdList.fromArray(bitIds.filter((id) => !scope.isExported(id)));
       const componentsAndObjects: ModelComponentAndObjects[] = [];
       const objectList = new ObjectList();
       const objectListPerName: ObjectListPerName = {};
@@ -412,15 +410,15 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
       await mapSeries(refsToExportPerComponent, processModelComponent);
       if (lane) {
-        lane.components.forEach((c) => {
-          const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(c.id);
-          c.id = c.id.hasScope() ? c.id : c.id.changeScope(idWithFutureScope?.scope || lane.scope);
-        });
-        if (lane.readmeComponent) {
-          lane.readmeComponent.id = lane.readmeComponent.id.hasScope()
-            ? lane.readmeComponent.id
-            : lane.readmeComponent.id.changeScope(lane.scope);
-        }
+        // lane.components.forEach((c) => {
+        //   const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(c.id);
+        //   c.id = c.id.hasScope() ? c.id : c.id.changeScope(idWithFutureScope?.scope || lane.scope);
+        // });
+        // if (lane.readmeComponent) {
+        //   lane.readmeComponent.id = lane.readmeComponent.id.hasScope()
+        //     ? lane.readmeComponent.id
+        //     : lane.readmeComponent.id.changeScope(lane.scope);
+        // }
         const laneData = { ref: lane.hash(), buffer: await lane.compress() };
         objectList.addIfNotExist([laneData]);
       }
@@ -751,12 +749,12 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       bitIds: ComponentIdList
     ): Promise<{ idsToExport: ComponentIdList; missingScope: ComponentID[]; idsWithFutureScope: ComponentIdList }> => {
       const idsWithFutureScope = await this.getIdsWithFutureScope(bitIds);
-      const [idsToExport, missingScope] = R.partition((id) => {
-        const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(id);
-        if (!idWithFutureScope) throw new Error(`idsWithFutureScope is missing ${id.toString()}`);
-        return idWithFutureScope.hasScope();
-      }, bitIds);
-      return { idsToExport: ComponentIdList.fromArray(idsToExport), missingScope, idsWithFutureScope };
+      // const [idsToExport, missingScope] = R.partition((id) => {
+      // const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(id);
+      // if (!idWithFutureScope) throw new Error(`idsWithFutureScope is missing ${id.toString()}`);
+      // return idWithFutureScope.hasScope();
+      // }, bitIds);
+      return { idsToExport: ComponentIdList.fromArray(bitIds), missingScope: [], idsWithFutureScope };
     };
     if (isUserTryingToExportLanes(consumer)) {
       if (ids.length) {
@@ -788,18 +786,22 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     return filterNonScopeIfNeeded(ComponentIdList.fromArray(parsedIds));
   }
 
+  /**
+   * remove the entire "idsWithFutureScope" thing. is not relevant anymore.
+   */
   private async getIdsWithFutureScope(ids: ComponentIdList): Promise<ComponentIdList> {
-    const idsArrayP = ids.map(async (id) => {
-      if (id.hasScope()) return id;
-      const componentId = await this.workspace.resolveComponentId(id);
-      const finalScope = await this.workspace.componentDefaultScope(componentId);
-      if (finalScope) {
-        return id.changeScope(finalScope);
-      }
-      return id;
-    });
-    const idsArray = await Promise.all(idsArrayP);
-    return ComponentIdList.fromArray(idsArray);
+    return ids;
+    // const idsArrayP = ids.map(async (id) => {
+    //   if (id.hasScope()) return id;
+    //   const componentId = await this.workspace.resolveComponentId(id);
+    //   const finalScope = await this.workspace.componentDefaultScope(componentId);
+    //   if (finalScope) {
+    //     return id.changeScope(finalScope);
+    //   }
+    //   return id;
+    // });
+    // const idsArray = await Promise.all(idsArrayP);
+    // return ComponentIdList.fromArray(idsArray);
   }
 
   private async getLaneCompIdsToExport(
@@ -876,17 +878,12 @@ function _updateIdsOnBitMap(
 }
 
 async function getParsedId(consumer: Consumer, id: string): Promise<ComponentID> {
-  // reason why not calling `consumer.getParsedId()` first is because a component might not be on
+  // reason why not calling `consumer.getParsedId()` only is because a component might not be on
   // .bitmap and only in the scope. we support this case and enable to export
-  const parsedId: ComponentID = await consumer.scope.getParsedId(id);
-  if (parsedId.hasScope()) return parsedId;
-  // parsing id from the scope, doesn't provide the scope-name in case it's missing, in this case
-  // get the id including the scope from the consumer.
   try {
     return consumer.getParsedId(id);
   } catch (err: any) {
-    // not in the consumer, just return the one parsed without the scope name
-    return parsedId;
+    return consumer.scope.getParsedId(id);
   }
 }
 

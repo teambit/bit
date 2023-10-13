@@ -1143,7 +1143,7 @@ export class IsolatorMain {
     const bitDependencies = getBitDependencies(legacyComp.dependencies.getAllIds());
     const bitDevDependencies = getBitDependencies(legacyComp.devDependencies.getAllIds());
     const bitExtensionDependencies = getBitDependencies(legacyComp.extensions.extensionsBitIds);
-    const packageJson = PackageJsonFile.createFromComponent(bitDir, legacyComp, true);
+    const packageJson = PackageJsonFile.createFromComponent(bitDir, legacyComp);
     const main = pathNormalizeToLinux(legacyComp.mainFile);
     packageJson.addOrUpdateProperty('main', main);
     const addDependencies = (packageJsonFile: PackageJsonFile) => {

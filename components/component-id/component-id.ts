@@ -108,6 +108,10 @@ export class ComponentID {
     return this._legacy.isLocal(scopeName);
   }
 
+  /**
+   * do not trust this data to determine whether a component is exported to a remote or not.
+   * use workspace.isExported() or scope.isExported() instead.
+   */
   hasScope(): Boolean {
     return this._legacy.hasScope();
   }

@@ -692,7 +692,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const missingDeps: ComponentID[] = [];
     await Promise.all(
       deps.map(async (dep) => {
-        if (!dep.id.hasScope() || !dep.id.hasVersion()) return;
+        if (!this.scope.isExported(dep.id) || !dep.id.hasVersion()) return;
         if (isTag(dep.id.version)) return;
         if (allIds.hasWithoutVersion(dep.id)) return; // it's tagged/snapped now.
         let isPartOfHistory: boolean | undefined;
@@ -949,7 +949,7 @@ another option, in case this dependency is not in main yet is to remove all refe
 
   private throwForPendingImport(components: ConsumerComponent[]) {
     const componentsMissingFromScope = components
-      .filter((c) => !c.componentFromModel && c.id.hasScope())
+      .filter((c) => !c.componentFromModel && this.scope.isExported(c.id))
       .map((c) => c.id.toString());
     if (componentsMissingFromScope.length) {
       throw new ComponentsPendingImport(componentsMissingFromScope);

@@ -114,10 +114,10 @@ export class GraphFromFsBuilder {
     const compOnWorkspaceOnly = components.filter((comp) => workspaceIds.find((id) => id.isEqual(comp.id)));
     const allDeps = (await Promise.all(compOnWorkspaceOnly.map((c) => this.getAllDepsUnfiltered(c)))).flat();
     const allDepsNotImported = allDeps.filter((d) => !this.importedIds.includes(d.toString()));
-    const allDepsWithScope = allDepsNotImported.map((id) => id).filter((dep) => dep.hasScope());
+    const exportedDeps = allDepsNotImported.map((id) => id).filter((dep) => this.workspace.isExported(dep));
     const scopeComponentsImporter = this.consumer.scope.scopeImporter;
     await scopeComponentsImporter.importMany({
-      ids: ComponentIdList.uniqFromArray(allDepsWithScope),
+      ids: ComponentIdList.uniqFromArray(exportedDeps),
       preferDependencyGraph: false,
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
       throwForSeederNotFound: this.shouldThrowOnMissingDep,

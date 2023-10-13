@@ -27,7 +27,12 @@ export class ScopeComponentLoader {
     const legacyId = id;
     let modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id);
     // import if missing
-    if (!modelComponent && importIfMissing && id.hasScope() && !this.importedComponentsCache.get(id.toString())) {
+    if (
+      !modelComponent &&
+      importIfMissing &&
+      this.scope.isExported(id) &&
+      !this.importedComponentsCache.get(id.toString())
+    ) {
       await this.scope.import([id], { reason: `${id.toString()} because it's missing from the local scope` });
       this.importedComponentsCache.set(id.toString(), true);
       modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id);

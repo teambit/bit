@@ -116,7 +116,7 @@ export default class ScopeComponentsImporter {
     logger.debug(
       `importMany, cache ${cache}, preferDependencyGraph: ${preferDependencyGraph}, reFetchUnBuiltVersion: ${reFetchUnBuiltVersion}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: ${ids.toString()}, lane: ${lane?.id()}`
     );
-    const idsToImport = compact(ids.filter((id) => id.hasScope() && !this.scope.isNotExported(id)));
+    const idsToImport = compact(ids.filter((id) => this.scope.isExported(id)));
     if (R.isEmpty(idsToImport)) {
       logger.debug(`importMany, nothing to import`);
       return [];
@@ -586,8 +586,8 @@ export default class ScopeComponentsImporter {
    * get a single component from a remote without saving it locally
    */
   async getRemoteComponent(id: ComponentID): Promise<BitObjectList | null | undefined> {
-    if (!id.hasScope()) {
-      throw new Error(`unable to get remote component "${id.toString()}", the scope is empty`);
+    if (!this.scope.isExported(id)) {
+      throw new Error(`unable to get remote component "${id.toString()}", the scope was not exported yet`);
     }
     const remotes = await getScopeRemotes(this.scope);
     let bitObjectsList: BitObjectList;
@@ -608,8 +608,8 @@ export default class ScopeComponentsImporter {
   async getManyRemoteComponents(ids: ComponentID[]): Promise<BitObjectList> {
     logger.debug(`getManyRemoteComponents, ids: ${ids.map((id) => id.toString()).join(', ')}`);
     ids.forEach((id) => {
-      if (!id.hasScope()) {
-        throw new Error(`unable to get remote component "${id.toString()}", the scope is empty`);
+      if (!this.scope.isExported(id)) {
+        throw new Error(`unable to get remote component "${id.toString()}", the scope was not exported yet`);
       }
     });
     const remotes = await getScopeRemotes(this.scope);
@@ -924,7 +924,7 @@ export default class ScopeComponentsImporter {
       if (visited.includes(idStr)) return;
       visited.push(idStr);
       if (!component) {
-        if (this.scope.isNotExported(id)) return;
+        if (!this.scope.isExported(id)) return;
         if (this.scope.isLocal(id)) throw new ComponentNotFound(idStr);
         externalsToFetch.push(id);
         return;

@@ -124,15 +124,7 @@ export class AspectsMerger {
       }
       removedExtensionIds.push(...extensions.filter((extData) => extData.isRemoved).map((extData) => extData.stringId));
       const extsWithoutRemoved = extensions.filterRemovedExtensions();
-      const getSelfExt = () => {
-        const bitId = componentId;
-        const self = extsWithoutRemoved.findExtension(bitId.toStringWithoutVersion(), true);
-        if (self) return self;
-        if (bitId.hasScope()) return undefined;
-        // for some reason, new aspects get their extensionId wrong, including the scope. it's ComponentID which should not have it.
-        return extsWithoutRemoved.findExtension(bitId.changeScope(componentId.scope).toStringWithoutVersion(), true);
-      };
-      const selfInMergedExtensions = getSelfExt();
+      const selfInMergedExtensions = extsWithoutRemoved.findExtension(componentId.toStringWithoutVersion(), true);
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
         ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
         : extsWithoutRemoved;

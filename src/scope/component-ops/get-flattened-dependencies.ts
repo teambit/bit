@@ -51,7 +51,6 @@ export class FlattenedDependenciesGetter {
     const bitIds = idsStr
       .filter((id) => id)
       .map((idStr) => this.dependenciesGraph.node(idStr))
-      .filter((bitId: ComponentID) => bitId && bitId.hasScope())
       .filter((bitId) => !this.components.find((c) => c.id.isEqual(bitId)));
     const scopeComponentsImporter = this.scope.scopeImporter;
     this.versionDependencies = await scopeComponentsImporter.importMany({

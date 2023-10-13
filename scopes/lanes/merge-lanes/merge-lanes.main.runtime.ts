@@ -375,14 +375,14 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
   }
   private async getMainIdsToMerge(lane: Lane, includeNonLaneComps = false) {
     const laneIds = lane.toBitIds();
-    const ids = laneIds.filter((id) => id.hasScope());
+    const ids = laneIds.filter((id) => this.scope.isExported(id));
     if (includeNonLaneComps) {
       if (!this.workspace) {
         throw new BitError(`getMainIdsToMerge needs workspace`);
       }
       const workspaceIds = (await this.workspace.listIds()).map((id) => id);
       const mainNotOnLane = workspaceIds.filter(
-        (id) => !laneIds.find((laneId) => laneId.isEqualWithoutVersion(id)) && id.hasScope()
+        (id) => !laneIds.find((laneId) => laneId.isEqualWithoutVersion(id)) && this.scope.isExported(id)
       );
       ids.push(...mainNotOnLane);
     }

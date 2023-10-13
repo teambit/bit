@@ -390,6 +390,10 @@ export class ScopeMain implements ComponentFactory {
     return result;
   }
 
+  isExported(id: ComponentID): boolean {
+    return this.legacyScope.isExported(id);
+  }
+
   /**
    * for long-running processes, such as `bit start` or `bit watch`, it's important to keep the following data up to date:
    * 1. scope-index (.bit/index.json file).

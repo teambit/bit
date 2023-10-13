@@ -1055,7 +1055,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     this.logger.info(`current lane ${laneId.toString()} is missing, importing it`);
     await this.scope.legacyScope.objects.writeObjectsToTheFS([lane]);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
-    const ids = ComponentIdList.fromArray(lane.toBitIds().filter((id) => id.hasScope()));
+    const ids = ComponentIdList.fromArray(this.getExportedFrom(lane.toBitIds()));
     await scopeComponentsImporter.importWithoutDeps(ids.toVersionLatest(), {
       cache: false,
       lane,
@@ -1264,6 +1264,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       return true; // it's a new component
     }
     return this.isModified(component);
+  }
+
+  isExported(id: ComponentID): boolean {
+    return this.consumer.isExported(id);
+  }
+  getExportedFrom(ids: ComponentID[]): ComponentID[] {
+    const notExported = this.consumer.getNotExportedIds();
+    return ids.filter((id) => !notExported.hasWithoutVersion(id));
   }
 
   /**

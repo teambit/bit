@@ -80,10 +80,10 @@ export class GraphIdsFromFsBuilder {
     const workspaceIds = await this.workspace.listIds();
     const compOnWorkspaceOnly = components.filter((comp) => workspaceIds.find((id) => id.isEqual(comp.id)));
     const notImported = compOnWorkspaceOnly.map((c) => c.id).filter((id) => !this.importedIds.includes(id.toString()));
-    const withScope = notImported.map((id) => id).filter((dep) => dep.hasScope());
+    const exportedDeps = notImported.filter((dep) => this.workspace.isExported(dep));
     const scopeComponentsImporter = this.consumer.scope.scopeImporter;
     await scopeComponentsImporter.importMany({
-      ids: ComponentIdList.uniqFromArray(withScope),
+      ids: ComponentIdList.uniqFromArray(exportedDeps),
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
       throwForSeederNotFound: this.shouldThrowOnMissingDep,
       reFetchUnBuiltVersion: false,
