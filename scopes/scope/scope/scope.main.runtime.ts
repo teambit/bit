@@ -831,7 +831,7 @@ export class ScopeMain implements ComponentFactory {
       patterns.unshift('**');
     }
     // check also as legacyId.toString, as it doesn't have the defaultScope
-    const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id.toStringWithoutVersion()];
+    const idsToCheck = (id: ComponentID) => [id._legacy.toStringWithoutVersion(), id.toStringWithoutVersion()];
     const idsFiltered = ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
     if (throwForNoMatch && !idsFiltered.length) {
       throw new NoIdMatchPattern(pattern);

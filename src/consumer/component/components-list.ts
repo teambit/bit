@@ -456,7 +456,7 @@ export default class ComponentsList {
       ? modelComponentsIds
       : ComponentIdList.uniqFromArray([...authoredAndImportedIdsNoVer, ...modelComponentsIds]);
     const idsFilteredByWildcards = namespacesUsingWildcards
-      ? ComponentsList.filterComponentsByWildcard(allIds, namespacesUsingWildcards)
+      ? ComponentsList.filterComponentsByWildcard(allIds, `**/${namespacesUsingWildcards}`)
       : allIds;
     const idsSorted = ComponentsList.sortComponentsByName(idsFilteredByWildcards);
     const listAllResults: ListScopeResult[] = await Promise.all(
