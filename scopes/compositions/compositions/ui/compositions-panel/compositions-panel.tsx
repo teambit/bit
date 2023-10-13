@@ -28,6 +28,8 @@ export type CompositionsPanelProps = {
   isScaling?: boolean;
 
   includesEnvTemplate?: boolean;
+
+  includesNameParam?: boolean;
 } & React.HTMLAttributes<HTMLUListElement>;
 
 export function CompositionsPanel({
@@ -37,10 +39,11 @@ export function CompositionsPanel({
   onSelectComposition: onSelect,
   active,
   includesEnvTemplate,
+  includesNameParam,
   className,
   ...rest
 }: CompositionsPanelProps) {
-  const shouldAddNameParam = isScaling && includesEnvTemplate === false;
+  const shouldAddNameParam = includesNameParam || (isScaling && includesEnvTemplate === false);
 
   const handleSelect = useCallback(
     (selected: Composition) => {
@@ -53,7 +56,6 @@ export function CompositionsPanel({
     <ul {...rest} className={classNames(className)}>
       {compositions.map((composition) => {
         const href = shouldAddNameParam ? `${url}&name=${composition.identifier}` : `${url}&${composition.identifier}`;
-
         // TODO - move to composition panel node
         return (
           <li

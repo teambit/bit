@@ -3,8 +3,7 @@
   flex-direction: column;
   gap: 24px;
   padding: 16px;
-  // @todo find token for this
-  background-color: #f7f7f5;
+  background-color: rgba(247, 247, 245, 0.631372549);
   width: 100%;
   border-radius: 8px;
 }
@@ -29,7 +28,7 @@
 
 .title {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .headingRight {
@@ -89,6 +88,7 @@
 
 .icon {
   cursor: pointer;
+  flex-shrink: 0;
   > img {
     height: 18px;
     width: 18px;
@@ -107,7 +107,7 @@
 .expandedRowDetails {
   display: flex;
   flex-direction: column;
-  width: calc(100% - 272px);
+  flex: 1;
   padding: 0px 16px;
   gap: 24px;
 }

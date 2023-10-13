@@ -48,6 +48,7 @@ export const componentOverviewFields = gql`
       isScaling
       skipIncludes
       onlyOverview
+      includesNameParam
     }
     compositions {
       identifier

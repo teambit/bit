@@ -19,6 +19,7 @@ export function previewSchema(previewExtension: PreviewMain) {
         """
         skipIncludes: Boolean
         onlyOverview: Boolean
+        includesNameParam: Boolean
       }
 
       extend type Component {
@@ -45,6 +46,9 @@ export function previewSchema(previewExtension: PreviewMain) {
         onlyOverview: ({ component }) => {
           // return true;
           return previewExtension.includesOnlyOverview(component);
+        },
+        includesNameParam: ({ component }) => {
+          return previewExtension.includesNameParam(component);
         },
       },
     },

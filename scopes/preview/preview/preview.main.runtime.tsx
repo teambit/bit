@@ -122,6 +122,11 @@ export type PreviewAnyComponentData = {
    * don't allow other aspects implementing a preview definition to be included in your preview.
    */
   onlyOverview?: boolean;
+
+  /**
+   * use name query params to select a specific composition to render.
+   */
+  includesNameParam?: boolean;
 };
 
 /**
@@ -130,6 +135,7 @@ export type PreviewAnyComponentData = {
 export type PreviewEnvComponentData = {
   isScaling?: boolean;
   onlyOverview?: boolean;
+  includesNameParam?: boolean;
 };
 
 export type PreviewConfig = {
@@ -254,6 +260,16 @@ export class PreviewMain {
     return !!previewData?.onlyOverview;
   }
 
+  /**
+   * check if the current version of env component supports name query param
+   * @param envComponent
+   * @returns
+   */
+  doesEnvIncludesNameParam(envComponent: Component): boolean {
+    const previewData = this.getPreviewData(envComponent);
+    return !!previewData?.includesNameParam;
+  }
+
   private async calculateIncludeOnlyOverview(component: Component): Promise<boolean> {
     if (this.envs.isUsingCoreEnv(component)) {
       const isNew = await component.isNew();
@@ -263,6 +279,17 @@ export class PreviewMain {
     }
     const envComponent = await this.envs.getEnvComponent(component);
     return this.doesEnvIncludesOnlyOverview(envComponent);
+  }
+
+  private async calculateIncludesNameParam(component: Component): Promise<boolean> {
+    if (this.envs.isUsingCoreEnv(component)) {
+      const isNew = await component.isNew();
+      if (isNew) {
+        return true;
+      }
+    }
+    const envComponent = await this.envs.getEnvComponent(component);
+    return this.doesEnvIncludesNameParam(envComponent);
   }
 
   /**
@@ -275,10 +302,12 @@ export class PreviewMain {
     const dataFromEnv = await this.calcPreviewDataFromEnv(component);
     const envData = (await this.calculateDataForEnvComponent(component)) || {};
     const onlyOverview = await this.calculateIncludeOnlyOverview(component);
+    const includesNameParam = await this.calculateIncludesNameParam(component);
 
     const data: PreviewComponentData = {
       doesScaling,
       onlyOverview,
+      includesNameParam,
       ...dataFromEnv,
       ...envData,
     };
@@ -292,7 +321,7 @@ export class PreviewMain {
    */
   async calcPreviewDataFromEnv(
     component: Component
-  ): Promise<Omit<PreviewAnyComponentData, 'doesScaling' | 'onlyOverview'> | undefined> {
+  ): Promise<Omit<PreviewAnyComponentData, 'doesScaling' | 'onlyOverview' | 'includesNameParam'> | undefined> {
     // Prevent infinite loop that caused by the fact that the env of the aspect env or the env env is the same as the component
     // so we can't load it since during load we are trying to get env component and load it again
     if (
@@ -331,6 +360,7 @@ export class PreviewMain {
       // default to true if the env doesn't have a preview config
       isScaling: previewAspectConfig?.isScaling ?? true,
       onlyOverview: true,
+      includesNameParam: true,
     };
     return data;
   }
@@ -468,6 +498,23 @@ export class PreviewMain {
     }
     const previewData = this.getPreviewData(component);
     return previewData?.onlyOverview ?? false;
+  }
+
+  /**
+   * check if the component preview should include the name query param
+   */
+  async includesNameParam(component: Component): Promise<boolean> {
+    const inWorkspace = await this.workspace?.hasId(component.id);
+    if (inWorkspace) {
+      if (this.envs.isUsingCoreEnv(component)) {
+        return true;
+      }
+      const envComponent = await this.envs.getEnvComponent(component);
+      const envSupportNameParam = await this.doesEnvIncludesNameParam(envComponent);
+      return envSupportNameParam;
+    }
+    const previewData = this.getPreviewData(component);
+    return previewData?.includesNameParam ?? false;
   }
 
   /**

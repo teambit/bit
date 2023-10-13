@@ -163,12 +163,10 @@ export function SchemaNodesSummary({
 
 function SchemaMethodMember({
   member,
-  lang,
   dimensions,
   initialState,
   apiNodeRendererProps,
 }: {
-  lang?: string;
   member: SchemaNode;
   dimensions: { width: number; height: number };
   initialState?: boolean;
@@ -192,6 +190,13 @@ function SchemaMethodMember({
   const returnTypeRenderer = returnType && renderers.find((renderer) => renderer.predicate(returnType));
   const paramTypeHeadings = ['Parameter', 'type', 'default', 'description'];
   const params = (member as any).params || [(member as any).param];
+  const filePath = apiNodeRendererProps.apiNode.api.location.filePath;
+  const lang = React.useMemo(() => {
+    const langFromFileEnding = filePath?.split('.').pop();
+    if (langFromFileEnding === 'scss' || langFromFileEnding === 'sass') return 'css';
+    if (langFromFileEnding === 'mdx') return 'md';
+    return langFromFileEnding;
+  }, [filePath]);
 
   return (
     <div className={styles.memberDetails} key={`${member.__schema}-${member.name}`}>
