@@ -1683,11 +1683,13 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
   }
 
+  /**
+   * component-id coming from Scope don't have the defaultScope, the legacyComponentId.scope is always populated.
+   * in the .bitmap we need to distinguish between the two, so the componentId needs to be corrected with the defaultScope.
+   */
   resolveIdWithDefaultScope(componentId: ComponentID): ComponentID {
     const isExported = !this.consumer.getNotExportedIds().searchWithoutVersion(componentId);
-    const bitId = isExported
-      ? componentId._legacy.changeScope(componentId.scope)
-      : componentId._legacy.changeScope(undefined);
+    const bitId = componentId._legacy.changeScope(isExported ? componentId.scope : undefined);
     return ComponentID.fromLegacy(bitId, componentId.scope);
   }
 
