@@ -1021,6 +1021,9 @@ another option, in case this dependency is not in main yet is to remove all refe
         );
       }
     });
+
+    if (!currentFiles.length)
+      throw new Error(`unable to update component ${component.id.toString()}, all files were deleted`);
   }
 
   async updateDependenciesVersionsOfComponent(
