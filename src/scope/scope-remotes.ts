@@ -10,7 +10,7 @@ export async function getScopeRemotes(scope: Scope): Promise<Remotes> {
 }
 
 export async function fetchRemoteVersions(scope: Scope, componentIds: ComponentID[]): Promise<ComponentID[]> {
-  const externals = componentIds.filter((id) => !id.isLocal(scope.name));
+  const externals = componentIds.filter((id) => !scope.isLocal(id));
   const remotes = await getScopeRemotes(scope);
   return remotes.latestVersions(externals, scope);
 }
