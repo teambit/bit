@@ -24,7 +24,7 @@ export default class RemovedObjects {
   }: {
     removedComponentIds?: ComponentIdList;
     missingComponents?: ComponentIdList;
-    dependentBits?: Record<string, any>;
+    dependentBits?: Record<string, ComponentIdList>;
     removedFromLane?: ComponentIdList;
     removedLanes?: string[];
   }) {
@@ -52,7 +52,7 @@ export default class RemovedObjects {
   static fromObjects(payload: {
     removedComponentIds: string[];
     missingComponents: string[];
-    dependentBits: { [key: string]: Record<string, any>[] };
+    dependentBits: { [key: string]: string[] };
     removedFromLane: string[];
     removedLanes: string[];
   }): RemovedObjects {
