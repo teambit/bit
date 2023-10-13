@@ -1683,6 +1683,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
   }
 
+  resolveIdWithDefaultScope(componentId: ComponentID): ComponentID {
+    const isExported = !this.consumer.getNotExportedIds().searchWithoutVersion(componentId);
+    const bitId = isExported
+      ? componentId._legacy.changeScope(componentId.scope)
+      : componentId._legacy.changeScope(undefined);
+    return ComponentID.fromLegacy(bitId, componentId.scope);
+  }
+
   /**
    * This will mutate the original extensions list and resolve it's ids
    *

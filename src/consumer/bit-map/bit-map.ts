@@ -238,7 +238,7 @@ export default class BitMap {
   static loadRawSync(dirPath: PathOsBasedAbsolute): Buffer | undefined {
     const { currentLocation } = BitMap.getBitMapLocation(dirPath);
     if (!currentLocation) {
-      logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will create a new one if needed`);
+      logger.info(`BitMap, unable to find an existing ${BIT_MAP} file. Will create a new one if needed`);
       return undefined;
     }
     const mapFileContent = fs.readFileSync(currentLocation);
@@ -264,7 +264,7 @@ export default class BitMap {
   static reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): void {
     const bitMapPath = path.join(dirPath, BIT_MAP);
     const deleteBitMapFile = () => {
-      logger.info(`deleting the bitMap file at ${bitMapPath}`);
+      logger.info(`BitMap, deleting the .bitmap file at ${bitMapPath}`);
       fs.removeSync(bitMapPath);
     };
     if (resetHard) {
@@ -558,7 +558,7 @@ export default class BitMap {
     similarIds.forEach((id) => {
       const idStr = id.toString();
       logger.debugAndAddBreadCrumb(
-        'BitMap.deleteOlderVersionsOfComponent',
+        'BitMap, deleteOlderVersionsOfComponent',
         'deleting an older version {idStr} of an existing component {componentId}',
         { idStr, componentId: componentId.toString() }
       );
@@ -652,7 +652,7 @@ export default class BitMap {
     config?: Config;
   }): ComponentMap {
     const componentIdStr = componentId.toString();
-    logger.debug(`adding to bit.map ${componentIdStr}`);
+    logger.debug(`BitMap, adding component ${componentIdStr}`);
 
     if (!componentId.hasScope() && !defaultScope) {
       throw new BitError(`unable to add component ${componentIdStr}, it does not have a scope nor a defaultScope`);
@@ -665,7 +665,7 @@ export default class BitMap {
       const ignoreVersion = true; // legacy can have two components on .bitmap with different versions
       const componentMap = this.getComponentIfExist(componentId, { ignoreVersion });
       if (componentMap) {
-        logger.info(`bit.map: updating an exiting component ${componentMap.id.toString()}`);
+        logger.info(`BitMap, updating an exiting component ${componentMap.id.toString()}`);
         componentMap.files = files;
         if (!this.laneId) {
           // happens when merging from another lane to main and main is empty
@@ -711,7 +711,7 @@ export default class BitMap {
     if (!componentMap) {
       throw new BitError(`unable to add files to a non-exist component ${componentIdStr}`);
     }
-    logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
+    logger.info(`BitMap, addFilesToComponent ${componentIdStr}`);
     componentMap.files = files;
     this.sortValidateAndMarkAsChanged(componentMap);
     return componentMap;
@@ -746,7 +746,7 @@ export default class BitMap {
   };
 
   private _removeFromComponentsArray(componentId: ComponentID) {
-    logger.debug(`bit-map: _removeFromComponentsArray ${componentId.toString()}`);
+    logger.debug(`BitMap, _removeFromComponentsArray ${componentId.toString()}`);
     this.components = this.components.filter((componentMap) => !componentMap.id.isEqual(componentId));
     this.markAsChanged();
   }
@@ -775,7 +775,7 @@ export default class BitMap {
     const newIdString = id.toString();
     const similarBitIds = this.findSimilarIds(id, true);
     if (!similarBitIds.length) {
-      logger.debug(`bit-map: no need to update ${newIdString}`);
+      logger.debug(`BitMap, no need to update ${newIdString}`);
       return id;
     }
     const similarCompMaps = similarBitIds.map((similarId) => this.getComponent(similarId));
@@ -787,7 +787,7 @@ export default class BitMap {
       .map((c) => c.id);
     if (!similarIds.length) {
       logger.debug(
-        `bit-map: no need to update ${newIdString}. the similar ids don't have the same scope: ${similarBitIds.join(
+        `BitMap, no need to update ${newIdString}. the similar ids don't have the same scope: ${similarBitIds.join(
           ', '
         )}`
       );
@@ -808,7 +808,7 @@ export default class BitMap {
     const newId = getNewId();
     const haveSameDefaultScope = (newId.hasScope() && oldId.hasScope()) || (!newId.hasScope() && !oldId.hasScope());
     if (newId.isEqual(oldId) && haveSameDefaultScope) {
-      logger.debug(`bit-map: no need to update ${oldIdStr}`);
+      logger.debug(`BitMap, no need to update ${oldIdStr}`);
       return oldId;
     }
     logger.debug(`BitMap: updating an older component ${oldIdStr} with a newer component ${newId.toString()}`);
@@ -970,7 +970,7 @@ export default class BitMap {
    */
   async write(): Promise<any> {
     if (!this.hasChanged) return;
-    logger.debug('writing to bit.map');
+    logger.debug('BitMap, writing to .bitmap file');
     await outputFile({ filePath: this.mapPath, content: this.contentToString(), prefixMessage: BITMAP_PREFIX_MESSAGE });
     this.hasChanged = false;
   }

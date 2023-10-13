@@ -145,12 +145,13 @@ export default class ComponentWriter {
     });
 
     const bitId = await this.replaceSnapWithTagIfNeeded();
-    const defaultScope = bitId.hasScope()
+    const compId = this.workspace.resolveIdWithDefaultScope(bitId);
+    const defaultScope = compId.hasScope()
       ? undefined
       : await this.workspace.componentDefaultScopeFromComponentDirAndName(rootDir, bitId.fullName);
 
     return this.bitMap.addComponent({
-      componentId: bitId,
+      componentId: compId,
       files: filesForBitMap,
       defaultScope,
       mainFile: pathNormalizeToLinux(this.component.mainFile),
