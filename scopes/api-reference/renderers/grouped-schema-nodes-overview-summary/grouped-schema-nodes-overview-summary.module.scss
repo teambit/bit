@@ -4,19 +4,33 @@
   gap: 24px;
   padding: 16px;
   background-color: rgba(247, 247, 245, 0.631372549);
-  width: 100%;
   border-radius: 8px;
 }
 
 .heading {
-  display: flex;
+  display: grid;
+  grid-template-columns: 240px minmax(500px, 900px);
 }
 
 .headingLeft {
+  grid-column: 1;
   display: flex;
-  gap: 4px;
-  width: 240px;
-  text-overflow: ellipsis;
+  gap: 8px;
+}
+
+.headingRight {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  > img {
+    width: 18px;
+    height: 18px;
+    &.collapsed {
+      transform: rotate(-90deg);
+    }
+    transition: transform 0.2s ease-in-out;
+  }
 }
 
 .icon {
@@ -31,23 +45,28 @@
   font-weight: 500;
 }
 
-.headingRight {
-  display: flex;
+.signature {
+  min-width: 400px;
+  max-width: 800px;
 }
+
+// .headingRight,
+// .icon {
+//   display: flex;
+//   align-items: center;
+//   justify-content: flex-end;
+// }
 
 .description {
   font-size: 14px;
-  // @todo change this to a token
 }
 
 .memberSummary {
   display: flex;
-  width: 100%;
 }
 
 .propertiesOverview {
   display: flex;
-  width: 100%;
 }
 
 .propertiesTitle,
@@ -65,25 +84,10 @@
   gap: 16px;
 }
 
-.memberDetails {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  flex-direction: column;
-  gap: 24px;
-}
-
 .table,
 .signature {
   display: flex;
   flex-direction: column;
-  width: calc(100% - 240px);
-}
-
-.collapsedRow {
-  display: flex;
-  align-items: center;
-  gap: 16px;
 }
 
 .icon {
@@ -99,21 +103,11 @@
   }
 }
 
-.expandedRow {
-  display: flex;
-  width: 100%;
-}
-
 .expandedRowDetails {
   display: flex;
   flex-direction: column;
   flex: 1;
-  padding: 0px 16px;
   gap: 24px;
-}
-
-.leftPlaceholder {
-  width: 240px;
 }
 
 .description {
@@ -136,4 +130,41 @@
 
 .returnContainer {
   margin-bottom: 16px;
+}
+
+.memberDetails {
+  display: grid;
+  grid-template-columns: 240px minmax(400px, 800px) 50px;
+  gap: 24px;
+  width: 100%;
+  align-items: center;
+}
+
+.collapsedRow {
+  align-items: center;
+}
+
+.collapsedRow,
+.expandedRow {
+  display: contents;
+}
+
+.memberTitle,
+.leftPlaceholder {
+  grid-column: 1;
+}
+
+.signature,
+.expandedRowDetails,
+.icon {
+  grid-column: 2;
+}
+
+.icon {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.expandedRow {
+  grid-column: 1 / span 3;
 }

@@ -94,16 +94,9 @@ export function SchemaNodesSummary({
     : (hasNodes && [['', nodes] as [string, SchemaNode[]]]) || [];
 
   const rootRef = React.useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
 
-  React.useLayoutEffect(() => {
-    if (rootRef.current) {
-      setDimensions({
-        width: rootRef.current.offsetWidth,
-        height: rootRef.current.offsetHeight,
-      });
-    }
-  }, []);
+  const [areAllExpanded, setAreAllExpanded] = React.useState(false);
+  const expandCollapseIcon = 'https://static.bit.dev/bit-icons/thin-arrow-down.svg';
 
   return (
     <div ref={rootRef} {...rest} className={classnames(styles.groupNodesContainer, className)}>
@@ -117,6 +110,17 @@ export function SchemaNodesSummary({
           <div className={styles.title}>
             <Link href={`~api-reference?selectedAPI=${name}`}>{name}</Link>
           </div>
+        </div>
+        <div
+          // style={{ width: dimensions.width ? `${dimensions.width * 0.5}px` : 'calc(100% - 300px)' }}
+          className={classnames(styles.headingRight)}
+          onClick={() => setAreAllExpanded(!areAllExpanded)}
+        >
+          <img
+            src={expandCollapseIcon}
+            alt={areAllExpanded ? 'Collapse All' : 'Expand All'}
+            className={areAllExpanded ? styles.expanded : styles.collapsed}
+          />
         </div>
       </div>
       {description && <div className={styles.description}>{description}</div>}
@@ -145,10 +149,9 @@ export function SchemaNodesSummary({
               <div className={styles.methodMembers}>
                 {groupedMembersByType.map((member) => (
                   <SchemaMethodMember
-                    dimensions={dimensions}
                     key={`${member.__schema}-${member.name}`}
                     member={member}
-                    initialState={false}
+                    initialState={areAllExpanded}
                     apiNodeRendererProps={apiNodeRendererProps}
                   />
                 ))}
@@ -163,12 +166,10 @@ export function SchemaNodesSummary({
 
 function SchemaMethodMember({
   member,
-  dimensions,
   initialState,
   apiNodeRendererProps,
 }: {
   member: SchemaNode;
-  dimensions: { width: number; height: number };
   initialState?: boolean;
   apiNodeRendererProps: APINodeRenderProps;
 }) {
@@ -203,10 +204,7 @@ function SchemaMethodMember({
       <div className={styles.collapsedRow}>
         <div className={styles.memberTitle}>{member.name}</div>
         {memberSignature && (
-          <div
-            className={styles.signature}
-            style={{ width: dimensions.width ? `${dimensions.width * 0.5}px` : 'calc(100% - 300px)' }}
-          >
+          <div className={styles.signature}>
             <SyntaxHighlighter
               language={lang}
               style={defaultTheme}
