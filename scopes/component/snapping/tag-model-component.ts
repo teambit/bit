@@ -283,6 +283,7 @@ export async function tagModelComponent({
   }
 
   logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially persist all components');
+  setCurrentSchema(allComponentsToTag);
   // go through all components and find the future versions for them
   isSnap
     ? setHashes(allComponentsToTag)
@@ -299,7 +300,6 @@ export async function tagModelComponent({
         soft,
         tagDataPerComp
       );
-  setCurrentSchema(allComponentsToTag);
   // go through all dependencies and update their versions
   updateDependenciesVersions(allComponentsToTag, dependencyResolver);
 

@@ -9,8 +9,10 @@ export type SymlinkProp = {
   realScope: string;
 };
 
-// TODO: fix me, parse
-// @ts-ignore
+/**
+ * @deprecated
+ * this is not used since component-schema 2.0.0, where the component-id is always the full id.
+ */
 export default class Symlink extends BitObject {
   scope: string;
   name: string;

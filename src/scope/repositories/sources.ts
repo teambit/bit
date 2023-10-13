@@ -259,6 +259,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       lang: comp.lang,
       bindingPrefix: comp.bindingPrefix,
       deprecated: comp.deprecated,
+      schema: comp.schema,
     };
   }
 

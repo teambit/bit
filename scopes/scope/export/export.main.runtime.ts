@@ -471,9 +471,9 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           idsToChangeLocally.map((id) => scope.sources.getRefsForComponentRemoval(id, removeComponentVersions))
         );
         scope.objects.removeManyObjects(refsToRemove.flat());
-        idsToChangeLocally.forEach((id) => {
-          scope.createSymlink(id, idsWithFutureScope.searchWithoutScopeAndVersion(id)?.scope || remoteNameStr);
-        });
+        // idsToChangeLocally.forEach((id) => {
+        //   scope.createSymlink(id, idsWithFutureScope.searchWithoutScopeAndVersion(id)?.scope || remoteNameStr);
+        // });
         componentsAndObjects.forEach((componentObject) => scope.sources.put(componentObject));
 
         // update lanes

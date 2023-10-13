@@ -8,7 +8,7 @@ import { ModelComponent, Version } from '../../src/scope/models';
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
 
-describe.only('graph aspect', function () {
+describe('graph aspect', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
