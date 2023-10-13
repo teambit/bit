@@ -343,11 +343,7 @@ export default class DependencyResolver {
     DEPENDENCIES_FIELDS.forEach((depField) => {
       if (components[depField] && components[depField].length) {
         components[depField].forEach((depData) =>
-          this.allDependencies[depField].push({
-            id: depData.componentId,
-            relativePaths: [],
-            packageName: depData.packageName,
-          })
+          this.allDependencies[depField].push(new Dependency(depData.componentId, [], depData.packageName))
         );
       }
       if (packages[depField] && !R.isEmpty(packages[depField])) {
