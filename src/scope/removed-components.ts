@@ -4,7 +4,7 @@ import { BitIdStr } from '../bit-id/bit-id';
 export type RemovedObjectSerialized = {
   removedComponentIds: BitIdStr[];
   missingComponents: BitIdStr[];
-  dependentBits: Record<string, any>;
+  dependentBits: Record<string, BitIdStr[]>;
   removedFromLane: BitIdStr[];
   removedLanes: string[];
 };
@@ -12,7 +12,7 @@ export type RemovedObjectSerialized = {
 export default class RemovedObjects {
   removedComponentIds: ComponentIdList;
   missingComponents: ComponentIdList;
-  dependentBits: Record<string, any>;
+  dependentBits: Record<string, ComponentIdList>;
   removedFromLane: ComponentIdList;
   removedLanes: string[];
   constructor({
@@ -36,10 +36,14 @@ export default class RemovedObjects {
   }
 
   serialize(): RemovedObjectSerialized {
+    const dependentBits = Object.keys(this.dependentBits).reduce((acc, current) => {
+      acc[current] = this.dependentBits[current].serialize();
+      return acc;
+    }, {});
     return {
       removedComponentIds: this.removedComponentIds.serialize(),
       missingComponents: this.missingComponents.serialize(),
-      dependentBits: this.dependentBits,
+      dependentBits,
       removedFromLane: this.removedFromLane.serialize(),
       removedLanes: this.removedLanes,
     };
@@ -53,16 +57,16 @@ export default class RemovedObjects {
     removedLanes: string[];
   }): RemovedObjects {
     // this function being called from an ssh, so the ids must have a remote scope
-    const missingComponents = new ComponentIdList(...payload.missingComponents.map((id) => ComponentID.fromString(id)));
-    const removedComponentIds = new ComponentIdList(
-      ...payload.removedComponentIds.map((id) => ComponentID.fromString(id))
-    );
+    const missingComponents = ComponentIdList.deserialize(payload.missingComponents);
+    const removedComponentIds = ComponentIdList.deserialize(payload.removedComponentIds);
     const removedFromLane = payload.removedFromLane
-      ? new ComponentIdList(...payload.removedFromLane.map((id) => ComponentID.fromString(id)))
+      ? ComponentIdList.deserialize(payload.removedFromLane)
       : new ComponentIdList();
     const dependentBits = Object.keys(payload.dependentBits).reduce((acc, current) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      acc[current] = new ComponentIdList(...payload.dependentBits[current].map((id) => ComponentID.fromObject(id)));
+      const componentIds = payload.dependentBits[current].map((id) =>
+        typeof id === 'string' ? ComponentID.fromString(id) : ComponentID.fromObject(id as any)
+      );
+      acc[current] = ComponentIdList.fromArray(componentIds);
       return acc;
     }, {});
     return new RemovedObjects({

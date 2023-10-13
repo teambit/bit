@@ -218,3 +218,14 @@ export type LaneData = {
   log?: Log;
   hash: string;
 };
+
+export function serializeLaneData(laneData: LaneData) {
+  return {
+    ...laneData,
+    components: laneData.components.map((c) => ({ id: c.id.toString(), head: c.head })),
+    readmeComponent: laneData.readmeComponent && {
+      id: laneData.readmeComponent.id.toString(),
+      head: laneData.readmeComponent.head,
+    },
+  };
+}

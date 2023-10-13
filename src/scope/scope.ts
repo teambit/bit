@@ -517,7 +517,7 @@ once done, to continue working, please run "bit cc"`
   async getDependentsBitIds(
     bitIds: ComponentID[],
     returnResultsWithVersion = false
-  ): Promise<{ [key: string]: BitId[] }> {
+  ): Promise<{ [key: string]: ComponentIdList }> {
     logger.debug(`scope.getDependentsBitIds, bitIds: ${bitIds.toString()}`);
     const idsGraph = await DependencyGraph.buildIdsGraphWithAllVersions(this);
     logger.debug(`scope.getDependentsBitIds, idsGraph the graph was built successfully`);
