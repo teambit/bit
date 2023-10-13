@@ -264,7 +264,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       if (!laneObject) {
         return;
       }
-      const newIds = ComponentIdList.fromArray(ids.filter((id) => !id.hasScope()));
+      const newIds = ComponentIdList.fromArray(ids.filter((id) => scope.isNotExported(id)));
       const newIdsGrouped = newIds.toGroupByScopeName(idsWithFutureScope);
       await mapSeries(Object.keys(newIdsGrouped), async (scopeName) => {
         if (scopeName === laneObject.scope) {
@@ -276,7 +276,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         const list = await remote.list();
         const listIds = ComponentIdList.fromArray(list.map((listItem) => listItem.id));
         newIdsGrouped[scopeName].forEach((id) => {
-          if (listIds.hasWithoutScopeAndVersion(id)) {
+          if (listIds.hasWithoutVersion(id)) {
             throw new Error(`unable to export a lane with a new component "${id.toString()}", which has the default-scope "${scopeName}".
   this scope already has a component with the same name. as such, it'll be impossible to merge the lane later because these two components are different`);
           }

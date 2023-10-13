@@ -117,12 +117,13 @@ export class LaneListCmd implements Command {
   async json(args, laneOptions: LaneOptions) {
     const { remote, merged = false, notMerged = false } = laneOptions;
 
-    const lanes = await this.lanes.getLanes({
+    const lanesData = await this.lanes.getLanes({
       remote,
       showDefaultLane: true,
       merged,
       notMerged,
     });
+    const lanes = lanesData.map(serializeLaneData);
     const currentLane = this.lanes.getCurrentLaneNameOrAlias();
     return { lanes, currentLane };
   }
