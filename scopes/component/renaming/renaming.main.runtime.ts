@@ -68,7 +68,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       await this.deleteLinkFromNodeModules(sourcePackageName);
     }
     await this.renameAspectIdInWorkspaceConfig(sourceId, targetId);
-    this.workspace.clearComponentCache(sourceId);
+    await this.workspace._reloadConsumer(); // in order to reload .bitmap file and clear all caches.
     const targetComp = await this.workspace.get(targetId);
     if (options.refactor) {
       const allComponents = await this.workspace.list();

@@ -97,7 +97,7 @@ describe('bit checkout command', function () {
             it('should throw an error NewerVersionFound', () => {
               const tagFunc = () => helper.command.tagComponent('bar/foo');
               const error = new NewerVersionFound([
-                { componentId: 'bar/foo', currentVersion: '0.0.5', latestVersion: '0.0.10' },
+                { componentId: `${helper.scopes.remote}/bar/foo`, currentVersion: '0.0.5', latestVersion: '0.0.10' },
               ]);
               helper.general.expectToThrow(tagFunc, error);
             });
