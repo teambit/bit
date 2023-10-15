@@ -338,7 +338,7 @@ export class DependencyResolverMain {
     /**
      * Dependency resolver  extension configuration.
      */
-    readonly config: DependencyResolverWorkspaceConfig,
+    public config: DependencyResolverWorkspaceConfig,
 
     /**
      * Registry for changes by other extensions.
@@ -396,6 +396,10 @@ export class DependencyResolverMain {
   supportsDedupingOnExistingRoot(): boolean {
     const packageManager = this.getPackageManager();
     return packageManager?.supportsDedupingOnExistingRoot?.() === true && !this.isolatedCapsules();
+  }
+
+  setConfig(config: DependencyResolverWorkspaceConfig) {
+    this.config = config;
   }
 
   hasRootComponents(): boolean {
