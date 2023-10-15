@@ -284,7 +284,7 @@ export class APIForIDE {
         if (hasSameDeps && hasSameAspects) return null;
         const result: ModifiedByConfig = {
           id: comp.id.toStringWithoutVersion(),
-          version: comp.id.version,
+          version: comp.id.version as string,
         };
         if (!hasSameDeps) result.dependencies = { workspace: wsComp.dependencies, scope: scopeComp.dependencies || [] };
         if (!hasSameAspects) result.aspects = { workspace: wsComp.aspects, scope: scopeComp.aspects || {} };

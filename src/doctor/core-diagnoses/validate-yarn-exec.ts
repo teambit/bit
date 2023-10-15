@@ -1,4 +1,5 @@
-import npmClient from '../../npm-client';
+import execa from 'execa';
+import logger from '../../logger/logger';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
 export default class ValidateYarnExec extends Diagnosis {
@@ -15,7 +16,7 @@ export default class ValidateYarnExec extends Diagnosis {
   }
 
   async _runExamine(): Promise<ExamineBareResult> {
-    const yarnVersion = await npmClient.getYarnVersion();
+    const yarnVersion = await getYarnVersion();
     if (yarnVersion) {
       return {
         valid: true,
@@ -26,4 +27,14 @@ export default class ValidateYarnExec extends Diagnosis {
       data: {},
     };
   }
+}
+
+export async function getYarnVersion(): Promise<string | null | undefined> {
+  try {
+    const { stdout } = await execa('yarn', ['-v']);
+    return stdout;
+  } catch (e: any) {
+    logger.debugAndAddBreadCrumb('npm-client', `can't find yarn version by running yarn -v. ${e.message}`);
+  }
+  return null;
 }

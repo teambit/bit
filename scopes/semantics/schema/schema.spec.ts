@@ -61,7 +61,7 @@ describe('SchemaAspect', function () {
       const json = fs.readJsonSync(jsonPath);
       const apiSchema = schema.getSchemaFromObject(json);
       expect(apiSchema instanceof APISchema).to.be.true;
-      expect(apiSchema.componentId instanceof ComponentID).to.be.true;
+      expect(apiSchema.componentId.constructor.name).to.equal(ComponentID.name);
       // @ts-ignore it exists on Jest. for some reason ts assumes this is Jasmine.
       expect(apiSchema.toObject()).to.containSubset(json);
     });

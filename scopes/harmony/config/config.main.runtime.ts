@@ -49,6 +49,11 @@ export class ConfigMain {
     return this.scopeConfig;
   }
 
+  async reloadWorkspaceConfig() {
+    const workspaceConfig = await loadWorkspaceConfigIfExist();
+    if (workspaceConfig) this.workspaceConfig = workspaceConfig;
+  }
+
   /**
    * Ensure the given directory has a workspace config
    * Load if existing and create new if not
@@ -95,11 +100,9 @@ export class ConfigMain {
   static async provider() {
     LegacyWorkspaceConfig.registerOnWorkspaceConfigIsExist(onLegacyWorkspaceConfigIsExist());
     LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());
-    const consumerInfo = await getConsumerInfo(process.cwd());
 
     let configMain: ConfigMain | any;
-    const configDirPath = consumerInfo?.path || process.cwd();
-    const workspaceConfig = await WorkspaceConfig.loadIfExist(configDirPath);
+    const workspaceConfig = await loadWorkspaceConfigIfExist();
     if (workspaceConfig) {
       configMain = new ConfigMain(workspaceConfig, undefined);
     } else {
@@ -115,6 +118,13 @@ export class ConfigMain {
 }
 
 ConfigAspect.addRuntime(ConfigMain);
+
+async function loadWorkspaceConfigIfExist(): Promise<WorkspaceConfig | undefined> {
+  const consumerInfo = await getConsumerInfo(process.cwd());
+  const configDirPath = consumerInfo?.path || process.cwd();
+  const workspaceConfig = await WorkspaceConfig.loadIfExist(configDirPath);
+  return workspaceConfig;
+}
 
 function onLegacyWorkspaceConfigIsExist(): WorkspaceConfigIsExistFunction {
   return async (dirPath: PathOsBased): Promise<boolean | undefined> => {

@@ -21,21 +21,12 @@ export default class RemoveModelComponents {
   force: boolean;
   consumer: Consumer | null | undefined;
   currentLane?: Lane | null = null;
-  fromLane?: boolean;
-  constructor(
-    scope: Scope,
-    bitIds: BitIds,
-    force: boolean,
-    consumer?: Consumer,
-    currentLane?: Lane | null,
-    fromLane?: boolean
-  ) {
+  constructor(scope: Scope, bitIds: BitIds, force: boolean, consumer?: Consumer, currentLane?: Lane | null) {
     this.scope = scope;
     this.bitIds = bitIds;
     this.force = force;
     this.consumer = consumer;
     this.currentLane = currentLane;
-    this.fromLane = fromLane;
   }
 
   async remove(): Promise<RemovedObjects> {
@@ -59,7 +50,6 @@ export default class RemoveModelComponents {
         if (result) {
           // component was found on the lane.
           removedFromLane.push(bitId);
-          if (this.fromLane) return null;
         }
         // component was not found on lane. it's ok, it might be on main. continue with the component removal.
       }

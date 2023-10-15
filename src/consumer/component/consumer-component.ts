@@ -260,7 +260,7 @@ export default class Component {
   }
 
   setNewVersion(version = sha1(v4())) {
-    this.previouslyUsedVersion = this.version;
+    this.previouslyUsedVersion = this.id.hasVersion() ? this.version : undefined;
     this.version = version;
   }
 
