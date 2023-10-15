@@ -75,18 +75,13 @@ export class StatusMain {
     const consumer = this.workspace.consumer;
     const laneObj = await consumer.getCurrentLaneObject();
     const componentsList = new ComponentsList(consumer);
-
     const newComponents: ConsumerComponent[] = (await componentsList.listNewComponents(
       true,
       loadOpts
     )) as ConsumerComponent[];
-
     const modifiedComponents = (await componentsList.listModifiedComponents(true, loadOpts)) as ConsumerComponent[];
-
     const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
-
     await this.addRemovedStagedIfNeeded(stagedComponents);
-
     const stagedComponentsWithVersions = await pMapSeries(stagedComponents, async (stagedComp) => {
       const versions = await stagedComp.getLocalTagsOrHashes(consumer.scope.objects);
       return {
