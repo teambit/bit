@@ -7,6 +7,14 @@ import { UIAspect, UiMain } from '@teambit/ui';
 
 export const BUNDLE_UI_TASK_NAME = 'BundleUI';
 export const BUNDLE_UI_DIR = 'ui-bundle';
+export const UIROOT_ASPECT_IDS = {
+  SCOPE: 'teambit.scope/scope',
+  WORKSPACE: 'teambit.workspace/workspace',
+};
+export const BUNDLE_UIROOT_DIR = {
+  [UIROOT_ASPECT_IDS.SCOPE]: 'scope',
+  [UIROOT_ASPECT_IDS.WORKSPACE]: 'workspace',
+};
 export const BUNDLE_UI_HASH_FILENAME = '.hash';
 
 export class BundleUiTask implements BuildTask {
@@ -24,11 +32,15 @@ export class BundleUiTask implements BuildTask {
       return { componentsResults: [] };
     }
 
-    const outputPath = join(capsule.path, BundleUiTask.getArtifactDirectory());
-    this.logger.info(`Generating UI bundle at ${outputPath}...`);
     try {
-      await this.ui.build(undefined, outputPath);
-      await this.generateHash(outputPath);
+      await Promise.all(
+        Object.values(UIROOT_ASPECT_IDS).map(async (uiRootAspectId) => {
+          const outputPath = join(capsule.path, BundleUiTask.getArtifactDirectory(uiRootAspectId));
+          this.logger.info(`Generating UI bundle at ${outputPath}...`);
+          await this.ui.build(uiRootAspectId, outputPath);
+          await this.generateHash(outputPath);
+        })
+      );
     } catch (error) {
       this.logger.error('Generating UI bundle failed');
       throw new Error('Generating UI bundle failed');
@@ -51,16 +63,21 @@ export class BundleUiTask implements BuildTask {
     writeFileSync(join(outputPath, BUNDLE_UI_HASH_FILENAME), hash);
   }
 
-  static getArtifactDirectory() {
-    return join('artifacts', BUNDLE_UI_DIR);
+  static getArtifactDirectory(uiRootAspectId) {
+    return join('artifacts', BUNDLE_UI_DIR, BUNDLE_UIROOT_DIR[uiRootAspectId]);
   }
 
   static getArtifactDef() {
+    const scopeRootDir = BundleUiTask.getArtifactDirectory(UIROOT_ASPECT_IDS.SCOPE);
+    const workspaceRootDir = BundleUiTask.getArtifactDirectory(UIROOT_ASPECT_IDS.WORKSPACE);
     return [
       {
-        name: BUNDLE_UI_DIR,
-        globPatterns: ['**'],
-        rootDir: BundleUiTask.getArtifactDirectory(),
+        name: `${BUNDLE_UI_DIR}-${BUNDLE_UIROOT_DIR[UIROOT_ASPECT_IDS.SCOPE]}`,
+        globPatterns: [`${scopeRootDir}/**`],
+      },
+      {
+        name: `${BUNDLE_UI_DIR}-${BUNDLE_UIROOT_DIR[UIROOT_ASPECT_IDS.WORKSPACE]}`,
+        globPatterns: [`${workspaceRootDir}/**`],
       },
     ];
   }
