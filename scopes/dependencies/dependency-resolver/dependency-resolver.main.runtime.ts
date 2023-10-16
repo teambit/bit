@@ -1412,7 +1412,7 @@ export class DependencyResolverMain {
     components: Component[];
     patterns?: string[];
     forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible';
-  }): Promise<MergedOutdatedPkg[]> {
+  }): Promise<MergedOutdatedPkg[] | null> {
     const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
     const componentModelVersions: ComponentModelVersion[] = (
       await Promise.all(
@@ -1452,6 +1452,9 @@ export class DependencyResolverMain {
         )
       );
       allPkgs = allPkgs.filter(({ name }) => selectedPkgNames.has(name));
+      if (!allPkgs.length) {
+        return null;
+      }
     }
     const outdatedPkgs = await this.getOutdatedPkgs({ rootDir, forceVersionBump }, allPkgs);
     return mergeOutdatedPkgs(outdatedPkgs);
