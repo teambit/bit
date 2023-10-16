@@ -9,7 +9,7 @@ export class TransformerNotFound extends Error {
         ts.SyntaxKind[node.kind]
       }) in component ${component.id.toString()}.
 location:  ${node.getSourceFile().fileName}, line: ${location.line}, character: ${location.character}.
-node-text: ${node.getText()}`
+node-text: ${node.getFullText()}`
     );
   }
 }

@@ -9,7 +9,8 @@ import {
   reStructureBuildArtifacts,
 } from '../component/sources/artifact-files';
 
-const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
+const mergeReducer = (accumulator: ExtensionDataList, currentValue: ExtensionDataList) =>
+  R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
 type ExtensionConfig = { [extName: string]: any } | RemoveExtensionSpecialSign;
 type ConfigOnlyEntry = {
   id: string;
@@ -145,19 +146,13 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     return extensionDataList;
   }
 
-  findExtension(extensionId: string, ignoreVersion = false, ignoreScope = false): ExtensionDataEntry | undefined {
+  findExtension(extensionId: string, ignoreVersion = false): ExtensionDataEntry | undefined {
     if (ExtensionDataList.coreExtensionsNames.has(extensionId)) {
       return this.findCoreExtension(extensionId);
     }
     return this.find((extEntry) => {
-      if (ignoreVersion && ignoreScope) {
-        return extEntry.extensionId?.toStringWithoutScopeAndVersion() === extensionId;
-      }
       if (ignoreVersion) {
         return extEntry.extensionId?.toStringWithoutVersion() === extensionId;
-      }
-      if (ignoreScope) {
-        return extEntry.extensionId?.toStringWithoutScope() === extensionId;
       }
       return extEntry.stringId === extensionId;
     });
@@ -270,7 +265,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   }
 }
 
-function ignoreVersionPredicate(extensionEntry1: ExtensionDataEntry, extensionEntry2: ExtensionDataEntry) {
+export function ignoreVersionPredicate(extensionEntry1: ExtensionDataEntry, extensionEntry2: ExtensionDataEntry) {
   if (extensionEntry1.extensionId && extensionEntry2.extensionId) {
     return extensionEntry1.extensionId.isEqualWithoutVersion(extensionEntry2.extensionId);
   }

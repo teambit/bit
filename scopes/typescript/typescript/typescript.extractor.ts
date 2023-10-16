@@ -86,7 +86,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
 
     const location = context.getLocation(mainAst);
 
-    return new APISchema(location, apiScheme, internals, component.id);
+    return new APISchema(location, apiScheme, internals, component.id as any);
   }
 
   async computeInternalModules(context: SchemaExtractorContext, internalFiles: AbstractVinyl[]) {
@@ -114,7 +114,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const transformer = this.getTransformer(node, context);
     let identifiers: Identifier[] = [];
     if (!transformer || !transformer.getIdentifiers) {
-      this.logger.warn(new TransformerNotFound(node, context.component, context.getLocation(node)).toString());
+      this.logger.debug(new TransformerNotFound(node, context.component, context.getLocation(node)).toString());
     } else {
       identifiers = await transformer.getIdentifiers(node, context);
     }
@@ -201,7 +201,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
       return singleTransformer.predicate(node);
     });
     if (!transformer) {
-      this.logger.warn(new TransformerNotFound(node, context.component, context.getLocation(node)).toString());
+      this.logger.debug(new TransformerNotFound(node, context.component, context.getLocation(node)).toString());
       return undefined;
     }
 

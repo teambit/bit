@@ -34,20 +34,15 @@ const DEFAULT_HEADINGS = {
   default: ['name', 'type', 'description'],
 };
 
-export function GroupedSchemaNodesSummary({
-  nodes,
-  apiNodeRendererProps,
-  headings: headingsFromProps = {},
-  skipNode,
-  skipGrouping,
-  renderTable = (type, member, _headings = []) => {
+const defaultTableRenderer = function DefaultTableRendererWrapper(apiNodeRendererProps: APINodeRenderProps) {
+  return function DefaultTableRenderer(type: string, member: SchemaNode, headings: string[]) {
     const typeId = type && encodeURIComponent(type);
 
     if (type === 'enum members') {
       return (
         <EnumMemberSummary
           key={`${member.__schema}-${member.name}`}
-          headings={_headings}
+          headings={headings}
           apiNodeRendererProps={apiNodeRendererProps}
           groupElementClassName={typeId}
           name={(member as EnumMemberSchema).name}
@@ -60,7 +55,7 @@ export function GroupedSchemaNodesSummary({
       <VariableNodeSummary
         key={`${member.__schema}-${member.name}`}
         node={member}
-        headings={_headings}
+        headings={headings}
         groupElementClassName={typeId}
         apiNodeRendererProps={apiNodeRendererProps}
         name={member.name || member.signature || ''}
@@ -69,7 +64,16 @@ export function GroupedSchemaNodesSummary({
         defaultValue={(member as any).defaultValue}
       />
     );
-  },
+  };
+};
+
+export function GroupedSchemaNodesSummary({
+  nodes,
+  apiNodeRendererProps,
+  headings: headingsFromProps = {},
+  skipNode,
+  skipGrouping,
+  renderTable = defaultTableRenderer(apiNodeRendererProps),
   className,
   ...rest
 }: GroupedSchemaNodesSummaryProps) {
@@ -106,7 +110,7 @@ export function GroupedSchemaNodesSummary({
             {!skipRenderingTable && (
               <div className={styles.table}>
                 <HeadingRow
-                  className={classnames(styles.row)}
+                  className={classnames(styles.row, styles.headingRow)}
                   colNumber={_headings.length as any}
                   headings={_headings}
                 />

@@ -86,10 +86,7 @@ export default function updateDependenciesVersions(
   function getIdFromComponentConfig(componentId: BitId): BitId | undefined {
     const dependencies = component.overrides.getComponentDependenciesWithVersion();
     if (R.isEmpty(dependencies)) return undefined;
-    const dependency = Object.keys(dependencies).find(
-      (idStr) =>
-        componentId.toStringWithoutVersion() === idStr || componentId.toStringWithoutScopeAndVersion() === idStr
-    );
+    const dependency = Object.keys(dependencies).find((idStr) => componentId.toStringWithoutVersion() === idStr);
     if (!dependency) return undefined;
     return componentId.changeVersion(dependencies[dependency]);
   }

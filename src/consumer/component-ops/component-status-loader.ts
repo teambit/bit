@@ -1,8 +1,8 @@
 import mapSeries from 'p-map-series';
+import { BitError } from '@teambit/bit-error';
 import { Consumer } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import { LATEST } from '../../constants';
-import ShowDoctorError from '../../error/show-doctor-error';
 import { ModelComponent } from '../../scope/models';
 import { MissingBitMapComponent } from '../bit-map/exceptions';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
@@ -105,13 +105,17 @@ export class ComponentStatusLoader {
     // const versionFromModel = await componentFromModel.loadVersion(versionFromFs, this.consumer.scope.objects);
     // it looks like it's exactly the same code but it's not working from some reason
     const versionRef = componentFromModel.getRef(versionFromFs);
-    if (!versionRef) throw new ShowDoctorError(`version ${versionFromFs} was not found in ${idStr}`);
+    if (!versionRef) throw new BitError(`version ${versionFromFs} was not found in ${idStr}`);
     const versionFromModel = await this.consumer.scope.getObject(versionRef.hash);
     if (!versionFromModel) {
-      throw new ShowDoctorError(`failed loading version ${versionFromFs} of ${idStr} from the scope`);
+      throw new BitError(`failed loading version ${versionFromFs} of ${idStr} from the scope`);
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     status.modified = await this.consumer.isComponentModified(versionFromModel, componentFromFileSystem);
     return status;
+  }
+
+  clearOneComponentCache(id: BitId) {
+    delete this._componentsStatusCache[id.toString()];
   }
 }

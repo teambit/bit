@@ -168,10 +168,10 @@ export class ForkingMain {
     const workspaceIds = await this.workspace.listIds();
     const workspaceBitIds = BitIds.fromArray(workspaceIds.map((id) => id._legacy));
     idsFromOriginalScope.forEach((id) => {
-      const existInWorkspace = workspaceBitIds.searchWithoutScopeAndVersion(id._legacy);
+      const existInWorkspace = workspaceBitIds.searchWithoutVersion(id._legacy);
       if (existInWorkspace) {
         throw new Error(
-          `unable to fork "${id.toString()}". the workspace has a component "${existInWorkspace.toString()}" with the same name`
+          `unable to fork "${id.toString()}". the workspace has a component "${existInWorkspace.toString()}" with the same name and same scope`
         );
       }
     });

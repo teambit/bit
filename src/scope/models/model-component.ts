@@ -3,6 +3,7 @@ import { forEach, isEmpty, pickBy, mapValues } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
+import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
@@ -18,7 +19,6 @@ import ConsumerComponent from '../../consumer/component';
 import { License, SourceFile } from '../../consumer/component/sources';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import GeneralError from '../../error/general-error';
-import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
 import { getStringifyArgs } from '../../utils';
@@ -172,10 +172,13 @@ export default class Component extends BitObject {
   }
 
   getRef(version: string): Ref | null {
+    if (isTag(version)) {
+      return this.versionsIncludeOrphaned[version];
+    }
     if (isHash(version)) {
       return new Ref(version);
     }
-    return this.versionsIncludeOrphaned[version];
+    return null;
   }
 
   getHeadStr(): string | null {
@@ -236,7 +239,8 @@ export default class Component extends BitObject {
       return false;
     }
     const versionParents = await getAllVersionParents({ repo, modelComponent: this, heads: [head] });
-    return versionParents.map((v) => v.hash).some((hash) => hash.toString() === version);
+    // we use "startsWith" because it can be a short hash
+    return versionParents.map((v) => v.hash).some((hash) => hash.toString().startsWith(version));
   }
 
   hasTag(version: string): boolean {
@@ -627,7 +631,7 @@ export default class Component extends BitObject {
       const versionToAddRef = Ref.from(versionToAdd);
       const parent = previouslyUsedVersion ? this.getRef(previouslyUsedVersion) : null;
       if (!parent) {
-        const existingComponentInLane = lane.getComponentByName(currentBitId);
+        const existingComponentInLane = lane.getComponent(currentBitId);
         const currentHead = (existingComponentInLane && existingComponentInLane.head) || this.getHead();
         if (currentHead) {
           throw new Error(
@@ -857,7 +861,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       throw new NoHeadNoVersion(this.id());
     }
     if (isTag(versionNum) && !this.hasTagIncludeOrphaned(versionNum)) {
-      throw new ShowDoctorError(
+      throw new BitError(
         `the version ${versionNum} of "${this.id()}" does not exist in ${this.listVersionsIncludeOrphaned().join(
           '\n'
         )}, versions array.`
@@ -936,9 +940,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       const loadP = file.file.load(repository);
       const content: Source = await loadP;
       if (!content)
-        throw new ShowDoctorError(
-          `failed loading file ${file.relativePath} from the model of ${this.id()}@${versionStr}`
-        );
+        throw new BitError(`failed loading file ${file.relativePath} from the model of ${this.id()}@${versionStr}`);
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
     const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;

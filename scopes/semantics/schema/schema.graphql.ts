@@ -2,10 +2,10 @@ import { ComponentFactory } from '@teambit/component';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import gql from 'graphql-tag';
 import { APISchema, UnImplementedSchema } from '@teambit/semantics.entities.semantic-schema';
-
+import { Schema } from '@teambit/graphql';
 import { SchemaMain } from './schema.main.runtime';
 
-export function schemaSchema(schema: SchemaMain) {
+export function schemaSchema(schema: SchemaMain): Schema {
   return {
     typeDefs: gql`
       scalar JSONObject

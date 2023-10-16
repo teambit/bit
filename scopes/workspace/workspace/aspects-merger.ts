@@ -4,8 +4,8 @@ import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-com
 import { BitId } from '@teambit/legacy-bit-id';
 import { EnvsAspect } from '@teambit/envs';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { partition, mergeWith, merge } from 'lodash';
+import { ExtensionDataList, ignoreVersionPredicate } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { partition, mergeWith, merge, uniq, uniqWith } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { AspectSpecificField, ExtensionsOrigin, Workspace } from './workspace';
 import { MergeConflictFile } from './merge-conflict-file';
@@ -44,7 +44,6 @@ export class AspectsMerger {
     // TODO: consider caching this result
     let configFileExtensions: ExtensionDataList | undefined;
     let variantsExtensions: ExtensionDataList | undefined;
-    let wsDefaultExtensions: ExtensionDataList | undefined;
     const mergeFromScope = true;
     const errors: Error[] = [];
 
@@ -93,7 +92,7 @@ export class AspectsMerger {
       : undefined;
 
     this.removeAutoDepsFromConfig(componentId, configMergeExtensions);
-    const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
+    const scopeExtensions = this.getComponentFromScopeWithoutDuplications(componentFromScope);
     // backward compatibility. previously, it was saved as an array into the model (when there was merge-config)
     this.removeAutoDepsFromConfig(componentId, scopeExtensions, true);
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
@@ -125,11 +124,15 @@ export class AspectsMerger {
       }
       removedExtensionIds.push(...extensions.filter((extData) => extData.isRemoved).map((extData) => extData.stringId));
       const extsWithoutRemoved = extensions.filterRemovedExtensions();
-      const selfInMergedExtensions = extsWithoutRemoved.findExtension(
-        componentId._legacy.toStringWithoutScopeAndVersion(),
-        true,
-        true
-      );
+      const getSelfExt = () => {
+        const bitId = componentId._legacy;
+        const self = extsWithoutRemoved.findExtension(bitId.toStringWithoutVersion(), true);
+        if (self) return self;
+        if (bitId.hasScope()) return undefined;
+        // for some reason, new aspects get their extensionId wrong, including the scope. it's BitId which should not have it.
+        return extsWithoutRemoved.findExtension(bitId.changeScope(componentId.scope).toStringWithoutVersion(), true);
+      };
+      const selfInMergedExtensions = getSelfExt();
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
         ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
         : extsWithoutRemoved;
@@ -178,16 +181,6 @@ export class AspectsMerger {
       await addExtensionsToMerge(variantsExtensions, 'WorkspaceVariants', { appliedRules });
     }
     continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
-    // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)
-    const isDefaultExtension = wsDefaultExtensions?.findExtension(componentId.toString(), true, true);
-    if (
-      wsDefaultExtensions &&
-      continuePropagating &&
-      !isDefaultExtension &&
-      !excludeOrigins.includes('WorkspaceDefault')
-    ) {
-      await addExtensionsToMerge(wsDefaultExtensions, 'WorkspaceDefault');
-    }
     if (mergeFromScope && continuePropagating && !excludeOrigins.includes('ModelNonSpecific')) {
       await addExtensionsToMerge(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
@@ -201,6 +194,23 @@ export class AspectsMerger {
       beforeMerge: extensionsToMerge,
       errors,
     };
+  }
+
+  /**
+   * before version 0.0.882 it was possible to save Version object with the same extension twice.
+   */
+  private getComponentFromScopeWithoutDuplications(componentFromScope?: Component) {
+    if (!componentFromScope) return new ExtensionDataList();
+    const scopeExtensions = componentFromScope.config.extensions;
+    const scopeExtIds = scopeExtensions.ids;
+    const scopeExtHasDuplications = scopeExtIds.length !== uniq(scopeExtIds).length;
+    if (!scopeExtHasDuplications) {
+      return scopeExtensions;
+    }
+    // let's remove this duplicated extension blindly without trying to merge. (no need to merge coz it's old data from scope
+    // which will be overridden anyway by the workspace or other config strategies).
+    const arr = uniqWith(scopeExtensions, ignoreVersionPredicate);
+    return ExtensionDataList.fromArray(arr);
   }
 
   /**

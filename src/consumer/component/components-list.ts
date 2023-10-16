@@ -93,7 +93,6 @@ export default class ComponentsList {
         if (!status) throw new Error(`listModifiedComponents unable to find status for ${component.id.toString()}`);
         return status.status.modified;
       });
-      // .filter((component: Component) => !unmergedComponents.hasWithoutScopeAndVersion(component.id));
     }
     if (load) return this._modifiedComponents;
     return this._modifiedComponents.map((component) => component.id);
@@ -111,8 +110,7 @@ export default class ComponentsList {
     await Promise.all(
       fileSystemComponents.map(async (component) => {
         const modelComponent = componentsFromModel.find((c) => c.toBitId().isEqualWithoutVersion(component.id));
-        if (!modelComponent || !component.id.hasVersion() || unmergedComponents.hasWithoutScopeAndVersion(component.id))
-          return;
+        if (!modelComponent || !component.id.hasVersion() || unmergedComponents.hasWithoutVersion(component.id)) return;
         if (mergePendingComponentsIds.hasWithoutVersion(component.id)) {
           // by default, outdated include merge-pending since the remote-head and local-head are
           // different, however we want them both to be separated as they need different treatment
@@ -221,7 +219,7 @@ export default class ComponentsList {
         await Promise.all(
           componentsFromFs.map(async (component: Component) => {
             const modelComponent = componentsFromModel.find((c) => c.toBitId().isEqualWithoutVersion(component.id));
-            if (!modelComponent || duringMergeComps.hasWithoutScopeAndVersion(component.id)) return null;
+            if (!modelComponent || duringMergeComps.hasWithoutVersion(component.id)) return null;
             const divergedData = await modelComponent.getDivergeDataForMergePending(this.scope.objects);
             if (!divergedData.isDiverged()) return null;
             return { id: modelComponent.toBitId(), diverge: divergedData };
@@ -284,34 +282,6 @@ export default class ComponentsList {
     return components;
   }
 
-  /**
-   * list all components that can be tagged.
-   */
-  async listPotentialTagAllWorkspace(): Promise<BitId[]> {
-    const removedIds = await this.listLocallySoftRemoved();
-    const allIdsExcludeRemoved = this.idsFromBitMap();
-    return [...removedIds, ...allIdsExcludeRemoved];
-  }
-
-  /**
-   * New and modified components are tag pending
-   *
-   * @return {Promise<string[]>}
-   */
-  async listTagPendingComponents(): Promise<BitIds> {
-    const newComponents = await this.listNewComponents();
-    const modifiedComponents = await this.listModifiedComponents();
-    const removedComponents = await this.listLocallySoftRemoved();
-    const duringMergeIds = this.listDuringMergeStateComponents();
-
-    return BitIds.uniqFromArray([
-      ...(newComponents as BitId[]),
-      ...(modifiedComponents as BitId[]),
-      ...removedComponents,
-      ...duringMergeIds,
-    ]);
-  }
-
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<BitIds> {
     const fromBitMap = this.bitMap.getAllBitIds();
     const modelComponents = await this.getModelComponents();
@@ -341,15 +311,16 @@ export default class ComponentsList {
   }
 
   async updateIdsFromModelIfTheyOutOfSync(ids: BitIds, loadOpts?: ComponentLoadOptions): Promise<BitIds> {
-    const authoredAndImported = this.bitMap.getAllBitIds();
     const updatedIdsP = ids.map(async (id: BitId) => {
-      const idFromBitMap = authoredAndImported.searchWithoutScopeAndVersion(id);
-      if (idFromBitMap && !idFromBitMap.hasVersion()) {
-        // component is out of sync, fix it by loading it from the consumer
-        const component = await this.consumer.loadComponent(id.changeVersion(LATEST), loadOpts);
-        return component.id;
-      }
-      return id;
+      const componentMap =
+        this.bitMap.getComponentIfExist(id, { ignoreVersion: true }) ||
+        this.bitMap.getComponentIfExist(id.changeScope(undefined), { ignoreVersion: true });
+      if (!componentMap || componentMap.id.hasVersion()) return id;
+      const areSameScope = id.scope ? id.scope === componentMap.defaultScope : true;
+      if (!areSameScope) return id;
+      // component is out of sync, fix it by loading it from the consumer
+      const component = await this.consumer.loadComponent(id.changeVersion(LATEST), loadOpts);
+      return component.id;
     });
     const updatedIds = await Promise.all(updatedIdsP);
     return BitIds.fromArray(updatedIds);
@@ -527,8 +498,14 @@ export default class ComponentsList {
   ): Promise<ListScopeResult[]> {
     const components = await scope.listLocal();
     const componentsOnMain = components.filter((comp) => comp.head);
-    const componentsFilteredByWildcards = namespacesUsingWildcards
-      ? ComponentsList.filterComponentsByWildcard(componentsOnMain, namespacesUsingWildcards)
+    const getNameSpaceIncludeScopeNameIfNeeded = () => {
+      if (!namespacesUsingWildcards) return undefined;
+      if (namespacesUsingWildcards.startsWith(`${scope.name}/`)) return namespacesUsingWildcards;
+      return `${scope.name}/${namespacesUsingWildcards}`;
+    };
+    const nameSpaceIncludeScopeName = getNameSpaceIncludeScopeNameIfNeeded();
+    const componentsFilteredByWildcards = nameSpaceIncludeScopeName
+      ? ComponentsList.filterComponentsByWildcard(componentsOnMain, nameSpaceIncludeScopeName)
       : componentsOnMain;
     const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
     const results = await Promise.all(

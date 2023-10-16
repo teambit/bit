@@ -1,5 +1,6 @@
-import npmClient from '../../npm-client';
+import execa from 'execa';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
+import logger from '../../logger/logger';
 
 export default class ValidateNpmExec extends Diagnosis {
   name = 'validate npm exec';
@@ -15,7 +16,7 @@ export default class ValidateNpmExec extends Diagnosis {
   }
 
   async _runExamine(): Promise<ExamineBareResult> {
-    const npmVersion = await npmClient.getNpmVersion();
+    const npmVersion = await getNpmVersion();
     if (npmVersion) {
       return {
         valid: true,
@@ -26,4 +27,14 @@ export default class ValidateNpmExec extends Diagnosis {
       data: {},
     };
   }
+}
+
+export async function getNpmVersion(): Promise<string | null | undefined> {
+  try {
+    const { stdout, stderr } = await execa('npm', ['--version']);
+    if (stdout && !stderr) return stdout;
+  } catch (err: any) {
+    logger.debugAndAddBreadCrumb('npm-client', `got an error when executing "npm --version". ${err.message}`);
+  }
+  return null;
 }

@@ -1,6 +1,6 @@
 import { v4 } from 'uuid';
 import { cloneDeep, pickBy } from 'lodash';
-import { isHash } from '@teambit/component-version';
+import { isSnap } from '@teambit/component-version';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
@@ -142,13 +142,10 @@ export default class Lane extends BitObject {
     }
   }
   removeComponent(id: BitId): boolean {
-    const existsComponent = this.getComponentByName(id);
+    const existsComponent = this.getComponent(id);
     if (!existsComponent) return false;
-    this.components = this.components.filter((c) => !c.id.isEqualWithoutScopeAndVersion(id));
+    this.components = this.components.filter((c) => !c.id.isEqualWithoutVersion(id));
     return true;
-  }
-  getComponentByName(bitId: BitId): LaneComponent | undefined {
-    return this.components.find((c) => c.id.isEqualWithoutScopeAndVersion(bitId));
   }
   getComponent(id: BitId): LaneComponent | undefined {
     return this.components.find((c) => c.id.isEqualWithoutVersion(id));
@@ -168,7 +165,7 @@ export default class Lane extends BitObject {
       this.readmeComponent = undefined;
       return;
     }
-    const readmeComponent = this.getComponentByName(id);
+    const readmeComponent = this.getComponent(id);
     if (!readmeComponent) {
       this.readmeComponent = { id, head: null };
     } else {
@@ -220,7 +217,7 @@ export default class Lane extends BitObject {
       if (bitIds.filterWithoutVersion(component.id).length > 1) {
         throw new ValidationError(`${message}, the following component is duplicated "${component.id.name}"`);
       }
-      if (!isHash(component.head.hash)) {
+      if (!isSnap(component.head.hash)) {
         throw new ValidationError(
           `${message}, lane component ${component.id.toStringWithoutVersion()} head should be a hash, got ${
             component.head.hash
