@@ -6,11 +6,14 @@ import { Logger } from '@teambit/logger';
 import { SnappingMain } from './snapping.main.runtime';
 import { BasicTagSnapParams } from './tag-model-component';
 
+export type FileData = { path: string; content: string; delete?: boolean };
+
 export type SnapDataPerCompRaw = {
   componentId: string;
   dependencies?: string[];
   aspects?: Record<string, any>;
   message?: string;
+  files?: FileData[];
 };
 
 type SnapFromScopeOptions = {
@@ -31,6 +34,7 @@ the input data is a stringified JSON of an array of the following object.
   dependencies?: string[]; // e.g. [teambit/compiler@1.0.0, teambit/tester@1.0.0]
   aspects?: Record<string,any> // e.g. { "teambit.react/react": {}, "teambit.envs/envs": { "env": "teambit.react/react" } }
   message?: string;       // tag-message.
+  files?: Array<{path: string, content: string}>; // replace content of specified source-files
 }
 an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "first snap"}]'
 `;

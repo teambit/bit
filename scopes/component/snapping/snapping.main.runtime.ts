@@ -51,6 +51,7 @@ import {
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { VersionNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
+import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
@@ -59,7 +60,7 @@ import { ComponentsHaveIssues } from './components-have-issues';
 import ResetCmd from './reset-cmd';
 import { tagModelComponent, updateComponentsVersions, BasicTagParams } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
-import { SnapDataPerCompRaw, SnapFromScopeCmd } from './snap-from-scope.cmd';
+import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -377,6 +378,7 @@ if you're willing to lose the history from the head to the specified version, us
             : [],
           aspects: snapData.aspects,
           message: snapData.message,
+          files: snapData.files,
         };
       })
     );
@@ -410,6 +412,9 @@ if you're willing to lose the history from the head to the specified version, us
         if (snapData.aspects) await this.scope.addAspectsFromConfigObject(comp, snapData.aspects);
         if (snapData.dependencies.length) {
           await this.updateDependenciesVersionsOfComponent(comp, snapData.dependencies, bitIds);
+        }
+        if (snapData.files?.length) {
+          await this.updateSourceFiles(comp, snapData.files);
         }
       })
     );
@@ -994,6 +999,31 @@ another option, in case this dependency is not in main yet is to remove all refe
       throw new Error(`unable to find a version that satisfies "${range}" of "${compId.toString()}"`);
     }
     return compId.changeVersion(exactVersion);
+  }
+
+  private async updateSourceFiles(component: Component, files: FileData[]) {
+    const currentFiles = component.state.filesystem.files;
+
+    files.forEach((file) => {
+      if (file.delete) {
+        const index = currentFiles.findIndex((f) => f.path === file.path);
+        if (index !== -1) {
+          currentFiles.splice(index, 1);
+        }
+        return;
+      }
+      const currentFile = currentFiles.find((f) => f.path === file.path);
+      if (currentFile) {
+        currentFile.contents = Buffer.from(file.content);
+      } else {
+        currentFiles.push(
+          new SourceFile({ base: '.', path: file.path, contents: Buffer.from(file.content), test: false })
+        );
+      }
+    });
+
+    if (!currentFiles.length)
+      throw new Error(`unable to update component ${component.id.toString()}, all files were deleted`);
   }
 
   async updateDependenciesVersionsOfComponent(
