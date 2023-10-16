@@ -295,7 +295,9 @@ export class WorkspaceComponentLoader {
 
     await Promise.all(
       ids.map(async (componentId) => {
-        const inWs = await this.workspace.hasId(componentId);
+        const allWsIds = await this.workspace.listIds();
+        const inWs = allWsIds.find((id) => id.isEqual(componentId, { ignoreVersion: !componentId.hasVersion() }));
+
         if (!inWs) {
           result.scopeIds.set(componentId.toString(), componentId);
           return undefined;
