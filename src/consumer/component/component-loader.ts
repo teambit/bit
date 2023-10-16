@@ -240,7 +240,7 @@ export default class ComponentLoader {
 
   private async _handleOutOfSyncScenarios(componentMap: ComponentMap): Promise<ComponentID | undefined> {
     const currentId = componentMap.id;
-    const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId);
+    const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId.changeVersion(undefined));
     if (modelComponent && !currentId.hasVersion()) {
       // for Harmony, we know ahead the defaultScope, so even then .bitmap shows it as new and
       // there is nothing in the scope, we can check if there is a component with the same
