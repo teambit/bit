@@ -5,6 +5,7 @@ import { SemVer } from 'semver';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { VERSION_ZERO } from '@teambit/legacy/dist/scope/models/model-component';
 import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
 import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import type { ScopeMain } from './scope.main.runtime';
@@ -44,8 +45,11 @@ export class ScopeComponentLoader {
     }
     if (!modelComponent) return undefined;
 
-    const versionStr =
-      id.version && id.version !== 'latest' ? id.version : modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
+    const versionStr = id.hasVersion()
+      ? (id.version as string)
+      : modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
+
+    if (versionStr === VERSION_ZERO) return undefined;
     const newId = id.changeVersion(versionStr);
     const version = await modelComponent.loadVersion(versionStr, this.scope.legacyScope.objects);
     const snap = await this.getHeadSnap(modelComponent);

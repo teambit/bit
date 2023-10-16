@@ -233,12 +233,13 @@ export class CheckoutMain {
 
   private async syncNewComponents({ ids, head }: CheckoutProps) {
     if (!head) return;
-    const notExported = ids?.filter((id) => !id.hasScope()).map((id) => id.changeScope(id.scope));
+    const notExported = ids?.filter((id) => !this.workspace.isExported(id)).map((id) => id.changeScope(id.scope));
     const scopeComponentsImporter = this.workspace.consumer.scope.scopeImporter;
     try {
       await scopeComponentsImporter.importWithoutDeps(ComponentIdList.fromArray(notExported || []).toVersionLatest(), {
         cache: false,
         reason: 'for making sure the new components are really new and are not out-of-sync',
+        includeUnexported: true,
       });
     } catch (err) {
       // don't stop the process. it's possible that the scope doesn't exist yet because these are new components

@@ -9,6 +9,7 @@ import ComponentsPendingImport from '../component-ops/exceptions/components-pend
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
 import MissingFilesFromComponent from '../component/exceptions/missing-files-from-component';
 import ComponentOutOfSync from '../exceptions/component-out-of-sync';
+import { VERSION_ZERO } from '../../scope/models/model-component';
 
 export type ComponentStatus = {
   modified: boolean;
@@ -89,6 +90,10 @@ export class ComponentStatusLoader {
       throw err;
     }
     if (!componentFromModel) {
+      status.newlyCreated = true;
+      return status;
+    }
+    if (componentFromModel.getHeadRegardlessOfLaneAsTagOrHash(true) === VERSION_ZERO) {
       status.newlyCreated = true;
       return status;
     }

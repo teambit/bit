@@ -48,6 +48,7 @@ import { ConsumerNotFound } from './exceptions';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
+import { NoHeadNoVersion } from '../scope/exceptions/no-head-no-version';
 
 type ConsumerProps = {
   projectPath: string;
@@ -294,7 +295,7 @@ export default class Consumer {
   async loadComponentFromModelIfExist(id: ComponentID): Promise<Component | undefined> {
     if (!id.version) return undefined;
     return this.loadComponentFromModel(id).catch((err) => {
-      if (err instanceof ComponentNotFound) return undefined;
+      if (err instanceof ComponentNotFound || err instanceof NoHeadNoVersion) return undefined;
       throw err;
     });
   }

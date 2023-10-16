@@ -201,7 +201,6 @@ export default class ComponentLoader {
     component.loadedFromFileSystem = true;
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
     component.componentMap = this.consumer.bitMap.getComponent(updatedId);
-    await this._handleOutOfSyncWithDefaultScope(component);
 
     const loadDependencies = async () => {
       await this.invalidateDependenciesCacheIfNeeded();
@@ -241,6 +240,26 @@ export default class ComponentLoader {
 
   private async _handleOutOfSyncScenarios(componentMap: ComponentMap): Promise<ComponentID | undefined> {
     const currentId = componentMap.id;
+    const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId);
+    if (modelComponent && !currentId.hasVersion()) {
+      // for Harmony, we know ahead the defaultScope, so even then .bitmap shows it as new and
+      // there is nothing in the scope, we can check if there is a component with the same
+      // default-scope in the objects
+      const existingVersion = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
+      if (existingVersion === VERSION_ZERO) {
+        // this might happen when a component was created on another lane.
+        // we don't allow two components with the same name and different history graph.
+        loader.stop();
+        logger.console(
+          `component ${currentId.toString()} exists already in the local-scope without head.
+it was probably created on another lane and if so, consider removing this component and merge it from the lane`,
+          'warn',
+          'yellow'
+        );
+        return undefined;
+      }
+    }
+
     const componentFromModel = await this.consumer.loadComponentFromModelIfExist(currentId);
     let newId: ComponentID | undefined;
     if (componentFromModel && !currentId.hasVersion()) {
@@ -254,7 +273,6 @@ export default class ComponentLoader {
     }
     if (!componentFromModel && currentId.hasVersion()) {
       // the version used in .bitmap doesn't exist in the scope
-      const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId.changeVersion(undefined));
       if (modelComponent) {
         // the scope has this component but not the version used in .bitmap, sync .bitmap with
         // latest version from the scope
@@ -270,42 +288,6 @@ export default class ComponentLoader {
       this.consumer.bitMap.updateComponentId(newId);
     }
     return newId;
-  }
-
-  private async _handleOutOfSyncWithDefaultScope(component: Component) {
-    const { componentFromModel, componentMap } = component;
-
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const currentId = componentMap!.id;
-    if (!componentFromModel && !currentId.hasVersion()) {
-      // for Harmony, we know ahead the defaultScope, so even then .bitmap shows it as new and
-      // there is nothing in the scope, we can check if there is a component with the same
-      // default-scope in the objects
-      const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId);
-      if (!modelComponent) {
-        return;
-      }
-      const existingVersion = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
-      if (existingVersion === VERSION_ZERO) {
-        // this might happen when a component was created on another lane.
-        // we don't allow two components with the same name and different history graph.
-        loader.stop();
-        logger.console(
-          `component ${currentId.toString()} exists already in the local-scope without head.
-it was probably created on another lane and if so, consider removing this component and merge it from the lane`,
-          'warn',
-          'yellow'
-        );
-        return;
-      }
-      const newId = currentId.changeVersion(existingVersion).changeScope(modelComponent.scope as string);
-      component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
-
-      component.version = newId.version;
-      component.scope = newId.scope;
-      this.consumer.bitMap.updateComponentId(newId);
-      component.componentMap = this.consumer.bitMap.getComponent(newId);
-    }
   }
 
   private async _throwPendingImportIfNeeded(currentId: ComponentID) {

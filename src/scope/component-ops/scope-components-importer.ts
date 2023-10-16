@@ -100,6 +100,7 @@ export default class ScopeComponentsImporter {
     lane,
     ignoreMissingHead = false,
     preferDependencyGraph = true,
+    includeUnexported = false,
     reason,
   }: {
     ids: ComponentIdList;
@@ -110,13 +111,14 @@ export default class ScopeComponentsImporter {
     lane?: Lane; // if ids coming from a lane, add the lane object so we could fetch these ids from the lane's remote
     ignoreMissingHead?: boolean; // needed when fetching "main" objects when on a lane
     preferDependencyGraph?: boolean; // if an external is missing and the remote has it with the dependency graph, don't fetch all its dependencies
+    includeUnexported?: boolean; // whether filter out new component-ids that were not exported yet (default), or not (for cases we want to fix out-of-sync scenarios)
     reason?: string; // reason why this import is needed
   }): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
     logger.debug(
       `importMany, cache ${cache}, preferDependencyGraph: ${preferDependencyGraph}, reFetchUnBuiltVersion: ${reFetchUnBuiltVersion}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: ${ids.toString()}, lane: ${lane?.id()}`
     );
-    const idsToImport = compact(ids.filter((id) => this.scope.isExported(id)));
+    const idsToImport = compact(ids.filter((id) => (includeUnexported ? id.hasScope() : this.scope.isExported(id))));
     if (R.isEmpty(idsToImport)) {
       logger.debug(`importMany, nothing to import`);
       return [];
@@ -160,6 +162,7 @@ export default class ScopeComponentsImporter {
       lane,
       throwForSeederNotFound,
       preferDependencyGraph,
+      includeUnexported,
       reason
     );
 
@@ -352,6 +355,7 @@ export default class ScopeComponentsImporter {
       ignoreMissingHead = false,
       collectParents = false,
       fetchHeadIfLocalIsBehind = false,
+      includeUnexported = false,
       reason,
     }: {
       /**
@@ -373,6 +377,11 @@ export default class ScopeComponentsImporter {
        */
       fetchHeadIfLocalIsBehind?: boolean;
       /**
+       * whether filter out new component-ids that were not exported yet (default), or not (for cases we want to fix
+       * out-of-sync scenarios)
+       */
+      includeUnexported?: boolean;
+      /**
        * the reason why this import is needed (shown during the import)
        */
       reason?: string;
@@ -382,7 +391,7 @@ export default class ScopeComponentsImporter {
     if (!idsWithoutNils.length) return;
     logger.debug(`importWithoutDeps, total ids: ${ids.length}`);
 
-    const [, externals] = partition(idsWithoutNils, (id) => this.scope.isLocal(id));
+    const [, externals] = partition(idsWithoutNils, (id) => this.isIdLocal(id, includeUnexported));
     if (!externals.length) return;
 
     const getIds = async () => {
@@ -422,6 +431,10 @@ export default class ScopeComponentsImporter {
       delta: fetchHeadIfLocalIsBehind,
       reason,
     });
+  }
+
+  private isIdLocal(id: ComponentID, includeNonExported = false) {
+    return includeNonExported ? id.isLocal(this.scope.name) : this.scope.isLocal(id);
   }
 
   async importLanes(remoteLaneIds: LaneId[]): Promise<Lane[]> {
@@ -751,6 +764,7 @@ export default class ScopeComponentsImporter {
     lane?: Lane,
     throwOnUnavailableScope = true,
     preferDependencyGraph = false,
+    includeUnexported = false,
     reason?: string
   ): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
@@ -760,7 +774,7 @@ export default class ScopeComponentsImporter {
     );
     const context = {};
     ids.forEach((id) => {
-      if (this.scope.isLocal(id))
+      if (this.isIdLocal(id, includeUnexported))
         throw new Error(`getExternalMany expects to get external ids only, got ${id.toString()}`);
     });
     enrichContextFromGlobal(Object.assign({}, { requestedBitIds: ids.map((id) => id.toString()) }));

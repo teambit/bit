@@ -57,6 +57,7 @@ export type ImportOptions = {
   fetchDeps?: boolean; // by default, if a component was tagged with > 0.0.900, it has the flattened-deps-graph in the object
   trackOnly?: boolean;
   includeDeprecated?: boolean;
+  isLaneFromRemote?: boolean; // whether the `lanes.lane` object is coming directly from the remote.
 };
 type ComponentMergeStatus = {
   component: Component;
@@ -298,6 +299,7 @@ if you need this specific snap, find the lane this snap is belong to, then run "
       // in case a user is merging a lane into a new workspace, then, locally main has head, but remotely the head is
       // empty, until it's exported. going to the remote and asking this component will throw an error if ignoreMissingHead is false
       ignoreMissingHead: true,
+      includeUnexported: this.options.isLaneFromRemote,
       reason: `of their latest on ${lane ? `lane ${lane.id()}` : 'main'}`,
     });
 

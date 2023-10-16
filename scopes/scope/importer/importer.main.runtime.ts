@@ -213,6 +213,7 @@ export class ImporterMain {
     const resultsPerLane = await pMapSeries(lanes, async (lane) => {
       this.logger.setStatusLine(`fetching lane ${lane.name}`);
       options.lanes = { laneIds: [lane.toLaneId()], lanes: [lane] };
+      options.isLaneFromRemote = true;
       const results = await this.importObjects(options);
       this.logger.consoleSuccess();
       return results;
