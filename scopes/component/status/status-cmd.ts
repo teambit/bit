@@ -19,7 +19,7 @@ import { isHash } from '@teambit/component-version';
 import { StatusMain, StatusResult } from './status.main.runtime';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
-  `learn more at about Bit component: https://BASE_DOCS_DOMAIN/reference/components/component-anatomy/`
+  `learn more at about Bit component: https://${BASE_DOCS_DOMAIN}/reference/components/component-anatomy/`
 )}`;
 
 export class StatusCmd implements Command {
