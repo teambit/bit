@@ -1057,7 +1057,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * currently it used only for get many of aspects
    * @param ids
    */
-  async importAndGetMany(ids: Array<ComponentID>, reason?: string): Promise<Component[]> {
+  async importAndGetMany(
+    ids: Array<ComponentID>,
+    reason?: string,
+    loadOpts?: ComponentLoadOptions
+  ): Promise<Component[]> {
     if (!ids.length) return [];
     await this.importCurrentLaneIfMissing();
     await this.scope.import(ids, {
@@ -1065,7 +1069,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       preferDependencyGraph: true,
       reason,
     });
-    return this.getMany(ids);
+    return this.getMany(ids, loadOpts);
   }
 
   async importCurrentLaneIfMissing() {

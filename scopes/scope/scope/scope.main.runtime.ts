@@ -723,9 +723,9 @@ export class ScopeMain implements ComponentFactory {
     return compact(components);
   }
 
-  async loadManyCompsAspects(Components: Component[], lane?: Lane): Promise<Component[]> {
-    const components = await mapSeries(Components, (id) => this.loadCompAspects(id, lane));
-    return compact(components);
+  async loadManyCompsAspects(components: Component[], lane?: Lane): Promise<Component[]> {
+    const loadedComponents = await mapSeries(components, (id) => this.loadCompAspects(id, lane));
+    return compact(loadedComponents);
   }
 
   /**
@@ -949,7 +949,7 @@ export class ScopeMain implements ComponentFactory {
       aspectIds.push(component.id.toString());
     }
     const envsData = component.state.aspects.get(EnvsAspect.id);
-    if ((opts.loadEnvs && envsData?.data?.services) || envsData?.data?.self) {
+    if ((opts.loadEnvs && envsData?.data?.services) || envsData?.data?.self || envsData?.data?.type === 'env') {
       aspectIds.push(component.id.toString());
     }
     await this.loadAspects(aspectIds, true, component.id.toString(), lane);

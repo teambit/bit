@@ -114,6 +114,7 @@ type CreateGraphOptions = {
 
 export type IsolateComponentsOptions = CreateGraphOptions & {
   name?: string;
+
   /**
    * absolute path to put all the capsules dirs inside.
    */
@@ -319,7 +320,7 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions,
     legacyScope?: LegacyScope
   ): Promise<Network> {
-    const host = this.componentAspect.getHost();
+    const host = opts.host || this.componentAspect.getHost();
     this.logger.debug(
       `isolateComponents, ${seeders.join(', ')}. opts: ${JSON.stringify(
         Object.assign({}, opts, { host: opts.host?.name })
@@ -361,7 +362,7 @@ export class IsolatorMain {
   }
 
   private async createGraph(seeders: ComponentID[], opts: CreateGraphOptions = {}): Promise<Component[]> {
-    const host = this.componentAspect.getHost();
+    const host = opts.host || this.componentAspect.getHost();
     const getGraphOpts = pick(opts, ['host']);
     const graph = await this.graph.getGraphIds(seeders, getGraphOpts);
     const successorsSubgraph = graph.successorsSubgraph(seeders.map((id) => id.toString()));

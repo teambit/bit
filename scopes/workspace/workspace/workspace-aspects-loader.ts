@@ -31,6 +31,7 @@ import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ShouldLoadFunc } from './build-graph-from-fs';
 import type { Workspace } from './workspace';
 import { OnAspectsResolve, OnAspectsResolveSlot, OnRootAspectAdded, OnRootAspectAddedSlot } from './workspace.provider';
+import { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
 
 export type GetConfiguredUserAspectsPackagesOptions = {
   externalsOnly?: boolean;
@@ -734,7 +735,13 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
    */
   private async importAndGetAspects(componentIds: ComponentID[]): Promise<Component[]> {
     try {
-      return await this.workspace.importAndGetMany(componentIds, 'to load aspects from the workspace');
+      // We don't want to load the seeders as aspects as it will cause an infinite loop
+      // once you try to load the seeder it will try to load the workspace component
+      // that will arrive here again and again
+      const loadOpts: ComponentLoadOptions = {
+        idsToNotLoadAsAspects: componentIds.map((id) => id.toString()),
+      };
+      return await this.workspace.importAndGetMany(componentIds, 'to load aspects from the workspace', loadOpts);
     } catch (err: any) {
       if (err instanceof ComponentNotFound) {
         const config = this.harmony.get<ConfigMain>('teambit.harmony/config');

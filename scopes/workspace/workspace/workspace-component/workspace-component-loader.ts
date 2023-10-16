@@ -25,9 +25,10 @@ type GetManyRes = {
   invalidComponents: InvalidComponent[];
 };
 
-type ComponentLoadOptions = LegacyComponentLoadOptions & {
+export type ComponentLoadOptions = LegacyComponentLoadOptions & {
   loadExtensions?: boolean;
   executeLoadSlot?: boolean;
+  idsToNotLoadAsAspects?: string[];
 };
 
 type ComponentGetOneOptions = {
@@ -37,6 +38,19 @@ type ComponentGetOneOptions = {
 type WorkspaceScopeIdsMap = {
   scopeIds: Map<string, ComponentID>;
   workspaceIds: Map<string, ComponentID>;
+};
+
+export type LoadCompAsAspectsOptions = {
+  /**
+   * In case the component we are loading is app, whether to load it as app (in a scope aspects capsule)
+   */
+  loadApps?: boolean;
+  /**
+   * In case the component we are loading is env, whether to load it as env (in a scope aspects capsule)
+   */
+  loadEnvs?: boolean;
+
+  idsToNotLoadAsAspects?: string[];
 };
 
 export class WorkspaceComponentLoader {
@@ -106,7 +120,6 @@ export class WorkspaceComponentLoader {
     const workspaceScopeIdsMap: WorkspaceScopeIdsMap = await this.groupAndUpdateIds(ids);
 
     const groupsToHandle = await this.buildLoadGroups(workspaceScopeIdsMap);
-
     const groupsRes = await mapSeries(groupsToHandle, async (group) => {
       const { scopeIds, workspaceIds } = group;
       return this.getAndLoadSlot(workspaceIds, scopeIds, loadOpts, throwOnFailure, longProcessLogger);
@@ -187,13 +200,15 @@ export class WorkspaceComponentLoader {
     throwOnFailure = true,
     longProcessLogger
   ): Promise<GetManyRes> {
-    const { components, invalidComponents } = await this.getComponentsWithoutLoadExtensions(
+    const { workspaceComponents, scopeComponents, invalidComponents } = await this.getComponentsWithoutLoadExtensions(
       workspaceIds,
       scopeIds,
       loadOpts,
       throwOnFailure,
       longProcessLogger
     );
+
+    const components = workspaceComponents.concat(scopeComponents);
 
     const allExtensions: ExtensionDataList[] = components.map((component) => {
       return component.state._consumer.extensions;
@@ -209,8 +224,40 @@ export class WorkspaceComponentLoader {
       })
     );
     await this.warnAboutMisconfiguredEnvs(withAspects);
+    // It's important to load the workspace components as aspects here
+    // otherwise the envs from the workspace won't be loaded at time
+    // so we will get wrong dependencies from component who uses envs from the workspace
+    await this.loadCompsAsAspects(workspaceComponents, {
+      loadApps: true,
+      loadEnvs: true,
+      idsToNotLoadAsAspects: loadOpts.idsToNotLoadAsAspects,
+    });
 
     return { components: withAspects, invalidComponents };
+  }
+
+  // TODO: this is similar to scope.main.runtime loadCompAspects func, we should merge them.
+  async loadCompsAsAspects(
+    components: Component[],
+    opts: LoadCompAsAspectsOptions = { loadApps: true, loadEnvs: true }
+  ): Promise<void> {
+    const aspectIds: string[] = [];
+    components.forEach((component) => {
+      if (opts.idsToNotLoadAsAspects?.includes(component.id.toString())) {
+        return;
+      }
+      const appData = component.state.aspects.get('teambit.harmony/application');
+      if (opts.loadApps && appData?.data?.appName) {
+        aspectIds.push(component.id.toString());
+      }
+      const envsData = component.state.aspects.get(EnvsAspect.id);
+      if ((opts.loadEnvs && envsData?.data?.services) || envsData?.data?.self || envsData?.data?.type === 'env') {
+        aspectIds.push(component.id.toString());
+      }
+    });
+    if (!aspectIds.length) return;
+
+    await this.workspace.loadAspects(aspectIds, true, 'self loading aspects', {});
   }
 
   private async populateScopeAndExtensionsCache(ids: ComponentID[], workspaceScopeIdsMap: WorkspaceScopeIdsMap) {
@@ -278,8 +325,6 @@ export class WorkspaceComponentLoader {
       loadOpts || {}
     );
 
-    const allIds = [...workspaceIds, ...scopeIds];
-
     const legacyIdsIndex = {};
 
     const legacyIds = workspaceIds.map((id) => {
@@ -334,8 +379,14 @@ export class WorkspaceComponentLoader {
       this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
     });
     const components = compact(await componentsP);
-    const scopeComponents = await this.workspace.scope.getMany(scopeIds);
-    return { components: components.concat(scopeComponents), invalidComponents };
+    // Here we need to load many, otherwise we will get wrong overrides dependencies data
+    // as when loading the next batch of components (next group) we won't have the envs loaded
+    const scopeComponents = await this.workspace.scope.loadMany(scopeIds);
+    return {
+      workspaceComponents: components,
+      scopeComponents,
+      invalidComponents,
+    };
   }
 
   async getInvalid(ids: Array<ComponentID>): Promise<InvalidComponent[]> {
