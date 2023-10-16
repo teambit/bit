@@ -23,7 +23,6 @@ type ConfigProps = {
 };
 
 type ConfigLoadRegistry = { [extId: string]: Function };
-type ConfigLegacyLoadRegistry = { [extId: string]: Function };
 
 // TODO: take for some other place like config
 // TODO: unify this and the same in src/components/utils/load-extensions/load-resolved-extensions.ts
