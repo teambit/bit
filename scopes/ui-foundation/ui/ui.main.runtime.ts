@@ -92,6 +92,7 @@ export type RuntimeOptions = {
   /**
    * name of the UI root to load.
    */
+  uiRootName?: string;
   uiRootAspectIdOrName?: string;
 
   /**
@@ -258,7 +259,18 @@ export class UiMain {
   /**
    * create a Bit UI runtime.
    */
-  async createRuntime({ uiRootAspectIdOrName, pattern, dev, port, rebuild, verbose, skipUiBuild }: RuntimeOptions) {
+  async createRuntime({
+    uiRootName,
+    uiRootAspectIdOrName,
+    pattern,
+    dev,
+    port,
+    rebuild,
+    verbose,
+    skipUiBuild,
+  }: RuntimeOptions) {
+    // uiRootName to be deprecated
+    uiRootAspectIdOrName = uiRootName || uiRootAspectIdOrName;
     const maybeUiRoot = this.getUi(uiRootAspectIdOrName);
     if (!maybeUiRoot) throw new UnknownUI(uiRootAspectIdOrName, this.possibleUis());
 
