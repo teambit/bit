@@ -36,7 +36,7 @@ export type OverviewProps = {
   titleBadges: TitleBadgeSlot;
   overviewOptions: OverviewOptionsSlot;
   previewProps?: Partial<ComponentPreviewProps>;
-  getEmptyState?: () => ComponentType|undefined;
+  getEmptyState?: () => ComponentType | undefined;
 };
 
 export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyState }: OverviewProps) {
@@ -56,7 +56,7 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
 
   // if (component?.buildStatus === 'failed' && component?.host === 'teambit.scope/scope')
   //   return <StatusMessageCard style={{ margin: 'auto' }} status="FAILURE" title="failed to get component preview " />;
-  const buildFailed = component.buildStatus !== 'Succeed' && component?.host === 'teambit.scope/scope';
+  const buildFailed = component.buildStatus?.toString() !== 'succeed' && component?.host === 'teambit.scope/scope';
 
   const isScaling = component.preview?.isScaling;
 
@@ -96,26 +96,28 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
       {/* <LinkedHeading size="xs" className={styles.title}>
         <Icon of="text" /> <span>README</span>
       </LinkedHeading> */}
-      {!buildFailed && <div className={styles.readme}>
-        {/* {isLoading && <ReadmeSkeleton />} */}
-        <ComponentPreview
-          onLoad={onPreviewLoad}
-          previewName="overview"
-          pubsub={true}
-          queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
-          viewport={null}
-          fullContentHeight
-          disableScroll={true}
-          {...rest}
-          component={component}
-          style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
-        />
-        {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
-        {component.preview?.skipIncludes && (
-          <PropertiesTable className={styles.overviewPropsTable} componentId={component.id.toString()} />
-        )}
-      </div>}
-      {(buildFailed && EmptyState) && <EmptyState />}
+      {!buildFailed && (
+        <div className={styles.readme}>
+          {/* {isLoading && <ReadmeSkeleton />} */}
+          <ComponentPreview
+            onLoad={onPreviewLoad}
+            previewName="overview"
+            pubsub={true}
+            queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
+            viewport={null}
+            fullContentHeight
+            disableScroll={true}
+            {...rest}
+            component={component}
+            style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
+          />
+          {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
+          {component.preview?.skipIncludes && (
+            <PropertiesTable className={styles.overviewPropsTable} componentId={component.id.toString()} />
+          )}
+        </div>
+      )}
+      {buildFailed && EmptyState && <EmptyState />}
     </div>
   );
 }
