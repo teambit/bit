@@ -120,6 +120,10 @@ export class ComponentID {
     return this.toObject();
   }
 
+  static deserialize(id: ComponentIdObj) {
+    return ComponentID.fromObject(id);
+  }
+
   static isValidVersion(version: string): boolean {
     return BitId.isValidVersion(version);
   }

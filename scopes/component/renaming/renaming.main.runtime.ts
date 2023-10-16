@@ -148,10 +148,8 @@ make sure this argument is the name only, without the scope-name. to change the 
     }
     if (this.workspace.defaultScope === oldScope) {
       await this.workspace.setDefaultScope(newScope);
-      componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.removeDefaultScope(comp.id));
-    } else {
-      componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.setDefaultScope(comp.id, newScope));
     }
+    componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.setDefaultScope(comp.id, newScope));
     await this.workspace.bitMap.write();
     await this.workspace.clearCache();
 

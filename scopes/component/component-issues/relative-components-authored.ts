@@ -17,12 +17,24 @@ export class RelativeComponentsAuthored extends ComponentIssue {
   isCacheBlocker = false;
   formatDataFunction = relativeComponentsAuthoredIssuesToString;
 
+  serialize(): string {
+    const obj = Object.keys(this.data).reduce((acc, fileName) => {
+      acc[fileName] = this.data[fileName].map((record) => ({
+        importSource: record.importSource,
+        componentId: record.componentId.serialize(),
+        relativePath: record.relativePath,
+      }));
+      return acc;
+    }, {});
+    return JSON.stringify(obj);
+  }
+
   deserialize(dataStr: string) {
     const data = JSON.parse(dataStr);
     Object.keys(data).forEach((fileName) => {
       data[fileName] = data[fileName].map((record) => ({
         importSource: record.importSource,
-        componentId: ComponentID.fromObject(record.componentId),
+        componentId: ComponentID.deserialize(record.componentId),
         relativePath: record.relativePath,
       }));
     });
