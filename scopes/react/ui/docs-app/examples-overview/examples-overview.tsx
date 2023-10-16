@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import React from 'react';
-import jsxToString from 'jsx-to-string';
+import jsxToString from 'react-element-to-jsx-string';
 import type { Example } from '@teambit/docs';
 import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { Section, SectionProps } from '@teambit/documenter.ui.section';
@@ -29,11 +29,7 @@ export type ExampleSectionProps = {
 
 function ExampleSection({ example, className, ...rest }: ExampleSectionProps) {
   // @ts-ignore
-  const code = example.jsx
-    ? jsxToString(example.jsx, {
-        useFunctionCode: true,
-      })
-    : example.code;
+  const code = example.jsx ? jsxToString(example.jsx, { showFunctions: true }) : example.code;
 
   return (
     <Section {...rest} className={classNames(className, styles.exampleSection)}>
