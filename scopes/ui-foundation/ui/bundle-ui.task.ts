@@ -68,16 +68,16 @@ export class BundleUiTask implements BuildTask {
   }
 
   static getArtifactDef() {
+    const scopeRootDir = BundleUiTask.getArtifactDirectory(UIROOT_ASPECT_IDS.SCOPE);
+    const workspaceRootDir = BundleUiTask.getArtifactDirectory(UIROOT_ASPECT_IDS.WORKSPACE);
     return [
       {
         name: `${BUNDLE_UI_DIR}-${BUNDLE_UIROOT_DIR[UIROOT_ASPECT_IDS.SCOPE]}`,
-        globPatterns: ['**'],
-        rootDir: BundleUiTask.getArtifactDirectory(UIROOT_ASPECT_IDS.SCOPE),
+        globPatterns: [`${scopeRootDir}/**`],
       },
       {
         name: `${BUNDLE_UI_DIR}-${BUNDLE_UIROOT_DIR[UIROOT_ASPECT_IDS.WORKSPACE]}`,
-        globPatterns: ['**'],
-        rootDir: BundleUiTask.getArtifactDirectory(UIROOT_ASPECT_IDS.WORKSPACE),
+        globPatterns: [`${workspaceRootDir}/**`],
       },
     ];
   }
