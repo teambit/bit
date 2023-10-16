@@ -107,8 +107,9 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
     // Do nothing here, invalid bitmaps will be handled later
     // eslint-disable-next-line no-empty
   } catch (e: any) {}
+  const defaultScope = rawConfig['teambit.workspace/workspace'].defaultScope;
   const allBitmapIds = Object.keys(parsedBitMap).map((id) =>
-    BitMap.getComponentIdFromComponentJson(id, parsedBitMap[id], rawConfig.defaultScope)
+    BitMap.getComponentIdFromComponentJson(id, parsedBitMap[id], defaultScope)
   );
   const bitMapBitIds = ComponentIdList.fromArray(allBitmapIds);
   const result = Object.entries(rawConfig).reduce((acc, [aspectId, aspectConfig]) => {
