@@ -295,7 +295,9 @@ export class WorkspaceComponentLoader {
 
     await Promise.all(
       ids.map(async (componentId) => {
-        const allWsIds = await this.workspace.listIds();
+        const nonDeletedWsIds = await this.workspace.listIds();
+        const deletedWsIds = await this.workspace.locallyDeletedIds();
+        const allWsIds = nonDeletedWsIds.concat(deletedWsIds);
         const inWs = allWsIds.find((id) => id.isEqual(componentId, { ignoreVersion: !componentId.hasVersion() }));
 
         if (!inWs) {
