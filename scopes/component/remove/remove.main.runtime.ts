@@ -13,8 +13,8 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import { IssuesClasses } from '@teambit/component-issues';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
+import { NoHeadNoVersion } from '@teambit/legacy/dist/scope/exceptions/no-head-no-version';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
-import { VersionNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { removeComponentsFromNodeModules } from '@teambit/legacy/dist/consumer/component/package-json-utils';
 import { RemoveCmd } from './remove-cmd';
 import { RemoveComponentsResult, removeComponents } from './remove-components';
@@ -176,17 +176,7 @@ export class RemoveMain {
     const currentLane = await this.workspace.getCurrentLaneObject();
     const idOnLane = currentLane?.getComponent(compId);
     const compIdWithPossibleVer = idOnLane ? compId.changeVersion(idOnLane.head.toString()) : compId;
-    let compFromScope: Component | undefined;
-    try {
-      compFromScope = await this.workspace.scope.get(compIdWithPossibleVer);
-    } catch (err: any) {
-      if (err instanceof VersionNotFound && err.version === '0.0.0') {
-        throw new BitError(
-          `unable to find the component ${compIdWithPossibleVer.toString()} in the current lane or main`
-        );
-      }
-      throw err;
-    }
+    const compFromScope = await this.workspace.scope.get(compIdWithPossibleVer);
     if (compFromScope && this.isRemoved(compFromScope)) {
       // case #2 and #3
       await importComp(compIdWithPossibleVer._legacy.toString());
@@ -194,7 +184,17 @@ export class RemoveMain {
       return true;
     }
     // case #5
-    const comp = await this.workspace.scope.getRemoteComponent(compId);
+    let comp: Component | undefined;
+    try {
+      comp = await this.workspace.scope.getRemoteComponent(compId);
+    } catch (err: any) {
+      if (err instanceof NoHeadNoVersion) {
+        throw new BitError(
+          `unable to find the component ${compIdWithPossibleVer.toString()} in the current lane or main`
+        );
+      }
+      throw err;
+    }
     if (!this.isRemoved(comp)) {
       return false;
     }

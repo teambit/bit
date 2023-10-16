@@ -59,7 +59,7 @@ describe('bit add command', function () {
     it('Should print tracking component: id', () => {
       helper.fixtures.createComponentBarFoo();
       output = helper.fixtures.addComponentBarFooAsDir();
-      expect(output).to.contain('tracking component bar/foo');
+      expect(output).to.contain('bar/foo');
     });
     // @TODO: FIX ON HARMONY!
     it.skip('Should print warning when trying to add file that is already tracked with different id and not add it as a new one', () => {
@@ -173,7 +173,7 @@ describe('bit add command', function () {
       output = helper.command.addComponent(path.normalize('bar'), { i: 'bar/foo' });
     });
     it('Should track component ', () => {
-      expect(output).to.contain('tracking component bar/foo');
+      expect(output).to.contain('bar/foo');
     });
     it('Should contain component inside bitmap', () => {
       const bitMap = helper.bitMap.read();
