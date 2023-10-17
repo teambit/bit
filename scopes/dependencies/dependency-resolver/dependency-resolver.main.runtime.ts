@@ -1111,13 +1111,13 @@ export class DependencyResolverMain {
     const envId = await this.envs.calculateEnvIdFromExtensions(configuredExtensions);
     if (this.envs.isCoreEnv(envId)) {
       const env = await this.envs.calculateEnvFromExtensions(configuredExtensions);
-      return this.getComponentEnvPolicyFromEnv(env.env, { includeLegacyPeersInSelfPolicy: true });
+      return this.getComponentEnvPolicyFromEnv(env.env, { envId });
     }
 
     const fromFile = await this.getEnvPolicyFromFile(envId);
     if (fromFile) return fromFile;
     const env = await this.envs.calculateEnvFromExtensions(configuredExtensions);
-    return this.getComponentEnvPolicyFromEnv(env.env, { includeLegacyPeersInSelfPolicy: false });
+    return this.getComponentEnvPolicyFromEnv(env.env, { envId });
   }
 
   async getEnvPolicyFromEnvId(id: ComponentID, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
@@ -1131,26 +1131,23 @@ export class DependencyResolverMain {
     if (!envDef) return undefined;
     const env = envDef.env;
     return this.getComponentEnvPolicyFromEnv(env, {
-      includeLegacyPeersInSelfPolicy: this.envs.isCoreEnv(id.toStringWithoutVersion()),
+      envId: id.toStringWithoutVersion(),
     });
   }
 
   async getComponentEnvPolicy(component: Component): Promise<EnvPolicy> {
     // const envComponent = await this.envs.getEnvComponent(component);
     const envId = await this.envs.calculateEnvId(component);
-    if (this.envs.isCoreEnv(envId.toStringWithoutVersion())) {
+    const envIdWithoutVersion = envId.toStringWithoutVersion();
+    if (this.envs.isCoreEnv(envIdWithoutVersion)) {
       const env = this.envs.getEnv(component).env;
-      return this.getComponentEnvPolicyFromEnv(env, {
-        includeLegacyPeersInSelfPolicy: true,
-      });
+      return this.getComponentEnvPolicyFromEnv(env, { envId: envIdWithoutVersion });
     }
     const fromFile = await this.getEnvPolicyFromFile(envId.toString());
     if (fromFile) return fromFile;
     this.envsWithoutManifest.add(envId.toString());
     const env = this.envs.getEnv(component).env;
-    return this.getComponentEnvPolicyFromEnv(env, {
-      includeLegacyPeersInSelfPolicy: false,
-    });
+    return this.getComponentEnvPolicyFromEnv(env, { envId: envIdWithoutVersion });
   }
 
   getEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): EnvPolicy | undefined {
@@ -1158,7 +1155,7 @@ export class DependencyResolverMain {
     const policy = object?.policy;
     if (!policy) return undefined;
     const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policy, {
-      includeLegacyPeersInSelfPolicy: this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()),
+      includeLegacyPeersInSelfPolicy: envComponent && this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()),
     });
     return allPoliciesFromEnv;
   }
@@ -1173,14 +1170,14 @@ export class DependencyResolverMain {
     return this.getEnvManifest(envComponent);
   }
 
-  async getComponentEnvPolicyFromEnv(
-    env: DependenciesEnv,
-    options: { includeLegacyPeersInSelfPolicy: boolean }
-  ): Promise<EnvPolicy> {
+  async getComponentEnvPolicyFromEnv(env: DependenciesEnv, options: { envId: string }): Promise<EnvPolicy> {
     if (env.getDependencies && typeof env.getDependencies === 'function') {
       const policiesFromEnvConfig = await env.getDependencies();
       if (policiesFromEnvConfig) {
-        const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policiesFromEnvConfig, options);
+        const idWithoutVersion = options.envId.split('@')[0];
+        const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policiesFromEnvConfig, {
+          includeLegacyPeersInSelfPolicy: this.envs.isCoreEnv(idWithoutVersion),
+        });
         return allPoliciesFromEnv;
       }
     }
@@ -1190,9 +1187,7 @@ export class DependencyResolverMain {
   async getComponentEnvPolicyFromEnvDefinition(envDef: EnvDefinition): Promise<EnvPolicy> {
     const fromFile = await this.getEnvPolicyFromFile(envDef.id);
     if (fromFile) return fromFile;
-    return this.getComponentEnvPolicyFromEnv(envDef.env, {
-      includeLegacyPeersInSelfPolicy: this.envs.isCoreEnv(envDef.id),
-    });
+    return this.getComponentEnvPolicyFromEnv(envDef.env, { envId: envDef.id });
   }
 
   /**
