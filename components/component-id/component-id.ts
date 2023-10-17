@@ -235,7 +235,7 @@ export class ComponentID {
     if (opts.ignoreVersion) {
       return result;
     }
-    return result && a.version === b.version;
+    return result && a._legacy.hasSameVersion(b._legacy);
   }
 
   static isEqualObj(a: ComponentIdObj | undefined, b: ComponentIdObj | undefined, opts: EqualityOption = {}): boolean {
