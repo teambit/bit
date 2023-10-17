@@ -188,7 +188,7 @@ export default async function provideWorkspace(
       // this is needed for "bit install" to install the dependencies from the merge config (see https://github.com/teambit/bit/pull/6849)
       const depsDataOfMergeConfig = workspace.getDepsDataOfMergeConfig(id);
       if (depsDataOfMergeConfig) {
-        const policiesFromMergeConfig = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, 'auto');
+        const policiesFromMergeConfig = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, { source: 'auto' });
         policy = VariantPolicy.mergePolices([policy, policiesFromMergeConfig]);
       }
       return policy.toLegacyAutoDetectOverrides();
@@ -198,7 +198,7 @@ export default async function provideWorkspace(
   LegacyDependencyResolver.registerOnComponentAutoDetectConfigMergeGetter((id: BitId) => {
     const depsDataOfMergeConfig = workspace.getDepsDataOfMergeConfig(id);
     if (depsDataOfMergeConfig) {
-      const policy = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, 'auto');
+      const policy = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, { source: 'auto' });
       return policy.toLegacyAutoDetectOverrides();
     }
     return undefined;

@@ -1235,14 +1235,14 @@ export class DependencyResolverMain {
       });
 
       if (policyTupleToApply && policyTupleToApply[1]) {
-        const currentPolicy = VariantPolicy.fromConfigObject(policyTupleToApply[1], 'slots');
+        const currentPolicy = VariantPolicy.fromConfigObject(policyTupleToApply[1], { source: 'slots' });
         policiesFromSlots = VariantPolicy.mergePolices([policiesFromSlots, currentPolicy]);
       }
     });
     const currentExtension = configuredExtensions.findExtension(DependencyResolverAspect.id);
     const currentConfig = currentExtension?.config as unknown as DependencyResolverVariantConfig;
     if (currentConfig && currentConfig.policy) {
-      policiesFromConfig = VariantPolicy.fromConfigObject(currentConfig.policy, 'config');
+      policiesFromConfig = VariantPolicy.fromConfigObject(currentConfig.policy, { source: 'config' });
     }
     const policiesFromEnvForItself =
       (await this.getPoliciesFromEnvForItself(id, legacyFiles)) ?? VariantPolicy.getEmpty();
