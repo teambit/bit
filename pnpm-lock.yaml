@@ -1586,9 +1586,6 @@ importers:
       jest-watcher:
         specifier: 27.5.1
         version: 27.5.1
-      jsx-to-string:
-        specifier: 1.4.0
-        version: 1.4.0
       junit-report-builder:
         specifier: 3.0.1
         version: 3.0.1
@@ -1862,6 +1859,9 @@ importers:
       react-dom:
         specifier: 17.0.2
         version: 17.0.2(react@17.0.2)
+      react-element-to-jsx-string:
+        specifier: ^15.0.0
+        version: 15.0.0(react-dom@17.0.2)(react@17.0.2)
       react-error-boundary:
         specifier: ^3.0.0
         version: 3.1.4(react@17.0.2)
@@ -17599,9 +17599,6 @@ importers:
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
-      jsx-to-string:
-        specifier: 1.4.0
-        version: 1.4.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -17611,6 +17608,9 @@ importers:
       react-dom:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
+      react-element-to-jsx-string:
+        specifier: ^15.0.0
+        version: 15.0.0(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@babel/runtime':
         specifier: 7.20.0
@@ -23170,6 +23170,10 @@ packages:
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
 
+  /@base2/pretty-print-object@1.0.1:
+    resolution: {integrity: sha512-4iri8i1AqYHJE2DstZYkyEprg6Pq6sKx3xn5FpySk9sNhH7qN2LLlHJCfDTZRILNwQNPD7mATWM0TBui7uC1pA==}
+    dev: false
+
   /@bcoe/v8-coverage@0.2.3:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
     dev: false
@@ -24654,7 +24658,7 @@ packages:
     resolution: {integrity: sha512-OEjQm/HiDScjfwXnbg0KzMnSsenyDavnfc8PjwBjnxORQxbzCr4d4RJFutG0dpXkhy6jhmHUg7WU5Yunei5iVQ==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/error': 5.0.2
       '@pnpm/logger': 5.0.0
@@ -24996,7 +25000,7 @@ packages:
     resolution: {integrity: sha512-FNcjvgoYzLVQ73yG9mhuzXqxhjTdaP0QkiBFetCqY/JniGHtqYOzuzZq3KuRnfJoN7UWqQLzLWV1VRwqefmYiw==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/core-loggers': 9.0.3(@pnpm/logger@5.0.0)
       '@pnpm/error': 5.0.2
@@ -49527,6 +49531,19 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
+  /react-element-to-jsx-string@15.0.0(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-UDg4lXB6BzlobN60P8fHWVPX3Kyw8ORrTeBtClmIlGdkOOE+GYQSFvmEU5iLLpwp/6v42DINwNcwOhOLfQ//FQ==}
+    peerDependencies:
+      react: ^0.14.8 || ^15.0.1 || ^16.0.0 || ^17.0.1 || ^18.0.0
+      react-dom: ^0.14.8 || ^15.0.1 || ^16.0.0 || ^17.0.1 || ^18.0.0
+    dependencies:
+      '@base2/pretty-print-object': 1.0.1
+      is-plain-object: 5.0.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+      react-is: 18.1.0
+    dev: false
+
   /react-error-boundary@3.1.4(react@17.0.2):
     resolution: {integrity: sha512-uM9uPzZJTF6wRQORmSrvOIgt4lJ9MC1sNgEOj2XGsDTRE4kmpWxg7ENK9EWNKJRMAOY9z0MuF4yIfl6gp4sotA==}
     engines: {node: '>=10', npm: '>=6'}
@@ -49564,6 +49581,10 @@ packages:
 
   /react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
+
+  /react-is@18.1.0:
+    resolution: {integrity: sha512-Fl7FuabXsJnV5Q1qIOQwx/sagGF18kogb4gpfcG4gjLBWO0WDiiz1ko/ExayuxE7InyQkBLkxRFG5oxY6Uu3Kg==}
+    dev: false
 
   /react-is@18.2.0:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
@@ -58089,6 +58110,7 @@ packages:
       lodash: 4.17.21
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
+      react-element-to-jsx-string: 15.0.0(react-dom@17.0.2)(react@17.0.2)
     transitivePeerDependencies:
       - '@testing-library/react'
       - '@types/react'
