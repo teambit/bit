@@ -267,7 +267,13 @@ it was probably created on another lane and if so, consider removing this compon
       newId = currentId.changeVersion(componentFromModel.version);
       if (componentFromModel.scope) newId = newId.changeScope(componentFromModel.scope);
     }
-    if (componentFromModel && componentFromModel.scope && currentId.hasVersion() && !currentId._legacy.hasScope()) {
+    if (
+      componentFromModel &&
+      componentFromModel.scope &&
+      modelComponent?.scopesList.length &&
+      currentId.hasVersion() &&
+      !currentId._legacy.hasScope()
+    ) {
       // component is not exported in .bitmap but exported in the scope, sync .bitmap with the scope data
       newId = currentId.changeScope(componentFromModel.scope);
     }
