@@ -336,8 +336,12 @@ export class WorkspaceComponentLoader {
       return id._legacy;
     });
 
-    const { components: legacyComponents, invalidComponents: legacyInvalidComponents } =
-      await this.workspace.consumer.loadComponents(BitIds.fromArray(legacyIds), false, loadOptsWithDefaults);
+    const {
+      components: legacyComponents,
+      invalidComponents: legacyInvalidComponents,
+      removedComponents,
+    } = await this.workspace.consumer.loadComponents(BitIds.fromArray(legacyIds), false, loadOptsWithDefaults);
+    const allLegacyComponents = legacyComponents.concat(removedComponents);
     legacyInvalidComponents.forEach((invalidComponent) => {
       const entry = { id: legacyIdsIndex[invalidComponent.id.toString()], err: invalidComponent.error };
       if (ConsumerComponent.isComponentInvalidByErrorType(invalidComponent.error)) {
@@ -352,29 +356,33 @@ export class WorkspaceComponentLoader {
       }
     });
 
+    const getWithCatch = (id, legacyComponent) => {
+      return this.get(id, legacyComponent, undefined, undefined, loadOptsWithDefaults).catch((err) => {
+        if (ConsumerComponent.isComponentInvalidByErrorType(err) && !throwOnFailure) {
+          invalidComponents.push({
+            id,
+            err,
+          });
+          return undefined;
+        }
+        if (this.isComponentNotExistsError(err) || err instanceof ComponentNotFoundInPath) {
+          errors.push({
+            id,
+            err,
+          });
+          return undefined;
+        }
+        throw err;
+      });
+    };
+
     // await this.getConsumerComponent(id, loadOpts)
 
     const componentsP = Promise.all(
-      legacyComponents.map(async (legacyComponent) => {
+      allLegacyComponents.map(async (legacyComponent) => {
         const id = legacyIdsIndex[legacyComponent.id.toString()];
         longProcessLogger.logProgress(id.toString());
-        return this.get(id, legacyComponent, undefined, undefined, loadOptsWithDefaults).catch((err) => {
-          if (ConsumerComponent.isComponentInvalidByErrorType(err) && !throwOnFailure) {
-            invalidComponents.push({
-              id,
-              err,
-            });
-            return undefined;
-          }
-          if (this.isComponentNotExistsError(err) || err instanceof ComponentNotFoundInPath) {
-            errors.push({
-              id,
-              err,
-            });
-            return undefined;
-          }
-          throw err;
-        });
+        return getWithCatch(id, legacyComponent);
       })
     );
 
@@ -383,6 +391,7 @@ export class WorkspaceComponentLoader {
       this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
     });
     const components = compact(await componentsP);
+
     // Here we need to load many, otherwise we will get wrong overrides dependencies data
     // as when loading the next batch of components (next group) we won't have the envs loaded
     const scopeComponents = await this.workspace.scope.loadMany(scopeIds);
@@ -432,9 +441,10 @@ export class WorkspaceComponentLoader {
     if (fromCache && useCache) {
       return fromCache;
     }
-    let consumerComponent;
-    if (await this.workspace.hasId(id)) {
-      consumerComponent = legacyComponent || (await this.getConsumerComponent(id, loadOptsWithDefaults));
+    let consumerComponent = legacyComponent;
+    const inWs = await this.workspace.hasId(id);
+    if (inWs && !consumerComponent) {
+      consumerComponent = await this.getConsumerComponent(id, loadOptsWithDefaults);
     }
 
     // in case of out-of-sync, the id may changed during the load process
