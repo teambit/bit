@@ -391,10 +391,7 @@ export default class ComponentsList {
    * in bit-status, we suggest to snap+export.
    */
   async listLocallySoftRemoved(): Promise<BitId[]> {
-    if (!this._removedComponents) {
-      await this.getFromFileSystem({ loadExtensions: false });
-    }
-    return this._removedComponents.map((c) => c.id);
+    return this.consumer.bitMap.getRemoved();
   }
 
   /**
