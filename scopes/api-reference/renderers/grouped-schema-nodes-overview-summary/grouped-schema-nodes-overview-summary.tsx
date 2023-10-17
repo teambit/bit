@@ -111,11 +111,7 @@ export function SchemaNodesSummary({
             <Link href={`~api-reference?selectedAPI=${name}`}>{name}</Link>
           </div>
         </div>
-        <div
-          // style={{ width: dimensions.width ? `${dimensions.width * 0.5}px` : 'calc(100% - 300px)' }}
-          className={classnames(styles.headingRight)}
-          onClick={() => setAreAllExpanded(!areAllExpanded)}
-        >
+        <div className={classnames(styles.headingRight)} onClick={() => setAreAllExpanded(!areAllExpanded)}>
           <img
             src={expandCollapseIcon}
             alt={areAllExpanded ? 'Collapse All' : 'Expand All'}

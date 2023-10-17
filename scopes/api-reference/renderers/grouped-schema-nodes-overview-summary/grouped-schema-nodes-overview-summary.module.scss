@@ -26,6 +26,7 @@
   > img {
     width: 18px;
     height: 18px;
+    cursor: pointer;
     &.collapsed {
       transform: rotate(-90deg);
     }
@@ -35,6 +36,7 @@
 
 .icon {
   > img {
+    cursor: pointer;
     width: 18px;
     height: 18px;
   }

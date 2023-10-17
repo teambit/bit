@@ -39,7 +39,7 @@ export type ComponentPreview = {
   isScaling?: boolean;
   onlyOverview?: boolean;
   legacyHeader?: boolean;
-  includesNameParam?: boolean;
+  useNameParam?: boolean;
 };
 
 export type ComponentServer = {

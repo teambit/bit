@@ -71,9 +71,9 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
   const compositionUrl = toPreviewUrl(component, 'compositions');
   const isScaling = component?.preview?.isScaling;
   const includesEnvTemplates = component?.preview?.includesEnvTemplate;
-  const includesNameParam = component?.preview?.includesNameParam;
+  const useNameParam = component?.preview?.useNameParam;
   const compositionIdentifierParam =
-    includesNameParam || (isScaling && includesEnvTemplates === false)
+    useNameParam || (isScaling && includesEnvTemplates === false)
       ? `name=${currentComposition?.identifier}`
       : currentComposition?.identifier;
 
@@ -120,7 +120,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
               <TabPanel className={styles.tabContent}>
                 <CompositionsPanel
                   isScaling={isScaling}
-                  includesNameParam={includesNameParam}
+                  useNameParam={useNameParam}
                   includesEnvTemplate={component.preview?.includesEnvTemplate}
                   onSelectComposition={(composition) => {
                     if (!currentComposition || !location) return;

@@ -14,6 +14,8 @@ export type CompositionGalleryProps = {
 export function CompositionGallery({ component, isLoading }: CompositionGalleryProps) {
   const navigate = useNavigate();
   const hasCompositions = component.compositions.length > 0;
+  const carouselRef = React.useRef<HTMLDivElement>(null);
+
   if (!hasCompositions) return null;
   return (
     <div className={styles.compositionGallery}>
@@ -21,7 +23,7 @@ export function CompositionGallery({ component, isLoading }: CompositionGalleryP
       <LinkedHeading size="sm" className={styles.title}>
         <Icon of="eye" /> <span>PREVIEW</span>
       </LinkedHeading>
-      <div className={styles.carousel}>
+      <div className={styles.carousel} ref={carouselRef}>
         {component.compositions.map((composition) => {
           return (
             <CompositionCard
@@ -32,6 +34,7 @@ export function CompositionGallery({ component, isLoading }: CompositionGalleryP
               previewClass={styles.preview}
               composition={composition}
               component={component}
+              parentRef={carouselRef}
             />
           );
         })}
