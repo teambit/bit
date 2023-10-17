@@ -47,7 +47,7 @@ export class EnvPolicy extends VariantPolicy {
     super(_policiesEntries);
   }
 
-  static fromConfigObject(configObject): EnvPolicy {
+  static fromConfigObject(configObject, options: { includeLegacyPeersInSelfPolicy: boolean }): EnvPolicy {
     validateEnvPolicyConfigObject(configObject);
 
     /**
@@ -56,7 +56,10 @@ export class EnvPolicy extends VariantPolicy {
      */
     const selfPeersEntries = entriesFromKey(configObject, 'peers', 'version', 'runtime', 'env-own', true);
 
-    const selfPolicy = VariantPolicy.fromArray(selfPeersEntries);
+    let selfPolicy = VariantPolicy.fromArray(selfPeersEntries);
+    if (options.includeLegacyPeersInSelfPolicy && !configObject.peers && configObject.peerDependencies) {
+      selfPolicy = VariantPolicy.fromArray(handleLegacyPeers(configObject));
+    }
 
     /**
      * Legacy policy used by the old getDependencies function on the env aspect.
@@ -81,6 +84,16 @@ export class EnvPolicy extends VariantPolicy {
   static getEmpty(): EnvPolicy {
     return new EnvPolicy([], VariantPolicy.getEmpty());
   }
+}
+
+function handleLegacyPeers(configObject: VariantPolicyConfigObject): VariantPolicyEntry[] {
+  if (!configObject.peerDependencies) {
+    return [];
+  }
+  const entries = Object.entries(configObject.peerDependencies).map(([packageName, version]) => {
+    return createVariantPolicyEntry(packageName, version, 'runtime', 'env-own', false, true);
+  });
+  return entries;
 }
 
 function entriesFromKey(

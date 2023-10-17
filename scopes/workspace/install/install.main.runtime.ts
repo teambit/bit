@@ -605,11 +605,11 @@ export class InstallMain {
   }
 
   private async _getAllUsedEnvIds(): Promise<ComponentID[]> {
-    const envs = new Set<ComponentID>();
+    const envs = new Map<string, ComponentID>();
     const components = await this.workspace.list();
     await pMapSeries(components, async (component) => {
       const envId = await this.envs.calculateEnvId(component);
-      envs.add(envId);
+      envs.set(envId.toString(), envId);
     });
     return Array.from(envs.values());
   }
@@ -651,7 +651,9 @@ export class InstallMain {
     if (outdatedPkgsToUpdate.length === 0) {
       this.logger.consoleSuccess('No outdated dependencies found');
       if (options.forceVersionBump === 'compatible') {
-        this.logger.console("If you want to find new versions that don't match the current version ranges, retry with the --latest flag");
+        this.logger.console(
+          "If you want to find new versions that don't match the current version ranges, retry with the --latest flag"
+        );
       }
       return null;
     }
