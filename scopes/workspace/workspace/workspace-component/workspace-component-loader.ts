@@ -160,14 +160,14 @@ export class WorkspaceComponentLoader {
     const allExtCompIds = Array.from(allExtIds.values());
     await this.populateScopeAndExtensionsCache(allExtCompIds || [], workspaceScopeIdsMap);
 
-    const allExtIdsStr = Array.from(allExtIds.keys());
+    const allExtIdsStr = allExtCompIds.map((id) => id.toString());
     const groupedByIsExtOfAnother = groupBy(groupedByIsCoreEnvs.false, (id) => {
       return allExtIdsStr.includes(id.toString());
     });
     const extIdsFromTheList = (groupedByIsExtOfAnother.true || []).map((id) => id.toString());
     const extsNotFromTheList: ComponentID[] = [];
-    for (const [idStr, id] of allExtIds.entries()) {
-      if (!extIdsFromTheList.includes(idStr)) {
+    for (const [, id] of allExtIds.entries()) {
+      if (!extIdsFromTheList.includes(id.toString())) {
         extsNotFromTheList.push(id);
       }
     }
