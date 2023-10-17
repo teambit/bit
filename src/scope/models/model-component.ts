@@ -1113,7 +1113,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   }
 
   async getVersionHistory(repo: Repository): Promise<VersionHistory> {
-    const emptyVersionHistory = VersionHistory.fromId(this.name, this.scope || undefined);
+    const emptyVersionHistory = VersionHistory.fromId(this.name, this.scope);
     const versionHistory = await repo.load(emptyVersionHistory.hash());
     return (versionHistory || emptyVersionHistory) as VersionHistory;
   }

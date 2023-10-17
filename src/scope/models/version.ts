@@ -516,7 +516,7 @@ export default class Version extends BitObject {
 
       return deps.map((dependency: any) => {
         return new Dependency(
-          ComponentID.fromLegacy(BitId.parseBackwardCompatible(dependency.id)),
+          ComponentID.fromObject(dependency.id),
           Array.isArray(dependency.relativePaths)
             ? dependency.relativePaths.map(getRelativePath)
             : dependency.relativePaths
@@ -525,7 +525,7 @@ export default class Version extends BitObject {
     };
 
     const _getFlattenedDependencies = (deps = []): ComponentID[] => {
-      return deps.map((dep) => ComponentID.fromLegacy(BitId.parseBackwardCompatible(dep)));
+      return deps.map((dep) => ComponentID.fromObject(dep));
     };
 
     const _groupFlattenedDependencies = () => {

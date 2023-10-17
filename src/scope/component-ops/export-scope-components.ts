@@ -119,7 +119,7 @@ async function _updateVersionHistoryForVersionsWithoutOrigin(
   logger.debug(`_updateVersionHistoryForVersionsWithoutOrigin, found ${
     versionsHistoryNoNull.length
   } versionsHistory to update
-${versionsHistoryNoNull.map((v) => v.bitId.toString()).join(', ')}`);
+${versionsHistoryNoNull.map((v) => v.compId.toString()).join(', ')}`);
 
   return versionsHistoryNoNull;
 }
