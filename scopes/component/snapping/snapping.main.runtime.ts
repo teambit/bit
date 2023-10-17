@@ -628,6 +628,15 @@ there are matching among unmodified components thought. consider using --unmodif
     return { results, isSoftUntag: !isRealUntag };
   }
 
+  async resetNeverExported(): Promise<ComponentID[]> {
+    const notExported = this.workspace.consumer.getNotExportedIds();
+    const hashes = notExported.map((id) => BitObject.makeHash(id.fullName));
+    await this.scope.legacyScope.objects.deleteObjectsFromFS(hashes.map((h) => Ref.from(h)));
+    notExported.map((id) => this.workspace.consumer.bitMap.updateComponentId(id.changeVersion(undefined)));
+    await this.workspace.bitMap.write();
+    return notExported;
+  }
+
   async _addFlattenedDependenciesToComponents(components: ConsumerComponent[]) {
     loader.start('importing missing dependencies...');
     const getLane = async () => {

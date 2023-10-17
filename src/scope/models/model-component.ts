@@ -139,7 +139,7 @@ export default class Component extends BitObject {
     if (!props.scope) {
       throw new Error(
         `your component "${props.name}" was tagged/snapped with older bit version (before v1.2.4), please export it with the same bit version.
-alternatively, if local tags/snaps are not relevant for you anymore, reset the local scope by "bit init --reset-scope"`
+alternatively, if local (unexported) tags/snaps are not relevant for you anymore, reset them by running "bit reset --never-exported"`
       );
     }
     this.scope = props.scope;
