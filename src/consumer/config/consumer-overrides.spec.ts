@@ -7,15 +7,19 @@ describe('ConsumerOverrides', () => {
     describe('when propagation set to false', () => {
       it('should use only the most specific match', () => {
         const overridesFixture = {
-          'src/*': { dependencies: { foo: '0.0.1', bar: '0.0.1' } },
-          'src/utils/javascript/*': { dependencies: { baz: '0.0.1' } },
-          'src/utils/*': { dependencies: { foo: '0.0.1' } },
-          'src/utils/javascript/is-string': { propagate: false, dependencies: { foo: '0.0.5' } },
+          'my-scope/src/*': { dependencies: { scope: 'my-scope', foo: '0.0.1', bar: '0.0.1' } },
+          'my-scope/src/utils/javascript/*': { dependencies: { scope: 'my-scope', baz: '0.0.1' } },
+          'my-scope/src/utils/*': { dependencies: { scope: 'my-scope', foo: '0.0.1' } },
+          'my-scope/src/utils/javascript/is-string': {
+            propagate: false,
+            dependencies: { scope: 'my-scope', foo: '0.0.5' },
+          },
         };
         const componentsOverrides = new ConsumerOverrides(overridesFixture);
         const id = ComponentID.fromObject({ scope: 'my-scope', name: 'src/utils/javascript/is-string' });
         const result = componentsOverrides.getOverrideComponentData(id);
         expect(result).to.have.property('dependencies').that.deep.equal({
+          scope: 'my-scope',
           foo: '0.0.5',
         });
       });
@@ -23,8 +27,13 @@ describe('ConsumerOverrides', () => {
     describe('when propagation set to true', () => {
       it('should get env results from the more generic wildcard overrides by the exact match', () => {
         const overridesFixture = {
-          'src/*': { env: { compiler: 'bit.envs/compiler/babel@7.0.0', tester: 'bit.envs/tester/jest@0.0.1' } },
-          'src/utils/javascript/is-string': { propagate: true, env: { compiler: 'bit.envs/compiler/babel@0.0.20' } },
+          'my-scope/src/*': {
+            env: { compiler: 'bit.envs/compiler/babel@7.0.0', tester: 'bit.envs/tester/jest@0.0.1' },
+          },
+          'my-scope/src/utils/javascript/is-string': {
+            propagate: true,
+            env: { compiler: 'bit.envs/compiler/babel@0.0.20' },
+          },
         };
         const componentsOverrides = new ConsumerOverrides(overridesFixture);
         const id = ComponentID.fromObject({ scope: 'my-scope', name: 'src/utils/javascript/is-string' });
@@ -36,13 +45,13 @@ describe('ConsumerOverrides', () => {
       });
       it('should get env results from the more generic wildcard overrides by the more specific one', () => {
         const overridesFixture = {
-          'src/*': {
+          'my-scope/src/*': {
             propagate: true,
             env: { compiler: 'bit.envs/compiler/babel@7.0.0', tester: 'bit.envs/tester/jest@0.0.1' },
           },
-          'src/utils/javascript/*': { propagate: true },
-          'src/utils/*': { propagate: true, env: { compiler: 'bit.envs/compiler/babel@0.0.20' } },
-          'utils/*': { propagate: true, env: { compiler: 'bit.envs/compiler/somethingelse@0.0.20' } },
+          'my-scope/src/utils/javascript/*': { propagate: true },
+          'my-scope/src/utils/*': { propagate: true, env: { compiler: 'bit.envs/compiler/babel@0.0.20' } },
+          'my-scope/utils/*': { propagate: true, env: { compiler: 'bit.envs/compiler/somethingelse@0.0.20' } },
         };
         const componentsOverrides = new ConsumerOverrides(overridesFixture);
         const id = ComponentID.fromObject({ scope: 'my-scope', name: 'src/utils/javascript/is-string' });
@@ -54,11 +63,11 @@ describe('ConsumerOverrides', () => {
       });
       it('should get dependencies results from the more generic wildcard overrides by the more specific one', () => {
         const overridesFixture = {
-          'src/*': { propagate: true, dependencies: { foo: '0.0.1', bar: '0.0.1' } },
-          'src/utils/javascript/*': { propagate: true, dependencies: { baz: '0.0.1' } },
-          'src/utils/*': { propagate: true, dependencies: { foo: '0.0.1' } },
-          'src/utils/javascript/is-string': { propagate: true, dependencies: { foo: '0.0.5' } },
-          'utils/*': { propagate: true, dependencies: { 'something/else': '0.0.1' } },
+          'my-scope/src/*': { propagate: true, dependencies: { foo: '0.0.1', bar: '0.0.1' } },
+          'my-scope/src/utils/javascript/*': { propagate: true, dependencies: { baz: '0.0.1' } },
+          'my-scope/src/utils/*': { propagate: true, dependencies: { foo: '0.0.1' } },
+          'my-scope/src/utils/javascript/is-string': { propagate: true, dependencies: { foo: '0.0.5' } },
+          'my-scope/utils/*': { propagate: true, dependencies: { 'something/else': '0.0.1' } },
         };
         const componentsOverrides = new ConsumerOverrides(overridesFixture);
         const id = ComponentID.fromObject({ scope: 'my-scope', name: 'src/utils/javascript/is-string' });

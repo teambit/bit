@@ -1,9 +1,9 @@
 import { expect } from 'chai';
+import { ComponentID } from '@teambit/component-id';
 import R from 'ramda';
 
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import dependenciesFixture from '../../../../fixtures/dependencies-fixture.json';
-import { BitId } from '../../../bit-id';
 import { Dependencies } from './';
 
 describe('Dependencies', () => {
@@ -12,7 +12,7 @@ describe('Dependencies', () => {
     let validateFunc;
     beforeEach(() => {
       const dependenciesFixtureCloned = R.clone(dependenciesFixture);
-      dependenciesFixtureCloned.forEach((d) => (d.id = BitId.parse(d.id)));
+      dependenciesFixtureCloned.forEach((d) => (d.id = ComponentID.fromString(d.id)));
       dependencies = new Dependencies(dependenciesFixtureCloned);
       validateFunc = () => dependencies.validate();
     });
@@ -87,7 +87,7 @@ describe('Dependencies', () => {
       );
     });
     it('should throw when a dependency has the same id as the component', () => {
-      const id = BitId.parse(dependenciesFixture[0].id);
+      const id = ComponentID.fromString(dependenciesFixture[0].id);
       validateFunc = () => dependencies.validate(id);
       expect(validateFunc).to.throw('one of the dependencies has the same id as the component');
     });

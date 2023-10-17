@@ -151,6 +151,10 @@ export class ComponentID {
     return id.toStringWithoutVersion();
   }
 
+  hasSameVersion(id: ComponentID) {
+    return this._legacy.hasSameVersion(id._legacy);
+  }
+
   /**
    * serialize the component ID.
    */
@@ -235,7 +239,7 @@ export class ComponentID {
     if (opts.ignoreVersion) {
       return result;
     }
-    return result && a._legacy.hasSameVersion(b._legacy);
+    return result && a.hasSameVersion(b);
   }
 
   static isEqualObj(a: ComponentIdObj | undefined, b: ComponentIdObj | undefined, opts: EqualityOption = {}): boolean {

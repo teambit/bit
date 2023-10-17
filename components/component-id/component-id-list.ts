@@ -54,10 +54,7 @@ export class ComponentIdList extends Array<ComponentID> {
 
   filterExact(componentId: ComponentID): ComponentID[] {
     return this.filter(
-      (id) =>
-        id.fullName === componentId.fullName &&
-        id.scope === componentId.scope &&
-        id._legacy.hasSameVersion(componentId._legacy)
+      (id) => id.fullName === componentId.fullName && id.scope === componentId.scope && id.hasSameVersion(componentId)
     );
   }
 

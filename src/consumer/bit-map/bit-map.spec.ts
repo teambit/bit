@@ -18,7 +18,7 @@ const getBitmapInstance = async () => {
 };
 
 const addComponentParamsFixture = {
-  componentId: new ComponentID(new BitId({ name: 'is-string' })),
+  componentId: ComponentID.fromObject({ name: 'is-string' }, 'my-scope'),
   files: [{ name: 'is-string.js', relativePath: 'is-string.js', test: false }],
   mainFile: 'is-string.js',
   defaultScope: 'my-scope',
