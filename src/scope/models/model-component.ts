@@ -721,12 +721,8 @@ export default class Component extends BitObject {
     });
   }
 
-  toBitIdWithHead(): BitId {
-    return new BitId({ scope: this.scope, name: this.name, version: this.head?.toString() });
-  }
-
   toComponentIdWithHead(): ComponentID {
-    return new ComponentID(this.toBitIdWithHead());
+    return ComponentID.fromObject({ scope: this.scope, name: this.name, version: this.head?.toString() });
   }
 
   toBitIdWithLatestVersionAllowNull(): ComponentID {

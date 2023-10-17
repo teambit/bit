@@ -3,7 +3,6 @@ import { pickBy } from 'lodash';
 import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
-import { BitId } from '../../bit-id';
 import { BuildStatus, DEFAULT_BINDINGS_PREFIX, DEFAULT_BUNDLE_FILENAME, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { isSchemaSupport, SchemaFeature, SchemaName } from '../../consumer/component/component-schema';
@@ -494,12 +493,6 @@ export default class Version extends BitObject {
     } = contentParsed;
 
     const _getDependencies = (deps = []): Dependency[] => {
-      if (deps.length && R.is(String, deps[0])) {
-        // backward compatibility
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        return deps.map((dependency) => ({ id: BitId.parseObsolete(dependency) }));
-      }
-
       const getRelativePath = (relativePath) => {
         if (relativePath.importSpecifiers) {
           // backward compatibility. Before the massive validation was added, an item of
