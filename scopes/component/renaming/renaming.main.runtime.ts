@@ -170,11 +170,11 @@ make sure this argument is the name only, without the scope-name. to change the 
           newStr: componentIdToPackageName({
             ...comp,
             bindingPrefix: getBindingPrefixByDefaultScope(newScope),
-            id: comp.id,
-            defaultScope: newScope,
+            id: comp.id.changeScope(newScope),
           }),
         };
       });
+
       const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace, [
         importTransformer,
         exportTransformer,
