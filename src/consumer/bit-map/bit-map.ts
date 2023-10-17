@@ -546,11 +546,13 @@ export default class BitMap {
    */
   private findSimilarIds(id: ComponentID, compareWithoutScope = false): ComponentIdList {
     const allIds = this.getAllBitIdsFromAllLanes();
+    // check both, legacy and harmony ids to cover the case where defaultScope is equal to actual scope.
+    const isEqual = (idToCheck: ComponentID) => idToCheck._legacy.isEqual(id._legacy) && idToCheck.isEqual(id);
     const similarIds = allIds.filter((existingId) => {
       const isSimilar = compareWithoutScope
         ? existingId.fullName === id.fullName
         : existingId.isEqual(id, { ignoreVersion: true });
-      return isSimilar && !existingId.isEqual(id);
+      return isSimilar && !isEqual(existingId);
     });
     return ComponentIdList.fromArray(similarIds);
   }
@@ -777,7 +779,7 @@ export default class BitMap {
     const newIdString = id.toString();
     const similarBitIds = this.findSimilarIds(id, true);
     if (!similarBitIds.length) {
-      logger.debug(`BitMap, no need to update ${newIdString}`);
+      logger.debug(`BitMap, no need to update ${newIdString}, no similar ids found`);
       return id;
     }
     const similarCompMaps = similarBitIds.map((similarId) => this.getComponent(similarId));
@@ -810,7 +812,7 @@ export default class BitMap {
     const newId = getNewId();
     const haveSameDefaultScope = (newId.hasScope() && oldId.hasScope()) || (!newId.hasScope() && !oldId.hasScope());
     if (newId.isEqual(oldId) && haveSameDefaultScope) {
-      logger.debug(`BitMap, no need to update ${oldIdStr}`);
+      logger.debug(`BitMap, no need to update ${oldIdStr}, the current id is the same as the new id`);
       return oldId;
     }
     logger.debug(`BitMap: updating an older component ${oldIdStr} with a newer component ${newId.toString()}`);
