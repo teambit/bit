@@ -138,7 +138,8 @@ export default class Component extends BitObject {
     if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
     if (!props.scope) {
       throw new Error(
-        `your component ${props.name} was tagged/snapped with bit version < 1.2.0. either export it with the same bit version or "bit reset" and tag/snap it again`
+        `your component "${props.name}" was tagged/snapped with older bit version (before v1.2.4), please export it with the same bit version.
+alternatively, if local tags/snaps are not relevant for you anymore, reset the local scope by "bit init --reset-scope"`
       );
     }
     this.scope = props.scope;
