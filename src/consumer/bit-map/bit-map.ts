@@ -776,9 +776,6 @@ export default class BitMap {
     revertToMain = false,
     updateVersionOnly = false
   ): ComponentID {
-    console.trace(
-      `BitMap, updateComponentId ${id.toString()}, updateScopeOnly ${updateScopeOnly.toString()}, updateVersionOnly ${updateVersionOnly.toString()}`
-    );
     logger.debug(
       `BitMap, updateComponentId ${id.toString()}, updateScopeOnly ${updateScopeOnly.toString()}, updateVersionOnly ${updateVersionOnly.toString()}`
     );
