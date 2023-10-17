@@ -234,7 +234,7 @@ export class DevFilesMain {
       DependencyResolver.getDevFiles = async (consumerComponent: LegacyComponent): Promise<string[]> => {
         const componentId = await workspace.resolveComponentId(consumerComponent.id);
         // Do not change the storeInCache=false arg. if you think you need to change it, please talk to Gilad first
-        const component = await workspace.get(componentId, consumerComponent, true, false);
+        const component = await workspace.get(componentId, consumerComponent, true, false, { loadExtensions: false });
         if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
         const computedDevFiles = await devFiles.computeDevFiles(component);
         return computedDevFiles.list();

@@ -392,7 +392,7 @@ export default class ComponentsList {
    */
   async listLocallySoftRemoved(): Promise<BitId[]> {
     if (!this._removedComponents) {
-      await this.getFromFileSystem();
+      await this.getFromFileSystem({ loadExtensions: false });
     }
     return this._removedComponents.map((c) => c.id);
   }
