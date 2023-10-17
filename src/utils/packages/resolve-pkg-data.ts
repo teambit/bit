@@ -2,7 +2,6 @@ import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
 import path from 'path';
 import readPkgUp from 'read-pkg-up';
-import { BitId } from '../../bit-id';
 import { PACKAGE_JSON } from '../../constants';
 import PackageJson from '../../consumer/component/package-json';
 import { PathLinuxAbsolute, PathOsBased, PathOsBasedAbsolute } from '../path';
@@ -103,8 +102,7 @@ function enrichDataFromDependency(packageData: ResolvedPackageData) {
       // @ts-ignore
       delete packageInfo.componentId.scope;
     }
-    const bitId = new BitId(packageInfo.componentId);
-    const componentId = new ComponentID(bitId, scope);
+    const componentId = ComponentID.fromObject(packageInfo.componentId, scope);
     packageData.componentId = componentId;
     if (packageData.componentId.hasVersion() && packageInfo.version) {
       // if packageInfo.version is not defined, it's coming from the workspace and the package.json is auto-generated

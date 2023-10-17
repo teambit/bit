@@ -1,18 +1,15 @@
 import { expect } from 'chai';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import BitId from '../bit-id/bit-id';
 import resolveLatestVersion from './resolveLatestVersion';
 
 describe('getLatestVersionNumber', () => {
-  const idWithNoVersion = new ComponentID(new BitId({ scope: 'my-scope', name: 'is-string' }));
-  const idWithVersionLatest = new ComponentID(new BitId({ scope: 'my-scope', name: 'is-string', version: 'latest' }));
-  const idWithVersion1 = new ComponentID(new BitId({ scope: 'my-scope', name: 'is-string', version: '0.0.1' }));
-  const idWithVersion2 = new ComponentID(new BitId({ scope: 'my-scope', name: 'is-string', version: '0.0.2' }));
-  const idWithVersion3 = new ComponentID(new BitId({ scope: 'my-scope', name: 'is-string', version: '0.0.3' }));
-  const idWithNoVersionWithScope = new ComponentID(new BitId({ scope: 'my-scope', name: 'is-string' }));
-  const idWithVersion1WithScope = new ComponentID(
-    new BitId({ scope: 'my-scope', name: 'is-string', version: '0.0.1' })
-  );
+  const idWithNoVersion = ComponentID.fromObject({ scope: 'my-scope', name: 'is-string' });
+  const idWithVersionLatest = ComponentID.fromObject({ scope: 'my-scope', name: 'is-string', version: 'latest' });
+  const idWithVersion1 = ComponentID.fromObject({ scope: 'my-scope', name: 'is-string', version: '0.0.1' });
+  const idWithVersion2 = ComponentID.fromObject({ scope: 'my-scope', name: 'is-string', version: '0.0.2' });
+  const idWithVersion3 = ComponentID.fromObject({ scope: 'my-scope', name: 'is-string', version: '0.0.3' });
+  const idWithNoVersionWithScope = ComponentID.fromObject({ scope: 'my-scope', name: 'is-string' });
+  const idWithVersion1WithScope = ComponentID.fromObject({ scope: 'my-scope', name: 'is-string', version: '0.0.1' });
 
   it('should return the same id when bitIds is empty', () => {
     const bitIds = new ComponentIdList();
@@ -20,14 +17,14 @@ describe('getLatestVersionNumber', () => {
     expect(result).to.deep.equal(idWithNoVersion);
   });
   it('should return the same id when bitIds does not have the bit id', () => {
-    const anotherId = new ComponentID(new BitId({ scope: 'my-scope', name: 'is-type' }));
+    const anotherId = ComponentID.fromObject({ scope: 'my-scope', name: 'is-type' });
     const bitIds = new ComponentIdList(anotherId);
     const result = resolveLatestVersion(bitIds, idWithNoVersion);
     expect(result).to.deep.equal(idWithNoVersion);
   });
   it('should work with a pre-release tag', () => {
-    const anotherId = new ComponentID(new BitId({ scope: 'foo', name: 'is-type' }));
-    const idWithPreRelease = new ComponentID(new BitId({ scope: 'foo', name: 'is-type', version: '3.0.0-dev.1' }));
+    const anotherId = ComponentID.fromObject({ scope: 'foo', name: 'is-type' });
+    const idWithPreRelease = ComponentID.fromObject({ scope: 'foo', name: 'is-type', version: '3.0.0-dev.1' });
     const bitIds = new ComponentIdList(idWithPreRelease);
     const result = resolveLatestVersion(bitIds, anotherId);
     expect(result).to.deep.equal(idWithPreRelease);
@@ -63,9 +60,11 @@ describe('getLatestVersionNumber', () => {
     expect(result).to.deep.equal(idWithVersion1WithScope);
   });
   it('should not return the id from the bitIds array if it is there with same version but different scope', () => {
-    const idWithDifferentScope = new ComponentID(
-      new BitId({ scope: 'my-another-scope', name: 'is-string', version: '0.0.1' })
-    );
+    const idWithDifferentScope = ComponentID.fromObject({
+      scope: 'my-another-scope',
+      name: 'is-string',
+      version: '0.0.1',
+    });
     const bitIds = new ComponentIdList(idWithDifferentScope);
     const result = resolveLatestVersion(bitIds, idWithNoVersionWithScope);
     expect(result).to.not.deep.equal(idWithDifferentScope);

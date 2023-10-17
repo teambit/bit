@@ -1,10 +1,9 @@
 import graphlib, { Graph as GraphLib } from 'graphlib';
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
-import { BitId } from '../../bit-id';
 import Component from '../../consumer/component';
 import { loadScope } from '../index';
-import { ModelComponent, Version } from '../models';
+import { ModelComponent } from '../models';
 import Scope from '../scope';
 
 export default class Graph extends GraphLib {
@@ -80,19 +79,6 @@ export default class Graph extends GraphLib {
     const graph = new Graph();
     const allModelComponents: ModelComponent[] = await scope.list();
     await this.addScopeComponentsAsNodes(allModelComponents, graph);
-  }
-
-  static _addDependenciesToGraph(id: BitId, graph: Graph, component: Version | Component): void {
-    const idStr = id.toString();
-    // save the full BitId of a string id to be able to retrieve it later with no confusion
-    if (!graph.hasNode(idStr)) graph.setNode(idStr, id);
-    Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
-      depIds.forEach((dependencyId) => {
-        const depIdStr = dependencyId.toString();
-        if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependencyId);
-        graph.setEdge(idStr, depIdStr, depType);
-      });
-    });
   }
 
   static async addScopeComponentsAsNodes(

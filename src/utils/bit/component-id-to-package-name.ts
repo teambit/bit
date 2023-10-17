@@ -1,5 +1,4 @@
 import { ComponentID } from '@teambit/component-id';
-import BitId from '../../bit-id/bit-id';
 import { Extensions, NODE_PATH_COMPONENT_SEPARATOR } from '../../constants';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { replacePlaceHolderForPackageValue } from './component-placeholders';
@@ -8,7 +7,7 @@ import { parseScope } from './parse-scope';
 
 /**
  * convert a component name to a valid npm package name
- * e.g. BitId { scope: util, name: is-string } => @bit/util.is-string
+ * e.g. { scope: util, name: is-string } => @bit/util.is-string
  */
 export default function componentIdToPackageName({
   id,
@@ -25,7 +24,7 @@ export default function componentIdToPackageName({
   extensions: ExtensionDataList;
   isDependency?: boolean;
 }): string {
-  const fromExtensions = getNameFromExtensions(id._legacy, defaultScope, extensions, isDependency);
+  const fromExtensions = getNameFromExtensions(id, defaultScope, extensions, isDependency);
   if (fromExtensions) return fromExtensions;
   const allSlashes = new RegExp('/', 'g');
   const name = id.fullName.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
@@ -45,7 +44,7 @@ export default function componentIdToPackageName({
 }
 
 function getNameFromExtensions(
-  id: BitId,
+  id: ComponentID,
   defaultScope?: string | null,
   extensions?: ExtensionDataList,
   isDependency?: boolean
@@ -60,9 +59,9 @@ function getNameFromExtensions(
       }
       if (!d.componentId.isEqual) {
         if (typeof d.componentId === 'string') {
-          d.componentId = BitId.parse(d.componentId);
+          d.componentId = ComponentID.fromString(d.componentId);
         } else {
-          d.componentId = new BitId(d.componentId);
+          d.componentId = ComponentID.fromObject(d.componentId);
         }
       }
       return d.componentId.isEqual(id);

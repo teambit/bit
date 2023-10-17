@@ -701,6 +701,9 @@ alternatively, if local (unexported) tags/snaps are not relevant for you anymore
     return this.scope ? [this.scope, this.name].join('/') : this.name;
   }
 
+  /**
+   * @deprecated use toComponentId() instead
+   */
   toBitId(): BitId {
     return new BitId({ scope: this.scope, name: this.name });
   }
@@ -710,6 +713,9 @@ alternatively, if local (unexported) tags/snaps are not relevant for you anymore
     return new ComponentID(this.toBitId());
   }
 
+  /**
+   * @deprecated use toComponentIdWithLatestVersion() instead
+   */
   toBitIdWithLatestVersion(): BitId {
     return new BitId({ scope: this.scope, name: this.name, version: this.getHeadRegardlessOfLaneAsTagOrHash(true) });
   }

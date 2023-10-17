@@ -181,7 +181,7 @@ export default function validateVersionInstance(version: Version): void {
     dependencies.forEach((dependency) => {
       if (dependency.constructor.name !== BitId.name && dependency.constructor.name !== ComponentID.name) {
         throw new VersionInvalid(
-          `${message}, a flattenedDependency expected to be BitId or ComponentID, got ${typeof dependency}`
+          `${message}, a flattenedDependency expected to be ComponentID, got ${typeof dependency}`
         );
       }
       if (!dependency.hasVersion()) {
