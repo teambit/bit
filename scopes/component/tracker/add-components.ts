@@ -375,19 +375,16 @@ you can add the directory these files are located at and it'll change the root d
    * use that id instead.
    */
   private _getIdAccordingToExistingComponent(currentId: BitIdStr): ComponentID | undefined {
-    const existingComponentId = this.bitMap.getExistingBitId(currentId, false);
+    const idWithScope = this.defaultScope ? `${this.defaultScope}/${currentId}` : currentId;
+    const existingComponentId = this.bitMap.getExistingBitId(idWithScope, false);
     if (currentId.includes(VERSION_DELIMITER)) {
       if (
         !existingComponentId || // this id is new, it shouldn't have a version
         !existingComponentId.hasVersion() || // this component is new, it shouldn't have a version
         // user shouldn't add files to a an existing component with different version
-        // $FlowFixMe this function gets called only when this.id is set
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        existingComponentId.version !== ComponentID.getVersionOnlyFromString(this.id)
+        existingComponentId.version !== BitId.getVersionOnlyFromString(currentId)
       ) {
-        // $FlowFixMe this.id is defined here
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        throw new VersionShouldBeRemoved(this.id);
+        throw new VersionShouldBeRemoved(currentId);
       }
     }
     return existingComponentId;

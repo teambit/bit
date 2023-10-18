@@ -559,7 +559,9 @@ export default class Component {
     const docsP = _getDocsForFiles(files, consumer.componentFsCache);
     const docs = await Promise.all(docsP);
     const flattenedDocs = docs ? R.flatten(docs) : [];
-    const defaultScope = componentConfig.defaultScope || null;
+    // probably componentConfig.defaultScope is not needed. try to remove it.
+    // once we changed BitId to ComponentId, the defaultScope is always part of the id.
+    const defaultScope = id.hasScope() ? componentConfig.defaultScope : id.scope;
     const getSchema = () => {
       if (componentFromModel) return componentFromModel.schema;
       return consumer.isLegacy ? undefined : CURRENT_SCHEMA;
@@ -583,7 +585,7 @@ export default class Component {
       deprecated,
       overrides,
       schema: getSchema(),
-      defaultScope,
+      defaultScope: defaultScope || null,
       packageJsonFile,
       packageJsonChangedProps,
       extensions,

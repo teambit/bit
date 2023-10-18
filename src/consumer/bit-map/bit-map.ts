@@ -31,7 +31,6 @@ import ComponentMap, {
 import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 import GeneralError from '../../error/general-error';
-import { ALLOW_SAME_NAME, isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 
 export type PathChangeResult = { id: ComponentID; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
@@ -89,13 +88,6 @@ export default class BitMap {
     const id = componentId.toString();
     if (!componentId.hasVersion() && componentId._legacy.scope) {
       throw new BitError(`invalid bitmap id ${id}, a component must have a version when a scope-name is included`);
-    }
-    if (!isFeatureEnabled(ALLOW_SAME_NAME)) {
-      // make sure there are no duplications (same name)
-      const similarIds = this.findSimilarIds(componentId, true);
-      if (similarIds.length) {
-        throw new BitError(`your id ${id} is duplicated with ${similarIds.toString()}`);
-      }
     }
     componentMap.id = componentId;
     this.components.push(componentMap);
