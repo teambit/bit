@@ -16,6 +16,7 @@ import { GeneratorMain } from '@teambit/generator';
 import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 import { RemoveMain } from '@teambit/remove';
 import { compact } from 'lodash';
+import { getCloudDomain } from '@teambit/legacy/dist/constants';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -221,11 +222,13 @@ export class APIForIDE {
   }
 
   async export() {
-    const { componentsIds, removedIds, exportedLanes } = await this.exporter.export();
+    const { componentsIds, removedIds, exportedLanes, rippleJobs } = await this.exporter.export();
+    const rippleJobsFullUrls = rippleJobs.map((job) => `https://${getCloudDomain()}/ripple-ci/job/${job}`);
     return {
       componentsIds: componentsIds.map((c) => c.toString()),
       removedIds: removedIds.map((c) => c.toString()),
       exportedLanes: exportedLanes.map((l) => l.id()),
+      rippleJobs: rippleJobsFullUrls,
     };
   }
 

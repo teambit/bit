@@ -636,6 +636,10 @@ export class InstallMain {
       patterns: options.patterns,
       forceVersionBump: options.forceVersionBump,
     });
+    if (outdatedPkgs == null) {
+      this.logger.consoleFailure('No dependencies found that match the patterns');
+      return null;
+    }
     let outdatedPkgsToUpdate!: MergedOutdatedPkg[];
     if (options.all) {
       outdatedPkgsToUpdate = outdatedPkgs;
@@ -646,6 +650,9 @@ export class InstallMain {
     }
     if (outdatedPkgsToUpdate.length === 0) {
       this.logger.consoleSuccess('No outdated dependencies found');
+      if (options.forceVersionBump === 'compatible') {
+        this.logger.console("If you want to find new versions that don't match the current version ranges, retry with the --latest flag");
+      }
       return null;
     }
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgsToUpdate, {
