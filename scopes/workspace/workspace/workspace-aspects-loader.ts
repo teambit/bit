@@ -626,6 +626,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       return localPath;
     }
     const parent = graph.predecessors(aspectStringId)[0];
+    if (!parent) return undefined;
     const parentPath = await this.resolveInstalledAspectRecursively(parent.attr, rootIds, graph);
     if (!parentPath) {
       this.resolvedInstalledAspects.set(aspectStringId, null);
