@@ -74,5 +74,5 @@ function getNameFromExtensions(
   const scopeId = id.scope || defaultScope;
   const { scope, owner } = parseScope(scopeId);
   if (!name) return null;
-  return replacePlaceHolderForPackageValue({ name: id.name, scope, owner, scopeId }, name);
+  return replacePlaceHolderForPackageValue({ name: id.fullName, scope, owner, scopeId }, name);
 }
