@@ -116,17 +116,17 @@ export class AspectList {
     return new AspectList(this.entries.map((entry) => entry.clone()));
   }
 
-  static fromLegacyExtensions(legacyDataList: ExtensionDataList, scope?: string): AspectList {
+  static fromLegacyExtensions(legacyDataList: ExtensionDataList): AspectList {
     const newEntries = legacyDataList.map((entry) => {
-      return new AspectEntry(getAspectId(entry, scope), entry);
+      return new AspectEntry(getAspectId(entry), entry);
     });
 
     return new AspectList(newEntries);
   }
 }
 
-function getAspectId(entry: ExtensionDataEntry, scope?: string) {
+function getAspectId(entry: ExtensionDataEntry) {
   if (!entry.extensionId && entry.name) return ComponentID.fromString(entry.name);
-  if (entry.extensionId) return ComponentID.fromLegacy(entry.extensionId._legacy, scope);
+  if (entry.extensionId) return entry.extensionId;
   throw new Error('aspect cannot be loaded without setting an ID');
 }

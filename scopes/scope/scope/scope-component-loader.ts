@@ -194,7 +194,7 @@ export class ScopeComponentLoader {
       new Config(version.mainFile, consumerComponent.extensions),
       // todo: see the comment of this "createAspectListFromLegacy" method. the aspect ids may be incorrect.
       // find a better way to get the ids correctly.
-      this.scope.componentExtension.createAspectListFromLegacy(consumerComponent.extensions, this.scope.name),
+      this.scope.componentExtension.createAspectListFromLegacy(consumerComponent.extensions),
       ComponentFS.fromVinyls(consumerComponent.files),
       version.dependencies,
       consumerComponent
