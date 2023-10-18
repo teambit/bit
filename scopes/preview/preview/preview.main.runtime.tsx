@@ -497,6 +497,7 @@ export class PreviewMain {
     const previewData = this.getPreviewData(envComponent);
     return !!previewData?.skipIncludes;
   }
+
   /**
    * check if the component preview should only include the overview (skipping rendering of the compostions and properties table)
    */
