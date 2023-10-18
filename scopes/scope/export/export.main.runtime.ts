@@ -633,7 +633,6 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       versionsObjects.map(async (objectVersion: Version) => {
         const didDependencyChange = changeDependencyScope(objectVersion);
         changeExtensionsScope(objectVersion);
-        this.depResolver.updateDepsOnLegacyExport(objectVersion, getIdWithUpdatedScope.bind(this));
 
         return didDependencyChange;
       })

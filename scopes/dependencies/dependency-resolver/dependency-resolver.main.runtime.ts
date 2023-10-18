@@ -1275,23 +1275,6 @@ export class DependencyResolverMain {
     return component;
   }
 
-  updateDepsOnLegacyExport(version: VersionModel, idTransformer: OnExportIdTransformer): VersionModel {
-    const entry = version.extensions.findCoreExtension(DependencyResolverAspect.id);
-    if (!entry) {
-      return version;
-    }
-    const dependencies = get(entry, ['data', 'dependencies'], []);
-    dependencies.forEach((dep) => {
-      if (dep.__type === COMPONENT_DEP_TYPE) {
-        const depId = ComponentID.fromObject(dep.componentId);
-        const newDepId = idTransformer(depId);
-        dep.componentId = (newDepId || depId).serialize();
-        dep.id = (newDepId || depId).toString();
-      }
-    });
-    return version;
-  }
-
   /**
    * Register a new dependency detector. Detectors allow to extend Bit's dependency detection
    * mechanism to support new file extensions and types.
