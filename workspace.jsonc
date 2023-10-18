@@ -487,7 +487,6 @@
         "query-string": "7.0.0",
         "react-animate-height": "2.0.23",
         "react-dev-utils": "11.0.4",
-        "react-element-to-jsx-string": "^15.0.0",
         "react-error-boundary": "^3.0.0",
         "react-error-overlay": "6.0.9",
         "react-flow-renderer": "8.3.7",
