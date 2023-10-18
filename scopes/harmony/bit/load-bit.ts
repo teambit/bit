@@ -299,6 +299,7 @@ function clearGlobalsIfNeeded() {
   // @ts-ignore
   DependencyResolver.getWorkspacePolicy = undefined;
   ExtensionDataList.coreExtensionsNames = new Map();
+  ExtensionDataList.toModelObjectsHook = [];
   // @ts-ignore
   WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;
   // @ts-ignore

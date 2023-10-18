@@ -28,7 +28,6 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 import { onTagIdTransformer } from '@teambit/snapping';
-import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { ComponentID } from '@teambit/component-id';
@@ -320,8 +319,6 @@ export type GetDependenciesOptions = {
 export type GetVersionResolverOptions = {
   cacheRootDirectory?: string;
 };
-
-type OnExportIdTransformer = (id: ComponentID) => ComponentID;
 
 const defaultLinkingOptions: LinkingOptions = {
   linkTeambitBit: true,
@@ -1636,6 +1633,20 @@ export class DependencyResolverMain {
 
     graphql.register(dependencyResolverSchema(dependencyResolver));
     envs.registerService(new DependenciesService());
+
+    // this is needed because during tag process, the data.dependencies can be loaded and the componentId can become
+    // an instance of ComponentID class. it needs to be serialized before saved into objects.
+    const serializeDepResolverDataBeforePersist = (extDataList: ExtensionDataList) => {
+      const entry = extDataList.findCoreExtension(DependencyResolverAspect.id);
+      if (!entry) return;
+      const dependencies = get(entry, ['data', 'dependencies'], []);
+      dependencies.forEach((dep) => {
+        if (dep.__type === COMPONENT_DEP_TYPE) {
+          dep.componentId = dep.componentId instanceof ComponentID ? dep.componentId.serialize() : dep.componentId;
+        }
+      });
+    };
+    ExtensionDataList.toModelObjectsHook.push(serializeDepResolverDataBeforePersist);
 
     return dependencyResolver;
   }

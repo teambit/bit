@@ -104,6 +104,7 @@ export class ExtensionDataEntry {
 
 export class ExtensionDataList extends Array<ExtensionDataEntry> {
   static coreExtensionsNames: Map<string, string> = new Map();
+  static toModelObjectsHook: ((extDataList: ExtensionDataList) => void)[] = [];
   static registerCoreExtensionName(name: string) {
     ExtensionDataList.coreExtensionsNames.set(name, '');
   }
@@ -127,6 +128,10 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   }
 
   toModelObjects() {
+    // call the hook before "clone". otherwise, some classes are loosing their structure and become plain objects
+    ExtensionDataList.toModelObjectsHook.forEach((hook) => {
+      hook(this);
+    });
     const extensionsClone = this.clone();
     extensionsClone.forEach((ext) => {
       if (ext.extensionId) {
