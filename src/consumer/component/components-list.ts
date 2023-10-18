@@ -587,7 +587,6 @@ export default class ComponentsList {
     const allIds = this.bitMap.getAllBitIds();
     const matchedIds = ComponentsList.filterComponentsByWildcard(allIds, idsWithWildcard);
     if (!matchedIds.length) throw new NoIdMatchWildcard(idsWithWildcard);
-    // $FlowFixMe filterComponentsByWildcard got ComponentID so it returns BitId
     return matchedIds;
   }
 }

@@ -4,7 +4,6 @@ import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { isSnap } from '@teambit/component-version';
-import { BitId } from '../bit-id';
 import { DEPENDENCIES_FIELDS } from '../constants';
 import { SchemaName } from '../consumer/component/component-schema';
 import { Dependencies } from '../consumer/component/dependencies';
@@ -179,7 +178,7 @@ export default function validateVersionInstance(version: Version): void {
   const validateFlattenedDependencies = (dependencies: ComponentIdList) => {
     validateType(message, dependencies, 'dependencies', 'array');
     dependencies.forEach((dependency) => {
-      if (dependency.constructor.name !== BitId.name && dependency.constructor.name !== ComponentID.name) {
+      if (dependency.constructor.name !== ComponentID.name) {
         throw new VersionInvalid(
           `${message}, a flattenedDependency expected to be ComponentID, got ${typeof dependency}`
         );
