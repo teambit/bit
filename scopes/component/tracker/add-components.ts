@@ -504,8 +504,9 @@ you can add the directory these files are located at and it'll change the root d
     const idOfTrackDir = this._getIdAccordingToTrackDir(componentPath);
     if (!finalBitId) {
       if (this.id) {
-        const defaultScope = await this.getDefaultScope(relativeComponentPath, this.id);
-        finalBitId = ComponentID.fromObject({ name: this.id }, defaultScope);
+        const bitId = BitId.parse(this.id, false);
+        const defaultScope = await this.getDefaultScope(relativeComponentPath, bitId.name);
+        finalBitId = new ComponentID(bitId, defaultScope);
       } else if (idOfTrackDir) {
         finalBitId = idOfTrackDir;
       } else {
