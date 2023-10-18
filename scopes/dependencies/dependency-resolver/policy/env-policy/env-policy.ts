@@ -58,12 +58,13 @@ export class EnvPolicy extends VariantPolicy {
      * Calculate the policy for the env itself.
      * Always force it for the env itself
      */
-    const selfPeersEntries = entriesFromKey(configObject, 'peers', 'version', 'runtime', 'env-own', true);
-
-    let selfPolicy = VariantPolicy.fromArray(selfPeersEntries);
+    let selfPeersEntries: VariantPolicyEntry[];
     if (includeLegacyPeersInSelfPolicy && !configObject.peers && configObject.peerDependencies) {
-      selfPolicy = VariantPolicy.fromArray(handleLegacyPeers(configObject));
+      selfPeersEntries = handleLegacyPeers(configObject);
+    } else {
+      selfPeersEntries = entriesFromKey(configObject, 'peers', 'version', 'runtime', 'env-own', true);
     }
+    const selfPolicy = VariantPolicy.fromArray(selfPeersEntries);
 
     /**
      * Legacy policy used by the old getDependencies function on the env aspect.
