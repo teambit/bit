@@ -189,17 +189,21 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       );
       return scopeAspectIds;
     } catch (err: any) {
-      if (err instanceof ComponentNotFound) {
-        const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
-        const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
-        if (configStr.includes(err.id)) {
-          throw new BitError(`error: a component "${err.id}" was not found
-  your workspace.jsonc has this component-id set. you might want to remove/change it.`);
-        }
-        return scopeAspectIds;
-      }
+      this.throwWsJsoncAspectNotFoundError(err);
+      return scopeAspectIds;
 
       throw err;
+    }
+  }
+
+  throwWsJsoncAspectNotFoundError(err: Error) {
+    if (err instanceof ComponentNotFound) {
+      const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
+      const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
+      if (configStr.includes(err.id)) {
+        throw new BitError(`error: a component "${err.id}" was not found
+your workspace.jsonc has this component-id set. you might want to remove/change it.`);
+      }
     }
   }
 
@@ -743,14 +747,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       };
       return await this.workspace.importAndGetMany(componentIds, 'to load aspects from the workspace', loadOpts);
     } catch (err: any) {
-      if (err instanceof ComponentNotFound) {
-        const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
-        const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
-        if (configStr.includes(err.id)) {
-          throw new BitError(`error: a component "${err.id}" was not found
-your workspace.jsonc has this component-id set. you might want to remove/change it.`);
-        }
-      }
+      this.throwWsJsoncAspectNotFoundError(err);
 
       throw err;
     }

@@ -31,6 +31,15 @@ export type ComponentLoadOptions = LegacyComponentLoadOptions & {
   idsToNotLoadAsAspects?: string[];
 };
 
+type LoadGroup = { workspaceIds: ComponentID[]; scopeIds: ComponentID[] } & LoadGroupMetadata;
+type LoadGroupMetadata = {
+  core?: boolean;
+  aspects?: boolean;
+  seeders?: boolean;
+};
+
+type GetAndLoadSlotOpts = ComponentLoadOptions & LoadGroupMetadata;
+
 type ComponentGetOneOptions = {
   resolveIdVersion?: boolean;
 };
@@ -51,6 +60,16 @@ export type LoadCompAsAspectsOptions = {
   loadEnvs?: boolean;
 
   idsToNotLoadAsAspects?: string[];
+
+  /**
+   * Are this core aspects
+   */
+  core?: boolean;
+
+  /**
+   * Are this aspects seeders of the load many operation
+   */
+  seeders?: boolean;
 };
 
 export class WorkspaceComponentLoader {
@@ -121,8 +140,14 @@ export class WorkspaceComponentLoader {
 
     const groupsToHandle = await this.buildLoadGroups(workspaceScopeIdsMap);
     const groupsRes = await mapSeries(groupsToHandle, async (group) => {
-      const { scopeIds, workspaceIds } = group;
-      return this.getAndLoadSlot(workspaceIds, scopeIds, loadOpts, throwOnFailure, longProcessLogger);
+      const { scopeIds, workspaceIds, aspects, core, seeders } = group;
+      return this.getAndLoadSlot(
+        workspaceIds,
+        scopeIds,
+        { ...loadOpts, core, seeders, aspects },
+        throwOnFailure,
+        longProcessLogger
+      );
     });
     const finalRes = groupsRes.reduce(
       (acc, curr) => {
@@ -136,9 +161,7 @@ export class WorkspaceComponentLoader {
     return finalRes;
   }
 
-  private async buildLoadGroups(
-    workspaceScopeIdsMap: WorkspaceScopeIdsMap
-  ): Promise<Array<{ workspaceIds: ComponentID[]; scopeIds: ComponentID[] }>> {
+  private async buildLoadGroups(workspaceScopeIdsMap: WorkspaceScopeIdsMap): Promise<Array<LoadGroup>> {
     const allIds = [...workspaceScopeIdsMap.workspaceIds.values(), ...workspaceScopeIdsMap.scopeIds.values()];
     const groupedByIsCoreEnvs = groupBy(allIds, (id) => {
       return this.envs.isCoreEnv(id.toStringWithoutVersion());
@@ -176,18 +199,21 @@ export class WorkspaceComponentLoader {
 
     const groupsToHandle = [
       // Always load first core envs
-      groupedByIsCoreEnvs.true || [],
-      extsNotFromTheList || [],
-      groupedByIsExtOfAnother.true || [],
-      groupedByIsExtOfAnother.false || [],
+      { ids: groupedByIsCoreEnvs.true || [], core: true, aspects: true },
+      { ids: extsNotFromTheList || [], core: false, aspects: true, seeders: false },
+      { ids: groupedByIsExtOfAnother.true || [], core: false, aspects: true, seeders: true },
+      { ids: groupedByIsExtOfAnother.false || [], core: false, aspects: false, seeders: true },
     ];
     const groupsByWsScope = groupsToHandle.map((group) => {
-      const groupedByWsScope = groupBy(group, (id) => {
+      const groupedByWsScope = groupBy(group.ids, (id) => {
         return workspaceScopeIdsMap.workspaceIds.has(id.toString());
       });
       return {
         workspaceIds: groupedByWsScope.true || [],
         scopeIds: groupedByWsScope.false || [],
+        core: group.core,
+        aspects: group.aspects,
+        seeders: group.seeders,
       };
     });
     return groupsByWsScope;
@@ -196,7 +222,7 @@ export class WorkspaceComponentLoader {
   private async getAndLoadSlot(
     workspaceIds: ComponentID[],
     scopeIds: ComponentID[],
-    loadOpts: ComponentLoadOptions,
+    loadOpts: GetAndLoadSlotOpts,
     throwOnFailure = true,
     longProcessLogger
   ): Promise<GetManyRes> {
@@ -230,6 +256,8 @@ export class WorkspaceComponentLoader {
     await this.loadCompsAsAspects(workspaceComponents, {
       loadApps: true,
       loadEnvs: true,
+      core: loadOpts.core,
+      seeders: loadOpts.seeders,
       idsToNotLoadAsAspects: loadOpts.idsToNotLoadAsAspects,
     });
 
@@ -271,7 +299,9 @@ export class WorkspaceComponentLoader {
             this.scopeComponentsCache.set(idStr, componentFromScope);
           }
           // This is fine here, as it will be handled later in the process
-        } catch (err) {
+        } catch (err: any) {
+          const wsAspectLoader = this.workspace.getWorkspaceAspectsLoader();
+          wsAspectLoader.throwWsJsoncAspectNotFoundError(err);
           this.logger.warn(`populateScopeAndExtensionsCache - failed loading component ${idStr} from scope`, err);
         }
       }
@@ -320,7 +350,7 @@ export class WorkspaceComponentLoader {
   private async getComponentsWithoutLoadExtensions(
     workspaceIds: ComponentID[],
     scopeIds: ComponentID[],
-    loadOpts: ComponentLoadOptions,
+    loadOpts: GetAndLoadSlotOpts,
     throwOnFailure = true,
     longProcessLogger
   ) {
