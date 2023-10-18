@@ -44,11 +44,13 @@ export function previewSchema(previewExtension: PreviewMain) {
           return previewExtension.isLegacyHeader(component);
         },
         onlyOverview: ({ component }) => {
-          // return true;
           return previewExtension.includesOnlyOverview(component);
         },
         useNameParam: ({ component }) => {
           return previewExtension.useNameParam(component);
+        },
+        skipIncludes: ({ component }) => {
+          return previewExtension.isSupportSkipIncludes(component);
         },
       },
     },

@@ -13,23 +13,26 @@ export type APIReferenceTableOfContentsProps = {
 
 export function APIReferenceTableOfContents({ apiModel, className }: APIReferenceTableOfContentsProps) {
   const apiNodesGroupedByType = Array.from(apiModel.apiByType.entries()).sort(sortGroupedAPINodes);
+
   return (
     <div className={classNames(styles.apiRefToc, className)}>
       {apiNodesGroupedByType.map(([type, nodes]) => {
-        return (
-          <div key={`${type}`} className={styles.apiRefTocGroup}>
-            {nodes.sort(sortAPINodes).map((node) => {
-              return (
-                <div key={`${type}-${node.api.name}`} className={styles.apiRefTocGroupItem}>
-                  <div className={styles.apiRefTocGroupIcon}>{<img src={node.renderer.icon?.url} />}</div>
-                  <div className={styles.apiRefTocGroupItemName}>
-                    <Link href={`~api-reference?selectedAPI=${node.api.name}`}>{node.api.name}</Link>
-                  </div>
+        const chunkedNodes = chunkArray(nodes.sort(sortAPINodes), 3);
+        return chunkedNodes.map((nodeGroup, groupIndex) => (
+          <div
+            key={`${type}-${groupIndex}`}
+            className={classNames(styles.apiRefTocGroup, { [styles.extraPadding]: groupIndex !== 0 })}
+          >
+            {nodeGroup.map((node) => (
+              <div key={`${type}-${node.api.name}`} className={styles.apiRefTocGroupItem}>
+                <div className={styles.apiRefTocGroupIcon}>{<img src={node.renderer.icon?.url} />}</div>
+                <div className={styles.apiRefTocGroupItemName}>
+                  <Link href={`~api-reference?selectedAPI=${node.api.name}`}>{node.api.name}</Link>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
-        );
+        ));
       })}
     </div>
   );
@@ -43,4 +46,12 @@ function sortGroupedAPINodes(a: [string, APINode<SchemaNode>[]], b: [string, API
   if (aType > bType) return 1;
 
   return 0;
+}
+
+function chunkArray<T>(array: T[], size: number): T[][] {
+  const chunkedArr: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunkedArr.push(array.slice(i, i + size));
+  }
+  return chunkedArr;
 }

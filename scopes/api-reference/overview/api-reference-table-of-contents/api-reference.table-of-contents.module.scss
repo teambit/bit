@@ -1,18 +1,18 @@
 .apiRefToc {
   display: flex;
-  gap: 32px;
+  gap: 48px;
 }
 
 .apiRefTocGroup {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
   align-items: flex-start;
 }
 
 .apiRefTocGroupItem {
   display: flex;
-  gap: 4px;
+  gap: 8px;
   justify-content: center;
   align-items: center;
 }

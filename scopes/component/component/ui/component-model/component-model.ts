@@ -40,6 +40,7 @@ export type ComponentPreview = {
   onlyOverview?: boolean;
   legacyHeader?: boolean;
   useNameParam?: boolean;
+  skipIncludes?: boolean;
 };
 
 export type ComponentServer = {

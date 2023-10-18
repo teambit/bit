@@ -60,6 +60,7 @@ import { ComponentPreviewRoute } from './component-preview.route';
 import { previewSchema } from './preview.graphql';
 import { PreviewAssetsRoute } from './preview-assets.route';
 import { PreviewService } from './preview.service';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 
 const noopResult = {
   results: [],
@@ -127,6 +128,11 @@ export type PreviewAnyComponentData = {
    * use name query params to select a specific composition to render.
    */
   useNameParam?: boolean;
+
+  /**
+   * don't allow other aspects implementing a preview definition to be included in your preview.
+   */
+  skipIncludes?: boolean;
 };
 
 /**
@@ -191,7 +197,9 @@ export class PreviewMain {
 
     private logger: Logger,
 
-    private dependencyResolver: DependencyResolverMain
+    private dependencyResolver: DependencyResolverMain,
+
+    private scope: ScopeMain
   ) {}
 
   get tempFolder(): string {
@@ -482,6 +490,46 @@ export class PreviewMain {
   isEnvSupportScaling(envComponent: Component): boolean {
     const previewData = this.getPreviewData(envComponent);
     return !!previewData?.isScaling;
+  }
+
+  async isSupportSkipIncludes(component: Component) {
+    const isCore = this.envs.isUsingCoreEnv(component);
+    if (isCore) return false;
+
+    const envComponent = await this.envs.getEnvComponent(component);
+    const previewData = this.getPreviewData(envComponent);
+    return !!previewData?.skipIncludes;
+  }
+
+  async sanitizePreviewData(harmonyComps: Component[], scope: ScopeMain, envs: EnvsMain, workspace?: Workspace) {
+    const harmonyCompIdsWithEnvId = await Promise.all(
+      harmonyComps.map(async (comp) => {
+        const envComp = await envs.getEnvComponent(comp);
+        const inWs = workspace ? await workspace.hasId(envComp.id) : false;
+        const lastTaggedEnvHasOnlyOverview: boolean | undefined = (
+          await scope.get(envComp.id, false)
+        )?.state.aspects.get('teambit.preview/preview')?.data?.onlyOverview;
+
+        return [comp.id.toString(), { envId: envComp.id.toString(), inWs, lastTaggedEnvHasOnlyOverview }] as [
+          string,
+          { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean }
+        ];
+      })
+    );
+
+    const harmonyCompIdsWithEnvIdMap = new Map(harmonyCompIdsWithEnvId);
+
+    const compsToDeleteOnlyOverviewPreviewData = harmonyComps.filter((comp) => {
+      const envData: { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean } | undefined =
+        harmonyCompIdsWithEnvIdMap.get(comp.id.toString());
+      return envData?.inWs && !envData?.lastTaggedEnvHasOnlyOverview;
+    });
+
+    for (const comp of compsToDeleteOnlyOverviewPreviewData) {
+      const previewData = comp.state.aspects.get('teambit.preview/preview')?.data;
+      // if the env is not tagged with the component remove it from the preview data of the component
+      delete previewData?.onlyOverview;
+    }
   }
 
   /**
@@ -891,6 +939,7 @@ export class PreviewMain {
     DependencyResolverAspect,
     GraphqlAspect,
     WatcherAspect,
+    ScopeAspect,
   ];
 
   static defaultConfig = {
@@ -913,6 +962,7 @@ export class PreviewMain {
       dependencyResolver,
       graphql,
       watcher,
+      scope,
     ]: [
       BundlerMain,
       BuilderMain,
@@ -926,7 +976,8 @@ export class PreviewMain {
       LoggerMain,
       DependencyResolverMain,
       GraphqlMain,
-      WatcherMain
+      WatcherMain,
+      ScopeMain
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
@@ -947,7 +998,8 @@ export class PreviewMain {
       builder,
       workspace,
       logger,
-      dependencyResolver
+      dependencyResolver,
+      scope
     );
 
     if (workspace)
