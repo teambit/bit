@@ -1859,9 +1859,6 @@ importers:
       react-dom:
         specifier: 17.0.2
         version: 17.0.2(react@17.0.2)
-      react-element-to-jsx-string:
-        specifier: ^15.0.0
-        version: 15.0.0(react-dom@17.0.2)(react@17.0.2)
       react-error-boundary:
         specifier: ^3.0.0
         version: 3.1.4(react@17.0.2)
@@ -2966,7 +2963,7 @@ importers:
         version: file:scopes/react/ui/compositions-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
+        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(react-dom@17.0.2)(react@17.0.2)
@@ -4100,7 +4097,7 @@ importers:
         version: file:scopes/react/ui/compositions-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
+        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(react-dom@17.0.2)(react@17.0.2)
@@ -5234,7 +5231,7 @@ importers:
         version: file:scopes/react/ui/compositions-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
+        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(react-dom@17.0.2)(react@17.0.2)
@@ -6368,7 +6365,7 @@ importers:
         version: file:scopes/react/ui/compositions-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
+        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(react-dom@17.0.2)(react@17.0.2)
@@ -7502,7 +7499,7 @@ importers:
         version: file:scopes/react/ui/compositions-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
+        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(react-dom@17.0.2)(react@17.0.2)
@@ -8636,7 +8633,7 @@ importers:
         version: file:scopes/react/ui/compositions-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
+        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(react-dom@17.0.2)(react@17.0.2)
@@ -17584,33 +17581,18 @@ importers:
       '@teambit/design.themes.theme-toggler':
         specifier: 0.1.3
         version: 0.1.3(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.code.react-playground':
-        specifier: 4.1.9
-        version: 4.1.9(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
-      '@teambit/documenter.ui.linked-heading':
-        specifier: 4.1.6
-        version: 4.1.6(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.section':
-        specifier: 4.1.1
-        version: registry.npmjs.org/@teambit/documenter.ui.section@4.1.1(react-dom@17.0.2)(react@17.0.2)
       classnames:
         specifier: 2.2.6
         version: 2.2.6
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
-      lodash:
-        specifier: 4.17.21
-        version: 4.17.21
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
       react-dom:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
-      react-element-to-jsx-string:
-        specifier: ^15.0.0
-        version: 15.0.0(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@babel/runtime':
         specifier: 7.20.0
@@ -17621,9 +17603,6 @@ importers:
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
-      '@types/lodash':
-        specifier: 4.14.165
-        version: 4.14.165
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -23170,10 +23149,6 @@ packages:
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
 
-  /@base2/pretty-print-object@1.0.1:
-    resolution: {integrity: sha512-4iri8i1AqYHJE2DstZYkyEprg6Pq6sKx3xn5FpySk9sNhH7qN2LLlHJCfDTZRILNwQNPD7mATWM0TBui7uC1pA==}
-    dev: false
-
   /@bcoe/v8-coverage@0.2.3:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
     dev: false
@@ -25000,7 +24975,7 @@ packages:
     resolution: {integrity: sha512-FNcjvgoYzLVQ73yG9mhuzXqxhjTdaP0QkiBFetCqY/JniGHtqYOzuzZq3KuRnfJoN7UWqQLzLWV1VRwqefmYiw==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/core-loggers': 9.0.3(@pnpm/logger@5.0.0)
       '@pnpm/error': 5.0.2
@@ -36285,11 +36260,6 @@ packages:
       require-from-string: 2.0.2
       uri-js: 4.4.1
 
-  /amdefine@1.0.1:
-    resolution: {integrity: sha512-S2Hw0TtNkMJhIabBwIojKL9YHO5T0n5eNqWJ7Lrlel/zDbftQpxpapi8tZs3X1HWa+u+QeydGmzzNU0m09+Rcg==}
-    engines: {node: '>=0.4.2'}
-    dev: false
-
   /anonymous-npm-registry-client@0.2.0:
     resolution: {integrity: sha512-ym3GCDQU8B6PZrswCvanRiWoSg2QrrlPwoRlMr4oCpGvyK2KlwTujdCZfxrGapqxrqEY3TpxEqLf+7PhFnyaLA==}
     dependencies:
@@ -37068,11 +37038,6 @@ packages:
       tslib: 2.6.2
     dev: false
 
-  /ast-types@0.9.6:
-    resolution: {integrity: sha512-qEdtR2UH78yyHX/AUNfXmJTlM48XoFZKBdwi1nzkI1mJL21cmbu0cvjxjpkXJ5NENMq42H+hNs8VLJcqXLerBQ==}
-    engines: {node: '>= 0.8'}
-    dev: false
-
   /astral-regex@1.0.0:
     resolution: {integrity: sha512-+Ryf6g3BKoRc7jfp7ad8tM4TtMiaWvbF/1/sQcZPkkS7ag3D5nMBCe2UfOTONtAkaG0tO0ij3C5Lwmf1EiyjHg==}
     engines: {node: '>=4'}
@@ -37418,10 +37383,6 @@ packages:
 
   /balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
-
-  /base62@1.2.8:
-    resolution: {integrity: sha512-V6YHUbjLxN1ymqNLb1DPHoU1CpfdL7d2YTIp5W3U4hhoG4hhxNmsFDs66M9EXxBiSEke5Bt5dwdfMwwZF70iLA==}
-    dev: false
 
   /base64-arraybuffer@0.1.4:
     resolution: {integrity: sha512-a1eIFi4R9ySrbiMuyTGx5e92uRH5tQY6kArNcFaKBUleIoLjdjBg7Zxm3Mqm3Kmkf27HLR/1fnxX9q8GQ7Iavg==}
@@ -38671,22 +38632,6 @@ packages:
   /commondir@1.0.1:
     resolution: {integrity: sha512-W9pAhw0ja1Edb5GVdIF1mjZw/ASI0AlShXM83UUGe2DVr5TdAPEA1OA8m/g8zWp9x6On7gqufY+FatDbC3MDQg==}
 
-  /commoner@0.10.8:
-    resolution: {integrity: sha512-3/qHkNMM6o/KGXHITA14y78PcfmXh4+AOCJpSoF73h4VY1JpdGv3CHMS5+JW6SwLhfJt4RhNmLAa7+RRX/62EQ==}
-    engines: {node: '>= 0.8'}
-    hasBin: true
-    dependencies:
-      commander: 2.20.3
-      detective: 4.7.1
-      glob: 5.0.15
-      graceful-fs: 4.2.10
-      iconv-lite: 0.4.24
-      mkdirp: 0.5.6
-      private: 0.1.8
-      q: 1.5.1
-      recast: 0.11.23
-    dev: false
-
   /component-bind@1.0.0:
     resolution: {integrity: sha512-WZveuKPeKAG9qY+FkYDeADzdHyTYdIboXS59ixDeRJL5ZhxpqUnxSOwop4FQjMsiYm3/Or8cegVbpAHNA7pHxw==}
     dev: false
@@ -38874,11 +38819,6 @@ packages:
   /core-js-pure@3.32.2:
     resolution: {integrity: sha512-Y2rxThOuNywTjnX/PgA5vWM6CZ9QB9sz9oGeCixV8MqXZO70z/5SHzf9EeBrEBK0PN36DnEBBu9O/aGWzKuMZQ==}
     requiresBuild: true
-    dev: false
-
-  /core-js@1.2.7:
-    resolution: {integrity: sha512-ZiPp9pZlgxpWRu0M+YWbm6+aQ84XEfH1JRXvfOc/fILWI0VKhLC2LX13X1NYq4fULzLMq7Hfh43CSo2/aIaUPA==}
-    deprecated: core-js@<3.23.3 is no longer maintained and not recommended for usage due to the number of issues. Because of the V8 engine whims, feature detection in old core-js versions could cause a slowdown up to 100x even if nothing is polyfilled. Some versions have web compatibility issues. Please, upgrade your dependencies to the actual version of core-js.
     dev: false
 
   /core-js@2.6.12:
@@ -39739,10 +39679,6 @@ packages:
       isobject: 3.0.1
     dev: false
 
-  /defined@1.0.1:
-    resolution: {integrity: sha512-hsBd2qSVCRE+5PmNdHt1uzyrFu5d3RwmFDKzyNZMFq/EwDNJF7Ee5+D5oEKF0hU6LhtoUF1macFvOe4AskQC1Q==}
-    dev: false
-
   /del@6.1.1:
     resolution: {integrity: sha512-ua8BhapfP0JUJKC/zV9yHHDW/rDoDxP4Zhn3AkA6/xT6gY7jYXJiaeyBZznYVujhZZET+UgcbZiQ7sN3WqcImg==}
     engines: {node: '>=10'}
@@ -39864,13 +39800,6 @@ packages:
 
   /detective-stylus@1.0.0:
     resolution: {integrity: sha512-HelsT2sUFhMHumcu96Fq8tKQLLeIxMbEmj5zhPYQojuL9qJRUFlX39YsqIwBE9ttxNSI5DM3xO/NTkG4BYV5eA==}
-    dev: false
-
-  /detective@4.7.1:
-    resolution: {integrity: sha512-H6PmeeUcZloWtdt4DAkFyzFL94arpHr3NOwwmVILFiy+9Qd4JTxxXrzfyGk/lmct2qVGBwTSwSXagqu2BxmWig==}
-    dependencies:
-      acorn: 5.7.4
-      defined: 1.0.1
     dev: false
 
   /devtools-protocol@0.0.981744:
@@ -40297,14 +40226,6 @@ packages:
   /env-paths@2.2.1:
     resolution: {integrity: sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A==}
     engines: {node: '>=6'}
-    dev: false
-
-  /envify@3.4.1:
-    resolution: {integrity: sha512-XLiBFsLtNF0MOZl+vWU59yPb3C2JtrQY2CNJn22KH75zPlHWY5ChcAQuf4knJeWT/lLkrx3sqvhP/J349bt4Bw==}
-    hasBin: true
-    dependencies:
-      jstransform: 11.0.3
-      through: 2.3.8
     dev: false
 
   /envinfo@7.10.0:
@@ -41180,18 +41101,6 @@ packages:
       eslint-visitor-keys: 1.3.0
     dev: false
 
-  /esprima-fb@15001.1.0-dev-harmony-fb:
-    resolution: {integrity: sha512-59dDGQo2b3M/JfKIws0/z8dcXH2mnVHkfSPRhCYS91JNGfGNwr7GsSF6qzWZuOGvw5Ii0w9TtylrX07MGmlOoQ==}
-    engines: {node: '>=0.4.0'}
-    hasBin: true
-    dev: false
-
-  /esprima@3.1.3:
-    resolution: {integrity: sha512-AWwVMNxwhN8+NIPQzAQZCm7RkLC4RbM3B1OobMuyp3i+w73X57KCKaVIxaRZb+DYCojq7rspo+fmuQfAboyhFg==}
-    engines: {node: '>=4'}
-    hasBin: true
-    dev: false
-
   /esprima@4.0.1:
     resolution: {integrity: sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==}
     engines: {node: '>=4'}
@@ -41685,16 +41594,6 @@ packages:
 
   /fbjs-css-vars@1.0.2:
     resolution: {integrity: sha512-b2XGFAFdWZWg0phtAWLHCk836A1Xann+I+Dgd3Gk64MHKZO44FfoD1KxyvbSh0qZsIoXQGGlVztIY+oitJPpRQ==}
-    dev: false
-
-  /fbjs@0.6.1:
-    resolution: {integrity: sha512-4KW7tT33ytfazK3Ekvesbsa4A5J79hUrdXONQGZ0wM6i3PFc70YknF9kj1eyx3mDupgJ7Z+ifFhcMJ+ps2eZIw==}
-    dependencies:
-      core-js: 1.2.7
-      loose-envify: 1.4.0
-      promise: 7.3.1
-      ua-parser-js: 0.7.24
-      whatwg-fetch: 0.9.0
     dev: false
 
   /fbjs@1.0.0:
@@ -42435,16 +42334,6 @@ packages:
 
   /glob-to-regexp@0.4.1:
     resolution: {integrity: sha512-lkX1HJXwyMcprw/5YUZc2s7DrpAiHB21/V+E1rHUrVNokkvB6bqMzT0VfV6/86ZNabt1k14YOIaT7nDvOX3Iiw==}
-
-  /glob@5.0.15:
-    resolution: {integrity: sha512-c9IPMazfRITpmAAKi22dK1VKxGDX9ehhqfABDriL/lzO92xcUKEJPQHrVA/2YHSNFB4iFlykVmWvwo48nr3OxA==}
-    dependencies:
-      inflight: 1.0.6
-      inherits: 2.0.4
-      minimatch: 3.0.5
-      once: 1.4.0
-      path-is-absolute: 1.0.1
-    dev: false
 
   /glob@6.0.4:
     resolution: {integrity: sha512-MKZeRNyYZAVVVG1oZeLaWie1uweH40m9AZwIwxyPbTSX4hHrVYSzLg0Ro5Z5R7XKkIX+Cc6oD1rqeDJnwsB8/A==}
@@ -45115,10 +45004,6 @@ packages:
     resolution: {integrity: sha512-H/ZGY0nIAg3QcOwE1QN/rK/Fa7gJn7Ii5obwp6zyPO4xiPNwpIMjqy2gwjBEGqzkF/vSWEIBQCBuN19hYiL6Qg==}
     dev: false
 
-  /json-stringify-pretty-compact@1.2.0:
-    resolution: {integrity: sha512-/11Pj1OyX814QMKO7K8l85SHPTr/KsFxHp8GE2zVa0BtJgGimDjXHfM3FhC7keQdWDea7+nXf+f1de7ATZcZkQ==}
-    dev: false
-
   /json-stringify-safe@5.0.1:
     resolution: {integrity: sha512-ZClg6AaYvamvYEE82d3Iyd3vSSIjQ+odgjaTzRuO3s7toCdFKczob2i0zCh7JE8kWn17yvAWhUVxvqGwUalsRA==}
     dev: false
@@ -45194,18 +45079,6 @@ packages:
       verror: 1.10.0
     dev: false
 
-  /jstransform@11.0.3:
-    resolution: {integrity: sha512-LGm87w0A8E92RrcXt94PnNHkFqHmgDy3mKHvNZOG7QepKCTCH/VB6S+IEN+bT4uLN3gVpOT0vvOOVd96osG71g==}
-    engines: {node: '>=0.8.8'}
-    hasBin: true
-    dependencies:
-      base62: 1.2.8
-      commoner: 0.10.8
-      esprima-fb: 15001.1.0-dev-harmony-fb
-      object-assign: 2.1.1
-      source-map: 0.4.4
-    dev: false
-
   /jsx-ast-utils@3.3.5:
     resolution: {integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==}
     engines: {node: '>=4.0'}
@@ -45214,14 +45087,6 @@ packages:
       array.prototype.flat: 1.3.2
       object.assign: 4.1.4
       object.values: 1.1.7
-    dev: false
-
-  /jsx-to-string@1.4.0:
-    resolution: {integrity: sha512-BmDM0gMngtBcjET7iEDuMxU+ZA4fTFWhMWAfbJeZP0X0VIaN7+At3wa64v48hzuE9rf77VAwlI/aMJrR+9LEZA==}
-    dependencies:
-      immutable: 4.3.4
-      json-stringify-pretty-compact: 1.2.0
-      react: 0.14.10
     dev: false
 
   /junit-report-builder@3.0.1:
@@ -47203,11 +47068,6 @@ packages:
     resolution: {integrity: sha512-fexhUFFPTGV8ybAtSIGbV6gOkSv8UtRbDBnAyLQw4QPKkgNlsH2ByPGtMUqdWkos6YCRmAqViwgZrJc/mRDzZQ==}
     dev: false
 
-  /object-assign@2.1.1:
-    resolution: {integrity: sha512-CdsOUYIh5wIiozhJ3rLQgmUTgcyzFwZZrqhkKhODMoGtPKM+wt0h0CNIoauJWMsS9822EdzPsF/6mb4nLvPN5g==}
-    engines: {node: '>=0.10.0'}
-    dev: false
-
   /object-assign@4.1.1:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
     engines: {node: '>=0.10.0'}
@@ -49013,11 +48873,6 @@ packages:
     resolution: {integrity: sha512-Kx/1w86q/epKcmte75LNrEoT+lX8pBpavuAbvJWRXar7Hz8jrtF+e3vY751p0R8H9HdArwaCTNDDzHg/ScJK1Q==}
     engines: {node: '>=6'}
 
-  /private@0.1.8:
-    resolution: {integrity: sha512-VvivMrbvd2nKkiG38qjULzlc+4Vx4wm/whI9pQD35YrARNnhxeiRktSOhSukRLFNlzg6Br/cJPet5J/u19r/mg==}
-    engines: {node: '>= 0.6'}
-    dev: false
-
   /proc-output@1.0.8:
     resolution: {integrity: sha512-d5v2wFTIrfE7eyt5KqB+CwsaBAmYqKIVNZv3R3Hya96gImHm2Aul+x6MZHRaKI7Ijpr9cg3RiOCY6s1O4SvzFQ==}
     dev: false
@@ -49531,19 +49386,6 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /react-element-to-jsx-string@15.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-UDg4lXB6BzlobN60P8fHWVPX3Kyw8ORrTeBtClmIlGdkOOE+GYQSFvmEU5iLLpwp/6v42DINwNcwOhOLfQ//FQ==}
-    peerDependencies:
-      react: ^0.14.8 || ^15.0.1 || ^16.0.0 || ^17.0.1 || ^18.0.0
-      react-dom: ^0.14.8 || ^15.0.1 || ^16.0.0 || ^17.0.1 || ^18.0.0
-    dependencies:
-      '@base2/pretty-print-object': 1.0.1
-      is-plain-object: 5.0.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-      react-is: 18.1.0
-    dev: false
-
   /react-error-boundary@3.1.4(react@17.0.2):
     resolution: {integrity: sha512-uM9uPzZJTF6wRQORmSrvOIgt4lJ9MC1sNgEOj2XGsDTRE4kmpWxg7ENK9EWNKJRMAOY9z0MuF4yIfl6gp4sotA==}
     engines: {node: '>=10', npm: '>=6'}
@@ -49581,10 +49423,6 @@ packages:
 
   /react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
-
-  /react-is@18.1.0:
-    resolution: {integrity: sha512-Fl7FuabXsJnV5Q1qIOQwx/sagGF18kogb4gpfcG4gjLBWO0WDiiz1ko/ExayuxE7InyQkBLkxRFG5oxY6Uu3Kg==}
-    dev: false
 
   /react-is@18.2.0:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
@@ -49810,14 +49648,6 @@ packages:
       react: 17.0.2
     dev: true
 
-  /react@0.14.10:
-    resolution: {integrity: sha512-yxMw5aorZG4qsLVBfjae4wGFvd5708DhcxaXLJ3IOTgr1TCs8k9+ZheGgLGr5OfwWMhSahNbGvvoEDzrxVWouA==}
-    engines: {node: '>=0.10.0'}
-    dependencies:
-      envify: 3.4.1
-      fbjs: 0.6.1
-    dev: false
-
   /react@17.0.2:
     resolution: {integrity: sha512-gnhPt75i/dq/z3/6q/0asP78D0u592D5L1pd7M8P+dck6Fu/jJeL6iVVK23fptSUZj8Vjf++7wXA8UNclGQcbA==}
     engines: {node: '>=0.10.0'}
@@ -50000,16 +49830,6 @@ packages:
   /realpath-missing@1.1.0:
     resolution: {integrity: sha512-wnWtnywepjg/eHIgWR97R7UuM5i+qHLA195qdN9UPKvcMqfn60+67S8sPPW3vDlSEfYHoFkKU8IvpCNty3zQvQ==}
     engines: {node: '>=10'}
-    dev: false
-
-  /recast@0.11.23:
-    resolution: {integrity: sha512-+nixG+3NugceyR8O1bLU45qs84JgI3+8EauyRZafLgC9XbdAOIVgwV1Pe2da0YzGo62KzWoZwUpVEQf6qNAXWA==}
-    engines: {node: '>= 0.8'}
-    dependencies:
-      ast-types: 0.9.6
-      esprima: 3.1.3
-      private: 0.1.8
-      source-map: 0.5.7
     dev: false
 
   /recursive-readdir@2.2.2:
@@ -51431,13 +51251,6 @@ packages:
   /source-map-url@0.4.1:
     resolution: {integrity: sha512-cPiFOTLUKvJFIg4SKVScy4ilPPW6rFgMgfuZJPNoDuMs3nC1HbMUycBoJw77xFIp6z1UJQJOfx6C9GMH80DiTw==}
     deprecated: See https://github.com/lydell/source-map-url#deprecated
-    dev: false
-
-  /source-map@0.4.4:
-    resolution: {integrity: sha512-Y8nIfcb1s/7DcobUz1yOO1GSp7gyL+D9zLHDehT7iRESqGSxjJ448Sg7rvfgsRJCnKLdSl11uGf0s9X80cH0/A==}
-    engines: {node: '>=0.8.0'}
-    dependencies:
-      amdefine: 1.0.1
     dev: false
 
   /source-map@0.5.6:
@@ -54025,10 +53838,6 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       iconv-lite: 0.6.3
-    dev: false
-
-  /whatwg-fetch@0.9.0:
-    resolution: {integrity: sha512-DIuh7/cloHxHYwS/oRXGgkALYAntijL63nsgMQsNSnBj825AysosAqA2ZbYXGRqpPRiNH7335dTqV364euRpZw==}
     dev: false
 
   /whatwg-fetch@3.6.19:
@@ -58091,7 +57900,7 @@ packages:
       - '@types/react'
     dev: false
 
-  file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4):
+  file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/react/ui/docs-app, type: directory}
     id: file:scopes/react/ui/docs-app
     name: '@teambit/react.ui.docs-app'
@@ -58101,20 +57910,12 @@ packages:
     dependencies:
       '@teambit/design.theme.icons-font': 2.0.26(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.themes.theme-toggler': 0.1.3(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.code.react-playground': 4.1.9(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
-      '@teambit/documenter.ui.linked-heading': 4.1.6(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.section': registry.npmjs.org/@teambit/documenter.ui.section@4.1.1(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
-      jsx-to-string: 1.4.0
-      lodash: 4.17.21
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-      react-element-to-jsx-string: 15.0.0(react-dom@17.0.2)(react@17.0.2)
     transitivePeerDependencies:
       - '@testing-library/react'
-      - '@types/react'
-      - typescript
     dev: false
 
   file:scopes/react/ui/docs/apply-providers(react-dom@17.0.2)(react@17.0.2):
