@@ -265,9 +265,14 @@ export class WorkspaceComponentLoader {
       const idStr = id.toString();
       let componentFromScope;
       if (!this.scopeComponentsCache.has(idStr)) {
-        componentFromScope = await this.workspace.scope.get(id);
-        if (componentFromScope) {
-          this.scopeComponentsCache.set(idStr, componentFromScope);
+        try {
+          componentFromScope = await this.workspace.scope.get(id);
+          if (componentFromScope) {
+            this.scopeComponentsCache.set(idStr, componentFromScope);
+          }
+          // This is fine here, as it will be handled later in the process
+        } catch (err) {
+          this.logger.warn(`populateScopeAndExtensionsCache - failed loading component ${idStr} from scope`, err);
         }
       }
       if (!this.componentsExtensionsCache.has(idStr) && workspaceScopeIdsMap.workspaceIds.has(idStr)) {
