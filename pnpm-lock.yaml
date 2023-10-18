@@ -179,6 +179,51 @@ importers:
       '@teambit/any-fs':
         specifier: 0.0.5
         version: 0.0.5
+      '@teambit/api-reference.models.api-node-renderer':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.models.api-reference-model':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.api-node-details':
+        specifier: ^0.0.28
+        version: 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.class':
+        specifier: ^0.0.29
+        version: 0.0.29(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.enum':
+        specifier: ^0.0.29
+        version: 0.0.29(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.inference-type':
+        specifier: ^0.0.19
+        version: 0.0.19(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.interface':
+        specifier: ^0.0.29
+        version: 0.0.29(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.schema-nodes-index':
+        specifier: ^0.0.25
+        version: 0.0.25(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.type':
+        specifier: ^0.0.28
+        version: 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.type-array':
+        specifier: ^0.0.19
+        version: 0.0.19(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.type-intersection':
+        specifier: ^0.0.19
+        version: 0.0.19(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.type-literal':
+        specifier: ^0.0.26
+        version: 0.0.26(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.type-union':
+        specifier: ^0.0.19
+        version: 0.0.19(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.unresolved':
+        specifier: ^0.0.28
+        version: 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.variable':
+        specifier: ^0.0.28
+        version: 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.utils.code-editor-options':
         specifier: ^0.0.6
         version: 0.0.6
@@ -191,6 +236,9 @@ importers:
       '@teambit/api-reference.utils.schema-node-signature-transform':
         specifier: ^0.0.15
         version: 0.0.15
+      '@teambit/api-reference.utils.sort-api-nodes':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-react.layout.row':
         specifier: 0.0.3
         version: 0.0.3(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
@@ -620,9 +668,6 @@ importers:
       '@teambit/design.ui.styles.muted-italic':
         specifier: 0.0.44
         version: 0.0.44(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/design.ui.surfaces.menu.item':
-        specifier: 0.0.354
-        version: 0.0.354(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.surfaces.menu.link-item':
         specifier: 1.0.0
         version: 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -1814,9 +1859,6 @@ importers:
       react-dom:
         specifier: 17.0.2
         version: 17.0.2(react@17.0.2)
-      react-element-to-jsx-string:
-        specifier: ^15.0.0
-        version: 15.0.0(react-dom@17.0.2)(react@17.0.2)
       react-error-boundary:
         specifier: ^3.0.0
         version: 3.1.4(react@17.0.2)
@@ -2388,309 +2430,14 @@ importers:
         specifier: 4.3.0
         version: 4.3.0
 
-  components/models/api-node-renderer:
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.59
-        version: 0.0.59
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  components/models/api-reference-model:
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.59
-        version: 0.0.59
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  components/renderers/api-node-details:
-    dependencies:
-      '@monaco-editor/react':
-        specifier: 4.4.6
-        version: 4.4.6(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.utils.code-editor-options':
-        specifier: ^0.0.6
-        version: 0.0.6
-      '@teambit/base-react.navigation.link':
-        specifier: 2.0.27
-        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/code.ui.code-editor':
-        specifier: ^0.0.8
-        version: 0.0.8(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.heading':
-        specifier: 4.1.1
-        version: registry.npmjs.org/@teambit/documenter.ui.heading@4.1.1(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.react-router.use-query':
-        specifier: ^0.0.501
-        version: 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      classnames:
-        specifier: 2.2.6
-        version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      monaco-editor:
-        specifier: 0.33.0
-        version: 0.33.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-      react-router-dom:
-        specifier: ^6.0.0
-        version: 6.3.0(react-dom@17.0.2)(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/classnames':
-        specifier: 2.2.11
-        version: 2.2.11
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  components/renderers/class:
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.59
-        version: 0.0.59
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  components/renderers/enum:
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.59
-        version: 0.0.59
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  components/renderers/inference-type:
-    dependencies:
-      '@teambit/design.ui.tooltip':
-        specifier: 0.0.361
-        version: 0.0.361(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.59
-        version: 0.0.59
-      classnames:
-        specifier: 2.2.6
-        version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-      react-syntax-highlighter:
-        specifier: 15.4.3
-        version: 15.4.3(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/classnames':
-        specifier: 2.2.11
-        version: 2.2.11
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  components/renderers/interface:
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.59
-        version: 0.0.59
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
   components/renderers/react:
     dependencies:
-      '@teambit/base-react.navigation.link':
-        specifier: 2.0.27
-        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.models.api-node-renderer':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.api-node-details':
+        specifier: ^0.0.28
+        version: 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/semantics.entities.semantic-schema':
         specifier: ^0.0.59
         version: 0.0.59
@@ -2731,356 +2478,12 @@ importers:
       '@types/testing-library__jest-dom':
         specifier: 5.9.5
         version: 5.9.5
-
-  components/renderers/schema-nodes-index:
-    dependencies:
-      '@teambit/base-react.navigation.link':
-        specifier: 2.0.27
-        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/design.ui.surfaces.menu.item':
-        specifier: 0.0.354
-        version: 0.0.354(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/docs.ui.hooks.use-element-on-fold':
-        specifier: 1.96.5
-        version: 1.96.5(react@17.0.2)
-      classnames:
-        specifier: 2.2.6
-        version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/classnames':
-        specifier: 2.2.11
-        version: 2.2.11
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/lodash.flatten':
-        specifier: 4.4.6
-        version: 4.4.6
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  components/renderers/type:
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.59
-        version: 0.0.59
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  components/renderers/type-array:
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.59
-        version: 0.0.59
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  components/renderers/type-intersection:
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.59
-        version: 0.0.59
-      classnames:
-        specifier: 2.2.6
-        version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/classnames':
-        specifier: 2.2.11
-        version: 2.2.11
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  components/renderers/type-literal:
-    dependencies:
-      '@teambit/api-reference.utils.copy-schema-node':
-        specifier: ^0.0.13
-        version: 0.0.13
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.59
-        version: 0.0.59
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  components/renderers/type-union:
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.59
-        version: 0.0.59
-      classnames:
-        specifier: 2.2.6
-        version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/classnames':
-        specifier: 2.2.11
-        version: 2.2.11
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  components/renderers/unresolved:
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.59
-        version: 0.0.59
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  components/renderers/variable:
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.59
-        version: 0.0.59
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  components/utils/sort-api-nodes:
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: 26.0.20
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
 
   node_modules/.bit_roots/teambit.envs_env:
     dependencies:
       '@teambit/api-reference':
         specifier: workspace:*
-        version: file:scopes/api-reference/api-reference(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/api-reference(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.explorer.api-reference-explorer':
         specifier: workspace:*
         version: file:scopes/api-reference/explorer/api-reference-explorer(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -3090,84 +2493,30 @@ importers:
       '@teambit/api-reference.hooks.use-api-ref-url':
         specifier: workspace:*
         version: file:scopes/api-reference/hooks/use-api-ref-url(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.hooks.use-api-renderers':
-        specifier: workspace:*
-        version: file:scopes/api-reference/hooks/use-api-renderers(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.hooks.use-schema':
         specifier: workspace:*
         version: file:scopes/api-reference/hooks/use-schema(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.models.api-node-renderer':
-        specifier: workspace:*
-        version: file:components/models/api-node-renderer(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.models.api-reference-model':
-        specifier: workspace:*
-        version: file:components/models/api-reference-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.overview.api-reference-table-of-contents':
-        specifier: workspace:*
-        version: file:scopes/api-reference/overview/api-reference-table-of-contents(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary':
-        specifier: workspace:*
-        version: file:scopes/api-reference/renderers/grouped-schema-nodes-overview-summary(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.api-node-details':
-        specifier: workspace:*
-        version: file:components/renderers/api-node-details(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
-      '@teambit/api-reference.renderers.class':
-        specifier: workspace:*
-        version: file:components/renderers/class(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.enum':
-        specifier: workspace:*
-        version: file:components/renderers/enum(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.function':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/function(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/function(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/grouped-schema-nodes-summary(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.inference-type':
-        specifier: workspace:*
-        version: file:components/renderers/inference-type(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.interface':
-        specifier: workspace:*
-        version: file:components/renderers/interface(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.parameter':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/parameter(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.react':
         specifier: workspace:*
-        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.schema-node-member-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-node-member-summary(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.schema-nodes-index':
-        specifier: workspace:*
-        version: file:components/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.this':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/this(react@17.0.2)
-      '@teambit/api-reference.renderers.type':
-        specifier: workspace:*
-        version: file:components/renderers/type(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-array':
-        specifier: workspace:*
-        version: file:components/renderers/type-array(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-intersection':
-        specifier: workspace:*
-        version: file:components/renderers/type-intersection(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-literal':
-        specifier: workspace:*
-        version: file:components/renderers/type-literal(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/this(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.type-ref':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/type-ref(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-union':
-        specifier: workspace:*
-        version: file:components/renderers/type-union(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.unresolved':
-        specifier: workspace:*
-        version: file:components/renderers/unresolved(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.variable':
-        specifier: workspace:*
-        version: file:components/renderers/variable(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/type-ref(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.sections.api-reference-page':
         specifier: workspace:*
         version: file:scopes/api-reference/sections/api-reference-page(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -3177,9 +2526,6 @@ importers:
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/custom-prism-syntax-highlighter-theme
-      '@teambit/api-reference.utils.sort-api-nodes':
-        specifier: workspace:*
-        version: file:components/utils/sort-api-nodes
       '@teambit/api-server':
         specifier: workspace:*
         version: file:scopes/harmony/api-server(react-dom@17.0.2)(react@17.0.2)
@@ -3617,7 +2963,7 @@ importers:
         version: file:scopes/react/ui/compositions-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
+        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(react-dom@17.0.2)(react@17.0.2)
@@ -3678,9 +3024,6 @@ importers:
       '@teambit/status':
         specifier: workspace:*
         version: file:scopes/component/status(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/tagged-exports':
-        specifier: workspace:*
-        version: file:scopes/api-reference/tagged-exports(react-dom@17.0.2)(react@17.0.2)
       '@teambit/tester':
         specifier: workspace:*
         version: file:scopes/defender/tester(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.67)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
@@ -3825,31 +3168,11 @@ importers:
         injected: true
       '@teambit/api-reference.hooks.use-api-ref-url':
         injected: true
-      '@teambit/api-reference.hooks.use-api-renderers':
-        injected: true
       '@teambit/api-reference.hooks.use-schema':
-        injected: true
-      '@teambit/api-reference.models.api-node-renderer':
-        injected: true
-      '@teambit/api-reference.models.api-reference-model':
-        injected: true
-      '@teambit/api-reference.overview.api-reference-table-of-contents':
-        injected: true
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary':
-        injected: true
-      '@teambit/api-reference.renderers.api-node-details':
-        injected: true
-      '@teambit/api-reference.renderers.class':
-        injected: true
-      '@teambit/api-reference.renderers.enum':
         injected: true
       '@teambit/api-reference.renderers.function':
         injected: true
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
-        injected: true
-      '@teambit/api-reference.renderers.inference-type':
-        injected: true
-      '@teambit/api-reference.renderers.interface':
         injected: true
       '@teambit/api-reference.renderers.parameter':
         injected: true
@@ -3857,33 +3180,15 @@ importers:
         injected: true
       '@teambit/api-reference.renderers.schema-node-member-summary':
         injected: true
-      '@teambit/api-reference.renderers.schema-nodes-index':
-        injected: true
       '@teambit/api-reference.renderers.this':
         injected: true
-      '@teambit/api-reference.renderers.type':
-        injected: true
-      '@teambit/api-reference.renderers.type-array':
-        injected: true
-      '@teambit/api-reference.renderers.type-intersection':
-        injected: true
-      '@teambit/api-reference.renderers.type-literal':
-        injected: true
       '@teambit/api-reference.renderers.type-ref':
-        injected: true
-      '@teambit/api-reference.renderers.type-union':
-        injected: true
-      '@teambit/api-reference.renderers.unresolved':
-        injected: true
-      '@teambit/api-reference.renderers.variable':
         injected: true
       '@teambit/api-reference.sections.api-reference-page':
         injected: true
       '@teambit/api-reference.sections.api-reference-section':
         injected: true
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
-        injected: true
-      '@teambit/api-reference.utils.sort-api-nodes':
         injected: true
       '@teambit/api-server':
         injected: true
@@ -4216,8 +3521,6 @@ importers:
       '@teambit/stash':
         injected: true
       '@teambit/status':
-        injected: true
-      '@teambit/tagged-exports':
         injected: true
       '@teambit/tester':
         injected: true
@@ -4314,7 +3617,7 @@ importers:
     dependencies:
       '@teambit/api-reference':
         specifier: workspace:*
-        version: file:scopes/api-reference/api-reference(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/api-reference(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.explorer.api-reference-explorer':
         specifier: workspace:*
         version: file:scopes/api-reference/explorer/api-reference-explorer(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -4324,84 +3627,30 @@ importers:
       '@teambit/api-reference.hooks.use-api-ref-url':
         specifier: workspace:*
         version: file:scopes/api-reference/hooks/use-api-ref-url(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.hooks.use-api-renderers':
-        specifier: workspace:*
-        version: file:scopes/api-reference/hooks/use-api-renderers(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.hooks.use-schema':
         specifier: workspace:*
         version: file:scopes/api-reference/hooks/use-schema(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.models.api-node-renderer':
-        specifier: workspace:*
-        version: file:components/models/api-node-renderer(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.models.api-reference-model':
-        specifier: workspace:*
-        version: file:components/models/api-reference-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.overview.api-reference-table-of-contents':
-        specifier: workspace:*
-        version: file:scopes/api-reference/overview/api-reference-table-of-contents(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary':
-        specifier: workspace:*
-        version: file:scopes/api-reference/renderers/grouped-schema-nodes-overview-summary(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.api-node-details':
-        specifier: workspace:*
-        version: file:components/renderers/api-node-details(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
-      '@teambit/api-reference.renderers.class':
-        specifier: workspace:*
-        version: file:components/renderers/class(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.enum':
-        specifier: workspace:*
-        version: file:components/renderers/enum(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.function':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/function(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/function(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/grouped-schema-nodes-summary(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.inference-type':
-        specifier: workspace:*
-        version: file:components/renderers/inference-type(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.interface':
-        specifier: workspace:*
-        version: file:components/renderers/interface(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.parameter':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/parameter(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.react':
         specifier: workspace:*
-        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.schema-node-member-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-node-member-summary(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.schema-nodes-index':
-        specifier: workspace:*
-        version: file:components/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.this':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/this(react@17.0.2)
-      '@teambit/api-reference.renderers.type':
-        specifier: workspace:*
-        version: file:components/renderers/type(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-array':
-        specifier: workspace:*
-        version: file:components/renderers/type-array(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-intersection':
-        specifier: workspace:*
-        version: file:components/renderers/type-intersection(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-literal':
-        specifier: workspace:*
-        version: file:components/renderers/type-literal(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/this(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.type-ref':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/type-ref(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-union':
-        specifier: workspace:*
-        version: file:components/renderers/type-union(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.unresolved':
-        specifier: workspace:*
-        version: file:components/renderers/unresolved(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.variable':
-        specifier: workspace:*
-        version: file:components/renderers/variable(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/type-ref(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.sections.api-reference-page':
         specifier: workspace:*
         version: file:scopes/api-reference/sections/api-reference-page(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -4411,9 +3660,6 @@ importers:
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/custom-prism-syntax-highlighter-theme
-      '@teambit/api-reference.utils.sort-api-nodes':
-        specifier: workspace:*
-        version: file:components/utils/sort-api-nodes
       '@teambit/api-server':
         specifier: workspace:*
         version: file:scopes/harmony/api-server(react-dom@17.0.2)(react@17.0.2)
@@ -4851,7 +4097,7 @@ importers:
         version: file:scopes/react/ui/compositions-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
+        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(react-dom@17.0.2)(react@17.0.2)
@@ -4912,9 +4158,6 @@ importers:
       '@teambit/status':
         specifier: workspace:*
         version: file:scopes/component/status(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/tagged-exports':
-        specifier: workspace:*
-        version: file:scopes/api-reference/tagged-exports(react-dom@17.0.2)(react@17.0.2)
       '@teambit/tester':
         specifier: workspace:*
         version: file:scopes/defender/tester(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.67)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
@@ -5059,31 +4302,11 @@ importers:
         injected: true
       '@teambit/api-reference.hooks.use-api-ref-url':
         injected: true
-      '@teambit/api-reference.hooks.use-api-renderers':
-        injected: true
       '@teambit/api-reference.hooks.use-schema':
-        injected: true
-      '@teambit/api-reference.models.api-node-renderer':
-        injected: true
-      '@teambit/api-reference.models.api-reference-model':
-        injected: true
-      '@teambit/api-reference.overview.api-reference-table-of-contents':
-        injected: true
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary':
-        injected: true
-      '@teambit/api-reference.renderers.api-node-details':
-        injected: true
-      '@teambit/api-reference.renderers.class':
-        injected: true
-      '@teambit/api-reference.renderers.enum':
         injected: true
       '@teambit/api-reference.renderers.function':
         injected: true
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
-        injected: true
-      '@teambit/api-reference.renderers.inference-type':
-        injected: true
-      '@teambit/api-reference.renderers.interface':
         injected: true
       '@teambit/api-reference.renderers.parameter':
         injected: true
@@ -5091,33 +4314,15 @@ importers:
         injected: true
       '@teambit/api-reference.renderers.schema-node-member-summary':
         injected: true
-      '@teambit/api-reference.renderers.schema-nodes-index':
-        injected: true
       '@teambit/api-reference.renderers.this':
         injected: true
-      '@teambit/api-reference.renderers.type':
-        injected: true
-      '@teambit/api-reference.renderers.type-array':
-        injected: true
-      '@teambit/api-reference.renderers.type-intersection':
-        injected: true
-      '@teambit/api-reference.renderers.type-literal':
-        injected: true
       '@teambit/api-reference.renderers.type-ref':
-        injected: true
-      '@teambit/api-reference.renderers.type-union':
-        injected: true
-      '@teambit/api-reference.renderers.unresolved':
-        injected: true
-      '@teambit/api-reference.renderers.variable':
         injected: true
       '@teambit/api-reference.sections.api-reference-page':
         injected: true
       '@teambit/api-reference.sections.api-reference-section':
         injected: true
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
-        injected: true
-      '@teambit/api-reference.utils.sort-api-nodes':
         injected: true
       '@teambit/api-server':
         injected: true
@@ -5450,8 +4655,6 @@ importers:
       '@teambit/stash':
         injected: true
       '@teambit/status':
-        injected: true
-      '@teambit/tagged-exports':
         injected: true
       '@teambit/tester':
         injected: true
@@ -5548,7 +4751,7 @@ importers:
     dependencies:
       '@teambit/api-reference':
         specifier: workspace:*
-        version: file:scopes/api-reference/api-reference(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/api-reference(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.explorer.api-reference-explorer':
         specifier: workspace:*
         version: file:scopes/api-reference/explorer/api-reference-explorer(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -5558,84 +4761,30 @@ importers:
       '@teambit/api-reference.hooks.use-api-ref-url':
         specifier: workspace:*
         version: file:scopes/api-reference/hooks/use-api-ref-url(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.hooks.use-api-renderers':
-        specifier: workspace:*
-        version: file:scopes/api-reference/hooks/use-api-renderers(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.hooks.use-schema':
         specifier: workspace:*
         version: file:scopes/api-reference/hooks/use-schema(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.models.api-node-renderer':
-        specifier: workspace:*
-        version: file:components/models/api-node-renderer(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.models.api-reference-model':
-        specifier: workspace:*
-        version: file:components/models/api-reference-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.overview.api-reference-table-of-contents':
-        specifier: workspace:*
-        version: file:scopes/api-reference/overview/api-reference-table-of-contents(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary':
-        specifier: workspace:*
-        version: file:scopes/api-reference/renderers/grouped-schema-nodes-overview-summary(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.api-node-details':
-        specifier: workspace:*
-        version: file:components/renderers/api-node-details(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
-      '@teambit/api-reference.renderers.class':
-        specifier: workspace:*
-        version: file:components/renderers/class(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.enum':
-        specifier: workspace:*
-        version: file:components/renderers/enum(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.function':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/function(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/function(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/grouped-schema-nodes-summary(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.inference-type':
-        specifier: workspace:*
-        version: file:components/renderers/inference-type(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.interface':
-        specifier: workspace:*
-        version: file:components/renderers/interface(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.parameter':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/parameter(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.react':
         specifier: workspace:*
-        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.schema-node-member-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-node-member-summary(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.schema-nodes-index':
-        specifier: workspace:*
-        version: file:components/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.this':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/this(react@17.0.2)
-      '@teambit/api-reference.renderers.type':
-        specifier: workspace:*
-        version: file:components/renderers/type(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-array':
-        specifier: workspace:*
-        version: file:components/renderers/type-array(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-intersection':
-        specifier: workspace:*
-        version: file:components/renderers/type-intersection(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-literal':
-        specifier: workspace:*
-        version: file:components/renderers/type-literal(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/this(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.type-ref':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/type-ref(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-union':
-        specifier: workspace:*
-        version: file:components/renderers/type-union(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.unresolved':
-        specifier: workspace:*
-        version: file:components/renderers/unresolved(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.variable':
-        specifier: workspace:*
-        version: file:components/renderers/variable(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/type-ref(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.sections.api-reference-page':
         specifier: workspace:*
         version: file:scopes/api-reference/sections/api-reference-page(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -5645,9 +4794,6 @@ importers:
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/custom-prism-syntax-highlighter-theme
-      '@teambit/api-reference.utils.sort-api-nodes':
-        specifier: workspace:*
-        version: file:components/utils/sort-api-nodes
       '@teambit/api-server':
         specifier: workspace:*
         version: file:scopes/harmony/api-server(react-dom@17.0.2)(react@17.0.2)
@@ -6085,7 +5231,7 @@ importers:
         version: file:scopes/react/ui/compositions-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
+        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(react-dom@17.0.2)(react@17.0.2)
@@ -6146,9 +5292,6 @@ importers:
       '@teambit/status':
         specifier: workspace:*
         version: file:scopes/component/status(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/tagged-exports':
-        specifier: workspace:*
-        version: file:scopes/api-reference/tagged-exports(react-dom@17.0.2)(react@17.0.2)
       '@teambit/tester':
         specifier: workspace:*
         version: file:scopes/defender/tester(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.67)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
@@ -6293,31 +5436,11 @@ importers:
         injected: true
       '@teambit/api-reference.hooks.use-api-ref-url':
         injected: true
-      '@teambit/api-reference.hooks.use-api-renderers':
-        injected: true
       '@teambit/api-reference.hooks.use-schema':
-        injected: true
-      '@teambit/api-reference.models.api-node-renderer':
-        injected: true
-      '@teambit/api-reference.models.api-reference-model':
-        injected: true
-      '@teambit/api-reference.overview.api-reference-table-of-contents':
-        injected: true
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary':
-        injected: true
-      '@teambit/api-reference.renderers.api-node-details':
-        injected: true
-      '@teambit/api-reference.renderers.class':
-        injected: true
-      '@teambit/api-reference.renderers.enum':
         injected: true
       '@teambit/api-reference.renderers.function':
         injected: true
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
-        injected: true
-      '@teambit/api-reference.renderers.inference-type':
-        injected: true
-      '@teambit/api-reference.renderers.interface':
         injected: true
       '@teambit/api-reference.renderers.parameter':
         injected: true
@@ -6325,33 +5448,15 @@ importers:
         injected: true
       '@teambit/api-reference.renderers.schema-node-member-summary':
         injected: true
-      '@teambit/api-reference.renderers.schema-nodes-index':
-        injected: true
       '@teambit/api-reference.renderers.this':
         injected: true
-      '@teambit/api-reference.renderers.type':
-        injected: true
-      '@teambit/api-reference.renderers.type-array':
-        injected: true
-      '@teambit/api-reference.renderers.type-intersection':
-        injected: true
-      '@teambit/api-reference.renderers.type-literal':
-        injected: true
       '@teambit/api-reference.renderers.type-ref':
-        injected: true
-      '@teambit/api-reference.renderers.type-union':
-        injected: true
-      '@teambit/api-reference.renderers.unresolved':
-        injected: true
-      '@teambit/api-reference.renderers.variable':
         injected: true
       '@teambit/api-reference.sections.api-reference-page':
         injected: true
       '@teambit/api-reference.sections.api-reference-section':
         injected: true
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
-        injected: true
-      '@teambit/api-reference.utils.sort-api-nodes':
         injected: true
       '@teambit/api-server':
         injected: true
@@ -6684,8 +5789,6 @@ importers:
       '@teambit/stash':
         injected: true
       '@teambit/status':
-        injected: true
-      '@teambit/tagged-exports':
         injected: true
       '@teambit/tester':
         injected: true
@@ -6782,7 +5885,7 @@ importers:
     dependencies:
       '@teambit/api-reference':
         specifier: workspace:*
-        version: file:scopes/api-reference/api-reference(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/api-reference(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.explorer.api-reference-explorer':
         specifier: workspace:*
         version: file:scopes/api-reference/explorer/api-reference-explorer(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -6792,84 +5895,30 @@ importers:
       '@teambit/api-reference.hooks.use-api-ref-url':
         specifier: workspace:*
         version: file:scopes/api-reference/hooks/use-api-ref-url(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.hooks.use-api-renderers':
-        specifier: workspace:*
-        version: file:scopes/api-reference/hooks/use-api-renderers(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.hooks.use-schema':
         specifier: workspace:*
         version: file:scopes/api-reference/hooks/use-schema(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.models.api-node-renderer':
-        specifier: workspace:*
-        version: file:components/models/api-node-renderer(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.models.api-reference-model':
-        specifier: workspace:*
-        version: file:components/models/api-reference-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.overview.api-reference-table-of-contents':
-        specifier: workspace:*
-        version: file:scopes/api-reference/overview/api-reference-table-of-contents(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary':
-        specifier: workspace:*
-        version: file:scopes/api-reference/renderers/grouped-schema-nodes-overview-summary(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.api-node-details':
-        specifier: workspace:*
-        version: file:components/renderers/api-node-details(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
-      '@teambit/api-reference.renderers.class':
-        specifier: workspace:*
-        version: file:components/renderers/class(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.enum':
-        specifier: workspace:*
-        version: file:components/renderers/enum(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.function':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/function(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/function(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/grouped-schema-nodes-summary(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.inference-type':
-        specifier: workspace:*
-        version: file:components/renderers/inference-type(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.interface':
-        specifier: workspace:*
-        version: file:components/renderers/interface(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.parameter':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/parameter(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.react':
         specifier: workspace:*
-        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.schema-node-member-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-node-member-summary(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.schema-nodes-index':
-        specifier: workspace:*
-        version: file:components/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.this':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/this(react@17.0.2)
-      '@teambit/api-reference.renderers.type':
-        specifier: workspace:*
-        version: file:components/renderers/type(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-array':
-        specifier: workspace:*
-        version: file:components/renderers/type-array(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-intersection':
-        specifier: workspace:*
-        version: file:components/renderers/type-intersection(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-literal':
-        specifier: workspace:*
-        version: file:components/renderers/type-literal(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/this(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.type-ref':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/type-ref(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-union':
-        specifier: workspace:*
-        version: file:components/renderers/type-union(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.unresolved':
-        specifier: workspace:*
-        version: file:components/renderers/unresolved(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.variable':
-        specifier: workspace:*
-        version: file:components/renderers/variable(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/type-ref(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.sections.api-reference-page':
         specifier: workspace:*
         version: file:scopes/api-reference/sections/api-reference-page(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -6879,9 +5928,6 @@ importers:
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/custom-prism-syntax-highlighter-theme
-      '@teambit/api-reference.utils.sort-api-nodes':
-        specifier: workspace:*
-        version: file:components/utils/sort-api-nodes
       '@teambit/api-server':
         specifier: workspace:*
         version: file:scopes/harmony/api-server(react-dom@17.0.2)(react@17.0.2)
@@ -7319,7 +6365,7 @@ importers:
         version: file:scopes/react/ui/compositions-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
+        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(react-dom@17.0.2)(react@17.0.2)
@@ -7380,9 +6426,6 @@ importers:
       '@teambit/status':
         specifier: workspace:*
         version: file:scopes/component/status(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/tagged-exports':
-        specifier: workspace:*
-        version: file:scopes/api-reference/tagged-exports(react-dom@17.0.2)(react@17.0.2)
       '@teambit/tester':
         specifier: workspace:*
         version: file:scopes/defender/tester(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.67)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
@@ -7527,31 +6570,11 @@ importers:
         injected: true
       '@teambit/api-reference.hooks.use-api-ref-url':
         injected: true
-      '@teambit/api-reference.hooks.use-api-renderers':
-        injected: true
       '@teambit/api-reference.hooks.use-schema':
-        injected: true
-      '@teambit/api-reference.models.api-node-renderer':
-        injected: true
-      '@teambit/api-reference.models.api-reference-model':
-        injected: true
-      '@teambit/api-reference.overview.api-reference-table-of-contents':
-        injected: true
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary':
-        injected: true
-      '@teambit/api-reference.renderers.api-node-details':
-        injected: true
-      '@teambit/api-reference.renderers.class':
-        injected: true
-      '@teambit/api-reference.renderers.enum':
         injected: true
       '@teambit/api-reference.renderers.function':
         injected: true
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
-        injected: true
-      '@teambit/api-reference.renderers.inference-type':
-        injected: true
-      '@teambit/api-reference.renderers.interface':
         injected: true
       '@teambit/api-reference.renderers.parameter':
         injected: true
@@ -7559,33 +6582,15 @@ importers:
         injected: true
       '@teambit/api-reference.renderers.schema-node-member-summary':
         injected: true
-      '@teambit/api-reference.renderers.schema-nodes-index':
-        injected: true
       '@teambit/api-reference.renderers.this':
         injected: true
-      '@teambit/api-reference.renderers.type':
-        injected: true
-      '@teambit/api-reference.renderers.type-array':
-        injected: true
-      '@teambit/api-reference.renderers.type-intersection':
-        injected: true
-      '@teambit/api-reference.renderers.type-literal':
-        injected: true
       '@teambit/api-reference.renderers.type-ref':
-        injected: true
-      '@teambit/api-reference.renderers.type-union':
-        injected: true
-      '@teambit/api-reference.renderers.unresolved':
-        injected: true
-      '@teambit/api-reference.renderers.variable':
         injected: true
       '@teambit/api-reference.sections.api-reference-page':
         injected: true
       '@teambit/api-reference.sections.api-reference-section':
         injected: true
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
-        injected: true
-      '@teambit/api-reference.utils.sort-api-nodes':
         injected: true
       '@teambit/api-server':
         injected: true
@@ -7918,8 +6923,6 @@ importers:
       '@teambit/stash':
         injected: true
       '@teambit/status':
-        injected: true
-      '@teambit/tagged-exports':
         injected: true
       '@teambit/tester':
         injected: true
@@ -8016,7 +7019,7 @@ importers:
     dependencies:
       '@teambit/api-reference':
         specifier: workspace:*
-        version: file:scopes/api-reference/api-reference(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/api-reference(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.explorer.api-reference-explorer':
         specifier: workspace:*
         version: file:scopes/api-reference/explorer/api-reference-explorer(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -8026,84 +7029,30 @@ importers:
       '@teambit/api-reference.hooks.use-api-ref-url':
         specifier: workspace:*
         version: file:scopes/api-reference/hooks/use-api-ref-url(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.hooks.use-api-renderers':
-        specifier: workspace:*
-        version: file:scopes/api-reference/hooks/use-api-renderers(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.hooks.use-schema':
         specifier: workspace:*
         version: file:scopes/api-reference/hooks/use-schema(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.models.api-node-renderer':
-        specifier: workspace:*
-        version: file:components/models/api-node-renderer(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.models.api-reference-model':
-        specifier: workspace:*
-        version: file:components/models/api-reference-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.overview.api-reference-table-of-contents':
-        specifier: workspace:*
-        version: file:scopes/api-reference/overview/api-reference-table-of-contents(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary':
-        specifier: workspace:*
-        version: file:scopes/api-reference/renderers/grouped-schema-nodes-overview-summary(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.api-node-details':
-        specifier: workspace:*
-        version: file:components/renderers/api-node-details(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
-      '@teambit/api-reference.renderers.class':
-        specifier: workspace:*
-        version: file:components/renderers/class(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.enum':
-        specifier: workspace:*
-        version: file:components/renderers/enum(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.function':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/function(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/function(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/grouped-schema-nodes-summary(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.inference-type':
-        specifier: workspace:*
-        version: file:components/renderers/inference-type(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.interface':
-        specifier: workspace:*
-        version: file:components/renderers/interface(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.parameter':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/parameter(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.react':
         specifier: workspace:*
-        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.schema-node-member-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-node-member-summary(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.schema-nodes-index':
-        specifier: workspace:*
-        version: file:components/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.this':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/this(react@17.0.2)
-      '@teambit/api-reference.renderers.type':
-        specifier: workspace:*
-        version: file:components/renderers/type(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-array':
-        specifier: workspace:*
-        version: file:components/renderers/type-array(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-intersection':
-        specifier: workspace:*
-        version: file:components/renderers/type-intersection(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-literal':
-        specifier: workspace:*
-        version: file:components/renderers/type-literal(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/this(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.type-ref':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/type-ref(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-union':
-        specifier: workspace:*
-        version: file:components/renderers/type-union(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.unresolved':
-        specifier: workspace:*
-        version: file:components/renderers/unresolved(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.variable':
-        specifier: workspace:*
-        version: file:components/renderers/variable(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/type-ref(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.sections.api-reference-page':
         specifier: workspace:*
         version: file:scopes/api-reference/sections/api-reference-page(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -8113,9 +7062,6 @@ importers:
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/custom-prism-syntax-highlighter-theme
-      '@teambit/api-reference.utils.sort-api-nodes':
-        specifier: workspace:*
-        version: file:components/utils/sort-api-nodes
       '@teambit/api-server':
         specifier: workspace:*
         version: file:scopes/harmony/api-server(react-dom@17.0.2)(react@17.0.2)
@@ -8553,7 +7499,7 @@ importers:
         version: file:scopes/react/ui/compositions-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
+        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(react-dom@17.0.2)(react@17.0.2)
@@ -8614,9 +7560,6 @@ importers:
       '@teambit/status':
         specifier: workspace:*
         version: file:scopes/component/status(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/tagged-exports':
-        specifier: workspace:*
-        version: file:scopes/api-reference/tagged-exports(react-dom@17.0.2)(react@17.0.2)
       '@teambit/tester':
         specifier: workspace:*
         version: file:scopes/defender/tester(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.67)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
@@ -8761,31 +7704,11 @@ importers:
         injected: true
       '@teambit/api-reference.hooks.use-api-ref-url':
         injected: true
-      '@teambit/api-reference.hooks.use-api-renderers':
-        injected: true
       '@teambit/api-reference.hooks.use-schema':
-        injected: true
-      '@teambit/api-reference.models.api-node-renderer':
-        injected: true
-      '@teambit/api-reference.models.api-reference-model':
-        injected: true
-      '@teambit/api-reference.overview.api-reference-table-of-contents':
-        injected: true
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary':
-        injected: true
-      '@teambit/api-reference.renderers.api-node-details':
-        injected: true
-      '@teambit/api-reference.renderers.class':
-        injected: true
-      '@teambit/api-reference.renderers.enum':
         injected: true
       '@teambit/api-reference.renderers.function':
         injected: true
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
-        injected: true
-      '@teambit/api-reference.renderers.inference-type':
-        injected: true
-      '@teambit/api-reference.renderers.interface':
         injected: true
       '@teambit/api-reference.renderers.parameter':
         injected: true
@@ -8793,33 +7716,15 @@ importers:
         injected: true
       '@teambit/api-reference.renderers.schema-node-member-summary':
         injected: true
-      '@teambit/api-reference.renderers.schema-nodes-index':
-        injected: true
       '@teambit/api-reference.renderers.this':
         injected: true
-      '@teambit/api-reference.renderers.type':
-        injected: true
-      '@teambit/api-reference.renderers.type-array':
-        injected: true
-      '@teambit/api-reference.renderers.type-intersection':
-        injected: true
-      '@teambit/api-reference.renderers.type-literal':
-        injected: true
       '@teambit/api-reference.renderers.type-ref':
-        injected: true
-      '@teambit/api-reference.renderers.type-union':
-        injected: true
-      '@teambit/api-reference.renderers.unresolved':
-        injected: true
-      '@teambit/api-reference.renderers.variable':
         injected: true
       '@teambit/api-reference.sections.api-reference-page':
         injected: true
       '@teambit/api-reference.sections.api-reference-section':
         injected: true
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
-        injected: true
-      '@teambit/api-reference.utils.sort-api-nodes':
         injected: true
       '@teambit/api-server':
         injected: true
@@ -9152,8 +8057,6 @@ importers:
       '@teambit/stash':
         injected: true
       '@teambit/status':
-        injected: true
-      '@teambit/tagged-exports':
         injected: true
       '@teambit/tester':
         injected: true
@@ -9250,7 +8153,7 @@ importers:
     dependencies:
       '@teambit/api-reference':
         specifier: workspace:*
-        version: file:scopes/api-reference/api-reference(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/api-reference(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.explorer.api-reference-explorer':
         specifier: workspace:*
         version: file:scopes/api-reference/explorer/api-reference-explorer(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -9260,84 +8163,30 @@ importers:
       '@teambit/api-reference.hooks.use-api-ref-url':
         specifier: workspace:*
         version: file:scopes/api-reference/hooks/use-api-ref-url(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.hooks.use-api-renderers':
-        specifier: workspace:*
-        version: file:scopes/api-reference/hooks/use-api-renderers(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.hooks.use-schema':
         specifier: workspace:*
         version: file:scopes/api-reference/hooks/use-schema(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.models.api-node-renderer':
-        specifier: workspace:*
-        version: file:components/models/api-node-renderer(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.models.api-reference-model':
-        specifier: workspace:*
-        version: file:components/models/api-reference-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.overview.api-reference-table-of-contents':
-        specifier: workspace:*
-        version: file:scopes/api-reference/overview/api-reference-table-of-contents(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary':
-        specifier: workspace:*
-        version: file:scopes/api-reference/renderers/grouped-schema-nodes-overview-summary(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.api-node-details':
-        specifier: workspace:*
-        version: file:components/renderers/api-node-details(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
-      '@teambit/api-reference.renderers.class':
-        specifier: workspace:*
-        version: file:components/renderers/class(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.enum':
-        specifier: workspace:*
-        version: file:components/renderers/enum(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.function':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/function(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/function(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/grouped-schema-nodes-summary(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.inference-type':
-        specifier: workspace:*
-        version: file:components/renderers/inference-type(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.interface':
-        specifier: workspace:*
-        version: file:components/renderers/interface(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.parameter':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/parameter(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.react':
         specifier: workspace:*
-        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.schema-node-member-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-node-member-summary(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.schema-nodes-index':
-        specifier: workspace:*
-        version: file:components/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.this':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/this(react@17.0.2)
-      '@teambit/api-reference.renderers.type':
-        specifier: workspace:*
-        version: file:components/renderers/type(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-array':
-        specifier: workspace:*
-        version: file:components/renderers/type-array(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-intersection':
-        specifier: workspace:*
-        version: file:components/renderers/type-intersection(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-literal':
-        specifier: workspace:*
-        version: file:components/renderers/type-literal(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/this(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.type-ref':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/type-ref(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.type-union':
-        specifier: workspace:*
-        version: file:components/renderers/type-union(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.unresolved':
-        specifier: workspace:*
-        version: file:components/renderers/unresolved(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.variable':
-        specifier: workspace:*
-        version: file:components/renderers/variable(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/api-reference/renderers/type-ref(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.sections.api-reference-page':
         specifier: workspace:*
         version: file:scopes/api-reference/sections/api-reference-page(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -9347,9 +8196,6 @@ importers:
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/custom-prism-syntax-highlighter-theme
-      '@teambit/api-reference.utils.sort-api-nodes':
-        specifier: workspace:*
-        version: file:components/utils/sort-api-nodes
       '@teambit/api-server':
         specifier: workspace:*
         version: file:scopes/harmony/api-server(react-dom@17.0.2)(react@17.0.2)
@@ -9787,7 +8633,7 @@ importers:
         version: file:scopes/react/ui/compositions-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
+        version: file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(react-dom@17.0.2)(react@17.0.2)
@@ -9848,9 +8694,6 @@ importers:
       '@teambit/status':
         specifier: workspace:*
         version: file:scopes/component/status(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/tagged-exports':
-        specifier: workspace:*
-        version: file:scopes/api-reference/tagged-exports(react-dom@17.0.2)(react@17.0.2)
       '@teambit/tester':
         specifier: workspace:*
         version: file:scopes/defender/tester(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.67)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
@@ -9995,31 +8838,11 @@ importers:
         injected: true
       '@teambit/api-reference.hooks.use-api-ref-url':
         injected: true
-      '@teambit/api-reference.hooks.use-api-renderers':
-        injected: true
       '@teambit/api-reference.hooks.use-schema':
-        injected: true
-      '@teambit/api-reference.models.api-node-renderer':
-        injected: true
-      '@teambit/api-reference.models.api-reference-model':
-        injected: true
-      '@teambit/api-reference.overview.api-reference-table-of-contents':
-        injected: true
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary':
-        injected: true
-      '@teambit/api-reference.renderers.api-node-details':
-        injected: true
-      '@teambit/api-reference.renderers.class':
-        injected: true
-      '@teambit/api-reference.renderers.enum':
         injected: true
       '@teambit/api-reference.renderers.function':
         injected: true
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
-        injected: true
-      '@teambit/api-reference.renderers.inference-type':
-        injected: true
-      '@teambit/api-reference.renderers.interface':
         injected: true
       '@teambit/api-reference.renderers.parameter':
         injected: true
@@ -10027,33 +8850,15 @@ importers:
         injected: true
       '@teambit/api-reference.renderers.schema-node-member-summary':
         injected: true
-      '@teambit/api-reference.renderers.schema-nodes-index':
-        injected: true
       '@teambit/api-reference.renderers.this':
         injected: true
-      '@teambit/api-reference.renderers.type':
-        injected: true
-      '@teambit/api-reference.renderers.type-array':
-        injected: true
-      '@teambit/api-reference.renderers.type-intersection':
-        injected: true
-      '@teambit/api-reference.renderers.type-literal':
-        injected: true
       '@teambit/api-reference.renderers.type-ref':
-        injected: true
-      '@teambit/api-reference.renderers.type-union':
-        injected: true
-      '@teambit/api-reference.renderers.unresolved':
-        injected: true
-      '@teambit/api-reference.renderers.variable':
         injected: true
       '@teambit/api-reference.sections.api-reference-page':
         injected: true
       '@teambit/api-reference.sections.api-reference-section':
         injected: true
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
-        injected: true
-      '@teambit/api-reference.utils.sort-api-nodes':
         injected: true
       '@teambit/api-server':
         injected: true
@@ -10386,8 +9191,6 @@ importers:
       '@teambit/stash':
         injected: true
       '@teambit/status':
-        injected: true
-      '@teambit/tagged-exports':
         injected: true
       '@teambit/tester':
         injected: true
@@ -10485,6 +9288,42 @@ importers:
       '@babel/runtime':
         specifier: 7.20.0
         version: 7.20.0
+      '@teambit/api-reference.models.api-node-renderer':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.class':
+        specifier: ^0.0.29
+        version: 0.0.29(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.enum':
+        specifier: ^0.0.29
+        version: 0.0.29(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.inference-type':
+        specifier: ^0.0.19
+        version: 0.0.19(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.interface':
+        specifier: ^0.0.29
+        version: 0.0.29(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.type':
+        specifier: ^0.0.28
+        version: 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.type-array':
+        specifier: ^0.0.19
+        version: 0.0.19(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.type-intersection':
+        specifier: ^0.0.19
+        version: 0.0.19(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.type-literal':
+        specifier: ^0.0.26
+        version: 0.0.26(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.type-union':
+        specifier: ^0.0.19
+        version: 0.0.19(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.unresolved':
+        specifier: ^0.0.28
+        version: 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.variable':
+        specifier: ^0.0.28
+        version: 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -10494,9 +9333,6 @@ importers:
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
-      lodash:
-        specifier: 4.17.21
-        version: 4.17.21
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -10507,9 +9343,6 @@ importers:
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
-      '@types/lodash':
-        specifier: 4.14.165
-        version: 4.14.165
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -10580,6 +9413,12 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+      '@teambit/api-reference.models.api-node-renderer':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.models.api-reference-model':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-data-query':
         specifier: ^0.0.505
         version: 0.0.505(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
@@ -10655,45 +9494,17 @@ importers:
         specifier: 5.9.5
         version: 5.9.5
 
-  scopes/api-reference/hooks/use-api-renderers:
-    dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
   scopes/api-reference/hooks/use-schema:
     dependencies:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+      '@teambit/api-reference.models.api-node-renderer':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.models.api-reference-model':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-data-query':
         specifier: ^0.0.505
         version: 0.0.505(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
@@ -10729,42 +9540,14 @@ importers:
         specifier: 5.9.5
         version: 5.9.5
 
-  scopes/api-reference/overview/api-reference-table-of-contents:
-    dependencies:
-      '@teambit/base-react.navigation.link':
-        specifier: 2.0.27
-        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.59
-        version: 0.0.59
-      classnames:
-        specifier: 2.2.6
-        version: 2.2.6
-      react:
-        specifier: 17.0.2
-        version: 17.0.2
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/classnames':
-        specifier: 2.2.11
-        version: 2.2.11
-      '@types/jest':
-        specifier: 26.0.20
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-
   scopes/api-reference/renderers/function:
     dependencies:
+      '@teambit/api-reference.models.api-node-renderer':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.api-node-details':
+        specifier: ^0.0.28
+        version: 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/documenter.ui.table-heading-row':
         specifier: 4.0.11
         version: 4.0.11(react-dom@17.0.2)(react@17.0.2)
@@ -10783,64 +9566,6 @@ importers:
       react-dom:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/classnames':
-        specifier: 2.2.11
-        version: 2.2.11
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  scopes/api-reference/renderers/grouped-schema-nodes-overview-summary:
-    dependencies:
-      '@teambit/api-reference.utils.group-schema-node-by-signature':
-        specifier: ^0.0.13
-        version: 0.0.13
-      '@teambit/api-reference.utils.schema-node-signature-transform':
-        specifier: ^0.0.15
-        version: 0.0.15
-      '@teambit/base-react.navigation.link':
-        specifier: 2.0.27
-        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.table-heading-row':
-        specifier: 4.0.11
-        version: 4.0.11(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.59
-        version: 0.0.59
-      classnames:
-        specifier: 2.2.6
-        version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-      react-syntax-highlighter:
-        specifier: 15.4.3
-        version: 15.4.3(react@17.0.2)
     devDependencies:
       '@babel/runtime':
         specifier: 7.20.0
@@ -10869,6 +9594,9 @@ importers:
 
   scopes/api-reference/renderers/grouped-schema-nodes-summary:
     dependencies:
+      '@teambit/api-reference.models.api-node-renderer':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.utils.group-schema-node-by-signature':
         specifier: ^0.0.13
         version: 0.0.13
@@ -10918,6 +9646,9 @@ importers:
 
   scopes/api-reference/renderers/parameter:
     dependencies:
+      '@teambit/api-reference.models.api-node-renderer':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.table-heading-row':
         specifier: 4.0.11
         version: 4.0.11(react-dom@17.0.2)(react@17.0.2)
@@ -10961,6 +9692,12 @@ importers:
 
   scopes/api-reference/renderers/schema-node-member-summary:
     dependencies:
+      '@teambit/api-reference.models.api-node-renderer':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.models.api-reference-model':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.utils.schema-node-signature-transform':
         specifier: ^0.0.15
         version: 0.0.15
@@ -11016,6 +9753,9 @@ importers:
 
   scopes/api-reference/renderers/this:
     dependencies:
+      '@teambit/api-reference.models.api-node-renderer':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
       '@teambit/semantics.entities.semantic-schema':
         specifier: ^0.0.59
         version: 0.0.59
@@ -11041,6 +9781,12 @@ importers:
 
   scopes/api-reference/renderers/type-ref:
     dependencies:
+      '@teambit/api-reference.models.api-node-renderer':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.api-node-details':
+        specifier: ^0.0.28
+        version: 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.utils.copy-schema-node':
         specifier: ^0.0.13
         version: 0.0.13
@@ -11090,6 +9836,9 @@ importers:
 
   scopes/api-reference/sections/api-reference-page:
     dependencies:
+      '@teambit/api-reference.utils.sort-api-nodes':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-react.navigation.link':
         specifier: 2.0.27
         version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -11169,46 +9918,6 @@ importers:
 
   scopes/api-reference/sections/api-reference-section:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.67
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.21
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  scopes/api-reference/tagged-exports:
-    dependencies:
-      '@teambit/documenter.ui.linked-heading':
-        specifier: 4.1.6
-        version: 4.1.6(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.section':
-        specifier: 4.1.1
-        version: registry.npmjs.org/@teambit/documenter.ui.section@4.1.1(react-dom@17.0.2)(react@17.0.2)
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -18872,33 +17581,18 @@ importers:
       '@teambit/design.themes.theme-toggler':
         specifier: 0.1.3
         version: 0.1.3(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.code.react-playground':
-        specifier: 4.1.9
-        version: 4.1.9(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
-      '@teambit/documenter.ui.linked-heading':
-        specifier: 4.1.6
-        version: 4.1.6(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.section':
-        specifier: 4.1.1
-        version: registry.npmjs.org/@teambit/documenter.ui.section@4.1.1(react-dom@17.0.2)(react@17.0.2)
       classnames:
         specifier: 2.2.6
         version: 2.2.6
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
-      lodash:
-        specifier: 4.17.21
-        version: 4.17.21
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
       react-dom:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
-      react-element-to-jsx-string:
-        specifier: ^15.0.0
-        version: 15.0.0(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@babel/runtime':
         specifier: 7.20.0
@@ -18909,9 +17603,6 @@ importers:
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
-      '@types/lodash':
-        specifier: 4.14.165
-        version: 4.14.165
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24458,10 +23149,6 @@ packages:
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
 
-  /@base2/pretty-print-object@1.0.1:
-    resolution: {integrity: sha512-4iri8i1AqYHJE2DstZYkyEprg6Pq6sKx3xn5FpySk9sNhH7qN2LLlHJCfDTZRILNwQNPD7mATWM0TBui7uC1pA==}
-    dev: false
-
   /@bcoe/v8-coverage@0.2.3:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
     dev: false
@@ -27434,6 +26121,23 @@ packages:
       memfs: 3.0.3
     dev: false
 
+  /@teambit/api-reference.hooks.use-api-ref-url@0.0.9(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-ewjLhnqXq4+X/EdVi1hIOeFDG1cWiY0RhMDv2RI+OsDCDpSYxIHmU9fu4u2BDgV7+QURt5iic/B4li7M6Xz9yQ==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@types/react'
+    dev: false
+
   /@teambit/api-reference.models.api-node-renderer@0.0.17(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-m6Rgx6rh5fvsMneZWfm/tIrtJf8R9OWOhGwHFxB9IlHmv16Rt+ZxIGcYx6Ida9L+h31GSoDrZ1mKoQth2KF0wQ==}
     engines: {node: '>=12.22.0'}
@@ -27463,6 +26167,314 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
+  /@teambit/api-reference.renderers.api-node-details@0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+    resolution: {integrity: sha512-FfbWew5UAqk6GN2NWkis4ATlxoXS+HdTDdT7FU7wdmwkq0bAClw1iyFgoPWxuXVkvEE8amcUOril6UG5vUlVNA==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+      react-router-dom: ^6.0.0
+    dependencies:
+      '@monaco-editor/react': 4.4.6(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.hooks.use-api-ref-url': 0.0.9(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.models.api-reference-model': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.schema-nodes-index': 0.0.25(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.utils.code-editor-options': 0.0.6
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/code.ui.code-editor': 0.0.8(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/documenter.ui.heading': registry.npmjs.org/@teambit/documenter.ui.heading@4.1.1(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      classnames: 2.2.6
+      core-js: 3.13.0
+      monaco-editor: 0.33.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+      react-router-dom: 6.3.0(react-dom@17.0.2)(react@17.0.2)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+    dev: false
+
+  /@teambit/api-reference.renderers.class@0.0.29(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+    resolution: {integrity: sha512-g/H+k4U8SfhksdaWTbQXCELsFotZY6IKrCoVFxqQK6jRbgaNzK5p9a6dL5UYdou1njdIxW/rEL5TCyS8MHOMvQ==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.26(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/semantics.entities.semantic-schema': 0.0.59
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - react-router-dom
+    dev: false
+
+  /@teambit/api-reference.renderers.enum@0.0.29(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+    resolution: {integrity: sha512-B9engEgmMCzgP9weZs5qFZu3TEPlL94RMmQPN0ZV9McDgpudB3qzMXMahFcinY0eNvYHBFIR9mPWCtweWxZ4xQ==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.26(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/semantics.entities.semantic-schema': 0.0.59
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - react-router-dom
+    dev: false
+
+  /@teambit/api-reference.renderers.grouped-schema-nodes-summary@0.0.26(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-k902ihnD5QSXWVWggohIKRpH0BBXNIMnc1pE/VYlYOUDetjGHp/Tdc7jihOZtWQ+gV4Y3YbQPLJdVPhDjWBVRg==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.25(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.utils.group-schema-node-by-signature': 0.0.13
+      '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/semantics.entities.semantic-schema': 0.0.59
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  /@teambit/api-reference.renderers.inference-type@0.0.19(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-J8OF/L8owSnUK5tSgeKCFvOKLNz7JO4GXzKV5InTMPmdGIwCb0Qr/2MO4jTmT8TM68qW2RM2bs9i1RhULwfzlA==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/semantics.entities.semantic-schema': 0.0.59
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+      react-syntax-highlighter: 15.4.3(react@17.0.2)
+    dev: false
+
+  /@teambit/api-reference.renderers.interface@0.0.29(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+    resolution: {integrity: sha512-36QyWAgz9hiuOhcdkT9zCHHzChw7a+Hp3pdlwkAGUraid6cVlFVkHwcCOl+esQ57VVDi+CD24e9sbyCbONbikA==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.26(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/semantics.entities.semantic-schema': 0.0.59
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - react-router-dom
+    dev: false
+
+  /@teambit/api-reference.renderers.parameter@0.0.23(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-aCzvpgcB/k8Vrz13CRgsifZW0n8+TPhDvCv4bfHjUr0xEjYt3SQf3r2xdohHo3LhDaEjSf7kf+k9MQBu/ze5FQ==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/documenter.ui.table-row': 4.1.13(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/semantics.entities.semantic-schema': 0.0.59
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  /@teambit/api-reference.renderers.schema-node-member-summary@0.0.25(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-iTQz90yqJq5boiUZKnfaYD39d7biy+CwIuNcKyjgnWyCQmICzgpAxQDdUBE1wV5z+SPjveVGViOr+TcY6+M/ow==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.models.api-reference-model': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.parameter': 0.0.23(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme': 0.0.1
+      '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.15
+      '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/documenter.ui.table-row': 4.1.13(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/semantics.entities.semantic-schema': 0.0.59
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+      react-syntax-highlighter: 15.4.3(react@17.0.2)
+    dev: false
+
+  /@teambit/api-reference.renderers.schema-nodes-index@0.0.25(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-732UQP7x8YIYi5fWZp+BIijfqUNYUrwQu5oabpvaJBfWQi7hmeATJoE1SaO6w/uA9TQIIEuKWDO58PLBOssCRw==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.25(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.surfaces.menu.item': 0.0.354(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/docs.ui.hooks.use-element-on-fold': 1.96.5(react@17.0.2)
+      classnames: 2.2.6
+      core-js: 3.13.0
+      lodash.flatten: 4.4.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+    dev: false
+
+  /@teambit/api-reference.renderers.type-array@0.0.19(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-yIo22b898l/KmOEvkuneGrFOpDDLtMw1Ca6xpKT9Jz7bXq38OdWk07uzYgYnS+6YvjL9K7JX1pjsY79+XQUDQQ==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/semantics.entities.semantic-schema': 0.0.59
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  /@teambit/api-reference.renderers.type-intersection@0.0.19(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-cFfUpnsSar5p8FtonnqZWpYxGljnK5oAlo4yNDRmvVMpiqH17gBbEPIU/T/kdCDgMYIeVeiS+T1TuHE2KP+LvQ==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/semantics.entities.semantic-schema': 0.0.59
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  /@teambit/api-reference.renderers.type-literal@0.0.26(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-8+U8G9wCXj16Dpm/sxiSe0Hxl6FdKkvQGO/eaGqJcoWdeZK95CXMEK0SDpwEwA7TIuj7rey9YJkhwnBrrD3FYw==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.26(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.utils.copy-schema-node': 0.0.13
+      '@teambit/semantics.entities.semantic-schema': 0.0.59
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  /@teambit/api-reference.renderers.type-union@0.0.19(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-8FHaZq8WRr/g+Ti3kQFW1dIzghbWQzuwoudMxKD5day1N/AxmacxVtPXNsyoYQiUSR25LLjYYLW65uznnFo7EA==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/semantics.entities.semantic-schema': 0.0.59
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  /@teambit/api-reference.renderers.type@0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+    resolution: {integrity: sha512-0fb9nB1habcWgUBEkKTVjIPS7GkaHJS7u6G2i98q3NhZ2wtzqbYiU6+MUyeLFMnry8togWqPQm5CpubAWfMl8g==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/semantics.entities.semantic-schema': 0.0.59
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - react-router-dom
+    dev: false
+
+  /@teambit/api-reference.renderers.unresolved@0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+    resolution: {integrity: sha512-zN0I9IMUCgWLNeCjQM6ucFhuqfxDHSWtsynfSnQxzBFynkObBt+Jf1wjqvQRZvpwCABc3RbzSa+IAwlEnDmspQ==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/semantics.entities.semantic-schema': 0.0.59
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - react-router-dom
+    dev: false
+
+  /@teambit/api-reference.renderers.variable@0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+    resolution: {integrity: sha512-FbNAYdNZtipwp/WoSTqYjmccBXiwGL27QH0zBrbXcYeaaIKsuuFfdII7Wh+qXS0hoelZa3yfMHXPXGkMN9ne+Q==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/semantics.entities.semantic-schema': 0.0.59
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - react-router-dom
+    dev: false
+
   /@teambit/api-reference.utils.code-editor-options@0.0.6:
     resolution: {integrity: sha512-Mrqu6RYbwqQeiPilYw9gj6cXsBqPP+nSi4GSQIBzplWpv91yHHAbuAuQ1ko2bPAJDZ9Ew8iV9adZMk50BLo3ug==}
     engines: {node: '>=12.22.0'}
@@ -27475,6 +26487,11 @@ packages:
     engines: {node: '>=12.22.0'}
     dependencies:
       '@teambit/semantics.entities.semantic-schema': 0.0.59
+    dev: false
+
+  /@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme@0.0.1:
+    resolution: {integrity: sha512-PauxlcDSH7ZlNAz1WklLh2yLSz4p3pLXLxjdn3ZZmsoBpQt/wwE3oqHfY5UWITSPam1MGduCf8B0+oaEEfGs5A==}
+    engines: {node: '>=12.22.0'}
     dev: false
 
   /@teambit/api-reference.utils.group-schema-node-by-signature@0.0.13:
@@ -31541,7 +30558,7 @@ packages:
     dev: false
 
   /@teambit/documenter.ui.linked-heading@4.1.8(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-LGpmPIXZSWsXbYgkS/WR1VxJcCg=, tarball: https://node-registry.bit.cloud/tarballs/teambit.documenter/ui/linked-heading@4.1.8.tgz}
+    resolution: {integrity: sha1-LGpmPIXZSWsXbYgkS/WR1VxJcCg=, tarball: https://node-registry.bit.cloud/@teambit/documenter.ui.linked-heading/-/@teambit-documenter.ui.linked-heading-4.1.8.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -31761,8 +30778,8 @@ packages:
     resolution: {integrity: sha512-/HcLKG/XtP9e1U4UJTzn1LQwM5/YU668hYbLDsjCb68tUs24Nu6k8uJeolF15T4cH7TXzj15SipkChUKwfwGEw==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       core-js: 3.13.0
       react: 17.0.2
@@ -33269,8 +32286,8 @@ packages:
     resolution: {integrity: sha512-oL4a+3k6kGiBj7ahAnmAoXBzb0rtrnWiG1aMztsWsl0cwFtqX4lcJrhBUnWSJBia5CSui+amMjJkVe4h5cItmA==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/evangelist.elements.icon': 1.0.2(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
@@ -36490,7 +35507,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.1
       '@yarnpkg/fslib': 3.0.0-rc.51
-      '@yarnpkg/libzip': 3.0.0-rc.51
+      '@yarnpkg/libzip': 3.0.0-rc.51(@yarnpkg/fslib@3.0.0-rc.51)
       '@yarnpkg/parsers': 3.0.0-rc.51
       '@yarnpkg/shell': 4.0.0-rc.51
       camelcase: 5.3.1
@@ -36521,7 +35538,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.1
       '@yarnpkg/fslib': 3.0.0-rc.51
-      '@yarnpkg/libzip': 3.0.0-rc.51
+      '@yarnpkg/libzip': 3.0.0-rc.51(@yarnpkg/fslib@3.0.0-rc.51)
       '@yarnpkg/parsers': 3.0.0-rc.51
       '@yarnpkg/shell': 4.0.0-rc.51
       camelcase: 5.3.1
@@ -36594,9 +35611,11 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/libzip@3.0.0-rc.51:
+  /@yarnpkg/libzip@3.0.0-rc.51(@yarnpkg/fslib@3.0.0-rc.51):
     resolution: {integrity: sha512-OzgLMFretzeAk96hEwkbkmvDJ4y17WGxdaMnAyrpOrRK6coCIfNL8xWwTNnmXeddcRKTfD9yF4AwQTeXhLKDCA==}
     engines: {node: '>=18.12.0'}
+    peerDependencies:
+      '@yarnpkg/fslib': ^3.0.0-rc.51
     dependencies:
       '@types/emscripten': 1.39.8
       '@yarnpkg/fslib': 3.0.0-rc.51
@@ -37240,11 +36259,6 @@ packages:
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
       uri-js: 4.4.1
-
-  /amdefine@1.0.1:
-    resolution: {integrity: sha512-S2Hw0TtNkMJhIabBwIojKL9YHO5T0n5eNqWJ7Lrlel/zDbftQpxpapi8tZs3X1HWa+u+QeydGmzzNU0m09+Rcg==}
-    engines: {node: '>=0.4.2'}
-    dev: false
 
   /anonymous-npm-registry-client@0.2.0:
     resolution: {integrity: sha512-ym3GCDQU8B6PZrswCvanRiWoSg2QrrlPwoRlMr4oCpGvyK2KlwTujdCZfxrGapqxrqEY3TpxEqLf+7PhFnyaLA==}
@@ -38024,11 +37038,6 @@ packages:
       tslib: 2.6.2
     dev: false
 
-  /ast-types@0.9.6:
-    resolution: {integrity: sha512-qEdtR2UH78yyHX/AUNfXmJTlM48XoFZKBdwi1nzkI1mJL21cmbu0cvjxjpkXJ5NENMq42H+hNs8VLJcqXLerBQ==}
-    engines: {node: '>= 0.8'}
-    dev: false
-
   /astral-regex@1.0.0:
     resolution: {integrity: sha512-+Ryf6g3BKoRc7jfp7ad8tM4TtMiaWvbF/1/sQcZPkkS7ag3D5nMBCe2UfOTONtAkaG0tO0ij3C5Lwmf1EiyjHg==}
     engines: {node: '>=4'}
@@ -38374,10 +37383,6 @@ packages:
 
   /balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
-
-  /base62@1.2.8:
-    resolution: {integrity: sha512-V6YHUbjLxN1ymqNLb1DPHoU1CpfdL7d2YTIp5W3U4hhoG4hhxNmsFDs66M9EXxBiSEke5Bt5dwdfMwwZF70iLA==}
-    dev: false
 
   /base64-arraybuffer@0.1.4:
     resolution: {integrity: sha512-a1eIFi4R9ySrbiMuyTGx5e92uRH5tQY6kArNcFaKBUleIoLjdjBg7Zxm3Mqm3Kmkf27HLR/1fnxX9q8GQ7Iavg==}
@@ -39627,22 +38632,6 @@ packages:
   /commondir@1.0.1:
     resolution: {integrity: sha512-W9pAhw0ja1Edb5GVdIF1mjZw/ASI0AlShXM83UUGe2DVr5TdAPEA1OA8m/g8zWp9x6On7gqufY+FatDbC3MDQg==}
 
-  /commoner@0.10.8:
-    resolution: {integrity: sha512-3/qHkNMM6o/KGXHITA14y78PcfmXh4+AOCJpSoF73h4VY1JpdGv3CHMS5+JW6SwLhfJt4RhNmLAa7+RRX/62EQ==}
-    engines: {node: '>= 0.8'}
-    hasBin: true
-    dependencies:
-      commander: 2.20.3
-      detective: 4.7.1
-      glob: 5.0.15
-      graceful-fs: 4.2.10
-      iconv-lite: 0.4.24
-      mkdirp: 0.5.6
-      private: 0.1.8
-      q: 1.5.1
-      recast: 0.11.23
-    dev: false
-
   /component-bind@1.0.0:
     resolution: {integrity: sha512-WZveuKPeKAG9qY+FkYDeADzdHyTYdIboXS59ixDeRJL5ZhxpqUnxSOwop4FQjMsiYm3/Or8cegVbpAHNA7pHxw==}
     dev: false
@@ -39830,11 +38819,6 @@ packages:
   /core-js-pure@3.32.2:
     resolution: {integrity: sha512-Y2rxThOuNywTjnX/PgA5vWM6CZ9QB9sz9oGeCixV8MqXZO70z/5SHzf9EeBrEBK0PN36DnEBBu9O/aGWzKuMZQ==}
     requiresBuild: true
-    dev: false
-
-  /core-js@1.2.7:
-    resolution: {integrity: sha512-ZiPp9pZlgxpWRu0M+YWbm6+aQ84XEfH1JRXvfOc/fILWI0VKhLC2LX13X1NYq4fULzLMq7Hfh43CSo2/aIaUPA==}
-    deprecated: core-js@<3.23.3 is no longer maintained and not recommended for usage due to the number of issues. Because of the V8 engine whims, feature detection in old core-js versions could cause a slowdown up to 100x even if nothing is polyfilled. Some versions have web compatibility issues. Please, upgrade your dependencies to the actual version of core-js.
     dev: false
 
   /core-js@2.6.12:
@@ -40695,10 +39679,6 @@ packages:
       isobject: 3.0.1
     dev: false
 
-  /defined@1.0.1:
-    resolution: {integrity: sha512-hsBd2qSVCRE+5PmNdHt1uzyrFu5d3RwmFDKzyNZMFq/EwDNJF7Ee5+D5oEKF0hU6LhtoUF1macFvOe4AskQC1Q==}
-    dev: false
-
   /del@6.1.1:
     resolution: {integrity: sha512-ua8BhapfP0JUJKC/zV9yHHDW/rDoDxP4Zhn3AkA6/xT6gY7jYXJiaeyBZznYVujhZZET+UgcbZiQ7sN3WqcImg==}
     engines: {node: '>=10'}
@@ -40820,13 +39800,6 @@ packages:
 
   /detective-stylus@1.0.0:
     resolution: {integrity: sha512-HelsT2sUFhMHumcu96Fq8tKQLLeIxMbEmj5zhPYQojuL9qJRUFlX39YsqIwBE9ttxNSI5DM3xO/NTkG4BYV5eA==}
-    dev: false
-
-  /detective@4.7.1:
-    resolution: {integrity: sha512-H6PmeeUcZloWtdt4DAkFyzFL94arpHr3NOwwmVILFiy+9Qd4JTxxXrzfyGk/lmct2qVGBwTSwSXagqu2BxmWig==}
-    dependencies:
-      acorn: 5.7.4
-      defined: 1.0.1
     dev: false
 
   /devtools-protocol@0.0.981744:
@@ -41253,14 +40226,6 @@ packages:
   /env-paths@2.2.1:
     resolution: {integrity: sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A==}
     engines: {node: '>=6'}
-    dev: false
-
-  /envify@3.4.1:
-    resolution: {integrity: sha512-XLiBFsLtNF0MOZl+vWU59yPb3C2JtrQY2CNJn22KH75zPlHWY5ChcAQuf4knJeWT/lLkrx3sqvhP/J349bt4Bw==}
-    hasBin: true
-    dependencies:
-      jstransform: 11.0.3
-      through: 2.3.8
     dev: false
 
   /envinfo@7.10.0:
@@ -42136,18 +41101,6 @@ packages:
       eslint-visitor-keys: 1.3.0
     dev: false
 
-  /esprima-fb@15001.1.0-dev-harmony-fb:
-    resolution: {integrity: sha512-59dDGQo2b3M/JfKIws0/z8dcXH2mnVHkfSPRhCYS91JNGfGNwr7GsSF6qzWZuOGvw5Ii0w9TtylrX07MGmlOoQ==}
-    engines: {node: '>=0.4.0'}
-    hasBin: true
-    dev: false
-
-  /esprima@3.1.3:
-    resolution: {integrity: sha512-AWwVMNxwhN8+NIPQzAQZCm7RkLC4RbM3B1OobMuyp3i+w73X57KCKaVIxaRZb+DYCojq7rspo+fmuQfAboyhFg==}
-    engines: {node: '>=4'}
-    hasBin: true
-    dev: false
-
   /esprima@4.0.1:
     resolution: {integrity: sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==}
     engines: {node: '>=4'}
@@ -42641,16 +41594,6 @@ packages:
 
   /fbjs-css-vars@1.0.2:
     resolution: {integrity: sha512-b2XGFAFdWZWg0phtAWLHCk836A1Xann+I+Dgd3Gk64MHKZO44FfoD1KxyvbSh0qZsIoXQGGlVztIY+oitJPpRQ==}
-    dev: false
-
-  /fbjs@0.6.1:
-    resolution: {integrity: sha512-4KW7tT33ytfazK3Ekvesbsa4A5J79hUrdXONQGZ0wM6i3PFc70YknF9kj1eyx3mDupgJ7Z+ifFhcMJ+ps2eZIw==}
-    dependencies:
-      core-js: 1.2.7
-      loose-envify: 1.4.0
-      promise: 7.3.1
-      ua-parser-js: 0.7.24
-      whatwg-fetch: 0.9.0
     dev: false
 
   /fbjs@1.0.0:
@@ -43391,16 +42334,6 @@ packages:
 
   /glob-to-regexp@0.4.1:
     resolution: {integrity: sha512-lkX1HJXwyMcprw/5YUZc2s7DrpAiHB21/V+E1rHUrVNokkvB6bqMzT0VfV6/86ZNabt1k14YOIaT7nDvOX3Iiw==}
-
-  /glob@5.0.15:
-    resolution: {integrity: sha512-c9IPMazfRITpmAAKi22dK1VKxGDX9ehhqfABDriL/lzO92xcUKEJPQHrVA/2YHSNFB4iFlykVmWvwo48nr3OxA==}
-    dependencies:
-      inflight: 1.0.6
-      inherits: 2.0.4
-      minimatch: 3.0.5
-      once: 1.4.0
-      path-is-absolute: 1.0.1
-    dev: false
 
   /glob@6.0.4:
     resolution: {integrity: sha512-MKZeRNyYZAVVVG1oZeLaWie1uweH40m9AZwIwxyPbTSX4hHrVYSzLg0Ro5Z5R7XKkIX+Cc6oD1rqeDJnwsB8/A==}
@@ -46071,10 +45004,6 @@ packages:
     resolution: {integrity: sha512-H/ZGY0nIAg3QcOwE1QN/rK/Fa7gJn7Ii5obwp6zyPO4xiPNwpIMjqy2gwjBEGqzkF/vSWEIBQCBuN19hYiL6Qg==}
     dev: false
 
-  /json-stringify-pretty-compact@1.2.0:
-    resolution: {integrity: sha512-/11Pj1OyX814QMKO7K8l85SHPTr/KsFxHp8GE2zVa0BtJgGimDjXHfM3FhC7keQdWDea7+nXf+f1de7ATZcZkQ==}
-    dev: false
-
   /json-stringify-safe@5.0.1:
     resolution: {integrity: sha512-ZClg6AaYvamvYEE82d3Iyd3vSSIjQ+odgjaTzRuO3s7toCdFKczob2i0zCh7JE8kWn17yvAWhUVxvqGwUalsRA==}
     dev: false
@@ -46150,18 +45079,6 @@ packages:
       verror: 1.10.0
     dev: false
 
-  /jstransform@11.0.3:
-    resolution: {integrity: sha512-LGm87w0A8E92RrcXt94PnNHkFqHmgDy3mKHvNZOG7QepKCTCH/VB6S+IEN+bT4uLN3gVpOT0vvOOVd96osG71g==}
-    engines: {node: '>=0.8.8'}
-    hasBin: true
-    dependencies:
-      base62: 1.2.8
-      commoner: 0.10.8
-      esprima-fb: 15001.1.0-dev-harmony-fb
-      object-assign: 2.1.1
-      source-map: 0.4.4
-    dev: false
-
   /jsx-ast-utils@3.3.5:
     resolution: {integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==}
     engines: {node: '>=4.0'}
@@ -46170,14 +45087,6 @@ packages:
       array.prototype.flat: 1.3.2
       object.assign: 4.1.4
       object.values: 1.1.7
-    dev: false
-
-  /jsx-to-string@1.4.0:
-    resolution: {integrity: sha512-BmDM0gMngtBcjET7iEDuMxU+ZA4fTFWhMWAfbJeZP0X0VIaN7+At3wa64v48hzuE9rf77VAwlI/aMJrR+9LEZA==}
-    dependencies:
-      immutable: 4.3.4
-      json-stringify-pretty-compact: 1.2.0
-      react: 0.14.10
     dev: false
 
   /junit-report-builder@3.0.1:
@@ -48159,11 +47068,6 @@ packages:
     resolution: {integrity: sha512-fexhUFFPTGV8ybAtSIGbV6gOkSv8UtRbDBnAyLQw4QPKkgNlsH2ByPGtMUqdWkos6YCRmAqViwgZrJc/mRDzZQ==}
     dev: false
 
-  /object-assign@2.1.1:
-    resolution: {integrity: sha512-CdsOUYIh5wIiozhJ3rLQgmUTgcyzFwZZrqhkKhODMoGtPKM+wt0h0CNIoauJWMsS9822EdzPsF/6mb4nLvPN5g==}
-    engines: {node: '>=0.10.0'}
-    dev: false
-
   /object-assign@4.1.1:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
     engines: {node: '>=0.10.0'}
@@ -49969,11 +48873,6 @@ packages:
     resolution: {integrity: sha512-Kx/1w86q/epKcmte75LNrEoT+lX8pBpavuAbvJWRXar7Hz8jrtF+e3vY751p0R8H9HdArwaCTNDDzHg/ScJK1Q==}
     engines: {node: '>=6'}
 
-  /private@0.1.8:
-    resolution: {integrity: sha512-VvivMrbvd2nKkiG38qjULzlc+4Vx4wm/whI9pQD35YrARNnhxeiRktSOhSukRLFNlzg6Br/cJPet5J/u19r/mg==}
-    engines: {node: '>= 0.6'}
-    dev: false
-
   /proc-output@1.0.8:
     resolution: {integrity: sha512-d5v2wFTIrfE7eyt5KqB+CwsaBAmYqKIVNZv3R3Hya96gImHm2Aul+x6MZHRaKI7Ijpr9cg3RiOCY6s1O4SvzFQ==}
     dev: false
@@ -50487,19 +49386,6 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /react-element-to-jsx-string@15.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-UDg4lXB6BzlobN60P8fHWVPX3Kyw8ORrTeBtClmIlGdkOOE+GYQSFvmEU5iLLpwp/6v42DINwNcwOhOLfQ//FQ==}
-    peerDependencies:
-      react: ^0.14.8 || ^15.0.1 || ^16.0.0 || ^17.0.1 || ^18.0.0
-      react-dom: ^0.14.8 || ^15.0.1 || ^16.0.0 || ^17.0.1 || ^18.0.0
-    dependencies:
-      '@base2/pretty-print-object': 1.0.1
-      is-plain-object: 5.0.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-      react-is: 18.1.0
-    dev: false
-
   /react-error-boundary@3.1.4(react@17.0.2):
     resolution: {integrity: sha512-uM9uPzZJTF6wRQORmSrvOIgt4lJ9MC1sNgEOj2XGsDTRE4kmpWxg7ENK9EWNKJRMAOY9z0MuF4yIfl6gp4sotA==}
     engines: {node: '>=10', npm: '>=6'}
@@ -50537,10 +49423,6 @@ packages:
 
   /react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
-
-  /react-is@18.1.0:
-    resolution: {integrity: sha512-Fl7FuabXsJnV5Q1qIOQwx/sagGF18kogb4gpfcG4gjLBWO0WDiiz1ko/ExayuxE7InyQkBLkxRFG5oxY6Uu3Kg==}
-    dev: false
 
   /react-is@18.2.0:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
@@ -50766,14 +49648,6 @@ packages:
       react: 17.0.2
     dev: true
 
-  /react@0.14.10:
-    resolution: {integrity: sha512-yxMw5aorZG4qsLVBfjae4wGFvd5708DhcxaXLJ3IOTgr1TCs8k9+ZheGgLGr5OfwWMhSahNbGvvoEDzrxVWouA==}
-    engines: {node: '>=0.10.0'}
-    dependencies:
-      envify: 3.4.1
-      fbjs: 0.6.1
-    dev: false
-
   /react@17.0.2:
     resolution: {integrity: sha512-gnhPt75i/dq/z3/6q/0asP78D0u592D5L1pd7M8P+dck6Fu/jJeL6iVVK23fptSUZj8Vjf++7wXA8UNclGQcbA==}
     engines: {node: '>=0.10.0'}
@@ -50956,16 +49830,6 @@ packages:
   /realpath-missing@1.1.0:
     resolution: {integrity: sha512-wnWtnywepjg/eHIgWR97R7UuM5i+qHLA195qdN9UPKvcMqfn60+67S8sPPW3vDlSEfYHoFkKU8IvpCNty3zQvQ==}
     engines: {node: '>=10'}
-    dev: false
-
-  /recast@0.11.23:
-    resolution: {integrity: sha512-+nixG+3NugceyR8O1bLU45qs84JgI3+8EauyRZafLgC9XbdAOIVgwV1Pe2da0YzGo62KzWoZwUpVEQf6qNAXWA==}
-    engines: {node: '>= 0.8'}
-    dependencies:
-      ast-types: 0.9.6
-      esprima: 3.1.3
-      private: 0.1.8
-      source-map: 0.5.7
     dev: false
 
   /recursive-readdir@2.2.2:
@@ -52387,13 +51251,6 @@ packages:
   /source-map-url@0.4.1:
     resolution: {integrity: sha512-cPiFOTLUKvJFIg4SKVScy4ilPPW6rFgMgfuZJPNoDuMs3nC1HbMUycBoJw77xFIp6z1UJQJOfx6C9GMH80DiTw==}
     deprecated: See https://github.com/lydell/source-map-url#deprecated
-    dev: false
-
-  /source-map@0.4.4:
-    resolution: {integrity: sha512-Y8nIfcb1s/7DcobUz1yOO1GSp7gyL+D9zLHDehT7iRESqGSxjJ448Sg7rvfgsRJCnKLdSl11uGf0s9X80cH0/A==}
-    engines: {node: '>=0.8.0'}
-    dependencies:
-      amdefine: 1.0.1
     dev: false
 
   /source-map@0.5.6:
@@ -54983,10 +53840,6 @@ packages:
       iconv-lite: 0.6.3
     dev: false
 
-  /whatwg-fetch@0.9.0:
-    resolution: {integrity: sha512-DIuh7/cloHxHYwS/oRXGgkALYAntijL63nsgMQsNSnBj825AysosAqA2ZbYXGRqpPRiNH7335dTqV364euRpZw==}
-    dev: false
-
   /whatwg-fetch@3.6.19:
     resolution: {integrity: sha512-d67JP4dHSbm2TrpFj8AbO8DnL1JXL5J9u0Kq2xW6d0TFDbCA3Muhdt8orXC22utleTVj7Prqt82baN6RBvnEgw==}
     dev: false
@@ -55807,120 +54660,7 @@ packages:
       semver: 7.5.2
     dev: false
 
-  file:components/models/api-node-renderer(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: components/models/api-node-renderer, type: directory}
-    id: file:components/models/api-node-renderer
-    name: '@teambit/api-reference.models.api-node-renderer'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  file:components/models/api-reference-model(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: components/models/api-reference-model, type: directory}
-    id: file:components/models/api-reference-model
-    name: '@teambit/api-reference.models.api-reference-model'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  file:components/renderers/api-node-details(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
-    resolution: {directory: components/renderers/api-node-details, type: directory}
-    id: file:components/renderers/api-node-details
-    name: '@teambit/api-reference.renderers.api-node-details'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-      react-router-dom: ^6.0.0
-    dependencies:
-      '@monaco-editor/react': 4.4.6(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.utils.code-editor-options': 0.0.6
-      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/code.ui.code-editor': 0.0.8(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.heading': registry.npmjs.org/@teambit/documenter.ui.heading@4.1.1(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      classnames: 2.2.6
-      core-js: 3.13.0
-      monaco-editor: 0.33.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-      react-router-dom: 6.3.0(react-dom@17.0.2)(react@17.0.2)
-    transitivePeerDependencies:
-      - '@testing-library/react'
-      - '@types/react'
-    dev: false
-
-  file:components/renderers/class(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: components/renderers/class, type: directory}
-    id: file:components/renderers/class
-    name: '@teambit/api-reference.renderers.class'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  file:components/renderers/enum(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: components/renderers/enum, type: directory}
-    id: file:components/renderers/enum
-    name: '@teambit/api-reference.renderers.enum'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  file:components/renderers/inference-type(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: components/renderers/inference-type, type: directory}
-    id: file:components/renderers/inference-type
-    name: '@teambit/api-reference.renderers.inference-type'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      classnames: 2.2.6
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-      react-syntax-highlighter: 15.4.3(react@17.0.2)
-    dev: false
-
-  file:components/renderers/interface(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: components/renderers/interface, type: directory}
-    id: file:components/renderers/interface
-    name: '@teambit/api-reference.renderers.interface'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
+  file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
     resolution: {directory: components/renderers/react, type: directory}
     id: file:components/renderers/react
     name: '@teambit/api-reference.renderers.react'
@@ -55928,146 +54668,21 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/semantics.entities.semantic-schema': 0.0.59
       classnames: 2.2.6
       core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    transitivePeerDependencies:
-      - '@testing-library/react'
-      - '@types/react'
-    dev: false
-
-  file:components/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: components/renderers/schema-nodes-index, type: directory}
-    id: file:components/renderers/schema-nodes-index
-    name: '@teambit/api-reference.renderers.schema-nodes-index'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/design.ui.surfaces.menu.item': 0.0.354(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/docs.ui.hooks.use-element-on-fold': 1.96.5(react@17.0.2)
-      classnames: 2.2.6
-      core-js: 3.13.0
-      lodash.flatten: 4.4.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     transitivePeerDependencies:
       - '@testing-library/react'
       - '@testing-library/react-hooks'
       - '@types/react'
+      - react-router-dom
     dev: false
 
-  file:components/renderers/type(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: components/renderers/type, type: directory}
-    id: file:components/renderers/type
-    name: '@teambit/api-reference.renderers.type'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  file:components/renderers/type-array(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: components/renderers/type-array, type: directory}
-    id: file:components/renderers/type-array
-    name: '@teambit/api-reference.renderers.type-array'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  file:components/renderers/type-intersection(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: components/renderers/type-intersection, type: directory}
-    id: file:components/renderers/type-intersection
-    name: '@teambit/api-reference.renderers.type-intersection'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      classnames: 2.2.6
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  file:components/renderers/type-literal(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: components/renderers/type-literal, type: directory}
-    id: file:components/renderers/type-literal
-    name: '@teambit/api-reference.renderers.type-literal'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/api-reference.utils.copy-schema-node': 0.0.13
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  file:components/renderers/type-union(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: components/renderers/type-union, type: directory}
-    id: file:components/renderers/type-union
-    name: '@teambit/api-reference.renderers.type-union'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      classnames: 2.2.6
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  file:components/renderers/unresolved(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: components/renderers/unresolved, type: directory}
-    id: file:components/renderers/unresolved
-    name: '@teambit/api-reference.renderers.unresolved'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  file:components/renderers/variable(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: components/renderers/variable, type: directory}
-    id: file:components/renderers/variable
-    name: '@teambit/api-reference.renderers.variable'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  file:components/utils/sort-api-nodes:
-    resolution: {directory: components/utils/sort-api-nodes, type: directory}
-    name: '@teambit/api-reference.utils.sort-api-nodes'
-    dev: false
-
-  file:scopes/api-reference/api-reference(react-dom@17.0.2)(react@17.0.2):
+  file:scopes/api-reference/api-reference(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
     resolution: {directory: scopes/api-reference/api-reference, type: directory}
     id: file:scopes/api-reference/api-reference
     name: '@teambit/api-reference'
@@ -56076,12 +54691,28 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.class': 0.0.29(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.enum': 0.0.29(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.inference-type': 0.0.19(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.interface': 0.0.29(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.type': 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.type-array': 0.0.19(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.type-intersection': 0.0.19(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.type-literal': 0.0.26(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.type-union': 0.0.19(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.unresolved': 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/api-reference.renderers.variable': 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/harmony': 0.4.6
       '@teambit/semantics.entities.semantic-schema': 0.0.59
       core-js: 3.13.0
-      lodash: 4.17.21
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - react-router-dom
     dev: false
 
   file:scopes/api-reference/explorer/api-reference-explorer(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
@@ -56139,19 +54770,6 @@ packages:
       - '@types/react'
     dev: false
 
-  file:scopes/api-reference/hooks/use-api-renderers(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: scopes/api-reference/hooks/use-api-renderers, type: directory}
-    id: file:scopes/api-reference/hooks/use-api-renderers
-    name: '@teambit/api-reference.hooks.use-api-renderers'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
   file:scopes/api-reference/hooks/use-schema(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/api-reference/hooks/use-schema, type: directory}
     id: file:scopes/api-reference/hooks/use-schema
@@ -56170,24 +54788,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/api-reference/overview/api-reference-table-of-contents(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: scopes/api-reference/overview/api-reference-table-of-contents, type: directory}
-    id: file:scopes/api-reference/overview/api-reference-table-of-contents
-    name: '@teambit/api-reference.overview.api-reference-table-of-contents'
-    peerDependencies:
-      react: 17.0.2
-    dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      classnames: 2.2.6
-      react: 17.0.2
-    transitivePeerDependencies:
-      - '@testing-library/react'
-      - '@types/react'
-      - react-dom
-    dev: false
-
-  file:scopes/api-reference/renderers/function(react-dom@17.0.2)(react@17.0.2):
+  file:scopes/api-reference/renderers/function(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
     resolution: {directory: scopes/api-reference/renderers/function, type: directory}
     id: file:scopes/api-reference/renderers/function
     name: '@teambit/api-reference.renderers.function'
@@ -56195,35 +54796,19 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@17.0.2)(react@17.0.2)
       '@teambit/semantics.entities.semantic-schema': 0.0.59
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  file:scopes/api-reference/renderers/grouped-schema-nodes-overview-summary(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: scopes/api-reference/renderers/grouped-schema-nodes-overview-summary, type: directory}
-    id: file:scopes/api-reference/renderers/grouped-schema-nodes-overview-summary
-    name: '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/api-reference.utils.group-schema-node-by-signature': 0.0.13
-      '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.15
-      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      classnames: 2.2.6
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-      react-syntax-highlighter: 15.4.3(react@17.0.2)
     transitivePeerDependencies:
       - '@testing-library/react'
+      - '@testing-library/react-hooks'
       - '@types/react'
+      - react-router-dom
     dev: false
 
   file:scopes/api-reference/renderers/grouped-schema-nodes-summary(react-dom@17.0.2)(react@17.0.2):
@@ -56282,18 +54867,21 @@ packages:
       react-syntax-highlighter: 15.4.3(react@17.0.2)
     dev: false
 
-  file:scopes/api-reference/renderers/this(react@17.0.2):
+  file:scopes/api-reference/renderers/this(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/api-reference/renderers/this, type: directory}
     id: file:scopes/api-reference/renderers/this
     name: '@teambit/api-reference.renderers.this'
     peerDependencies:
       react: 17.0.2
     dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
       '@teambit/semantics.entities.semantic-schema': 0.0.59
       react: 17.0.2
+    transitivePeerDependencies:
+      - react-dom
     dev: false
 
-  file:scopes/api-reference/renderers/type-ref(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
+  file:scopes/api-reference/renderers/type-ref(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
     resolution: {directory: scopes/api-reference/renderers/type-ref, type: directory}
     id: file:scopes/api-reference/renderers/type-ref
     name: '@teambit/api-reference.renderers.type-ref'
@@ -56301,8 +54889,11 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.utils.copy-schema-node': 0.0.13
       '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-id': 0.0.427
       '@teambit/semantics.entities.semantic-schema': 0.0.59
       classnames: 2.2.6
       core-js: 3.13.0
@@ -56310,7 +54901,9 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     transitivePeerDependencies:
       - '@testing-library/react'
+      - '@testing-library/react-hooks'
       - '@types/react'
+      - react-router-dom
     dev: false
 
   file:scopes/api-reference/sections/api-reference-page(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
@@ -56352,21 +54945,6 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  file:scopes/api-reference/tagged-exports(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: scopes/api-reference/tagged-exports, type: directory}
-    id: file:scopes/api-reference/tagged-exports
-    name: '@teambit/tagged-exports'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/documenter.ui.linked-heading': 4.1.6(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.section': registry.npmjs.org/@teambit/documenter.ui.section@4.1.1(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -59322,7 +57900,7 @@ packages:
       - '@types/react'
     dev: false
 
-  file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4):
+  file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/react/ui/docs-app, type: directory}
     id: file:scopes/react/ui/docs-app
     name: '@teambit/react.ui.docs-app'
@@ -59332,20 +57910,12 @@ packages:
     dependencies:
       '@teambit/design.theme.icons-font': 2.0.26(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.themes.theme-toggler': 0.1.3(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.code.react-playground': 4.1.9(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
-      '@teambit/documenter.ui.linked-heading': 4.1.6(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.section': registry.npmjs.org/@teambit/documenter.ui.section@4.1.1(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
-      jsx-to-string: 1.4.0
-      lodash: 4.17.21
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-      react-element-to-jsx-string: 15.0.0(react-dom@17.0.2)(react@17.0.2)
     transitivePeerDependencies:
       - '@testing-library/react'
-      - '@types/react'
-      - typescript
     dev: false
 
   file:scopes/react/ui/docs/apply-providers(react-dom@17.0.2)(react@17.0.2):
