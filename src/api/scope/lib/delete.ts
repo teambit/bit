@@ -16,18 +16,18 @@ export default async function remove(
     const removedObjects = new RemovedObjects({ removedLanes });
     return removedObjects.serialize();
   }
-  const bitIds = ComponentIdList.deserialize(ids);
+  const bitIds = ComponentIdList.fromStringArray(ids);
   const args = { path, bitIds, force };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   HooksManagerInstance?.triggerHook(PRE_REMOVE_REMOTE, args, headers);
   const res = await scope.removeMany(bitIds, force);
   const hookArgs = {
-    removedComponentsIds: res.removedComponentIds.serialize(),
-    missingComponentsIds: res.missingComponents.serialize(),
+    removedComponentsIds: res.removedComponentIds.toStringArray(),
+    missingComponentsIds: res.missingComponents.toStringArray(),
     dependentBitsIds: res.dependentBits,
     force,
     scopePath: path,
-    componentsIds: bitIds.serialize(),
+    componentsIds: bitIds.toStringArray(),
     scopeName: scope.scopeJson.name,
   };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

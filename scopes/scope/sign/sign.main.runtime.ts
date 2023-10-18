@@ -151,7 +151,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
 
   private async clearScopesCaches(components: ConsumerComponent[]) {
     const bitIds = ComponentIdList.fromArray(components.map((c) => c.id));
-    const idsGroupedByScope = bitIds.toGroupByScopeName(new ComponentIdList());
+    const idsGroupedByScope = bitIds.toGroupByScopeName();
     const scopeRemotes: Remotes = await getScopeRemotes(this.scope.legacyScope);
     await Promise.all(
       Object.keys(idsGroupedByScope).map(async (scopeName) => {

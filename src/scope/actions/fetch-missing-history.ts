@@ -15,7 +15,7 @@ export class FetchMissingHistory implements Action<Options> {
       'check if history is missing and fetch it from original scopes'
     );
     const scopeComponentsImporter = scope.scopeImporter;
-    const bitIds: ComponentIdList = ComponentIdList.deserialize(options.ids);
+    const bitIds: ComponentIdList = ComponentIdList.fromStringArray(options.ids);
     await scopeComponentsImporter.importMissingHistory(bitIds);
     logger.debugAndAddBreadCrumb('FetchMissingHistory', 'completed successfully');
   }

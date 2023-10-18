@@ -253,7 +253,25 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
   }> {
     this.logger.debug(`scope.exportMany, ids: ${ids.toString()}`);
     const scopeRemotes: Remotes = await getScopeRemotes(scope);
-    const idsGroupedByScope = ids.toGroupByScopeName(idsWithFutureScope);
+
+    const groupByScopeName = (idList: ComponentIdList): { [scopeName: string]: ComponentIdList } => {
+      return idList.reduce((acc, current) => {
+        const getScopeName = () => {
+          if (current.scope) return current.scope;
+          const idWithDefaultScope = idsWithFutureScope.searchWithoutScopeAndVersion(current);
+          return idWithDefaultScope ? idWithDefaultScope.scope : null;
+        };
+        const scopeName = getScopeName();
+        if (!scopeName) {
+          throw new Error(`toGroupByScopeName() expect ids to have a scope name, got ${current.toString()}`);
+        }
+        if (acc[scopeName]) acc[scopeName].push(current);
+        else acc[scopeName] = new ComponentIdList(current);
+        return acc;
+      }, {});
+    };
+
+    const idsGroupedByScope = groupByScopeName(ids);
 
     /**
      * when a component is exported for the first time, and the lane-scope is not the same as the component-scope, it's
@@ -265,7 +283,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         return;
       }
       const newIds = ComponentIdList.fromArray(ids.filter((id) => !scope.isExported(id)));
-      const newIdsGrouped = newIds.toGroupByScopeName(idsWithFutureScope);
+      const newIdsGrouped = groupByScopeName(newIds);
       await mapSeries(Object.keys(newIdsGrouped), async (scopeName) => {
         if (scopeName === laneObject.scope) {
           // this validation is redundant if the lane-component is in the same scope as the lane-object

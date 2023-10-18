@@ -159,7 +159,7 @@ async function fetchByType(
   };
   switch (fetchOptions.type) {
     case 'component': {
-      const bitIds: ComponentIdList = ComponentIdList.deserialize(ids);
+      const bitIds: ComponentIdList = ComponentIdList.fromStringArray(ids);
       const shouldCollectParents = () => {
         if (clientSupportsVersionHistory) {
           return Boolean(fetchOptions.collectParents);
@@ -251,7 +251,7 @@ async function fetchByType(
         // backward compatible before 0.0.900 - it was always true
         return true;
       };
-      const bitIdsWithHashToStop: ComponentIdList = ComponentIdList.deserialize(ids);
+      const bitIdsWithHashToStop: ComponentIdList = ComponentIdList.fromStringArray(ids);
       const scopeComponentsImporter = scope.scopeImporter;
       const laneId = fetchOptions.laneId ? LaneId.parse(fetchOptions.laneId) : null;
       const lane = laneId ? await scope.loadLane(laneId) : null;

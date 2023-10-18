@@ -584,7 +584,7 @@ export default class BitMap {
     const componentWithScope = idHasVersion ? allIdsStr[id] : allIdsStrWithoutVersion[id];
     if (componentWithScope) return componentWithScope;
     // continue with searching without the scope name (in the bitmap)
-    const idWithoutVersion = BitId.getStringWithoutVersion(id);
+    const idWithoutVersion = ComponentID.getStringWithoutVersion(id);
     const componentWithoutScope = idHasVersion
       ? allIdsStrWithoutScope[id]
       : allIdsStrWithoutScopeAndVersion[idWithoutVersion];

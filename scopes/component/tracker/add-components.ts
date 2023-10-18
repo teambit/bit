@@ -284,7 +284,7 @@ export default class AddComponents {
       }
       const rootDir = getRootDir();
       const getDefaultScope = async () => {
-        if (componentId._legacy.scope) return undefined;
+        if (componentId.hasScope()) return undefined;
         return this.getDefaultScope(rootDir, componentId.fullName);
       };
       const defaultScope = await getDefaultScope();
@@ -382,7 +382,7 @@ you can add the directory these files are located at and it'll change the root d
         !existingComponentId || // this id is new, it shouldn't have a version
         !existingComponentId.hasVersion() || // this component is new, it shouldn't have a version
         // user shouldn't add files to a an existing component with different version
-        existingComponentId.version !== BitId.getVersionOnlyFromString(currentId)
+        existingComponentId.version !== ComponentID.getVersionFromString(currentId)
       ) {
         throw new VersionShouldBeRemoved(currentId);
       }

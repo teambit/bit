@@ -3,7 +3,7 @@ import { ComponentID } from '@teambit/component-id';
 import { LATEST_VERSION } from '@teambit/component-version';
 
 export class ComponentIdList extends Array<ComponentID> {
-  serialize(): string[] {
+  toStringArray(): string[] {
     return this.map((componentId) => componentId.toString());
   }
 
@@ -13,10 +13,6 @@ export class ComponentIdList extends Array<ComponentID> {
 
   hasWithoutVersion(componentId: ComponentID): boolean {
     return Boolean(this.searchWithoutVersion(componentId));
-  }
-
-  hasWithoutScope(componentId: ComponentID): boolean {
-    return Boolean(this.searchWithoutScope(componentId));
   }
 
   hasWithoutScopeAndVersion(componentId: ComponentID): boolean {
@@ -40,16 +36,8 @@ export class ComponentIdList extends Array<ComponentID> {
     return this.find((id) => id.fullName === componentId.fullName);
   }
 
-  searchWithoutScope(componentId: ComponentID): ComponentID | null | undefined {
-    return this.find((id) => id.fullName === componentId.fullName && id._legacy.hasSameVersion(componentId._legacy));
-  }
-
   searchStrWithoutVersion(idStr: string): ComponentID | null | undefined {
     return this.find((id) => id.toStringWithoutVersion() === idStr);
-  }
-
-  searchStrWithoutScopeAndVersion(idStr: string): ComponentID | null | undefined {
-    return this.find((id) => id.fullName === idStr);
   }
 
   filterExact(componentId: ComponentID): ComponentID[] {
@@ -62,24 +50,8 @@ export class ComponentIdList extends Array<ComponentID> {
     return this.filter((id) => id.fullName === componentId.fullName && id.scope === componentId.scope);
   }
 
-  filterWithoutScopeAndVersion(componentId: ComponentID): ComponentID[] {
-    return this.filter((id) => id.fullName === componentId.fullName);
-  }
-
   removeIfExist(componentId: ComponentID): ComponentIdList {
     return ComponentIdList.fromArray(this.filter((id) => !id.isEqual(componentId)));
-  }
-
-  /**
-   * Return ids which are on the current instance and not in the passed list
-   * @param componentIds
-   */
-  difference(componentIds: ComponentIdList): ComponentIdList {
-    return ComponentIdList.fromArray(this.filter((id) => !componentIds.search(id)));
-  }
-
-  removeMultipleIfExistWithoutVersion(componentIds: ComponentIdList): ComponentIdList {
-    return ComponentIdList.fromArray(this.filter((id) => !componentIds.hasWithoutVersion(id)));
   }
 
   toObject() {
@@ -102,17 +74,9 @@ export class ComponentIdList extends Array<ComponentID> {
     }, {});
   }
 
-  toGroupByScopeName(idsWithDefaultScope: ComponentIdList): { [scopeName: string]: ComponentIdList } {
+  toGroupByScopeName(): { [scopeName: string]: ComponentIdList } {
     return this.reduce((acc, current) => {
-      const getScopeName = () => {
-        if (current.scope) return current.scope;
-        const idWithDefaultScope = idsWithDefaultScope.searchWithoutScopeAndVersion(current);
-        return idWithDefaultScope ? idWithDefaultScope.scope : null;
-      };
-      const scopeName = getScopeName();
-      if (!scopeName) {
-        throw new Error(`toGroupByScopeName() expect ids to have a scope name, got ${current.toString()}`);
-      }
+      const scopeName = current.scope;
       if (acc[scopeName]) acc[scopeName].push(current);
       else acc[scopeName] = new ComponentIdList(current);
       return acc;
@@ -148,7 +112,7 @@ export class ComponentIdList extends Array<ComponentID> {
     return ComponentIdList.fromArray(uniq);
   }
 
-  static deserialize(idsStr: string[] = []): ComponentIdList {
+  static fromStringArray(idsStr: string[] = []): ComponentIdList {
     return ComponentIdList.fromArray(idsStr.map((id) => ComponentID.fromString(id)));
   }
 

@@ -37,14 +37,14 @@ export default class RemovedObjects {
 
   serialize(): RemovedObjectSerialized {
     const dependentBits = Object.keys(this.dependentBits).reduce((acc, current) => {
-      acc[current] = this.dependentBits[current].serialize();
+      acc[current] = this.dependentBits[current].toStringArray();
       return acc;
     }, {});
     return {
-      removedComponentIds: this.removedComponentIds.serialize(),
-      missingComponents: this.missingComponents.serialize(),
+      removedComponentIds: this.removedComponentIds.toStringArray(),
+      missingComponents: this.missingComponents.toStringArray(),
       dependentBits,
-      removedFromLane: this.removedFromLane.serialize(),
+      removedFromLane: this.removedFromLane.toStringArray(),
       removedLanes: this.removedLanes,
     };
   }
@@ -57,10 +57,10 @@ export default class RemovedObjects {
     removedLanes: string[];
   }): RemovedObjects {
     // this function being called from an ssh, so the ids must have a remote scope
-    const missingComponents = ComponentIdList.deserialize(payload.missingComponents);
-    const removedComponentIds = ComponentIdList.deserialize(payload.removedComponentIds);
+    const missingComponents = ComponentIdList.fromStringArray(payload.missingComponents);
+    const removedComponentIds = ComponentIdList.fromStringArray(payload.removedComponentIds);
     const removedFromLane = payload.removedFromLane
-      ? ComponentIdList.deserialize(payload.removedFromLane)
+      ? ComponentIdList.fromStringArray(payload.removedFromLane)
       : new ComponentIdList();
     const dependentBits = Object.keys(payload.dependentBits).reduce((acc, current) => {
       const componentIds = payload.dependentBits[current].map((id) =>

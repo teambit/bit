@@ -681,7 +681,7 @@ once done, to continue working, please run "bit cc"`
 
   async loadModelComponentByIdStr(id: string): Promise<ModelComponent | Symlink> {
     // Remove the version before hashing since hashing with the version number will result a wrong hash
-    const idWithoutVersion = BitId.getStringWithoutVersion(id);
+    const idWithoutVersion = ComponentID.getStringWithoutVersion(id);
     const ref = Ref.from(BitObject.makeHash(idWithoutVersion));
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.objects.load(ref);
@@ -695,7 +695,7 @@ once done, to continue working, please run "bit cc"`
     const idHasScope = Boolean(component && component.scope);
     if (idHasScope) {
       const bitId = component.toComponentId();
-      const version = BitId.getVersionOnlyFromString(id);
+      const version = ComponentID.getVersionFromString(id);
       return bitId.changeVersion(version || LATEST);
     }
     const [idWithoutVersion, version] = id.toString().split('@');
