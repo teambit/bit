@@ -382,14 +382,11 @@ async function linkManifestsToInjectedDeps({
           targetDirs.map(async (targetDir) => {
             try {
               await fs.link(pkgJsonPath, path.join(targetDir, 'package.json'));
-              console.log('CREATED link to ', path.join(targetDir, 'package.json'));
             } catch (err: any) {
               if (err.code !== 'EEXIST') throw err;
             }
           })
         );
-      } else {
-        console.log('DOES NOT EXIST', pkgJsonPath);
       }
     })
   );
