@@ -1,7 +1,7 @@
 import { Harmony } from '@teambit/harmony';
-import { Component, ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { ExtensionDataList, getCompareExtPredicate } from '@teambit/legacy/dist/consumer/config/extension-data';
@@ -17,7 +17,7 @@ export class AspectsMerger {
     this.mergeConflictFile = new MergeConflictFile(workspace.path);
   }
 
-  getDepsDataOfMergeConfig(id: BitId) {
+  getDepsDataOfMergeConfig(id: ComponentID) {
     return this.mergeConfigDepsResolverDataCache[id.toString()];
   }
 
@@ -45,7 +45,7 @@ export class AspectsMerger {
     const mergeFromScope = true;
     const errors: Error[] = [];
 
-    const bitMapEntry = this.workspace.consumer.bitMap.getComponentIfExist(componentId._legacy);
+    const bitMapEntry = this.workspace.consumer.bitMap.getComponentIfExist(componentId);
     const bitMapExtensions = bitMapEntry?.config;
 
     let configMerge: Record<string, any> | undefined;
@@ -122,15 +122,7 @@ export class AspectsMerger {
       }
       removedExtensionIds.push(...extensions.filter((extData) => extData.isRemoved).map((extData) => extData.stringId));
       const extsWithoutRemoved = extensions.filterRemovedExtensions();
-      const getSelfExt = () => {
-        const bitId = componentId._legacy;
-        const self = extsWithoutRemoved.findExtension(bitId.toStringWithoutVersion(), true);
-        if (self) return self;
-        if (bitId.hasScope()) return undefined;
-        // for some reason, new aspects get their extensionId wrong, including the scope. it's BitId which should not have it.
-        return extsWithoutRemoved.findExtension(bitId.changeScope(componentId.scope).toStringWithoutVersion(), true);
-      };
-      const selfInMergedExtensions = getSelfExt();
+      const selfInMergedExtensions = extsWithoutRemoved.findExtension(componentId.toStringWithoutVersion(), true);
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
         ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
         : extsWithoutRemoved;
@@ -252,7 +244,7 @@ export class AspectsMerger {
   }
 
   private getUnmergedData(componentId: ComponentID): UnmergedComponent | undefined {
-    return this.workspace.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
+    return this.workspace.scope.legacyScope.objects.unmergedComponents.getEntry(componentId.fullName);
   }
 
   private async filterEnvsFromExtensionsIfNeeded(
@@ -290,9 +282,9 @@ export class AspectsMerger {
       const envAspectExt = extensionDataList.find((e) => e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect);
       const ids = await this.workspace.listIds();
       const envAspectId = envAspectExt?.extensionId;
-      const found = envAspectId && ids.find((id) => id._legacy.isEqualWithoutVersion(envAspectId));
+      const found = envAspectId && ids.find((id) => id.isEqualWithoutVersion(envAspectId));
       if (found) {
-        envAspectExt.extensionId = found._legacy;
+        envAspectExt.extensionId = found;
       }
     }
     return { extensionDataListFiltered: extensionDataList, envIsCurrentlySet: Boolean(envFromEnvsAspect) };
@@ -309,14 +301,14 @@ export class AspectsMerger {
   ): Promise<ExtensionDataList> {
     const promises = extensionList.map(async (entry) => {
       if (entry.extensionId) {
-        // don't pass `entry.extensionId` (as BitId) to `resolveComponentId` because then it'll use the optimization
+        // don't pass `entry.extensionId` (as ComponentID) to `resolveComponentId` because then it'll use the optimization
         // of parsing it to ComponentID without checking the workspace. Normally, this optimization is good, but here
-        // in case the extension wasn't exported, the BitId is wrong, it has the scope-name due to incorrect BitId.parse
+        // in case the extension wasn't exported, the ComponentID is wrong, it has the scope-name due to incorrect ComponentID.fromString
         // in configEntryToDataEntry() function. It'd be ideal to fix it from there but it's not easy.
         const componentId = await this.workspace.resolveComponentId(entry.extensionId.toString());
         const idFromWorkspace = preferWorkspaceVersion ? this.workspace.getIdIfExist(componentId) : undefined;
         const id = idFromWorkspace || componentId;
-        entry.extensionId = id._legacy;
+        entry.extensionId = id;
         entry.newExtensionId = id;
       }
 

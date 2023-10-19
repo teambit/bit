@@ -1,14 +1,12 @@
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { importTransformer, exportTransformer } from '@teambit/typescript';
-import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
-import { ComponentIdObj } from '@teambit/component-id';
+import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { ComponentDependency, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ComponentConfig } from '@teambit/generator';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { InstallAspect, InstallMain } from '@teambit/install';
-import { BitId } from '@teambit/legacy-bit-id';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentID, ComponentIdObj, ComponentIdList } from '@teambit/component-id';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import PkgAspect, { PkgMain } from '@teambit/pkg';
 import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
@@ -69,9 +67,7 @@ export class ForkingMain {
       const existingInWorkspace = await this.workspace.get(sourceCompId);
       return this.forkExistingInWorkspace(existingInWorkspace, targetId, options);
     }
-    const sourceIdWithScope = sourceCompId._legacy.scope
-      ? sourceCompId
-      : ComponentID.fromLegacy(BitId.parse(sourceId, true));
+    const sourceIdWithScope = sourceCompId._legacy.scope ? sourceCompId : ComponentID.fromString(sourceId);
     const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, options);
     await this.saveDeps(component);
     if (!options?.skipDependencyInstallation) await this.installDeps();
@@ -94,9 +90,7 @@ export class ForkingMain {
     const { scope } = options;
     const results = await pMapSeries(componentsToForkSorted, async ({ sourceId, targetId, path, env, config }) => {
       const sourceCompId = await this.workspace.resolveComponentId(sourceId);
-      const sourceIdWithScope = sourceCompId._legacy.scope
-        ? sourceCompId
-        : ComponentID.fromLegacy(BitId.parse(sourceId, true));
+      const sourceIdWithScope = sourceCompId._legacy.scope ? sourceCompId : ComponentID.fromString(sourceId);
       const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, {
         scope,
         path,
@@ -166,9 +160,9 @@ export class ForkingMain {
       throw new Error(`unable to find components to fork from ${originalScope}`);
     }
     const workspaceIds = await this.workspace.listIds();
-    const workspaceBitIds = BitIds.fromArray(workspaceIds.map((id) => id._legacy));
+    const workspaceBitIds = ComponentIdList.fromArray(workspaceIds.map((id) => id));
     idsFromOriginalScope.forEach((id) => {
-      const existInWorkspace = workspaceBitIds.searchWithoutVersion(id._legacy);
+      const existInWorkspace = workspaceBitIds.searchWithoutVersion(id);
       if (existInWorkspace) {
         throw new Error(
           `unable to fork "${id.toString()}". the workspace has a component "${existInWorkspace.toString()}" with the same name and same scope`

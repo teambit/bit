@@ -1,7 +1,7 @@
 import { Readable } from 'stream';
+import { ComponentIdList } from '@teambit/component-id';
 import semver from 'semver';
 import { LaneId } from '@teambit/lane-id';
-import { BitIds } from '../../../bit-id';
 import { LATEST_BIT_VERSION, POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
 import logger from '../../../logger/logger';
@@ -159,7 +159,7 @@ async function fetchByType(
   };
   switch (fetchOptions.type) {
     case 'component': {
-      const bitIds: BitIds = BitIds.deserialize(ids);
+      const bitIds: ComponentIdList = ComponentIdList.fromStringArray(ids);
       const shouldCollectParents = () => {
         if (clientSupportsVersionHistory) {
           return Boolean(fetchOptions.collectParents);
@@ -180,7 +180,7 @@ async function fetchByType(
       const getBitIds = () => {
         if (!lane) return bitIds;
         const laneIds = lane.toBitIds();
-        return BitIds.fromArray(
+        return ComponentIdList.fromArray(
           bitIds.map((bitId) => {
             if (bitId.hasVersion()) return bitId;
             // when the client asks for bitId without version and it's on the lane, we need the latest from the lane, not main
@@ -251,7 +251,7 @@ async function fetchByType(
         // backward compatible before 0.0.900 - it was always true
         return true;
       };
-      const bitIdsWithHashToStop: BitIds = BitIds.deserialize(ids);
+      const bitIdsWithHashToStop: ComponentIdList = ComponentIdList.fromStringArray(ids);
       const scopeComponentsImporter = scope.scopeImporter;
       const laneId = fetchOptions.laneId ? LaneId.parse(fetchOptions.laneId) : null;
       const lane = laneId ? await scope.loadLane(laneId) : null;
@@ -305,12 +305,12 @@ async function fetchByType(
   }
 }
 
-function bitIdsToLatest(bitIds: BitIds, lane: Lane | null) {
+function bitIdsToLatest(bitIds: ComponentIdList, lane: Lane | null) {
   if (!lane) {
     return bitIds.toVersionLatest();
   }
   const laneIds = lane.toBitIds();
-  return BitIds.fromArray(
+  return ComponentIdList.fromArray(
     bitIds.map((bitId) => {
       const inLane = laneIds.searchWithoutVersion(bitId);
       return inLane || bitId.changeVersion(LATEST_BIT_VERSION);

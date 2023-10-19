@@ -185,7 +185,7 @@ describe('bit reset command', function () {
         });
         it('should throw a descriptive error', () => {
           expect(untagOutput).to.have.string(
-            'unable to reset utils/is-type, the version 0.0.1 has the following dependent(s) utils/is-string@0.0.1'
+            `unable to reset ${helper.scopes.remote}/utils/is-type, the version 0.0.1 has the following dependent(s) ${helper.scopes.remote}/utils/is-string@0.0.1`
           );
         });
       });

@@ -49,11 +49,7 @@ export class ListerMain {
   ): Promise<ListScopeResult[]> {
     const results = await Promise.all(
       legacyListScopeResult.map(async (legacyResult) => {
-        const bitId = legacyResult.id;
-        const componentId =
-          this.workspace && !bitId.hasScope()
-            ? await this.workspace.resolveComponentId(bitId)
-            : ComponentID.fromLegacy(bitId);
+        const componentId = legacyResult.id;
         return {
           id: componentId,
           currentlyUsedVersion: legacyResult.currentlyUsedVersion,

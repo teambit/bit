@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { pickBy } from 'lodash';
 import R from 'ramda';
 import { BitError } from '@teambit/bit-error';
-import { BitId } from '../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
 import logger from '../../logger/logger';
 import Component from '../component/consumer-component';
@@ -87,7 +87,7 @@ export default class ComponentConfig extends AbstractConfig {
     componentId,
     loadOpts,
   }: {
-    componentId: BitId;
+    componentId: ComponentID;
     loadOpts?: ComponentConfigLoadOptions;
   }): Promise<ComponentConfig> {
     const onLoadResults = await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentId, loadOpts);
@@ -113,7 +113,7 @@ export default class ComponentConfig extends AbstractConfig {
    */
   static async runOnLoadEvent(
     subscribers: ConfigLoadRegistry,
-    id: BitId,
+    id: ComponentID,
     loadOpts?: ComponentConfigLoadOptions
   ): Promise<any[]> {
     logger.debugAndAddBreadCrumb('componentConfigLoad', `running on load even for component ${id.toString()}`);

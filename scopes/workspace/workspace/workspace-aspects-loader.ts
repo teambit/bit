@@ -16,12 +16,12 @@ import { MainRuntime } from '@teambit/cli';
 import fs from 'fs-extra';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import pMapSeries from 'p-map-series';
 import { difference, compact, groupBy, partition } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
+import { Component, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
 import { ScopeMain } from '@teambit/scope';
 import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
@@ -501,7 +501,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     await Promise.all(existsP);
     // TODO: this should be done properly by the install aspect by slot
     if (missingPaths) {
-      const bitIds: BitId[] = ids.map((id) => id._legacy);
+      const bitIds: ComponentID[] = ids.map((id) => id);
       return linkToNodeModulesByIds(this.workspace, bitIds);
     }
     return Promise.resolve();
@@ -516,7 +516,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
    */
   private getWorkspaceAspectResolver(stringIds: string[], runtimeName?: string): AspectResolver {
     const workspaceAspectResolver = async (component: Component): Promise<ResolvedAspect> => {
-      const compStringId = component.id._legacy.toString();
+      const compStringId = component.id.toString();
       stringIds.push(compStringId);
       const localPath = await this.workspace.getComponentPackagePath(component);
 
@@ -586,7 +586,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     opts: { throwOnError: boolean } = { throwOnError: false }
   ): AspectResolver {
     const installedAspectsResolver = async (component: Component): Promise<ResolvedAspect | undefined> => {
-      const compStringId = component.id._legacy.toString();
+      const compStringId = component.id.toString();
       // stringIds.push(compStringId);
       const localPath = await this.resolveInstalledAspectRecursively(component, rootIds, graph, opts);
       if (!localPath) return undefined;
@@ -615,7 +615,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     graph: Graph<Component, string>,
     opts: { throwOnError: boolean } = { throwOnError: false }
   ): Promise<string | null | undefined> {
-    const aspectStringId = aspectComponent.id._legacy.toString();
+    const aspectStringId = aspectComponent.id.toString();
     if (this.resolvedInstalledAspects.has(aspectStringId)) {
       const resolvedPath = this.resolvedInstalledAspects.get(aspectStringId);
       return resolvedPath;
@@ -663,7 +663,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const ids = components.map((component) => component.id);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     // TODO: @gilad it causes many issues we need to find a better solution. removed for now.
-    // const coreAspectsComponentIds = coreAspectsStringIds.map((id) => BitId.parse(id, true));
+    // const coreAspectsComponentIds = coreAspectsStringIds.map((id) => ComponentID.fromString(id));
     // const aspectsIds = components.reduce((acc, curr) => {
     //   const currIds = curr.state.aspects.ids;
     //   acc = acc.concat(currIds);

@@ -1,7 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
@@ -52,7 +52,7 @@ export class ComponentCompareMain {
   async compare(baseIdStr: string, compareIdStr: string): Promise<ComponentCompareResult> {
     const host = this.componentAspect.getHost();
     const [baseCompId, compareCompId] = await host.resolveMultipleComponentIds([baseIdStr, compareIdStr]);
-    const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(compareCompId._legacy);
+    const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(compareCompId);
 
     if (!modelComponent) {
       throw new GeneralError(`component ${compareCompId.toString()} doesn't have any version yet`);
@@ -145,19 +145,21 @@ export class ComponentCompareMain {
     };
   }
 
-  private async parseValues(values: string[]): Promise<{ bitIds: BitId[]; version?: string; toVersion?: string }> {
+  private async parseValues(
+    values: string[]
+  ): Promise<{ bitIds: ComponentID[]; version?: string; toVersion?: string }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     // option #1: bit diff
     // no arguments
     if (!values.length) {
       const componentIds = await this.workspace.listTagPendingIds();
-      return { bitIds: componentIds.map((id) => id._legacy) };
+      return { bitIds: componentIds.map((id) => id) };
     }
     const firstValue = values[0];
     const lastValue = values[values.length - 1];
     const oneBeforeLastValue = values[values.length - 2];
-    const isLastItemVersion = BitId.isValidVersion(lastValue);
-    const isOneBeforeLastItemVersion = BitId.isValidVersion(oneBeforeLastValue);
+    const isLastItemVersion = ComponentID.isValidVersion(lastValue);
+    const isOneBeforeLastItemVersion = ComponentID.isValidVersion(oneBeforeLastValue);
     // option #2: bit diff [ids...]
     // all arguments are ids
     if (!isLastItemVersion) {
@@ -183,7 +185,7 @@ export class ComponentCompareMain {
     return { bitIds: this.getBitIdsForDiff([firstValue]), version: oneBeforeLastValue, toVersion: lastValue };
   }
 
-  private getBitIdsForDiff(ids: string[]): BitId[] {
+  private getBitIdsForDiff(ids: string[]): ComponentID[] {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     if (hasWildcard(ids)) {

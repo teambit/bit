@@ -1,12 +1,12 @@
 /* eslint-disable max-classes-per-file */
 import mapSeries from 'p-map-series';
-import { Component, ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
 import { WatcherMain, WatchOptions } from '@teambit/watcher';
 import path from 'path';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
@@ -299,7 +299,7 @@ export class WorkspaceCompiler {
       const start = Date.now();
       this.logger.console(`compiling ${componentIds.length} components`);
       await this.compileComponents(
-        componentIds.map((id) => id._legacy),
+        componentIds.map((id) => id),
         { initiator: CompilationInitiator.PreWatch }
       );
       const end = Date.now() - start;
@@ -308,7 +308,7 @@ export class WorkspaceCompiler {
   }
 
   async compileComponents(
-    componentsIds: string[] | BitId[] | ComponentID[], // when empty, it compiles new+modified (unless options.all is set),
+    componentsIds: string[] | ComponentID[] | ComponentID[], // when empty, it compiles new+modified (unless options.all is set),
     options: CompileOptions,
     noThrow?: boolean
   ): Promise<BuildResult[]> {
@@ -375,7 +375,7 @@ export class WorkspaceCompiler {
   }
 
   private async getIdsToCompile(
-    componentsIds: Array<string | ComponentID | BitId>,
+    componentsIds: Array<string | ComponentID | ComponentID>,
     changed = false
   ): Promise<ComponentID[]> {
     if (componentsIds.length) {

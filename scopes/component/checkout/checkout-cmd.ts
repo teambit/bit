@@ -11,7 +11,7 @@ import {
 } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP, HEAD, LATEST } from '@teambit/legacy/dist/constants';
 import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
 
@@ -126,7 +126,7 @@ export class CheckoutCmd implements Command {
     else if (to === 'reset') checkoutProps.reset = true;
     else if (to === 'main') checkoutProps.main = true;
     else {
-      if (!BitId.isValidVersion(to)) throw new BitError(`the specified version "${to}" is not a valid version`);
+      if (!ComponentID.isValidVersion(to)) throw new BitError(`the specified version "${to}" is not a valid version`);
       checkoutProps.version = to;
     }
 

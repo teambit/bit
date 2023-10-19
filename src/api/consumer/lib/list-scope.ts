@@ -1,6 +1,5 @@
 import R from 'ramda';
-
-import { BitId } from '../../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import loader from '../../../cli/loader';
 import { BEFORE_LOCAL_LIST, BEFORE_REMOTE_LIST } from '../../../cli/loader/loader-messages';
 import { Consumer, loadConsumerIfExist } from '../../../consumer';
@@ -47,7 +46,7 @@ export async function listScope({
   }
 }
 
-export async function getRemoteBitIdsByWildcards(idStr: string, includeDeprecated = true): Promise<BitId[]> {
+export async function getRemoteBitIdsByWildcards(idStr: string, includeDeprecated = true): Promise<ComponentID[]> {
   if (!idStr.includes('/')) {
     throw new GeneralError(
       `import with wildcards expects full scope-name before the wildcards, instead, got "${idStr}"`
