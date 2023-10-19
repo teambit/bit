@@ -21,8 +21,9 @@ export class ComponentID {
 
     readonly _scope?: string
   ) {
-    if (!legacyComponentId.name)
+    if (!legacyComponentId.name) {
       throw new Error(`ComponentID expects to get an object with "name" prop. got ${legacyComponentId}`);
+    }
     if (!_scope && !legacyComponentId.scope) throw new MissingScope(legacyComponentId);
   }
 
@@ -222,8 +223,12 @@ export class ComponentID {
   // overload when providing scope separaetly, e.g. `fromObject({ name: 'button' }, 'teambit.base-ui')`
   static fromObject(object: Omit<ComponentIdObj, 'scope'>, scope: string): ComponentID;
   static fromObject(object: ComponentIdObj, scope?: string): ComponentID;
-  /** deserialize a componnet id from raw object */
+  /** deserialize a component id from raw object */
   static fromObject(object: ComponentIdObj, scope?: string) {
+    if (object instanceof ComponentID)
+      throw new Error(
+        `ComponentID.fromObject expect to get an object, got an instance of ComponentID: ${object.toString()}`
+      );
     return ComponentID.fromLegacy(new BitId(object), scope);
   }
 
