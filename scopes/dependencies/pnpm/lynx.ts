@@ -5,7 +5,6 @@ import parsePackageName from 'parse-package-name';
 import { initDefaultReporter } from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
 import { StoreController, WantedDependency } from '@pnpm/package-store';
-import { readModulesManifest } from '@pnpm/modules-yaml';
 import { rebuild } from '@pnpm/plugin-commands-rebuild';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { sortPackages } from '@pnpm/sort-packages';
@@ -305,16 +304,6 @@ export async function install(
     stopReporting?.();
     await finishWorkers();
   }
-  if (options.rootComponents) {
-    const modulesState = await readModulesManifest(path.join(rootDir, 'node_modules'));
-    if (modulesState?.injectedDeps) {
-      await linkManifestsToInjectedDeps({
-        injectedDeps: modulesState.injectedDeps,
-        manifestsByPaths,
-        rootDir,
-      });
-    }
-  }
   return {
     dependenciesChanged,
     rebuild: async (rebuildOpts) => {
@@ -357,39 +346,6 @@ function initReporter(opts?: ReportOptions) {
     // Only those that are symlinked from outside the workspace will be hidden.
     filterPkgsDiff: (diff) => !diff.name.startsWith('@teambit/') || !diff.from,
   });
-}
-
-/*
- * The package.json files of the components are generated into node_modules/<component pkg name>/package.json
- * This function copies the generated package.json file into all the locations of the component.
- */
-async function linkManifestsToInjectedDeps({
-  rootDir,
-  manifestsByPaths,
-  injectedDeps,
-}: {
-  rootDir: string;
-  manifestsByPaths: Record<string, ProjectManifest>;
-  injectedDeps: Record<string, string[]>;
-}) {
-  await Promise.all(
-    Object.entries(injectedDeps).map(async ([compDir, targetDirs]) => {
-      const pkgName = manifestsByPaths[path.join(rootDir, compDir)]?.name;
-      if (!pkgName) return;
-      const pkgJsonPath = path.join(rootDir, 'node_modules', pkgName, 'package.json');
-      if (fs.existsSync(pkgJsonPath)) {
-        await Promise.all(
-          targetDirs.map(async (targetDir) => {
-            try {
-              await fs.link(pkgJsonPath, path.join(targetDir, 'package.json'));
-            } catch (err: any) {
-              if (err.code !== 'EEXIST') throw err;
-            }
-          })
-        );
-      }
-    })
-  );
 }
 
 /**

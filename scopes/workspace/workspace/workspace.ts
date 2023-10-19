@@ -1901,6 +1901,17 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     });
     this.componentPathsRegExps = [...pathsExcluding.map((stringPattern) => new RegExp(stringPattern))];
   }
+
+  getInjectedDirs(component: Component): Promise<string[]> {
+    const relativeCompDir = this.componentDir(component.id, undefined, {
+      relative: true,
+    });
+    return this.dependencyResolver.getInjectedDirs(
+      this.path,
+      relativeCompDir,
+      this.dependencyResolver.getPackageName(component)
+    );
+  }
 }
 
 /**
