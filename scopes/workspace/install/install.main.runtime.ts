@@ -638,11 +638,11 @@ export class InstallMain {
   }
 
   private async _getAllUsedEnvIds(): Promise<ComponentID[]> {
-    const envs = new Set<ComponentID>();
+    const envs = new Map<string, ComponentID>();
     const components = await this.workspace.list();
     await pMapSeries(components, async (component) => {
       const envId = await this.envs.calculateEnvId(component);
-      envs.add(envId);
+      envs.set(envId.toString(), envId);
     });
     return Array.from(envs.values());
   }

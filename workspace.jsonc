@@ -506,6 +506,7 @@
         "react-error-boundary": "^3.0.0",
         "react-error-overlay": "6.0.9",
         "react-flow-renderer": "8.3.7",
+        "react-native": "^0.64.1",
         "react-syntax-highlighter": "15.4.3",
         "react-tabs": "3.2.0",
         "react-test-renderer": "17.0.2",

@@ -309,7 +309,7 @@ export class DependencyInstaller {
         if (manifest) {
           acc[dir] = manifest.toJson({ copyPeerToRuntime: copyPeerToRuntimeOnComponents });
           const selfPolicyWithoutLocal = manifest.envPolicy.selfPolicy.filter(
-            (dep) => !packageNames.includes(dep.dependencyId)
+            (dep) => !packageNames.includes(dep.dependencyId) && !acc[dir].dependencies[dep.dependencyId]
           );
           acc[dir].defaultPeerDependencies = fromPairs(selfPolicyWithoutLocal.toNameVersionTuple());
         }
