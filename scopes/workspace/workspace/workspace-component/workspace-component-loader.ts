@@ -437,7 +437,7 @@ export class WorkspaceComponentLoader {
       this.logger.console(`failed loading component ${err.id.toString()}, see full error in debug.log file`);
       this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
     });
-    const components = compact(await componentsP);
+    const components: Component[] = compact(await componentsP);
 
     // Here we need to load many, otherwise we will get wrong overrides dependencies data
     // as when loading the next batch of components (next group) we won't have the envs loaded

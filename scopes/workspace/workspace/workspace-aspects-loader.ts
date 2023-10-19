@@ -196,7 +196,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     }
   }
 
-  throwWsJsoncAspectNotFoundError(err: Error) {
+  throwWsJsoncAspectNotFoundError(err: any) {
     if (err instanceof ComponentNotFound) {
       const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
       const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
