@@ -88,7 +88,7 @@ export class PreviewPreview {
     const { previewName, componentId, envId } = this.getLocation();
     const name = previewName || this.getDefault();
     if (rootExt) this.isDev = rootExt === 'teambit.workspace/workspace';
-    this.isDev = false;
+
     const preview = this.getPreview(name);
     if (!preview || !componentId) {
       throw new PreviewNotFound(previewName);
