@@ -661,20 +661,18 @@ export async function sanitizePreviewData(
   envs: EnvsMain,
   workspace?: Workspace
 ) {
-  const harmonyCompIdsWithEnvId = await Promise.all(
-    harmonyComps.map(async (comp) => {
-      const envComp = await envs.getEnvComponent(comp);
-      const inWs = workspace ? await workspace.hasId(envComp.id) : false;
-      const lastTaggedEnvHasOnlyOverview: boolean | undefined = (await scope.get(envComp.id, false))?.state.aspects.get(
-        'teambit.preview/preview'
-      )?.data?.onlyOverview;
+  const harmonyCompIdsWithEnvId = await mapSeries(harmonyComps, async (comp) => {
+    const envComp = await envs.getEnvComponent(comp);
+    const inWs = workspace ? await workspace.hasId(envComp.id) : false;
+    const lastTaggedEnvHasOnlyOverview: boolean | undefined = (await scope.get(envComp.id, false))?.state.aspects.get(
+      'teambit.preview/preview'
+    )?.data?.onlyOverview;
 
-      return [comp.id.toString(), { envId: envComp.id.toString(), inWs, lastTaggedEnvHasOnlyOverview }] as [
-        string,
-        { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean }
-      ];
-    })
-  );
+    return [comp.id.toString(), { envId: envComp.id.toString(), inWs, lastTaggedEnvHasOnlyOverview }] as [
+      string,
+      { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean }
+    ];
+  });
 
   const harmonyCompIdsWithEnvIdMap = new Map(harmonyCompIdsWithEnvId);
 
