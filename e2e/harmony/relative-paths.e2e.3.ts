@@ -29,7 +29,7 @@ describe('relative paths flow (components requiring each other by relative paths
       const output = helper.general.runWithTryCatch('bit tag -a');
       const RelativeComponentAuthoredClass = IssuesClasses.RelativeComponentsAuthored;
       expect(output).to.have.string(new RelativeComponentAuthoredClass().description);
-      expect(output).to.have.string('index.js -> "../comp2" (comp2)');
+      expect(output).to.have.string(`index.js -> "../comp2" (${helper.scopes.remote}/comp2)`);
     });
     describe('replacing relative paths by module paths', () => {
       let linkOutput;

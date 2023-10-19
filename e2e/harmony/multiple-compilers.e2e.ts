@@ -31,7 +31,7 @@ describe('multiple compilers - babel and typescript', function () {
           'export function sayHello(name: string) { console.log(`hello ${name}`); }; sayHello("David");'
         );
         helper.command.addComponent('bar');
-        helper.extensions.addExtensionToVariant('bar', `my-scope/${envName}`);
+        helper.extensions.addExtensionToVariant('bar', `${helper.scopes.remote}/${envName}`);
         helper.command.compile();
         distDir = path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}/bar/dist`);
       });
@@ -89,9 +89,9 @@ describe('multiple compilers - babel and typescript', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponentsTS(4);
       const babelEnv = helper.env.setBabelWithTsHarmony();
-      helper.extensions.addExtensionToVariant('comp1', `my-scope/${babelEnv}`);
+      helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/${babelEnv}`);
       helper.extensions.addExtensionToVariant('comp2', 'teambit.harmony/node');
-      helper.extensions.addExtensionToVariant('comp3', `my-scope/${babelEnv}`);
+      helper.extensions.addExtensionToVariant('comp3', `${helper.scopes.remote}/${babelEnv}`);
       helper.extensions.addExtensionToVariant('comp4', 'teambit.harmony/node');
       helper.command.compile();
       buildOutput = helper.command.build();

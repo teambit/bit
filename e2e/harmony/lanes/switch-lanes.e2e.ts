@@ -47,7 +47,7 @@ describe('bit lane command', function () {
       it('bit lane should show the component in the checked out lane', () => {
         const lanes = helper.command.showOneLaneParsed('dev');
         expect(lanes.components).to.have.lengthOf(1);
-        expect(lanes.components[0].id.name).to.equal('bar/foo');
+        expect(lanes.components[0].id).to.include('bar/foo');
       });
       it('bit status should not show the component as pending updates', () => {
         const status = helper.command.statusJson();

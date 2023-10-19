@@ -772,7 +772,7 @@ export class InstallMain {
   }
 
   async linkCodemods(compDirMap: ComponentMap<string>, options?: { rewire?: boolean }) {
-    const bitIds = compDirMap.toArray().map(([component]) => component.id._legacy);
+    const bitIds = compDirMap.toArray().map(([component]) => component.id);
     return linkToNodeModulesWithCodemod(this.workspace, bitIds, options?.rewire ?? false);
   }
 

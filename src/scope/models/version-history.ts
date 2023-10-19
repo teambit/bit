@@ -1,6 +1,6 @@
 import { Graph, Edge, Node } from '@teambit/graph.cleargraph';
+import { ComponentID } from '@teambit/component-id';
 import { compact, difference, uniqBy } from 'lodash';
-import { BitId } from '../../bit-id';
 import getStringifyArgs from '../../utils/string/get-stringify-args';
 import Ref from '../objects/ref';
 import BitObject from '../objects/object';
@@ -16,14 +16,14 @@ export type VersionParents = {
 
 type VersionHistoryProps = {
   name: string;
-  scope?: string;
+  scope: string;
   versions: VersionParents[];
   graphCompleteRefs?: string[];
 };
 
 export default class VersionHistory extends BitObject {
   name: string;
-  scope?: string;
+  scope: string;
   versions: VersionParents[];
   graphCompleteRefs: string[];
   hasChanged = false; // whether the version history has changed since the last persist
@@ -39,7 +39,7 @@ export default class VersionHistory extends BitObject {
     return `${this.scope}/${this.name}:${VersionHistory.name}`;
   }
 
-  static fromId(name: string, scope?: string) {
+  static fromId(name: string, scope: string) {
     return new VersionHistory({ scope, name, versions: [] });
   }
 
@@ -170,8 +170,8 @@ export default class VersionHistory extends BitObject {
     return graph;
   }
 
-  get bitId() {
-    return new BitId({ scope: this.scope, name: this.name });
+  get compId() {
+    return ComponentID.fromObject({ scope: this.scope, name: this.name });
   }
 
   static create(name: string, scope: string, versions: VersionParents[]) {

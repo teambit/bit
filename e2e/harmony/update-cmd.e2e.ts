@@ -25,7 +25,7 @@ describe('update command', function () {
             },
           },
         });
-        helper.command.ejectConf('comp2/comp2');
+        helper.command.ejectConf('comp2');
         componentJson = helper.componentJson.read('comp2');
         delete componentJson.componentId.scope;
         componentJson.extensions = {
@@ -160,7 +160,7 @@ const isPositive = require("is-positive");`
           'is-positive': '1.0.0',
         },
       });
-      helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remoteWithoutOwner}/my-aspect`, {});
+      helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/my-aspect`, {});
       helper.extensions.addExtensionToVariant('comp1', 'teambit.dependencies/dependency-resolver', {
         policy: {
           devDependencies: {

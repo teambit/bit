@@ -1,14 +1,14 @@
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdList } from '@teambit/component-id';
 import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 
-export default class RemovedLocalObjects extends RemovedObjects {
-  modifiedComponents: BitIds;
+export class RemovedLocalObjects extends RemovedObjects {
+  modifiedComponents: ComponentIdList;
   constructor(
-    removedComponentIds?: BitIds,
-    missingComponents?: BitIds,
-    modifiedComponents?: BitIds,
+    removedComponentIds?: ComponentIdList,
+    missingComponents?: ComponentIdList,
+    modifiedComponents?: ComponentIdList,
     dependentBits?: Record<string, any>,
-    removedFromLane?: BitIds
+    removedFromLane?: ComponentIdList
   ) {
     super({ removedComponentIds, missingComponents, dependentBits, removedFromLane });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -6,7 +6,6 @@ import {
   DependencyResolverMain,
   KEY_NAME_BY_LIFECYCLE_TYPE,
 } from '@teambit/dependency-resolver';
-import { BitId } from '@teambit/legacy-bit-id';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { cloneDeep, compact, set } from 'lodash';
 import pMapSeries from 'p-map-series';
@@ -42,7 +41,7 @@ export type DependenciesResultsDebug = DebugDependencies &
 export type DependenciesResults = {
   scopeGraph: DependencyGraph;
   workspaceGraph: DependencyGraph;
-  id: BitId;
+  id: ComponentID;
 };
 
 export type BlameResult = {
@@ -104,48 +103,46 @@ export class DependenciesMain {
     removeOnlyIfExists = false // unset
   ): Promise<RemoveDependencyResult[]> {
     const compIds = await this.workspace.idsByPattern(componentPattern);
-    const results = await Promise.all(
-      compIds.map(async (compId) => {
-        const component = await this.workspace.get(compId);
-        const depList = await this.dependencyResolver.getDependencies(component);
-        const getCurrentConfig = async () => {
-          const currentConfigFromWorkspace = await this.workspace.getSpecificComponentConfig(
-            compId,
-            DependencyResolverAspect.id
-          );
-          if (currentConfigFromWorkspace) return currentConfigFromWorkspace;
-          const extFromScope = await this.workspace.getExtensionsFromScopeAndSpecific(compId);
-          return extFromScope?.toConfigObject()[DependencyResolverAspect.id];
+    const results = await pMapSeries(compIds, async (compId) => {
+      const component = await this.workspace.get(compId);
+      const depList = await this.dependencyResolver.getDependencies(component);
+      const getCurrentConfig = async () => {
+        const currentConfigFromWorkspace = await this.workspace.getSpecificComponentConfig(
+          compId,
+          DependencyResolverAspect.id
+        );
+        if (currentConfigFromWorkspace) return currentConfigFromWorkspace;
+        const extFromScope = await this.workspace.getExtensionsFromScopeAndSpecific(compId);
+        return extFromScope?.toConfigObject()[DependencyResolverAspect.id];
+      };
+      const currentDepResolverConfig = await getCurrentConfig();
+      const newDepResolverConfig = cloneDeep(currentDepResolverConfig || {});
+      const removedPackagesWithNulls = await pMapSeries(packages, async (pkg) => {
+        const [name, version] = this.splitPkgToNameAndVer(pkg);
+        const dependency = depList.findByPkgNameOrCompId(name, version);
+        if (!dependency) return null;
+        const depName = dependency.getPackageName?.() || dependency.id;
+        const getLifeCycle = () => {
+          if (options.dev) return 'dev';
+          if (options.peer) return 'peer';
+          return dependency.lifecycle;
         };
-        const currentDepResolverConfig = await getCurrentConfig();
-        const newDepResolverConfig = cloneDeep(currentDepResolverConfig || {});
-        const removedPackagesWithNulls = await pMapSeries(packages, async (pkg) => {
-          const [name, version] = this.splitPkgToNameAndVer(pkg);
-          const dependency = depList.findByPkgNameOrCompId(name, version);
-          if (!dependency) return null;
-          const depName = dependency.getPackageName?.() || dependency.id;
-          const getLifeCycle = () => {
-            if (options.dev) return 'dev';
-            if (options.peer) return 'peer';
-            return dependency.lifecycle;
-          };
-          const depField = KEY_NAME_BY_LIFECYCLE_TYPE[getLifeCycle()];
-          const existsInSpecificConfig = newDepResolverConfig.policy?.[depField]?.[depName];
-          if (existsInSpecificConfig) {
-            if (existsInSpecificConfig === '-') return null;
-            delete newDepResolverConfig.policy[depField][depName];
-          } else {
-            if (removeOnlyIfExists) return null;
-            set(newDepResolverConfig, ['policy', depField, depName], '-');
-          }
-          return `${depName}@${dependency.version}`;
-        });
-        const removedPackages = compact(removedPackagesWithNulls);
-        if (!removedPackages.length) return null;
-        await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, newDepResolverConfig);
-        return { id: compId, removedPackages };
-      })
-    );
+        const depField = KEY_NAME_BY_LIFECYCLE_TYPE[getLifeCycle()];
+        const existsInSpecificConfig = newDepResolverConfig.policy?.[depField]?.[depName];
+        if (existsInSpecificConfig) {
+          if (existsInSpecificConfig === '-') return null;
+          delete newDepResolverConfig.policy[depField][depName];
+        } else {
+          if (removeOnlyIfExists) return null;
+          set(newDepResolverConfig, ['policy', depField, depName], '-');
+        }
+        return `${depName}@${dependency.version}`;
+      });
+      const removedPackages = compact(removedPackagesWithNulls);
+      if (!removedPackages.length) return null;
+      await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, newDepResolverConfig);
+      return { id: compId, removedPackages };
+    });
     await this.workspace.bitMap.write();
 
     return compact(results);
@@ -183,7 +180,6 @@ export class DependenciesMain {
     // @todo: supports this on bare-scope.
     if (!this.workspace) throw new OutsideWorkspaceError();
     const compId = await this.workspace.resolveComponentId(id);
-    const bitId = compId._legacy;
     const consumer = this.workspace.consumer;
     const scopeGraph = await DependencyGraph.buildGraphFromScope(consumer.scope);
     const scopeDependencyGraph = new DependencyGraph(scopeGraph);
@@ -191,7 +187,7 @@ export class DependenciesMain {
     const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(consumer, true);
     const workspaceDependencyGraph = new DependencyGraph(workspaceGraph);
 
-    return { scopeGraph: scopeDependencyGraph, workspaceGraph: workspaceDependencyGraph, id: bitId };
+    return { scopeGraph: scopeDependencyGraph, workspaceGraph: workspaceDependencyGraph, id: compId };
   }
 
   async debugDependencies(id: string): Promise<DependenciesResultsDebug> {

@@ -33,11 +33,12 @@ export class ComponentDependencyFactory implements DependencyFactory {
   ): Promise<ComponentDependency> {
     let id;
 
-    if (serialized.componentId.scope) {
-      // @ts-ignore - ts is saying scope is possibly missing, but just checked it is defined
-      id = ComponentID.fromObject(serialized.componentId);
+    if (serialized.componentId instanceof ComponentID) {
+      id = serialized.componentId;
+    } else if (typeof serialized.componentId === 'object' && serialized.componentId.scope) {
+      id = ComponentID.fromObject(serialized.componentId as any);
     } else {
-      id = await this.componentAspect.getHost().resolveComponentId(serialized.id);
+      throw new Error(`ComponentDependencyFactory, unable to parse ${serialized.componentId}`);
     }
 
     return new ComponentDependency(
@@ -88,7 +89,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
       isExtension: false,
       packageName,
       componentId: legacyDep.id.serialize(),
-      version: legacyDep.id.getVersion().toString(),
+      version: legacyDep.id._legacy.getVersion().toString(),
       __type: TYPE,
       lifecycle,
     };
@@ -113,7 +114,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
       isExtension: true,
       packageName,
       componentId: extension.extensionId.serialize(),
-      version: extension.extensionId.getVersion().toString(),
+      version: extension.extensionId._legacy.getVersion().toString(),
       __type: TYPE,
       lifecycle,
     };

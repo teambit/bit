@@ -3,7 +3,7 @@ import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain, CommandList } from '@teambit/cli';
 import { DependencyResolverAspect, DependencyResolverMain, VariantPolicy } from '@teambit/dependency-resolver';
-import type { ComponentMain, Component, ComponentID } from '@teambit/component';
+import type { ComponentMain, Component } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony, SlotRegistry } from '@teambit/harmony';
@@ -16,7 +16,7 @@ import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import LegacyComponentLoader, { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { DependencyResolver as LegacyDependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
@@ -183,7 +183,7 @@ export default async function provideWorkspace(
   );
 
   LegacyDependencyResolver.registerOnComponentAutoDetectOverridesGetter(
-    async (configuredExtensions: ExtensionDataList, id: BitId, legacyFiles: SourceFile[]) => {
+    async (configuredExtensions: ExtensionDataList, id: ComponentID, legacyFiles: SourceFile[]) => {
       let policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
       // this is needed for "bit install" to install the dependencies from the merge config (see https://github.com/teambit/bit/pull/6849)
       const depsDataOfMergeConfig = workspace.getDepsDataOfMergeConfig(id);
@@ -195,7 +195,7 @@ export default async function provideWorkspace(
     }
   );
 
-  LegacyDependencyResolver.registerOnComponentAutoDetectConfigMergeGetter((id: BitId) => {
+  LegacyDependencyResolver.registerOnComponentAutoDetectConfigMergeGetter((id: ComponentID) => {
     const depsDataOfMergeConfig = workspace.getDepsDataOfMergeConfig(id);
     if (depsDataOfMergeConfig) {
       const policy = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, { source: 'auto' });
@@ -216,9 +216,7 @@ export default async function provideWorkspace(
     const extensionsWithLegacyIdsP = extensions.map(async (extension) => {
       const legacyEntry = extension.clone();
       if (legacyEntry.extensionId) {
-        const compId = await workspace.resolveComponentId(legacyEntry.extensionId);
-        legacyEntry.extensionId = compId._legacy;
-        legacyEntry.newExtensionId = compId;
+        legacyEntry.newExtensionId = legacyEntry.extensionId;
       }
 
       return legacyEntry;

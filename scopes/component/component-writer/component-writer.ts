@@ -1,9 +1,5 @@
-import fs from 'fs-extra';
-import * as path from 'path';
-import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Scope } from '@teambit/legacy/dist/scope';
-import getNodeModulesPathOfComponent from '@teambit/legacy/dist/utils/bit/component-node-modules-path';
 import { PathLinuxRelative, pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
@@ -26,7 +22,7 @@ export type ComponentWriterProps = {
   workspace: Workspace;
   scope?: Scope | undefined;
   bitMap: BitMap;
-  ignoreBitDependencies?: boolean | BitIds;
+  ignoreBitDependencies?: boolean | ComponentIdList;
   deleteBitDirContent?: boolean;
   existingComponentMap?: ComponentMap;
   skipUpdatingBitMap?: boolean;
@@ -43,7 +39,7 @@ export default class ComponentWriter {
   workspace: Workspace;
   scope?: Scope | undefined;
   bitMap: BitMap;
-  ignoreBitDependencies: boolean | BitIds;
+  ignoreBitDependencies: boolean | ComponentIdList;
   deleteBitDirContent: boolean | undefined;
   existingComponentMap: ComponentMap | undefined;
   skipUpdatingBitMap?: boolean;
@@ -148,12 +144,14 @@ export default class ComponentWriter {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
 
-    const componentId = await this.replaceSnapWithTagIfNeeded();
-    const defaultScope = componentId.hasScope()
+    const bitId = await this.replaceSnapWithTagIfNeeded();
+    const compId = this.workspace.resolveIdWithDefaultScope(bitId);
+    const defaultScope = compId.hasScope()
       ? undefined
-      : await this.workspace.componentDefaultScopeFromComponentDirAndName(rootDir, componentId.name);
+      : await this.workspace.componentDefaultScopeFromComponentDirAndName(rootDir, bitId.fullName);
+
     return this.bitMap.addComponent({
-      componentId: await this.replaceSnapWithTagIfNeeded(),
+      componentId: compId,
       files: filesForBitMap,
       defaultScope,
       mainFile: pathNormalizeToLinux(this.component.mainFile),
@@ -161,7 +159,7 @@ export default class ComponentWriter {
     });
   }
 
-  private async replaceSnapWithTagIfNeeded(): Promise<BitId> {
+  private async replaceSnapWithTagIfNeeded(): Promise<ComponentID> {
     const version = this.component.id.version;
     if (!version || !isHash(version)) {
       return this.component.id;
@@ -182,40 +180,5 @@ export default class ComponentWriter {
   _updateFilesBasePaths() {
     const newBase = this.writeToPath || '.';
     this.component.files.forEach((file) => file.updatePaths({ newBase }));
-  }
-
-  async _cleanOldNestedComponent() {
-    if (!this.consumer) throw new Error('ComponentWriter._cleanOldNestedComponent expect to have a consumer');
-    // @ts-ignore this function gets called when it was previously NESTED, so the rootDir is set
-    const oldLocation = path.join(this.consumer.getPath(), this.component.componentMap.rootDir);
-    logger.debugAndAddBreadCrumb(
-      'component-writer._cleanOldNestedComponent',
-      'deleting the old directory of a component at {oldLocation}',
-      { oldLocation }
-    );
-    await fs.remove(oldLocation);
-    await this._removeNodeModulesLinksFromDependents();
-    this.bitMap.removeComponent(this.component.id);
-  }
-
-  async _removeNodeModulesLinksFromDependents() {
-    if (!this.consumer) {
-      throw new Error('ComponentWriter._removeNodeModulesLinksFromDependents expect to have a consumer');
-    }
-    const directDependentIds = await this.consumer.getAuthoredAndImportedDependentsIdsOf([this.component]);
-    await Promise.all(
-      directDependentIds.map((dependentId) => {
-        const dependentComponentMap = this.consumer ? this.consumer.bitMap.getComponent(dependentId) : null;
-        const relativeLinkPath = this.consumer ? getNodeModulesPathOfComponent(this.component) : null;
-        const nodeModulesLinkAbs =
-          this.consumer && dependentComponentMap && relativeLinkPath
-            ? this.consumer.toAbsolutePath(path.join(dependentComponentMap.getRootDir(), relativeLinkPath))
-            : null;
-        if (nodeModulesLinkAbs) {
-          logger.debug(`deleting an obsolete link to node_modules at ${nodeModulesLinkAbs}`);
-        }
-        return nodeModulesLinkAbs ? fs.remove(nodeModulesLinkAbs) : Promise.resolve();
-      })
-    );
   }
 }

@@ -1,4 +1,4 @@
-import { BitId } from '../../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import loader from '../../../cli/loader';
 import { BEFORE_REMOTE_SHOW } from '../../../cli/loader/loader-messages';
 import { Consumer, loadConsumerIfExist } from '../../../consumer';
@@ -22,7 +22,7 @@ export default async function getScopeComponent({
   showDependencies?: boolean;
   loadScopeFromCache?: boolean;
 }): Promise<{ component: Component[] | Component }> {
-  const bitId: BitId = BitId.parse(id, true); // user used --remote so we know it has a scope
+  const bitId = ComponentID.fromString(id); // user used --remote so we know it has a scope
 
   if (scopePath) {
     // coming from the api
@@ -32,7 +32,7 @@ export default async function getScopeComponent({
   }
 
   const consumer: Consumer | undefined = await loadConsumerIfExist();
-  const remote = await getRemoteByName(bitId.scope as string, consumer);
+  const remote = await getRemoteByName(bitId.scope, consumer);
   loader.start(BEFORE_REMOTE_SHOW);
   const component = await remote.show(bitId);
   let dependenciesInfo: DependenciesInfo[] = [];

@@ -39,17 +39,21 @@ describe('cyclic dependencies', function () {
     });
     it('should save the dependencies and flattenedDependencies of A correctly', () => {
       const compA = helper.command.catComponent('comp/a@0.0.1');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(compA.dependencies[0].id).to.deep.equal({ name: 'comp/b', version: '0.0.1' });
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(compA.flattenedDependencies[0]).to.deep.equal({ name: 'comp/b', version: '0.0.1' });
+      expect(compA.dependencies[0].id).to.deep.equal({ name: 'comp/b', scope: helper.scopes.remote, version: '0.0.1' });
+      expect(compA.flattenedDependencies[0]).to.deep.equal({
+        name: 'comp/b',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
     });
     it('should save the dependencies and flattenedDependencies of B correctly', () => {
       const compA = helper.command.catComponent('comp/b@0.0.1');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(compA.dependencies[0].id).to.deep.equal({ name: 'comp/a', version: '0.0.1' });
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(compA.flattenedDependencies[0]).to.deep.equal({ name: 'comp/a', version: '0.0.1' });
+      expect(compA.dependencies[0].id).to.deep.equal({ name: 'comp/a', scope: helper.scopes.remote, version: '0.0.1' });
+      expect(compA.flattenedDependencies[0]).to.deep.equal({
+        name: 'comp/a',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
     });
     describe('exporting the component', () => {
       let exportOutput;
@@ -129,9 +133,13 @@ describe('cyclic dependencies', function () {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A2.flattenedDependencies).to.have.lengthOf(1);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(A2.dependencies[0].id).to.deep.equal({ name: 'comp/a3', version: '0.0.1' });
+      expect(A2.dependencies[0].id).to.deep.equal({ name: 'comp/a3', scope: helper.scopes.remote, version: '0.0.1' });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(A2.flattenedDependencies[0]).to.deep.equal({ name: 'comp/a3', version: '0.0.1' });
+      expect(A2.flattenedDependencies[0]).to.deep.equal({
+        name: 'comp/a3',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
     });
     // A1 => A2 => A3 (leaf). A1 => B1. B1 => B2 => B3 => B4.
     it('A1 should have A2 and B1 as direct dependencies, and all the rest as flattenedDependencies', () => {
@@ -140,26 +148,58 @@ describe('cyclic dependencies', function () {
       expect(A1.dependencies).to.have.lengthOf(2);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependenciesIds = A1.dependencies.map((dep) => dep.id);
-      expect(dependenciesIds).to.deep.include({ name: 'comp/a2', version: '0.0.1' });
-      expect(dependenciesIds).to.deep.include({ name: 'comp/b1', version: '0.0.1' });
+      expect(dependenciesIds).to.deep.include({ name: 'comp/a2', scope: helper.scopes.remote, version: '0.0.1' });
+      expect(dependenciesIds).to.deep.include({ name: 'comp/b1', scope: helper.scopes.remote, version: '0.0.1' });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A1.flattenedDependencies).to.have.lengthOf(8);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(A1.flattenedDependencies).to.deep.include({ name: 'comp/a2', version: '0.0.1' });
+      expect(A1.flattenedDependencies).to.deep.include({
+        name: 'comp/a2',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(A1.flattenedDependencies).to.deep.include({ name: 'comp/a3', version: '0.0.1' });
+      expect(A1.flattenedDependencies).to.deep.include({
+        name: 'comp/a3',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(A1.flattenedDependencies).to.deep.include({ name: 'comp/b1', version: '0.0.1' });
+      expect(A1.flattenedDependencies).to.deep.include({
+        name: 'comp/b1',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(A1.flattenedDependencies).to.deep.include({ name: 'comp/b2', version: '0.0.1' });
+      expect(A1.flattenedDependencies).to.deep.include({
+        name: 'comp/b2',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(A1.flattenedDependencies).to.deep.include({ name: 'comp/b3', version: '0.0.1' });
+      expect(A1.flattenedDependencies).to.deep.include({
+        name: 'comp/b3',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(A1.flattenedDependencies).to.deep.include({ name: 'comp/b4', version: '0.0.1' });
+      expect(A1.flattenedDependencies).to.deep.include({
+        name: 'comp/b4',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(A1.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+      expect(A1.flattenedDependencies).to.deep.include({
+        name: 'utils/is-type',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(A1.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
+      expect(A1.flattenedDependencies).to.deep.include({
+        name: 'utils/is-string',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
     });
     // B2 => B3 => B4. B2 => A1. A1 => A2 => A3 (leaf). A1 => B1.
     it('B2 should have A1 and B3 as direct dependencies, and all the rest as flattenedDependencies', () => {
@@ -168,26 +208,58 @@ describe('cyclic dependencies', function () {
       expect(B2.dependencies).to.have.lengthOf(2);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependenciesIds = B2.dependencies.map((dep) => dep.id);
-      expect(dependenciesIds).to.deep.include({ name: 'comp/b3', version: '0.0.1' });
-      expect(dependenciesIds).to.deep.include({ name: 'comp/a1', version: '0.0.1' });
+      expect(dependenciesIds).to.deep.include({ name: 'comp/b3', scope: helper.scopes.remote, version: '0.0.1' });
+      expect(dependenciesIds).to.deep.include({ name: 'comp/a1', scope: helper.scopes.remote, version: '0.0.1' });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B2.flattenedDependencies).to.have.lengthOf(8);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B2.flattenedDependencies).to.deep.include({ name: 'comp/a1', version: '0.0.1' });
+      expect(B2.flattenedDependencies).to.deep.include({
+        name: 'comp/a1',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B2.flattenedDependencies).to.deep.include({ name: 'comp/a2', version: '0.0.1' });
+      expect(B2.flattenedDependencies).to.deep.include({
+        name: 'comp/a2',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B2.flattenedDependencies).to.deep.include({ name: 'comp/a3', version: '0.0.1' });
+      expect(B2.flattenedDependencies).to.deep.include({
+        name: 'comp/a3',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B2.flattenedDependencies).to.deep.include({ name: 'comp/b1', version: '0.0.1' });
+      expect(B2.flattenedDependencies).to.deep.include({
+        name: 'comp/b1',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B2.flattenedDependencies).to.deep.include({ name: 'comp/b3', version: '0.0.1' });
+      expect(B2.flattenedDependencies).to.deep.include({
+        name: 'comp/b3',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B2.flattenedDependencies).to.deep.include({ name: 'comp/b4', version: '0.0.1' });
+      expect(B2.flattenedDependencies).to.deep.include({
+        name: 'comp/b4',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B2.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+      expect(B2.flattenedDependencies).to.deep.include({
+        name: 'utils/is-type',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B2.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
+      expect(B2.flattenedDependencies).to.deep.include({
+        name: 'utils/is-string',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
     });
     // B1 => B2 => B3 => B4. B2 => A1. A1 => A2 => A3 (leaf)
     it('B1 should have B2 as direct dependencies, and all the rest as flattenedDependencies', () => {
@@ -196,25 +268,57 @@ describe('cyclic dependencies', function () {
       expect(B1.dependencies).to.have.lengthOf(1);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependenciesIds = B1.dependencies.map((dep) => dep.id);
-      expect(dependenciesIds).to.deep.include({ name: 'comp/b2', version: '0.0.1' });
+      expect(dependenciesIds).to.deep.include({ name: 'comp/b2', scope: helper.scopes.remote, version: '0.0.1' });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B1.flattenedDependencies).to.have.lengthOf(8);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B1.flattenedDependencies).to.deep.include({ name: 'comp/a1', version: '0.0.1' });
+      expect(B1.flattenedDependencies).to.deep.include({
+        name: 'comp/a1',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B1.flattenedDependencies).to.deep.include({ name: 'comp/a2', version: '0.0.1' });
+      expect(B1.flattenedDependencies).to.deep.include({
+        name: 'comp/a2',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B1.flattenedDependencies).to.deep.include({ name: 'comp/a3', version: '0.0.1' });
+      expect(B1.flattenedDependencies).to.deep.include({
+        name: 'comp/a3',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B1.flattenedDependencies).to.deep.include({ name: 'comp/b2', version: '0.0.1' });
+      expect(B1.flattenedDependencies).to.deep.include({
+        name: 'comp/b2',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B1.flattenedDependencies).to.deep.include({ name: 'comp/b3', version: '0.0.1' });
+      expect(B1.flattenedDependencies).to.deep.include({
+        name: 'comp/b3',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B1.flattenedDependencies).to.deep.include({ name: 'comp/b4', version: '0.0.1' });
+      expect(B1.flattenedDependencies).to.deep.include({
+        name: 'comp/b4',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B1.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+      expect(B1.flattenedDependencies).to.deep.include({
+        name: 'utils/is-type',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B1.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
+      expect(B1.flattenedDependencies).to.deep.include({
+        name: 'utils/is-string',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
     });
     // B3 => B4 => is-string => is-type (leaf)
     it('B3 should have B4 as direct dependencies, and B4, is-type, is-string as flattenedDependencies', () => {
@@ -223,15 +327,27 @@ describe('cyclic dependencies', function () {
       expect(B3.dependencies).to.have.lengthOf(1);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependenciesIds = B3.dependencies.map((dep) => dep.id);
-      expect(dependenciesIds).to.deep.include({ name: 'comp/b4', version: '0.0.1' });
+      expect(dependenciesIds).to.deep.include({ name: 'comp/b4', scope: helper.scopes.remote, version: '0.0.1' });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B3.flattenedDependencies).to.have.lengthOf(3);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B3.flattenedDependencies).to.deep.include({ name: 'comp/b4', version: '0.0.1' });
+      expect(B3.flattenedDependencies).to.deep.include({
+        name: 'comp/b4',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B3.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+      expect(B3.flattenedDependencies).to.deep.include({
+        name: 'utils/is-type',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B3.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
+      expect(B3.flattenedDependencies).to.deep.include({
+        name: 'utils/is-string',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
     });
     // B4 => is-string => is-type (leaf)
     it('B4 should have is-string as a direct dependency, and is-type, is-string as flattenedDependencies', () => {
@@ -240,13 +356,25 @@ describe('cyclic dependencies', function () {
       expect(B4.dependencies).to.have.lengthOf(1);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependenciesIds = B4.dependencies.map((dep) => dep.id);
-      expect(dependenciesIds).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
+      expect(dependenciesIds).to.deep.include({
+        name: 'utils/is-string',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B4.flattenedDependencies).to.have.lengthOf(2);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B4.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+      expect(B4.flattenedDependencies).to.deep.include({
+        name: 'utils/is-type',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(B4.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
+      expect(B4.flattenedDependencies).to.deep.include({
+        name: 'utils/is-string',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
     });
     describe('exporting the component', () => {
       let exportOutput;

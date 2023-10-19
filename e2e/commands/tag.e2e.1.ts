@@ -112,7 +112,7 @@ describe('bit tag command', function () {
       it('Should throw error when the version already exists', () => {
         helper.command.tagWithoutBuild('components/exact --ver 5.5.5', '-f');
         const tagWithExisting = () => helper.command.tagWithoutBuild('components/exact --ver 5.5.5', '-f');
-        const error = new VersionAlreadyExists('5.5.5', 'components/exact');
+        const error = new VersionAlreadyExists('5.5.5', 'my-scope/components/exact');
         helper.general.expectToThrow(tagWithExisting, error);
       });
     });

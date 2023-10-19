@@ -1,6 +1,6 @@
 import GraphLib, { Graph } from 'graphlib';
 import pMapSeries from 'p-map-series';
-import { BitId, BitIds } from '../../bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { VERSION_DELIMITER } from '../../constants';
 import ComponentsList from '../../consumer/component/components-list';
 import Component from '../../consumer/component/consumer-component';
@@ -13,7 +13,7 @@ import { ModelComponent, Version } from '../models';
 import Scope from '../scope';
 
 export type DependenciesInfo = {
-  id: BitId;
+  id: ComponentID;
   depth: number;
   parent: string;
   dependencyType: string;
@@ -48,11 +48,11 @@ export default class DependencyGraph {
 
   static loadFromString(str: object): DependencyGraph {
     const graph = GraphLib.json.read(str);
-    // when getting a graph from a remote scope, the class BitId is gone and only the object is received
+    // when getting a graph from a remote scope, the class ComponentID is gone and only the object is received
     graph.nodes().forEach((node) => {
       const id = graph.node(node);
-      if (!(id instanceof BitId)) {
-        graph.setNode(node, new BitId(id));
+      if (!(id instanceof ComponentID)) {
+        graph.setNode(node, ComponentID.fromObject(id));
       }
     });
     return new DependencyGraph(graph);
@@ -79,7 +79,7 @@ export default class DependencyGraph {
             graph.setNode(idWithVersion, componentVersion);
             graph.setParent(idWithVersion, component.id());
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            componentVersion.id = component.toBitId();
+            componentVersion.id = component.toComponentId();
             depObj[idWithVersion] = componentVersion;
           })
         );
@@ -105,7 +105,7 @@ export default class DependencyGraph {
       });
       versionsInfo.forEach((versionInfo) => {
         if (!versionInfo.version) return;
-        const id = modelComp.toBitId().changeVersion(versionInfo.tag || versionInfo.ref.toString());
+        const id = modelComp.toComponentId().changeVersion(versionInfo.tag || versionInfo.ref.toString());
         DependencyGraph._addDependenciesToGraph(id, graph, versionInfo.version);
       });
     });
@@ -124,7 +124,7 @@ export default class DependencyGraph {
           // a component might be in the scope with only the latest version
           return;
         }
-        const id = modelComponent.toBitId().changeVersion(versionNum);
+        const id = modelComponent.toComponentId().changeVersion(versionNum);
         this._addDependenciesToGraph(id, graph, version);
       });
       await Promise.all(buildVersionP);
@@ -143,7 +143,7 @@ export default class DependencyGraph {
       const latestVersion = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
       const buildVersionP = modelComponent.listVersionsIncludeOrphaned().map(async (versionNum) => {
         if (onlyLatest && latestVersion !== versionNum) return;
-        const id = modelComponent.toBitId().changeVersion(versionNum);
+        const id = modelComponent.toComponentId().changeVersion(versionNum);
         const componentFromWorkspace = workspaceComponents.find((comp) => comp.id.isEqual(id));
         // if the same component exists in the workspace, use it as it might be modified
         const version =
@@ -167,7 +167,7 @@ export default class DependencyGraph {
   /**
    * ignore nested dependencies. build the graph from only imported and authored components
    * according to currently used versions (.bitmap versions).
-   * returns a graph that each node is a BitId object.
+   * returns a graph that each node is a ComponentID object.
    */
   static async buildGraphFromCurrentlyUsedComponents(consumer: Consumer): Promise<Graph> {
     const componentsList = new ComponentsList(consumer);
@@ -180,9 +180,9 @@ export default class DependencyGraph {
     return graph;
   }
 
-  static _addDependenciesToGraph(id: BitId, graph: Graph, component: Version | Component, reverse = false): void {
+  static _addDependenciesToGraph(id: ComponentID, graph: Graph, component: Version | Component, reverse = false): void {
     const idStr = id.toString();
-    // save the full BitId of a string id to be able to retrieve it later with no confusion
+    // save the full ComponentID of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(idStr)) graph.setNode(idStr, id);
     Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
       depIds.forEach((dependencyId) => {
@@ -198,7 +198,7 @@ export default class DependencyGraph {
   }
 
   static buildFromNodesAndEdges(
-    nodes: Array<{ idStr: string; bitId: BitId }>,
+    nodes: Array<{ idStr: string; bitId: ComponentID }>,
     edges: Array<{ src: string; target: string; depType: string }>
   ): Graph {
     const graph = new Graph();
@@ -213,7 +213,7 @@ export default class DependencyGraph {
    * (meaning, they're either dependents or dependencies)
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  getSubGraphOfConnectedComponents(id: BitId): Graph {
+  getSubGraphOfConnectedComponents(id: ComponentID): Graph {
     const connectedGraphs = GraphLib.alg.components(this.graph);
     const idWithVersion = this._getIdWithLatestVersion(id);
     const graphWithId = connectedGraphs.find((graph) => graph.includes(idWithVersion.toString()));
@@ -223,7 +223,7 @@ export default class DependencyGraph {
     return this.graph.filterNodes((node) => graphWithId.includes(node));
   }
 
-  getDependenciesInfo(id: BitId): DependenciesInfo[] {
+  getDependenciesInfo(id: ComponentID): DependenciesInfo[] {
     const idWithVersion = this._getIdWithLatestVersion(id);
     const dijkstraResults = GraphLib.alg.dijkstra(this.graph, idWithVersion.toString());
     const dependencies: DependenciesInfo[] = [];
@@ -256,7 +256,7 @@ export default class DependencyGraph {
     return { label, nodes };
   }
 
-  getDependentsInfo(id: BitId): DependenciesInfo[] {
+  getDependentsInfo(id: ComponentID): DependenciesInfo[] {
     const idWithVersion = this._getIdWithLatestVersion(id);
     const edgeFunc = (v) => this.graph.inEdges(v);
     // @ts-ignore (incorrect types in @types/graphlib)
@@ -281,17 +281,17 @@ export default class DependencyGraph {
     return dependents;
   }
 
-  getDependentsForAllVersions(id: BitId): BitIds {
+  getDependentsForAllVersions(id: ComponentID): ComponentIdList {
     const allBitIds = this.graph.nodes().map((idStr) => this.graph.node(idStr));
-    const idWithAllVersions = allBitIds.filter((bitId) => bitId.hasSameName(id) && bitId.hasSameScope(id));
+    const idWithAllVersions = allBitIds.filter((bitId) => id.isEqualWithoutVersion(bitId));
     const dependentsIds = idWithAllVersions
       .map((idWithVer) => this.getDependentsInfo(idWithVer))
       .flat()
       .map((depInfo) => depInfo.id);
-    return BitIds.uniqFromArray(dependentsIds);
+    return ComponentIdList.uniqFromArray(dependentsIds);
   }
 
-  _getIdWithLatestVersion(id: BitId): BitId {
+  _getIdWithLatestVersion(id: ComponentID): ComponentID {
     if (id.hasVersion()) {
       return id;
     }
@@ -301,21 +301,21 @@ export default class DependencyGraph {
       throw new IdNotFoundInGraph(id.toString());
     }
     const bitIds = ids.map((idStr) => this.graph.node(idStr));
-    return getLatestVersionNumber(BitIds.fromArray(bitIds), id);
+    return getLatestVersionNumber(ComponentIdList.fromArray(bitIds), id);
   }
 
-  getComponent(id: BitId): ModelComponent {
+  getComponent(id: ComponentID): ModelComponent {
     return this.graph.node(id.toStringWithoutVersion());
   }
 
-  getImmediateDependentsPerId(id: BitId, returnNodeValue = false): Array<string | Component | BitId> {
+  getImmediateDependentsPerId(id: ComponentID, returnNodeValue = false): Array<string | Component | ComponentID> {
     const nodeEdges = this.graph.inEdges(id.toString());
     if (!nodeEdges) return [];
     const idsStr = nodeEdges.map((node) => node.v);
     return returnNodeValue ? idsStr.map((idStr) => this.graph.node(idStr)) : idsStr;
   }
 
-  getImmediateDependenciesPerId(id: BitId): string[] {
+  getImmediateDependenciesPerId(id: ComponentID): string[] {
     const nodeEdges = this.graph.outEdges(id.toString());
     if (!nodeEdges) return [];
     return nodeEdges.map((node) => node.v);

@@ -51,9 +51,25 @@ export class DependencyList {
   }
 
   findByPkgNameOrCompId(id: string, version?: string): Dependency | undefined {
-    const found = this.dependencies.find(
-      (dep) => dep.id === id || dep.getPackageName?.() === id || dep.id.startsWith(`${id}@`)
-    );
+    const findByVariousStrategies = () => {
+      // try by full-id or package-name
+      const found = this.dependencies.find(
+        (dep) => dep.id === id || dep.getPackageName?.() === id || dep.id.startsWith(`${id}@`)
+      );
+      if (found) return found;
+      const compDeps = this.toTypeArray<ComponentDependency>('component');
+
+      // try by component-name
+      const foundByName = compDeps.filter((dep) => dep.componentId.fullName === id);
+      if (foundByName.length > 1) {
+        throw new Error(
+          `found multiple dependencies with the same component-name "${id}", please specify the full component-id`
+        );
+      }
+      if (foundByName.length === 1) return foundByName[0];
+      return undefined;
+    };
+    const found = findByVariousStrategies();
     if (!found) return undefined;
     if (version) {
       // because the version for snaps is stored in deps as the hash without the prefix of "0.0.0-""
