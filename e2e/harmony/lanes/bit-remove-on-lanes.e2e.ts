@@ -166,7 +166,7 @@ describe('bit lane command', function () {
     it('should remove from the lane object as well', () => {
       const lane = helper.command.showOneLaneParsed('dev');
       expect(lane.components).to.have.lengthOf(1);
-      expect(lane.components[0].id.name).to.not.have.string('comp1');
+      expect(lane.components[0].id).to.not.include('comp1');
     });
     // previously, it was throwing: "Error: unable to merge lane dev, the component 87ql0ef4-remote/comp1 was not found"
     // because the component was not removed from the lane-object.

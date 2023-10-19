@@ -163,7 +163,8 @@ describe('bit dependencies command', function () {
         beforeRemove = helper.scopeHelper.cloneLocalScope();
       });
       it('should support component-id syntax', () => {
-        helper.command.dependenciesRemove('comp1', 'comp2');
+        const output = helper.command.dependenciesRemove('comp1', 'comp2');
+        expect(output).to.not.include('nothing to remove');
         const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
         expect(showConfig.config.policy.dependencies).to.deep.equal({ '@my-scope/comp2': '-' });
       });

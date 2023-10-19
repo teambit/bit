@@ -90,7 +90,7 @@ export class ComponentGenerator {
     try {
       await linkToNodeModulesByIds(
         this.workspace,
-        ids.map((id) => id._legacy)
+        ids.map((id) => id)
       );
     } catch (err: any) {
       this.logger.consoleFailure(

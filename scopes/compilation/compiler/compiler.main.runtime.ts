@@ -5,11 +5,11 @@ import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { IssuesClasses } from '@teambit/component-issues';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
-import { Component, ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
@@ -45,7 +45,7 @@ export class CompilerMain {
    * Run compilation on `bit new` and when new components are imported
    */
   compileOnWorkspace(
-    componentsIds: string[] | BitId[] | ComponentID[] = [], // when empty, it compiles all
+    componentsIds: string[] | ComponentID[] | ComponentID[] = [], // when empty, it compiles all
     options: CompileOptions = { initiator: CompilationInitiator.ComponentAdded }
   ) {
     return this.workspaceCompiler.compileComponents(componentsIds, options);

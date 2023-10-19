@@ -35,7 +35,7 @@ export class BuilderRoute implements Route {
           .jsonp({ error: `no artifacts found for component ${component.id} by aspect ${aspectId}` });
       const extensionsWithArtifacts = await Promise.all(
         artifacts.map(async (artifact) => {
-          const files = await artifact.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+          const files = await artifact.files.getVinylsAndImportIfMissing(component.id, this.scope.legacyScope);
           if (!filePath) return { extensionId: artifact.task.aspectId, files };
           return { extensionId: artifact.task.aspectId, files: files.filter((file) => file.path === filePath) };
         })

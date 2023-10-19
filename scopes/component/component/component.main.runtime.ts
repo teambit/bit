@@ -61,8 +61,8 @@ export class ComponentMain {
    * to fix this possibly incorrect scope-name, the `workspace.resolveScopeAspectListIds()` checks whether the
    * scope-name is the same as scope.name, and if so, resolve it to the correct scope-name.
    */
-  createAspectListFromLegacy(legacyExtensionDataList: ExtensionDataList, scope?: string) {
-    return AspectList.fromLegacyExtensions(legacyExtensionDataList, scope);
+  createAspectListFromLegacy(legacyExtensionDataList: ExtensionDataList) {
+    return AspectList.fromLegacyExtensions(legacyExtensionDataList);
   }
 
   createAspectListFromEntries(entries: AspectEntry[]) {

@@ -1,5 +1,4 @@
 import { IssuesList } from '@teambit/component-issues';
-import { BitId } from '../../../../bit-id';
 import Dependency from '../dependency';
 import { AllDependencies, AllPackagesDependencies } from './dependencies-resolver';
 import { ManuallyChangedDependencies } from './overrides-dependencies';
@@ -20,18 +19,21 @@ export class DependenciesData {
   ) {}
 
   serialize(): string {
-    const { issues, ...nonIssues } = this;
-    return JSON.stringify({ ...nonIssues, issues: issues.serialize() });
+    const { issues, allDependencies, ...rest } = this;
+    return JSON.stringify({
+      ...rest,
+      issues: issues.serialize(),
+      allDependencies: {
+        dependencies: allDependencies.dependencies.map((dep) => dep.serialize()),
+        devDependencies: allDependencies.devDependencies.map((dep) => dep.serialize()),
+      },
+    });
   }
 
   static deserialize(data: string): DependenciesData {
     const dataParsed = JSON.parse(data);
-    const dependencies = dataParsed.allDependencies.dependencies.map(
-      (dep) => new Dependency(new BitId(dep.id), dep.relativePaths, dep.packageName)
-    );
-    const devDependencies = dataParsed.allDependencies.devDependencies.map(
-      (dep) => new Dependency(new BitId(dep.id), dep.relativePaths, dep.packageName)
-    );
+    const dependencies = dataParsed.allDependencies.dependencies.map((dep) => Dependency.deserialize(dep));
+    const devDependencies = dataParsed.allDependencies.devDependencies.map((dep) => Dependency.deserialize(dep));
     const issuesList = IssuesList.deserialize(dataParsed.issues);
     const allDependencies = { dependencies, devDependencies };
     return new DependenciesData(

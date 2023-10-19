@@ -1,4 +1,4 @@
-import BitId from '../../bit-id/bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { Extensions, NODE_PATH_COMPONENT_SEPARATOR } from '../../constants';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { replacePlaceHolderForPackageValue } from './component-placeholders';
@@ -7,7 +7,7 @@ import { parseScope } from './parse-scope';
 
 /**
  * convert a component name to a valid npm package name
- * e.g. BitId { scope: util, name: is-string } => @bit/util.is-string
+ * e.g. { scope: util, name: is-string } => @bit/util.is-string
  */
 export default function componentIdToPackageName({
   id,
@@ -17,7 +17,7 @@ export default function componentIdToPackageName({
   extensions,
   isDependency = false,
 }: {
-  id: BitId;
+  id: ComponentID;
   bindingPrefix: string | null | undefined;
   defaultScope?: string | null; // if an id doesn't have a scope, use defaultScope if exists
   withPrefix?: boolean;
@@ -27,8 +27,8 @@ export default function componentIdToPackageName({
   const fromExtensions = getNameFromExtensions(id, defaultScope, extensions, isDependency);
   if (fromExtensions) return fromExtensions;
   const allSlashes = new RegExp('/', 'g');
-  const name = id.name.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
-  const scope = id.scope || defaultScope;
+  const name = id.fullName.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
+  const scope = id.scope;
   const partsToJoin = scope ? [scope, name] : [name];
   let nameWithoutPrefix = partsToJoin.join(NODE_PATH_COMPONENT_SEPARATOR);
   if (!withPrefix) return nameWithoutPrefix;
@@ -44,7 +44,7 @@ export default function componentIdToPackageName({
 }
 
 function getNameFromExtensions(
-  id: BitId,
+  id: ComponentID,
   defaultScope?: string | null,
   extensions?: ExtensionDataList,
   isDependency?: boolean
@@ -59,9 +59,9 @@ function getNameFromExtensions(
       }
       if (!d.componentId.isEqual) {
         if (typeof d.componentId === 'string') {
-          d.componentId = BitId.parse(d.componentId);
+          d.componentId = ComponentID.fromString(d.componentId);
         } else {
-          d.componentId = new BitId(d.componentId);
+          d.componentId = ComponentID.fromObject(d.componentId);
         }
       }
       return d.componentId.isEqual(id);
@@ -74,5 +74,5 @@ function getNameFromExtensions(
   const scopeId = id.scope || defaultScope;
   const { scope, owner } = parseScope(scopeId);
   if (!name) return null;
-  return replacePlaceHolderForPackageValue({ name: id.name, scope, owner, scopeId }, name);
+  return replacePlaceHolderForPackageValue({ name: id.fullName, scope, owner, scopeId }, name);
 }

@@ -33,7 +33,7 @@ export class Runtime {
   ): Promise<EnvsExecutionResult<T>> {
     const envRuntime = this.runtimeEnvs.find((runtime) => {
       const id = ComponentID.fromString(runtime.id);
-      const withoutVersion = id._legacy.toStringWithoutVersion();
+      const withoutVersion = id.toStringWithoutVersion();
       return withoutVersion === envRuntimeId;
     });
     if (!envRuntime) throw new EnvNotFoundInRuntime(envRuntimeId);
