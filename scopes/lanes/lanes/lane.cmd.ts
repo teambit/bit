@@ -5,7 +5,7 @@ import { ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
-import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
+import { LaneData, serializeLaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { BitError } from '@teambit/bit-error';
 import { approveOperation } from '@teambit/legacy/dist/prompts';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
@@ -117,12 +117,13 @@ export class LaneListCmd implements Command {
   async json(args, laneOptions: LaneOptions) {
     const { remote, merged = false, notMerged = false } = laneOptions;
 
-    const lanes = await this.lanes.getLanes({
+    const lanesData = await this.lanes.getLanes({
       remote,
       showDefaultLane: true,
       merged,
       notMerged,
     });
+    const lanes = lanesData.map(serializeLaneData);
     const currentLane = this.lanes.getCurrentLaneNameOrAlias();
     return { lanes, currentLane };
   }
@@ -177,7 +178,7 @@ export class LaneShowCmd implements Command {
       remote,
     });
 
-    return lanes[0];
+    return serializeLaneData(lanes[0]);
   }
 }
 
@@ -492,6 +493,6 @@ function outputReadmeComponent(component: LaneData['readmeComponent']): string {
   if (!component) return '';
   return `\n\t${`${chalk.yellow('readme component')}\n\t  ${component.id} - ${
     component.head ||
-    `(unsnapped)\n\t("use bit snap ${component.id.name}" to snap the readme component on the lane before exporting)`
+    `(unsnapped)\n\t("use bit snap ${component.id.fullName}" to snap the readme component on the lane before exporting)`
   }`}\n`;
 }

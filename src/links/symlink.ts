@@ -1,14 +1,13 @@
 import fs from 'fs-extra';
 import * as path from 'path';
-
-import BitId from '../bit-id/bit-id';
+import { ComponentID } from '@teambit/component-id';
 import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 
 export default class Symlink {
   src: string; // current existing path
   dest: string; // new symlink path
-  componentId: BitId | null | undefined;
-  constructor(src: string, dest: string, componentId?: BitId, private avoidHardLink = false) {
+  componentId: ComponentID | null | undefined;
+  constructor(src: string, dest: string, componentId?: ComponentID, private avoidHardLink = false) {
     this.src = src;
     this.dest = dest;
     this.componentId = componentId;
@@ -44,7 +43,7 @@ export default class Symlink {
     return fs.symlinkSync(this.src, dest);
   }
 
-  static makeInstance(src: string, dest: string, componentId?: BitId, avoidHardLink?: boolean) {
+  static makeInstance(src: string, dest: string, componentId?: ComponentID, avoidHardLink?: boolean) {
     return new Symlink(src, dest, componentId, avoidHardLink);
   }
 }

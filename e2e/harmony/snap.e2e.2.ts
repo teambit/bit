@@ -602,7 +602,11 @@ describe('bit snap command', function () {
       expect(comp2.dependencies[0].id.name).to.equal('comp3');
       expect(comp2.dependencies[0].id.version).to.equal(isTypeHead);
 
-      expect(comp2.flattenedDependencies).to.deep.include({ name: 'comp3', version: isTypeHead });
+      expect(comp2.flattenedDependencies).to.deep.include({
+        name: 'comp3',
+        scope: helper.scopes.remote,
+        version: isTypeHead,
+      });
     });
     it('should update the dependencies and the flattenedDependencies of the dependent of the dependent with the new versions', () => {
       const comp1 = helper.command.catComponent('comp1@latest');
@@ -610,8 +614,16 @@ describe('bit snap command', function () {
       expect(comp1.dependencies[0].id.name).to.equal('comp2');
       expect(comp1.dependencies[0].id.version).to.equal(isStringHead);
 
-      expect(comp1.flattenedDependencies).to.deep.include({ name: 'comp3', version: isTypeHead });
-      expect(comp1.flattenedDependencies).to.deep.include({ name: 'comp2', version: isStringHead });
+      expect(comp1.flattenedDependencies).to.deep.include({
+        name: 'comp3',
+        scope: helper.scopes.remote,
+        version: isTypeHead,
+      });
+      expect(comp1.flattenedDependencies).to.deep.include({
+        name: 'comp2',
+        scope: helper.scopes.remote,
+        version: isStringHead,
+      });
     });
     it('bit-status should show them all as staged and not modified', () => {
       const status = helper.command.statusJson();

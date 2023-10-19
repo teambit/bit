@@ -260,6 +260,8 @@ export default class BitId {
   }
 
   /**
+   * @deprecated since Harmony this function is not needed. if your id is a string, use BitId.parse().
+   *
    * before version 13.0.3 bitmap and component-dependencies ids were written as strings (e.g. scope/box/name@version)
    * since that version the ids are written as objects ({ scope: scopeName, name: compName, version: 0.0.1 })
    */

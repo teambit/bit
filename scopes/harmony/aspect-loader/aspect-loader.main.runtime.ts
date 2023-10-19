@@ -1,14 +1,14 @@
 import { join, resolve } from 'path';
 import { readdirSync, existsSync } from 'fs-extra';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import { GLOBAL_SCOPE, DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { MainRuntime } from '@teambit/cli';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
 import type { LoggerMain } from '@teambit/logger';
-import { ComponentID, Component, FilterAspectsOptions } from '@teambit/component';
+import { Component, FilterAspectsOptions } from '@teambit/component';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { replaceFileExtToJs } from '@teambit/compilation.modules.babel-compiler';
@@ -549,7 +549,7 @@ export class AspectLoaderMain {
     const aspectLoader = globalScopeHarmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
     // @todo: Gilad make this work
     // const ids = await scope.resolveMultipleComponentIds(aspectIds);
-    const ids = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
+    const ids = aspectIds.map((id) => ComponentID.fromString(id));
     const hasVersions = ids.every((id) => id.hasVersion());
     const useCache = hasVersions; // if all components has versions, try to use the cached aspects
     await scope.import(ids, { useCache, reason: 'to load aspects from global scope' });

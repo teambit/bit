@@ -12,7 +12,7 @@ export class StashData {
     return {
       metadata: this.metadata,
       stashCompsData: this.stashCompsData.map(({ id, hash }) => ({
-        // id: { scope: id._legacy.scope, name: id.fullName },
+        // id: { scope: id.scope, name: id.fullName },
         id: id.changeVersion(undefined).toObject(),
         hash: hash.toString(),
       })),

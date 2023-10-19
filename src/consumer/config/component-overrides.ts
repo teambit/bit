@@ -1,7 +1,6 @@
 import R from 'ramda';
 import { pickBy } from 'lodash';
-
-import { BitId } from '../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import {
   MANUALLY_ADD_DEPENDENCY,
   MANUALLY_REMOVE_DEPENDENCY,
@@ -67,7 +66,7 @@ export default class ComponentOverrides {
    * use the component-config.
    */
   static async loadFromConsumer(
-    componentId: BitId,
+    componentId: ComponentID,
     workspaceConfig: ILegacyWorkspaceConfig,
     overridesFromModel: ComponentOverridesData | undefined,
     componentConfig: ComponentConfig,
@@ -223,7 +222,7 @@ function mergeExtensionsOverrides(configs: DependenciesOverridesData[]): any {
 async function runOnLoadOverridesEvent(
   configsRegistry: OverridesLoadRegistry,
   extensions: ExtensionDataList,
-  id: BitId,
+  id: ComponentID,
   files: SourceFile[]
 ): Promise<DependenciesOverridesData> {
   const extensionsAddedOverridesP = Object.keys(configsRegistry).map((extId) => {

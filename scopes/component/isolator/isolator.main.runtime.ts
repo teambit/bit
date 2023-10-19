@@ -5,7 +5,7 @@ import semver from 'semver';
 import chalk from 'chalk';
 import { compact, flatten, pick } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
-import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
+import { Component, ComponentMap, ComponentAspect } from '@teambit/component';
 import type { ComponentMain, ComponentFactory } from '@teambit/component';
 import { getComponentPackageVersion, snapToSemver } from '@teambit/component-package-version';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
@@ -25,7 +25,7 @@ import {
   NodeLinker,
 } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain, LongProcessLogger } from '@teambit/logger';
-import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import {
@@ -877,7 +877,7 @@ export class IsolatorMain {
     const legacyModifiedComps = modifiedComps.map((component) => component.state._consumer.clone());
     const legacyComponents = [...legacyUnmodifiedComps, ...legacyModifiedComps];
     if (legacyScope && unmodifiedComps.length) await importMultipleDistsArtifacts(legacyScope, legacyUnmodifiedComps);
-    const allIds = BitIds.fromArray(legacyComponents.map((c) => c.id));
+    const allIds = ComponentIdList.fromArray(legacyComponents.map((c) => c.id));
     await Promise.all(
       components.map(async (component) => {
         const capsule = capsuleList.getCapsule(component.id);
@@ -1090,7 +1090,7 @@ export class IsolatorMain {
 
   async populateComponentsFilesToWriteForCapsule(
     component: Component,
-    ids: BitIds,
+    ids: ComponentIdList,
     legacyScope?: Scope,
     opts?: IsolateComponentsOptions
   ): Promise<DataToPersist> {
@@ -1122,13 +1122,13 @@ export class IsolatorMain {
   private preparePackageJsonToWrite(
     component: Component,
     bitDir: string,
-    ignoreBitDependencies: BitIds | boolean = true
+    ignoreBitDependencies: ComponentIdList | boolean = true
   ): PackageJsonFile {
     const legacyComp: ConsumerComponent = component.state._consumer;
     this.logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}.`);
-    const getBitDependencies = (dependencies: BitIds) => {
+    const getBitDependencies = (dependencies: ComponentIdList) => {
       if (ignoreBitDependencies === true) return {};
-      return dependencies.reduce((acc, depId: BitId) => {
+      return dependencies.reduce((acc, depId: ComponentID) => {
         if (Array.isArray(ignoreBitDependencies) && ignoreBitDependencies.searchWithoutVersion(depId)) return acc;
         const packageDependency = depId.version;
         const packageName = componentIdToPackageName({
@@ -1143,7 +1143,7 @@ export class IsolatorMain {
     const bitDependencies = getBitDependencies(legacyComp.dependencies.getAllIds());
     const bitDevDependencies = getBitDependencies(legacyComp.devDependencies.getAllIds());
     const bitExtensionDependencies = getBitDependencies(legacyComp.extensions.extensionsBitIds);
-    const packageJson = PackageJsonFile.createFromComponent(bitDir, legacyComp, true);
+    const packageJson = PackageJsonFile.createFromComponent(bitDir, legacyComp);
     const main = pathNormalizeToLinux(legacyComp.mainFile);
     packageJson.addOrUpdateProperty('main', main);
     const addDependencies = (packageJsonFile: PackageJsonFile) => {
@@ -1189,7 +1189,7 @@ export class IsolatorMain {
             `getArtifacts: unable to find where to populate the artifacts from for ${component.id.toString()}`
           );
         }
-        const compParent = await legacyScope.getConsumerComponent(found._legacy);
+        const compParent = await legacyScope.getConsumerComponent(found);
         return getArtifactFilesExcludeExtension(compParent.extensions, 'teambit.pkg/pkg');
       }
       const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];

@@ -12,7 +12,6 @@ import { BEFORE_STATUS } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
-import { BitId } from '@teambit/legacy-bit-id';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
@@ -85,7 +84,7 @@ export class StatusMain {
     const stagedComponentsWithVersions = await pMapSeries(stagedComponents, async (stagedComp) => {
       const versions = await stagedComp.getLocalTagsOrHashes(consumer.scope.objects);
       return {
-        id: stagedComp.toBitId(),
+        id: stagedComp.toComponentId(),
         versions,
       };
     });
@@ -112,7 +111,7 @@ export class StatusMain {
     }
     const componentsWithIssues = allComps.filter((component) => !component.state.issues.isEmpty());
     const softTaggedComponents = componentsList.listSoftTaggedComponents();
-    const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toBitId());
+    const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toComponentId());
     const pendingUpdatesFromMain = lanes ? await componentsList.listUpdatesFromMainPending() : [];
     const updatesFromForked = lanes ? await this.lanes.listUpdatesFromForked(componentsList) : [];
     const currentLaneId = consumer.getCurrentLaneId();
@@ -125,11 +124,11 @@ export class StatusMain {
     Analytics.setExtraData('autoTagPendingComponents', autoTagPendingComponents.length);
     Analytics.setExtraData('deleted', invalidComponents.length);
 
-    const convertBitIdToComponentIdsAndSort = async (ids: BitId[]) =>
+    const convertBitIdToComponentIdsAndSort = async (ids: ComponentID[]) =>
       ComponentID.sortIds(await this.workspace.resolveMultipleComponentIds(ids));
 
     const convertObjToComponentIdsAndSort = async <T>(
-      objectsWithId: Array<T & { id: BitId }>
+      objectsWithId: Array<T & { id: ComponentID }>
     ): Promise<Array<T & { id: ComponentID }>> => {
       const results = await Promise.all(
         objectsWithId.map(async (obj) => {
@@ -168,7 +167,7 @@ export class StatusMain {
         mergePendingComponents.map((c) => ({ id: c.id, divergeData: c.diverge }))
       ),
       componentsDuringMergeState: await convertBitIdToComponentIdsAndSort(idsDuringMergeState),
-      softTaggedComponents: await convertBitIdToComponentIdsAndSort(softTaggedComponents),
+      softTaggedComponents: ComponentID.sortIds(softTaggedComponents),
       snappedComponents: await convertBitIdToComponentIdsAndSort(snappedComponents),
       pendingUpdatesFromMain: await convertObjToComponentIdsAndSort(pendingUpdatesFromMain),
       updatesFromForked: await convertObjToComponentIdsAndSort(updatesFromForked),
@@ -206,9 +205,9 @@ export class StatusMain {
   private async addRemovedStagedIfNeeded(stagedComponents: ModelComponent[]) {
     const removedStagedIds = await this.remove.getRemovedStaged();
     if (!removedStagedIds.length) return;
-    const removedStagedBitIds = removedStagedIds.map((id) => id._legacy);
+    const removedStagedBitIds = removedStagedIds.map((id) => id);
     const nonExistsInStaged = removedStagedBitIds.filter(
-      (id) => !stagedComponents.find((c) => c.toBitId().isEqualWithoutVersion(id))
+      (id) => !stagedComponents.find((c) => c.toComponentId().isEqualWithoutVersion(id))
     );
     if (!nonExistsInStaged.length) return;
     const modelComps = await Promise.all(

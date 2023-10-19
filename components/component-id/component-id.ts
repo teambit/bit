@@ -1,4 +1,4 @@
-import { BitId } from '@teambit/legacy-bit-id';
+import { BitId, VERSION_DELIMITER } from '@teambit/legacy-bit-id';
 import { MissingScope } from './exceptions';
 
 /**
@@ -20,7 +20,12 @@ export class ComponentID {
     private legacyComponentId: BitId,
 
     readonly _scope?: string
-  ) {}
+  ) {
+    if (!legacyComponentId.name) {
+      throw new Error(`ComponentID expects to get an object with "name" prop. got ${legacyComponentId}`);
+    }
+    if (!_scope && !legacyComponentId.scope) throw new MissingScope(legacyComponentId);
+  }
 
   /**
    * An access to the legacy id. DO NOT USE THIS
@@ -78,10 +83,11 @@ export class ComponentID {
 
   /**
    * get a new component ID instance with given scope.
+   * in case "undefined"/"null" is passed, the current scope becomes defaultScope
    */
   changeScope(scopeName: string): ComponentID {
     const legacyId = this._legacy.changeScope(scopeName);
-    return ComponentID.fromLegacy(legacyId);
+    return ComponentID.fromLegacy(legacyId, this.scope);
   }
 
   changeVersion(version: string | undefined) {
@@ -91,6 +97,42 @@ export class ComponentID {
 
   isEqual(id: ComponentID, opts?: EqualityOption): boolean {
     return ComponentID.isEqual(this, id, opts);
+  }
+
+  isEqualWithoutVersion(id: ComponentID): boolean {
+    return this.isEqual(id, { ignoreVersion: true });
+  }
+
+  isLocal(scopeName?: string): boolean {
+    return this._legacy.isLocal(scopeName);
+  }
+
+  /**
+   * do not trust this data to determine whether a component is exported to a remote or not.
+   * use workspace.isExported() or scope.isExported() instead.
+   */
+  hasScope(): Boolean {
+    return this._legacy.hasScope();
+  }
+
+  serialize(): ComponentIdObj {
+    return this.toObject();
+  }
+
+  static deserialize(id: ComponentIdObj) {
+    return ComponentID.fromObject(id);
+  }
+
+  static isValidVersion(version: string): boolean {
+    return BitId.isValidVersion(version);
+  }
+
+  static getVersionFromString(id: string) {
+    return id.split(VERSION_DELIMITER)[1];
+  }
+
+  static getStringWithoutVersion(id: string) {
+    return id.split(VERSION_DELIMITER)[0];
   }
 
   /**
@@ -116,6 +158,10 @@ export class ComponentID {
     return id.toStringWithoutVersion();
   }
 
+  hasSameVersion(id: ComponentID) {
+    return this._legacy.hasSameVersion(id._legacy);
+  }
+
   /**
    * serialize the component ID.
    */
@@ -138,6 +184,10 @@ export class ComponentID {
 
     // TODO - TS does not realize object.scope now has a value
     return object as ComponentIdObj;
+  }
+
+  clone() {
+    return ComponentID.fromLegacy(this._legacy.clone(), this._scope);
   }
 
   /**
@@ -173,8 +223,12 @@ export class ComponentID {
   // overload when providing scope separaetly, e.g. `fromObject({ name: 'button' }, 'teambit.base-ui')`
   static fromObject(object: Omit<ComponentIdObj, 'scope'>, scope: string): ComponentID;
   static fromObject(object: ComponentIdObj, scope?: string): ComponentID;
-  /** deserialize a componnet id from raw object */
+  /** deserialize a component id from raw object */
   static fromObject(object: ComponentIdObj, scope?: string) {
+    if (object instanceof ComponentID)
+      throw new Error(
+        `ComponentID.fromObject expect to get an object, got an instance of ComponentID: ${object.toString()}`
+      );
     return ComponentID.fromLegacy(new BitId(object), scope);
   }
 
@@ -190,13 +244,13 @@ export class ComponentID {
     if (!a && !b) return true;
     if (!a || !b) return false;
 
-    let result =
+    const result =
       a.scope === b.scope &&
       a.toString({ ignoreVersion: opts.ignoreVersion }) === b.toString({ ignoreVersion: opts.ignoreVersion });
-    if (!opts.ignoreVersion) {
-      result = result && a.version === b.version;
+    if (opts.ignoreVersion) {
+      return result;
     }
-    return result;
+    return result && a.hasSameVersion(b);
   }
 
   static isEqualObj(a: ComponentIdObj | undefined, b: ComponentIdObj | undefined, opts: EqualityOption = {}): boolean {

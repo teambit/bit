@@ -1,6 +1,5 @@
 import { expect } from 'chai';
-
-import { BitId } from '../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { ExtensionDataEntry, ExtensionDataList } from './extension-data';
 
 describe('ExtensionDataList', () => {
@@ -120,19 +119,19 @@ describe('ExtensionDataList', () => {
   describe('to config array', () => {
     let configArr;
     before(() => {
-      const configEntry = new ExtensionDataEntry(undefined, BitId.parse('my-scope/ext1', true), undefined, {
+      const configEntry = new ExtensionDataEntry(undefined, ComponentID.fromString('my-scope/ext1'), undefined, {
         conf1: 'val1',
       });
       const dataEntry = new ExtensionDataEntry(
         undefined,
-        BitId.parse('my-scope/ext2', true),
+        ComponentID.fromString('my-scope/ext2'),
         undefined,
         {},
         { data1: 'val1' }
       );
       const dataConfigEntry = new ExtensionDataEntry(
         undefined,
-        BitId.parse('my-scope/ext3', true),
+        ComponentID.fromString('my-scope/ext3'),
         undefined,
         { conf3: 'val3' },
         { data3: 'val3' }
