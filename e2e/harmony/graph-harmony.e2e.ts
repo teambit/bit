@@ -39,8 +39,8 @@ describe('graph aspect', function () {
         expect(jsonGraph.edges).to.have.lengthOf(2);
         const edges = jsonGraph.edges.map((edge) => ({ sourceId: edge.sourceId, targetId: edge.targetId }));
         expect(edges).to.include.deep.members([
-          { sourceId: 'comp1@0.0.1', targetId: 'comp2@0.0.1' },
-          { sourceId: 'comp2@0.0.1', targetId: 'comp3@0.0.1' },
+          { sourceId: `${helper.scopes.remote}/comp1@0.0.1`, targetId: `${helper.scopes.remote}/comp2@0.0.1` },
+          { sourceId: `${helper.scopes.remote}/comp2@0.0.1`, targetId: `${helper.scopes.remote}/comp3@0.0.1` },
         ]);
       });
     });

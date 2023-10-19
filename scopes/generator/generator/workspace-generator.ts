@@ -186,6 +186,7 @@ export class WorkspaceGenerator {
         {
           ids: [componentToImport.id],
           installNpmPackages: false,
+          writeConfigFiles: false,
           writeToPath: componentToImport.path,
         },
         []

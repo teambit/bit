@@ -1,14 +1,12 @@
 import { expect } from 'chai';
 
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { ALLOW_SAME_NAME } from '../../src/api/consumer/lib/feature-toggle';
 
 describe('two components with the same name but different scope-name', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(ALLOW_SAME_NAME);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -83,8 +81,7 @@ describe('two components with the same name but different scope-name', function 
       });
     });
   });
-  // @todo: support this case.
-  describe.skip('creating two new components with the same name in the same workspace', () => {
+  describe('creating two new components with the same name in the same workspace', () => {
     let anotherScopeName: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -96,6 +93,21 @@ describe('two components with the same name but different scope-name', function 
       helper.command.addComponent('scope1/comp1', '--id comp1');
       helper.command.addComponent('scope2/comp1', `--id comp1 --scope ${anotherScopeName}`);
     });
-    it('should work', () => {});
+    it('bit list should list them both', () => {
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(2);
+    });
+    describe('tagging them both', () => {
+      before(() => {
+        helper.command.tagAllWithoutBuild();
+      });
+      it('should tag both of them', () => {
+        const status = helper.command.statusJson();
+        expect(status.stagedComponents).to.have.lengthOf(2);
+      });
+      it('should export with no errors', () => {
+        helper.command.export();
+      });
+    });
   });
 });

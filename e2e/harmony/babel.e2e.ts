@@ -43,7 +43,7 @@ describe('babel compiler', function () {
 
         helper.fs.outputFile('bar/foo.js', 'export function sayHello() { console.log("hello"); }; sayHello();');
         helper.command.addComponent('bar');
-        helper.extensions.addExtensionToVariant('bar', `my-scope/${EXTENSIONS_BASE_FOLDER}`);
+        helper.extensions.addExtensionToVariant('bar', `${helper.scopes.remote}/${EXTENSIONS_BASE_FOLDER}`);
         helper.command.compile();
         distDir = path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}/bar/dist`);
       });

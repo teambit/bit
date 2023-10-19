@@ -2,7 +2,7 @@ import * as path from 'path';
 import globby from 'globby';
 import ignore from 'ignore';
 import R from 'ramda';
-import { BitId } from '../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
@@ -33,7 +33,7 @@ export type NextVersion = {
 };
 
 export type ComponentMapData = {
-  id: BitId;
+  id: ComponentID;
   files: ComponentMapFile[];
   defaultScope?: string;
   mainFile: PathLinux;
@@ -50,7 +50,7 @@ export type ComponentMapData = {
 export type PathChange = { from: PathLinux; to: PathLinux };
 
 export default class ComponentMap {
-  id: BitId;
+  id: ComponentID;
   files: ComponentMapFile[];
   defaultScope?: string;
   mainFile: PathLinux;
@@ -301,7 +301,7 @@ export default class ComponentMap {
    * if the component dir has changed since the last tracking, re-scan the component-dir to get the
    * updated list of the files
    */
-  async trackDirectoryChangesHarmony(consumer: Consumer, id: BitId): Promise<void> {
+  async trackDirectoryChangesHarmony(consumer: Consumer, id: ComponentID): Promise<void> {
     const trackDir = this.rootDir;
     if (!trackDir) {
       return;

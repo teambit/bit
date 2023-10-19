@@ -3,7 +3,7 @@ import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import { getAllCoreAspectsIds } from '@teambit/bit';
 import { getRelativeRootComponentDir } from '@teambit/bit-roots';
-import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent, ComponentID } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
 import { compact, get, pick, uniq, omit } from 'lodash';
@@ -28,10 +28,9 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 import { onTagIdTransformer } from '@teambit/snapping';
-import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
@@ -320,8 +319,6 @@ export type GetDependenciesOptions = {
 export type GetVersionResolverOptions = {
   cacheRootDirectory?: string;
 };
-
-type OnExportIdTransformer = (id: BitId) => BitId;
 
 const defaultLinkingOptions: LinkingOptions = {
   linkTeambitBit: true,
@@ -1121,10 +1118,10 @@ export class DependencyResolverMain {
   }
 
   async getEnvPolicyFromEnvId(id: ComponentID, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
-    return this.getEnvPolicyFromEnvLegacyId(id._legacy, legacyFiles);
+    return this.getEnvPolicyFromEnvLegacyId(id, legacyFiles);
   }
 
-  async getEnvPolicyFromEnvLegacyId(id: BitId, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
+  async getEnvPolicyFromEnvLegacyId(id: ComponentID, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
     const fromFile = await this.getEnvPolicyFromFile(id.toString(), legacyFiles);
     if (fromFile) return fromFile;
     const envDef = await this.envs.getEnvDefinitionByLegacyId(id);
@@ -1208,7 +1205,7 @@ export class DependencyResolverMain {
    */
   async mergeVariantPolicies(
     configuredExtensions: ExtensionDataList,
-    id: BitId,
+    id: ComponentID,
     legacyFiles?: SourceFile[]
   ): Promise<VariantPolicy> {
     let policiesFromSlots: VariantPolicy = VariantPolicy.getEmpty();
@@ -1252,7 +1249,7 @@ export class DependencyResolverMain {
    * These are the policies that the env itself defines for itself.
    * So policies installed only locally for the env, not to any components that use the env.
    */
-  async getPoliciesFromEnvForItself(id: BitId, legacyFiles?: SourceFile[]): Promise<VariantPolicy | undefined> {
+  async getPoliciesFromEnvForItself(id: ComponentID, legacyFiles?: SourceFile[]): Promise<VariantPolicy | undefined> {
     const envPolicy = await this.getEnvPolicyFromEnvLegacyId(id, legacyFiles);
     return envPolicy?.selfPolicy;
   }
@@ -1265,7 +1262,7 @@ export class DependencyResolverMain {
     const dependencies = get(entry, ['data', 'dependencies'], []);
     dependencies.forEach((dep) => {
       if (dep.__type === COMPONENT_DEP_TYPE) {
-        const depId = new BitId(dep.componentId);
+        const depId = ComponentID.fromObject(dep.componentId);
         const newDepId = idTransformer(depId);
         dep.componentId = (newDepId || depId).serialize();
         dep.id = (newDepId || depId).toString();
@@ -1273,23 +1270,6 @@ export class DependencyResolverMain {
       }
     });
     return component;
-  }
-
-  updateDepsOnLegacyExport(version: VersionModel, idTransformer: OnExportIdTransformer): VersionModel {
-    const entry = version.extensions.findCoreExtension(DependencyResolverAspect.id);
-    if (!entry) {
-      return version;
-    }
-    const dependencies = get(entry, ['data', 'dependencies'], []);
-    dependencies.forEach((dep) => {
-      if (dep.__type === COMPONENT_DEP_TYPE) {
-        const depId = new BitId(dep.componentId);
-        const newDepId = idTransformer(depId);
-        dep.componentId = (newDepId || depId).serialize();
-        dep.id = (newDepId || depId).toString();
-      }
-    });
-    return version;
   }
 
   /**
@@ -1629,7 +1609,7 @@ export class DependencyResolverMain {
 
     LegacyComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
-      async (configuredExtensions: ExtensionDataList, id: BitId, legacyFiles: SourceFile[]) => {
+      async (configuredExtensions: ExtensionDataList, id: ComponentID, legacyFiles: SourceFile[]) => {
         const policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
         return policy.toLegacyDepsOverrides();
       }
@@ -1641,7 +1621,7 @@ export class DependencyResolverMain {
     DependencyResolver.registerEnvDetectorGetter(async (extensions: ExtensionDataList) => {
       return dependencyResolver.calcComponentEnvDepDetectors(extensions);
     });
-    DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: BitId, files: SourceFile[]) => {
+    DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: ComponentID, files: SourceFile[]) => {
       const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id, files);
       if (!envPolicy) return undefined;
       return envPolicy.selfPolicy.toVersionManifest();
@@ -1653,6 +1633,20 @@ export class DependencyResolverMain {
 
     graphql.register(dependencyResolverSchema(dependencyResolver));
     envs.registerService(new DependenciesService());
+
+    // this is needed because during tag process, the data.dependencies can be loaded and the componentId can become
+    // an instance of ComponentID class. it needs to be serialized before saved into objects.
+    const serializeDepResolverDataBeforePersist = (extDataList: ExtensionDataList) => {
+      const entry = extDataList.findCoreExtension(DependencyResolverAspect.id);
+      if (!entry) return;
+      const dependencies = get(entry, ['data', 'dependencies'], []);
+      dependencies.forEach((dep) => {
+        if (dep.__type === COMPONENT_DEP_TYPE) {
+          dep.componentId = dep.componentId instanceof ComponentID ? dep.componentId.serialize() : dep.componentId;
+        }
+      });
+    };
+    ExtensionDataList.toModelObjectsHook.push(serializeDepResolverDataBeforePersist);
 
     return dependencyResolver;
   }

@@ -9,6 +9,7 @@ describe('ModelComponentMerger', () => {
     it('should not remove a version that exist locally but not in the incoming component if it came not from its origin', async () => {
       const existingComponent = Component.parse(
         JSON.stringify({
+          scope: 'my-scope',
           name: 'foo',
           versions: {
             '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
@@ -18,6 +19,7 @@ describe('ModelComponentMerger', () => {
       );
       const incomingComponent = Component.parse(
         JSON.stringify({
+          scope: 'my-scope',
           name: 'foo',
           versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
         })
@@ -37,6 +39,7 @@ describe('ModelComponentMerger', () => {
     it('should move a version to orphanedVersions if the incoming came from its origin and it does not have the version', async () => {
       const existingComponent = Component.parse(
         JSON.stringify({
+          scope: 'my-scope',
           name: 'foo',
           versions: {
             '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
@@ -46,6 +49,7 @@ describe('ModelComponentMerger', () => {
       );
       const incomingComponent = Component.parse(
         JSON.stringify({
+          scope: 'my-scope',
           name: 'foo',
           versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
         })
@@ -66,6 +70,7 @@ describe('ModelComponentMerger', () => {
     it('should move a version from orphanedVersions to versions if the incoming came from its origin and it has this version', async () => {
       const existingComponent = Component.parse(
         JSON.stringify({
+          scope: 'my-scope',
           name: 'foo',
           versions: {
             '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
@@ -77,6 +82,7 @@ describe('ModelComponentMerger', () => {
       );
       const incomingComponent = Component.parse(
         JSON.stringify({
+          scope: 'my-scope',
           name: 'foo',
           versions: {
             '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
@@ -99,12 +105,14 @@ describe('ModelComponentMerger', () => {
     it('should override a version from the incoming component in case of hash discrepancies', async () => {
       const existingComponent = Component.parse(
         JSON.stringify({
+          scope: 'my-scope',
           name: 'foo',
           versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
         })
       );
       const incomingComponent = Component.parse(
         JSON.stringify({
+          scope: 'my-scope',
           name: 'foo',
           versions: { '0.0.1': 'c471678f719783b044ac6d933ccb1da7132dc93d' },
         })
@@ -123,12 +131,14 @@ describe('ModelComponentMerger', () => {
     it('should add versions that exist in the incoming component but not locally', async () => {
       const existingComponent = Component.parse(
         JSON.stringify({
+          scope: 'my-scope',
           name: 'foo',
           versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
         })
       );
       const incomingComponent = Component.parse(
         JSON.stringify({
+          scope: 'my-scope',
           name: 'foo',
           versions: {
             '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
@@ -437,6 +447,7 @@ describe('ModelComponentMerger', () => {
 function getComponentObject(componentObj: Record<string, any>): Component {
   return Component.parse(
     JSON.stringify({
+      scope: 'my-scope',
       name: 'foo',
       ...componentObj,
     })

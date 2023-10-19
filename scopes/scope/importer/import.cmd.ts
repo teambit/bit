@@ -8,8 +8,7 @@ import {
   MergeOptions,
   MergeStrategy,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
-import { BitId } from '@teambit/legacy-bit-id';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
@@ -25,6 +24,7 @@ type ImportFlags = {
   json?: boolean;
   conf?: string;
   skipDependencyInstallation?: boolean;
+  skipWriteConfigFiles?: boolean;
   merge?: MergeStrategy;
   saveInLane?: boolean;
   dependencies?: boolean;
@@ -61,6 +61,7 @@ export class ImportCmd implements Command {
     ['j', 'json', 'return the output as JSON'],
     // ['', 'conf', 'write the configuration file (component.json) of the component'], // not working. need to fix once ComponentWriter is moved to Harmony
     ['x', 'skip-dependency-installation', 'do not auto-install dependencies of the imported components'],
+    ['', 'skip-write-config-files', 'do not write config files (such as eslint, tsconfig, prettier, etc...)'],
     [
       'm',
       'merge [strategy]',
@@ -118,7 +119,7 @@ export class ImportCmd implements Command {
     if (!importedIds.length && !missingIds?.length) {
       return chalk.yellow(cancellationMessage || 'nothing to import');
     }
-    const importedIdsUniqNoVersion = BitIds.fromArray(importedIds).toVersionLatest();
+    const importedIdsUniqNoVersion = ComponentIdList.fromArray(importedIds).toVersionLatest();
     const summaryPrefix =
       importedIdsUniqNoVersion.length === 1
         ? 'successfully imported one component'
@@ -169,6 +170,7 @@ export class ImportCmd implements Command {
       verbose = false,
       conf,
       skipDependencyInstallation = false,
+      skipWriteConfigFiles = false,
       merge,
       saveInLane = false,
       dependencies = false,
@@ -213,6 +215,7 @@ export class ImportCmd implements Command {
       override,
       writeConfig: Boolean(conf),
       installNpmPackages: !skipDependencyInstallation,
+      writeConfigFiles: !skipWriteConfigFiles,
       saveInLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
@@ -234,7 +237,7 @@ Also, check that the requested version exists on main or the checked out lane`;
   return `\n\n${title}\n${subTitle}\n${body}`;
 }
 
-function formatPlainComponentItemWithVersions(bitId: BitId, importDetails: ImportDetails) {
+function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails: ImportDetails) {
   const status: ImportStatus = importDetails.status;
   const id = bitId.toStringWithoutVersion();
   const getVersionsOutput = () => {

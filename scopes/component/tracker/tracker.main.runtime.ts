@@ -40,7 +40,7 @@ export class TrackerMain {
     );
     const result = await addComponent.add();
     const addedComponent = result.addedComponents[0];
-    const componentName = addedComponent?.id.name || (trackData.componentName as string);
+    const componentName = addedComponent?.id.fullName || (trackData.componentName as string);
     const files = addedComponent?.files.map((f) => f.relativePath) || [];
     return { componentName, files, warnings: result.warnings };
   }

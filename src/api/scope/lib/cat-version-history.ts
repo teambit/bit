@@ -1,4 +1,3 @@
-import { BitId } from '../../../bit-id';
 import { loadScope, Scope } from '../../../scope';
 import { VersionHistory } from '../../../scope/models';
 
@@ -16,7 +15,7 @@ export async function generateVersionHistoryGraph(id: string) {
 
 async function getVersionHistory(id: string): Promise<VersionHistory> {
   const scope: Scope = await loadScope();
-  const bitId: BitId = await scope.getParsedId(id);
+  const bitId = await scope.getParsedId(id);
   const component = await scope.getModelComponent(bitId);
   return component.getVersionHistory(scope.objects);
 }

@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { BitIds } from '../bit-id';
+import { ComponentIdList } from '@teambit/component-id';
 
 import Consumer from '../consumer/consumer';
 import { MissingBitMapComponent } from './bit-map/exceptions';
@@ -20,7 +20,7 @@ describe('Consumer', function () {
     });
     // @ts-ignore
     consumer.bitMap = {
-      getAllBitIdsFromAllLanes: () => new BitIds(),
+      getAllBitIdsFromAllLanes: () => new ComponentIdList(),
     };
     return consumer;
   };

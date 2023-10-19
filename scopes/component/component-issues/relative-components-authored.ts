@@ -1,9 +1,9 @@
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { ComponentIssue } from './component-issue';
 
 export type RelativeComponentsAuthoredEntry = {
   importSource: string;
-  componentId: BitId;
+  componentId: ComponentID;
   relativePath: {
     sourceRelativePath: string;
     importSpecifiers?: any[];
@@ -17,12 +17,24 @@ export class RelativeComponentsAuthored extends ComponentIssue {
   isCacheBlocker = false;
   formatDataFunction = relativeComponentsAuthoredIssuesToString;
 
+  serialize(): string {
+    const obj = Object.keys(this.data).reduce((acc, fileName) => {
+      acc[fileName] = this.data[fileName].map((record) => ({
+        importSource: record.importSource,
+        componentId: record.componentId.serialize(),
+        relativePath: record.relativePath,
+      }));
+      return acc;
+    }, {});
+    return JSON.stringify(obj);
+  }
+
   deserialize(dataStr: string) {
     const data = JSON.parse(dataStr);
     Object.keys(data).forEach((fileName) => {
       data[fileName] = data[fileName].map((record) => ({
         importSource: record.importSource,
-        componentId: new BitId(record.componentId),
+        componentId: ComponentID.deserialize(record.componentId),
         relativePath: record.relativePath,
       }));
     });
