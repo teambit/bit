@@ -497,7 +497,9 @@ describe('DepenendencyResolverMain.getComponentEnvPolicyFromEnv()', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any,
+      {
+        isCoreEnv: () => false,
+      } as any,
       {} as any,
       {} as any,
       {} as any,
