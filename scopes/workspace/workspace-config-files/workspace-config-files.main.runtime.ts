@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
 import pMapSeries from 'p-map-series';
 import yesno from 'yesno';
-import { flatMap, isFunction, pick, uniq } from 'lodash';
+import { defaults, flatMap, isFunction, pick, uniq } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { Workspace } from '@teambit/workspace';
@@ -62,6 +62,7 @@ export type WriteConfigFilesOptions = {
   silent?: boolean; // no prompt
   dedupe?: boolean;
   dryRun?: boolean;
+  throw?: boolean;
   writers?: string[];
 };
 
@@ -90,6 +91,7 @@ export type WriteConfigFilesResult = {
   cleanResults?: string[];
   writeResults: WriteResults;
   wsDir: string;
+  err?: Error;
 };
 
 export class WorkspaceConfigFilesMain {
@@ -115,22 +117,43 @@ export class WorkspaceConfigFilesMain {
    * - cleanResults: array of deleted paths
    */
   async writeConfigFiles(options: WriteConfigFilesOptions = {}): Promise<WriteConfigFilesResult> {
+    const defaultOpts: WriteConfigFilesOptions = {
+      clean: false,
+      dedupe: false,
+      silent: false,
+      dryRun: false,
+      throw: true,
+    };
+    const optionsWithDefaults = defaults(options, defaultOpts);
     const execContext = await this.getExecContext();
 
     let cleanResults: string[] | undefined;
-    if (options.clean) {
+    if (optionsWithDefaults.clean) {
       cleanResults = await this.clean(options);
     }
 
+    let writeErr;
     let writeResults;
     try {
-      writeResults = await this.write(execContext, options);
+      writeResults = await this.write(execContext, optionsWithDefaults);
     } catch (err) {
       this.logger.info('writeConfigFiles failed', err);
-      throw new WriteConfigFilesFailed();
+      if (optionsWithDefaults.throw) {
+        throw new WriteConfigFilesFailed();
+      }
+      writeErr = err;
     }
 
-    return { writeResults, cleanResults, wsDir: this.workspace.path };
+    return { writeResults, cleanResults, wsDir: this.workspace.path, err: writeErr };
+  }
+
+  /**
+   * This will check the config.enableWorkspaceConfigWrite before writing the config files.
+   */
+  async writeConfigFilesIfEnabled(options: WriteConfigFilesOptions = {}): Promise<WriteConfigFilesResult | undefined> {
+    const shouldWrite = this.isWorkspaceConfigWriteEnabled();
+    if (!shouldWrite) return undefined;
+    return this.writeConfigFiles(options);
   }
 
   /**

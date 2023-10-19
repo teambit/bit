@@ -43,6 +43,7 @@ export type ImportOptions = {
   writeConfig?: boolean;
   override?: boolean;
   installNpmPackages: boolean; // default: true
+  writeConfigFiles: boolean; // default: true
   objectsOnly?: boolean;
   saveDependenciesAsComponents?: boolean;
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages, not as imported
@@ -731,6 +732,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       writeToPath: this.options.writeToPath,
       writeConfig: this.options.writeConfig,
       skipDependencyInstallation: !this.options.installNpmPackages,
+      skipWriteConfigFiles: !this.options.writeConfigFiles,
       verbose: this.options.verbose,
       throwForExistingDir: !this.options.override,
       skipWritingToFs: this.options.trackOnly,

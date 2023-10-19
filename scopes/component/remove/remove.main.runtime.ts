@@ -149,6 +149,7 @@ export class RemoveMain {
       await this.importer.import({
         ids: [idStr],
         installNpmPackages: !options.skipDependencyInstallation,
+        writeConfigFiles: !options.skipWriteConfigFiles,
         override: true,
       });
     };
