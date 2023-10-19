@@ -364,10 +364,11 @@ export class WorkspaceComponentLoader {
       loadOpts || {}
     );
 
-    const legacyIdsIndex = {};
+    const idsIndex = {};
 
     const legacyIds = workspaceIds.map((id) => {
-      legacyIdsIndex[id._legacy.toString()] = id;
+      idsIndex[id._legacy.toString()] = id;
+      idsIndex[id.toString()] = id;
       return id._legacy;
     });
 
@@ -378,7 +379,7 @@ export class WorkspaceComponentLoader {
     } = await this.workspace.consumer.loadComponents(BitIds.fromArray(legacyIds), false, loadOptsWithDefaults);
     const allLegacyComponents = legacyComponents.concat(removedComponents);
     legacyInvalidComponents.forEach((invalidComponent) => {
-      const entry = { id: legacyIdsIndex[invalidComponent.id.toString()], err: invalidComponent.error };
+      const entry = { id: idsIndex[invalidComponent.id.toString()], err: invalidComponent.error };
       if (ConsumerComponent.isComponentInvalidByErrorType(invalidComponent.error)) {
         if (throwOnFailure) throw invalidComponent.error;
         invalidComponents.push(entry);
@@ -415,7 +416,14 @@ export class WorkspaceComponentLoader {
 
     const componentsP = Promise.all(
       allLegacyComponents.map(async (legacyComponent) => {
-        const id = legacyIdsIndex[legacyComponent.id.toString()];
+        let id = idsIndex[legacyComponent.id.toString()];
+        if (!id) {
+          const withoutVersion = idsIndex[legacyComponent.id.toStringWithoutVersion()];
+          if (withoutVersion) {
+            id = withoutVersion.changeVersion(legacyComponent.id.version);
+            idsIndex[legacyComponent.id.toString()] = id;
+          }
+        }
         longProcessLogger.logProgress(id.toString());
         return getWithCatch(id, legacyComponent);
       })
