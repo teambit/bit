@@ -25,6 +25,7 @@ type ImportFlags = {
   json?: boolean;
   conf?: string;
   skipDependencyInstallation?: boolean;
+  skipWriteConfigFiles?: boolean;
   merge?: MergeStrategy;
   saveInLane?: boolean;
   dependencies?: boolean;
@@ -61,6 +62,7 @@ export class ImportCmd implements Command {
     ['j', 'json', 'return the output as JSON'],
     // ['', 'conf', 'write the configuration file (component.json) of the component'], // not working. need to fix once ComponentWriter is moved to Harmony
     ['x', 'skip-dependency-installation', 'do not auto-install dependencies of the imported components'],
+    ['', 'skip-write-config-files', 'do not write config files (such as eslint, tsconfig, prettier, etc...)'],
     [
       'm',
       'merge [strategy]',
@@ -169,6 +171,7 @@ export class ImportCmd implements Command {
       verbose = false,
       conf,
       skipDependencyInstallation = false,
+      skipWriteConfigFiles = false,
       merge,
       saveInLane = false,
       dependencies = false,
@@ -213,6 +216,7 @@ export class ImportCmd implements Command {
       override,
       writeConfig: Boolean(conf),
       installNpmPackages: !skipDependencyInstallation,
+      writeConfigFiles: !skipWriteConfigFiles,
       saveInLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,

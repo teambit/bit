@@ -74,6 +74,7 @@ export class ImporterMain {
       objectsOnly: true,
       ids: options.ids || [],
       installNpmPackages: false,
+      writeConfigFiles: false,
     };
     const importComponents = new ImportComponents(this.workspace, this.graph, this.componentWriter, importOptions);
     return importComponents.importComponents();
@@ -102,6 +103,7 @@ export class ImporterMain {
       ids: [],
       objectsOnly: true,
       installNpmPackages: false,
+      writeConfigFiles: false,
     };
     const currentRemoteLane = await this.workspace.getCurrentRemoteLane();
     if (currentRemoteLane) {
@@ -158,6 +160,7 @@ export class ImporterMain {
       writeConfig: false,
       override: false,
       installNpmPackages: false,
+      writeConfigFiles: false,
       fromOriginalScope,
     };
 

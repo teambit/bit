@@ -113,16 +113,16 @@ export class ComponentGenerator {
    * `writeConfigFiles`, an error message is being returned.
    */
   private async tryWriteConfigFiles(ids: ComponentID[]) {
-    try {
-      const shouldWrite = this.wsConfigFiles.isWorkspaceConfigWriteEnabled();
-      if (!shouldWrite) return;
-      ids.map((id) => this.workspace.clearComponentCache(id));
-      await this.wsConfigFiles.writeConfigFiles({
-        clean: true,
-        silent: true,
-        dedupe: true,
-      });
-    } catch (err: any) {
+    const shouldWrite = this.wsConfigFiles.isWorkspaceConfigWriteEnabled();
+    if (!shouldWrite) return;
+    ids.map((id) => this.workspace.clearComponentCache(id));
+    const { err } = await this.wsConfigFiles.writeConfigFiles({
+      clean: true,
+      silent: true,
+      dedupe: true,
+      throw: false,
+    });
+    if (err) {
       this.logger.consoleFailure(
         `failed generating workspace config files, please run "bit ws-config write" manually. error: ${err.message}`
       );
