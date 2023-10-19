@@ -1870,7 +1870,7 @@ importers:
         version: 8.3.7(react-dom@17.0.2)(react@17.0.2)
       react-native:
         specifier: ^0.64.1
-        version: 0.64.4(@babel/preset-env@7.22.15)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: 0.64.4(@babel/core@7.19.6)(@babel/preset-env@7.22.15)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
       react-native-web:
         specifier: '>=0.16.0 <0.17.0'
         version: 0.16.5(react-dom@17.0.2)(react@17.0.2)
@@ -2343,9 +2343,15 @@ importers:
       '@babel/runtime':
         specifier: 7.20.0
         version: 7.20.0
+      '@teambit/component-version':
+        specifier: 1.0.0
+        version: 1.0.0
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
+      lodash:
+        specifier: 4.17.21
+        version: 4.17.21
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2359,6 +2365,9 @@ importers:
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
+      '@types/lodash':
+        specifier: 4.14.165
+        version: 4.14.165
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -2537,7 +2546,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.67)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -2549,7 +2558,7 @@ importers:
         version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.67)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/bit-custom-aspect
+        version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error':
         specifier: workspace:*
         version: file:scopes/harmony/bit-error
@@ -2726,7 +2735,7 @@ importers:
         version: file:scopes/web-components/elements(@testing-library/react@12.1.5)(@types/react@17.0.67)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env
+        version: file:scopes/envs/env(react-dom@17.0.2)(react@17.0.2)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@types/react@17.0.67)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -2855,7 +2864,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -2936,13 +2945,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -2993,7 +3002,7 @@ importers:
         version: file:scopes/react/ui/loader-fallback(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/readme':
         specifier: workspace:*
-        version: file:scopes/mdx/readme
+        version: file:scopes/mdx/readme(react-dom@17.0.2)(react@17.0.2)
       '@teambit/refactoring':
         specifier: workspace:*
         version: file:scopes/component/refactoring(react-dom@17.0.2)(react@17.0.2)
@@ -3162,12 +3171,6 @@ importers:
       '@teambit/yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/yarn(@testing-library/react@12.1.5)(@types/react@17.0.67)(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -3677,7 +3680,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.67)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -3689,7 +3692,7 @@ importers:
         version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.67)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/bit-custom-aspect
+        version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error':
         specifier: workspace:*
         version: file:scopes/harmony/bit-error
@@ -3866,7 +3869,7 @@ importers:
         version: file:scopes/web-components/elements(@testing-library/react@12.1.5)(@types/react@17.0.67)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env
+        version: file:scopes/envs/env(react-dom@17.0.2)(react@17.0.2)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@types/react@17.0.67)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -3995,7 +3998,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -4076,13 +4079,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -4133,7 +4136,7 @@ importers:
         version: file:scopes/react/ui/loader-fallback(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/readme':
         specifier: workspace:*
-        version: file:scopes/mdx/readme
+        version: file:scopes/mdx/readme(react-dom@17.0.2)(react@17.0.2)
       '@teambit/refactoring':
         specifier: workspace:*
         version: file:scopes/component/refactoring(react-dom@17.0.2)(react@17.0.2)
@@ -4302,12 +4305,6 @@ importers:
       '@teambit/yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/yarn(@testing-library/react@12.1.5)(@types/react@17.0.67)(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -4817,7 +4814,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.67)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -4829,7 +4826,7 @@ importers:
         version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.67)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/bit-custom-aspect
+        version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error':
         specifier: workspace:*
         version: file:scopes/harmony/bit-error
@@ -5006,7 +5003,7 @@ importers:
         version: file:scopes/web-components/elements(@testing-library/react@12.1.5)(@types/react@17.0.67)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env
+        version: file:scopes/envs/env(react-dom@17.0.2)(react@17.0.2)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@types/react@17.0.67)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -5135,7 +5132,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -5216,13 +5213,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -5273,7 +5270,7 @@ importers:
         version: file:scopes/react/ui/loader-fallback(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/readme':
         specifier: workspace:*
-        version: file:scopes/mdx/readme
+        version: file:scopes/mdx/readme(react-dom@17.0.2)(react@17.0.2)
       '@teambit/refactoring':
         specifier: workspace:*
         version: file:scopes/component/refactoring(react-dom@17.0.2)(react@17.0.2)
@@ -5442,12 +5439,6 @@ importers:
       '@teambit/yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/yarn(@testing-library/react@12.1.5)(@types/react@17.0.67)(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -5957,7 +5948,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.67)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -5969,7 +5960,7 @@ importers:
         version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.67)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/bit-custom-aspect
+        version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error':
         specifier: workspace:*
         version: file:scopes/harmony/bit-error
@@ -6146,7 +6137,7 @@ importers:
         version: file:scopes/web-components/elements(@testing-library/react@12.1.5)(@types/react@17.0.67)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env
+        version: file:scopes/envs/env(react-dom@17.0.2)(react@17.0.2)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@types/react@17.0.67)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -6275,7 +6266,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -6356,13 +6347,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -6413,7 +6404,7 @@ importers:
         version: file:scopes/react/ui/loader-fallback(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/readme':
         specifier: workspace:*
-        version: file:scopes/mdx/readme
+        version: file:scopes/mdx/readme(react-dom@17.0.2)(react@17.0.2)
       '@teambit/refactoring':
         specifier: workspace:*
         version: file:scopes/component/refactoring(react-dom@17.0.2)(react@17.0.2)
@@ -7091,7 +7082,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.67)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -7103,7 +7094,7 @@ importers:
         version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.67)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/bit-custom-aspect
+        version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error':
         specifier: workspace:*
         version: file:scopes/harmony/bit-error
@@ -7280,7 +7271,7 @@ importers:
         version: file:scopes/web-components/elements(@testing-library/react@12.1.5)(@types/react@17.0.67)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env
+        version: file:scopes/envs/env(react-dom@17.0.2)(react@17.0.2)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@types/react@17.0.67)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -7409,7 +7400,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -7490,13 +7481,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -7547,7 +7538,7 @@ importers:
         version: file:scopes/react/ui/loader-fallback(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/readme':
         specifier: workspace:*
-        version: file:scopes/mdx/readme
+        version: file:scopes/mdx/readme(react-dom@17.0.2)(react@17.0.2)
       '@teambit/refactoring':
         specifier: workspace:*
         version: file:scopes/component/refactoring(react-dom@17.0.2)(react@17.0.2)
@@ -7716,12 +7707,6 @@ importers:
       '@teambit/yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/yarn(@testing-library/react@12.1.5)(@types/react@17.0.67)(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -8231,7 +8216,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.67)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -8243,7 +8228,7 @@ importers:
         version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.67)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/bit-custom-aspect
+        version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error':
         specifier: workspace:*
         version: file:scopes/harmony/bit-error
@@ -8420,7 +8405,7 @@ importers:
         version: file:scopes/web-components/elements(@testing-library/react@12.1.5)(@types/react@17.0.67)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env
+        version: file:scopes/envs/env(react-dom@17.0.2)(react@17.0.2)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@types/react@17.0.67)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -8549,7 +8534,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -8630,13 +8615,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -8687,7 +8672,7 @@ importers:
         version: file:scopes/react/ui/loader-fallback(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/readme':
         specifier: workspace:*
-        version: file:scopes/mdx/readme
+        version: file:scopes/mdx/readme(react-dom@17.0.2)(react@17.0.2)
       '@teambit/refactoring':
         specifier: workspace:*
         version: file:scopes/component/refactoring(react-dom@17.0.2)(react@17.0.2)
@@ -8856,12 +8841,6 @@ importers:
       '@teambit/yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/yarn(@testing-library/react@12.1.5)(@types/react@17.0.67)(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -17540,9 +17519,6 @@ importers:
       react-dom:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
-      react-native:
-        specifier: ^0.64.1
-        version: 0.64.4(@babel/preset-env@7.22.15)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
       react-native-web:
         specifier: ^0.16.0
         version: 0.16.5(react-dom@17.0.2)(react@17.0.2)
@@ -18034,6 +18010,9 @@ importers:
       '@babel/runtime':
         specifier: 7.20.0
         version: 7.20.0
+      '@teambit/component-version':
+        specifier: 1.0.0
+        version: 1.0.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -26069,7 +26048,7 @@ packages:
       ora: 3.4.0
     dev: false
 
-  /@react-native-community/cli@5.0.1(bufferutil@4.0.3)(react-native@0.64.4)(utf-8-validate@5.0.5):
+  /@react-native-community/cli@5.0.1(@babel/core@7.19.6)(bufferutil@4.0.3)(react-native@0.64.4)(utf-8-validate@5.0.5):
     resolution: {integrity: sha512-9VzSYUYSEqxEH5Ib2UNSdn2eyPiYZ4T7Y79o9DKtRBuSaUIwbCUdZtIm+UUjBpLS1XYBkW26FqL8/UdZDmQvXw==}
     engines: {node: '>=12'}
     hasBin: true
@@ -26099,7 +26078,7 @@ packages:
       metro: 0.64.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       metro-config: 0.64.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       metro-core: 0.64.0
-      metro-react-native-babel-transformer: 0.64.0
+      metro-react-native-babel-transformer: 0.64.0(@babel/core@7.19.6)
       metro-resolver: 0.64.0
       metro-runtime: 0.64.0
       minimist: 1.2.8
@@ -26108,13 +26087,14 @@ packages:
       ora: 3.4.0
       pretty-format: 26.6.2
       prompts: 2.4.2
-      react-native: 0.64.4(@babel/preset-env@7.22.15)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
+      react-native: 0.64.4(@babel/core@7.19.6)(@babel/preset-env@7.22.15)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
       semver: 6.3.1
       serve-static: 1.15.0
       strip-ansi: 5.2.0
       sudo-prompt: 9.2.1
       wcwidth: 1.0.1
     transitivePeerDependencies:
+      - '@babel/core'
       - bufferutil
       - encoding
       - supports-color
@@ -46870,8 +46850,10 @@ packages:
       uglify-es: 3.3.9
     dev: false
 
-  /metro-react-native-babel-preset@0.64.0:
+  /metro-react-native-babel-preset@0.64.0(@babel/core@7.19.6):
     resolution: {integrity: sha512-HcZ0RWQRuJfpPiaHyFQJzcym+/dDIVUPwUAXWoub/C4GkGu+mPjp8vqK6g0FxokCnnI2TK0gZTza2IDfiNNscQ==}
+    peerDependencies:
+      '@babel/core': '*'
     dependencies:
       '@babel/core': 7.19.6
       '@babel/plugin-proposal-class-properties': 7.12.1(@babel/core@7.19.6)
@@ -46912,17 +46894,17 @@ packages:
       '@babel/plugin-transform-unicode-regex': 7.22.5(@babel/core@7.19.6)
       '@babel/template': 7.22.15
       react-refresh: 0.4.3
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
-  /metro-react-native-babel-transformer@0.64.0:
+  /metro-react-native-babel-transformer@0.64.0(@babel/core@7.19.6):
     resolution: {integrity: sha512-K1sHO3ODBFCr7uEiCQ4RvVr+cQg0EHQF8ChVPnecGh/WDD8udrTq9ECwB0dRfMjAvlsHtRUlJm6ZSI8UPgum2w==}
+    peerDependencies:
+      '@babel/core': '*'
     dependencies:
       '@babel/core': 7.19.6
       babel-preset-fbjs: 3.4.0(@babel/core@7.19.6)
       metro-babel-transformer: 0.64.0
-      metro-react-native-babel-preset: 0.64.0
+      metro-react-native-babel-preset: 0.64.0(@babel/core@7.19.6)
       metro-source-map: 0.64.0
       nullthrows: 1.1.1
     transitivePeerDependencies:
@@ -47040,7 +47022,7 @@ packages:
       metro-hermes-compiler: 0.64.0
       metro-inspector-proxy: 0.64.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       metro-minify-uglify: 0.64.0
-      metro-react-native-babel-preset: 0.64.0
+      metro-react-native-babel-preset: 0.64.0(@babel/core@7.19.6)
       metro-resolver: 0.64.0
       metro-runtime: 0.64.0
       metro-source-map: 0.64.0
@@ -50625,7 +50607,7 @@ packages:
       - encoding
     dev: false
 
-  /react-native@0.64.4(@babel/preset-env@7.22.15)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5):
+  /react-native@0.64.4(@babel/core@7.19.6)(@babel/preset-env@7.22.15)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5):
     resolution: {integrity: sha512-nxYt/NrTmGyW6+tOd+Hqp4O8uJ2LLZkN7ispMPDprAq7bwvLkF/GXmDQCZHAEyqXuhIztTtMX41KqFQ6UMCUJQ==}
     engines: {node: '>=12'}
     deprecated: 'Issues and pull requests filed against this version are not supported. See the React Native release support policy to learn more: https://github.com/reactwg/react-native-releases#releases-support-policy'
@@ -50634,7 +50616,7 @@ packages:
       react: 17.0.1
     dependencies:
       '@jest/create-cache-key-function': 26.6.2
-      '@react-native-community/cli': 5.0.1(bufferutil@4.0.3)(react-native@0.64.4)(utf-8-validate@5.0.5)
+      '@react-native-community/cli': 5.0.1(@babel/core@7.19.6)(bufferutil@4.0.3)(react-native@0.64.4)(utf-8-validate@5.0.5)
       '@react-native-community/cli-platform-android': 5.0.1
       '@react-native-community/cli-platform-ios': 5.0.2
       '@react-native/assets': 1.0.0
@@ -50648,7 +50630,7 @@ packages:
       invariant: 2.2.4
       jsc-android: 245459.0.0
       metro-babel-register: 0.64.0
-      metro-react-native-babel-transformer: 0.64.0
+      metro-react-native-babel-transformer: 0.64.0(@babel/core@7.19.6)
       metro-runtime: 0.64.0
       metro-source-map: 0.64.0
       nullthrows: 1.1.1
@@ -50667,6 +50649,7 @@ packages:
       whatwg-fetch: 3.6.19
       ws: 6.2.2(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     transitivePeerDependencies:
+      - '@babel/core'
       - '@babel/preset-env'
       - bufferutil
       - encoding
@@ -56029,7 +56012,9 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
+      '@teambit/component-version': 1.0.0
       core-js: 3.13.0
+      lodash: 4.17.21
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     dev: false
@@ -57859,9 +57844,13 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/envs/env:
+  file:scopes/envs/env(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/envs/env, type: directory}
+    id: file:scopes/envs/env
     name: '@teambit/env'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
@@ -58060,10 +58049,13 @@ packages:
       - utf-8-validate
     dev: false
 
-  file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy):
+  file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/harmony/aspect, type: directory}
     id: file:scopes/harmony/aspect
     name: '@teambit/aspect'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/plugin-proposal-decorators': 7.12.13(@babel/core@7.19.6)
       '@babel/plugin-transform-class-properties': 7.22.5(@babel/core@7.19.6)
@@ -58185,9 +58177,13 @@ packages:
       - subscriptions-transport-ws
     dev: false
 
-  file:scopes/harmony/bit-custom-aspect:
+  file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/harmony/bit-custom-aspect, type: directory}
+    id: file:scopes/harmony/bit-custom-aspect
     name: '@teambit/bit-custom-aspect'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
@@ -58651,9 +58647,13 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/mdx/mdx:
+  file:scopes/mdx/mdx(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/mdx/mdx, type: directory}
+    id: file:scopes/mdx/mdx
     name: '@teambit/mdx'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/core': 7.19.6
       '@babel/helper-plugin-test-runner': 7.16.7
@@ -58704,9 +58704,13 @@ packages:
       - webpack-cli
     dev: false
 
-  file:scopes/mdx/readme:
+  file:scopes/mdx/readme(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/mdx/readme, type: directory}
+    id: file:scopes/mdx/readme
     name: '@teambit/readme'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
@@ -59035,10 +59039,13 @@ packages:
       - utf-8-validate
     dev: false
 
-  file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
+  file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
     resolution: {directory: scopes/react/react, type: directory}
     id: file:scopes/react/react
     name: '@teambit/react'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/core': 7.19.6
       '@babel/helper-plugin-test-runner': 7.16.7
@@ -59219,10 +59226,14 @@ packages:
       - webpack-cli
     dev: false
 
-  file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5):
+  file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2):
     resolution: {directory: scopes/react/react-native, type: directory}
     id: file:scopes/react/react-native
     name: '@teambit/react-native'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+      react-native-web: ^0.16.0
     dependencies:
       '@babel/plugin-transform-class-properties': 7.22.5(@babel/core@7.19.6)
       '@babel/preset-env': 7.22.15(@babel/core@7.19.6)
@@ -59237,16 +59248,12 @@ packages:
       ramda: 0.27.1
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-      react-native: 0.64.4(@babel/preset-env@7.22.15)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
       react-native-web: 0.16.5(react-dom@17.0.2)(react@17.0.2)
       typescript: 4.7.4
     transitivePeerDependencies:
       - '@babel/core'
       - '@teambit/legacy'
-      - bufferutil
-      - encoding
       - supports-color
-      - utf-8-validate
     dev: false
 
   file:scopes/react/ui/compositions-app(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
@@ -59440,6 +59447,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
+      '@teambit/component-version': 1.0.0
       '@teambit/harmony': 0.4.6
       '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
