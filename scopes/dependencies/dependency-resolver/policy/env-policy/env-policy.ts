@@ -71,7 +71,7 @@ export class EnvPolicy extends VariantPolicy {
      * when we used to configure dependencies, devDependencies, peerDependencies as objects of dependencyId: version
      * Those were always forced on the components as visible dependencies.
      */
-    const legacyPolicy = VariantPolicy.fromConfigObject(configObject, { source: 'env', force: true });
+    const legacyPolicy = VariantPolicy.fromConfigObject(configObject, { source: 'env', force: true, hidden: false });
     const componentPeersEntries = entriesFromKey(configObject, 'peers', 'supportedRange', 'peer', 'env');
     const otherKeyNames: EnvJsoncPolicyConfigKey[] = ['dev', 'runtime'];
     const otherEntries: VariantPolicyEntry[] = otherKeyNames.reduce(
