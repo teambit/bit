@@ -495,7 +495,7 @@ export class WorkspaceComponentLoader {
     }
 
     // in case of out-of-sync, the id may changed during the load process
-    const updatedId = consumerComponent ? ComponentID.fromLegacy(consumerComponent.id, id.scope) : id;
+    const updatedId = consumerComponent ? consumerComponent.id : id;
     const component = await this.loadOne(updatedId, consumerComponent, loadOptsWithDefaults);
     if (storeInCache) {
       this.addMultipleEnvsIssueIfNeeded(component); // it's in storeInCache block, otherwise, it wasn't fully loaded
@@ -518,7 +518,7 @@ export class WorkspaceComponentLoader {
   private resolveVersion(componentId: ComponentID): ComponentID {
     const bitIdWithVersion: ComponentID = getLatestVersionNumber(
       this.workspace.consumer.bitmapIdsFromCurrentLaneIncludeRemoved,
-      componentId._legacy
+      componentId
     );
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
     return id;
