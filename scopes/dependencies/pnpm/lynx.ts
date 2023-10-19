@@ -1,5 +1,3 @@
-import fs from 'fs-extra';
-import path from 'path';
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import { initDefaultReporter } from '@pnpm/default-reporter';
