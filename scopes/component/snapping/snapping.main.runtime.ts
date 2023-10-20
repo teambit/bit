@@ -52,7 +52,6 @@ import { VersionNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';
-import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
@@ -107,8 +106,7 @@ export class SnappingMain {
     private scope: ScopeMain,
     private exporter: ExportMain,
     private builder: BuilderMain,
-    private importer: ImporterMain,
-    private envs: EnvsMain
+    private importer: ImporterMain
   ) {
     this.objectsRepo = this.scope?.legacyScope?.objects;
   }
@@ -193,7 +191,6 @@ export class SnappingMain {
         scope: this.scope,
         snapping: this,
         builder: this.builder,
-        envs: this.envs,
         consumerComponents,
         ids: legacyBitIds,
         message,
@@ -322,7 +319,6 @@ if you're willing to lose the history from the head to the specified version, us
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
-      envs: this.envs,
       consumerComponents,
       tagDataPerComp,
       populateArtifactsFrom: shouldUsePopulateArtifactsFrom ? components.map((c) => c.id) : undefined,
@@ -423,7 +419,6 @@ if you're willing to lose the history from the head to the specified version, us
     const legacyIds = ComponentIdList.fromArray(componentIds.map((id) => id));
     const results = await tagModelComponent({
       ...params,
-      envs: this.envs,
       scope: this.scope,
       consumerComponents,
       tagDataPerComp: snapDataPerComp,
@@ -509,7 +504,6 @@ if you're willing to lose the history from the head to the specified version, us
     const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await tagModelComponent({
       workspace: this.workspace,
       scope: this.scope,
-      envs: this.envs,
       snapping: this,
       builder: this.builder,
       editor,
@@ -1169,7 +1163,6 @@ another option, in case this dependency is not in main yet is to remove all refe
     BuilderAspect,
     ImporterAspect,
     GlobalConfigAspect,
-    EnvsAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1184,7 +1177,6 @@ another option, in case this dependency is not in main yet is to remove all refe
     builder,
     importer,
     globalConfig,
-    envs,
   ]: [
     Workspace,
     CLIMain,
@@ -1196,8 +1188,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     ExportMain,
     BuilderMain,
     ImporterMain,
-    GlobalConfigMain,
-    EnvsMain
+    GlobalConfigMain
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(
@@ -1209,8 +1200,7 @@ another option, in case this dependency is not in main yet is to remove all refe
       scope,
       exporter,
       builder,
-      importer,
-      envs
+      importer
     );
     const snapCmd = new SnapCmd(snapping, logger, globalConfig);
     const tagCmd = new TagCmd(snapping, logger, globalConfig);

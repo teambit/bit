@@ -148,7 +148,56 @@ export class BuilderMain {
     if (populateArtifactsFrom) await this.combineBuildDataFrom(builderDataMap, populateArtifactsFrom);
     this.validateBuilderDataMap(builderDataMap);
 
+    await this.sanitizePreviewData(components);
+
     return { builderDataMap, pipeResults };
+  }
+
+  /**
+   * remove the onlyOverview from the preview data of the component if
+   * the env is in the workspace
+   * the env is not tagged with the component
+   * the last tagged env has onlyOverview undefined in preview data
+   *
+   * We don't want to do this but have no choice because,
+   * when we load components in workspace,
+   * we set the onlyOverview to true in the env's preview data
+   * which sets the onlyOverview to true in the component's preview data
+   * but if you don't tag the env with the component,
+   * the onlyOverview will be true in the component's preview data, since its env is in the workspace
+   * even though the env it is tagged with doesn't have onlyOverview in its preview data
+   * which will result in inconsistent preview data when exported to the scope
+   */
+  async sanitizePreviewData(harmonyComps: Component[]) {
+    const harmonyCompIdsWithEnvId = await Promise.all(
+      harmonyComps.map(async (comp) => {
+        const envId = await this.envs.getEnvId(comp);
+        const envCompId = ComponentID.fromString(envId);
+        const inWs = this.workspace ? await this.workspace.hasId(envCompId) : false;
+        const lastTaggedEnvHasOnlyOverview: boolean | undefined = (
+          await this.scope.get(envCompId, false)
+        )?.state.aspects.get('teambit.preview/preview')?.data?.onlyOverview;
+
+        return [comp.id.toString(), { envId, inWs, lastTaggedEnvHasOnlyOverview }] as [
+          string,
+          { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean }
+        ];
+      })
+    );
+
+    const harmonyCompIdsWithEnvIdMap = new Map(harmonyCompIdsWithEnvId);
+
+    const compsToDeleteOnlyOverviewPreviewData = harmonyComps.filter((comp) => {
+      const envData: { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean } | undefined =
+        harmonyCompIdsWithEnvIdMap.get(comp.id.toString());
+      return envData?.inWs && !envData?.lastTaggedEnvHasOnlyOverview;
+    });
+
+    for (const comp of compsToDeleteOnlyOverviewPreviewData) {
+      const previewData = comp.state.aspects.get('teambit.preview/preview')?.data;
+      // if the env is not tagged with the component remove it from the preview data of the component
+      delete previewData?.onlyOverview;
+    }
   }
 
   private validateBuilderDataMap(builderDataMap: ComponentMap<RawBuilderData>) {

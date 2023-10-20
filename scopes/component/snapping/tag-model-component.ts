@@ -37,7 +37,6 @@ import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
-import { EnvsMain } from '@teambit/envs';
 import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 
 export type onTagIdTransformer = (id: ComponentID) => ComponentID | null;
@@ -179,7 +178,6 @@ export async function tagModelComponent({
   scope,
   snapping,
   builder,
-  envs,
   consumerComponents,
   ids,
   tagDataPerComp,
@@ -208,7 +206,6 @@ export async function tagModelComponent({
   scope: ScopeMain;
   snapping: SnappingMain;
   builder: BuilderMain;
-  envs: EnvsMain;
   consumerComponents: ConsumerComponent[];
   ids: ComponentIdList;
   tagDataPerComp?: TagDataPerComp[];
@@ -332,11 +329,7 @@ export async function tagModelComponent({
   }
 
   const publishedPackages: string[] = [];
-  const harmonyComps: Component[] = await (workspace || scope).getManyByLegacy(
-    allComponentsToTag.filter((c) => !c.isRemoved())
-  );
-
-  await sanitizePreviewData(harmonyComps, scope, envs, workspace);
+  let harmonyComps: Component[] = [];
 
   if (build) {
     const onTagOpts: OnTagOpts = {
@@ -353,7 +346,7 @@ export async function tagModelComponent({
     const componentsToBuild = allComponentsToTag.filter((c) => !c.isRemoved());
     if (componentsToBuild.length) {
       await scope.reloadAspectsWithNewVersion(componentsToBuild);
-      // harmonyComps = await (workspace || scope).getManyByLegacy(componentsToBuild);
+      harmonyComps = await (workspace || scope).getManyByLegacy(componentsToBuild);
       const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions, builderOptions);
       const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
 
@@ -638,55 +631,4 @@ export async function updateComponentsVersions(
   await workspace.scope.legacyScope.stagedSnaps.write();
 
   return stagedConfig;
-}
-
-/**
- * remove the onlyOverview from the preview data of the component if
- * the env is in the workspace
- * the env is not tagged with the component
- * the last tagged env has onlyOverview undefined in preview data
- *
- * We don't want to do this but have no choice because,
- * when we load components in workspace,
- * we set the onlyOverview to true in the env's preview data
- * which sets the onlyOverview to true in the component's preview data
- * but if you don't tag the env with the component,
- * the onlyOverview will be true in the component's preview data, since its env is in the workspace
- * even though the env it is tagged with doesn't have onlyOverview in its preview data
- * which will result in inconsistent preview data when exported to the scope
- */
-export async function sanitizePreviewData(
-  harmonyComps: Component[],
-  scope: ScopeMain,
-  envs: EnvsMain,
-  workspace?: Workspace
-) {
-  const harmonyCompIdsWithEnvId = await Promise.all(
-    harmonyComps.map(async (comp) => {
-      const envComp = await envs.getEnvComponent(comp);
-      const inWs = workspace ? await workspace.hasId(envComp.id) : false;
-      const lastTaggedEnvHasOnlyOverview: boolean | undefined = (await scope.get(envComp.id, false))?.state.aspects.get(
-        'teambit.preview/preview'
-      )?.data?.onlyOverview;
-
-      return [comp.id.toString(), { envId: envComp.id.toString(), inWs, lastTaggedEnvHasOnlyOverview }] as [
-        string,
-        { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean }
-      ];
-    })
-  );
-
-  const harmonyCompIdsWithEnvIdMap = new Map(harmonyCompIdsWithEnvId);
-
-  const compsToDeleteOnlyOverviewPreviewData = harmonyComps.filter((comp) => {
-    const envData: { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean } | undefined =
-      harmonyCompIdsWithEnvIdMap.get(comp.id.toString());
-    return envData?.inWs && !envData?.lastTaggedEnvHasOnlyOverview;
-  });
-
-  for (const comp of compsToDeleteOnlyOverviewPreviewData) {
-    const previewData = comp.state.aspects.get('teambit.preview/preview')?.data;
-    // if the env is not tagged with the component remove it from the preview data of the component
-    delete previewData?.onlyOverview;
-  }
 }
