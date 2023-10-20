@@ -306,7 +306,6 @@
         "@teambit/react.ui.component-highlighter": "0.2.1",
         "@teambit/scope.content.scope-overview": "1.95.0",
         "@teambit/scope.ui.empty-scope": "^0.0.509",
-        "@teambit/scope.ui.hooks.scope-context": "^0.0.448",
         "@teambit/scope.ui.hooks.use-scope": "^0.0.453",
         "@teambit/scope.ui.scope-details": "^0.0.526",
         "@teambit/scope.ui.scope-icon": "0.0.91",
