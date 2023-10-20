@@ -35,8 +35,8 @@ export function VariableNodeSummary({
 }: VariableNodeSummaryProps) {
   const { __schema, doc } = node;
   const { renderers } = apiNodeRendererProps;
-  const sanitizedName = __schema === 'IndexSignature' ? (node as IndexSignatureSchema).keyType.toString() : name;
-  const sanitizedType = __schema === 'IndexSignature' ? (node as IndexSignatureSchema).valueType : type;
+  const sanitizedName = __schema === 'IndexSignatureSchema' ? (node as IndexSignatureSchema).keyType.toString() : name;
+  const sanitizedType = __schema === 'IndexSignatureSchema' ? (node as IndexSignatureSchema).valueType : type;
   const typeRenderer = sanitizedType && renderers.find((renderer) => renderer.predicate(sanitizedType));
 
   const customTypeRow = (typeRenderer && (
