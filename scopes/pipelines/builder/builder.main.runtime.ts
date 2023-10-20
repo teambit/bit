@@ -171,8 +171,8 @@ export class BuilderMain {
   async sanitizePreviewData(harmonyComps: Component[]) {
     const harmonyCompIdsWithEnvId = await Promise.all(
       harmonyComps.map(async (comp) => {
-        const envId = await this.envs.getEnvIdFromEnvsData(comp);
-        if (envId && this.envs.getCoreEnvsIds().includes(envId)) {
+        const envId = await this.envs.getEnvId(comp);
+        if (this.envs.isUsingCoreEnv(comp)) {
           return [comp.id.toString(), { envId, inWs: false, lastTaggedEnvHasOnlyOverview: false }] as [
             string,
             { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean }
