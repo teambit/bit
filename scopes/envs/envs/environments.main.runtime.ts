@@ -309,7 +309,7 @@ export class EnvsMain {
    * @param component
    * @param ignoreVersion
    */
-  private getEnvIdFromEnvsData(component: Component, ignoreVersion = true): string | undefined {
+  getEnvIdFromEnvsData(component: Component, ignoreVersion = true): string | undefined {
     const envsData = this.getEnvData(component);
     if (!envsData) return undefined;
     const rawEnvId = envsData.id;

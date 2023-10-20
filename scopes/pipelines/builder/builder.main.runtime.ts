@@ -171,12 +171,18 @@ export class BuilderMain {
   async sanitizePreviewData(harmonyComps: Component[]) {
     const harmonyCompIdsWithEnvId = await Promise.all(
       harmonyComps.map(async (comp) => {
-        const envId = await this.envs.getEnvId(comp);
-        const envCompId = ComponentID.fromString(envId);
-        const inWs = this.workspace ? await this.workspace.hasId(envCompId) : false;
-        const lastTaggedEnvHasOnlyOverview: boolean | undefined = (
-          await this.scope.get(envCompId, false)
-        )?.state.aspects.get('teambit.preview/preview')?.data?.onlyOverview;
+        const envId = await this.envs.getEnvIdFromEnvsData(comp);
+        if (envId && this.envs.getCoreEnvsIds().includes(envId)) {
+          return [comp.id.toString(), { envId, inWs: false, lastTaggedEnvHasOnlyOverview: false }] as [
+            string,
+            { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean }
+          ];
+        }
+        const envCompId = (envId && ComponentID.fromString(envId)) || undefined;
+        const inWs = this.workspace && envCompId ? await this.workspace.hasId(envCompId) : false;
+        const lastTaggedEnvHasOnlyOverview: boolean | undefined =
+          envCompId &&
+          (await this.scope.get(envCompId, false))?.state.aspects.get('teambit.preview/preview')?.data?.onlyOverview;
 
         return [comp.id.toString(), { envId, inWs, lastTaggedEnvHasOnlyOverview }] as [
           string,
