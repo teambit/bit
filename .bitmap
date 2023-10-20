@@ -189,18 +189,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit-custom-aspect"
     },
-    "bit-error": {
-        "scope": "teambit.harmony",
-        "version": "0.0.404",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/bit-error"
-    },
-    "bit-roots": {
-        "scope": "teambit.workspace",
-        "version": "0.0.133",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/bit-roots"
-    },
     "builder": {
         "scope": "teambit.pipelines",
         "version": "1.0.27",
@@ -333,12 +321,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-descriptor"
     },
-    "component-issues": {
-        "scope": "teambit.component",
-        "version": "0.0.99",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-issues"
-    },
     "component-log": {
         "scope": "teambit.component",
         "version": "1.0.27",
@@ -362,12 +344,6 @@
         "version": "1.0.27",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-tree"
-    },
-    "component-version": {
-        "scope": "teambit.component",
-        "version": "1.0.3",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-version"
     },
     "component-writer": {
         "scope": "teambit.component",
@@ -627,23 +603,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/jest"
     },
-    "lane-id": {
-        "scope": "teambit.lanes",
-        "version": "0.0.311",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/lane-id"
-    },
     "lanes": {
         "scope": "teambit.lanes",
         "version": "1.0.27",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/lanes"
-    },
-    "legacy-component-log": {
-        "scope": "teambit.component",
-        "version": "0.0.402",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/legacy-component-log"
     },
     "linter": {
         "scope": "teambit.defender",
@@ -713,7 +677,7 @@
     },
     "modules/component-url": {
         "scope": "teambit.component",
-        "version": "0.0.155",
+        "version": "0.0.156",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-url"
     },
@@ -848,12 +812,6 @@
         "version": "1.0.27",
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/multi-tester"
-    },
-    "network/agent": {
-        "scope": "teambit.toolbox",
-        "version": "0.0.554",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/network/agent"
     },
     "network/get-port": {
         "scope": "teambit.toolbox",
