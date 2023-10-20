@@ -713,7 +713,7 @@
     },
     "modules/component-url": {
         "scope": "teambit.component",
-        "version": "0.0.155",
+        "version": "0.0.156",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-url"
     },
