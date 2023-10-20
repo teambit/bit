@@ -76,8 +76,8 @@ export class SchemaExtractorContext {
     this.hostRootPath = pathNormalizeToLinux(hostRootPath);
   }
 
-  getComputedNodeKey({ filePath, line, character }: Location) {
-    return `${filePath}:${line}:${character}`;
+  getComputedNodeKey({ filePath, line, character }: Location, schema: string) {
+    return `${filePath}:${line}:${character}__${schema}`;
   }
 
   getIdentifierKeyForNode(node: Node) {
@@ -90,8 +90,8 @@ export class SchemaExtractorContext {
   }
 
   setComputed(node: SchemaNode) {
-    const { location } = node;
-    const key = this.getComputedNodeKey(location);
+    const { location, __schema } = node;
+    const key = this.getComputedNodeKey(location, __schema);
     this.computed.set(key, node);
   }
 
@@ -116,7 +116,7 @@ export class SchemaExtractorContext {
 
   async computeSchema(node: Node): Promise<SchemaNode> {
     const location = this.getLocation(node);
-    const key = this.getComputedNodeKey(location);
+    const key = this.getComputedNodeKey(location, SyntaxKind[node.kind]);
     const existingComputedSchema = this.computed.get(key);
     if (existingComputedSchema) {
       return existingComputedSchema;
