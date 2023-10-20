@@ -278,10 +278,7 @@ export class PreviewMain {
 
   private async calculateIncludeOnlyOverview(component: Component): Promise<boolean> {
     if (this.envs.isUsingCoreEnv(component)) {
-      const isNew = await component.isNew();
-      if (isNew) {
-        return true;
-      }
+      return true;
     }
     const envComponent = await this.envs.getEnvComponent(component);
     return this.doesEnvIncludesOnlyOverview(envComponent);
@@ -289,10 +286,7 @@ export class PreviewMain {
 
   private async calculateUseNameParam(component: Component): Promise<boolean> {
     if (this.envs.isUsingCoreEnv(component)) {
-      const isNew = await component.isNew();
-      if (isNew) {
-        return true;
-      }
+      return true;
     }
     const envComponent = await this.envs.getEnvComponent(component);
     return this.doesEnvUseNameParam(envComponent);
