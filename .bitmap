@@ -453,6 +453,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/entities/lane-diff"
     },
+    "entities/semantic-schema": {
+        "name": "entities/semantic-schema",
+        "scope": "teambit.semantics",
+        "version": "0.0.59",
+        "mainFile": "index.ts",
+        "rootDir": "components/entities/semantic-schema"
+    },
     "env": {
         "scope": "teambit.envs",
         "version": "1.0.27",
