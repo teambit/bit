@@ -24,7 +24,7 @@
 <a href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-1vq1vcxxu-CEVobR1p9BurmW8QnQFh1w" ><img alt="Join Slack" src="https://img.shields.io/badge/Slack-Join%20Bit%20Slack-blueviolet"/></a>
 
 
-Bit is a build system for development of **composable software**. It makes the composition of applications from independently versioned components simple and fast.
+Bit is a build system for development of **composable software**. It makes the composition of applications from independently versioned components seamless and fast.
 
 Bit is similar in sense, but stands as the opposite for the "Monorepo" approach, which aims to center all code under a central repository. Instead, Bit is bringing simplicity for distribution of source code into  independently versioned components, depending on each other.
 
