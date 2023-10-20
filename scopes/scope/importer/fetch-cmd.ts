@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { FileStatus } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import { ImporterMain } from './importer.main.runtime';
 import { ImportDetails, ImportStatus } from './import-components';
@@ -74,7 +74,7 @@ export class FetchCmd implements Command {
   }
 }
 
-function formatPlainComponentItemWithVersions(bitId: BitId, importDetails: ImportDetails) {
+function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails: ImportDetails) {
   const status: ImportStatus = importDetails.status;
   const id = bitId.toStringWithoutVersion();
   const versions = importDetails.versions.length ? `new versions: ${importDetails.versions.join(', ')}` : '';

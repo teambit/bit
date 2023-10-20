@@ -54,7 +54,7 @@ export class NewComponentHelperMain {
       return pathFromUser;
     }
 
-    return composeComponentPath(componentId._legacy.changeScope(componentId.scope), this.workspace.defaultDirectory);
+    return composeComponentPath(componentId.changeScope(componentId.scope), this.workspace.defaultDirectory);
   }
   async writeAndAddNewComp(
     comp: Component,

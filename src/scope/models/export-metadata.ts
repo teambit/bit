@@ -1,4 +1,4 @@
-import { BitId } from '../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { getStringifyArgs } from '../../utils';
 import { Ref } from '../objects';
 import BitObject from '../objects/object';
@@ -7,7 +7,7 @@ type ExportMetadataProps = {
   exportVersions: ExportVersions[];
 };
 
-export type ExportVersions = { id: BitId; versions: string[]; head: Ref };
+export type ExportVersions = { id: ComponentID; versions: string[]; head: Ref };
 
 export default class ExportMetadata extends BitObject {
   exportVersions: ExportVersions[];
@@ -44,7 +44,7 @@ export default class ExportMetadata extends BitObject {
     const parsed = JSON.parse(contents);
     const props: ExportMetadataProps = {
       exportVersions: parsed.exportVersions.map((comp) => ({
-        id: BitId.parse(comp.id, true),
+        id: ComponentID.fromString(comp.id),
         versions: comp.versions,
         head: Ref.from(comp.head),
       })),

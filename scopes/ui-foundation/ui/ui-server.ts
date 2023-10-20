@@ -101,6 +101,7 @@ export class UIServer {
     const publicDir = `/${this.publicDir}`;
     const defaultRoot = join(this.uiRoot.path, publicDir);
     const root = bundleUiRoot || defaultRoot;
+    this.logger.debug(`UiServer, start from ${root}`);
     const server = await this.graphql.createServer({ app });
 
     // set up proxy, for things like preview, e.g. '/preview/teambit.react/react'

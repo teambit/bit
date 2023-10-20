@@ -3,7 +3,7 @@ import { forEach } from 'lodash';
 
 import BitId, { BitIdStr } from '../bit-id/bit-id';
 import { LATEST_BIT_VERSION } from '../constants';
-import getLatestVersionNumber from '../utils/resolveLatestVersion';
+// import getLatestVersionNumber from '../utils/resolveLatestVersion';
 
 export default class BitIds extends Array<BitId> {
   serialize(): string[] {
@@ -18,9 +18,9 @@ export default class BitIds extends Array<BitId> {
    * @returns {BitId} - The bit id found in the array (with actual version)
    * @memberof BitIds
    */
-  resolveVersion(idWithLatest: BitId) {
-    return getLatestVersionNumber(this, idWithLatest);
-  }
+  // resolveVersion(idWithLatest: BitId) {
+  //   return getLatestVersionNumber(this, idWithLatest);
+  // }
 
   has(bitId: BitId): boolean {
     return Boolean(this.search(bitId));
@@ -122,17 +122,17 @@ export default class BitIds extends Array<BitId> {
     return this.map((id) => id.toString()).join(', ');
   }
 
-  removeMultipleVersionsKeepLatest(): BitId[] {
-    const grouped = this.toGroupByIdWithoutVersion();
-    const latestVersions = Object.keys(grouped).map((key) => {
-      const ids = grouped[key];
-      if (ids.length === 1) return ids[0];
-      const latest = getLatestVersionNumber(ids, ids[0].changeVersion(LATEST_BIT_VERSION));
-      return latest;
-    });
+  // removeMultipleVersionsKeepLatest(): BitId[] {
+  //   const grouped = this.toGroupByIdWithoutVersion();
+  //   const latestVersions = Object.keys(grouped).map((key) => {
+  //     const ids = grouped[key];
+  //     if (ids.length === 1) return ids[0];
+  //     const latest = getLatestVersionNumber(ids, ids[0].changeVersion(LATEST_BIT_VERSION));
+  //     return latest;
+  //   });
 
-    return latestVersions;
-  }
+  //   return latestVersions;
+  // }
 
   toGroupByIdWithoutVersion(): { [idStrWithoutVer: string]: BitIds } {
     return this.reduce((acc, current) => {

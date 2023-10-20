@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Command, CommandOptions } from '@teambit/cli';
 import { NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
@@ -9,7 +9,6 @@ import {
   CFG_FORCE_LOCAL_BUILD,
 } from '@teambit/legacy/dist/constants';
 import { GlobalConfigMain } from '@teambit/global-config';
-import { BitId } from '@teambit/legacy-bit-id';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
@@ -240,7 +239,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       else if (persist === 'skip-build') build = false;
       else throw new BitError(`unknown value for --persist, use either --persist or --persist=skip-build`);
     }
-    if (!build) {
+    if (!build && !soft) {
       this.logger.consoleWarning(
         `tagging components on "main" lane when using remote build is not recommended. To avoid SemVer versions of your component with failing builds, please refer to:
 - Snap changes in a different lane and merge to "main" on your remote (learn more on lanes - https://bit.dev/reference/lanes/getting-started-with-lanes)
@@ -289,7 +288,7 @@ To undo local tag use the "bit reset" command.`
 
     const tagExplanation = results.isSoftTag ? tagExplanationSoft : tagExplanationPersist;
 
-    const compInBold = (id: BitId) => {
+    const compInBold = (id: ComponentID) => {
       const version = id.hasVersion() ? `@${id.version}` : '';
       return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
     };
@@ -352,7 +351,7 @@ To undo local tag use the "bit reset" command.`
   }
 }
 
-export function outputIdsIfExists(label: string, ids?: BitIds) {
+export function outputIdsIfExists(label: string, ids?: ComponentIdList) {
   if (!ids?.length) return '';
   return `\n${chalk.underline(label)}\n${ids.map((id) => id.toStringWithoutVersion()).join('\n')}\n`;
 }

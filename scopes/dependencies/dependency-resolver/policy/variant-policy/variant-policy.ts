@@ -54,6 +54,13 @@ export type VariantPolicyEntry = PolicyEntry & {
 export type SerializedVariantPolicyEntry = VariantPolicyEntry;
 export type SerializedVariantPolicy = SerializedVariantPolicyEntry[];
 
+export interface VariantPolicyFromConfigObjectOptions {
+  includeLegacyPeersInSelfPolicy?: boolean;
+  source?: DependencySource;
+  hidden?: boolean;
+  force?: boolean;
+}
+
 export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
   constructor(private _policiesEntries: VariantPolicyEntry[]) {
     this._policiesEntries = uniqEntries(_policiesEntries);
@@ -218,7 +225,10 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     return res;
   }
 
-  static fromConfigObject(configObject, source?: DependencySource, hidden?: boolean, force?: boolean): VariantPolicy {
+  static fromConfigObject(
+    configObject,
+    { source, hidden, force }: VariantPolicyFromConfigObjectOptions = {}
+  ): VariantPolicy {
     const runtimeEntries = entriesFromKey(configObject, 'dependencies', source, hidden, force);
     const devEntries = entriesFromKey(configObject, 'devDependencies', source, hidden, force);
     const peerEntries = entriesFromKey(configObject, 'peerDependencies', source, hidden, force);

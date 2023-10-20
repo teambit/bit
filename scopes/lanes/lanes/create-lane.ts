@@ -2,7 +2,7 @@ import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ScopeMain } from '@teambit/scope';
-// import { BitIds } from '@teambit/legacy/dist/bit-id';
+// import { ComponentIdList } from '@teambit/component-id';
 import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
 import { isSnap } from '@teambit/component-version';
 import { getBitCloudUser } from '@teambit/snapping';

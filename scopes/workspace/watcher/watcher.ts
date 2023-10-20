@@ -2,8 +2,7 @@ import { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
 import { dirname, basename } from 'path';
 import { compact, difference, partition } from 'lodash';
-import { ComponentID } from '@teambit/component';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BIT_MAP, CFG_WATCH_USE_POLLING, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
@@ -14,7 +13,7 @@ import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import chokidar, { FSWatcher } from '@teambit/chokidar';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
-import { PathLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { CompilationInitiator } from '@teambit/compiler';
 import {
   WorkspaceAspect,
@@ -28,7 +27,7 @@ import { CheckTypes } from './check-types';
 import { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';
 
-export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: BitId; componentIds: BitId[] };
+export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: ComponentID; componentIds: ComponentID[] };
 
 export type EventMessages = {
   onAll: Function;
@@ -58,6 +57,7 @@ export type WatchOptions = {
 };
 
 const DEBOUNCE_WAIT_MS = 100;
+type PathLinux = string; // ts fails when importing it from @teambit/legacy/dist/utils/path.
 
 export class Watcher {
   private fsWatcher: FSWatcher;
@@ -266,7 +266,7 @@ export class Watcher {
       return [];
     }
     this.consumer.bitMap.updateComponentPaths(
-      componentId._legacy,
+      componentId,
       compFiles.map((f) => this.consumer.getPathRelativeToConsumer(f)),
       removedFiles.map((f) => this.consumer.getPathRelativeToConsumer(f))
     );
@@ -352,7 +352,7 @@ export class Watcher {
   }
 
   private isComponentWatchedExternally(componentId: ComponentID) {
-    const watcherData = this.multipleWatchers.find((m) => m.componentIds.find((id) => id.isEqual(componentId._legacy)));
+    const watcherData = this.multipleWatchers.find((m) => m.componentIds.find((id) => id.isEqual(componentId)));
     if (watcherData) {
       logger.debug(`${componentId.toString()} is watched by ${watcherData.compilerId.toString()}`);
       return true;

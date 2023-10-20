@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { CompFiles, Workspace, FilesStatus } from '@teambit/workspace';
-import { PathLinux, PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy/dist/utils/path';
 import pMap from 'p-map';
 import { SnappingMain } from '@teambit/snapping';
 import { LanesMain } from '@teambit/lanes';
@@ -13,11 +13,15 @@ import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log
 import { Log } from '@teambit/legacy/dist/scope/models/lane';
 import { ComponentCompareMain } from '@teambit/component-compare';
 import { GeneratorMain } from '@teambit/generator';
+import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 import { RemoveMain } from '@teambit/remove';
 import { compact } from 'lodash';
+import { getCloudDomain } from '@teambit/legacy/dist/constants';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
+
+type PathLinux = string; // problematic to get it from @teambit/legacy/dist/utils/path.
 
 type PathFromLastSnap = { [relativeToWorkspace: PathLinux]: string };
 
@@ -218,11 +222,13 @@ export class APIForIDE {
   }
 
   async export() {
-    const { componentsIds, removedIds, exportedLanes } = await this.exporter.export();
+    const { componentsIds, removedIds, exportedLanes, rippleJobs } = await this.exporter.export();
+    const rippleJobsFullUrls = rippleJobs.map((job) => `https://${getCloudDomain()}/ripple-ci/job/${job}`);
     return {
       componentsIds: componentsIds.map((c) => c.toString()),
       removedIds: removedIds.map((c) => c.toString()),
       exportedLanes: exportedLanes.map((l) => l.id()),
+      rippleJobs: rippleJobsFullUrls,
     };
   }
 
@@ -253,7 +259,7 @@ export class APIForIDE {
       componentsPattern: id,
       force: true,
     });
-    const serializedResults = results.localResult.serialize();
+    const serializedResults = (results.localResult as RemovedObjects).serialize();
     return serializedResults;
   }
 

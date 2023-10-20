@@ -1,7 +1,7 @@
 import minimatch from 'minimatch';
 import path from 'path';
 import _ from 'lodash';
-import { BitId } from '../../../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { DEPENDENCIES_FIELDS, MANUALLY_ADD_DEPENDENCY, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
 import logger from '../../../../logger/logger';
@@ -79,11 +79,11 @@ export default class OverridesDependencies {
     return ignore;
   }
 
-  shouldIgnoreComponent(componentId: BitId, fileType: FileType): boolean {
+  shouldIgnoreComponent(componentId: ComponentID, fileType: FileType): boolean {
     const componentIdStr = componentId.toStringWithoutVersion();
-    const shouldIgnore = (ids: BitId[]) => {
+    const shouldIgnore = (ids: ComponentID[]) => {
       return ids.some((id) => {
-        return componentId.isEqualWithoutVersion(id);
+        return componentId.isEqual(id, { ignoreVersion: true });
       });
     };
     const field = fileType.isTestFile ? 'devDependencies' : 'dependencies';
@@ -131,19 +131,22 @@ export default class OverridesDependencies {
     return { components, packages };
   }
 
-  _getIgnoredComponentsByField(field: 'devDependencies' | 'dependencies' | 'peerDependencies'): BitId[] {
+  _getIgnoredComponentsByField(field: 'devDependencies' | 'dependencies' | 'peerDependencies'): ComponentID[] {
     const ignoredPackages = this.component.overrides.getIgnoredPackages(field);
     const ignoredComponents = ignoredPackages.map((packageName) => this._getComponentIdFromPackage(packageName));
     return _.compact(ignoredComponents);
   }
 
-  _getComponentIdToAdd(field: string, dependency: string): { componentId?: BitId; packageName?: string } | undefined {
+  _getComponentIdToAdd(
+    field: string,
+    dependency: string
+  ): { componentId?: ComponentID; packageName?: string } | undefined {
     if (field === 'peerDependencies') return undefined;
     const packageData = this._resolvePackageData(dependency);
     return { componentId: packageData?.componentId, packageName: packageData?.name };
   }
 
-  _getComponentIdFromPackage(packageName: string): BitId | undefined {
+  _getComponentIdFromPackage(packageName: string): ComponentID | undefined {
     const packageData = this._resolvePackageData(packageName);
     return packageData?.componentId;
   }

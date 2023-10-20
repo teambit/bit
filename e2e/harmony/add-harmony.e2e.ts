@@ -34,7 +34,7 @@ describe('add command on Harmony', function () {
     });
     it('should throw a descriptive error about parent-dir is tracked', () => {
       const cmd = () => helper.command.addComponent('comp1/foo');
-      const error = new ParentDirTracked('comp1', 'comp1', path.normalize('comp1/foo'));
+      const error = new ParentDirTracked('comp1', `${helper.scopes.remote}/comp1`, path.normalize('comp1/foo'));
       helper.general.expectToThrow(cmd, error);
     });
   });

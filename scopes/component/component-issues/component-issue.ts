@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 
 export type StringsPerFilePath = { [filePath: string]: string[] };
 
@@ -60,7 +60,7 @@ export function componentIssueToString(value: string[] | string) {
 export function deserializeWithBitId(dataStr: string) {
   const data = JSON.parse(dataStr);
   Object.keys(data).forEach((filePath) => {
-    data[filePath] = data[filePath].map((id) => new BitId(id));
+    data[filePath] = data[filePath].map((id) => new ComponentID(id));
   });
   return data;
 }

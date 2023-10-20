@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import R from 'ramda';
+import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { Consumer } from '..';
-import { BitId } from '../../bit-id';
 import GeneralError from '../../error/general-error';
 import { Scope } from '../../scope';
 import { ModelComponent, Version } from '../../scope/models';
@@ -27,7 +27,7 @@ export type FieldsDiff = {
   diffOutput: string;
 };
 export type DiffResults = {
-  id: BitId;
+  id: ComponentID;
   hasDiff: boolean;
   filesDiff?: FileDiff[];
   fieldsDiff?: FieldsDiff[] | null | undefined;
@@ -41,7 +41,7 @@ export type DiffOptions = {
 
 export default async function componentsDiff(
   consumer: Consumer,
-  ids: BitId[],
+  ids: ComponentID[],
   version: string | null | undefined,
   toVersion: string | null | undefined,
   diffOpts: DiffOptions
@@ -52,10 +52,10 @@ export default async function componentsDiff(
 
   // try to resolve ids scope of by components array
   const idsWithScope = ids.map((id) => {
-    if (!id.scope && components) {
-      const foundComponent = components.find((o) => o.name === id.name);
-      if (foundComponent) return id.changeScope(foundComponent.scope);
-    }
+    // if (!id.scope && components) {
+    //   const foundComponent = components.find((o) => o.name === id.name);
+    //   if (foundComponent) return id.changeScope(foundComponent.scope);
+    // }
     return id;
   });
 
@@ -72,8 +72,8 @@ export default async function componentsDiff(
   return componentsDiffResults;
 
   async function getComponentDiffOfVersion(component: Component): Promise<DiffResults> {
-    const diffResult: DiffResults = { id: component.id, hasDiff: false };
-    const modelComponent = await consumer.scope.getModelComponentIfExist(component.id);
+    const diffResult: DiffResults = { id: component.componentId, hasDiff: false };
+    const modelComponent = await consumer.scope.getModelComponentIfExist(component.componentId);
     if (!modelComponent) {
       throw new GeneralError(`component ${component.id.toString()} doesn't have any version yet`);
     }
@@ -93,7 +93,7 @@ export default async function componentsDiff(
     return diffResult;
   }
 
-  async function getComponentDiffBetweenVersions(id: BitId): Promise<DiffResults> {
+  async function getComponentDiffBetweenVersions(id: ComponentID): Promise<DiffResults> {
     const diffResult: DiffResults = { id, hasDiff: false };
     const modelComponent = await consumer.scope.getModelComponentIfExist(id);
     if (!modelComponent) {
@@ -119,7 +119,7 @@ export default async function componentsDiff(
   }
 
   async function getComponentDiff(component: Component): Promise<DiffResults> {
-    const diffResult = { id: component.id, hasDiff: false };
+    const diffResult = { id: component.componentId, hasDiff: false };
     if (!component.componentFromModel) {
       // it's a new component. not modified. show all files as new.
       const fsFiles = component.files;
@@ -147,7 +147,7 @@ export async function diffBetweenVersionsObjects(
   scope: Scope,
   diffOpts: DiffOptions
 ) {
-  const diffResult: DiffResults = { id: modelComponent.toBitId(), hasDiff: false };
+  const diffResult: DiffResults = { id: modelComponent.toComponentId(), hasDiff: false };
   const repository = scope.objects;
   const fromVersionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
   const toVersionFiles = await toVersionObject.modelFilesToSourceFiles(repository);

@@ -29,6 +29,7 @@ export default class ResetCmd implements Command {
       'force',
       "revert the tag even if it's used as a dependency. WARNING: components that depend on this tag will be corrupted",
     ],
+    ['', 'never-exported', 'reset only components that were never exported'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -42,8 +43,13 @@ export default class ResetCmd implements Command {
       head = false,
       force = false,
       soft = false,
-    }: { all?: boolean; head?: boolean; force?: boolean; soft?: boolean }
+      neverExported = false,
+    }: { all?: boolean; head?: boolean; force?: boolean; soft?: boolean; neverExported?: boolean }
   ) {
+    if (neverExported) {
+      const compIds = await this.snapping.resetNeverExported();
+      return chalk.green(`successfully reset the following never-exported components:\n${compIds.join('\n')}`);
+    }
     if (!pattern && !all) {
       throw new BitError('please specify a component-pattern or use --all flag');
     }
