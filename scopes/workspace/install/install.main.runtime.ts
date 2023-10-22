@@ -319,6 +319,7 @@ export class InstallMain {
         pmInstallOptions
       );
       let cacheCleared = false;
+      await this.linkCodemods(compDirMap);
       if (options?.compile ?? true) {
         const compileStartTime = process.hrtime();
         const compileOutputMessage = `compiling components`;
@@ -335,7 +336,6 @@ export class InstallMain {
       if (options?.writeConfigFiles ?? true) {
         await this.tryWriteConfigFiles(!cacheCleared);
       }
-      await this.linkCodemods(compDirMap);
       if (!dependenciesChanged) break;
       if (!options?.recurringInstall) break;
       const oldNonLoadedEnvs = this.getOldNonLoadedEnvs();
