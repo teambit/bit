@@ -26,6 +26,7 @@ type ImportFlags = {
   skipDependencyInstallation?: boolean;
   skipWriteConfigFiles?: boolean;
   merge?: MergeStrategy;
+  filterEnvs?: string;
   saveInLane?: boolean;
   dependencies?: boolean;
   dependents?: boolean;
@@ -76,6 +77,11 @@ export class ImportCmd implements Command {
       '',
       'dependents',
       'import components found while traversing from the imported components upwards to the workspace components',
+    ],
+    [
+      '',
+      'filter-envs <envs>',
+      'only import components that have the specified environment (e.g., "teambit.react/react-env")',
     ],
     [
       '',
@@ -172,6 +178,7 @@ export class ImportCmd implements Command {
       skipDependencyInstallation = false,
       skipWriteConfigFiles = false,
       merge,
+      filterEnvs,
       saveInLane = false,
       dependencies = false,
       dependents = false,
@@ -205,10 +212,13 @@ export class ImportCmd implements Command {
       mergeStrategy = merge;
     }
 
+    const envsToFilter = filterEnvs ? filterEnvs.split(',').map((p) => p.trim()) : undefined;
+
     const importOptions: ImportOptions = {
       ids,
       verbose,
       merge: Boolean(merge),
+      filterEnvs: envsToFilter,
       mergeStrategy,
       writeToPath: path,
       objectsOnly: objects,
