@@ -123,7 +123,7 @@ export class GraphqlMain {
       })
     );
 
-    app.use(
+    appp.use(
       '/graphql',
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       graphqlHTTP((request, res, params) => ({
