@@ -6,6 +6,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import pMapSeries from 'p-map-series';
+import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
@@ -32,6 +33,7 @@ export class ImporterMain {
     private graph: GraphMain,
     private scope: ScopeMain,
     private componentWriter: ComponentWriterMain,
+    private envs: EnvsMain,
     private logger: Logger
   ) {}
 
@@ -54,7 +56,13 @@ export class ImporterMain {
         importOptions.lanes = { laneIds: [currentLaneId], lanes: [] };
       }
     }
-    const importComponents = new ImportComponents(this.workspace, this.graph, this.componentWriter, importOptions);
+    const importComponents = new ImportComponents(
+      this.workspace,
+      this.graph,
+      this.componentWriter,
+      this.envs,
+      importOptions
+    );
     const results = await importComponents.importComponents();
     Analytics.setExtraData('num_components', results.importedIds.length);
     if (results.writtenComponents && results.writtenComponents.length) {
@@ -76,7 +84,13 @@ export class ImporterMain {
       installNpmPackages: false,
       writeConfigFiles: false,
     };
-    const importComponents = new ImportComponents(this.workspace, this.graph, this.componentWriter, importOptions);
+    const importComponents = new ImportComponents(
+      this.workspace,
+      this.graph,
+      this.componentWriter,
+      this.envs,
+      importOptions
+    );
     return importComponents.importComponents();
   }
 
@@ -109,7 +123,13 @@ export class ImporterMain {
     if (currentRemoteLane) {
       importOptions.lanes = { laneIds: [currentRemoteLane.toLaneId()], lanes: [currentRemoteLane] };
     }
-    const importComponents = new ImportComponents(this.workspace, this.graph, this.componentWriter, importOptions);
+    const importComponents = new ImportComponents(
+      this.workspace,
+      this.graph,
+      this.componentWriter,
+      this.envs,
+      importOptions
+    );
     return importComponents.importComponents();
   }
 
@@ -164,7 +184,13 @@ export class ImporterMain {
       fromOriginalScope,
     };
 
-    const importComponents = new ImportComponents(this.workspace, this.graph, this.componentWriter, importOptions);
+    const importComponents = new ImportComponents(
+      this.workspace,
+      this.graph,
+      this.componentWriter,
+      this.envs,
+      importOptions
+    );
     const { importedIds, importDetails } = await importComponents.importComponents();
     Analytics.setExtraData('num_components', importedIds.length);
     await consumer.onDestroy();
@@ -272,10 +298,11 @@ export class ImporterMain {
     ScopeAspect,
     ComponentWriterAspect,
     InstallAspect,
+    EnvsAspect,
     LoggerAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, depResolver, graph, scope, componentWriter, install, loggerMain]: [
+  static async provider([cli, workspace, depResolver, graph, scope, componentWriter, install, envs, loggerMain]: [
     CLIMain,
     Workspace,
     DependencyResolverMain,
@@ -283,10 +310,11 @@ export class ImporterMain {
     ScopeMain,
     ComponentWriterMain,
     InstallMain,
+    EnvsMain,
     LoggerMain
   ]) {
     const logger = loggerMain.createLogger(ImporterAspect.id);
-    const importerMain = new ImporterMain(workspace, depResolver, graph, scope, componentWriter, logger);
+    const importerMain = new ImporterMain(workspace, depResolver, graph, scope, componentWriter, envs, logger);
     install.registerPreInstall(async (opts) => {
       if (!opts?.import) return;
       logger.setStatusLine('importing missing objects');
