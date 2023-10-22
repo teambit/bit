@@ -305,6 +305,7 @@ export class WorkspaceComponentLoader {
         }
       }
       if (!this.componentsExtensionsCache.has(idStr) && workspaceScopeIdsMap.workspaceIds.has(idStr)) {
+        componentFromScope = componentFromScope || this.scopeComponentsCache.get(idStr);
         const { extensions, errors } = await this.workspace.componentExtensions(id, componentFromScope, undefined, {
           loadExtensions: false,
         });
