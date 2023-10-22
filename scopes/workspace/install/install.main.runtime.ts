@@ -336,7 +336,6 @@ export class InstallMain {
       if (options?.writeConfigFiles ?? true) {
         await this.tryWriteConfigFiles(!cacheCleared);
       }
-      await this.linkCodemods(compDirMap);
       if (!dependenciesChanged) break;
       if (!options?.recurringInstall) break;
       const oldNonLoadedEnvs = this.getOldNonLoadedEnvs();
