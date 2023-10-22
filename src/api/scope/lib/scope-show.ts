@@ -1,4 +1,4 @@
-import { ComponentID } from '@teambit/component';
+import { ComponentID } from '@teambit/component-id';
 import ConsumerComponent from '../../../consumer/component';
 import { loadScope, Scope } from '../../../scope';
 

@@ -1,4 +1,4 @@
-import { ComponentID } from '@teambit/component';
+import { ComponentID } from '@teambit/component-id';
 import { loadScope, Scope } from '../../../scope';
 
 export default async function log(path: string, id: string): Promise<string> {

@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import chai, { expect } from 'chai';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
-import { IssuesClasses } from '../../scopes/component/component-issues';
+import { IssuesClasses } from '@teambit/component-issues';
 import { Extensions, IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
