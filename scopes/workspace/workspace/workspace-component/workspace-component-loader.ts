@@ -423,7 +423,7 @@ export class WorkspaceComponentLoader {
       allLegacyComponents.map(async (legacyComponent) => {
         let id = idsIndex[legacyComponent.id.toString()];
         if (!id) {
-          const withoutVersion = idsIndex[legacyComponent.id.toStringWithoutVersion()];
+          const withoutVersion = idsIndex[legacyComponent.id.toStringWithoutVersion()] || legacyComponent.id;
           if (withoutVersion) {
             id = withoutVersion.changeVersion(legacyComponent.id.version);
             idsIndex[legacyComponent.id.toString()] = id;
