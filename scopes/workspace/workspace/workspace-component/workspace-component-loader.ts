@@ -330,10 +330,7 @@ export class WorkspaceComponentLoader {
 
     await Promise.all(
       ids.map(async (componentId) => {
-        const nonDeletedWsIds = await this.workspace.listIds();
-        const deletedWsIds = await this.workspace.locallyDeletedIds();
-        const allWsIds = nonDeletedWsIds.concat(deletedWsIds);
-        const inWs = allWsIds.find((id) => id.isEqual(componentId, { ignoreVersion: !componentId.hasVersion() }));
+        const inWs = await this.isInWsIncludeDeleted(componentId);
 
         if (!inWs) {
           result.scopeIds.set(componentId.toString(), componentId);
@@ -345,6 +342,14 @@ export class WorkspaceComponentLoader {
       })
     );
     return result;
+  }
+
+  private async isInWsIncludeDeleted(componentId: ComponentID): Promise<boolean> {
+    const nonDeletedWsIds = await this.workspace.listIds();
+    const deletedWsIds = await this.workspace.locallyDeletedIds();
+    const allWsIds = nonDeletedWsIds.concat(deletedWsIds);
+    const inWs = allWsIds.find((id) => id.isEqual(componentId, { ignoreVersion: !componentId.hasVersion() }));
+    return !!inWs;
   }
 
   private async getComponentsWithoutLoadExtensions(
@@ -490,7 +495,7 @@ export class WorkspaceComponentLoader {
       return fromCache;
     }
     let consumerComponent = legacyComponent;
-    const inWs = await this.workspace.hasId(id);
+    const inWs = await this.isInWsIncludeDeleted(componentId);
     if (inWs && !consumerComponent) {
       consumerComponent = await this.getConsumerComponent(id, loadOptsWithDefaults);
     }
