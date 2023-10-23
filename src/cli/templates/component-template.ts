@@ -1,7 +1,7 @@
 import c from 'chalk';
 import rightpad from 'pad-right';
 import { table } from 'table';
-import { ComponentID } from '@teambit/component';
+import { ComponentID } from '@teambit/component-id';
 
 import {
   componentToPrintableForDiff,
