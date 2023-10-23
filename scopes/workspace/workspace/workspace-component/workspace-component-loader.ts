@@ -138,16 +138,21 @@ export class WorkspaceComponentLoader {
     const workspaceScopeIdsMap: WorkspaceScopeIdsMap = await this.groupAndUpdateIds(ids);
 
     const groupsToHandle = await this.buildLoadGroups(workspaceScopeIdsMap);
-    const groupsRes = await mapSeries(groupsToHandle, async (group) => {
-      const { scopeIds, workspaceIds, aspects, core, seeders } = group;
-      return this.getAndLoadSlot(
-        workspaceIds,
-        scopeIds,
-        { ...loadOpts, core, seeders, aspects },
-        throwOnFailure,
-        longProcessLogger
-      );
-    });
+    const groupsRes = compact(
+      await mapSeries(groupsToHandle, async (group) => {
+        const { scopeIds, workspaceIds, aspects, core, seeders } = group;
+        const res = await this.getAndLoadSlot(
+          workspaceIds,
+          scopeIds,
+          { ...loadOpts, core, seeders, aspects },
+          throwOnFailure,
+          longProcessLogger
+        );
+        // We don't want to return components that were not asked originally (we do want to load them)
+        if (!group.seeders) return undefined;
+        return res;
+      })
+    );
     const finalRes = groupsRes.reduce(
       (acc, curr) => {
         return {
