@@ -204,7 +204,7 @@ other:   ${otherLaneHead.toString()}`);
       return { ...componentStatus, componentFromModel: componentOnOther, divergeData };
     }
     const getCurrentComponent = () => {
-      if (existingBitMapId) return consumer.loadComponent(existingBitMapId);
+      if (existingBitMapId) return consumer.loadComponent(existingBitMapId, { loadExtensions: true });
       return consumer.scope.getConsumerComponent(currentId);
     };
     const currentComponent = await getCurrentComponent();
