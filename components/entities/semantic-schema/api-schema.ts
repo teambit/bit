@@ -13,6 +13,7 @@ import {
 } from './schemas';
 import { SchemaLocation, SchemaNode } from './schema-node';
 import { TagName } from './schemas/docs/tag';
+import { SchemaRegistry } from './schema-registry';
 
 export class APISchema extends SchemaNode {
   readonly module: ModuleSchema; // index
@@ -27,13 +28,17 @@ export class APISchema extends SchemaNode {
     readonly location: SchemaLocation,
     module: ModuleSchema,
     internals: ModuleSchema[],
-    componentId: ComponentID
+    componentId: ComponentID,
+    taggedModuleExports: SchemaNode[] = []
   ) {
     super();
     this.module = module;
     this.internals = internals;
     this.componentId = componentId;
     this.taggedModuleExports = this.listTaggedExports(module);
+    if (taggedModuleExports.length > 0) {
+      this.taggedModuleExports = this.taggedModuleExports.concat(taggedModuleExports);
+    }
   }
 
   listTaggedExports(module?: ModuleSchema) {
@@ -93,8 +98,8 @@ export class APISchema extends SchemaNode {
     const module: ModuleSchema = ModuleSchema.fromObject(obj.module);
     const internals: ModuleSchema[] = (obj.internals || []).map((i: any) => ModuleSchema.fromObject(i));
     const componentId: ComponentID = ComponentID.fromObject(obj.componentId);
-
-    return new APISchema(location, module, internals, componentId);
+    const taggedModuleExports = (obj.taggedModuleExports || []).map((e: any) => SchemaRegistry.fromObject(e));
+    return new APISchema(location, module, internals, componentId, taggedModuleExports);
   }
 
   static empty(componentId: ComponentID) {

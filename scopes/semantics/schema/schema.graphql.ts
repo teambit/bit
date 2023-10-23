@@ -27,14 +27,14 @@ export function schemaSchema(schema: SchemaMain): Schema {
           const api = await schema.getSchema(component, undefined, undefined, undefined, undefined, skipInternals);
           if (!api) return empty;
 
-          return filterUnimplementedSchemaNodes(api);
+          return filterUnimplementedAndAddDefaults(api);
         },
       },
     },
   };
 }
 
-function filterUnimplementedSchemaNodes(api: APISchema) {
+function filterUnimplementedAndAddDefaults(api: APISchema) {
   const apiObject = api.toObject();
   const filteredExports = apiObject.module.exports.filter((exp) => exp.__schema !== UnImplementedSchema.name);
   const filteredInternals = apiObject.internals.map((internalObject) => {
@@ -46,13 +46,17 @@ function filterUnimplementedSchemaNodes(api: APISchema) {
       internals: filteredInternalNodes,
     };
   });
+
   const filteredTaggedExports = apiObject.taggedModuleExports.filter(
     (exp) => exp.__schema !== UnImplementedSchema.name
   );
+
+  const defaultTaggedExports = filteredExports.filter((exportedModule) => exportedModule.__schema === 'ReactSchema');
+
   return {
     ...apiObject,
     exports: filteredExports,
     internals: filteredInternals,
-    taggedModuleExports: filteredTaggedExports,
+    taggedModuleExports: filteredTaggedExports.length > 0 ? filteredTaggedExports : defaultTaggedExports,
   };
 }
