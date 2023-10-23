@@ -18,7 +18,7 @@ export default class ResetCmd implements Command {
     },
   ];
   group = 'development';
-  extendedDescription = `https://${BASE_DOCS_DOMAIN}/components/tags#undoing-a-tag`;
+  extendedDescription = `${BASE_DOCS_DOMAIN}components/tags#undoing-a-tag`;
   alias = '';
   options = [
     ['a', 'all', 'revert all unexported tags/snaps for all components'],
