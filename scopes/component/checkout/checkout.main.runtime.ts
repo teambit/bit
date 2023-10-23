@@ -318,7 +318,8 @@ export class CheckoutMain {
     let existingBitMapId = consumer.bitMap.getComponentIdIfExist(id, { ignoreVersion: true });
     const getComponent = async () => {
       try {
-        return await consumer.loadComponent(id);
+        // TODO: check if we really need the { loadExtensions: true } here
+        return await consumer.loadComponent(id, { loadExtensions: true });
       } catch (err) {
         if (checkoutProps.allowAddingComponentsFromScope && !existingBitMapId) return undefined;
         throw err;
