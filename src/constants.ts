@@ -616,3 +616,5 @@ export enum BuildStatus {
 export const SOURCE_DIR_SYMLINK_TO_NM = '_src'; // symlink from node_modules to the workspace sources files
 
 export const FILE_CHANGES_CHECKOUT_MSG = 'components with file changes';
+
+export const VERSION_CHANGED_BIT_ID_TO_COMP_ID = '1.2.10';
