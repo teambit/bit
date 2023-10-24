@@ -458,8 +458,8 @@ jobs:
   setup_harmony:
     resource_class: large
     <<: *defaults
-    # environment:
-    #   BIT_FEATURES: cloud-importer-v2
+    environment:
+      BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: ./
