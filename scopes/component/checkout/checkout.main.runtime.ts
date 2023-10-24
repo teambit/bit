@@ -113,7 +113,7 @@ export class CheckoutMain {
     if (componentWithConflict) {
       if (!promptMergeOptions && !checkoutProps.mergeStrategy) {
         throw new GeneralError(
-          `automatic merge has failed for component ${componentWithConflict.id.toStringWithoutVersion()}.\nplease use "--manual" to manually merge changes or use "--theirs / --ours" to choose one of the conflicted versions`
+          `automatic merge has failed for component ${componentWithConflict.id.toStringWithoutVersion()}.\nplease run the previous command with the "--help" flag to determine the correct merge syntax`
         );
       }
       if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
