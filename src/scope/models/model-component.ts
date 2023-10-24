@@ -15,6 +15,7 @@ import {
   DEFAULT_BIT_VERSION,
   DEFAULT_LANGUAGE,
   Extensions,
+  VERSION_CHANGED_BIT_ID_TO_COMP_ID,
 } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { License, SourceFile } from '../../consumer/component/sources';
@@ -138,7 +139,7 @@ export default class Component extends BitObject {
     if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
     if (!props.scope) {
       throw new Error(
-        `your component "${props.name}" was tagged/snapped with older bit version (before v1.2.4), please export it with the same bit version.
+        `your component "${props.name}" was tagged/snapped with older bit version (before v${VERSION_CHANGED_BIT_ID_TO_COMP_ID}), please export it with the same bit version.
 alternatively, if local (unexported) tags/snaps are not relevant for you anymore, reset them by running "bit reset --never-exported"`
       );
     }

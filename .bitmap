@@ -709,6 +709,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/lanes"
     },
+    "legacy-bit-id": {
+        "name": "legacy-bit-id",
+        "scope": "teambit.component",
+        "version": "1.0.3",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy-bit-id"
+    },
     "linter": {
         "name": "linter",
         "scope": "teambit.defender",
