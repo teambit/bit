@@ -187,11 +187,11 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     });
 
     const mergeResult = mergeReport({ ...mergeResults, configMergeResults, verbose });
-    const deleteResult = `${deleteResults.localResult ? removeTemplate(deleteResults.localResult, false) : ''}${(
+    const deleteOutput = `\n${deleteResults.localResult ? removeTemplate(deleteResults.localResult, false) : ''}${(
       deleteResults.remoteResult || []
     ).map((item) => removeTemplate(item, true))}${
       (deleteResults.readmeResult && chalk.yellow(deleteResults.readmeResult)) || ''
     }\n`;
-    return mergeResult + deleteResult;
+    return mergeResult + deleteOutput;
   }
 }
