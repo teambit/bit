@@ -141,6 +141,7 @@ export class WorkspaceComponentLoader {
     const groupsRes = compact(
       await mapSeries(groupsToHandle, async (group) => {
         const { scopeIds, workspaceIds, aspects, core, seeders } = group;
+        if (!workspaceIds.length && !scopeIds.length) return undefined;
         const res = await this.getAndLoadSlot(
           workspaceIds,
           scopeIds,
