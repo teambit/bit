@@ -185,6 +185,7 @@ export async function install(
     includeOptionalDeps?: boolean;
     reportOptions?: ReportOptions;
     hidePackageManagerOutput?: boolean;
+    dryRun?: boolean;
   } & Pick<
     InstallOptions,
     | 'publicHoistPattern'
@@ -278,33 +279,36 @@ export async function install(
     disableRelinkLocalDirDeps: true,
   };
 
-  let stopReporting: Function | undefined;
-  if (!options.hidePackageManagerOutput) {
-    stopReporting = initReporter({
-      ...options.reportOptions,
-      hideAddedPkgsProgress: options.lockfileOnly,
-    });
-  }
   let dependenciesChanged = false;
-  try {
-    await installsRunning[rootDir];
-    await restartWorkerPool();
-    installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
-    const { stats } = await installsRunning[rootDir];
-    dependenciesChanged = stats.added + stats.removed + stats.linkedToRoot > 0;
-    delete installsRunning[rootDir];
-  } catch (err: any) {
-    if (logger) {
-      logger.warn('got an error from pnpm mutateModules function', err);
+  if (!options.dryRun) {
+    let stopReporting: Function | undefined;
+    if (!options.hidePackageManagerOutput) {
+      stopReporting = initReporter({
+        ...options.reportOptions,
+        hideAddedPkgsProgress: options.lockfileOnly,
+      });
     }
-    throw pnpmErrorToBitError(err);
-  } finally {
-    stopReporting?.();
-    await finishWorkers();
+    try {
+      await installsRunning[rootDir];
+      await restartWorkerPool();
+      installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
+      const { stats } = await installsRunning[rootDir];
+      dependenciesChanged = stats.added + stats.removed + stats.linkedToRoot > 0;
+      delete installsRunning[rootDir];
+    } catch (err: any) {
+      if (logger) {
+        logger.warn('got an error from pnpm mutateModules function', err);
+      }
+      throw pnpmErrorToBitError(err);
+    } finally {
+      stopReporting?.();
+      await finishWorkers();
+    }
   }
   return {
     dependenciesChanged,
     rebuild: async (rebuildOpts) => {
+      let stopReporting: Function | undefined;
       const _opts = {
         ...opts,
         ...rebuildOpts,
