@@ -58,6 +58,11 @@ export type LoadCompAsAspectsOptions = {
    */
   loadEnvs?: boolean;
 
+  /**
+   * In case the component we are loading is a regular aspect, whether to load it as aspect (in a scope aspects capsule)
+   */
+  loadAspects?: boolean;
+
   idsToNotLoadAsAspects?: string[];
 
   /**
@@ -261,6 +266,7 @@ export class WorkspaceComponentLoader {
     await this.loadCompsAsAspects(workspaceComponents, {
       loadApps: true,
       loadEnvs: true,
+      loadAspects: true,
       core: loadOpts.core,
       seeders: loadOpts.seeders,
       idsToNotLoadAsAspects: loadOpts.idsToNotLoadAsAspects,
@@ -272,7 +278,7 @@ export class WorkspaceComponentLoader {
   // TODO: this is similar to scope.main.runtime loadCompAspects func, we should merge them.
   async loadCompsAsAspects(
     components: Component[],
-    opts: LoadCompAsAspectsOptions = { loadApps: true, loadEnvs: true }
+    opts: LoadCompAsAspectsOptions = { loadApps: true, loadEnvs: true, loadAspects: true }
   ): Promise<void> {
     const aspectIds: string[] = [];
     components.forEach((component) => {
@@ -284,7 +290,10 @@ export class WorkspaceComponentLoader {
         aspectIds.push(component.id.toString());
       }
       const envsData = component.state.aspects.get(EnvsAspect.id);
-      if ((opts.loadEnvs && envsData?.data?.services) || envsData?.data?.self || envsData?.data?.type === 'env') {
+      if (opts.loadEnvs && (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env')) {
+        aspectIds.push(component.id.toString());
+      }
+      if (opts.loadAspects && envsData?.data?.type === 'aspect') {
         aspectIds.push(component.id.toString());
       }
     });
@@ -371,6 +380,8 @@ export class WorkspaceComponentLoader {
       // We don't want to load extension or execute the load slot at this step
       // we will do it later
       // this important for better performance
+      // We don't want to store deps in fs cache, as at this point extnesions are not loaded yet
+      // so it might save a wrong deps into the cache
       { loadExtensions: false, executeLoadSlot: false },
       loadOpts || {}
     );

@@ -15,6 +15,7 @@ type Opts = {
   cacheResolvedDependencies: Record<string, any>;
   cacheProjectAst?: Record<string, any>;
   useDependenciesCache: boolean;
+  storeInFsCache?: boolean;
 };
 
 export class DependenciesLoader {
@@ -72,6 +73,8 @@ export class DependenciesLoader {
   }
 
   private shouldSaveInCache(dependenciesData: DependenciesData) {
+    const storeInFsCache = this.opts.storeInFsCache ?? true;
+    if (!storeInFsCache) return false;
     if (!dependenciesData.issues) return true;
     return !dependenciesData.issues.shouldBlockSavingInCache();
   }

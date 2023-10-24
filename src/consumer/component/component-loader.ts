@@ -24,6 +24,8 @@ export type ComponentLoadOptions = {
   loadCompositions?: boolean;
   originatedFromHarmony?: boolean;
   loadExtensions?: boolean;
+  storeInCache?: boolean;
+  storeDepsInFsCache?: boolean;
 };
 export type LoadManyResult = {
   components: Component[];
@@ -130,14 +132,16 @@ export default class ComponentLoader {
       { idsStr: alreadyLoadedComponents.map((c) => c.id.toString()).join(', ') }
     );
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents, removedComponents };
-
+    const storeInCache = loadOpts?.storeInCache ?? true;
     const allComponents: Component[] = [];
     // await mapSeries(idsToProcess, async (id: BitId) => {
     await Promise.all(
       idsToProcess.map(async (id: ComponentID) => {
         const component = await this.loadOne(id, throwOnFailure, invalidComponents, removedComponents, loadOpts);
         if (component) {
-          this.componentsCache.set(component.id.toString(), component);
+          if (storeInCache) {
+            this.componentsCache.set(component.id.toString(), component);
+          }
           logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
             id: component.id.toString(),
           });
@@ -213,6 +217,7 @@ export default class ComponentLoader {
         cacheResolvedDependencies: this.cacheResolvedDependencies,
         cacheProjectAst: this.cacheProjectAst,
         useDependenciesCache: component.issues.isEmpty(),
+        storeInFsCache: loadOpts?.storeDepsInFsCache,
       });
       await dependenciesLoader.load();
       updateDependenciesVersions(this.consumer, component);
