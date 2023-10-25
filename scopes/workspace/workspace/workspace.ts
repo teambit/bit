@@ -60,7 +60,6 @@ import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { isHash } from '@teambit/component-version';
-import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { ComponentConfigFile } from './component-config-file';
 import {
@@ -85,7 +84,7 @@ import {
   OnRootAspectAdded,
   OnRootAspectAddedSlot,
 } from './workspace.provider';
-import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
+import { ComponentLoadOptions, WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
 import type { MergeOptions as BitmapMergeOptions } from './bit-map';

@@ -28,6 +28,7 @@ export type ComponentLoadOptions = LegacyComponentLoadOptions & {
   loadExtensions?: boolean;
   executeLoadSlot?: boolean;
   idsToNotLoadAsAspects?: string[];
+  loadSeedersAsAspects?: boolean;
 };
 
 type LoadGroup = { workspaceIds: ComponentID[]; scopeIds: ComponentID[] } & LoadGroupMetadata;
@@ -105,7 +106,7 @@ export class WorkspaceComponentLoader {
       // We don't want to load extension or execute the load slot at this step
       // we will do it later
       // this important for better performance
-      { loadExtensions: false, executeLoadSlot: false },
+      { loadExtensions: false, executeLoadSlot: false, loadSeedersAsAspects: true },
       loadOpts || {}
     );
 
@@ -263,14 +264,16 @@ export class WorkspaceComponentLoader {
     // It's important to load the workspace components as aspects here
     // otherwise the envs from the workspace won't be loaded at time
     // so we will get wrong dependencies from component who uses envs from the workspace
-    await this.loadCompsAsAspects(workspaceComponents, {
-      loadApps: true,
-      loadEnvs: true,
-      loadAspects: true,
-      core: loadOpts.core,
-      seeders: loadOpts.seeders,
-      idsToNotLoadAsAspects: loadOpts.idsToNotLoadAsAspects,
-    });
+    if (loadOpts.loadSeedersAsAspects) {
+      await this.loadCompsAsAspects(workspaceComponents, {
+        loadApps: true,
+        loadEnvs: true,
+        loadAspects: true,
+        core: loadOpts.core,
+        seeders: loadOpts.seeders,
+        idsToNotLoadAsAspects: loadOpts.idsToNotLoadAsAspects,
+      });
+    }
 
     return { components: withAspects, invalidComponents };
   }
