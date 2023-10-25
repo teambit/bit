@@ -125,7 +125,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       throw new OldScopeNotFound(oldScope);
     }
     const envs = componentsUsingOldScope.filter((c) => this.envs.isEnv(c));
-    const compsUsingEnv = {};
+    const compsUsingEnv: { [envIdStr: string]: ComponentID[] } = {};
     await Promise.all(
       envs.map(async (env) => {
         const components = await this.workspace.getComponentsUsingEnv(env.id.toString(), true);
@@ -157,7 +157,9 @@ make sure this argument is the name only, without the scope-name. to change the 
       envs.map(async (env) => {
         const componentIds = compsUsingEnv[env.id.toString()];
         if (!componentIds?.length) return;
-        await this.workspace.setEnvToComponents(env.id.changeScope(newScope), componentIds);
+        const newEnvId = env.id.changeDefaultScope(newScope);
+        const newComponentIds = componentIds.map((id) => id.changeDefaultScope(newScope));
+        await this.workspace.setEnvToComponents(newEnvId, newComponentIds);
       })
     );
 

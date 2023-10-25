@@ -248,7 +248,7 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)\n`;
     const remotelySoftRemovedOutput = immutableUnshift(
       remotelySoftRemoved.map((c) => format(c)).sort(),
       remotelySoftRemoved.length
-        ? chalk.underline.white('components soft-removed on the remote') + remotelySoftRemovedDesc
+        ? chalk.underline.white('components deleted on the remote') + remotelySoftRemovedDesc
         : ''
     ).join('\n');
 
