@@ -12,9 +12,9 @@ import {
   ResolvedPackageVersion,
 } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
-import { ComponentMap, Component } from '@teambit/component';
+import { ComponentMap } from '@teambit/component';
 import fs from 'fs-extra';
-import { join, relative, resolve } from 'path';
+import { join, relative } from 'path';
 import {
   Workspace,
   Project,
@@ -42,10 +42,6 @@ import YAML from 'yaml';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import symlinkDir from 'symlink-dir';
 import { createRootComponentsDir } from './create-root-components-dir';
-
-type BackupJsons = {
-  [path: string]: Buffer | undefined;
-};
 
 export class YarnPackageManager implements PackageManager {
   readonly name = 'yarn';
@@ -165,7 +161,6 @@ export class YarnPackageManager implements PackageManager {
     this.setupWorkspaces(project, workspaces);
 
     const cache = await Cache.find(config);
-    // const existingPackageJsons = await this.backupPackageJsons(rootDir, componentDirectoryMap);
 
     const installReport = await StreamReport.start(
       {
@@ -193,11 +188,6 @@ export class YarnPackageManager implements PackageManager {
       );
     }
 
-    // TODO: check if package.json and link files generation can be prevented through the yarn API or
-    // mock the files by hooking to `xfs`.
-    // see the persistProject: false above
-    // await this.restorePackageJsons(existingPackageJsons);
-
     if (installReport.hasErrors()) process.exit(installReport.exitCode());
 
     this.logger.consoleSuccess('installing dependencies');
@@ -220,59 +210,6 @@ export class YarnPackageManager implements PackageManager {
     return overrides;
   }
 
-  private getPackageJsonPath(dir: string): string {
-    const packageJsonPath = join(dir, 'package.json');
-    return packageJsonPath;
-  }
-
-  private async backupPackageJsons(rootDir: string, componentDirectoryMap: ComponentMap<string>): Promise<BackupJsons> {
-    const result: BackupJsons = {};
-    const rootPackageJsonPath = this.getPackageJsonPath(rootDir);
-    result[rootPackageJsonPath] = await this.getFileToBackup(rootPackageJsonPath);
-    const componentsBackupsP = componentDirectoryMap.toArray().map(async ([component, dir]) => {
-      const { packageJsonPath, file } = await this.getComponentPackageJsonToBackup(component, dir);
-      result[packageJsonPath] = file;
-    });
-    await Promise.all(componentsBackupsP);
-    return result;
-  }
-
-  private async restorePackageJsons(backupJsons: BackupJsons): Promise<void | undefined> {
-    const promises = Object.entries(backupJsons).map(async ([packageJsonPath, file]) => {
-      const exists = await fs.pathExists(packageJsonPath);
-      // if there is no backup it means it wasn't there before and should be deleted
-      if (!file) {
-        if (exists) {
-          return fs.remove(packageJsonPath);
-        }
-        return undefined;
-      }
-      return fs.writeFile(packageJsonPath, file);
-    });
-    await Promise.all(promises);
-  }
-
-  private async getFileToBackup(packageJsonPath: string): Promise<Buffer | undefined> {
-    const exists = await fs.pathExists(packageJsonPath);
-    if (!exists) {
-      return undefined;
-    }
-    const existingFile = await fs.readFile(packageJsonPath);
-    return existingFile;
-  }
-
-  private async getComponentPackageJsonToBackup(
-    component: Component,
-    dir: string
-  ): Promise<{ packageJsonPath: string; file: Buffer | undefined }> {
-    const packageJsonPath = resolve(join(dir, 'package.json'));
-    const result = {
-      packageJsonPath,
-      file: await this.getFileToBackup(packageJsonPath),
-    };
-    return result;
-  }
-
   private async createWorkspace({
     rootDir,
     project,
@@ -292,7 +229,6 @@ export class YarnPackageManager implements PackageManager {
     const ws = new Workspace(wsPath, { project });
     await ws.setup();
     const identity = structUtils.parseIdent(name);
-    // const needOverrideInternal = !!ws.manifest.name && !!manifest.name;
     ws.manifest.name = identity;
     ws.manifest.version = manifest.version;
     ws.manifest.dependencies = this.computeDeps(manifest.dependencies);
@@ -306,8 +242,6 @@ export class YarnPackageManager implements PackageManager {
     if (overrides) {
       ws.manifest.resolutions = convertOverridesToResolutions(overrides);
     }
-
-    // if (needOverrideInternal) this.overrideInternalWorkspaceParams(ws);
 
     return ws;
   }

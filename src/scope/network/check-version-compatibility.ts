@@ -85,7 +85,7 @@ export function checkVersionCompatibilityOnTheServer(clientVersion: string) {
   const oldClientVersionMessageUntilV14 = `Please update your Bit client.\nFor additional information: https://${BASE_LEGACY_DOCS_DOMAIN}/installation#latest-version`;
   const oldClientVersionMessageAfterV14 =
     () => `Fatal: Bit client - server version mismatch. Using "${clientVersion}" Local version to communicate with "${BIT_VERSION}" on the Remove Server. Please update your Bit client.
-For additional information: https://${BASE_DOCS_DOMAIN}/getting-started/installing-bit/installing-bit`;
+For additional information: ${BASE_DOCS_DOMAIN}getting-started/installing-bit/installing-bit`;
 
   if (localMajor > clientMajor) {
     if (clientMajor >= throwErrorFromServerSinceVersion) {

@@ -194,6 +194,11 @@ export default class NodeModuleLinker {
     // an example is when developing a vscode extension, vscode expects to have a valid package.json during the development.
 
     this.dataToPersist.addFile(packageJson.toVinylFile());
+    const injectedDirs = await this.workspace.getInjectedDirs(component);
+    const src = path.join(dest, 'package.json');
+    for (const injectedDir of injectedDirs) {
+      this.dataToPersist.addSymlink(Symlink.makeInstance(src, path.join(injectedDir, 'package.json')));
+    }
   }
 
   /**
