@@ -2,7 +2,7 @@ import React from 'react';
 import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { Section } from '@teambit/documenter.ui.section';
 import { useAPI } from '@teambit/api-reference.hooks.use-api';
-import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
+import { BlockSkeleton, WordSkeleton, CircleSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { useAPIRefRenderers } from '@teambit/api-reference.hooks.use-api-renderers';
 import { APIReferenceTableOfContents } from '@teambit/api-reference.overview.api-reference-table-of-contents';
 import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
@@ -23,10 +23,15 @@ export function TaggedExports({ componentId, ...rest }: TaggedExportsProps) {
 
   if (!loading && !api.apiModel) return null;
 
-  // todo - fix loader
   const Loader = (
     <div className={styles.loader}>
-      <BlockSkeleton />
+      <div className={styles.loaderTitle}>
+        <CircleSkeleton size={1.5} />
+        <WordSkeleton length={5} />
+      </div>
+
+      <BlockSkeleton lines={8} />
+      <BlockSkeleton lines={4} />
     </div>
   );
 
