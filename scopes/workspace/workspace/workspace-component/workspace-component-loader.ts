@@ -302,7 +302,12 @@ export class WorkspaceComponentLoader {
     });
     if (!aspectIds.length) return;
 
-    await this.workspace.loadAspects(aspectIds, true, 'self loading aspects', {});
+    try {
+      await this.workspace.loadAspects(aspectIds, true, 'self loading aspects', {});
+    } catch (err: any) {
+      this.logger.warn(`failed loading components as aspects for components ${aspectIds.join(', ')}`, err);
+      // we ignore that errors at the moment
+    }
   }
 
   private async populateScopeAndExtensionsCache(ids: ComponentID[], workspaceScopeIdsMap: WorkspaceScopeIdsMap) {
