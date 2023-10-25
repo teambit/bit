@@ -366,10 +366,11 @@ export class Workspace implements ComponentFactory {
    * list all workspace components.
    */
   async list(filter?: { offset: number; limit: number }, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
+    const loadOptsWithDefaults: ComponentLoadOptions = Object.assign({ loadSeedersAsAspects: false }, loadOpts || {});
     const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
     const ids = await this.resolveMultipleComponentIds(legacyIds);
     const idsToGet = filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids;
-    return this.getMany(idsToGet, loadOpts);
+    return this.getMany(idsToGet, loadOptsWithDefaults);
   }
 
   async listWithInvalid(loadOpts?: ComponentLoadOptions) {
