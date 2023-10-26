@@ -123,6 +123,7 @@ export class BitMap {
   setDefaultScope(id: ComponentID, defaultScope: string) {
     const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     bitMapEntry.defaultScope = defaultScope;
+    bitMapEntry.id = bitMapEntry.id.changeDefaultScope(defaultScope);
     this.legacyBitMap.markAsChanged();
   }
 

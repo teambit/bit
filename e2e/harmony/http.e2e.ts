@@ -61,7 +61,7 @@ import { HttpHelper } from '../http-helper';
       httpHelper.killHttp();
     });
   });
-  describe('export with removed components', () => {
+  describe('export with deleted components', () => {
     before(async () => {
       httpHelper = new HttpHelper(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -77,6 +77,12 @@ import { HttpHelper } from '../http-helper';
     });
     it('bit list -r should show not show the removed component', () => {
       const list = helper.command.listRemoteScopeParsed();
+      expect(list).to.have.lengthOf(1);
+      expect(list[0].id).to.not.have.string('comp2');
+    });
+    it('bit import of the entire scope should not bring in the deleted components', () => {
+      helper.command.importComponent('*', '-x');
+      const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(1);
       expect(list[0].id).to.not.have.string('comp2');
     });
