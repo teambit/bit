@@ -43,7 +43,7 @@ const isEnvProduction = true;
 // eslint-disable-next-line complexity
 export default function createWebpackConfig(
   outputDir: string,
-  entryFiles: string[],
+  entryFiles: string[] | string,
   publicDir = 'public'
 ): Configuration {
   // Variable used for enabling profiling in Production
