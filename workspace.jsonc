@@ -299,6 +299,7 @@
         "@teambit/mdx.ui.mdx-layout": "^1.0.6",
         "@teambit/mdx.ui.mdx-scope-context": "^1.0.5",
         "@teambit/pkg.content.packages-overview": "1.95.9",
+        "@teambit/preview.modules.preview-modules": "^1.0.1",
         "@teambit/react.content.react-overview": "1.95.0",
         "@teambit/react.instructions.react-native.adding-tests": "0.0.1",
         "@teambit/react.instructions.react.adding-compositions": "0.0.6",

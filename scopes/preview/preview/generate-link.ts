@@ -35,7 +35,7 @@ export function generateLink(
   }
 
   return `
-import { linkModules } from '${toWindowsCompatiblePath(require.resolve('./preview.preview.runtime'))}';
+  import { linkModules } from '@teambit/preview.modules.preview-modules';
 
 ${links
   .map((link) => link.modules.map((module) => `import * as ${module.varName} from "${module.resolveFrom}";`).join('\n'))
