@@ -19,8 +19,8 @@ import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
 import { uniq } from 'lodash';
-import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
-import { join } from 'path';
+import { writeFileSync, existsSync, mkdirSync, readJsonSync, outputFileSync } from 'fs-extra';
+import { join, resolve } from 'path';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { AspectLoaderAspect, getAspectDir, getAspectDirFromBvm } from '@teambit/aspect-loader';
 import type { AspectDefinition, AspectLoaderMain } from '@teambit/aspect-loader';
@@ -29,6 +29,7 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { sha1 } from '@teambit/legacy/dist/utils';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { BundlingStrategyNotFound } from './exceptions';
@@ -38,6 +39,7 @@ import { PreviewDefinition } from './preview-definition';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { PreviewRoute } from './preview.route';
 import { PreviewTask, PREVIEW_TASK_NAME } from './preview.task';
+import { PreBundlePreviewTask } from './pre-bundle-preview.task';
 import { BundlingStrategy } from './bundling-strategy';
 import {
   EnvBundlingStrategy,
@@ -600,10 +602,35 @@ export class PreviewMain {
       this.executionRefs.set(ctxId, new ExecutionRef(context));
     });
 
-    const previewRuntime = await this.writePreviewRuntime(context);
+    const previewRuntime = await this.writePreviewEntry();
     const linkFiles = await this.updateLinkFiles(context.components, context);
 
     return [...linkFiles, previewRuntime];
+  }
+
+  private writePreviewEntry() {
+    const previewPathFromBvm = getAspectDirFromBvm(PreviewAspect.id);
+    const previewArtifactPath = PreBundlePreviewTask.getArtifactDirectory();
+    const previewPreBundlePath = join(previewPathFromBvm, previewArtifactPath);
+    const manifestPath = join(previewPreBundlePath, 'asset-manifest.json');
+    const manifest = readJsonSync(manifestPath);
+    const imports = manifest.entrypoints
+      .map((entry: string) =>
+        entry.endsWith('.js')
+          ? `import { run } from '@teambit/preview/${previewArtifactPath}/${entry}';`
+          : `import '@teambit/preview/${previewArtifactPath}/${entry}';`
+      )
+      .join('\n');
+
+    const name = this.workspace?.name || 'workspace';
+    const config = this.harmony.config.toObject();
+    config['teambit.harmony/bit'] = name;
+    const contents = `${imports}\n\nrun(${JSON.stringify(config, null, 2)});\n`;
+    const previewRuntime = resolve(join(__dirname, `preview.entry.${sha1(contents)}.js`));
+    if (!existsSync(previewRuntime)) {
+      outputFileSync(previewRuntime, contents);
+    }
+    return previewRuntime;
   }
 
   private updateLinkFiles(components: Component[] = [], context: ExecutionContext) {
