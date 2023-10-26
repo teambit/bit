@@ -190,11 +190,10 @@ describe('generateNodeModulesPattern()', () => {
         });
       });
 
-      it('should return an array with 2 patterns', () => {
-        expect((patterns || []).length).toEqual(2);
+      it('should return an array with 1 pattern', () => {
+        expect((patterns || []).length).toEqual(1);
         expect(patterns).toEqual([
           '^(.+?[\\/]node_modules[\\/](?!(@my-org[\\/]my-scope.components))(@.+?[\\/])?.+?)[\\/]',
-          '^(.+?[\\/]node_modules[\\/](?!(\\.pnpm[\\/](.*[+\\/])?@my-org\\+my-scope.components.*))(@.+?[\\/])?.+?)[\\/]',
         ]);
       });
     });
@@ -230,11 +229,6 @@ describe('generateNodeModulesPattern()', () => {
         expect(
           regexps.every((regexp) =>
             regexp.test('/Users/aUser/dev/bit-example/node_modules/@my-org/my-scope.components/package.json')
-          )
-        ).toBeFalsy();
-        expect(
-          regexps.every((regexp) =>
-            regexp.test('/Users/aUser/dev/bit-example/node_modules/.pnpm/@my-org+my-scope.components/package.json')
           )
         ).toBeFalsy();
       });
