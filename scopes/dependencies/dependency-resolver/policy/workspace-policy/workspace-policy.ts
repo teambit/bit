@@ -26,7 +26,8 @@ type WorkspacePolicyLifecycleManifestObject = {
 export type WorkspacePolicyConfigEntryValue = WorkspacePolicyEntryValue | WorkspacePolicyEntryVersion;
 
 export type AddEntryOptions = {
-  updateExisting: boolean;
+  updateExisting?: boolean;
+  skipIfExisting?: boolean;
 };
 /**
  * Allowed values are valid semver values, git urls, fs path.
@@ -56,12 +57,16 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
   add(entry: WorkspacePolicyEntry, options?: AddEntryOptions): void {
     const defaultOptions: AddEntryOptions = {
       updateExisting: false,
+      skipIfExisting: false,
     };
 
     const calculatedOpts = Object.assign({}, defaultOptions, options);
 
     const existing = this.find(entry.dependencyId);
     if (existing) {
+      if (calculatedOpts.skipIfExisting) {
+        return;
+      }
       if (!calculatedOpts.updateExisting) {
         throw new EntryAlreadyExist(entry);
       }
