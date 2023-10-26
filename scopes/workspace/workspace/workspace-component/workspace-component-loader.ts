@@ -101,7 +101,7 @@ export class WorkspaceComponentLoader {
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<GetManyRes> {
     const idsWithoutEmpty = compact(ids);
-    const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
+    this.logger.setStatusLine(`loading ${ids.length} component(s)`);
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
       // We don't want to load extension or execute the load slot at this step
       // we will do it later
@@ -123,21 +123,19 @@ export class WorkspaceComponentLoader {
     const { components: loadedComponents, invalidComponents } = await this.getAndLoadSlotOrdered(
       loadOrCached.idsToLoad || [],
       loadOptsWithDefaults,
-      throwOnFailure,
-      longProcessLogger
+      throwOnFailure
     );
 
     const components = [...loadedComponents, ...loadOrCached.fromCache];
 
-    longProcessLogger.end();
+    // this.logger.clearStatusLine();
     return { components, invalidComponents };
   }
 
   private async getAndLoadSlotOrdered(
     ids: ComponentID[],
     loadOpts: ComponentLoadOptions,
-    throwOnFailure = true,
-    longProcessLogger
+    throwOnFailure = true
   ): Promise<GetManyRes> {
     if (!ids?.length) return { components: [], invalidComponents: [] };
 
@@ -152,8 +150,7 @@ export class WorkspaceComponentLoader {
           workspaceIds,
           scopeIds,
           { ...loadOpts, core, seeders, aspects },
-          throwOnFailure,
-          longProcessLogger
+          throwOnFailure
         );
         // We don't want to return components that were not asked originally (we do want to load them)
         if (!group.seeders) return undefined;
@@ -234,15 +231,13 @@ export class WorkspaceComponentLoader {
     workspaceIds: ComponentID[],
     scopeIds: ComponentID[],
     loadOpts: GetAndLoadSlotOpts,
-    throwOnFailure = true,
-    longProcessLogger
+    throwOnFailure = true
   ): Promise<GetManyRes> {
     const { workspaceComponents, scopeComponents, invalidComponents } = await this.getComponentsWithoutLoadExtensions(
       workspaceIds,
       scopeIds,
       loadOpts,
-      throwOnFailure,
-      longProcessLogger
+      throwOnFailure
     );
 
     const components = workspaceComponents.concat(scopeComponents);
@@ -379,8 +374,7 @@ export class WorkspaceComponentLoader {
     workspaceIds: ComponentID[],
     scopeIds: ComponentID[],
     loadOpts: GetAndLoadSlotOpts,
-    throwOnFailure = true,
-    longProcessLogger
+    throwOnFailure = true
   ) {
     const invalidComponents: InvalidComponent[] = [];
     const errors: { id: ComponentID; err: Error }[] = [];
@@ -388,7 +382,7 @@ export class WorkspaceComponentLoader {
       // We don't want to load extension or execute the load slot at this step
       // we will do it later
       // this important for better performance
-      // We don't want to store deps in fs cache, as at this point extnesions are not loaded yet
+      // We don't want to store deps in fs cache, as at this point extensions are not loaded yet
       // so it might save a wrong deps into the cache
       { loadExtensions: false, executeLoadSlot: false },
       loadOpts || {}
@@ -396,11 +390,8 @@ export class WorkspaceComponentLoader {
 
     const idsIndex = {};
 
-    // const legacyIds = workspaceIds.map((id) => {
     workspaceIds.forEach((id) => {
-      // idsIndex[id._legacy.toString()] = id;
       idsIndex[id.toString()] = id;
-      // return id._legacy;
     });
 
     const {
@@ -459,7 +450,6 @@ export class WorkspaceComponentLoader {
             idsIndex[legacyComponent.id.toString()] = id;
           }
         }
-        longProcessLogger.logProgress(id.toString());
         return getWithCatch(id, legacyComponent);
       })
     );
