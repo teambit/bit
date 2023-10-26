@@ -28,6 +28,7 @@ import { getMaxSizeForObjects, InMemoryCache } from '../../cache/in-memory-cache
 import { Types } from '../object-registrar';
 import { Lane, ModelComponent, Symlink } from '../models';
 import { ComponentFsCache } from '../../consumer/component/component-fs-cache';
+import { pMapPool } from '../../utils/promise-with-concurrent';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
@@ -203,7 +204,7 @@ export default class Repository {
     const refs = await this.listRefs();
     const concurrency = concurrentIOLimit();
     const objects: BitObject[] = [];
-    await pMap(
+    await pMapPool(
       refs,
       async (ref) => {
         const object = await this.load(ref);
