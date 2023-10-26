@@ -21,12 +21,20 @@ export default async function init(
   if (reset || resetHard) {
     await Consumer.reset(absPath, resetHard, noGit);
   }
+  let consumer: Consumer | undefined;
+  try {
+    consumer = await Consumer.create(absPath, noGit, workspaceConfigProps);
+  } catch (err) {
+    // it's possible that at this stage the consumer fails to load due to scope issues.
+    // still we want to load it to include its instance of "scope.json", so then later when "consumer.write()", we
+    // don't lose some scope metadata
+  }
   if (resetScope) {
     const scopePath = findScopePath(process.cwd());
     if (!scopePath) throw new Error(`fatal: scope not found in the path: ${process.cwd()}`);
     await Scope.reset(scopePath, true);
   }
-  const consumer: Consumer = await Consumer.create(absPath, noGit, workspaceConfigProps);
+  if (!consumer) consumer = await Consumer.create(absPath, noGit, workspaceConfigProps);
   if (!force && !resetScope) {
     await throwForOutOfSyncScope(consumer);
   }
