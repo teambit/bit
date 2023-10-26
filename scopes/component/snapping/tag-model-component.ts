@@ -246,7 +246,7 @@ export async function tagModelComponent({
   const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
   const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
   const allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
-  // check if all components to tag includes the env of the component being tagged
+
   const messagesFromEditorFetcher = new MessagePerComponentFetcher(idsToTag, autoTagIds);
   const getMessagePerId = async () => {
     if (editor) return messagesFromEditorFetcher.getMessagesFromEditor(legacyScope.tmp, editor);
@@ -330,7 +330,6 @@ export async function tagModelComponent({
 
   const publishedPackages: string[] = [];
   let harmonyComps: Component[] = [];
-
   if (build) {
     const onTagOpts: OnTagOpts = {
       disableTagAndSnapPipelines,
