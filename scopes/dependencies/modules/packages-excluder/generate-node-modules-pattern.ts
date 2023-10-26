@@ -79,6 +79,6 @@ function toJestPattern<T>(packages: string[], options: PatternTargetMapOptions<T
 function toWebpackPattern(packages: string[]) {
   const patterns = packages.map((pkg) => pkg.replace(/\//g, '[\\/]'));
   return patterns.map((pattern) => {
-    return `^(.+?[\\/]node_modules[\\/](?!(${pattern}))(@.+?[\\/])?.+?)[\\/]`;
+    return `^(.+?[\\/]node_modules[\\/]\\.pnpm[\\/][^\\/]+[\\/]node_modules[\\/](?!(${pattern}))).+`;
   });
 }

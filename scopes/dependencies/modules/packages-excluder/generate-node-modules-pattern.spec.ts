@@ -193,7 +193,7 @@ describe('generateNodeModulesPattern()', () => {
       it('should return an array with 1 pattern', () => {
         expect((patterns || []).length).toEqual(1);
         expect(patterns).toEqual([
-          '^(.+?[\\/]node_modules[\\/](?!(@my-org[\\/]my-scope.components))(@.+?[\\/])?.+?)[\\/]',
+          '^(.+?[\\/]node_modules[\\/]\\.pnpm[\\/][^\\/]+[\\/]node_modules[\\/](?!(@my-org[\\/]my-scope.components))).+',
         ]);
       });
     });
@@ -236,14 +236,24 @@ describe('generateNodeModulesPattern()', () => {
       it('should not exclude other packages', () => {
         expect(
           regexps.some((regexp) =>
-            regexp.test('/Users/aUser/dev/bit-example/node_modules/@my-org/my-scope.apps/package.json')
+            regexp.test(
+              '/Users/aUser/dev/bit-example/node_modules/.pnpm/file+my-org+my-scope/node_modules/@my-org/my-scope.apps/package.json'
+            )
           )
         ).toBeTruthy();
         expect(
-          regexps.some((regexp) => regexp.test('/Users/aUser/dev/bit-example/node_modules/@lodash/package.json'))
+          regexps.some((regexp) =>
+            regexp.test(
+              '/Users/aUser/dev/bit-example/node_modules/.pnpm/file+my-org+my-scope/node_modules/@lodash/package.json'
+            )
+          )
         ).toBeTruthy();
         expect(
-          regexps.some((regexp) => regexp.test('/Users/aUser/dev/bit-example/node_modules/@react/package.json'))
+          regexps.some((regexp) =>
+            regexp.test(
+              '/Users/aUser/dev/bit-example/node_modules/.pnpm/file+my-org+my-scope/node_modules/@react/package.json'
+            )
+          )
         ).toBeTruthy();
       });
     });
