@@ -23,6 +23,10 @@ type GenerateNodeModulesPatternOptions<T> = {
    * The target for which patterns are generated.
    */
   target?: T;
+  /**
+   * Defines if pnpm is enabled as a package manager
+   */
+  isPnpmEnabled: boolean;
 };
 
 const patternTargetMap = {
@@ -39,13 +43,13 @@ type PatternReturnType<T extends PatternTarget> = ReturnType<PatternTargetMap[T]
  * @returns {string} node modules catched packages regex.
  */
 export function generateNodeModulesPattern<T extends PatternTarget>(
-  options: GenerateNodeModulesPatternOptions<T> = {}
+  options: GenerateNodeModulesPatternOptions<T>
 ): PatternReturnType<T> {
-  const { packages = [], excludeComponents, target = PatternTarget.JEST } = options;
-  return patternTargetMap[target](packages, { excludeComponents }) as PatternReturnType<T>;
+  const { packages = [], excludeComponents, target = PatternTarget.JEST, isPnpmEnabled } = options;
+  return patternTargetMap[target](packages, { excludeComponents, isPnpmEnabled }) as PatternReturnType<T>;
 }
 
-type PatternTargetMapOptions<T> = Pick<GenerateNodeModulesPatternOptions<T>, 'excludeComponents'>;
+type PatternTargetMapOptions<T> = Pick<GenerateNodeModulesPatternOptions<T>, 'excludeComponents' | 'isPnpmEnabled'>;
 
 function toJestPattern<T>(packages: string[], options: PatternTargetMapOptions<T>) {
   const { excludeComponents } = options;
@@ -76,9 +80,11 @@ function toJestPattern<T>(packages: string[], options: PatternTargetMapOptions<T
  * - RegExp to exclude this path from managed paths: `/^(.+?[\\/]node_modules[\\/](?!(@my-org[\\/]my-scope.components))(@.+?[\\/])?.+?)[\\/]/`
  */
 
-function toWebpackPattern(packages: string[]) {
+function toWebpackPattern<T>(packages: string[], { isPnpmEnabled }: PatternTargetMapOptions<T>) {
   const patterns = packages.map((pkg) => pkg.replace(/\//g, '[\\/]'));
   return patterns.map((pattern) => {
-    return `^(.+?[\\/]node_modules[\\/]\\.pnpm[\\/][^\\/]+[\\/]node_modules[\\/](?!(${pattern}))).+`;
+    return isPnpmEnabled
+      ? `^(.+?[\\/]node_modules[\\/]\\.pnpm[\\/][^\\/]+[\\/]node_modules[\\/](?!(${pattern}))).+`
+      : `^(.+?[\\/]node_modules[\\/](?!(${pattern}))).+?[\\/]`;
   });
 }
