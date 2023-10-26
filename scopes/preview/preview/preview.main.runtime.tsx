@@ -31,6 +31,7 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
+import { isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BundlingStrategyNotFound } from './exceptions';
 import { generateLink, MainModulesMap } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
@@ -153,6 +154,7 @@ export type PreviewConfig = {
    * default - no limit.
    */
   maxChunkSize?: number;
+  onlyOverview?: boolean;
 };
 
 export type EnvPreviewConfig = {
@@ -484,6 +486,8 @@ export class PreviewMain {
   }
 
   async isSupportSkipIncludes(component: Component) {
+    if (!this.config.onlyOverview || !isFeatureEnabled('only-overview')) return false;
+
     const isCore = this.envs.isUsingCoreEnv(component);
     if (isCore) return false;
 
@@ -496,6 +500,8 @@ export class PreviewMain {
    * check if the component preview should only include the overview (skipping rendering of the compostions and properties table)
    */
   async includesOnlyOverview(component: Component): Promise<boolean> {
+    if (!this.config.onlyOverview || !isFeatureEnabled('only-overview')) return false;
+
     const inWorkspace = await this.workspace?.hasId(component.id);
     if (inWorkspace) {
       if (this.envs.isUsingCoreEnv(component)) {
