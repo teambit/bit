@@ -3,17 +3,20 @@ import fs from 'fs-extra';
 import { __TEST__ as v8CompileCache } from 'v8-compile-cache';
 import { Consumer, getConsumerInfo, loadConsumerIfExist } from '../../../consumer';
 import { ComponentFsCache } from '../../../consumer/component/component-fs-cache';
-import { Scope } from '../../../scope';
-import { loadScopeIfExist } from '../../../scope/scope-loader';
+import { findScopePath } from '../../../utils';
+import ScopeIndex from '../../../scope/objects/scope-index';
+
+export type CacheClearResult = { succeed: string[]; failed: string[] };
 
 class CacheClearer {
   private cacheCleared: string[] = [];
-  async clear() {
+  private cacheClearedFailures: string[] = [];
+  async clear(): Promise<CacheClearResult> {
     this.clearV8CompiledCode();
     await this.clearFSCache();
     await this.clearScopeIndex();
 
-    return this.cacheCleared;
+    return { succeed: this.cacheCleared, failed: this.cacheClearedFailures };
   }
 
   private clearV8CompiledCode() {
@@ -38,14 +41,6 @@ class CacheClearer {
     }
   }
 
-  private async getScopeGracefully(): Promise<Scope | undefined> {
-    try {
-      return await loadScopeIfExist();
-    } catch (err: any) {
-      return undefined;
-    }
-  }
-
   private async getFSCachePath(): Promise<string | null> {
     const consumer = await this.getConsumerGracefully();
     if (consumer) {
@@ -55,21 +50,24 @@ class CacheClearer {
     if (!consumerInfo) {
       return null; // no workspace around, nothing to do.
     }
-    const scope = await this.getScopeGracefully();
-    if (!scope) return null;
-    const componentFsCache = new ComponentFsCache(scope.path);
+    const scopePath = findScopePath(consumerInfo.path);
+    if (!scopePath) return null;
+    const componentFsCache = new ComponentFsCache(scopePath);
     return componentFsCache.basePath;
   }
 
   private async clearScopeIndex() {
-    const scope = await loadScopeIfExist();
-    if (scope) {
-      await scope.objects.scopeIndex.deleteFile();
+    try {
+      const scopePath = findScopePath(process.cwd());
+      if (!scopePath) return;
+      await ScopeIndex.reset(scopePath);
       this.cacheCleared.push('scope-index file');
+    } catch (err: any) {
+      this.cacheClearedFailures.push(`scope-index file (err: ${err.message})`);
     }
   }
 }
 
-export async function clearCache(): Promise<string[]> {
+export async function clearCache(): Promise<CacheClearResult> {
   return new CacheClearer().clear();
 }

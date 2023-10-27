@@ -1,4 +1,4 @@
-import { ScopeMain } from '@teambit/scope';
+import { ScopeMain } from './scope.main.runtime';
 
 export class ClearCacheAction {
   name = ClearCacheAction.name;
