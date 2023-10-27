@@ -617,8 +617,8 @@ export class PreviewMain {
     const imports = manifest.entrypoints
       .map((entry: string) =>
         entry.endsWith('.js')
-          ? `import { run } from '@teambit/preview/${previewArtifactPath}/${entry}';`
-          : `import '@teambit/preview/${previewArtifactPath}/${entry}';`
+          ? `import { run } from '${previewPreBundlePath}/${entry}';`
+          : `import '${previewPreBundlePath}/${entry}';`
       )
       .join('\n');
 
