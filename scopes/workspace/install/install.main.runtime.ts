@@ -319,6 +319,7 @@ export class InstallMain {
         pmInstallOptions
       );
       let cacheCleared = false;
+      await this.linkCodemods(compDirMap);
       if (options?.compile ?? true) {
         const compileStartTime = process.hrtime();
         const compileOutputMessage = `compiling components`;
@@ -335,7 +336,6 @@ export class InstallMain {
       if (options?.writeConfigFiles ?? true) {
         await this.tryWriteConfigFiles(!cacheCleared);
       }
-      await this.linkCodemods(compDirMap);
       if (!dependenciesChanged) break;
       if (!options?.recurringInstall) break;
       const oldNonLoadedEnvs = this.getOldNonLoadedEnvs();
@@ -427,13 +427,17 @@ export class InstallMain {
     const rootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const aspectsPackages = await this.workspace.getConfiguredUserAspectsPackages({ externalsOnly: true });
     aspectsPackages.forEach((aspectsPackage) => {
-      rootPolicy.add({
-        dependencyId: aspectsPackage.packageName,
-        value: {
-          version: aspectsPackage.version,
+      rootPolicy.add(
+        {
+          dependencyId: aspectsPackage.packageName,
+          value: {
+            version: aspectsPackage.version,
+          },
+          lifecycleType: 'runtime',
         },
-        lifecycleType: 'runtime',
-      });
+        // If it's already exist from the root, take the version from the root policy
+        { skipIfExisting: true }
+      );
     });
     return rootPolicy;
   }

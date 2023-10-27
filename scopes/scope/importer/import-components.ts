@@ -33,12 +33,15 @@ import { GraphMain } from '@teambit/graph';
 import { Workspace } from '@teambit/workspace';
 import { ComponentWriterMain, ComponentWriterResults, ManyComponentsWriterParams } from '@teambit/component-writer';
 import { LATEST_VERSION } from '@teambit/component-version';
+import { EnvsMain } from '@teambit/envs';
+import { compact } from 'lodash';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
   verbose?: boolean;
   merge?: boolean;
   mergeStrategy?: MergeStrategy;
+  filterEnvs?: string[];
   writeToPath?: string;
   writeConfig?: boolean;
   override?: boolean;
@@ -97,6 +100,7 @@ export default class ImportComponents {
     private workspace: Workspace,
     private graph: GraphMain,
     private componentWriter: ComponentWriterMain,
+    private envs: EnvsMain,
     public options: ImportOptions
   ) {
     this.consumer = this.workspace.consumer;
@@ -201,9 +205,10 @@ export default class ImportComponents {
       await this._fetchDivergeData(components);
       this._throwForDivergedHistory();
       await this.throwForComponentsFromAnotherLane(components.map((c) => c.id));
-      componentWriterResults = await this._writeToFileSystem(components);
-      await this._saveLaneDataIfNeeded(components);
-      writtenComponents = components;
+      const filteredComponents = await this._filterComponentsByFilters(components);
+      componentWriterResults = await this._writeToFileSystem(filteredComponents);
+      await this._saveLaneDataIfNeeded(filteredComponents);
+      writtenComponents = filteredComponents;
     }
 
     return this.returnCompleteResults(
@@ -212,6 +217,32 @@ export default class ImportComponents {
       writtenComponents,
       componentWriterResults
     );
+  }
+
+  private async _filterComponentsByFilters(components: Component[]): Promise<Component[]> {
+    if (!this.options.filterEnvs) return components;
+    const filteredP = components.map(async (component) => {
+      // If the id was requested explicitly, we don't want to filter it out
+      if (this.options.ids) {
+        if (
+          this.options.ids.includes(component.id.toStringWithoutVersion()) ||
+          this.options.ids.includes(component.id.toString())
+        ) {
+          return component;
+        }
+      }
+      const currentEnv = await this.envs.calculateEnvIdFromExtensions(component.extensions);
+      const currentEnvWithoutVersion = currentEnv.split('@')[0];
+      if (
+        this.options.filterEnvs?.includes(currentEnv) ||
+        this.options.filterEnvs?.includes(currentEnvWithoutVersion)
+      ) {
+        return component;
+      }
+      return undefined;
+    });
+    const filtered = compact(await Promise.all(filteredP));
+    return filtered;
   }
 
   async _fetchDivergeData(components: Component[]) {

@@ -22,6 +22,7 @@ import Repository from '../objects/repository';
 import validateVersionInstance from '../version-validator';
 import Source from './source';
 import { getHarmonyVersion } from '../../bootstrap';
+import { BitIdCompIdError } from '../exceptions/bit-id-comp-id-err';
 
 export type SourceFileModel = {
   name: string;
@@ -508,6 +509,9 @@ export default class Version extends BitObject {
       };
 
       return deps.map((dependency: any) => {
+        if (!dependency.id.scope) {
+          throw new BitIdCompIdError(dependency.id.name);
+        }
         return new Dependency(
           ComponentID.fromObject(dependency.id),
           Array.isArray(dependency.relativePaths)

@@ -2,8 +2,11 @@ import { Harmony } from '@teambit/harmony';
 import { Component } from '@teambit/component';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { ComponentID } from '@teambit/component-id';
+import { lt } from 'semver';
+import { InvalidScopeNameFromRemote, InvalidScopeName } from '@teambit/legacy-bit-id';
 import { EnvsAspect } from '@teambit/envs';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { VERSION_CHANGED_BIT_ID_TO_COMP_ID } from '@teambit/legacy/dist/constants';
 import { ExtensionDataList, ignoreVersionPredicate } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { partition, mergeWith, merge, uniq, uniqWith } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
@@ -176,10 +179,9 @@ export class AspectsMerger {
     if (mergeFromScope && continuePropagating && !excludeOrigins.includes('ModelNonSpecific')) {
       await addExtensionsToMerge(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
-
     const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
-    await this.loadExtensions(afterMerge, componentId);
-    const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
+    const afterLoaded = await this.loadExtensions(afterMerge, componentId);
+    const withoutRemoved = afterLoaded.filter((extData) => !removedExtensionIds.includes(extData.stringId));
     const extensions = ExtensionDataList.fromArray(withoutRemoved);
     return {
       extensions,
@@ -325,11 +327,45 @@ export class AspectsMerger {
    */
   private async loadExtensions(
     extensions: ExtensionDataList,
-    originatedFrom?: ComponentID,
+    originatedFrom: ComponentID,
     opts: WorkspaceLoadAspectsOptions = {}
-  ): Promise<void> {
+  ): Promise<ExtensionDataList> {
     const workspaceAspectsLoader = this.workspace.getWorkspaceAspectsLoader();
-    return workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, opts);
+    try {
+      await workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, opts);
+      return extensions;
+    } catch (err) {
+      if (err instanceof InvalidScopeNameFromRemote || err instanceof InvalidScopeName) {
+        const scopeName = err.scopeName;
+        const shouldStrip = await this.shouldStripInvalidExtIds(originatedFrom);
+        if (shouldStrip) {
+          const newExtensions = extensions.filter((ext) => {
+            if (ext.extensionId) return ext.extensionId.scope !== scopeName;
+            const scope = ext.stringId.split('/')[0];
+            return scope !== scopeName;
+          });
+          const newExtDataList = ExtensionDataList.fromArray(newExtensions);
+          await workspaceAspectsLoader.loadComponentsExtensions(newExtDataList, originatedFrom, opts);
+          return newExtDataList;
+        }
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * we saw occurrences of ExtensionDataEntry with invalid `name` prop, e.g. "blogging/teambit".
+   * these occurrences should not happen today, and if they do, it should throw.
+   * this is a workaround to be able to fix/tag those old occurrences.
+   */
+  async shouldStripInvalidExtIds(compId: ComponentID) {
+    if (!compId.hasVersion()) return false;
+    const modelComp = await this.workspace.scope.getBitObjectModelComponent(compId);
+    if (!modelComp) return false; // probably new comp
+    const verObj = await this.workspace.scope.getBitObjectVersion(modelComp, compId.version as string);
+    if (!verObj) return false; // probably new comp
+    if (!verObj.bitVersion) return true; // super old
+    return lt(verObj.bitVersion, VERSION_CHANGED_BIT_ID_TO_COMP_ID);
   }
 
   /**
