@@ -373,20 +373,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-descriptor"
     },
-    "component-id": {
-        "name": "component-id",
-        "scope": "teambit.component",
-        "version": "1.1.0",
-        "mainFile": "index.ts",
-        "rootDir": "components/component-id"
-    },
-    "component-issues": {
-        "name": "component-issues",
-        "scope": "teambit.component",
-        "version": "0.0.100",
-        "mainFile": "index.ts",
-        "rootDir": "components/component-issues"
-    },
     "component-log": {
         "name": "component-log",
         "scope": "teambit.component",
@@ -722,13 +708,6 @@
         "version": "1.0.34",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/lanes"
-    },
-    "legacy-bit-id": {
-        "name": "legacy-bit-id",
-        "scope": "teambit.component",
-        "version": "1.0.4",
-        "mainFile": "index.ts",
-        "rootDir": "components/legacy-bit-id"
     },
     "linter": {
         "name": "linter",
