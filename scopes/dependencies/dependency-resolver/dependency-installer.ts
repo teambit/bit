@@ -7,7 +7,6 @@ import { CreateFromComponentsOptions, DependencyResolverMain } from '@teambit/de
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
 import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
-import { fromPairs } from 'lodash';
 import { MainAspectNotInstallable, RootDirNotDefined } from './exceptions';
 import { PackageManager, PackageManagerInstallOptions, PackageImportMethod } from './package-manager';
 import { WorkspacePolicy } from './policy';
@@ -302,9 +301,8 @@ export class DependencyInstaller {
       this.dependencyResolver.getPackageName(component)
     );
     const rootDefaultPeerDeps = {};
-    const manifests: Record<string, ProjectManifest> = componentDirectoryMap
-      .toArray()
-      .reduce((acc, [component, dir]) => {
+    const manifests: Record<string, ProjectManifest & { defaultPeerDependencies?: Record<string, string> }> =
+      componentDirectoryMap.toArray().reduce((acc, [component, dir]) => {
         const packageName = this.dependencyResolver.getPackageName(component);
         const manifest = workspaceManifest.componentsManifestsMap.get(packageName);
         if (manifest) {
@@ -331,7 +329,7 @@ export class DependencyInstaller {
         installPeersFromEnvs,
       });
     }
-    manifests[rootDir]['defaultPeerDependencies'] = rootDefaultPeerDeps;
+    manifests[rootDir].defaultPeerDependencies = rootDefaultPeerDeps;
     return manifests;
   }
 
