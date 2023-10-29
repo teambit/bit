@@ -83,7 +83,7 @@ export class AspectList {
     const res = {};
     this.entries.forEach((entry) => {
       if (entry.config) {
-        res[entry.id.toString()] = removeInternalConfigFields(entry.config);
+        res[entry.id.toString()] = removeInternalConfigFields(entry.legacy.rawConfig);
       }
     });
     return res;

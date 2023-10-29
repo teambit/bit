@@ -1,10 +1,25 @@
-import { AppDeployContext, DeployFn } from '@teambit/application';
+import { DeployFn, AppBuildResult } from '@teambit/application';
 
-export interface DeployContext extends AppDeployContext {
+export interface DeployContext extends AppBuildResult {
+  metadata: NodeAppMetadata;
+
   /**
-   * the main file file of the app e.g: dist/app.js
+   * @todo: remove this. it's already part of `metadata`.
+   * it's here only for backward compatibility.
    */
   mainFile?: string;
+}
+
+export interface NodeAppMetadata {
+  /**
+   * the main file of the app e.g: dist/app.js
+   */
+  mainFile: string;
+
+  /**
+   * the directory where the artifacts are saved.
+   */
+  artifactsDir: string;
 }
 
 export type NodeAppOptions = {
