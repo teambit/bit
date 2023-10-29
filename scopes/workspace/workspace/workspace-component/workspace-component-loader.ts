@@ -12,6 +12,7 @@ import { Logger } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
+import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
 import { ComponentLoadOptions as LegacyComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
@@ -88,15 +89,19 @@ export class WorkspaceComponentLoader {
    * And to make sure we load extensions first.
    */
   private componentsExtensionsCache: InMemoryCache<{ extensions: ExtensionDataList; errors: Error[] | undefined }>;
+
+  private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   constructor(
     private workspace: Workspace,
     private logger: Logger,
     private dependencyResolver: DependencyResolverMain,
-    private envs: EnvsMain
+    private envs: EnvsMain,
+    private aspectLoader: AspectLoaderMain
   ) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.scopeComponentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.componentsExtensionsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+    this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<GetManyRes> {
@@ -205,11 +210,21 @@ export class WorkspaceComponentLoader {
 
     await this.groupAndUpdateIds(extsNotFromTheList, workspaceScopeIdsMap);
 
+    const layerdExtFromTheList = this.regroupExtIdsFromTheList(groupedByIsExtOfAnother.true);
+    const layerdExtGroups = layerdExtFromTheList.map((ids) => {
+      return {
+        ids,
+        core: false,
+        aspects: true,
+        seeders: true,
+      };
+    });
+
     const groupsToHandle = [
       // Always load first core envs
-      { ids: groupedByIsCoreEnvs.true || [], core: true, aspects: true },
+      { ids: groupedByIsCoreEnvs.true || [], core: true, aspects: true, seeders: false },
       { ids: extsNotFromTheList || [], core: false, aspects: true, seeders: false },
-      { ids: groupedByIsExtOfAnother.true || [], core: false, aspects: true, seeders: true },
+      ...layerdExtGroups,
       { ids: groupedByIsExtOfAnother.false || [], core: false, aspects: false, seeders: true },
     ];
     const groupsByWsScope = groupsToHandle.map((group) => {
@@ -225,6 +240,16 @@ export class WorkspaceComponentLoader {
       };
     });
     return groupsByWsScope;
+  }
+
+  private regroupExtIdsFromTheList(ids: ComponentID[]): Array<ComponentID[]> {
+    // TODO: implement this function
+    // this should handle a case when you have:
+    // compA that has extA and that extA has extB
+    // in that case we now get the following group:
+    // ids: [extA, extB]
+    // while we need extB to be in a different group before extA
+    return [ids];
   }
 
   private async getAndLoadSlot(
@@ -263,7 +288,7 @@ export class WorkspaceComponentLoader {
       await this.loadCompsAsAspects(workspaceComponents, {
         loadApps: true,
         loadEnvs: true,
-        loadAspects: true,
+        loadAspects: loadOpts.aspects,
         core: loadOpts.core,
         seeders: loadOpts.seeders,
         idsToNotLoadAsAspects: loadOpts.idsToNotLoadAsAspects,
@@ -280,19 +305,29 @@ export class WorkspaceComponentLoader {
   ): Promise<void> {
     const aspectIds: string[] = [];
     components.forEach((component) => {
-      if (opts.idsToNotLoadAsAspects?.includes(component.id.toString())) {
+      const firstTimeToLoad = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
+      const excluded = opts.idsToNotLoadAsAspects?.includes(component.id.toString());
+      const isCore = this.aspectLoader.isCoreAspect(component.id.toStringWithoutVersion());
+      const alreadyLoaded = this.aspectLoader.isAspectLoaded(component.id.toString());
+      const skipLoading = excluded || isCore || alreadyLoaded || !firstTimeToLoad;
+
+      if (skipLoading) {
         return;
       }
+      const idStr = component.id.toString();
       const appData = component.state.aspects.get('teambit.harmony/application');
       if (opts.loadApps && appData?.data?.appName) {
-        aspectIds.push(component.id.toString());
+        aspectIds.push(idStr);
+        this.componentLoadedSelfAsAspects.set(idStr, true);
       }
       const envsData = component.state.aspects.get(EnvsAspect.id);
       if (opts.loadEnvs && (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env')) {
-        aspectIds.push(component.id.toString());
+        aspectIds.push(idStr);
+        this.componentLoadedSelfAsAspects.set(idStr, true);
       }
       if (opts.loadAspects && envsData?.data?.type === 'aspect') {
-        aspectIds.push(component.id.toString());
+        aspectIds.push(idStr);
+        this.componentLoadedSelfAsAspects.set(idStr, true);
       }
     });
     if (!aspectIds.length) return;
