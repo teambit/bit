@@ -297,29 +297,13 @@ export class DependencyInstaller {
       options,
       this.installingContext
     );
-    const packageNames = componentDirectoryMap.components.map((component) =>
-      this.dependencyResolver.getPackageName(component)
-    );
-    const rootDefaultPeerDeps = {};
-    const manifests: Record<string, ProjectManifest & { defaultPeerDependencies?: Record<string, string> }> =
-      componentDirectoryMap.toArray().reduce((acc, [component, dir]) => {
+    const manifests: Record<string, ProjectManifest> = componentDirectoryMap
+      .toArray()
+      .reduce((acc, [component, dir]) => {
         const packageName = this.dependencyResolver.getPackageName(component);
         const manifest = workspaceManifest.componentsManifestsMap.get(packageName);
         if (manifest) {
           acc[dir] = manifest.toJson({ copyPeerToRuntime: copyPeerToRuntimeOnComponents });
-          const selfPolicyWithoutLocal = manifest.envPolicy.selfPolicy.filter(
-            (dep) => !packageNames.includes(dep.dependencyId) && !acc[dir].dependencies[dep.dependencyId]
-          );
-          if (dir !== rootDir) {
-            acc[dir].defaultPeerDependencies = {};
-            for (const [peerName, peerVersion] of selfPolicyWithoutLocal.toNameVersionTuple()) {
-              if (rootDefaultPeerDeps[peerName] && rootDefaultPeerDeps[peerName] !== peerVersion) {
-                acc[dir].defaultPeerDependencies[peerName] = peerVersion;
-              } else if (!rootDefaultPeerDeps[peerName]) {
-                rootDefaultPeerDeps[peerName] = peerVersion;
-              }
-            }
-          }
         }
         return acc;
       }, {});
@@ -329,7 +313,6 @@ export class DependencyInstaller {
         installPeersFromEnvs,
       });
     }
-    manifests[rootDir].defaultPeerDependencies = rootDefaultPeerDeps;
     return manifests;
   }
 

@@ -40,6 +40,8 @@ export class Manifest {
       dependencies,
       devDependencies,
       peerDependencies,
+      // eslint-disable-next-line
+      defaultPeerDependencies: this.dependencies['defaultPeerDependencies'],
     };
     // if (options.includeDir) {
     //   return {

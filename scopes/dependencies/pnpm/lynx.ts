@@ -363,9 +363,9 @@ function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string)
     return readDependencyPackageHook({
       ...pkg,
       dependencies: {
-        ...pkg.dependencies,
         ...pkg.peerDependencies,
         ...pkg['defaultPeerDependencies'], // eslint-disable-line
+        ...pkg.dependencies,
       },
     });
   }
