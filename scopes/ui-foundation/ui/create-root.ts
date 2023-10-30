@@ -64,10 +64,10 @@ if (isBrowser || '${runtime}' === 'main') render();
 `;
 }
 
-export function createImports(aspectDefs: AspectDefinition[]) {
+export function createImports(aspectDefs: AspectDefinition[], ignoreHarmony = false): string {
   const defs = aspectDefs.filter((def) => def.runtimePath);
 
-  return `import { Harmony } from '@teambit/harmony';
+  return `${ignoreHarmony ? '' : "import { Harmony } from '@teambit/harmony';"}
 ${getImportStatements(aspectDefs, 'aspectFilePath', 'Aspect')}
 ${getImportStatements(defs, 'runtimePath', 'Runtime')}`;
 }

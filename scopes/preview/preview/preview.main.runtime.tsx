@@ -32,6 +32,7 @@ import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/a
 import { sha1 } from '@teambit/legacy/dist/utils';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
+import { createImports, getIdSetters, getIdentifiers } from '@teambit/ui/dist/create-root';
 import { BundlingStrategyNotFound } from './exceptions';
 import { generateLink, MainModulesMap } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
@@ -602,13 +603,23 @@ export class PreviewMain {
       this.executionRefs.set(ctxId, new ExecutionRef(context));
     });
 
-    const previewRuntime = await this.writePreviewEntry();
+    const customAspects = await this.getCustomAspects();
+    const previewRuntime = await this.writePreviewEntry(customAspects);
     const linkFiles = await this.updateLinkFiles(context.components, context);
 
     return [...linkFiles, previewRuntime];
   }
 
-  private writePreviewEntry() {
+  private async getCustomAspects() {
+    const [, uiRoot] = this.getUi();
+    const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
+    const result = resolvedAspects.filter((aspect) => {
+      return !aspect.getId || !this.aspectLoader.isCoreAspect(aspect.getId);
+    });
+    return result;
+  }
+
+  private writePreviewEntry(customAspects: AspectDefinition[] = []) {
     const previewPathFromBvm = getAspectDirFromBvm(PreviewAspect.id);
     const previewArtifactPath = PreBundlePreviewTask.getArtifactDirectory();
     const previewPreBundlePath = join(previewPathFromBvm, previewArtifactPath);
@@ -621,11 +632,20 @@ export class PreviewMain {
           : `import '${previewPreBundlePath}/${entry}';`
       )
       .join('\n');
-
     const name = this.workspace?.name || 'workspace';
     const config = this.harmony.config.toObject();
     config['teambit.harmony/bit'] = name;
-    const contents = `${imports}\n\nrun(${JSON.stringify(config, null, 2)});\n`;
+    const customImports = createImports(customAspects, true);
+    const customIdSetters = getIdSetters(customAspects, 'Aspect');
+    const customIdentifiers = getIdentifiers(customAspects, 'Aspect');
+
+    const contents = [
+      imports,
+      customImports,
+      customIdSetters.join('\n'),
+      `run(${JSON.stringify(config, null, 2)}, [${customIdentifiers.join('\n')}]);`,
+    ].join('\n');
+
     const previewRuntime = resolve(join(__dirname, `preview.entry.${sha1(contents)}.js`));
     if (!existsSync(previewRuntime)) {
       outputFileSync(previewRuntime, contents);
