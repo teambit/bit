@@ -1,0 +1,26 @@
+---
+description: A component to create the layout of the content in a tab
+labels: ['react', 'ui-component', 'component', 'tab']
+---
+
+import { TabContent } from './tab-content';
+import { ExpandableTabContent } from './expandable-tab-content';
+
+The `ExpandableTabContent` is used when you want a bottom drawer that can be collapsed and expanded to show more info.
+
+```js live
+<ExpandableTabContent
+  style={{ width: 300 }}
+  content={<div>content of the tab</div>}
+  drawerTitle={<div>click here for more content</div>}
+  drawerContent={<div>some more content</div>}
+/>
+```
+
+The `TabContent` can also be used for the basic top-bottom layout for a tab in the menu, without the expandable drawer at the bottom.
+
+```js live
+<TabContent bottom={<div>bottom</div>}>
+  <div>children</div>
+</TabContent>
+```
