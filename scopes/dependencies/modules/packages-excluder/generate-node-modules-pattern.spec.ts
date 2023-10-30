@@ -4,14 +4,14 @@ describe('generateNodeModulesPattern()', () => {
   describe('default format for JEST', () => {
     describe('should work with empty array', () => {
       it('include any package in the node_modules', () => {
-        expect(generateNodeModulesPattern({ packages: [], isPnpmEnabled: true })).toEqual('node_modules/(?!()/)');
+        expect(generateNodeModulesPattern({ packages: [] })).toEqual('node_modules/(?!()/)');
       });
     });
     describe('should work with one package', () => {
       let pattern;
       let regex;
       beforeAll(() => {
-        pattern = generateNodeModulesPattern({ packages: ['@myorg'], isPnpmEnabled: true });
+        pattern = generateNodeModulesPattern({ packages: ['@myorg'] });
         regex = new RegExp(pattern);
       });
 
@@ -33,7 +33,7 @@ describe('generateNodeModulesPattern()', () => {
       let regex;
       beforeAll(() => {
         packagesToTransform = ['react', '@myorg', 'testing-library__dom'];
-        pattern = generateNodeModulesPattern({ packages: packagesToTransform, isPnpmEnabled: true });
+        pattern = generateNodeModulesPattern({ packages: packagesToTransform });
         regex = new RegExp(pattern);
       });
 
@@ -77,7 +77,7 @@ describe('generateNodeModulesPattern()', () => {
       let regex;
       beforeAll(() => {
         packagesToTransform = ['react'];
-        pattern = generateNodeModulesPattern({ packages: packagesToTransform, isPnpmEnabled: true });
+        pattern = generateNodeModulesPattern({ packages: packagesToTransform });
         regex = new RegExp(pattern);
       });
 
@@ -110,7 +110,7 @@ describe('generateNodeModulesPattern()', () => {
       let pattern;
       let regex;
       beforeAll(() => {
-        pattern = generateNodeModulesPattern({ excludeComponents: true, isPnpmEnabled: true });
+        pattern = generateNodeModulesPattern({ excludeComponents: true });
         regex = new RegExp(pattern);
       });
       const fixtures = [
@@ -137,7 +137,7 @@ describe('generateNodeModulesPattern()', () => {
       let pattern;
       let regex;
       beforeAll(() => {
-        pattern = generateNodeModulesPattern({ packages: ['@myorg'], excludeComponents: true, isPnpmEnabled: true });
+        pattern = generateNodeModulesPattern({ packages: ['@myorg'], excludeComponents: true });
         regex = new RegExp(pattern);
       });
       it('should have yarn structure excluded', () => {
@@ -151,7 +151,6 @@ describe('generateNodeModulesPattern()', () => {
         pattern = generateNodeModulesPattern({
           packages: ['@shohamgilad'],
           excludeComponents: false,
-          isPnpmEnabled: true,
         });
         regex = new RegExp(pattern);
       });
@@ -167,7 +166,7 @@ describe('generateNodeModulesPattern()', () => {
       let pattern;
       let regex;
       beforeAll(() => {
-        pattern = generateNodeModulesPattern({ excludeComponents: true, isPnpmEnabled: true });
+        pattern = generateNodeModulesPattern({ excludeComponents: true });
         regex = new RegExp(pattern);
       });
       it('should exclude package under the .pnpm directory', () => {
@@ -182,9 +181,7 @@ describe('generateNodeModulesPattern()', () => {
   describe('format for webpack', () => {
     describe('when packages provided is an empty array', () => {
       it('should return an empty array', () => {
-        expect(
-          generateNodeModulesPattern({ packages: [], target: PatternTarget.WEBPACK, isPnpmEnabled: true })
-        ).toEqual([]);
+        expect(generateNodeModulesPattern({ packages: [], target: PatternTarget.WEBPACK })).toEqual([]);
       });
     });
     describe('when packages contains a single package', () => {
@@ -193,7 +190,6 @@ describe('generateNodeModulesPattern()', () => {
         patterns = generateNodeModulesPattern({
           packages: ['@my-org/my-scope.components'],
           target: PatternTarget.WEBPACK,
-          isPnpmEnabled: true,
         });
       });
 
@@ -212,7 +208,6 @@ describe('generateNodeModulesPattern()', () => {
         patterns = generateNodeModulesPattern({
           packages: ['@my-org/my-scope.components', '@other-org/my-scope.my-app'],
           target: PatternTarget.WEBPACK,
-          isPnpmEnabled: true,
         });
         regexps = [...patterns.map((pattern) => new RegExp(pattern))];
       });

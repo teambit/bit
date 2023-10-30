@@ -26,7 +26,7 @@ type GenerateNodeModulesPatternOptions<T> = {
   /**
    * Defines if pnpm is enabled as a package manager
    */
-  isPnpmEnabled: boolean;
+  isPnpmEnabled?: boolean;
 };
 
 const patternTargetMap = {
@@ -43,9 +43,9 @@ type PatternReturnType<T extends PatternTarget> = ReturnType<PatternTargetMap[T]
  * @returns {string} node modules catched packages regex.
  */
 export function generateNodeModulesPattern<T extends PatternTarget>(
-  options: GenerateNodeModulesPatternOptions<T>
+  options: GenerateNodeModulesPatternOptions<T> = {}
 ): PatternReturnType<T> {
-  const { packages = [], excludeComponents, target = PatternTarget.JEST, isPnpmEnabled } = options;
+  const { packages = [], excludeComponents, target = PatternTarget.JEST, isPnpmEnabled = true } = options;
   return patternTargetMap[target](packages, { excludeComponents, isPnpmEnabled }) as PatternReturnType<T>;
 }
 
