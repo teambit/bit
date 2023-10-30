@@ -169,24 +169,36 @@ export class BuilderMain {
    * which will result in inconsistent preview data when exported to the scope
    */
   async sanitizePreviewData(harmonyComps: Component[]) {
+    const compsBeingTaggedLookup = new Set(harmonyComps.map((comp) => comp.id.toString()));
+
     const harmonyCompIdsWithEnvId = await Promise.all(
       harmonyComps.map(async (comp) => {
         const envId = await this.envs.getEnvId(comp);
         if (this.envs.isUsingCoreEnv(comp)) {
           return [comp.id.toString(), { envId, inWs: false, lastTaggedEnvHasOnlyOverview: false }] as [
             string,
-            { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean }
+            { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview?: boolean; isEnvTaggedWithComp?: boolean }
           ];
         }
+
+        // check if the env is tagged with the component
+        if (envId && !compsBeingTaggedLookup.has(comp.id.toString())) {
+          return [comp.id.toString(), { envId, isEnvTaggedWithComp: false }] as [
+            string,
+            { envId: string; inWs?: boolean; lastTaggedEnvHasOnlyOverview?: boolean; isEnvTaggedWithComp?: boolean }
+          ];
+        }
+
         const envCompId = (envId && ComponentID.fromString(envId)) || undefined;
         const inWs = this.workspace && envCompId ? await this.workspace.hasId(envCompId) : false;
+
         const lastTaggedEnvHasOnlyOverview: boolean | undefined =
           envCompId &&
           (await this.scope.get(envCompId, false))?.state.aspects.get('teambit.preview/preview')?.data?.onlyOverview;
 
-        return [comp.id.toString(), { envId, inWs, lastTaggedEnvHasOnlyOverview }] as [
+        return [comp.id.toString(), { envId, inWs, lastTaggedEnvHasOnlyOverview, isEnvTaggedWithComp: true }] as [
           string,
-          { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean }
+          { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean; isEnvTaggedWithComp?: boolean }
         ];
       })
     );
@@ -194,9 +206,10 @@ export class BuilderMain {
     const harmonyCompIdsWithEnvIdMap = new Map(harmonyCompIdsWithEnvId);
 
     const compsToDeleteOnlyOverviewPreviewData = harmonyComps.filter((comp) => {
-      const envData: { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean } | undefined =
-        harmonyCompIdsWithEnvIdMap.get(comp.id.toString());
-      return envData?.inWs && !envData?.lastTaggedEnvHasOnlyOverview;
+      const envData:
+        | { envId: string; inWs?: boolean; lastTaggedEnvHasOnlyOverview?: boolean; isEnvTaggedWithComp?: boolean }
+        | undefined = harmonyCompIdsWithEnvIdMap.get(comp.id.toString());
+      return envData?.inWs && !envData?.lastTaggedEnvHasOnlyOverview && envData?.isEnvTaggedWithComp;
     });
 
     for (const comp of compsToDeleteOnlyOverviewPreviewData) {

@@ -44,10 +44,10 @@ export function previewSchema(previewExtension: PreviewMain) {
           return previewExtension.isLegacyHeader(component);
         },
         onlyOverview: ({ component }) => {
-          return previewExtension.includesOnlyOverview(component);
+          return previewExtension.getOnlyOverview(component);
         },
         useNameParam: ({ component }) => {
-          return previewExtension.useNameParam(component);
+          return previewExtension.getUseNameParam(component);
         },
         skipIncludes: ({ component }) => {
           return previewExtension.isSupportSkipIncludes(component);

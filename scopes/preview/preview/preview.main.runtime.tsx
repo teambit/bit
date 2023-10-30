@@ -139,9 +139,8 @@ export type PreviewAnyComponentData = {
  */
 export type PreviewEnvComponentData = {
   isScaling?: boolean;
-  onlyOverview?: boolean;
-  // rename to useNameParam
-  useNameParam?: boolean;
+  supportsOnlyOverview?: boolean;
+  supportsUseNameParam?: boolean;
 };
 
 export type PreviewConfig = {
@@ -264,7 +263,7 @@ export class PreviewMain {
    */
   doesEnvIncludesOnlyOverview(envComponent: Component): boolean {
     const previewData = this.getPreviewData(envComponent);
-    return !!previewData?.onlyOverview;
+    return !!previewData?.supportsOnlyOverview;
   }
 
   /**
@@ -274,7 +273,7 @@ export class PreviewMain {
    */
   doesEnvUseNameParam(envComponent: Component): boolean {
     const previewData = this.getPreviewData(envComponent);
-    return !!previewData?.useNameParam;
+    return !!previewData?.supportsUseNameParam;
   }
 
   private async calculateIncludeOnlyOverview(component: Component): Promise<boolean> {
@@ -360,8 +359,8 @@ export class PreviewMain {
     const data = {
       // default to true if the env doesn't have a preview config
       isScaling: previewAspectConfig?.isScaling ?? true,
-      onlyOverview: true,
-      useNameParam: true,
+      supportsOnlyOverview: true,
+      supportsUseNameParam: true,
     };
     return data;
   }
@@ -498,37 +497,18 @@ export class PreviewMain {
   /**
    * check if the component preview should only include the overview (skipping rendering of the compostions and properties table)
    */
-  async includesOnlyOverview(component: Component): Promise<boolean> {
+  async getOnlyOverview(component: Component): Promise<boolean> {
     if (!this.config.onlyOverview) return false;
-
-    const inWorkspace = await this.workspace?.hasId(component.id);
-    if (inWorkspace) {
-      if (this.envs.isUsingCoreEnv(component)) {
-        return true;
-      }
-      const envComponent = await this.envs.getEnvComponent(component);
-      const envSupportOnlyOverview = await this.doesEnvIncludesOnlyOverview(envComponent);
-      return envSupportOnlyOverview;
-    }
     const previewData = this.getPreviewData(component);
-    return previewData?.onlyOverview ?? false;
+    return previewData?.supportsOnlyOverview ?? false;
   }
 
   /**
    * check if the component preview should include the name query param
    */
-  async useNameParam(component: Component): Promise<boolean> {
-    const inWorkspace = await this.workspace?.hasId(component.id);
-    if (inWorkspace) {
-      if (this.envs.isUsingCoreEnv(component)) {
-        return true;
-      }
-      const envComponent = await this.envs.getEnvComponent(component);
-      const envSupportNameParam = await this.doesEnvUseNameParam(envComponent);
-      return envSupportNameParam;
-    }
+  async getUseNameParam(component: Component): Promise<boolean> {
     const previewData = this.getPreviewData(component);
-    return previewData?.useNameParam ?? false;
+    return previewData?.supportsUseNameParam ?? false;
   }
 
   /**
