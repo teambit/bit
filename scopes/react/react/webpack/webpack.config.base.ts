@@ -71,6 +71,7 @@ export default function (isEnvProduction = false): Configuration {
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
 
       alias: {
+        '@teambit/preview.modules.preview-modules': require.resolve('@teambit/preview.modules.preview-modules'),
         'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime.js'),
         'react/jsx-runtime': require.resolve('react/jsx-runtime.js'),
         'react-dom/server': require.resolve('react-dom/server'),
