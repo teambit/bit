@@ -1,4 +1,4 @@
-import { DepObjectValue, ManifestDependenciesKeysNames, ManifestDependenciesObject } from '../manifest';
+import { ManifestDependenciesKeysNames, ManifestDependenciesObject } from '../manifest';
 import { WorkspacePolicy } from '../../policy';
 import { PackageName, SemverVersion } from '../../dependencies';
 import { ComponentDependenciesMap } from '../workspace-manifest-factory';
