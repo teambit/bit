@@ -505,7 +505,6 @@ export function getEmptyDedupedDependencies(): DedupedDependencies {
       dependencies: {},
       devDependencies: {},
       peerDependencies: {},
-      defaultPeerDependencies: {},
     },
     componentDependenciesMap: new Map(),
     issus: {

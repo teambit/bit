@@ -198,7 +198,11 @@ export class WorkspaceManifestFactory {
           !depManifestBeforeFiltering.peerDependencies[rootPackageName]
         );
       });
+
+      const defaultPeerDependencies = await this._getDefaultPeerDependencies(component, packageNames);
+
       depManifest.dependencies = {
+        ...defaultPeerDependencies,
         ...unresolvedRuntimeMissingRootDeps,
         ...additionalDeps,
         ...depManifest.dependencies,
@@ -208,13 +212,6 @@ export class WorkspaceManifestFactory {
         ...unresolvedDevMissingRootDeps,
         ...depManifest.devDependencies,
       };
-
-      const envPolicy = await this.dependencyResolver.getComponentEnvPolicy(component);
-      const selfPolicyWithoutLocal = envPolicy.selfPolicy.filter(
-        (dep) => !packageNames.includes(dep.dependencyId) && !depManifest[dep.dependencyId]
-      );
-      // eslint-disable-next-line
-      depManifest['defaultPeerDependencies'] = fromPairs(selfPolicyWithoutLocal.toNameVersionTuple());
 
       return { packageName, depManifest };
     });
@@ -228,6 +225,17 @@ export class WorkspaceManifestFactory {
     }
 
     return result;
+  }
+
+  private async _getDefaultPeerDependencies(
+    component: Component,
+    packageNamesFromWorkspace: string[]
+  ): Promise<Record<string, string>> {
+    const envPolicy = await this.dependencyResolver.getComponentEnvPolicy(component);
+    const selfPolicyWithoutLocal = envPolicy.selfPolicy.filter(
+      (dep) => !packageNamesFromWorkspace.includes(dep.dependencyId)
+    );
+    return fromPairs(selfPolicyWithoutLocal.toNameVersionTuple());
   }
 
   private async updateDependenciesVersions(

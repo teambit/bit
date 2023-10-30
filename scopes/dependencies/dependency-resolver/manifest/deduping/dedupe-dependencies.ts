@@ -24,7 +24,7 @@ export type DedupedDependenciesIssues = {
 };
 
 export type DedupedDependencies = {
-  rootDependencies: ManifestDependenciesObject & { defaultPeerDependencies?: DepObjectValue };
+  rootDependencies: ManifestDependenciesObject;
   componentDependenciesMap: ComponentDependenciesMap;
   issus?: DedupedDependenciesIssues;
 };
