@@ -1,4 +1,4 @@
-import { ManifestDependenciesKeysNames, ManifestDependenciesObject } from '../manifest';
+import { DepObjectValue, ManifestDependenciesKeysNames, ManifestDependenciesObject } from '../manifest';
 import { WorkspacePolicy } from '../../policy';
 import { PackageName, SemverVersion } from '../../dependencies';
 import { ComponentDependenciesMap } from '../workspace-manifest-factory';
@@ -24,7 +24,7 @@ export type DedupedDependenciesIssues = {
 };
 
 export type DedupedDependencies = {
-  rootDependencies: ManifestDependenciesObject & { defaultPeerDependencies: Record<string, string> };
+  rootDependencies: ManifestDependenciesObject & { defaultPeerDependencies?: DepObjectValue };
   componentDependenciesMap: ComponentDependenciesMap;
   issus?: DedupedDependenciesIssues;
 };
