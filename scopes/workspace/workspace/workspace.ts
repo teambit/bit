@@ -242,22 +242,6 @@ export class Workspace implements ComponentFactory {
       }
     );
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
-
-    // this.registerOnComponentAdd(async () => {
-    //   await this.setComponentPathsRegExps();
-    //   return {
-    //     results: this.componentPathsRegExps,
-    //     toString: () => this.componentPathsRegExps.join(),
-    //   };
-    // });
-
-    this.registerOnComponentRemove(async () => {
-      await this.setComponentPathsRegExps();
-      return {
-        results: this.componentPathsRegExps,
-        toString: () => this.componentPathsRegExps.join(),
-      };
-    });
   }
 
   private validateConfig() {

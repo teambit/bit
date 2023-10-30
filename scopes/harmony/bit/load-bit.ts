@@ -38,6 +38,7 @@ import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-o
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { satisfies } from 'semver';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+import ClearCacheAspect from '@teambit/clear-cache';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
@@ -203,8 +204,12 @@ function shouldLoadInSafeMode() {
     'remote',
   ];
   const hasSafeModeFlag = process.argv.includes('--safe-mode');
-  const isSafeModeCommand = safeModeCommands.includes(currentCommand);
+  const isSafeModeCommand = safeModeCommands.includes(currentCommand) || isClearCacheCommand();
   return isSafeModeCommand || hasSafeModeFlag;
+}
+
+function isClearCacheCommand() {
+  return process.argv[2] === 'clear-cache' || process.argv[2] === 'cc';
 }
 
 function shouldRunAsDaemon() {
@@ -224,6 +229,7 @@ export async function loadBit(path = process.cwd()) {
 
   const aspectsToLoad = [CLIAspect];
   const loadCLIOnly = shouldLoadInSafeMode();
+  if (isClearCacheCommand()) aspectsToLoad.push(ClearCacheAspect);
   if (!loadCLIOnly) {
     aspectsToLoad.push(BitAspect);
   }
