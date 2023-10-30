@@ -1245,54 +1245,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs"
     },
-    "ui/use-box/back-button": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.118",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/use-box/back-button"
-    },
-    "ui/use-box/bit-info": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.126",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/use-box/bit-info"
-    },
-    "ui/use-box/bottom-link": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.118",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/use-box/bottom-link"
-    },
-    "ui/use-box/dropdown": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.141",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/use-box/dropdown"
-    },
-    "ui/use-box/menu": {
-        "scope": "teambit.ui-foundation",
-        "version": "1.0.5",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/use-box/menu"
-    },
-    "ui/use-box/scope-menu": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.144",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/use-box/scope-menu"
-    },
-    "ui/use-box/tab": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.121",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/use-box/tab"
-    },
-    "ui/use-box/tab-content": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.121",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/use-box/tab-content"
-    },
     "update-dependencies": {
         "scope": "teambit.scope",
         "version": "1.0.35",
