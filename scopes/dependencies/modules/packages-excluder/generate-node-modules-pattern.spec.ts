@@ -148,7 +148,10 @@ describe('generateNodeModulesPattern()', () => {
       let pattern;
       let regex;
       beforeAll(() => {
-        pattern = generateNodeModulesPattern({ packages: ['@shohamgilad'], excludeComponents: false });
+        pattern = generateNodeModulesPattern({
+          packages: ['@shohamgilad'],
+          excludeComponents: false,
+        });
         regex = new RegExp(pattern);
       });
       it('should exclude package under the .pnpm directory', () => {
@@ -190,11 +193,10 @@ describe('generateNodeModulesPattern()', () => {
         });
       });
 
-      it('should return an array with 2 patterns', () => {
-        expect((patterns || []).length).toEqual(2);
+      it('should return an array with 1 pattern', () => {
+        expect((patterns || []).length).toEqual(1);
         expect(patterns).toEqual([
-          '^(.+?[\\/]node_modules[\\/](?!(@my-org[\\/]my-scope.components))(@.+?[\\/])?.+?)[\\/]',
-          '^(.+?[\\/]node_modules[\\/](?!(\\.pnpm[\\/](.*[+\\/])?@my-org\\+my-scope.components.*))(@.+?[\\/])?.+?)[\\/]',
+          '^(.+?[\\/]node_modules[\\/]\\.pnpm[\\/][^\\/]+[\\/]node_modules[\\/](?!(@my-org[\\/]my-scope.components))).+',
         ]);
       });
     });
@@ -232,24 +234,29 @@ describe('generateNodeModulesPattern()', () => {
             regexp.test('/Users/aUser/dev/bit-example/node_modules/@my-org/my-scope.components/package.json')
           )
         ).toBeFalsy();
-        expect(
-          regexps.every((regexp) =>
-            regexp.test('/Users/aUser/dev/bit-example/node_modules/.pnpm/@my-org+my-scope.components/package.json')
-          )
-        ).toBeFalsy();
       });
 
       it('should not exclude other packages', () => {
         expect(
           regexps.some((regexp) =>
-            regexp.test('/Users/aUser/dev/bit-example/node_modules/@my-org/my-scope.apps/package.json')
+            regexp.test(
+              '/Users/aUser/dev/bit-example/node_modules/.pnpm/file+my-org+my-scope/node_modules/@my-org/my-scope.apps/package.json'
+            )
           )
         ).toBeTruthy();
         expect(
-          regexps.some((regexp) => regexp.test('/Users/aUser/dev/bit-example/node_modules/@lodash/package.json'))
+          regexps.some((regexp) =>
+            regexp.test(
+              '/Users/aUser/dev/bit-example/node_modules/.pnpm/file+my-org+my-scope/node_modules/@lodash/package.json'
+            )
+          )
         ).toBeTruthy();
         expect(
-          regexps.some((regexp) => regexp.test('/Users/aUser/dev/bit-example/node_modules/@react/package.json'))
+          regexps.some((regexp) =>
+            regexp.test(
+              '/Users/aUser/dev/bit-example/node_modules/.pnpm/file+my-org+my-scope/node_modules/@react/package.json'
+            )
+          )
         ).toBeTruthy();
       });
     });
