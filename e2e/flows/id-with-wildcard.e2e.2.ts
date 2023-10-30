@@ -236,9 +236,8 @@ describe('component id with wildcard', function () {
         before(() => {
           output = helper.command.checkout('0.0.1 "utils/is/*"');
         });
-        it('should indicate the checked out components', () => {
-          expect(output).to.have.string('utils/is/string');
-          expect(output).to.have.string('utils/is/type');
+        it('should indicate the number of checked out components', () => {
+          expect(output).to.have.string('successfully switched 2 components');
         });
         it('should checkout only the matched components', () => {
           const bitMap = helper.bitMap.read();
