@@ -892,7 +892,6 @@ jobs:
 
   e2e_test:
     <<: *defaults
-    resource_class: medium+
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
