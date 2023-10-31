@@ -498,7 +498,7 @@ export class PreviewMain {
    * check if the component preview should only include the overview (skipping rendering of the compostions and properties table)
    */
   async getOnlyOverview(component: Component): Promise<boolean> {
-    // if (!this.config.onlyOverview) return false;
+    if (!this.config.onlyOverview) return false;
     const previewData = this.getPreviewData(component);
     return previewData?.onlyOverview ?? false;
   }
