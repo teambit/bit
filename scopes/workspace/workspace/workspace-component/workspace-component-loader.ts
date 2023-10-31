@@ -498,12 +498,19 @@ export class WorkspaceComponentLoader {
 
     // Here we need to load many, otherwise we will get wrong overrides dependencies data
     // as when loading the next batch of components (next group) we won't have the envs loaded
-    const scopeComponents = await this.workspace.scope.loadMany(scopeIds);
-    return {
-      workspaceComponents: components,
-      scopeComponents,
-      invalidComponents,
-    };
+
+    try {
+      const scopeComponents = await this.workspace.scope.loadMany(scopeIds);
+      return {
+        workspaceComponents: components,
+        scopeComponents,
+        invalidComponents,
+      };
+    } catch (err) {
+      const wsAspectLoader = this.workspace.getWorkspaceAspectsLoader();
+      wsAspectLoader.throwWsJsoncAspectNotFoundError(err);
+      throw err;
+    }
   }
 
   async getInvalid(ids: Array<ComponentID>): Promise<InvalidComponent[]> {
