@@ -1083,8 +1083,8 @@ importers:
         specifier: ^0.0.118
         version: 0.0.118(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.bit-info':
-        specifier: ^0.0.126
-        version: 0.0.126(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.127
+        version: 0.0.127(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.bottom-link':
         specifier: ^0.0.118
         version: 0.0.118(react-dom@17.0.2)(react@17.0.2)
@@ -1092,11 +1092,11 @@ importers:
         specifier: ^0.0.141
         version: 0.0.141(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.menu':
-        specifier: ^1.0.5
-        version: 1.0.5(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^1.0.6
+        version: 1.0.6(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.scope-menu':
-        specifier: ^0.0.144
-        version: 0.0.144(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.145
+        version: 0.0.145(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.tab':
         specifier: ^0.0.121
         version: 0.0.121(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
@@ -10525,8 +10525,8 @@ importers:
         specifier: ^0.0.141
         version: 0.0.141(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.menu':
-        specifier: ^1.0.5
-        version: 1.0.5(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^1.0.6
+        version: 1.0.6(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       classnames:
         specifier: 2.2.6
         version: 2.2.6
@@ -13460,8 +13460,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/ui-foundation.ui.use-box.menu':
-        specifier: ^1.0.5
-        version: 1.0.5(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^1.0.6
+        version: 1.0.6(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -13536,8 +13536,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/ui-foundation.ui.use-box.menu':
-        specifier: ^1.0.5
-        version: 1.0.5(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^1.0.6
+        version: 1.0.6(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@yarnpkg/cli':
         specifier: 3.6.1
         version: 3.6.1(@yarnpkg/core@3.5.2)
@@ -16446,8 +16446,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/ui-foundation.ui.use-box.menu':
-        specifier: ^1.0.5
-        version: 1.0.5(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^1.0.6
+        version: 1.0.6(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -18225,8 +18225,8 @@ importers:
         specifier: ^0.0.141
         version: 0.0.141(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.scope-menu':
-        specifier: ^0.0.144
-        version: 0.0.144(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.145
+        version: 0.0.145(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -30393,7 +30393,7 @@ packages:
     dev: false
 
   /@teambit/design.ui.styles.ellipsis@0.0.346(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-tvLAoURNuXdsEZlXLxvewQlj0Yo=, tarball: https://node-registry.bit.cloud/@teambit/design.ui.styles.ellipsis/-/@teambit-design.ui.styles.ellipsis-0.0.346.tgz}
+    resolution: {integrity: sha1-tvLAoURNuXdsEZlXLxvewQlj0Yo=}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -30406,7 +30406,7 @@ packages:
     dev: true
 
   /@teambit/design.ui.styles.ellipsis@0.0.347(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-LjDi1VsjWOmDi1kN1l+C+Ef0ArQ=, tarball: https://node-registry.bit.cloud/@teambit/design.ui.styles.ellipsis/-/@teambit-design.ui.styles.ellipsis-0.0.347.tgz}
+    resolution: {integrity: sha1-LjDi1VsjWOmDi1kN1l+C+Ef0ArQ=}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -30955,6 +30955,18 @@ packages:
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
+
+  /@teambit/documenter.ui.highlighted-text@4.1.1(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-lYt7PwLDWG49/PSgDOQmRzI0oS9GjGageLFdxxLBS29YRBRGhopphOxGnRtBONCxH67ZxLblkzduu7gRl5fvjg==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/documenter.ui.inline-code': 0.1.1(react-dom@17.0.2)(react@17.0.2)
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
 
   /@teambit/documenter.ui.image@4.0.2(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-lOGzakfJTF07HAYwkCYPeS3MKwI=, tarball: https://node-registry.bit.cloud/tarballs/teambit.documenter/ui/image@4.0.2.tgz}
@@ -32763,7 +32775,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/evangelist.elements.icon': 1.0.2(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -34189,8 +34201,8 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/ui-foundation.ui.use-box.bit-info@0.0.126(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-ZHGpZuXKrr6dk8m4iXrh9BMsj1RhExfMoxhsIOqTqKzr3xAp35kMdLfpQ13p6F9jCWugoxvaFzwRL1QBCAwtZQ==}
+  /@teambit/ui-foundation.ui.use-box.bit-info@0.0.127(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-O+ZJVHyBNfmCI/1dJzepjiXqDreAjm63WotjYpFw7GqjSqDvrgCTYi180TLzE1dsA99JWZqNTqUw98PmW0CFCQ==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -34201,7 +34213,7 @@ packages:
       '@teambit/documenter.ui.copy-box': 4.1.16(react-dom@17.0.2)(react@17.0.2)
       '@teambit/evangelist.elements.icon': 1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.bottom-link': 0.0.118(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.use-box.tab-content': 0.0.120(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.use-box.tab-content': 0.0.121(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -34239,8 +34251,8 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/ui-foundation.ui.use-box.menu@1.0.5(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-YDb+XluCScG/HBIzGHGUc4yqm6e5ozmlW0cBF82IAFcRe2IJWFOPe4j9bevR77FvuSA+ZBq9J73jZwLu3K36ng==}
+  /@teambit/ui-foundation.ui.use-box.menu@1.0.6(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-j0KwS+HhiupxDWxBE0OMqfxJ71W2NkxHrjH9vPuI938puPBwesFJrv9cUrYidf3xioZ1o3ruFo86DRPyvYvOdQ==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -34250,13 +34262,13 @@ packages:
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.content.documentation-links': 4.1.3(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.copy-box': 4.1.16(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.highlighted-text': registry.npmjs.org/@teambit/documenter.ui.highlighted-text@4.1.1(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/documenter.ui.highlighted-text': 4.1.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/evangelist.elements.icon': 1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.constants.z-indexes': 0.0.504(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.use-box.bit-info': 0.0.126(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.use-box.bit-info': 0.0.127(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.bottom-link': 0.0.118(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.tab': 0.0.121(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.use-box.tab-content': 0.0.120(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.use-box.tab-content': 0.0.121(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       lodash.flatten: 4.4.0
@@ -34268,8 +34280,8 @@ packages:
       - '@types/react'
     dev: false
 
-  /@teambit/ui-foundation.ui.use-box.scope-menu@0.0.144(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-OR4eALPw7b0RFLPLSc2bmk8q7pteJSqkth/ZYdQc/c6OWiuaIEQG7NsGBCGbsTUfWNRu0nCfkJiUGIxlmNljdw==}
+  /@teambit/ui-foundation.ui.use-box.scope-menu@0.0.145(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-kN01yBEKf1Gfs3pcBoT2/C/YsQqUxRRNyf+kH1wMnf0ebr1t5QMd/ijv/aXQGHghA+poMfxF0Dll4iowhPJdzQ==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -34278,7 +34290,7 @@ packages:
       '@teambit/design.ui.styles.ellipsis': 0.0.357(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.copy-box': 4.1.16(react-dom@17.0.2)(react@17.0.2)
       '@teambit/evangelist.elements.icon': 1.0.2(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.use-box.bit-info': 0.0.126(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.use-box.bit-info': 0.0.127(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.tab-content': 0.0.121(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
@@ -34286,22 +34298,6 @@ packages:
     transitivePeerDependencies:
       - '@testing-library/react'
       - '@types/react'
-    dev: false
-
-  /@teambit/ui-foundation.ui.use-box.tab-content@0.0.120(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-W0g9nb5gzn/R2QqFXoJNtgC6sNQuh+eYql5/MrAghwKNo0sYBTO6hhJ/VnLfrbV01qcsIFj8J4T28OaUzOyuXQ==}
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/evangelist.elements.icon': 1.0.2(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.use-box.bottom-link': 0.0.118(react-dom@17.0.2)(react@17.0.2)
-      classnames: 2.2.6
-      core-js: 3.13.0
-      react: 17.0.2
-      react-animate-height: 2.0.23(react-dom@17.0.2)(react@17.0.2)
-      react-dom: 17.0.2(react@17.0.2)
     dev: false
 
   /@teambit/ui-foundation.ui.use-box.tab-content@0.0.121(react-dom@17.0.2)(react@17.0.2):
@@ -36035,7 +36031,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.1
       '@yarnpkg/fslib': 3.0.0-rc.51
-      '@yarnpkg/libzip': 3.0.0-rc.51
+      '@yarnpkg/libzip': 3.0.0-rc.51(@yarnpkg/fslib@3.0.0-rc.51)
       '@yarnpkg/parsers': 3.0.0-rc.51
       '@yarnpkg/shell': 4.0.0-rc.51
       camelcase: 5.3.1
@@ -36066,7 +36062,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.1
       '@yarnpkg/fslib': 3.0.0-rc.51
-      '@yarnpkg/libzip': 3.0.0-rc.51
+      '@yarnpkg/libzip': 3.0.0-rc.51(@yarnpkg/fslib@3.0.0-rc.51)
       '@yarnpkg/parsers': 3.0.0-rc.51
       '@yarnpkg/shell': 4.0.0-rc.51
       camelcase: 5.3.1
@@ -36139,9 +36135,11 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/libzip@3.0.0-rc.51:
+  /@yarnpkg/libzip@3.0.0-rc.51(@yarnpkg/fslib@3.0.0-rc.51):
     resolution: {integrity: sha512-OzgLMFretzeAk96hEwkbkmvDJ4y17WGxdaMnAyrpOrRK6coCIfNL8xWwTNnmXeddcRKTfD9yF4AwQTeXhLKDCA==}
     engines: {node: '>=18.12.0'}
+    peerDependencies:
+      '@yarnpkg/fslib': ^3.0.0-rc.51
     dependencies:
       '@types/emscripten': 1.39.8
       '@yarnpkg/fslib': 3.0.0-rc.51
@@ -56796,7 +56794,7 @@ packages:
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.dropdown': 0.0.141(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.use-box.menu': 1.0.5(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.use-box.menu': 1.0.6(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       copy-to-clipboard: 3.3.1
       core-js: 3.13.0
@@ -57919,7 +57917,7 @@ packages:
       '@pnpm/workspace.pkgs-graph': 2.0.8(@pnpm/logger@5.0.0)
       '@teambit/bit-error': 0.0.404
       '@teambit/harmony': 0.4.6
-      '@teambit/ui-foundation.ui.use-box.menu': 1.0.5(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.use-box.menu': 1.0.6(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       credentials-by-uri: 2.0.0
       fs-extra: 10.0.0
@@ -57952,7 +57950,7 @@ packages:
       '@pnpm/types': 9.3.0
       '@teambit/bit-error': 0.0.404
       '@teambit/harmony': 0.4.6
-      '@teambit/ui-foundation.ui.use-box.menu': 1.0.5(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.use-box.menu': 1.0.6(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@yarnpkg/cli': 3.6.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core': 3.5.2
       '@yarnpkg/fslib': 2.10.3
@@ -59024,7 +59022,7 @@ packages:
       '@teambit/component-issues': 0.0.101(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-version': 1.0.3
       '@teambit/harmony': 0.4.6
-      '@teambit/ui-foundation.ui.use-box.menu': 1.0.5(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.use-box.menu': 1.0.6(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       chalk: 2.4.2
       cli-highlight: 2.1.9
       core-js: 3.13.0
@@ -59744,7 +59742,7 @@ packages:
       '@teambit/ui-foundation.ui.top-bar': 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.drawer': 0.0.517(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.dropdown': 0.0.141(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.use-box.scope-menu': 0.0.144(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.use-box.scope-menu': 0.0.145(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       chalk: 2.4.2
       classnames: 2.2.6
       core-js: 3.13.0
