@@ -1,3 +1,4 @@
+import path from 'path';
 import {
   DependencyResolverMain,
   extendWithComponentsFromDir,
@@ -18,6 +19,7 @@ import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { readModulesManifest } from '@pnpm/modules-yaml';
 import { buildDependenciesHierarchy, createPackagesSearcher } from '@pnpm/reviewing.dependencies-hierarchy';
 import { renderTree } from '@pnpm/list';
+import { readWantedLockfile } from '@pnpm/lockfile-file';
 import { ProjectManifest } from '@pnpm/types';
 import { join } from 'path';
 import { readConfig } from './read-config';
@@ -230,28 +232,30 @@ export class PnpmPackageManager implements PackageManager {
 
   async findUsages(depName: string, opts: { lockfileDir: string }): Promise<string> {
     const search = createPackagesSearcher([depName]);
-    const results = await Promise.all(
-      Object.entries(
-        await buildDependenciesHierarchy(undefined, {
-          depth: Infinity,
-          include: {
-            dependencies: true,
-            devDependencies: true,
-            optionalDependencies: true,
-          },
-          lockfileDir: opts.lockfileDir,
-          registries: {
-            default: 'https://registry.npmjs.org',
-          },
-          search,
-        })
-      ).map(async ([projectPath, builtDependenciesHierarchy]) => {
-        return {
-          path: projectPath,
-          ...builtDependenciesHierarchy,
-        };
+    const lockfile = await readWantedLockfile(opts.lockfileDir, { ignoreIncompatible: false });
+    const projectPaths = Object.keys(lockfile?.importers ?? {})
+      .filter((id) => !id.startsWith('node_modules/.bit_roots'))
+      .map((id) => path.join(opts.lockfileDir, id))
+    const results = Object.entries(
+      await buildDependenciesHierarchy(projectPaths, {
+        depth: Infinity,
+        include: {
+          dependencies: true,
+          devDependencies: true,
+          optionalDependencies: true,
+        },
+        lockfileDir: opts.lockfileDir,
+        registries: {
+          default: 'https://registry.npmjs.org',
+        },
+        search,
       })
-    );
+    ).map(([projectPath, builtDependenciesHierarchy]) => {
+      return {
+        path: projectPath,
+        ...builtDependenciesHierarchy,
+      };
+    });
     return renderTree(results, {
       alwaysPrintRootPackage: false,
       depth: Infinity,
