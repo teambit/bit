@@ -1,4 +1,4 @@
 import { ComponentTemplate } from '@teambit/generator';
-import { MDXComponent, deprecatedMDXComponent } from './templates/mdx-component';
+import { MdxComponentTemplate, MdxEnvTemplate } from '@teambit/mdx.generator.mdx-templates';
 
-export const componentTemplates: ComponentTemplate[] = [MDXComponent, deprecatedMDXComponent];
+export const componentTemplates: ComponentTemplate[] = [new MdxComponentTemplate(), new MdxEnvTemplate()];

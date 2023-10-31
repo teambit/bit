@@ -11,6 +11,7 @@ import { ReactAspect, ReactEnv, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { HtmlAspect } from './html.aspect';
 import { HtmlEnv } from './html.env';
+import { componentTemplates } from './html.templates';
 
 export class HtmlMain {
   constructor(
@@ -108,9 +109,12 @@ export class HtmlMain {
     return this.envs.compose(this.envs.merge(targetEnv, this.htmlEnv), transformers);
   }
 
-  static async provider([envs, react]: [EnvsMain, ReactMain, GeneratorMain]) {
+  static async provider([envs, react, generator]: [EnvsMain, ReactMain, GeneratorMain]) {
     const htmlEnv: HtmlEnv = envs.merge<HtmlEnv, ReactEnv>(new HtmlEnv(), react.reactEnv);
     envs.registerEnv(htmlEnv);
+    if (generator) {
+      generator.registerComponentTemplate(componentTemplates);
+    }
 
     return new HtmlMain(react, htmlEnv, envs);
   }

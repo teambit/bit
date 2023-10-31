@@ -1,18 +1,18 @@
 import { ComponentTemplate } from '@teambit/generator';
-import { reactComponent, deprecatedReactComponent } from './templates/react-component';
-import { reactComponentJS, deprecatedReactComponentJS } from './templates/react-component-js';
-import { reactEnvTemplate } from './templates/react-env';
-import { reactHook } from './templates/react-hook';
-import { reactContext } from './templates/react-context';
-import { reactAppTemplate } from './templates/react-app';
+import {
+  ReactComponentTemplate,
+  ReactHookTemplate,
+  ReactContextTemplate,
+  ReactAppTemplate,
+  ReactJSComponentTemplate,
+  ReactEnvTemplate,
+} from '@teambit/react.generator.react-templates';
 
 export const componentTemplates: ComponentTemplate[] = [
-  reactComponent,
-  reactContext,
-  reactHook,
-  reactComponentJS,
-  reactEnvTemplate,
-  reactAppTemplate,
-  deprecatedReactComponent,
-  deprecatedReactComponentJS,
+  new ReactComponentTemplate(),
+  new ReactHookTemplate(),
+  new ReactContextTemplate(),
+  new ReactAppTemplate(),
+  new ReactJSComponentTemplate(),
+  new ReactEnvTemplate(),
 ];
