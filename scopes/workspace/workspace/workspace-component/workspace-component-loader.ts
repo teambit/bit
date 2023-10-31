@@ -346,7 +346,8 @@ export class WorkspaceComponentLoader {
       let componentFromScope;
       if (!this.scopeComponentsCache.has(idStr)) {
         try {
-          componentFromScope = await this.workspace.scope.get(id);
+          // Do not import automatically if it's missing, it will throw an error later
+          componentFromScope = await this.workspace.scope.get(id, undefined, false);
           if (componentFromScope) {
             this.scopeComponentsCache.set(idStr, componentFromScope);
           }
