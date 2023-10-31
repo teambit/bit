@@ -22,6 +22,42 @@ const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `learn more at about Bit component: ${BASE_DOCS_DOMAIN}reference/components/component-anatomy/`
 )}`;
 
+type StatusJsonResults = {
+  newComponents: string[];
+  modifiedComponents: string[];
+  stagedComponents: Array<{ id: string; versions: string[] }>;
+  unavailableOnMain: string[];
+  componentsWithIssues: Array<{
+    id: string;
+    issues: Array<{
+      type: string;
+      description: string;
+      data: any;
+    }>;
+  }>;
+  importPendingComponents: string[];
+  autoTagPendingComponents: string[];
+  invalidComponents: Array<{ id: string; error: Error }>;
+  locallySoftRemoved: string[];
+  remotelySoftRemoved: string[];
+  outdatedComponents: Array<{ id: string; headVersion: string; latestVersion?: string }>;
+  mergePendingComponents: string[];
+  componentsDuringMergeState: string[];
+  softTaggedComponents: string[];
+  snappedComponents: string[];
+  pendingUpdatesFromMain: Array<{
+    id: string;
+    divergeData: any;
+  }>;
+  updatesFromForked: Array<{
+    id: string;
+    divergeData: any;
+  }>;
+  currentLaneId: string;
+  forkedLaneId: string | undefined;
+  workspaceIssues: string[];
+};
+
 export class StatusCmd implements Command {
   name = 'status';
   description = 'present the current status of components in the workspace, including indication of detected issues';
@@ -39,7 +75,7 @@ export class StatusCmd implements Command {
 
   constructor(private status: StatusMain) {}
 
-  async json(_args, { lanes }: { lanes?: boolean }) {
+  async json(_args, { lanes }: { lanes?: boolean }): Promise<StatusJsonResults> {
     const {
       newComponents,
       modifiedComponents,
@@ -73,7 +109,7 @@ export class StatusCmd implements Command {
       })),
       importPendingComponents: importPendingComponents.map((id) => id.toStringWithoutVersion()),
       autoTagPendingComponents: autoTagPendingComponents.map((s) => s.toStringWithoutVersion()),
-      invalidComponents,
+      invalidComponents: invalidComponents.map(({ id, error }) => ({ id: id.toStringWithoutVersion(), error })),
       locallySoftRemoved: locallySoftRemoved.map((id) => id.toStringWithoutVersion()),
       remotelySoftRemoved: remotelySoftRemoved.map((id) => id.toStringWithoutVersion()),
       outdatedComponents: outdatedComponents.map((c) => ({ ...c, id: c.id.toStringWithoutVersion() })),
@@ -89,8 +125,8 @@ export class StatusCmd implements Command {
         id: p.id.toStringWithoutVersion(),
         divergeData: p.divergeData,
       })),
-      currentLaneId,
-      forkedLaneId,
+      currentLaneId: currentLaneId.toString(),
+      forkedLaneId: forkedLaneId?.toString(),
       workspaceIssues,
     };
   }
