@@ -603,7 +603,11 @@ export class WorkspaceComponentLoader {
 
   clearCache() {
     this.componentsCache.deleteAll();
+    this.scopeComponentsCache.deleteAll();
+    this.componentsExtensionsCache.deleteAll();
+    this.componentLoadedSelfAsAspects.deleteAll();
   }
+
   clearComponentCache(id: ComponentID) {
     const idStr = id.toString();
     for (const cacheKey of this.componentsCache.keys()) {
