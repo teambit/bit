@@ -933,15 +933,21 @@ export class ScopeMain implements ComponentFactory {
     // load components from type aspects as aspects.
     // important! previously, this was running for any aspect, not only apps. (the if statement was `this.aspectLoader.isAspectComponent(component)`)
     // Ran suggests changing it and if it breaks something, we'll document is and fix it.
-    const appData = component.state.aspects.get('teambit.harmony/application');
-    if (opts.loadApps && appData?.data?.appName) {
-      aspectIds.push(component.id.toString());
+    if (opts.loadApps) {
+      const appData = component.state.aspects.get('teambit.harmony/application');
+      if (appData?.data?.appName) {
+        aspectIds.push(component.id.toString());
+      }
     }
-    const envsData = component.state.aspects.get(EnvsAspect.id);
-    if ((opts.loadEnvs && envsData?.data?.services) || envsData?.data?.self || envsData?.data?.type === 'env') {
-      aspectIds.push(component.id.toString());
+    if (opts.loadEnvs) {
+      const envsData = component.state.aspects.get(EnvsAspect.id);
+      if (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env') {
+        aspectIds.push(component.id.toString());
+      }
     }
-    await this.loadAspects(aspectIds, true, component.id.toString(), lane);
+    if (aspectIds && aspectIds.length) {
+      await this.loadAspects(aspectIds, true, component.id.toString(), lane);
+    }
 
     return component;
   }

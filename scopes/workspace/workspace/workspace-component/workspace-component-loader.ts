@@ -500,7 +500,11 @@ export class WorkspaceComponentLoader {
     // as when loading the next batch of components (next group) we won't have the envs loaded
 
     try {
-      const scopeComponents = await this.workspace.scope.loadMany(scopeIds);
+      // We don't want to load envs as part of this step, they will be loaded later
+      const scopeComponents = await this.workspace.scope.loadMany(scopeIds, undefined, {
+        loadApps: false,
+        loadEnvs: false,
+      });
       return {
         workspaceComponents: components,
         scopeComponents,
