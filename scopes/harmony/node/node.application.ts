@@ -5,7 +5,7 @@ import { ReactEnv } from '@teambit/react';
 import { Application, DeployFn, AppBuildContext, AppContext } from '@teambit/application';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { NodeEnv } from './node.env';
-import { DeployContext } from './node-app-options';
+import { DeployContext, NodeAppMetadata } from './node-app-options';
 
 export class NodeApp implements Application {
   constructor(
@@ -40,7 +40,15 @@ export class NodeApp implements Application {
     const { base } = parse(this.entry);
     const { distDir } = this.nodeEnv.getCompiler();
     const mainFile = join(distDir, base);
-    const _context = Object.assign(context, { mainFile });
-    return _context;
+    const metadata: NodeAppMetadata = {
+      mainFile,
+      artifactsDir: context.artifactsDir,
+    };
+    const deployContext: DeployContext = {
+      ...context, // @todo: is this needed?
+      mainFile, // @todo: remove this when possible. only metadata should be used.
+      metadata,
+    };
+    return deployContext;
   }
 }

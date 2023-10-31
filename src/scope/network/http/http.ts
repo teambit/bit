@@ -2,7 +2,7 @@ import { ClientError, gql, GraphQLClient } from 'graphql-request';
 import fetch, { Response } from 'cross-fetch';
 import readLine from 'readline';
 import HttpAgent from 'agentkeepalive';
-
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpProxyAgent } from 'http-proxy-agent';
@@ -10,7 +10,6 @@ import { LaneId } from '@teambit/lane-id';
 import { getAgent, AgentOptions } from '@teambit/toolbox.network.agent';
 import { Network } from '../network';
 import { getHarmonyVersion } from '../../../bootstrap';
-import { BitId, BitIds } from '../../../bit-id';
 import Component from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import DependencyGraph from '../../graph/scope-graph';
@@ -462,14 +461,14 @@ export class Http implements Network {
     });
 
     data.scope.components.forEach((comp) => {
-      comp.id = new BitId(comp.id);
+      comp.id = ComponentID.fromObject(comp.id);
       comp.deprecated = comp.deprecation.isDeprecate;
     });
 
     return data.scope.components;
   }
 
-  async show(bitId: BitId): Promise<Component | null | undefined> {
+  async show(bitId: ComponentID): Promise<Component | null | undefined> {
     const SHOW_COMPONENT = gql`
       query showLegacy($id: String!) {
         scope {
@@ -484,7 +483,7 @@ export class Http implements Network {
     return Component.fromString(data.scope._getLegacy);
   }
 
-  async log(id: BitId): Promise<ComponentLog[]> {
+  async log(id: ComponentID): Promise<ComponentLog[]> {
     const GET_LOG_QUERY = gql`
       query getLogs($id: String!) {
         scope {
@@ -507,7 +506,7 @@ export class Http implements Network {
     return data.scope.getLogs;
   }
 
-  async latestVersions(bitIds: BitIds): Promise<string[]> {
+  async latestVersions(bitIds: ComponentIdList): Promise<string[]> {
     const GET_LATEST_VERSIONS = gql`
       query getLatestVersions($ids: [String]!) {
         scope {
@@ -523,7 +522,7 @@ export class Http implements Network {
     return data.scope._legacyLatestVersions;
   }
 
-  async graph(bitId?: BitId): Promise<DependencyGraph> {
+  async graph(bitId?: ComponentID): Promise<DependencyGraph> {
     const GRAPH_QUERY = gql`
       query graph($ids: [String], $filter: String) {
         graph(ids: $ids, filter: $filter) {
@@ -550,7 +549,7 @@ export class Http implements Network {
       ids: bitId ? [bitId.toString()] : [],
     });
 
-    const nodes = graph.nodes.map((node) => ({ idStr: node.id, bitId: new BitId(node.component.id) }));
+    const nodes = graph.nodes.map((node) => ({ idStr: node.id, bitId: ComponentID.fromObject(node.component.id) }));
     const edges = graph.edges.map((edge) => ({
       src: edge.sourceId,
       target: edge.targetId,
@@ -584,7 +583,10 @@ export class Http implements Network {
     return res.lanes.list.map((lane) => ({
       ...lane,
       id: LaneId.from(lane.id.name, lane.id.scope),
-      components: lane.components.map((laneCompId) => ({ id: new BitId(laneCompId), head: laneCompId.version })),
+      components: lane.components.map((laneCompId) => ({
+        id: ComponentID.fromObject(laneCompId),
+        head: laneCompId.version,
+      })),
     }));
   }
 

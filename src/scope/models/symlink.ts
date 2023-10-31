@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import { BitId } from '../../bit-id';
 import { getStringifyArgs } from '../../utils';
 import BitObject from '../objects/object';
@@ -8,8 +9,10 @@ export type SymlinkProp = {
   realScope: string;
 };
 
-// TODO: fix me, parse
-// @ts-ignore
+/**
+ * @deprecated
+ * this is not used since component-schema 2.0.0, where the component-id is always the full id.
+ */
 export default class Symlink extends BitObject {
   scope: string;
   name: string;
@@ -26,8 +29,12 @@ export default class Symlink extends BitObject {
     return this.name;
   }
 
-  getRealComponentId(): BitId {
-    return new BitId({ scope: this.realScope, name: this.name });
+  getRealComponentId(): ComponentID {
+    return ComponentID.fromObject({ scope: this.realScope, name: this.name });
+  }
+
+  toComponentId(): ComponentID {
+    return this.getRealComponentId();
   }
 
   static parse(contents: Buffer): Symlink {

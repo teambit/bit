@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import { BitError } from '@teambit/bit-error';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 
 const DEV_ENV = 'development';
 const RUNTIME_ENV = 'runtime';
@@ -9,7 +9,7 @@ const RUNTIME_ENV = 'runtime';
 type Environment = 'development' | 'runtime';
 // type WrappingMethod = 'component' | 'package';
 
-export class DependencyId extends BitId {}
+export class DependencyId extends ComponentID {}
 
 export class Dependency {
   constructor(public id: DependencyId) {}

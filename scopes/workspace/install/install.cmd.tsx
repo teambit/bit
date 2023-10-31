@@ -10,6 +10,7 @@ type InstallCmdOptions = {
   skipDedupe: boolean;
   skipImport: boolean;
   skipCompile: boolean;
+  skipWriteConfigFiles: boolean;
   update: boolean;
   updateExisting: boolean;
   savePrefix: string;
@@ -51,6 +52,7 @@ export default class InstallCmd implements Command {
     ['', 'skip-dedupe', 'do not dedupe dependencies on installation'],
     ['', 'skip-import', 'do not import bit objects post installation'],
     ['', 'skip-compile', 'do not compile components'],
+    ['', 'skip-write-config-files', 'do not write config files (such as eslint, tsconfig, prettier, etc...)'],
     ['', 'add-missing-deps', 'install all missing dependencies'],
     ['', 'add-missing-peers', 'install all missing peer dependencies'],
     [
@@ -94,6 +96,7 @@ export default class InstallCmd implements Command {
       addMissingPeers: options.addMissingPeers,
       compile: !options.skipCompile,
       includeOptionalDeps: !options.noOptional,
+      writeConfigFiles: !options.skipWriteConfigFiles,
       updateAll: options.update,
       recurringInstall: options.recurringInstall,
       lockfileOnly: options.lockfileOnly,

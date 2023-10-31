@@ -29,6 +29,7 @@ export interface ManyComponentsWriterParams {
   resetConfig?: boolean;
   skipWritingToFs?: boolean;
   skipUpdatingBitMap?: boolean;
+  skipWriteConfigFiles?: boolean;
 }
 
 export type ComponentWriterResults = { installationError?: Error; compilationError?: Error };
@@ -55,7 +56,7 @@ export class ComponentWriterMain {
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
     if (!opts.skipDependencyInstallation) {
-      installationError = await this.installPackagesGracefully();
+      installationError = await this.installPackagesGracefully(opts.skipWriteConfigFiles);
       // no point to compile if the installation is not running. the environment is not ready.
       compilationError = await this.compileGracefully();
     }
@@ -63,13 +64,14 @@ export class ComponentWriterMain {
     return { installationError, compilationError };
   }
 
-  private async installPackagesGracefully(): Promise<Error | undefined> {
+  private async installPackagesGracefully(skipWriteConfigFiles = false): Promise<Error | undefined> {
     this.logger.debug('installPackagesGracefully, start installing packages');
     try {
       const installOpts = {
         dedupe: true,
         updateExisting: false,
         import: false,
+        writeConfigFiles: !skipWriteConfigFiles,
       };
       await this.installer.install(undefined, installOpts);
       this.logger.debug('installPackagesGracefully, completed installing packages successfully');

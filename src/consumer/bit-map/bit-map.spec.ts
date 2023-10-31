@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import * as path from 'path';
-
+import { ComponentID } from '@teambit/component-id';
 import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
 import BitMap from './bit-map';
@@ -18,7 +18,7 @@ const getBitmapInstance = async () => {
 };
 
 const addComponentParamsFixture = {
-  componentId: new BitId({ name: 'is-string' }),
+  componentId: ComponentID.fromObject({ name: 'is-string' }, 'my-scope'),
   files: [{ name: 'is-string.js', relativePath: 'is-string.js', test: false }],
   mainFile: 'is-string.js',
   defaultScope: 'my-scope',
@@ -47,11 +47,17 @@ describe('BitMap', function () {
       const exampleComponent = { ...addComponentParamsFixture };
       exampleComponent.defaultScope = '';
       bitMap = await getBitmapInstance();
-      exampleComponent.componentId = new BitId({ scope: 'my-scope', name: 'is-string1', version: '0.0.1' });
+      exampleComponent.componentId = new ComponentID(
+        new BitId({ scope: 'my-scope', name: 'is-string1', version: '0.0.1' })
+      );
       bitMap.addComponent(exampleComponent);
-      exampleComponent.componentId = new BitId({ scope: 'my-scope', name: 'is-string3', version: '0.0.1' });
+      exampleComponent.componentId = new ComponentID(
+        new BitId({ scope: 'my-scope', name: 'is-string3', version: '0.0.1' })
+      );
       bitMap.addComponent(exampleComponent);
-      exampleComponent.componentId = new BitId({ scope: 'my-scope', name: 'is-string2', version: '0.0.1' });
+      exampleComponent.componentId = new ComponentID(
+        new BitId({ scope: 'my-scope', name: 'is-string2', version: '0.0.1' })
+      );
       bitMap.addComponent(exampleComponent);
       const allComponents = bitMap.toObjects();
       const ids = Object.keys(allComponents);

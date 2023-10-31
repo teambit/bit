@@ -157,7 +157,7 @@ export class ComponentUI {
 
     const version = componentId.version === latest ? '' : `@${componentId.version}`;
     const packageVersion =
-      componentId.version === latest ? '' : `@${this.formatToInstallableVersion(componentId.version)}`;
+      componentId.version === latest ? '' : `@${this.formatToInstallableVersion(componentId.version as string)}`;
 
     return {
       Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,

@@ -1,9 +1,12 @@
 import { Harmony } from '@teambit/harmony';
-import { Component, ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
+import { lt } from 'semver';
+import { InvalidScopeNameFromRemote, InvalidScopeName } from '@teambit/legacy-bit-id';
 import { EnvsAspect } from '@teambit/envs';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { VERSION_CHANGED_BIT_ID_TO_COMP_ID } from '@teambit/legacy/dist/constants';
 import { ExtensionDataList, ignoreVersionPredicate } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { partition, mergeWith, merge, uniq, uniqWith } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
@@ -19,7 +22,7 @@ export class AspectsMerger {
     this.mergeConflictFile = new MergeConflictFile(workspace.path);
   }
 
-  getDepsDataOfMergeConfig(id: BitId) {
+  getDepsDataOfMergeConfig(id: ComponentID) {
     return this.mergeConfigDepsResolverDataCache[id.toString()];
   }
 
@@ -47,7 +50,7 @@ export class AspectsMerger {
     const mergeFromScope = true;
     const errors: Error[] = [];
 
-    const bitMapEntry = this.workspace.consumer.bitMap.getComponentIfExist(componentId._legacy);
+    const bitMapEntry = this.workspace.consumer.bitMap.getComponentIfExist(componentId);
     const bitMapExtensions = bitMapEntry?.config;
 
     let configMerge: Record<string, any> | undefined;
@@ -124,15 +127,7 @@ export class AspectsMerger {
       }
       removedExtensionIds.push(...extensions.filter((extData) => extData.isRemoved).map((extData) => extData.stringId));
       const extsWithoutRemoved = extensions.filterRemovedExtensions();
-      const getSelfExt = () => {
-        const bitId = componentId._legacy;
-        const self = extsWithoutRemoved.findExtension(bitId.toStringWithoutVersion(), true);
-        if (self) return self;
-        if (bitId.hasScope()) return undefined;
-        // for some reason, new aspects get their extensionId wrong, including the scope. it's BitId which should not have it.
-        return extsWithoutRemoved.findExtension(bitId.changeScope(componentId.scope).toStringWithoutVersion(), true);
-      };
-      const selfInMergedExtensions = getSelfExt();
+      const selfInMergedExtensions = extsWithoutRemoved.findExtension(componentId.toStringWithoutVersion(), true);
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
         ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
         : extsWithoutRemoved;
@@ -184,10 +179,9 @@ export class AspectsMerger {
     if (mergeFromScope && continuePropagating && !excludeOrigins.includes('ModelNonSpecific')) {
       await addExtensionsToMerge(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
-
     const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
-    await this.loadExtensions(afterMerge, componentId);
-    const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
+    const afterLoaded = await this.loadExtensions(afterMerge, componentId);
+    const withoutRemoved = afterLoaded.filter((extData) => !removedExtensionIds.includes(extData.stringId));
     const extensions = ExtensionDataList.fromArray(withoutRemoved);
     return {
       extensions,
@@ -256,7 +250,7 @@ export class AspectsMerger {
   }
 
   private getUnmergedData(componentId: ComponentID): UnmergedComponent | undefined {
-    return this.workspace.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
+    return this.workspace.scope.legacyScope.objects.unmergedComponents.getEntry(componentId.fullName);
   }
 
   private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {
@@ -319,9 +313,9 @@ export class AspectsMerger {
       const envAspectExt = extensionDataList.find((e) => e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect);
       const ids = await this.workspace.listIds();
       const envAspectId = envAspectExt?.extensionId;
-      const found = envAspectId && ids.find((id) => id._legacy.isEqualWithoutVersion(envAspectId));
+      const found = envAspectId && ids.find((id) => id.isEqualWithoutVersion(envAspectId));
       if (found) {
-        envAspectExt.extensionId = found._legacy;
+        envAspectExt.extensionId = found;
       }
     }
     return { extensionDataListFiltered: extensionDataList, envIsCurrentlySet: Boolean(envFromEnvsAspect) };
@@ -333,11 +327,45 @@ export class AspectsMerger {
    */
   private async loadExtensions(
     extensions: ExtensionDataList,
-    originatedFrom?: ComponentID,
+    originatedFrom: ComponentID,
     opts: WorkspaceLoadAspectsOptions = {}
-  ): Promise<void> {
+  ): Promise<ExtensionDataList> {
     const workspaceAspectsLoader = this.workspace.getWorkspaceAspectsLoader();
-    return workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, opts);
+    try {
+      await workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, opts);
+      return extensions;
+    } catch (err) {
+      if (err instanceof InvalidScopeNameFromRemote || err instanceof InvalidScopeName) {
+        const scopeName = err.scopeName;
+        const shouldStrip = await this.shouldStripInvalidExtIds(originatedFrom);
+        if (shouldStrip) {
+          const newExtensions = extensions.filter((ext) => {
+            if (ext.extensionId) return ext.extensionId.scope !== scopeName;
+            const scope = ext.stringId.split('/')[0];
+            return scope !== scopeName;
+          });
+          const newExtDataList = ExtensionDataList.fromArray(newExtensions);
+          await workspaceAspectsLoader.loadComponentsExtensions(newExtDataList, originatedFrom, opts);
+          return newExtDataList;
+        }
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * we saw occurrences of ExtensionDataEntry with invalid `name` prop, e.g. "blogging/teambit".
+   * these occurrences should not happen today, and if they do, it should throw.
+   * this is a workaround to be able to fix/tag those old occurrences.
+   */
+  async shouldStripInvalidExtIds(compId: ComponentID) {
+    if (!compId.hasVersion()) return false;
+    const modelComp = await this.workspace.scope.getBitObjectModelComponent(compId);
+    if (!modelComp) return false; // probably new comp
+    const verObj = await this.workspace.scope.getBitObjectVersion(modelComp, compId.version as string);
+    if (!verObj) return false; // probably new comp
+    if (!verObj.bitVersion) return true; // super old
+    return lt(verObj.bitVersion, VERSION_CHANGED_BIT_ID_TO_COMP_ID);
   }
 
   /**
@@ -351,14 +379,14 @@ export class AspectsMerger {
   ): Promise<ExtensionDataList> {
     const promises = extensionList.map(async (entry) => {
       if (entry.extensionId) {
-        // don't pass `entry.extensionId` (as BitId) to `resolveComponentId` because then it'll use the optimization
+        // don't pass `entry.extensionId` (as ComponentID) to `resolveComponentId` because then it'll use the optimization
         // of parsing it to ComponentID without checking the workspace. Normally, this optimization is good, but here
-        // in case the extension wasn't exported, the BitId is wrong, it has the scope-name due to incorrect BitId.parse
+        // in case the extension wasn't exported, the ComponentID is wrong, it has the scope-name due to incorrect ComponentID.fromString
         // in configEntryToDataEntry() function. It'd be ideal to fix it from there but it's not easy.
         const componentId = await this.workspace.resolveComponentId(entry.extensionId.toString());
         const idFromWorkspace = preferWorkspaceVersion ? this.workspace.getIdIfExist(componentId) : undefined;
         const id = idFromWorkspace || componentId;
-        entry.extensionId = id._legacy;
+        entry.extensionId = id;
         entry.newExtensionId = id;
       }
 

@@ -216,4 +216,57 @@ describe('snap components from scope', function () {
       });
     });
   });
+  describe('snap with file changes', () => {
+    let bareTag;
+    let files;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/foo.ts');
+      helper.command.snapAllComponents();
+      helper.command.export();
+
+      bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+
+      const data = [
+        {
+          componentId: `${helper.scopes.remote}/comp1`,
+          message: `msg for first comp`,
+          files: [
+            {
+              path: 'index.js',
+              content: 'index-has-changed',
+            },
+            {
+              path: 'foo.ts',
+              delete: true,
+            },
+            {
+              path: 'bar.ts',
+              content: 'bar-has-created',
+            },
+          ],
+        },
+      ];
+      // console.log('data', JSON.stringify(data));
+      helper.command.snapFromScope(bareTag.scopePath, data);
+      const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, bareTag.scopePath);
+      files = comp.files;
+    });
+    it('should change existing files', () => {
+      const indexFile = files.find((f) => f.relativePath === 'index.js');
+      const indexFileContent = helper.command.catObject(indexFile.file, false, bareTag.scopePath);
+      expect(indexFileContent).to.include('index-has-changed');
+    });
+    it('should delete files', () => {
+      const fooFile = files.find((f) => f.relativePath === 'foo.ts');
+      expect(fooFile).to.be.undefined;
+    });
+    it('should create files', () => {
+      const barFile = files.find((f) => f.relativePath === 'bar.ts');
+      const barFileContent = helper.command.catObject(barFile.file, false, bareTag.scopePath);
+      expect(barFileContent).to.include('bar-has-created');
+    });
+  });
 });

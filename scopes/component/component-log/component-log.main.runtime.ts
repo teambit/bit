@@ -1,5 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
+import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import path from 'path';
 import moment from 'moment';
 import pMap from 'p-map';
@@ -41,10 +42,10 @@ export class ComponentLogMain {
   /**
    * get component log sorted by the timestamp in ascending order (from the earliest to the latest)
    */
-  async getLogs(id: string, isRemote?: boolean, shortHash = false) {
+  async getLogs(id: string, isRemote?: boolean, shortHash = false): Promise<ComponentLog[]> {
     if (isRemote) {
       const consumer = this.workspace?.consumer;
-      const bitId: BitId = BitId.parse(id, true);
+      const bitId = ComponentID.fromString(id);
       const remote = await getRemoteByName(bitId.scope as string, consumer);
       return remote.log(bitId);
     }
@@ -57,8 +58,8 @@ export class ComponentLogMain {
     return logs;
   }
 
-  async getLogsWithParents(id: string) {
-    const logs = await this.getLogs(id, false, true);
+  async getLogsWithParents(id: string, fullHash = false) {
+    const logs = await this.getLogs(id, false, !fullHash);
     const graph = buildSnapGraph(logs);
     const sorted = graph.toposort();
     return sorted.map((node) => this.stringifyLogInfoOneLine(node.attr));
@@ -70,7 +71,7 @@ export class ComponentLogMain {
     const componentId = await workspace.resolveComponentId(id);
     const modelComp = await workspace.scope.getBitObjectModelComponent(componentId, true);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const versionObj = (await workspace.scope.getBitObjectVersion(modelComp!, componentId.version, true)) as Version;
+    const versionObj = (await workspace.scope.getBitObjectVersion(modelComp!, componentId.version!, true)) as Version;
     const firstParent = versionObj.parents[0];
     const parentObj = firstParent
       ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

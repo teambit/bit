@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import Version from '@teambit/legacy/dist/scope/models/version';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
@@ -21,7 +21,7 @@ import chalk from 'chalk';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
-  ids?: BitId[];
+  ids?: ComponentID[];
   latestVersion?: boolean;
   promptMergeOptions?: boolean;
   mergeStrategy?: MergeStrategy | null;
@@ -38,7 +38,7 @@ export type CheckoutProps = {
 export type ComponentStatusBase = {
   currentComponent?: ConsumerComponent;
   componentFromModel?: Version;
-  id: BitId;
+  id: ComponentID;
   shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
   unchangedMessage?: string; // this gets populated either upon skip or failure.
   unchangedLegitimately?: boolean; // true for skipped legitimately (e.g. already up to date). false for failure.
@@ -69,7 +69,7 @@ export type ApplyVersionWithComps = { applyVersionResult: ApplyVersionResult; co
  */
 export async function applyVersion(
   consumer: Consumer,
-  id: BitId,
+  id: ComponentID,
   componentFromFS: ConsumerComponent | null | undefined, // it can be null only when isLanes is true
   mergeResults: MergeResultsThreeWay | null | undefined,
   checkoutProps: CheckoutProps
