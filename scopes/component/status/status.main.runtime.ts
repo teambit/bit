@@ -1,7 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import pMapSeries from 'p-map-series';
 import { LaneId } from '@teambit/lane-id';
-import { IssuesList } from '@teambit/component-issues';
+import { IssuesClasses, IssuesList } from '@teambit/component-issues';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
 import { ComponentID } from '@teambit/component-id';
@@ -61,7 +61,13 @@ export class StatusMain {
     private lanes: LanesMain
   ) {}
 
-  async status({ lanes }: { lanes?: boolean }): Promise<StatusResult> {
+  async status({
+    lanes,
+    ignoreCircularDependencies,
+  }: {
+    lanes?: boolean;
+    ignoreCircularDependencies?: boolean;
+  }): Promise<StatusResult> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     loader.start(BEFORE_STATUS);
     const loadOpts = {
@@ -105,7 +111,8 @@ export class StatusMain {
     const idsDuringMergeState = componentsList.listDuringMergeStateComponents();
     const mergePendingComponents = await componentsList.listMergePendingComponents();
     if (allComps.length) {
-      const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
+      const issuesFromFlag = ignoreCircularDependencies ? [IssuesClasses.CircularDependencies.name] : [];
+      const issuesToIgnore = [...this.issues.getIssuesToIgnoreGlobally(), ...issuesFromFlag];
       await this.issues.triggerAddComponentIssues(allComps, issuesToIgnore);
       this.issues.removeIgnoredIssuesFromComponents(allComps);
     }
