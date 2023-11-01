@@ -109,7 +109,6 @@ export class YarnPackageManager implements PackageManager {
         ...manifest,
         dependencies: {
           ...manifest.peerDependencies,
-          ...manifest['defaultPeerDependencies'], // eslint-disable-line
           ...manifest.dependencies,
         },
       }));
@@ -120,7 +119,6 @@ export class YarnPackageManager implements PackageManager {
       // so we make runtime dependencies from peer dependencies.
       manifests[rootDir].dependencies = {
         ...manifests[rootDir].peerDependencies,
-        ...manifests[rootDir]['defaultPeerDependencies'], // eslint-disable-line
         ...manifests[rootDir].dependencies,
       };
     } else if (installOptions.rootComponentsForCapsules) {
@@ -550,7 +548,6 @@ async function updateManifestsForInstallationInWorkspaceCapsules(manifests: { [k
       );
       manifest.dependencies = {
         ...manifest.peerDependencies,
-        ...manifest.defaultPeerDependencies,
         ...manifest.dependencies,
       };
       manifest.installConfig = {
