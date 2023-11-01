@@ -3,7 +3,7 @@ import { IssuesClasses } from '@teambit/component-issues';
 import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
-import { pickBy, mapValues, uniq, difference } from 'lodash';
+import { fromPairs, pickBy, mapValues, uniq, difference } from 'lodash';
 import { SemVer } from 'semver';
 import pMapSeries from 'p-map-series';
 import { snapToSemver } from '@teambit/component-package-version';
@@ -138,6 +138,7 @@ export class WorkspaceManifestFactory {
       rootPolicy?: WorkspacePolicy;
     }
   ): Promise<ComponentDependenciesMap> {
+    const packageNames = components.map((component) => this.dependencyResolver.getPackageName(component));
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
       let depList = await this.dependencyResolver.getDependencies(component, { includeHidden: true });
@@ -197,7 +198,11 @@ export class WorkspaceManifestFactory {
           !depManifestBeforeFiltering.peerDependencies[rootPackageName]
         );
       });
+
+      const defaultPeerDependencies = await this._getDefaultPeerDependencies(component, packageNames);
+
       depManifest.dependencies = {
+        ...defaultPeerDependencies,
         ...unresolvedRuntimeMissingRootDeps,
         ...additionalDeps,
         ...depManifest.dependencies,
@@ -220,6 +225,17 @@ export class WorkspaceManifestFactory {
     }
 
     return result;
+  }
+
+  private async _getDefaultPeerDependencies(
+    component: Component,
+    packageNamesFromWorkspace: string[]
+  ): Promise<Record<string, string>> {
+    const envPolicy = await this.dependencyResolver.getComponentEnvPolicy(component);
+    const selfPolicyWithoutLocal = envPolicy.selfPolicy.filter(
+      (dep) => !packageNamesFromWorkspace.includes(dep.dependencyId)
+    );
+    return fromPairs(selfPolicyWithoutLocal.toNameVersionTuple());
   }
 
   private async updateDependenciesVersions(
