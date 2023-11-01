@@ -108,7 +108,7 @@ export class StatusCmd implements Command {
       unavailableOnMain: unavailableOnMain.map((c) => c.toStringWithoutVersion()),
       componentsWithIssues: componentsWithIssues.map((c) => ({
         id: c.id.toStringWithoutVersion(),
-        issues: c.issues?.toObject(),
+        issues: c.issues?.toObjectIncludeDataAsString(),
       })),
       importPendingComponents: importPendingComponents.map((id) => id.toStringWithoutVersion()),
       autoTagPendingComponents: autoTagPendingComponents.map((s) => s.toStringWithoutVersion()),

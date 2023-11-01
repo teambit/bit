@@ -200,7 +200,8 @@ export class StatusMain {
     };
     const comps = opts.showIssues ? await this.workspace.getMany(ids, loadOpts) : [];
     if (opts.showIssues) {
-      const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
+      const issuesFromFlag = opts.ignoreCircularDependencies ? [IssuesClasses.CircularDependencies.name] : [];
+      const issuesToIgnore = [...this.issues.getIssuesToIgnoreGlobally(), ...issuesFromFlag];
       await this.issues.triggerAddComponentIssues(comps, issuesToIgnore);
       this.issues.removeIgnoredIssuesFromComponents(comps);
     }
