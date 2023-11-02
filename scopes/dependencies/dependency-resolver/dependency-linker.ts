@@ -4,6 +4,7 @@ import { uniq, compact, flatten, head, omit } from 'lodash';
 import { Stats } from 'fs';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
+import { findCurrentBvmDir } from '@teambit/bvm.path';
 import { ComponentMap, Component, ComponentID, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -110,6 +111,8 @@ type NestedModuleFolderEntry = {
 };
 
 export class DependencyLinker {
+  private _currentBitDir: string | null;
+
   constructor(
     private dependencyResolver: DependencyResolverMain,
 
@@ -126,7 +129,9 @@ export class DependencyLinker {
     private linkingOptions?: LinkingOptions,
 
     private linkingContext: DepLinkerContext = {}
-  ) {}
+  ) {
+    this._currentBitDir = findCurrentBvmDir();
+  }
 
   async calculateLinkedDeps(
     rootDir: string | undefined,
@@ -630,6 +635,9 @@ export class DependencyLinker {
 
     const packageName = `@teambit/${name}`;
     const target = path.join(rootDir, 'node_modules', packageName);
+    if (this._currentBitDir) {
+      return { packageName, from: path.join(this._currentBitDir, 'node_modules', packageName), to: target };
+    }
     const isDistDirExist = fs.pathExistsSync(distDir);
     if (!isDistDirExist) {
       const newDir = getDistDirForDevEnv(packageName);
