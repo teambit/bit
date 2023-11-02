@@ -661,7 +661,7 @@ jobs:
           command: >
             cd bit-${BIT_VERSION}-install &&
             pnpm init &&
-            echo "nodeLinker=hoisted" >> .npmrc &&
+            echo "node-linker=hoisted" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values linux --values linux &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
