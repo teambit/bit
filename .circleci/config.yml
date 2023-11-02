@@ -654,12 +654,15 @@ jobs:
           name: install bit for Linux x64
           command: >
             cd bit-${BIT_VERSION}-install &&
-            npm init -y &&
-            yarn set version 3.6.4 &&
-            yarn config set nodeLinker node-modules &&
-            yarn config set npmRegistryServer https://node-registry.bit.cloud &&
-            yarn config set supportedArchitectures --json '{"os":["linux"],"cpu":["x64"]}' &&
-            yarn add @teambit/bit
+            corepack enable &&
+            corepack prepare pnpm@8.10.2 --activate
+            pnpm init &&
+            echo "nodeLinker=hoisted" >> .npmrc &&
+            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
+            echo "modules-cache-max-age=0" >> .npmrc &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values linux &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64
+            pnpm add @teambit/bit
       - run:
           name: copy node_modules
           command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
@@ -676,8 +679,8 @@ jobs:
           name: install bit for Linux arm64
           command: >
             cd bit-${BIT_VERSION}-install &&
-            yarn config set supportedArchitectures --json '{"os":["linux"],"cpu":["arm64"]}' &&
-            yarn
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values arm64 &&
+            pnpm install
       - run:
           name: copy node_modules
           command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
@@ -697,8 +700,9 @@ jobs:
           name: install bit for macOS x64
           command: >
             cd bit-${BIT_VERSION}-install &&
-            yarn config set supportedArchitectures --json '{"os":["darwin"],"cpu":["x64"]}' &&
-            yarn
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values darwin &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 &&
+            pnpm install
       - run:
           name: copy node_modules
           command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
@@ -718,8 +722,8 @@ jobs:
           name: install bit for macOS arm64
           command: >
             cd bit-${BIT_VERSION}-install &&
-            yarn config set supportedArchitectures --json '{"os":["darwin"],"cpu":["arm64"]}' &&
-            yarn
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values arm64 &&
+            pnpm install
       - run:
           name: copy node_modules
           command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
@@ -739,8 +743,10 @@ jobs:
           name: install bit for Windows x64
           command: >
             cd bit-${BIT_VERSION}-install &&
-            yarn config set supportedArchitectures --json '{"os":["win32"],"cpu":["x64"]}' &&
-            yarn
+            echo "prefer-symlinked-executables=false" >> .npmrc && # We are building Bit for Windows, so no symlinks should be created
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values win32 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 &&
+            pnpm install
       - run:
           name: copy node_modules
           command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
