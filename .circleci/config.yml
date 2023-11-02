@@ -654,8 +654,7 @@ jobs:
           name: install bit for Linux x64
           command: >
             cd bit-${BIT_VERSION}-install &&
-            corepack enable &&
-            corepack prepare pnpm@8.10.2 --activate
+            npm install --global pnpm@8.10.2 &&
             pnpm init &&
             echo "nodeLinker=hoisted" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
