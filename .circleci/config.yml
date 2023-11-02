@@ -651,10 +651,15 @@ jobs:
           name: create empty folder
           command: mkdir bit-${BIT_VERSION} bit-${BIT_VERSION}-install
       - run:
+          name: install pnpm
+          command: >
+            npm config set prefix '~/.npm-global' &&
+            npm install --global pnpm@8.10.2 &&
+            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+      - run:
           name: install bit for Linux x64
           command: >
             cd bit-${BIT_VERSION}-install &&
-            npm install --global pnpm@8.10.2 &&
             pnpm init &&
             echo "nodeLinker=hoisted" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
