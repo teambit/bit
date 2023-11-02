@@ -2,6 +2,7 @@ import { BitError } from '@teambit/bit-error';
 import { existsSync, readdir } from 'fs-extra';
 import { join, resolve } from 'path';
 import { Config } from '@teambit/bvm.config';
+import { findCurrentBvmDir } from '@teambit/bvm.path';
 
 let _bvmConfig;
 
@@ -13,7 +14,14 @@ function getAspectDirFromPath(id: string, pathsToResolveAspects?: string[]): str
   if (pathsToResolveAspects && pathsToResolveAspects.length) {
     moduleDirectory = require.resolve(packageName, { paths: pathsToResolveAspects });
   } else {
-    moduleDirectory = require.resolve(packageName);
+    try {
+      moduleDirectory = require.resolve(packageName);
+    } catch {
+      const currentBitDir = findCurrentBvmDir();
+      if (currentBitDir) {
+        return resolve(currentBitDir, 'node_modules', packageName);
+      }
+    }
   }
   const dirPath = join(moduleDirectory, '../..'); // to remove the "index.js" at the end
   if (!existsSync(dirPath)) {
