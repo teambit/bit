@@ -85,11 +85,11 @@ export interface ConfigContext {
 
 export type ComponentConfig = { [aspectName: string]: any };
 
-export interface ComponentTemplate {
+export interface ComponentTemplateOptions {
   /**
    * name of the component template. for example: `hook`, `react-component` or `module`.
    */
-  name: string;
+  name?: string;
 
   /**
    * short description of the template. shown in the `bit templates` command.
@@ -105,7 +105,10 @@ export interface ComponentTemplate {
    * env to use for the component.
    */
   env?: string;
+}
 
+export interface ComponentTemplate extends ComponentTemplateOptions {
+  name: string;
   /**
    * template function for generating the file of a certain component.,
    */
