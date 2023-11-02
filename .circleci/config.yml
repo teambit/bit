@@ -659,7 +659,6 @@ jobs:
             pnpm init &&
             echo "nodeLinker=hoisted" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
-            echo "modules-cache-max-age=0" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values linux &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64
             pnpm add @teambit/bit
