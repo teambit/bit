@@ -663,8 +663,8 @@ jobs:
             pnpm init &&
             echo "nodeLinker=hoisted" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values linux &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values linux --values linux &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm add @teambit/bit
       - run:
           name: copy node_modules
@@ -682,7 +682,7 @@ jobs:
           name: install bit for Linux arm64
           command: >
             cd bit-${BIT_VERSION}-install &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values arm64 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values arm64 --values arm64 &&
             pnpm install
       - run:
           name: copy node_modules
@@ -703,8 +703,8 @@ jobs:
           name: install bit for macOS x64
           command: >
             cd bit-${BIT_VERSION}-install &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values darwin &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values darwin --values darwin &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm install
       - run:
           name: copy node_modules
@@ -725,7 +725,7 @@ jobs:
           name: install bit for macOS arm64
           command: >
             cd bit-${BIT_VERSION}-install &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values arm64 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values arm64 --values arm64 &&
             pnpm install
       - run:
           name: copy node_modules
@@ -747,8 +747,8 @@ jobs:
           command: >
             cd bit-${BIT_VERSION}-install &&
             echo "prefer-symlinked-executables=false" >> .npmrc && # We are building Bit for Windows, so no symlinks should be created
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values win32 &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values win32 --values win32 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm install
       - run:
           name: copy node_modules
