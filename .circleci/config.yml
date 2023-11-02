@@ -1538,10 +1538,6 @@ workflows:
           filters:
             branches:
               only: release-with-pnpm
-      - get_linux_arm64_packages:
-          filters:
-            branches:
-              only: release-with-pnpm
       - bundle_version:
           filters:
             branches:
