@@ -1,6 +1,6 @@
-The built-in [Node Component Development Environment](https://bit.dev/teambit/harmony/node) is a concrete composition of the [Env Aspect](https://bit.dev/teambit/envs/envs). Use it when getting started with Node components with Bit and later as a base for any future customization of your Node-based workflow.
+The built-in [Node Component Development Environment](https://bit.cloud/teambit/harmony/node) is a concrete composition of the [Env Aspect](https://bit.cloud/teambit/envs/envs). Use it when getting started with Node components with Bit and later as a base for any future customization of your Node-based workflow.
 
-Node environment is composed out of the base [React Environment](https://bit.dev/teambit/react/react) with some specific overrides for dependency management.
+Node environment is composed out of the base [React Environment](https://bit.cloud/teambit/react/react) with some specific overrides for dependency management.
 
 ## Use Node environment
 
@@ -34,19 +34,19 @@ Node, like all over Environments must implement a set of Service Handlers. For e
 
 > Node is a composition of the React environment with some specific modifications. Most of the links here direct to the actual configs in React environment.
 
-| Service              | Aspect                                                      | Base Configuration                                                                                                                 |
-| -------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Compilation          | [TypeScript](https://bit.dev/teambit/typescript/typescript) | [tsconfig.json](https://bit.dev/teambit/react/react/~code/typescript/tsconfig.json)                                                |
-| Testing              | **Jest**                                                    | [jest.config.js](https://bit.dev/teambit/react/react/~code/jest/jest.config.js)                                                    |
-| Linting              | **ESLint**                                                  | [eslintrc.ts](https://bit.dev/teambit/react/react/~code/eslint/eslintrc.ts)                                                        |
-| DevServer            | **Webpack**                                                 | [webpack.config.preview.dev.ts](https://bit.dev/teambit/react/react/~code/webpack/webpack.config.preview.dev.ts)                   |
-| Preview (simulation) | **Webpack**                                                 | [webpack.config.preview.ts](https://bit.dev/teambit/react/react/~code/webpack/webpack.config.preview.ts)                           |
-| Package              | **PKG**                                                     | Base `package.json` props from [TypeScript Aspect](https://bit.dev/teambit/typescript/typescript/~code/typescript.main.runtime.ts) |
-| Bundling             | **Webpack**                                                 | [webpack.config.preview.ts](https://bit.dev/teambit/react/react/~code/webpack/webpack.config.preview.ts)                           |
-| Documentation        | _Core implementation_                                       | [Docs template](https://bit.dev/teambit/react/react/~code/docs/index.tsx)                                                          |
-| Build pipeline       | [Builder](https://bit.dev/teambit/pipelines/builder)        | [Build pipeline](https://bit.dev/teambit/react/react/~code/node.env.ts)                                                            |
-| Dependencies         | _Core implementation_                                       | [Env-dependencies](https://bit.dev/teambit/harmony/node/~code/node.env.ts)                                                         |
-| Component Generator  | [Generator](https://bit.dev/teambit/generator/generator)    | [example template](https://bit.dev/harmony/node/~code/templates/node-component.ts)                                                 |
+| Service              | Aspect                                                        | Base Configuration                                                                                                                   |
+| -------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Compilation          | [TypeScript](https://bit.cloud/teambit/typescript/typescript) | [tsconfig.json](https://bit.cloud/teambit/react/react/~code/typescript/tsconfig.json)                                                |
+| Testing              | **Jest**                                                      | [jest.config.js](https://bit.cloud/teambit/react/react/~code/jest/jest.config.js)                                                    |
+| Linting              | **ESLint**                                                    | [eslintrc.ts](https://bit.cloud/teambit/react/react/~code/eslint/eslintrc.ts)                                                        |
+| DevServer            | **Webpack**                                                   | [webpack.config.preview.cloud.ts](https://bit.cloud/teambit/react/react/~code/webpack/webpack.config.preview.cloud.ts)               |
+| Preview (simulation) | **Webpack**                                                   | [webpack.config.preview.ts](https://bit.cloud/teambit/react/react/~code/webpack/webpack.config.preview.ts)                           |
+| Package              | **PKG**                                                       | Base `package.json` props from [TypeScript Aspect](https://bit.cloud/teambit/typescript/typescript/~code/typescript.main.runtime.ts) |
+| Bundling             | **Webpack**                                                   | [webpack.config.preview.ts](https://bit.cloud/teambit/react/react/~code/webpack/webpack.config.preview.ts)                           |
+| Documentation        | _Core implementation_                                         | [Docs template](https://bit.cloud/teambit/react/react/~code/docs/index.tsx)                                                          |
+| Build pipeline       | [Builder](https://bit.cloud/teambit/pipelines/builder)        | [Build pipeline](https://bit.cloud/teambit/react/react/~code/node.env.ts)                                                            |
+| Dependencies         | _Core implementation_                                         | [Env-dependencies](https://bit.cloud/teambit/harmony/node/~code/node.env.ts)                                                         |
+| Component Generator  | [Generator](https://bit.cloud/teambit/generator/generator)    | [example template](https://bit.cloud/harmony/node/~code/templates/node-component.ts)                                                 |
 
 ## Customize environment
 
@@ -170,7 +170,7 @@ Use these APIs to customize the base Node environment default configuration with
 #### `overrideTsConfig(tsconfig: TsConfigSourceFile): EnvTransformer`
 
 Merges the environment's default TypeScript configuration with the contents of your [typescript configuration file](https://www.typescriptlang.org/handbook/tsconfig-json.html).
-This config affects the transpilation carried out when rendering components on the local dev UI. To override the config used when building components, use `overrideBuildTsConfig` below.
+This config affects the transpilation carried out when rendering components on the local cloud UI. To override the config used when building components, use `overrideBuildTsConfig` below.
 
 ```ts
 // ...
@@ -208,7 +208,7 @@ export class NodeExtension {
 #### `overridePreviewConfig(config: Configuration): EnvTransformer`
 
 Merges the Webpack configuration for the 'Preview' environment service, with the contents of your [webpack configuration file](https://webpack.js.org/configuration/).
-This webpack configuration is used for building and rendering your components on the local dev server.
+This webpack configuration is used for building and rendering your components on the local cloud server.
 
 ```ts
 // ...
@@ -226,7 +226,7 @@ export class NodeExtension {
 #### `overrideDevServerConfig(config: Configuration): EnvTransformer`
 
 Merges the Webpack configuration for the 'DevServer' environment service, with the contents of your [webpack configuration file](https://webpack.js.org/configuration/).
-This configuration is used for building and rendering the dev server UI (but not your components, which use the PreviewConfig)
+This configuration is used for building and rendering the cloud server UI (but not your components, which use the PreviewConfig)
 
 ```ts
 // ...
@@ -281,12 +281,12 @@ export class CustomNode {
 #### `overrideDependencies(dependencyPolicy: DependenciesPolicy): EnvTransformer`
 
 This method receives a dependency-policy object and merges it with the environment's default dependency policy for components using this environment.
-Each key-value pair in a dependency-policy object signifies the package and the version to be used. Use also the `-` and `+` notation to signify a module should moved between dependency types (dev, peer or standard).
+Each key-value pair in a dependency-policy object signifies the package and the version to be used. Use also the `-` and `+` notation to signify a module should moved between dependency types (cloud, peer or standard).
 
 ```js
 // ...
 const newDependencies = {
-  devDependencies: {
+  cloudDependencies: {
     '@types/jest': '~26.0.9',
   },
 };

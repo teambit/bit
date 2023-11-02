@@ -1,10 +1,5 @@
-import fs from 'fs-extra';
-import * as path from 'path';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
-import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Scope } from '@teambit/legacy/dist/scope';
-import getNodeModulesPathOfComponent from '@teambit/legacy/dist/utils/bit/component-node-modules-path';
 import { PathLinuxRelative, pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
@@ -12,6 +7,10 @@ import Component from '@teambit/legacy/dist/consumer/component/consumer-componen
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { isHash } from '@teambit/component-version';
+import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { Workspace } from '@teambit/workspace';
+import { BitError } from '@teambit/bit-error';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -20,10 +19,10 @@ export type ComponentWriterProps = {
   writePackageJson?: boolean;
   override?: boolean;
   isolated?: boolean;
-  consumer: Consumer | undefined;
+  workspace: Workspace;
   scope?: Scope | undefined;
   bitMap: BitMap;
-  ignoreBitDependencies?: boolean | BitIds;
+  ignoreBitDependencies?: boolean | ComponentIdList;
   deleteBitDirContent?: boolean;
   existingComponentMap?: ComponentMap;
   skipUpdatingBitMap?: boolean;
@@ -37,9 +36,10 @@ export default class ComponentWriter {
   override: boolean; // default to true
   isolated?: boolean;
   consumer: Consumer | undefined; // when using capsule, the consumer is not defined
+  workspace: Workspace;
   scope?: Scope | undefined;
   bitMap: BitMap;
-  ignoreBitDependencies: boolean | BitIds;
+  ignoreBitDependencies: boolean | ComponentIdList;
   deleteBitDirContent: boolean | undefined;
   existingComponentMap: ComponentMap | undefined;
   skipUpdatingBitMap?: boolean;
@@ -51,8 +51,8 @@ export default class ComponentWriter {
     writePackageJson = true,
     override = true,
     isolated = false,
-    consumer,
-    scope = consumer?.scope,
+    workspace,
+    scope = workspace.consumer?.scope,
     bitMap,
     ignoreBitDependencies = true,
     deleteBitDirContent,
@@ -65,7 +65,8 @@ export default class ComponentWriter {
     this.writePackageJson = writePackageJson;
     this.override = override;
     this.isolated = isolated;
-    this.consumer = consumer;
+    this.workspace = workspace;
+    this.consumer = workspace.consumer;
     this.scope = scope;
     this.bitMap = bitMap;
     this.ignoreBitDependencies = ignoreBitDependencies;
@@ -93,16 +94,16 @@ export default class ComponentWriter {
   async populateComponentsFilesToWrite(): Promise<Component> {
     if (this.isolated) throw new Error('for isolation, please use this.populateComponentsFilesToWriteForCapsule()');
     if (!this.component.files || !this.component.files.length) {
-      throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
+      throw new BitError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
     this.throwForImportingLegacyIntoHarmony();
     this.component.dataToPersist = new DataToPersist();
     this._updateFilesBasePaths();
-    this.component.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
+    this.component.componentMap = this.existingComponentMap || (await this.addComponentToBitMap(this.writeToPath));
     this.deleteBitDirContent = false;
     this._updateComponentRootPathAccordingToBitMap();
     if (!this.skipUpdatingBitMap) {
-      this.component.componentMap = this.addComponentToBitMap(this.component.componentMap.rootDir);
+      this.component.componentMap = await this.addComponentToBitMap(this.component.componentMap.rootDir);
     }
     this.writePackageJson = false;
     await this.populateFilesToWriteToComponentDir();
@@ -135,7 +136,7 @@ export default class ComponentWriter {
     }
   }
 
-  addComponentToBitMap(rootDir: string | undefined): ComponentMap {
+  async addComponentToBitMap(rootDir: string): Promise<ComponentMap> {
     if (rootDir === '.') {
       throw new Error('addComponentToBitMap: rootDir cannot be "."');
     }
@@ -143,12 +144,30 @@ export default class ComponentWriter {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
 
+    const bitId = await this.replaceSnapWithTagIfNeeded();
+    const compId = this.workspace.resolveIdWithDefaultScope(bitId);
+    const defaultScope = compId.hasScope()
+      ? undefined
+      : await this.workspace.componentDefaultScopeFromComponentDirAndName(rootDir, bitId.fullName);
+
     return this.bitMap.addComponent({
-      componentId: this.component.id,
+      componentId: compId,
       files: filesForBitMap,
+      defaultScope,
       mainFile: pathNormalizeToLinux(this.component.mainFile),
       rootDir,
     });
+  }
+
+  private async replaceSnapWithTagIfNeeded(): Promise<ComponentID> {
+    const version = this.component.id.version;
+    if (!version || !isHash(version)) {
+      return this.component.id;
+    }
+    const compFromModel = await this.scope?.getModelComponentIfExist(this.component.id);
+    const tag = compFromModel?.getTagOfRefIfExists(Ref.from(version));
+    if (tag) return this.component.id.changeVersion(tag);
+    return this.component.id;
   }
 
   _updateComponentRootPathAccordingToBitMap() {
@@ -161,40 +180,5 @@ export default class ComponentWriter {
   _updateFilesBasePaths() {
     const newBase = this.writeToPath || '.';
     this.component.files.forEach((file) => file.updatePaths({ newBase }));
-  }
-
-  async _cleanOldNestedComponent() {
-    if (!this.consumer) throw new Error('ComponentWriter._cleanOldNestedComponent expect to have a consumer');
-    // @ts-ignore this function gets called when it was previously NESTED, so the rootDir is set
-    const oldLocation = path.join(this.consumer.getPath(), this.component.componentMap.rootDir);
-    logger.debugAndAddBreadCrumb(
-      'component-writer._cleanOldNestedComponent',
-      'deleting the old directory of a component at {oldLocation}',
-      { oldLocation }
-    );
-    await fs.remove(oldLocation);
-    await this._removeNodeModulesLinksFromDependents();
-    this.bitMap.removeComponent(this.component.id);
-  }
-
-  async _removeNodeModulesLinksFromDependents() {
-    if (!this.consumer) {
-      throw new Error('ComponentWriter._removeNodeModulesLinksFromDependents expect to have a consumer');
-    }
-    const directDependentIds = await this.consumer.getAuthoredAndImportedDependentsIdsOf([this.component]);
-    await Promise.all(
-      directDependentIds.map((dependentId) => {
-        const dependentComponentMap = this.consumer ? this.consumer.bitMap.getComponent(dependentId) : null;
-        const relativeLinkPath = this.consumer ? getNodeModulesPathOfComponent(this.component) : null;
-        const nodeModulesLinkAbs =
-          this.consumer && dependentComponentMap && relativeLinkPath
-            ? this.consumer.toAbsolutePath(path.join(dependentComponentMap.getRootDir(), relativeLinkPath))
-            : null;
-        if (nodeModulesLinkAbs) {
-          logger.debug(`deleting an obsolete link to node_modules at ${nodeModulesLinkAbs}`);
-        }
-        return nodeModulesLinkAbs ? fs.remove(nodeModulesLinkAbs) : Promise.resolve();
-      })
-    );
   }
 }

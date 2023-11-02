@@ -23,6 +23,10 @@ type GenerateNodeModulesPatternOptions<T> = {
    * The target for which patterns are generated.
    */
   target?: T;
+  /**
+   * Defines if pnpm is enabled as a package manager
+   */
+  isPnpmEnabled?: boolean;
 };
 
 const patternTargetMap = {
@@ -41,8 +45,15 @@ type PatternReturnType<T extends PatternTarget> = ReturnType<PatternTargetMap[T]
 export function generateNodeModulesPattern<T extends PatternTarget>(
   options: GenerateNodeModulesPatternOptions<T> = {}
 ): PatternReturnType<T> {
-  const { packages = [], excludeComponents, target = PatternTarget.JEST } = options;
-  const negativeLookaheadPatterns = packages.reduce((acc: string[], packageName) => {
+  const { packages = [], excludeComponents, target = PatternTarget.JEST, isPnpmEnabled = true } = options;
+  return patternTargetMap[target](packages, { excludeComponents, isPnpmEnabled }) as PatternReturnType<T>;
+}
+
+type PatternTargetMapOptions<T> = Pick<GenerateNodeModulesPatternOptions<T>, 'excludeComponents' | 'isPnpmEnabled'>;
+
+function toJestPattern<T>(packages: string[], options: PatternTargetMapOptions<T>) {
+  const { excludeComponents } = options;
+  const patterns = packages.reduce((acc: string[], packageName) => {
     const yarnPattern = packageName.replace(/\//g, '[\\/]');
     const pnpmPackageName = packageName.replace(/\//g, '\\+');
     const pnpmPattern = `\\.pnpm[\\/](.*[+\\/])?${pnpmPackageName}.*`;
@@ -50,17 +61,13 @@ export function generateNodeModulesPattern<T extends PatternTarget>(
   }, []);
 
   if (excludeComponents) {
-    negativeLookaheadPatterns.push(
+    patterns.push(
       '@[^/]+/([^/]+\\.)+[^/]+',
       '\\.pnpm/(.+[+/])?@[^+]+\\+([^+]+\\.)+[^+]+',
       '\\.pnpm/.+/node_modules/@[^/]+/([^/]+\\.)+[^/]+'
     );
   }
 
-  return patternTargetMap[target](negativeLookaheadPatterns) as PatternReturnType<T>;
-}
-
-function toJestPattern(patterns: string[]) {
   return `node_modules/(?!(${patterns.join('|')})/)`;
 }
 
@@ -73,8 +80,11 @@ function toJestPattern(patterns: string[]) {
  * - RegExp to exclude this path from managed paths: `/^(.+?[\\/]node_modules[\\/](?!(@my-org[\\/]my-scope.components))(@.+?[\\/])?.+?)[\\/]/`
  */
 
-function toWebpackPattern(patterns: string[]) {
+function toWebpackPattern<T>(packages: string[], { isPnpmEnabled }: PatternTargetMapOptions<T>) {
+  const patterns = packages.map((pkg) => pkg.replace(/\//g, '[\\/]'));
   return patterns.map((pattern) => {
-    return `^(.+?[\\/]node_modules[\\/](?!(${pattern}))(@.+?[\\/])?.+?)[\\/]`;
+    return isPnpmEnabled
+      ? `^(.+?[\\/]node_modules[\\/]\\.pnpm[\\/][^\\/]+[\\/]node_modules[\\/](?!(${pattern}))).+`
+      : `^(.+?[\\/]node_modules[\\/](?!(${pattern}))).+?[\\/]`;
   });
 }

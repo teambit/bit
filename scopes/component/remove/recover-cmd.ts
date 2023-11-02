@@ -5,6 +5,7 @@ import { RemoveMain } from './remove.main.runtime';
 
 export type RecoverOptions = {
   skipDependencyInstallation?: boolean;
+  skipWriteConfigFiles?: boolean;
 };
 
 export class RecoverCmd implements Command {
@@ -13,6 +14,7 @@ export class RecoverCmd implements Command {
   group = 'collaborate';
   options = [
     ['x', 'skip-dependency-installation', 'do not install packages in case of importing components'],
+    ['', 'skip-write-config-files', 'do not write config files (such as eslint, tsconfig, prettier, etc...)'],
   ] as CommandOptions;
   loader = true;
   migration = true;

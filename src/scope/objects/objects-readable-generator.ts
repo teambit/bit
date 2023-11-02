@@ -1,8 +1,8 @@
 import pMapSeries from 'p-map-series';
+import { BitError } from '@teambit/bit-error';
 import { Readable } from 'stream';
 import { Ref, Repository } from '.';
 import { Scope } from '..';
-import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import { getAllVersionHashesMemoized } from '../component-ops/traverse-versions';
 import { HashMismatch } from '../exceptions';
@@ -108,8 +108,7 @@ export class ObjectsReadableGenerator {
     const { component, collectParents, collectArtifacts, collectParentsUntil, includeVersionHistory } =
       componentWithOptions;
     const version = await component.loadVersion(componentWithOptions.version, this.repo, false);
-    if (!version)
-      throw new ShowDoctorError(`failed loading version ${componentWithOptions.version} of ${component.id()}`);
+    if (!version) throw new BitError(`failed loading version ${componentWithOptions.version} of ${component.id()}`);
     if (collectParentsUntil && version.hash().isEqual(collectParentsUntil)) {
       return;
     }

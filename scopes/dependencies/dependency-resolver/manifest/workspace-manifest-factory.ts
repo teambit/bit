@@ -3,7 +3,7 @@ import { IssuesClasses } from '@teambit/component-issues';
 import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
-import { pickBy, mapValues, uniq, difference } from 'lodash';
+import { fromPairs, pickBy, mapValues, uniq, difference } from 'lodash';
 import { SemVer } from 'semver';
 import pMapSeries from 'p-map-series';
 import { snapToSemver } from '@teambit/component-package-version';
@@ -138,6 +138,7 @@ export class WorkspaceManifestFactory {
       rootPolicy?: WorkspacePolicy;
     }
   ): Promise<ComponentDependenciesMap> {
+    const packageNames = components.map((component) => this.dependencyResolver.getPackageName(component));
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
       let depList = await this.dependencyResolver.getDependencies(component, { includeHidden: true });
@@ -197,7 +198,11 @@ export class WorkspaceManifestFactory {
           !depManifestBeforeFiltering.peerDependencies[rootPackageName]
         );
       });
+
+      const defaultPeerDependencies = await this._getDefaultPeerDependencies(component, packageNames);
+
       depManifest.dependencies = {
+        ...defaultPeerDependencies,
         ...unresolvedRuntimeMissingRootDeps,
         ...additionalDeps,
         ...depManifest.dependencies,
@@ -220,6 +225,17 @@ export class WorkspaceManifestFactory {
     }
 
     return result;
+  }
+
+  private async _getDefaultPeerDependencies(
+    component: Component,
+    packageNamesFromWorkspace: string[]
+  ): Promise<Record<string, string>> {
+    const envPolicy = await this.dependencyResolver.getComponentEnvPolicy(component);
+    const selfPolicyWithoutLocal = envPolicy.selfPolicy.filter(
+      (dep) => !packageNamesFromWorkspace.includes(dep.dependencyId)
+    );
+    return fromPairs(selfPolicyWithoutLocal.toNameVersionTuple());
   }
 
   private async updateDependenciesVersions(
@@ -310,13 +326,13 @@ function filterComponents(dependencyList: DependencyList, componentsToFilterOut:
       if (!component.id.hasVersion()) {
         return component.id.toString() === dep.componentId.toString({ ignoreVersion: true });
       }
-      // We are checking against both component.id._legacy and component.state._consumer.id
-      // Because during tag operation, the component.id._legacy has the current version (before the tag)
+      // We are checking against both component.id and component.state._consumer.id
+      // Because during tag operation, the component.id has the current version (before the tag)
       // while the component.state._consumer.id has the upcoming version (the version that will be after the tag)
       // The dependency in some cases is already updated to the upcoming version
       return (
-        component.id._legacy.isEqualWithoutVersion(dep.componentId._legacy) ||
-        component.state._consumer.id.isEqualWithoutVersion(dep.componentId._legacy)
+        component.id.isEqualWithoutVersion(dep.componentId) ||
+        component.state._consumer.id.isEqualWithoutVersion(dep.componentId)
       );
     });
     if (existingComponent) return false;

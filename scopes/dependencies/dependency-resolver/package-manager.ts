@@ -78,6 +78,22 @@ export type PackageManagerInstallOptions = {
    * E.g., if this is set to 1000, then the progress will be updated every second.
    */
   throttleProgress?: number;
+
+  hideProgressPrefix?: boolean;
+
+  hideLifecycleOutput?: boolean;
+
+  /**
+   * Do installation using lockfile only. Ignore the component manifests.
+   */
+  ignorePackageManifest?: boolean;
+
+  /**
+   * When enabled, installation by the package manager will be skipped
+   * but all the options will be calculated and the rebuild function will be returned.
+   * We use this option for a performance optimization in Ripple CI.
+   */
+  dryRun?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

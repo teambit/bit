@@ -12,7 +12,6 @@ import {
   ComponentMain,
   Component,
   ComponentFactory,
-  ComponentID,
   AspectList,
   InvalidComponent,
   ResolveAspectsOptions,
@@ -20,7 +19,7 @@ import {
 import { BitError } from '@teambit/bit-error';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverMain, DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
@@ -28,8 +27,8 @@ import { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import type { VariantsMain } from '@teambit/variants';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { BitId, InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName } from '@teambit/legacy-bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName, BitId } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
@@ -47,7 +46,7 @@ import {
 } from '@teambit/legacy/dist/utils/path';
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import { slice, isEmpty, merge, compact } from 'lodash';
+import { slice, isEmpty, merge, compact, uniqBy } from 'lodash';
 import { MergeConfigFilename, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy/dist/constants';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -63,7 +62,6 @@ import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/s
 import { isHash } from '@teambit/component-version';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { GlobalConfigMain } from '@teambit/global-config';
-
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,
@@ -129,7 +127,6 @@ export type ExtensionsOrigin =
   | 'ConfigMerge'
   | 'WorkspaceVariants'
   | 'ComponentJsonFile'
-  | 'WorkspaceDefault'
   | 'FinalAfterMerge';
 
 const DEFAULT_VENDOR_DIR = 'vendor';
@@ -144,7 +141,7 @@ export class Workspace implements ComponentFactory {
   componentLoader: WorkspaceComponentLoader;
   bitMap: BitMap;
   /**
-   * Indicate that we are now running installaion process
+   * Indicate that we are now running installation process
    * This is important to know to ignore missing modules across different places
    */
   inInstallContext = false;
@@ -241,22 +238,6 @@ export class Workspace implements ComponentFactory {
       }
     );
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
-
-    this.registerOnComponentAdd(async () => {
-      await this.setComponentPathsRegExps();
-      return {
-        results: this.componentPathsRegExps,
-        toString: () => this.componentPathsRegExps.join(),
-      };
-    });
-
-    this.registerOnComponentRemove(async () => {
-      await this.setComponentPathsRegExps();
-      return {
-        results: this.componentPathsRegExps,
-        toString: () => this.componentPathsRegExps.join(),
-      };
-    });
   }
 
   private validateConfig() {
@@ -339,7 +320,7 @@ export class Workspace implements ComponentFactory {
     const componentsList = new ComponentsList(this.consumer);
     const listAutoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
     const isAutoTag = listAutoTagPendingComponents.find((consumerComponent) =>
-      consumerComponent.id.isEqualWithoutVersion(component.id._legacy)
+      consumerComponent.id.isEqualWithoutVersion(component.id)
     );
     if (isAutoTag) return true;
     return false;
@@ -356,7 +337,7 @@ export class Workspace implements ComponentFactory {
    * provides status of all components in the workspace.
    */
   async getComponentStatus(component: Component): Promise<ComponentStatus> {
-    const status = await this.consumer.getComponentStatusById(component.id._legacy);
+    const status = await this.consumer.getComponentStatusById(component.id);
     const hasModifiedDependencies = await this.hasModifiedDependencies(component);
     return ComponentStatus.fromLegacy(status, hasModifiedDependencies, component.isOutdated());
   }
@@ -373,8 +354,7 @@ export class Workspace implements ComponentFactory {
 
   async listWithInvalid(loadOpts?: ComponentLoadOptions) {
     const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
-    const ids = await this.resolveMultipleComponentIds(legacyIds);
-    return this.componentLoader.getMany(ids, loadOpts, false);
+    return this.componentLoader.getMany(legacyIds, loadOpts, false);
   }
 
   /**
@@ -442,32 +422,69 @@ export class Workspace implements ComponentFactory {
    * list all modified components in the workspace.
    */
   async modified(): Promise<Component[]> {
-    const ids: any = await this.componentList.listModifiedComponents(false);
-    const componentIds = ids.map(ComponentID.fromLegacy);
-    return this.getMany(componentIds);
+    const allComps = await this.list();
+    const modifiedIncludeNulls = await mapSeries(allComps, async (component) => {
+      const modified = await this.isModified(component);
+      return modified ? component : null;
+    });
+    return compact(modifiedIncludeNulls);
   }
 
   /**
    * list all new components in the workspace.
    */
   async newComponents() {
-    const ids: any = await this.componentList.listNewComponents(false);
-    const componentIds = ids.map(ComponentID.fromLegacy);
+    const componentIds = await this.newComponentIds();
     return this.getMany(componentIds);
   }
 
+  async newComponentIds(): Promise<ComponentID[]> {
+    const allIds = await this.listIds();
+    return allIds.filter((id) => !id.hasVersion());
+  }
+
+  async locallyDeletedIds(): Promise<ComponentID[]> {
+    const locallyDeleted = await this.componentList.listLocallySoftRemoved();
+    return this.resolveMultipleComponentIds(locallyDeleted);
+  }
+
+  async duringMergeIds(): Promise<ComponentID[]> {
+    const duringMerge = this.componentList.listDuringMergeStateComponents();
+    return this.resolveMultipleComponentIds(duringMerge);
+  }
+
   /**
-   * get all workspace component-ids, include vendor components.
-   * (exclude nested dependencies in case dependencies are saved as components and not packages)
+   * @deprecated use `listIds()` instead.
+   * get all workspace component-ids
    */
   getAllComponentIds(): Promise<ComponentID[]> {
     const bitIds = this.consumer.bitMap.getAllBitIds();
     return this.resolveMultipleComponentIds(bitIds);
   }
 
+  async listTagPendingIds(): Promise<ComponentID[]> {
+    const newComponents = await this.newComponentIds();
+    const modifiedComponents = (await this.modified()).map((c) => c.id);
+    const removedComponents = await this.locallyDeletedIds();
+    const duringMergeIds = await this.duringMergeIds();
+    const allIds = [...newComponents, ...modifiedComponents, ...removedComponents, ...duringMergeIds];
+    const allIdsUniq = uniqBy(allIds, (id) => id.toString());
+    return allIdsUniq;
+  }
+
+  /**
+   * list all components that can be tagged. (e.g. when tagging/snapping with --unmodified).
+   * which are all components in the workspace, include locally deleted components.
+   */
+  async listPotentialTagIds(): Promise<ComponentID[]> {
+    const deletedIds = await this.locallyDeletedIds();
+    const allIdsWithoutDeleted = await this.listIds();
+    return [...deletedIds, ...allIdsWithoutDeleted];
+  }
+
   async getNewAndModifiedIds(): Promise<ComponentID[]> {
-    const ids = await this.componentList.listTagPendingComponents();
-    return this.resolveMultipleComponentIds(ids);
+    const ids = await this.listTagPendingIds();
+    return ids;
   }
 
   async newAndModified(): Promise<Component[]> {
@@ -503,10 +520,10 @@ export class Workspace implements ComponentFactory {
     const allIds = this.consumer.bitMap.getAllBitIdsFromAllLanes();
     const availableIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
     if (allIds.length === availableIds.length) return [];
-    const unavailableIds = allIds.filter((id) => !availableIds.hasWithoutScopeAndVersion(id));
+    const unavailableIds = allIds.filter((id) => !availableIds.hasWithoutVersion(id));
     if (!unavailableIds.length) return [];
     const removedIds = this.consumer.bitMap.getRemoved();
-    const compsWithHead: BitId[] = [];
+    const compsWithHead: ComponentID[] = [];
     await Promise.all(
       unavailableIds.map(async (id) => {
         if (removedIds.has(id)) return; // we don't care about removed components
@@ -520,7 +537,7 @@ export class Workspace implements ComponentFactory {
   async getSavedGraphOfComponentIfExist(component: Component) {
     let versionObj: Version;
     try {
-      versionObj = await this.scope.legacyScope.getVersionInstance(component.id._legacy);
+      versionObj = await this.scope.legacyScope.getVersionInstance(component.id);
     } catch (err) {
       return null;
     }
@@ -542,7 +559,7 @@ export class Workspace implements ComponentFactory {
     };
     const currentVersion = getCurrentVersionAsTagIfPossible();
 
-    flattenedBitIdCompIdMap[component.id._legacy.changeVersion(currentVersion).toString()] = component.id;
+    flattenedBitIdCompIdMap[component.id.changeVersion(currentVersion).toString()] = component.id;
     await Promise.all(
       versionObj.flattenedDependencies.map(async (bitId) => {
         flattenedBitIdCompIdMap[bitId.toString()] = await this.resolveComponentId(bitId);
@@ -580,9 +597,9 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   async getDependentsIds(ids: ComponentID[]): Promise<ComponentID[]> {
     const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(this.consumer, true);
     const workspaceDependencyGraph = new DependencyGraph(workspaceGraph);
-    const workspaceDependents = ids.map((id) => workspaceDependencyGraph.getDependentsInfo(id._legacy));
+    const workspaceDependents = ids.map((id) => workspaceDependencyGraph.getDependentsInfo(id));
     const dependentsLegacyIds = workspaceDependents.flat().map((_) => _.id);
-    const dependentsLegacyNoDup = BitIds.uniqFromArray(dependentsLegacyIds);
+    const dependentsLegacyNoDup = ComponentIdList.uniqFromArray(dependentsLegacyIds);
     const dependentsIds = await this.resolveMultipleComponentIds(dependentsLegacyNoDup);
     return dependentsIds;
   }
@@ -603,10 +620,10 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
    */
   async getLegacyMinimal(id: ComponentID): Promise<ConsumerComponent | undefined> {
     try {
-      const componentMap = this.consumer.bitMap.getComponent(id._legacy);
+      const componentMap = this.consumer.bitMap.getComponent(id);
       return await ConsumerComponent.loadFromFileSystem({
         componentMap,
-        id: id._legacy,
+        id,
         consumer: this.consumer,
       });
     } catch (err) {
@@ -624,7 +641,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     });
     const repo = this.scope.legacyScope.objects;
     const getHeadFiles = async () => {
-      const modelComp = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
+      const modelComp = await this.scope.legacyScope.getModelComponentIfExist(id);
       if (!modelComp) return [];
       const head = modelComp.getHeadRegardlessOfLane();
       if (!head) return [];
@@ -712,7 +729,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
 
   clearComponentCache(id: ComponentID) {
     this.componentLoader.clearComponentCache(id);
-    this.consumer.componentLoader.clearOneComponentCache(id._legacy);
+    this.consumer.clearOneComponentCache(id);
     this.componentList = new ComponentsList(this.consumer);
   }
 
@@ -770,6 +787,24 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     await mapSeries(onBitmapChangeEntries, async ([, onBitmapChangeFunc]) => {
       await onBitmapChangeFunc();
     });
+  }
+
+  /**
+   * if needed, add a slot to let other aspects react to this event.
+   * currently, the purpose is to reload the workspace config when it changes, so entries like "defaultScope" are updated.
+   * it also updates the DependencyResolver config. I couldn't find a good way to update all aspects in workspace.jsonc.
+   */
+  async triggerOnWorkspaceConfigChange(): Promise<void> {
+    this.logger.debug('triggerOnWorkspaceConfigChange, reloading workspace config');
+    const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
+    await config.reloadWorkspaceConfig();
+    const workspaceConfig = config.workspaceConfig;
+    if (!workspaceConfig) throw new Error('workspace config is missing from Config aspect');
+    const configOfWorkspaceAspect = workspaceConfig.extensions.findExtension(WorkspaceAspect.id);
+    if (!configOfWorkspaceAspect) throw new Error('workspace extension is missing from workspace config');
+    this.config = configOfWorkspaceAspect.config as WorkspaceExtConfig;
+    const configOfDepResolverAspect = workspaceConfig.extensions.findExtension(DependencyResolverAspect.id);
+    if (configOfDepResolverAspect) this.dependencyResolver.setConfig(configOfDepResolverAspect.config as any);
   }
 
   getState(id: ComponentID, hash: string) {
@@ -858,10 +893,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
 
   async getExtensionsFromScopeAndSpecific(id: ComponentID): Promise<ExtensionDataList> {
     const componentFromScope = await this.scope.get(id);
-    const { extensions } = await this.componentExtensions(id, componentFromScope, [
-      'WorkspaceDefault',
-      'WorkspaceVariants',
-    ]);
+    const { extensions } = await this.componentExtensions(id, componentFromScope, ['WorkspaceVariants']);
 
     return extensions;
   }
@@ -981,11 +1013,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * whether a component exists in the workspace
    */
   exists(componentId: ComponentID): boolean {
-    return Boolean(this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId._legacy)));
+    return Boolean(this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId)));
   }
 
   getIdIfExist(componentId: ComponentID): ComponentID | undefined {
-    const id = this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId._legacy));
+    const id = this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId));
     if (!id) return undefined;
     return componentId.changeVersion(id.version);
   }
@@ -1001,37 +1033,43 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * currently it used only for get many of aspects
    * @param ids
    */
-  async importAndGetMany(ids: Array<ComponentID>): Promise<Component[]> {
+  async importAndGetMany(ids: Array<ComponentID>, reason?: string): Promise<Component[]> {
     if (!ids.length) return [];
-    await this.importCurrentLaneIfMissing();
+    const lane = await this.importCurrentLaneIfMissing();
     await this.scope.import(ids, {
       reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion(),
       preferDependencyGraph: true,
+      // add the lane object although it was imported with all its ids previously.
+      // in some cases, this import re-fetch existing ids whose their VersionHistory is incomplete, so it needs the Lane context.
+      lane,
+      reason,
     });
     return this.getMany(ids);
   }
 
-  async importCurrentLaneIfMissing() {
+  async importCurrentLaneIfMissing(): Promise<Lane | undefined> {
     const laneId = this.getCurrentLaneId();
     const laneObj = await this.scope.legacyScope.getCurrentLaneObject();
     if (laneId.isDefault() || laneObj) {
-      return;
+      return laneObj || undefined;
     }
     const lane = await this.getCurrentRemoteLane();
     if (!lane) {
-      return;
+      return undefined;
     }
     this.logger.info(`current lane ${laneId.toString()} is missing, importing it`);
     await this.scope.legacyScope.objects.writeObjectsToTheFS([lane]);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
-    const ids = BitIds.fromArray(lane.toBitIds().filter((id) => id.hasScope()));
+    const ids = ComponentIdList.fromArray(this.getExportedFrom(lane.toBitIds()));
     await scopeComponentsImporter.importWithoutDeps(ids.toVersionLatest(), {
       cache: false,
       lane,
       includeVersionHistory: true,
+      reason: 'latest of the current lane',
     });
 
-    await scopeComponentsImporter.importMany({ ids, lane });
+    await scopeComponentsImporter.importMany({ ids, lane, reason: 'for making sure the current lane has all ' });
+    return lane;
   }
 
   async use(aspectIdStr: string): Promise<string> {
@@ -1060,7 +1098,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     bitMapOptions?: GetBitMapComponentOptions,
     options = { relative: false }
   ): PathOsBased {
-    return this.componentDirFromLegacyId(componentId._legacy, bitMapOptions, options);
+    return this.componentDirFromLegacyId(componentId, bitMapOptions, options);
   }
 
   /**
@@ -1080,7 +1118,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   private componentDirFromLegacyId(
-    bitId: BitId,
+    bitId: ComponentID,
     bitMapOptions?: GetBitMapComponentOptions,
     options = { relative: false }
   ): PathOsBased {
@@ -1113,7 +1151,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
-    const bitMapId = this.consumer.bitMap.getExistingBitId(name);
+    const bitMapId = this.consumer.bitMap.getExistingBitId(name, false);
     const bitMapEntry = bitMapId ? this.consumer.bitMap.getComponent(bitMapId) : undefined;
     if (bitMapEntry && bitMapEntry.defaultScope) {
       return bitMapEntry.defaultScope;
@@ -1168,7 +1206,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.aspectsMerger.mergeConflictFile;
   }
 
-  getDepsDataOfMergeConfig(id: BitId): Record<string, any> | undefined {
+  getDepsDataOfMergeConfig(id: ComponentID): Record<string, any> | undefined {
     return this.aspectsMerger.getDepsDataOfMergeConfig(id);
   }
 
@@ -1203,12 +1241,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   async listComponentsDuringMerge(): Promise<ComponentID[]> {
     const unmergedComps = this.scope.legacyScope.objects.unmergedComponents.getComponents();
-    const bitIds = unmergedComps.map((u) => new BitId(u.id));
+    const bitIds = unmergedComps.map((u) => ComponentID.fromObject(u.id));
     return this.resolveMultipleComponentIds(bitIds);
   }
 
   async getUnmergedComponent(componentId: ComponentID): Promise<Component | undefined> {
-    const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
+    const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId.fullName);
     if (unmerged?.head) {
       return this.scope.get(componentId.changeVersion(unmerged?.head.toString()));
     }
@@ -1218,12 +1256,28 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async isModified(component: Component): Promise<boolean> {
     const head = component.head;
     if (!head) {
-      return true; // it's a new component
+      return false; // it's a new component
     }
     const consumerComp = component.state._consumer as ConsumerComponent;
     if (typeof consumerComp._isModified === 'boolean') return consumerComp._isModified;
-    const componentStatus = await this.consumer.getComponentStatusById(component.id._legacy);
+    const componentStatus = await this.consumer.getComponentStatusById(component.id);
     return componentStatus.modified === true;
+  }
+
+  async isModifiedOrNew(component: Component): Promise<boolean> {
+    const head = component.head;
+    if (!head) {
+      return true; // it's a new component
+    }
+    return this.isModified(component);
+  }
+
+  isExported(id: ComponentID): boolean {
+    return this.consumer.isExported(id);
+  }
+  getExportedFrom(ids: ComponentID[]): ComponentID[] {
+    const notExported = this.consumer.getNotExportedIds();
+    return ids.filter((id) => !notExported.hasWithoutVersion(id));
   }
 
   /**
@@ -1250,14 +1304,21 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (this.defaultScope === scopeName) {
       throw new Error(`the default-scope is already set as "${scopeName}", nothing to change`);
     }
+    if (!isValidScopeName(scopeName)) {
+      throw new InvalidScopeName(scopeName);
+    }
     const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
     config.workspaceConfig?.setExtension(
       WorkspaceAspect.id,
       { defaultScope: scopeName },
       { mergeIntoExisting: true, ignoreVersion: true }
     );
+    // fix also comps using the old default-scope
+    this.bitMap.updateDefaultScope(this.config.defaultScope, scopeName);
+
     this.config.defaultScope = scopeName;
     await config.workspaceConfig?.write({ dir: path.dirname(config.workspaceConfig.path) });
+    await this.bitMap.write();
   }
 
   async addSpecificComponentConfig(
@@ -1488,8 +1549,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     await this.clearCache();
   }
 
-  getComponentPackagePath(component: Component) {
-    const relativePath = this.dependencyResolver.getRuntimeModulePath(component);
+  async getComponentPackagePath(component: Component) {
+    const inInWs = await this.hasId(component.id);
+    const relativePath = this.dependencyResolver.getRuntimeModulePath(component, inInWs);
     return path.join(this.path, relativePath);
   }
 
@@ -1507,24 +1569,20 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   /**
    * Transform the id to ComponentId and get the exact id as appear in bitmap
-   *
-   * @param {(string | ComponentID | BitId)} id
-   * @returns {Promise<ComponentID>}
-   * @memberof Workspace
    */
-  async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
+  async resolveComponentId(id: string | BitId | ComponentID): Promise<ComponentID> {
     if (id instanceof BitId && id.hasScope() && id.hasVersion()) {
       // an optimization to make it faster when BitId is passed
       return ComponentID.fromLegacy(id);
     }
-    const getDefaultScope = async (bitId: BitId, bitMapOptions?: GetBitMapComponentOptions) => {
+    const getDefaultScope = async (bitId: ComponentID, bitMapOptions?: GetBitMapComponentOptions) => {
       if (bitId.scope) {
         return bitId.scope;
       }
       const relativeComponentDir = this.componentDirFromLegacyId(bitId, bitMapOptions, { relative: true });
       const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(
         relativeComponentDir,
-        bitId.toStringWithoutScopeAndVersion()
+        bitId.fullName
       );
       return defaultScope;
     };
@@ -1547,7 +1605,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       const shouldSearchWithoutScopeInProvidedId = id.toString().startsWith(`${defaultScope}/`);
       legacyId = this.consumer.getParsedIdIfExist(id.toString(), true, shouldSearchWithoutScopeInProvidedId);
       if (legacyId) {
-        return ComponentID.fromLegacy(legacyId, defaultScope);
+        return ComponentID.fromLegacy(legacyId._legacy, defaultScope);
       }
     }
     try {
@@ -1603,7 +1661,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
           if (version) {
             _bitmapIdWithVersionForSource = _bitMapId.changeVersion(version);
           }
-          return ComponentID.fromLegacy(_bitmapIdWithVersionForSource, defaultScopeForBitmapId);
+          return ComponentID.fromLegacy(_bitmapIdWithVersionForSource._legacy, defaultScopeForBitmapId);
         };
         // a case when the given id contains the default scope
         if (idWithVersion.startsWith(`${defaultScopeForBitmapId}/${_bitMapIdWithoutVersion}`)) {
@@ -1631,13 +1689,22 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       // Handle use case 3
       return await this.scope.resolveComponentId(idWithVersion);
     } catch (error: any) {
-      legacyId = BitId.parse(id.toString(), true);
-      return ComponentID.fromLegacy(legacyId);
+      return ComponentID.fromString(id.toString());
     }
   }
 
-  async resolveMultipleComponentIds(ids: Array<string | ComponentID | BitId>): Promise<ComponentID[]> {
+  async resolveMultipleComponentIds(ids: Array<string | ComponentID | ComponentID>): Promise<ComponentID[]> {
     return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
+  }
+
+  /**
+   * component-id coming from Scope don't have the defaultScope, the legacyComponentId.scope is always populated.
+   * in the .bitmap we need to distinguish between the two, so the componentId needs to be corrected with the defaultScope.
+   */
+  resolveIdWithDefaultScope(componentId: ComponentID): ComponentID {
+    const isExported = !this.consumer.getNotExportedIds().searchWithoutVersion(componentId);
+    const bitId = componentId._legacy.changeScope(isExported ? componentId.scope : undefined);
+    return ComponentID.fromLegacy(bitId, componentId.scope);
   }
 
   /**
@@ -1656,25 +1723,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
         // Assuming extensionId always has scope - do not allow extension id without scope
         const resolvedId = await this.resolveComponentId(extensionEntry.extensionId);
-        extensionEntry.extensionId = resolvedId._legacy;
-      }
-    });
-    return Promise.all(resolveMergedExtensionsP);
-  }
-
-  /**
-   * This will mutate the original extensions list and make sure all extensions has the ids with the scope / default scope
-   *
-   * @param {ExtensionDataList} extensions
-   * @returns {Promise<void[]>}
-   * @memberof Workspace
-   */
-  addDefaultScopeToExtensionsList(extensions: ExtensionDataList): Promise<void[]> {
-    const resolveMergedExtensionsP = extensions.map(async (extensionEntry) => {
-      if (extensionEntry.extensionId && !extensionEntry.extensionId.hasScope()) {
-        const componentId = ComponentID.fromLegacy(extensionEntry.extensionId);
-        const defaultScope = await this.componentDefaultScope(componentId);
-        extensionEntry.extensionId = extensionEntry.extensionId.changeScope(defaultScope);
+        extensionEntry.extensionId = resolvedId;
       }
     });
     return Promise.all(resolveMergedExtensionsP);
@@ -1718,7 +1767,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (found && found.extensionId?.version) {
       return found.extensionId.toString();
     }
-    const comps = await this.importAndGetMany([envId]);
+    const comps = await this.importAndGetMany([envId], `to get the env ${envId.toString()}`);
     return comps[0].id.toString();
   }
 
@@ -1737,8 +1786,15 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
           unchanged.push(id);
           return;
         }
+        // the env that gets saved in the .bitmap file config root can be with or without version.
+        // e.g. when a custom env is in .bitmap, it's saved without version, but when asking the component for the
+        // env by `this.getAspectIdFromConfig`, it returns the env with version.
+        // to make sure we remove the env from the .bitmap, we need to remove both with and without version.
         const currentEnvWithPotentialVersion = await this.getAspectIdFromConfig(id, currentEnv, true);
-        await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion || currentEnv);
+        await this.removeSpecificComponentConfig(id, currentEnv);
+        if (currentEnvWithPotentialVersion && currentEnvWithPotentialVersion.includes('@')) {
+          await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion);
+        }
         await this.removeSpecificComponentConfig(id, EnvsAspect.id);
         changed.push(id);
       })
@@ -1827,11 +1883,25 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async setComponentPathsRegExps() {
     const workspaceComponents = await this.list();
     const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
+    const packageManager = this.dependencyResolver.getPackageManagerName();
+    const isPnpmEnabled = typeof packageManager === 'undefined' || packageManager.includes('pnpm');
     const pathsExcluding = generateNodeModulesPattern({
       packages: workspacePackageNames,
       target: PatternTarget.WEBPACK,
+      isPnpmEnabled,
     });
     this.componentPathsRegExps = [...pathsExcluding.map((stringPattern) => new RegExp(stringPattern))];
+  }
+
+  getInjectedDirs(component: Component): Promise<string[]> {
+    const relativeCompDir = this.componentDir(component.id, undefined, {
+      relative: true,
+    });
+    return this.dependencyResolver.getInjectedDirs(
+      this.path,
+      relativeCompDir,
+      this.dependencyResolver.getPackageName(component)
+    );
   }
 }
 

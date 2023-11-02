@@ -8,6 +8,7 @@ import {
   CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR,
   CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR,
   CFG_USE_DATED_CAPSULES,
+  CFG_CACHE_LOCK_ONLY_CAPSULES,
 } from '@teambit/legacy/dist/constants';
 import { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
 import { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
@@ -20,6 +21,7 @@ import { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } fro
 import { ScopeMain } from '@teambit/scope';
 import { Logger } from '@teambit/logger';
 import { EnvsMain } from '@teambit/envs';
+import { NodeLinker } from '@teambit/dependency-resolver';
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
 
@@ -174,8 +176,8 @@ needed-for: ${neededFor || '<unknown>'}`);
     if (!componentIds || !componentIds.length) return [];
     await this.scope.import(componentIds, {
       reFetchUnBuiltVersion: false,
-      preferDependencyGraph: true,
       lane,
+      reason: 'for loading aspects from the scope',
     });
     const components = await this.scope.getMany(componentIds);
 
@@ -331,6 +333,12 @@ needed-for: ${neededFor || '<unknown>'}`);
     return globalConfig === true || globalConfig === 'true';
   }
 
+  shouldCacheLockFileOnly(): boolean {
+    const globalConfig = this.globalConfig.getSync(CFG_CACHE_LOCK_ONLY_CAPSULES);
+    // @ts-ignore
+    return globalConfig === true || globalConfig === 'true';
+  }
+
   getAspectCapsulePath() {
     const defaultPath = `${this.scope.path}-aspects`;
     if (this.scope.isGlobalScope) {
@@ -348,6 +356,10 @@ needed-for: ${neededFor || '<unknown>'}`);
 
   getAspectsPackageManager(): string | undefined {
     return this.scope.aspectsPackageManager;
+  }
+
+  getAspectsNodeLinker(): NodeLinker | undefined {
+    return this.scope.aspectsNodeLinker;
   }
 
   private async resolveUserAspects(
@@ -451,13 +463,17 @@ needed-for: ${neededFor || '<unknown>'}`);
   getDefaultIsolateOpts() {
     const useHash = this.shouldUseHashForCapsules();
     const useDatedDirs = this.shouldUseDatedCapsules();
+    const cacheLockFileOnly = this.shouldCacheLockFileOnly();
+    const nodeLinker = this.getAspectsNodeLinker();
 
     const opts = {
       datedDirId: this.scope.name,
       baseDir: this.getAspectCapsulePath(),
       useHash,
       packageManager: this.getAspectsPackageManager(),
+      nodeLinker,
       useDatedDirs,
+      cacheLockFileOnly,
       skipIfExists: true,
       seedersOnly: true,
       includeFromNestedHosts: true,

@@ -8,6 +8,7 @@ import { indexFile } from './files/index-file';
 export const reactComponent: ComponentTemplate = {
   name: 'react',
   description: 'a basic react component',
+  hidden: true,
   generateFiles: (context: ComponentContext) => {
     return [indexFile(context), componentFile(context), compositionFile(context), docsFile(context), testFile(context)];
   },

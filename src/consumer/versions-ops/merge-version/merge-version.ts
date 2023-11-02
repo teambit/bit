@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { BitId } from '../../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import GeneralError from '../../../error/general-error';
 import { resolveConflictPrompt } from '../../../prompts';
 
@@ -21,9 +21,8 @@ export const FileStatus = {
 };
 // fileName is PathLinux. TS doesn't let anything else in the keys other than string and number
 export type FilesStatus = { [fileName: string]: keyof typeof FileStatus };
-export type FailedComponents = { id: BitId; failureMessage: string; unchangedLegitimately?: boolean };
 
-export type ApplyVersionResult = { id: BitId; filesStatus: FilesStatus };
+export type ApplyVersionResult = { id: ComponentID; filesStatus: FilesStatus };
 
 export async function getMergeStrategyInteractive(): Promise<MergeStrategy> {
   try {

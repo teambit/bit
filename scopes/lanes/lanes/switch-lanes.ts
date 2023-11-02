@@ -1,8 +1,7 @@
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ApplyVersionResults } from '@teambit/merging';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { CheckoutPropsLegacy, CheckoutProps } from '@teambit/checkout';
 import { Workspace } from '@teambit/workspace';
@@ -13,8 +12,8 @@ import { throwForStagedComponents } from './create-lane';
 
 export type SwitchProps = {
   laneName: string;
-  ids?: BitId[];
-  laneBitIds?: BitId[]; // only needed for the deprecated onLanesOnly prop. once this prop is removed, this prop can be removed as well.
+  ids?: ComponentID[];
+  laneBitIds?: ComponentID[]; // only needed for the deprecated onLanesOnly prop. once this prop is removed, this prop can be removed as well.
   pattern?: string;
   existingOnWorkspaceOnly: boolean;
   remoteLane?: Lane;
@@ -55,6 +54,7 @@ export class LaneSwitcher {
       ids,
       allowAddingComponentsFromScope: true,
       versionPerId: await this.workspace.resolveMultipleComponentIds(idsToSwitch),
+      lane: this.laneToSwitchTo,
     };
 
     const results = await this.Lanes.checkout.checkout(checkoutProps);
@@ -92,16 +92,14 @@ export class LaneSwitcher {
       }
       const allIds = await this.workspace.resolveMultipleComponentIds(this.switchProps.ids || []);
       const patternIds = this.workspace.scope.filterIdsFromPoolIdsByPattern(this.switchProps.pattern, allIds);
-      this.switchProps.ids = patternIds.map((id) => id._legacy);
+      this.switchProps.ids = patternIds.map((id) => id);
     }
   }
 
-  private async populatePropsAccordingToRemoteLane(remoteLaneId: LaneId): Promise<BitId[]> {
+  private async populatePropsAccordingToRemoteLane(remoteLaneId: LaneId): Promise<ComponentID[]> {
     this.laneIdToSwitchTo = remoteLaneId;
     this.logger.debug(`populatePropsAccordingToRemoteLane, remoteLaneId: ${remoteLaneId.toString()}`);
-    if (this.consumer.getCurrentLaneId().isEqual(remoteLaneId)) {
-      throw new BitError(`already checked out to "${remoteLaneId.toString()}"`);
-    }
+    this.throwForSwitchingToCurrentLane();
     const remoteLane = await this.Lanes.fetchLaneWithItsComponents(remoteLaneId);
     this.switchProps.laneName = remoteLaneId.name;
     this.switchProps.localTrackedLane = this.consumer.scope.lanes.getAliasByLaneId(remoteLaneId) || undefined;
@@ -112,19 +110,25 @@ export class LaneSwitcher {
   }
 
   private async populatePropsAccordingToDefaultLane() {
-    if (this.consumer.isOnMain()) {
-      throw new BitError(`already checked out to "${this.switchProps.laneName}"`);
-    }
     this.laneIdToSwitchTo = LaneId.from(DEFAULT_LANE, this.consumer.scope.name);
+    this.throwForSwitchingToCurrentLane();
   }
 
-  private populatePropsAccordingToLocalLane(localLane: Lane): BitId[] {
-    if (this.consumer.getCurrentLaneId().name === this.switchProps.laneName) {
-      throw new BitError(`already checked out to "${this.switchProps.laneName}"`);
-    }
+  private populatePropsAccordingToLocalLane(localLane: Lane): ComponentID[] {
     this.laneIdToSwitchTo = localLane.toLaneId();
     this.laneToSwitchTo = localLane;
+    this.throwForSwitchingToCurrentLane();
     return localLane.components.map((c) => c.id.changeVersion(c.head.toString()));
+  }
+
+  private throwForSwitchingToCurrentLane() {
+    if (this.consumer.getCurrentLaneId().isEqual(this.laneIdToSwitchTo)) {
+      const laneIdStr = this.laneIdToSwitchTo.isDefault()
+        ? this.laneIdToSwitchTo.name
+        : this.laneIdToSwitchTo.toString();
+      throw new BitError(`already checked out to "${laneIdStr}".
+to be up to date with the remote lane, please run "bit checkout head""`);
+    }
   }
 
   private async saveLanesData() {
@@ -141,8 +145,8 @@ export class LaneSwitcher {
 
     this.consumer.setCurrentLane(this.laneIdToSwitchTo, !this.laneToSwitchTo?.isNew);
     this.consumer.bitMap.syncWithIds(
-      BitIds.fromArray(this.switchProps.ids || []),
-      BitIds.fromArray(this.switchProps.laneBitIds || [])
+      ComponentIdList.fromArray(this.switchProps.ids || []),
+      ComponentIdList.fromArray(this.switchProps.laneBitIds || [])
     );
   }
 }

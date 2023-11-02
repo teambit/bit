@@ -1,6 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import ejectTemplate from '@teambit/legacy/dist/cli/templates/eject-template';
-import { WILDCARD_HELP, COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import open from 'open';
+import { ejectTemplate } from '@teambit/eject';
+import { WILDCARD_HELP, COMPONENT_PATTERN_HELP, getCloudDomain } from '@teambit/legacy/dist/constants';
 import chalk from 'chalk';
 import { isEmpty } from 'lodash';
 import { ExportMain } from './export.main.runtime';
@@ -19,7 +20,7 @@ export class ExportCmd implements Command {
     most scenarios so that all changes are exported simultaneously)
   ${WILDCARD_HELP('export')}`;
   alias = 'e';
-  helpUrl = 'docs/components/exporting-components';
+  helpUrl = 'reference/components/exporting-components';
   options = [
     ['e', 'eject', 'remove component from the workspace and install it instead as a regular npm package'],
     [
@@ -44,10 +45,16 @@ export class ExportCmd implements Command {
     ],
     [
       '',
+      'head-only',
+      'EXPERIMENTAL. in case previous export failed and locally it shows exported and only one snap/tag was created, try using this flag',
+    ],
+    [
+      '',
       'ignore-missing-artifacts',
       "EXPERIMENTAL. don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote",
     ],
     ['', 'fork-lane-new-scope', 'allow exporting a forked lane into a different scope than the original scope'],
+    ['', 'open-browser', 'open a browser once the export is completed in the cloud job url'],
     ['j', 'json', 'show output in json format'],
   ] as CommandOptions;
   loader = true;
@@ -66,10 +73,12 @@ export class ExportCmd implements Command {
       originDirectly = false,
       ignoreMissingArtifacts = false,
       resume,
+      headOnly,
       forkLaneNewScope = false,
+      openBrowser = false,
     }: any
   ): Promise<string> {
-    const { componentsIds, nonExistOnBitMap, removedIds, missingScope, exportedLanes, ejectResults } =
+    const { componentsIds, nonExistOnBitMap, removedIds, missingScope, exportedLanes, ejectResults, rippleJobs } =
       await this.exportMain.export({
         ids,
         eject,
@@ -77,6 +86,7 @@ export class ExportCmd implements Command {
         allVersions: allVersions || all,
         originDirectly,
         resumeExportId: resume,
+        headOnly,
         ignoreMissingArtifacts,
         forkLaneNewScope,
       });
@@ -123,8 +133,29 @@ export class ExportCmd implements Command {
       const output = ejectTemplate(ejectResults);
       return `\n${output}`;
     };
+    const rippleJobsOutput = () => {
+      if (!rippleJobs.length) return '';
+      const shouldOpenBrowser = openBrowser && !process.env.CI;
+      const prefix = shouldOpenBrowser ? 'Your browser has been opened to the following link' : 'Visit the link below';
+      const msg = `\n\n${prefix} to track the progress of building the components in the cloud\n`;
+      const fullUrls = rippleJobs.map((job) => `https://${getCloudDomain()}/ripple-ci/job/${job}`);
+      if (shouldOpenBrowser) {
+        open(fullUrls[0], { url: true }).catch(() => {
+          /** it's ok, the user is instructed to open the browser manually */
+        });
+      }
+      const urlsColored = fullUrls.map((url) => chalk.bold.underline(url));
+      return msg + urlsColored.join('\n');
+    };
 
-    return nonExistOnBitMapOutput() + missingScopeOutput() + exportOutput() + ejectOutput() + removedOutput();
+    return (
+      nonExistOnBitMapOutput() +
+      missingScopeOutput() +
+      exportOutput() +
+      ejectOutput() +
+      removedOutput() +
+      rippleJobsOutput()
+    );
   }
 
   async json(

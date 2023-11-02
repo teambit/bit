@@ -13,10 +13,19 @@ export class AspectList {
   constructor(readonly entries: AspectEntry[]) {}
 
   addEntry(aspectId: ComponentID, data: SerializableMap = {}) {
-    const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data);
+    const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId, undefined, {}, data);
     const entry = new AspectEntry(aspectId, extensionDataEntry);
     this.entries.push(entry);
     return entry;
+  }
+
+  upsertEntry(aspectId: ComponentID, data: SerializableMap = {}) {
+    const existingEntry = this.entries.find((entry) => entry.id.isEqual(aspectId));
+    if (existingEntry) {
+      existingEntry.data = data;
+      return existingEntry;
+    }
+    return this.addEntry(aspectId, data);
   }
 
   /**
@@ -74,7 +83,7 @@ export class AspectList {
     const res = {};
     this.entries.forEach((entry) => {
       if (entry.config) {
-        res[entry.id.toString()] = removeInternalConfigFields(entry.config);
+        res[entry.id.toString()] = removeInternalConfigFields(entry.legacy.rawConfig);
       }
     });
     return res;
@@ -107,17 +116,17 @@ export class AspectList {
     return new AspectList(this.entries.map((entry) => entry.clone()));
   }
 
-  static fromLegacyExtensions(legacyDataList: ExtensionDataList, scope?: string): AspectList {
+  static fromLegacyExtensions(legacyDataList: ExtensionDataList): AspectList {
     const newEntries = legacyDataList.map((entry) => {
-      return new AspectEntry(getAspectId(entry, scope), entry);
+      return new AspectEntry(getAspectId(entry), entry);
     });
 
     return new AspectList(newEntries);
   }
 }
 
-function getAspectId(entry: ExtensionDataEntry, scope?: string) {
+function getAspectId(entry: ExtensionDataEntry) {
   if (!entry.extensionId && entry.name) return ComponentID.fromString(entry.name);
-  if (entry.extensionId) return ComponentID.fromLegacy(entry.extensionId, scope);
+  if (entry.extensionId) return entry.extensionId;
   throw new Error('aspect cannot be loaded without setting an ID');
 }

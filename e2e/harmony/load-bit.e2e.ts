@@ -31,9 +31,9 @@ describe('loadBit()', function () {
     const scopeB = await createScope(helper.scopes.remotePath);
     const scopeC = await createScope(helper.scopes.localPath);
     // expect(workspace.path).to.eq(helper.scopes.localPath);
-    expect(scopeA.name).to.eq(scopeName);
-    expect(scopeB.name).to.eq(helper.scopes.remote);
-    expect(scopeC.name).to.eq(helper.scopes.local);
+    expect(scopeA.name.startsWith(scopeName)).to.be.true;
+    expect(scopeB.name.startsWith(helper.scopes.remote)).to.be.true;
+    expect(scopeC.name.startsWith(helper.scopes.local)).to.be.true;
   });
 
   it('should throw when defaultScope is invalid', async () => {

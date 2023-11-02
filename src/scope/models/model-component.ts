@@ -3,10 +3,12 @@ import { forEach, isEmpty, pickBy, mapValues } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
+import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import {
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
@@ -18,7 +20,6 @@ import ConsumerComponent from '../../consumer/component';
 import { License, SourceFile } from '../../consumer/component/sources';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import GeneralError from '../../error/general-error';
-import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
 import { getStringifyArgs } from '../../utils';
@@ -53,6 +54,7 @@ import { SchemaName } from '../../consumer/component/component-schema';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { errorIsTypeOfMissingObject } from '../component-ops/scope-components-importer';
 import type Scope from '../scope';
+import { BitIdCompIdError } from '../exceptions/bit-id-comp-id-err';
 
 type State = {
   versions?: {
@@ -69,17 +71,13 @@ export type ScopeListItem = { url: string; name: string; date: string };
 export type ComponentLog = LegacyComponentLog;
 
 export type ComponentProps = {
-  scope: string | null | undefined;
+  scope: string;
   name: string;
   versions?: Versions;
   orphanedVersions?: Versions;
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
-  /**
-   * @deprecated since 0.12.6. It's currently stored in 'state' attribute
-   */
-  local?: boolean; // get deleted after export
   state?: State; // get deleted after export
   scopesList?: ScopeListItem[];
   head?: Ref;
@@ -95,7 +93,7 @@ export const VERSION_ZERO = '0.0.0';
 // TODO: FIX me .parser
 // @ts-ignore
 export default class Component extends BitObject {
-  scope: string | null | undefined;
+  scope: string;
   name: string;
   versions: Versions;
   orphanedVersions: Versions;
@@ -139,14 +137,16 @@ export default class Component extends BitObject {
   constructor(props: ComponentProps) {
     super();
     if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
-    this.scope = props.scope || null;
+    if (!props.scope) {
+      throw new BitIdCompIdError(props.name);
+    }
+    this.scope = props.scope;
     this.name = props.name;
     this.versions = props.versions || {};
     this.orphanedVersions = props.orphanedVersions || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.deprecated = props.deprecated || false;
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
-    this.local = props.local;
     this.state = props.state || {};
     this.scopesList = props.scopesList || [];
     this.head = props.head;
@@ -172,10 +172,13 @@ export default class Component extends BitObject {
   }
 
   getRef(version: string): Ref | null {
+    if (isTag(version)) {
+      return this.versionsIncludeOrphaned[version];
+    }
     if (isHash(version)) {
       return new Ref(version);
     }
-    return this.versionsIncludeOrphaned[version];
+    return null;
   }
 
   getHeadStr(): string | null {
@@ -236,7 +239,8 @@ export default class Component extends BitObject {
       return false;
     }
     const versionParents = await getAllVersionParents({ repo, modelComponent: this, heads: [head] });
-    return versionParents.map((v) => v.hash).some((hash) => hash.toString() === version);
+    // we use "startsWith" because it can be a short hash
+    return versionParents.map((v) => v.hash).some((hash) => hash.toString().startsWith(version));
   }
 
   hasTag(version: string): boolean {
@@ -329,18 +333,18 @@ export default class Component extends BitObject {
     if (!this.scope) {
       return; // no remote to update. it's local.
     }
-    this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toBitId());
+    this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toComponentId());
     if (!lane) {
       return;
     }
-    this.laneHeadRemote = lane.isNew ? null : await repo.remoteLanes.getRef(lane.toLaneId(), this.toBitId());
+    this.laneHeadRemote = lane.isNew ? null : await repo.remoteLanes.getRef(lane.toLaneId(), this.toComponentId());
 
     const calculateRemote = async () => {
       if (this.laneHeadRemote) return this.laneHeadRemote;
       if (lane.isNew && lane.forkedFrom && lane.forkedFrom.scope === lane.scope) {
         // the last check is to make sure that if this lane will be exported to a different scope than the original
         // lane, all snaps of the original lane will be considered as local and will be exported later on.
-        const headFromFork = await repo.remoteLanes.getRef(lane.forkedFrom, this.toBitId());
+        const headFromFork = await repo.remoteLanes.getRef(lane.forkedFrom, this.toComponentId());
         if (headFromFork) return headFromFork;
       }
       // if no remote-ref was found, because it's checked out to a lane, it's safe to assume that
@@ -353,7 +357,7 @@ export default class Component extends BitObject {
 
   setLaneHeadLocal(lane: Lane | null) {
     if (lane) {
-      this.laneHeadLocal = lane.getComponentHead(this.toBitId());
+      this.laneHeadLocal = lane.getComponentHead(this.toComponentId());
     }
   }
 
@@ -510,12 +514,16 @@ export default class Component extends BitObject {
       logger.info(`collectLogs is unable to find some objects for ${this.id()}. will try to import them`);
       try {
         const lane = await scope.getCurrentLaneObject();
-        await scope.scopeImporter.importWithoutDeps(BitIds.fromArray([this.toBitId()]).toVersionLatest(), {
-          cache: false,
-          includeVersionHistory: true,
-          collectParents: true,
-          lane: lane || undefined,
-        });
+        await scope.scopeImporter.importWithoutDeps(
+          ComponentIdList.fromArray([this.toComponentId()]).toVersionLatest(),
+          {
+            cache: false,
+            includeVersionHistory: true,
+            collectParents: true,
+            lane: lane || undefined,
+            reason: 'to collect logs (including parents)',
+          }
+        );
         versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
       } catch (err) {
         logger.error(`collectLogs failed to import ${this.id()} history`, err);
@@ -622,11 +630,11 @@ export default class Component extends BitObject {
           'unable to tag when checked out to a lane, please switch to main, merge the lane and then tag again'
         );
       }
-      const currentBitId = this.toBitId();
+      const currentBitId = this.toComponentId();
       const versionToAddRef = Ref.from(versionToAdd);
       const parent = previouslyUsedVersion ? this.getRef(previouslyUsedVersion) : null;
       if (!parent) {
-        const existingComponentInLane = lane.getComponentByName(currentBitId);
+        const existingComponentInLane = lane.getComponent(currentBitId);
         const currentHead = (existingComponentInLane && existingComponentInLane.head) || this.getHead();
         if (currentHead) {
           throw new Error(
@@ -639,7 +647,7 @@ export default class Component extends BitObject {
       }
       lane.addComponent({ id: currentBitId, head: versionToAddRef });
 
-      if (lane.readmeComponent && lane.readmeComponent.id.isEqualWithoutScopeAndVersion(currentBitId)) {
+      if (lane.readmeComponent && lane.readmeComponent.id.fullName === currentBitId.fullName) {
         lane.setReadmeComponent(currentBitId);
       }
       repo.add(lane);
@@ -691,20 +699,39 @@ export default class Component extends BitObject {
     return this.scope ? [this.scope, this.name].join('/') : this.name;
   }
 
+  /**
+   * @deprecated use toComponentId() instead
+   */
   toBitId(): BitId {
     return new BitId({ scope: this.scope, name: this.name });
   }
 
+  toComponentId(): ComponentID {
+    if (!this.scope) throw new Error(`ModelComponent: scope is missing from "${this.name}"`);
+    return new ComponentID(this.toBitId());
+  }
+
+  /**
+   * @deprecated use toComponentIdWithLatestVersion() instead
+   */
   toBitIdWithLatestVersion(): BitId {
     return new BitId({ scope: this.scope, name: this.name, version: this.getHeadRegardlessOfLaneAsTagOrHash(true) });
   }
 
-  toBitIdWithHead(): BitId {
-    return new BitId({ scope: this.scope, name: this.name, version: this.head?.toString() });
+  toComponentIdWithLatestVersion(): ComponentID {
+    return ComponentID.fromObject({
+      scope: this.scope,
+      name: this.name,
+      version: this.getHeadRegardlessOfLaneAsTagOrHash(true),
+    });
   }
 
-  toBitIdWithLatestVersionAllowNull(): BitId {
-    const id = this.toBitIdWithLatestVersion();
+  toComponentIdWithHead(): ComponentID {
+    return ComponentID.fromObject({ scope: this.scope, name: this.name, version: this.head?.toString() });
+  }
+
+  toBitIdWithLatestVersionAllowNull(): ComponentID {
+    const id = this.toComponentIdWithLatestVersion();
     return id.version === VERSION_ZERO ? id.changeVersion(undefined) : id;
   }
 
@@ -856,7 +883,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       throw new NoHeadNoVersion(this.id());
     }
     if (isTag(versionNum) && !this.hasTagIncludeOrphaned(versionNum)) {
-      throw new ShowDoctorError(
+      throw new BitError(
         `the version ${versionNum} of "${this.id()}" does not exist in ${this.listVersionsIncludeOrphaned().join(
           '\n'
         )}, versions array.`
@@ -935,9 +962,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       const loadP = file.file.load(repository);
       const content: Source = await loadP;
       if (!content)
-        throw new ShowDoctorError(
-          `failed loading file ${file.relativePath} from the model of ${this.id()}@${versionStr}`
-        );
+        throw new BitError(`failed loading file ${file.relativePath} from the model of ${this.id()}@${versionStr}`);
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
     const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
@@ -958,7 +983,8 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     const consumerComponent = new ConsumerComponent({
       name: this.name,
       version: componentVersion.version,
-      scope: this.scope,
+      scope: this.toComponentId()._legacy.scope,
+      defaultScope: this.scope,
       lang: this.lang,
       bindingPrefix,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -1088,7 +1114,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   }
 
   async getVersionHistory(repo: Repository): Promise<VersionHistory> {
-    const emptyVersionHistory = VersionHistory.fromId(this.name, this.scope || undefined);
+    const emptyVersionHistory = VersionHistory.fromId(this.name, this.scope);
     const versionHistory = await repo.load(emptyVersionHistory.hash());
     return (versionHistory || emptyVersionHistory) as VersionHistory;
   }
@@ -1103,6 +1129,11 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return versionHistory;
   }
 
+  /**
+   * careful! the `versions` passed here can belong to other components, not necessarily to this one.
+   * that's why it checks whether the version-hash exists in the VersionHistory, and if it's not,
+   * it won't update it.
+   */
   async updateRebasedVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory | undefined> {
     const versionHistory = await this.getVersionHistory(repo);
     const hasUpdated = versions.some((version) => {
@@ -1113,6 +1144,12 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     });
 
     return hasUpdated ? versionHistory : undefined;
+  }
+
+  async updateVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory> {
+    const versionHistory = await this.getVersionHistory(repo);
+    versionHistory.addFromVersionsObjects(versions);
+    return versionHistory;
   }
 
   async populateVersionHistoryIfMissingGracefully(
@@ -1167,7 +1204,6 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       lang: rawComponent.lang,
       deprecated: rawComponent.deprecated,
       bindingPrefix: rawComponent.bindingPrefix,
-      local: rawComponent.local,
       state: rawComponent.state,
       orphanedVersions: mapValues(rawComponent.orphanedVersions || {}, (val) => Ref.from(val)),
       scopesList: rawComponent.remotes,
@@ -1180,11 +1216,10 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return new Component(props);
   }
 
-  static fromBitId(bitId: BitId): Component {
-    if (bitId.box) throw new Error('component.fromBitId, bitId should not have the "box" property populated');
+  static fromBitId(bitId: ComponentID): Component {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Component({
-      name: bitId.name,
+      name: bitId.fullName,
       scope: bitId.scope,
     });
   }

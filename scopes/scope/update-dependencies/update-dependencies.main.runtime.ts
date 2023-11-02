@@ -9,7 +9,7 @@ import { Component, ComponentID } from '@teambit/component';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
 import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -166,7 +166,12 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     }
     // do not use cache. for dependencies we must fetch the latest ModelComponent from the remote
     // in order to match the semver later.
-    await this.scope.import(idsToImport, { useCache: false, lane: this.laneObj });
+    await this.scope.import(idsToImport, {
+      useCache: false,
+      lane: this.laneObj,
+      preferDependencyGraph: false,
+      reason: 'which are the seeders for the update-dependencies process',
+    });
   }
 
   private async addComponentsToScope() {
@@ -204,7 +209,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     // current bit ids are needed because we might update multiple components that are depend on
     // each other. in which case, we want the dependency version to be the same as the currently
     // tagged/snapped component.
-    const currentBitIds = components.map((c) => c.id._legacy);
+    const currentBitIds = components.map((c) => c.id);
     await mapSeries(this.depsUpdateItems, async ({ component, dependencies }) => {
       await this.snapping.updateDependenciesVersionsOfComponent(component, dependencies, currentBitIds);
       await this.updateDependencyResolver(component);
@@ -275,7 +280,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
   private async export() {
     const shouldExport = this.updateDepsOptions.push;
     if (!shouldExport) return;
-    const ids = BitIds.fromArray(this.legacyComponents.map((c) => c.id));
+    const ids = ComponentIdList.fromArray(this.legacyComponents.map((c) => c.id));
     await this.exporter.exportMany({
       scope: this.scope.legacyScope,
       ids,

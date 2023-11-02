@@ -3,7 +3,7 @@ import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
-import { OutsideWorkspaceError, Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import { LaneDiffCmd, LaneDiffGenerator, LaneDiffResults } from '@teambit/lanes.modules.diff';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
@@ -14,15 +14,15 @@ import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/compone
 import { MergeStrategy, MergeOptions } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
-import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
+import { ComponentIdList, ComponentID } from '@teambit/component-id';
+import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
+import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
-import { BitId, InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { ExportAspect, ExportMain } from '@teambit/export';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { compact, partition } from 'lodash';
+import { compact } from 'lodash';
 import { ComponentCompareMain, ComponentCompareAspect } from '@teambit/component-compare';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
@@ -48,7 +48,6 @@ import {
   LaneAddReadmeCmd,
   LaneRemoveReadmeCmd,
   LaneRemoveCompCmd,
-  RemoveCompsOpts,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
@@ -204,7 +203,7 @@ export class LanesMain {
 
                 return undefined;
               }
-              return { id: laneCompId._legacy, head: laneCompId.version as string };
+              return { id: laneCompId, head: laneCompId.version as string };
             })
           )
         );
@@ -357,14 +356,21 @@ if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-
     return { laneId };
   }
 
-  async changeScope(laneName: string, remoteScope: string): Promise<{ remoteScopeBefore: string }> {
+  async changeScope(remoteScope: string, laneName?: string): Promise<{ remoteScopeBefore: string; localName: string }> {
     if (!this.workspace) {
       throw new BitError(`unable to change-scope of a lane outside of Bit workspace`);
     }
-    const laneNameWithoutScope = laneName.includes(LANE_REMOTE_DELIMITER)
-      ? laneName.split(LANE_REMOTE_DELIMITER)[1]
-      : laneName;
-    const laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(laneName);
+    let laneId: LaneId;
+    let laneNameWithoutScope: string;
+    if (laneName) {
+      laneNameWithoutScope = laneName.includes(LANE_REMOTE_DELIMITER)
+        ? laneName.split(LANE_REMOTE_DELIMITER)[1]
+        : laneName;
+      laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(laneName);
+    } else {
+      laneId = this.workspace.getCurrentLaneId();
+      laneNameWithoutScope = laneId.name;
+    }
     const lane = await this.loadLane(laneId);
     if (!lane) {
       throw new BitError(`unable to find a local lane "${laneName}"`);
@@ -389,17 +395,18 @@ please create a new lane instead, which will include all components of this lane
     this.workspace.consumer.bitMap.setCurrentLane(newLaneId, false);
     await this.workspace.consumer.onDestroy();
 
-    return { remoteScopeBefore };
+    return { remoteScopeBefore, localName: laneNameWithoutScope };
   }
 
   /**
    * change a lane-name and if possible, export the lane to the remote
    */
-  async rename(currentName: string, newName: string): Promise<{ exported: boolean; exportErr?: Error }> {
+  async rename(newName: string, laneName?: string): Promise<{ currentName: string }> {
     if (!this.workspace) {
       throw new BitError(`unable to rename a lane outside of Bit workspace`);
     }
     throwForInvalidLaneName(newName);
+    const currentName = laneName || this.workspace.getCurrentLaneId().name;
     const existingAliasWithNewName = this.scope.legacyScope.lanes.getRemoteTrackedDataByLocalLane(newName);
     if (existingAliasWithNewName) {
       const remoteIdStr = `${existingAliasWithNewName.remoteLane}/${existingAliasWithNewName.remoteScope}`;
@@ -438,30 +445,17 @@ please create a new lane instead, which will include all components of this lane
       this.setCurrentLane(newLaneId, undefined, isExported);
     }
 
-    // export the lane with only the name-change
-    const clonedLaneToExport = lane.clone();
-    clonedLaneToExport.components = []; // otherwise, it'll export the changes done on the components.
-    let exported = false;
-    let exportErr: Error | undefined;
-    try {
-      await this.exportLane(clonedLaneToExport);
-      exported = true;
-    } catch (err: any) {
-      this.logger.error(`unable to export ${lane.id.toString()}: ${err.message}`);
-      exportErr = err;
-    }
-
     await this.workspace.consumer.onDestroy();
 
-    return { exported, exportErr };
+    return { currentName };
   }
 
   async exportLane(lane: Lane) {
     await this.exporter.exportMany({
       scope: this.scope.legacyScope,
       laneObject: lane,
-      ids: new BitIds(),
-      idsWithFutureScope: new BitIds(),
+      ids: new ComponentIdList(),
+      idsWithFutureScope: new ComponentIdList(),
       allVersions: false,
     });
   }
@@ -485,7 +479,7 @@ please create a new lane instead, which will include all components of this lane
   ): Promise<SnapsDistance> {
     if (!sourceHead && !targetHead)
       throw new Error(`getDivergeData got sourceHead and targetHead empty. at least one of them should be populated`);
-    const modelComponent = await this.scope.legacyScope.getModelComponent(componentId._legacy);
+    const modelComponent = await this.scope.legacyScope.getModelComponent(componentId);
     return getDivergeData({
       modelComponent,
       repo: this.scope.legacyScope.objects,
@@ -499,7 +493,7 @@ please create a new lane instead, which will include all components of this lane
    * get the head hash (snap) of main. return undefined if the component exists only on a lane and was never merged to main
    */
   async getHeadOnMain(componentId: ComponentID): Promise<string | undefined> {
-    const modelComponent = await this.scope.legacyScope.getModelComponent(componentId._legacy);
+    const modelComponent = await this.scope.legacyScope.getModelComponent(componentId);
     return modelComponent.head?.toString();
   }
 
@@ -552,46 +546,6 @@ please create a new lane instead, which will include all components of this lane
       );
     }
     await this.scope.legacyScope.objects.restoreFromTrash([ref]);
-  }
-
-  async removeComps(componentsPattern: string, removeCompsOpts: RemoveCompsOpts): Promise<MarkRemoveOnLaneResult> {
-    const workspace = this.workspace;
-    if (!workspace) throw new OutsideWorkspaceError();
-    const currentLane = await workspace.getCurrentLaneObject();
-    if (!currentLane) {
-      throw new Error('markRemoveOnLane expects to get called when on a lane');
-    }
-    const { workspaceOnly, updateMain } = removeCompsOpts;
-    if (!updateMain && (currentLane.isNew || workspaceOnly)) {
-      const results = await this.remove.remove({
-        componentsPattern,
-        force: true,
-      });
-      const ids = results.localResult.removedComponentIds;
-      const compIds = await workspace.resolveMultipleComponentIds(ids);
-      return { removedFromWs: compIds, markedRemoved: [] };
-    }
-
-    const componentIds = await workspace.idsByPattern(componentsPattern);
-    const laneBitIds = currentLane.toBitIds();
-    const [idsToMarkRemove, idsToRemoveFromWs] = updateMain
-      ? partition(componentIds, (id) => id.hasVersion())
-      : partition(componentIds, (id) => laneBitIds.hasWithoutVersion(id._legacy));
-
-    const removeFromWorkspace = async () => {
-      if (!idsToRemoveFromWs.length) return [];
-      const results = await this.remove.removeLocallyByIds(
-        idsToRemoveFromWs.map((id) => id._legacy),
-        { force: true }
-      );
-      const ids = results.localResult.removedComponentIds;
-      return workspace.resolveMultipleComponentIds(ids);
-    };
-
-    const removedFromWs = await removeFromWorkspace();
-    const markedRemoved = await this.remove.markRemoveComps(idsToMarkRemove, updateMain);
-
-    return { removedFromWs, markedRemoved };
   }
 
   /**
@@ -897,7 +851,6 @@ please create a new lane instead, which will include all components of this lane
     }
     const readmeComponentId = await this.workspace.resolveComponentId(readmeComponentIdStr);
 
-    const readmeComponentBitId = readmeComponentId._legacy;
     const scope: LegacyScope = this.workspace.scope.legacyScope;
     const laneId: LaneId = laneName
       ? await scope.lanes.parseLaneIdFromString(laneName)
@@ -909,7 +862,7 @@ please create a new lane instead, which will include all components of this lane
       return { result: false, message: `cannot find lane ${laneName}` };
     }
 
-    lane.setReadmeComponent(readmeComponentBitId);
+    lane.setReadmeComponent(readmeComponentId);
     await scope.lanes.saveLane(lane);
 
     const existingLaneConfig =
@@ -961,9 +914,9 @@ please create a new lane instead, which will include all components of this lane
 
     const componentsFromModel = await componentsList.getModelComponents();
     const compFromModelOnWorkspace = componentsFromModel
-      .filter((c) => workspaceIds.hasWithoutVersion(c.toBitId()))
+      .filter((c) => workspaceIds.hasWithoutVersion(c.toComponentId()))
       // if a component is merge-pending, it needs to be resolved first before getting more updates from main
-      .filter((c) => !duringMergeIds.hasWithoutVersion(c.toBitId()));
+      .filter((c) => !duringMergeIds.hasWithoutVersion(c.toComponentId()));
 
     // by default, when on a lane, forked is not fetched. we need to fetch it to get the latest updates.
     await this.fetchLaneWithItsComponents(forkedFromLaneId);
@@ -973,7 +926,7 @@ please create a new lane instead, which will include all components of this lane
 
     const results = await Promise.all(
       compFromModelOnWorkspace.map(async (modelComponent) => {
-        const headOnForked = remoteForkedLane.find((c) => c.id.isEqualWithoutVersion(modelComponent.toBitId()));
+        const headOnForked = remoteForkedLane.find((c) => c.id.isEqualWithoutVersion(modelComponent.toComponentId()));
         const headOnLane = modelComponent.laneHeadLocal;
         if (!headOnForked || !headOnLane) return undefined;
         const divergeData = await getDivergeData({
@@ -984,7 +937,7 @@ please create a new lane instead, which will include all components of this lane
           throws: false,
         });
         if (!divergeData.snapsOnTargetOnly.length && !divergeData.err) return undefined;
-        return { id: modelComponent.toBitId(), divergeData };
+        return { id: modelComponent.toComponentId(), divergeData };
       })
     );
 
@@ -993,10 +946,10 @@ please create a new lane instead, which will include all components of this lane
 
   private async getLaneDataOfDefaultLane(): Promise<LaneData | null> {
     const consumer = this.workspace?.consumer;
-    let bitIds: BitId[] = [];
+    let bitIds: ComponentID[] = [];
     if (!consumer) {
       const scopeComponents = await this.scope.list();
-      bitIds = scopeComponents.filter((component) => component.head).map((component) => component.id._legacy);
+      bitIds = scopeComponents.filter((component) => component.head).map((component) => component.id);
     } else {
       bitIds = await consumer.getIdsOfDefaultLane();
     }

@@ -13,16 +13,32 @@ export class BitErrorWithRichMessage extends BitError {
 }
 
 export function pnpmErrorToBitError(err: PnpmError): BitError {
-  return new BitErrorWithRichMessage(err.message, renderErrorMessage(err));
+  const msg = renderErrorMessage(err);
+  const newErr = new BitErrorWithRichMessage(msg, msg);
+  newErr.cause = err;
+  return newErr;
 }
 
 function renderErrorMessage(err: PnpmError): string {
-  if (err.code?.startsWith('ERR_PNPM_FETCH_')) {
-    // On fetching errors, pnpm adds information to the error object about the used auth headers.
-    // This information is safe to print as the tokens are obfuscated.
-    return `${err.message}
-
-${err.hint}`;
+  let output = err.message;
+  if (err.hint) {
+    output += `\n\n${err.hint}`;
   }
-  return err.message;
+  if (err.pkgsStack != null) {
+    if (err.pkgsStack.length > 0) {
+      output += `\n\n${formatPkgsStack(err.pkgsStack)}`;
+    } else if (err.prefix) {
+      output += `\n\nThis error happened while installing a direct dependency of ${err.prefix as string}`;
+    }
+  }
+  return output;
+}
+
+function formatPkgsStack(pkgsStack: Array<{ id: string; name: string; version: string }>) {
+  return `This error happened while installing the dependencies of \
+${pkgsStack[0].name}@${pkgsStack[0].version}\
+${pkgsStack
+  .slice(1)
+  .map(({ name, version }) => `\n at ${name}@${version}`)
+  .join('')}`;
 }

@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import chai, { expect } from 'chai';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
-import { IssuesClasses } from '../../scopes/component/component-issues';
+import { IssuesClasses } from '@teambit/component-issues';
 import { Extensions, IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
@@ -293,7 +293,7 @@ describe('custom env', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.command.create('aspect', 'comp1', `--env ${envId}@0.0.1`);
+        helper.command.create('starter', 'comp1', `--env ${envId}@0.0.1`);
       });
       it('should save it with a version in root but without version in envs/envs', () => {
         const bitMap = helper.bitMap.read();

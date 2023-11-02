@@ -17,7 +17,7 @@ export class ListCmd implements Command {
   name = 'list [remote-scope]';
   description = 'list components on a workspace or a remote scope (with flag).';
   group = 'discover';
-  helpUrl = 'reference/cli-reference#list';
+  helpUrl = 'reference/reference/cli-reference#list';
   alias = 'ls';
   options = [
     ['i', 'ids', 'show only component ids, unformatted'],

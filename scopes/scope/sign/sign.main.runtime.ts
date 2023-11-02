@@ -13,7 +13,7 @@ import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { PostSign } from '@teambit/legacy/dist/scope/actions';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { Remotes } from '@teambit/legacy/dist/remotes';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdList } from '@teambit/component-id';
 import Version, { Log } from '@teambit/legacy/dist/scope/models/version';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
@@ -53,14 +53,14 @@ export class SignMain {
    */
   async sign(
     ids: ComponentID[],
-    isMultiple?: boolean,
+    originalScope?: boolean,
     push?: boolean,
     laneIdStr?: string,
     rebuild?: boolean
   ): Promise<SignResult | null> {
     this.throwIfOnWorkspace();
     let lane: Lane | undefined;
-    if (isMultiple) {
+    if (!originalScope) {
       const longProcessLogger = this.logger.createLongProcessLogger('import objects');
       if (laneIdStr) {
         const laneId = LaneId.parse(laneIdStr);
@@ -70,7 +70,7 @@ export class SignMain {
         this.scope.legacyScope.setCurrentLaneId(laneId);
         this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
       }
-      await this.scope.import(ids, { lane, preferDependencyGraph: true });
+      await this.scope.import(ids, { lane, reason: 'which are the seeders for the sign process' });
       longProcessLogger.end('success');
     }
     const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids, rebuild);
@@ -101,11 +101,11 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     if (push) {
-      if (isMultiple) {
-        await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus, lane);
-      } else {
+      if (originalScope) {
         await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
         await this.clearScopesCaches(legacyComponents);
+      } else {
+        await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus, lane);
       }
     }
     await this.triggerOnPostSign(components);
@@ -150,8 +150,8 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
   }
 
   private async clearScopesCaches(components: ConsumerComponent[]) {
-    const bitIds = BitIds.fromArray(components.map((c) => c.id));
-    const idsGroupedByScope = bitIds.toGroupByScopeName(new BitIds());
+    const bitIds = ComponentIdList.fromArray(components.map((c) => c.id));
+    const idsGroupedByScope = bitIds.toGroupByScopeName();
     const scopeRemotes: Remotes = await getScopeRemotes(this.scope.legacyScope);
     await Promise.all(
       Object.keys(idsGroupedByScope).map(async (scopeName) => {
@@ -192,7 +192,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       const objectToMerge = await ObjectList.fromBitObjects(objects);
       objectToMerge.addScopeName(scopeName);
       objectList.mergeObjectList(objectToMerge);
-      return ComponentID.fromLegacy(component.id);
+      return component.id;
     });
     if (lane) {
       // the components should be exported to the lane-scope, not to their original scope.

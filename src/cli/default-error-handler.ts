@@ -193,7 +193,7 @@ ${err.message ? `server responded with: "${err.message}"` : ''}`,
     ) => `error: unable to export components to ${err.destinationScope} because they have dependencies on components in ${err.sourceScope}.
 bit does not allow setting dependencies between components in private collections managed by different owners.
 
-see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/bit-dev#permissions-for-collections`,
+see troubleshooting at ${BASE_DOCS_DOMAIN}docs/bit-dev#permissions-for-collections`,
   ],
   [
     SSHInvalidResponse,
@@ -251,19 +251,19 @@ please make sure it's not absolute and doesn't contain invalid characters`,
     (err) =>
       `error: the component ${chalk.bold(
         err.componentId
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/components/component-main-file`,
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at ${BASE_DOCS_DOMAIN}components/component-main-file`,
   ],
   [
     NoComponentDir,
     (err) => `"${err.id}" doesn't have a component directory, which is invalid.
-please run "bit status" to get more info.\nLearn more at https://${BASE_DOCS_DOMAIN}/workspace/component-directory`,
+please run "bit status" to get more info.\nLearn more at https:/BASE_DOCS_DOMAIN/reference/workspace/component-directory`,
   ],
   [
     MissingMainFileMultipleComponents,
     (err) =>
       `error: the components ${chalk.bold(
         err.componentIds.join(', ')
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/components/component-main-file`,
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at ${BASE_DOCS_DOMAIN}components/component-main-file`,
   ],
   [
     InvalidBitMap,

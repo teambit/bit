@@ -46,6 +46,14 @@ describe('export functionality on Harmony', function () {
     it('should not delete the first version', () => {
       expect(() => helper.command.catComponent('comp1@0.0.1')).not.to.throw();
     });
+    it('should update the VersionHistory on the remote', () => {
+      const versionHistory = helper.command.catVersionHistory(
+        `${helper.scopes.remote}/comp1`,
+        helper.scopes.remotePath
+      );
+      expect(versionHistory).to.have.property('versions');
+      expect(versionHistory.versions).to.have.lengthOf(2);
+    });
     it('should enable un-tagging after a new tag', () => {
       // before it used to throw VersionNotFound
       helper.fixtures.populateComponents(1, undefined, '-v3');
@@ -66,8 +74,8 @@ describe('export functionality on Harmony', function () {
       helper.fs.outputFile('bar1/foo1.js', `require('@${anotherRemote}/bar2');`);
       helper.fs.outputFile('bar2/foo2.js', `require('@${helper.scopes.remote}/bar1');`);
       helper.command.addComponent('bar1');
-      helper.command.addComponent('bar2');
       helper.bitJsonc.addToVariant('bar2', 'defaultScope', anotherRemote);
+      helper.command.addComponent('bar2');
       helper.command.linkAndRewire();
       helper.command.compile();
       helper.command.tagAllComponents();
@@ -140,10 +148,10 @@ describe('export functionality on Harmony', function () {
 
         helper.fs.outputFile('bar1/foo1.js', `require('@${remote2Name}/bar2');`);
         helper.fs.outputFile('bar2/foo2.js', `require('@${remote1Name}/bar1');`);
-        helper.command.addComponent('bar1');
-        helper.command.addComponent('bar2');
         helper.bitJsonc.addToVariant('bar1', 'defaultScope', remote1Name);
         helper.bitJsonc.addToVariant('bar2', 'defaultScope', remote2Name);
+        helper.command.addComponent('bar1');
+        helper.command.addComponent('bar2');
         helper.command.linkAndRewire();
         helper.command.compile();
         helper.command.tagAllWithoutBuild();

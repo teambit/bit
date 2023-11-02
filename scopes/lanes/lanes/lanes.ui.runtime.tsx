@@ -53,6 +53,7 @@ export function useComponentFilters() {
     },
   };
 }
+
 export function useLaneComponentIdFromUrl(): ComponentID | undefined | null {
   const idFromLocation = useIdFromLocation();
   const { lanesModel, loading } = useLanes();
@@ -60,16 +61,22 @@ export function useLaneComponentIdFromUrl(): ComponentID | undefined | null {
   const query = useQuery();
   const componentVersion = query.get('version');
 
-  if (componentVersion && laneFromUrl) {
-    const componentId = ComponentID.fromString(`${idFromLocation}@${componentVersion}`);
-    return componentId;
-  }
-  const laneComponentId =
-    idFromLocation && !laneFromUrl?.isDefault()
-      ? lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl) ?? null
-      : null;
+  if (!idFromLocation) return null;
 
-  return loading ? undefined : laneComponentId;
+  const compIdFromLocation = ComponentID.tryFromString(
+    `${idFromLocation}${componentVersion ? `@${componentVersion}` : ''}`
+  );
+
+  if (compIdFromLocation) return compIdFromLocation;
+  if (loading) return undefined;
+
+  const lanesComp = (lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl) as any | undefined) ?? null;
+
+  if (componentVersion) {
+    return lanesComp?.changeVersion(componentVersion);
+  }
+
+  return lanesComp;
 }
 
 export function useComponentId() {
@@ -148,7 +155,7 @@ export class LanesUI {
     const { prefix, path, getLaneComponentUrl, getLaneIdFromPathname, getLaneUrl } = fn();
     LanesModel.lanesPrefix = prefix;
     LanesModel.lanePath = path;
-    LanesModel.getLaneComponentUrl = getLaneComponentUrl;
+    LanesModel.getLaneComponentUrl = getLaneComponentUrl as any;
     LanesModel.getLaneUrl = getLaneUrl;
     LanesModel.getLaneIdFromPathname = getLaneIdFromPathname;
   }

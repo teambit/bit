@@ -1,14 +1,12 @@
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { importTransformer, exportTransformer } from '@teambit/typescript';
-import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
-import { ComponentIdObj } from '@teambit/component-id';
+import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { ComponentDependency, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ComponentConfig } from '@teambit/generator';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { InstallAspect, InstallMain } from '@teambit/install';
-import { BitId } from '@teambit/legacy-bit-id';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentID, ComponentIdObj, ComponentIdList } from '@teambit/component-id';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import PkgAspect, { PkgMain } from '@teambit/pkg';
 import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
@@ -19,7 +17,7 @@ import { ForkCmd, ForkOptions } from './fork.cmd';
 import { ForkingAspect } from './forking.aspect';
 import { ForkingFragment } from './forking.fragment';
 import { forkingSchema } from './forking.graphql';
-import { ScopeForkCmd } from './scope-fork.cmd';
+import { ScopeForkCmd, ScopeForkOptions } from './scope-fork.cmd';
 
 export type ForkInfo = {
   forkedFrom: ComponentID;
@@ -43,6 +41,7 @@ type MultipleForkOptions = {
   refactor?: boolean;
   scope?: string; // different scope-name than the original components
   install?: boolean; // whether to run "bit install" once done.
+  ast?: boolean; // whether to use AST to transform files instead of regex
 };
 
 export class ForkingMain {
@@ -68,9 +67,7 @@ export class ForkingMain {
       const existingInWorkspace = await this.workspace.get(sourceCompId);
       return this.forkExistingInWorkspace(existingInWorkspace, targetId, options);
     }
-    const sourceIdWithScope = sourceCompId._legacy.scope
-      ? sourceCompId
-      : ComponentID.fromLegacy(BitId.parse(sourceId, true));
+    const sourceIdWithScope = sourceCompId._legacy.scope ? sourceCompId : ComponentID.fromString(sourceId);
     const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, options);
     await this.saveDeps(component);
     if (!options?.skipDependencyInstallation) await this.installDeps();
@@ -93,9 +90,7 @@ export class ForkingMain {
     const { scope } = options;
     const results = await pMapSeries(componentsToForkSorted, async ({ sourceId, targetId, path, env, config }) => {
       const sourceCompId = await this.workspace.resolveComponentId(sourceId);
-      const sourceIdWithScope = sourceCompId._legacy.scope
-        ? sourceCompId
-        : ComponentID.fromLegacy(BitId.parse(sourceId, true));
+      const sourceIdWithScope = sourceCompId._legacy.scope ? sourceCompId : ComponentID.fromString(sourceId);
       const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, {
         scope,
         path,
@@ -138,10 +133,11 @@ export class ForkingMain {
       .flat();
     const allComponents = await this.workspace.list();
     if (options.refactor) {
-      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, stringsToReplace, [
-        importTransformer,
-        exportTransformer,
-      ]);
+      const { changedComponents } = await this.refactoring.replaceMultipleStrings(
+        allComponents,
+        stringsToReplace,
+        options.ast ? [importTransformer, exportTransformer] : undefined
+      );
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
     }
     const forkedComponents = results.map((result) => result.component);
@@ -158,18 +154,18 @@ export class ForkingMain {
   /**
    * fork all components of the given scope
    */
-  async forkScope(originalScope: string, newScope: string): Promise<ComponentID[]> {
+  async forkScope(originalScope: string, newScope: string, options?: ScopeForkOptions): Promise<ComponentID[]> {
     const idsFromOriginalScope = await this.workspace.scope.listRemoteScope(originalScope);
     if (!idsFromOriginalScope.length) {
       throw new Error(`unable to find components to fork from ${originalScope}`);
     }
     const workspaceIds = await this.workspace.listIds();
-    const workspaceBitIds = BitIds.fromArray(workspaceIds.map((id) => id._legacy));
+    const workspaceBitIds = ComponentIdList.fromArray(workspaceIds.map((id) => id));
     idsFromOriginalScope.forEach((id) => {
-      const existInWorkspace = workspaceBitIds.searchWithoutScopeAndVersion(id._legacy);
+      const existInWorkspace = workspaceBitIds.searchWithoutVersion(id);
       if (existInWorkspace) {
         throw new Error(
-          `unable to fork "${id.toString()}". the workspace has a component "${existInWorkspace.toString()}" with the same name`
+          `unable to fork "${id.toString()}". the workspace has a component "${existInWorkspace.toString()}" with the same name and same scope`
         );
       }
     });
@@ -181,7 +177,7 @@ export class ForkingMain {
       await this.newComponentHelper.writeAndAddNewComp(component, targetCompId, { scope: newScope }, config);
       multipleForkInfo.push({ targetCompId, sourceId: component.id.toStringWithoutVersion(), component });
     });
-    await this.refactorMultipleAndInstall(multipleForkInfo, { refactor: true, install: true });
+    await this.refactorMultipleAndInstall(multipleForkInfo, { refactor: true, install: true, ast: options?.ast });
     return multipleForkInfo.map((info) => info.targetCompId);
   }
 
@@ -225,7 +221,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
           newStr: targetCompId.toStringWithoutVersion(),
         },
       ],
-      [importTransformer, exportTransformer]
+      options?.ast ? [importTransformer, exportTransformer] : undefined
     );
     if (!options?.preserve) {
       await this.refactoring.refactorVariableAndClasses(component, sourceId, targetCompId);

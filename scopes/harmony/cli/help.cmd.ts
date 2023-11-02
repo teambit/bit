@@ -10,9 +10,9 @@ export class HelpCmd implements Command {
   group = 'general';
   options = [['', 'internal', 'show internal commands']] as CommandOptions;
 
-  constructor(private cliMain: CLIMain, private docsDomain: string) {}
+  constructor(private cliMain: CLIMain) {}
 
   async report(_, { internal }: { internal: boolean }) {
-    return formatHelp(this.cliMain.commands, this.cliMain.groups, this.docsDomain, internal);
+    return formatHelp(this.cliMain.commands, this.cliMain.groups, internal);
   }
 }

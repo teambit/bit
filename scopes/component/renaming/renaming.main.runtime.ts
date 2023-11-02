@@ -68,7 +68,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       await this.deleteLinkFromNodeModules(sourcePackageName);
     }
     await this.renameAspectIdInWorkspaceConfig(sourceId, targetId);
-    this.workspace.clearComponentCache(sourceId);
+    await this.workspace._reloadConsumer(); // in order to reload .bitmap file and clear all caches.
     const targetComp = await this.workspace.get(targetId);
     if (options.refactor) {
       const allComponents = await this.workspace.list();
@@ -83,7 +83,7 @@ make sure this argument is the name only, without the scope-name. to change the 
 
     // only write if it is not tagged, since we writeAndAddNewComp for tagged components
     if (!isTagged && !options.preserve) {
-      await this.refactoring.refactorVariableAndClasses(targetComp, sourceId, targetId);
+      await this.refactoring.refactorVariableAndClasses(targetComp, sourceId, targetId, options);
       this.refactoring.refactorFilenames(targetComp, sourceId, targetId);
       await this.componentWriter.writeMany({
         components: [targetComp.state._consumer],
@@ -125,7 +125,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       throw new OldScopeNotFound(oldScope);
     }
     const envs = componentsUsingOldScope.filter((c) => this.envs.isEnv(c));
-    const compsUsingEnv = {};
+    const compsUsingEnv: { [envIdStr: string]: ComponentID[] } = {};
     await Promise.all(
       envs.map(async (env) => {
         const components = await this.workspace.getComponentsUsingEnv(env.id.toString(), true);
@@ -136,7 +136,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     );
 
     // verify they're all new.
-    const exported = componentsUsingOldScope.filter((comp) => comp.id._legacy.hasScope());
+    const exported = componentsUsingOldScope.filter((comp) => this.workspace.isExported(comp.id));
     if (exported.length) {
       const idsStr = exported.map((comp) => comp.id.toString());
       throw new OldScopeExported(idsStr);
@@ -148,18 +148,18 @@ make sure this argument is the name only, without the scope-name. to change the 
     }
     if (this.workspace.defaultScope === oldScope) {
       await this.workspace.setDefaultScope(newScope);
-      componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.removeDefaultScope(comp.id));
-    } else {
-      componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.setDefaultScope(comp.id, newScope));
     }
+    componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.setDefaultScope(comp.id, newScope));
     await this.workspace.bitMap.write();
     await this.workspace.clearCache();
 
     await Promise.all(
       envs.map(async (env) => {
         const componentIds = compsUsingEnv[env.id.toString()];
-        if (!componentIds.length) return;
-        await this.workspace.setEnvToComponents(env.id.changeScope(newScope), componentIds);
+        if (!componentIds?.length) return;
+        const newEnvId = env.id.changeDefaultScope(newScope);
+        const newComponentIds = componentIds.map((id) => id.changeDefaultScope(newScope));
+        await this.workspace.setEnvToComponents(newEnvId, newComponentIds);
       })
     );
 
@@ -172,11 +172,11 @@ make sure this argument is the name only, without the scope-name. to change the 
           newStr: componentIdToPackageName({
             ...comp,
             bindingPrefix: getBindingPrefixByDefaultScope(newScope),
-            id: comp.id,
-            defaultScope: newScope,
+            id: comp.id.changeScope(newScope),
           }),
         };
       });
+
       const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace, [
         importTransformer,
         exportTransformer,
@@ -218,7 +218,11 @@ make sure this argument is the name only, without the scope-name. to change the 
    * keep in mind that this is working for new components only, for tagged/exported it's impossible. See the errors
    * thrown in such cases in this method.
    */
-  async renameOwner(oldOwner: string, newOwner: string, options: { refactor?: boolean }): Promise<RenameScopeResult> {
+  async renameOwner(
+    oldOwner: string,
+    newOwner: string,
+    options: { refactor?: boolean; ast?: boolean }
+  ): Promise<RenameScopeResult> {
     const allComponents = await this.workspace.list();
     const isScopeUsesOldOwner = (scope: string) => scope.startsWith(`${oldOwner}.`);
     const componentsUsingOldScope = allComponents.filter((comp) => isScopeUsesOldOwner(comp.id.scope));
@@ -226,7 +230,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       throw new OldScopeNotFound(oldOwner);
     }
     // verify they're all new.
-    const exported = componentsUsingOldScope.filter((comp) => comp.id._legacy.hasScope());
+    const exported = componentsUsingOldScope.filter((comp) => this.workspace.isExported(comp.id));
     if (exported.length) {
       const idsStr = exported.map((comp) => comp.id.toString());
       throw new OldScopeExported(idsStr);
@@ -268,10 +272,11 @@ make sure this argument is the name only, without the scope-name. to change the 
           }),
         };
       });
-      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace, [
-        importTransformer,
-        exportTransformer,
-      ]);
+      const { changedComponents } = await this.refactoring.replaceMultipleStrings(
+        allComponents,
+        packagesToReplace,
+        options.ast ? [importTransformer, exportTransformer] : undefined
+      );
       await this.renameOwnerOfAspectIdsInWorkspaceConfig(
         componentsUsingOldScope.map((c) => c.id),
         oldOwner,
@@ -303,7 +308,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     ids.forEach((id) => {
       const changed = config.renameExtensionInRaw(
         id.toStringWithoutVersion(),
-        id._legacy.changeScope(newScope).toStringWithoutVersion()
+        id.changeScope(newScope).toStringWithoutVersion()
       );
       if (changed) hasChanged = true;
     });
@@ -318,7 +323,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       const newScope = this.renameOwnerInScopeName(id.scope, oldOwner, newOwner);
       const changed = config.renameExtensionInRaw(
         id.toStringWithoutVersion(),
-        id._legacy.changeScope(newScope).toStringWithoutVersion()
+        id.changeScope(newScope).toStringWithoutVersion()
       );
       if (changed) hasChanged = true;
     });

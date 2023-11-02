@@ -44,7 +44,7 @@ describe('preview feature (during build)', function () {
     it('bit build should run successfully without preview errors', () => {
       // before, it used to throw "Support for the experimental syntax 'jsx' isn't currently enabled"
       const buildOutput = helper.command.build();
-      expect(buildOutput).to.have.string('build complete');
+      expect(buildOutput).to.have.string('build succeeded');
     });
   });
 });

@@ -1,72 +1,52 @@
-.table {
-  > div {
-    grid-gap: 8px 16px;
-  }
-}
-
-.signatureContainer {
+.summaryContainer {
+  padding: 0px 24px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  background-color: #f7f7f5a1;
   display: flex;
-  margin-right: 5px;
-  background-color: #ffffff;
-  padding: 4px;
-  border-radius: 6px;
-  width: 100%;
-  color: rgb(57, 115, 0);
-  font-family: Roboto mono;
-  font-size: var(--bit-p-xxs);
-  word-break: normal;
-  &.isHovering {
-    background-color: #f4f5f6;
-    cursor: pointer;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.signatureTitle {
+  color: var(--on-background-color);
+
+  > pre {
+    > code {
+      // override syntax highlighter code font size
+      font-size: var(--bit-p-xxs, 12px) !important;
+    }
   }
 }
 
-.row {
-  grid-template-columns: 1fr 1fr 2fr;
-  &.isHovering {
-    background-color: #f4f5f6;
-    cursor: pointer;
-  }
+.description {
+  font-size: 14px;
+  margin-bottom: 16px;
+  font-style: italic;
 }
 
-.name {
-  word-break: normal;
-}
-
-.rowWithSignatureDetails {
-  border-bottom: 1px solid var(--bit-border-color-lightest, var(--bit-border-color-lightest, #ededed));
-  margin-bottom: 8px;
-}
-
-.showSignature {
-  border-bottom: none;
-}
-
-.signatureDetails {
-  background-color: var(--bit-bg-heavy, #f4f5f6);
-}
-
-.returnContainer,
-.returnTitle,
-.returnType {
-  display: flex;
-}
-
-.returnContainer {
-  padding: 18px 20px;
-}
-
-.returnTitle {
+.subtitle {
   font-weight: 500;
   text-transform: uppercase;
   font-size: var(--bit-p-xxs);
   padding-right: 16px;
+  margin-bottom: 12px;
 }
 
-.node {
-  display: flex;
-  font-family: Roboto mono;
-  font-size: var(--bit-p-xxs);
-  word-break: normal;
-  color: rgb(57, 115, 0);
+.returnContainer {
+  margin-bottom: 16px;
+}
+
+.functionName {
+  font-size: var(--bit-p-md);
+  font-weight: 500;
+  padding: 16px 0px 8px 0px;
+}
+
+.hide {
+  padding: 8px 0px !important;
+}
+
+.paramHeading {
+  padding: 8px 0px 16px 0px;
 }

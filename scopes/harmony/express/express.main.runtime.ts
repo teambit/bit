@@ -1,4 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
+import { Server } from 'http';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import express, { Express } from 'express';
@@ -42,12 +43,12 @@ export class ExpressMain {
   ) {}
 
   /**
-   * start a express server.
+   * start an express server.
    */
-  async listen(port?: number) {
+  async listen(port?: number): Promise<Server> {
     const serverPort = port || this.config.port;
     const app = this.createApp();
-    app.listen(serverPort);
+    return app.listen(serverPort);
   }
 
   /**
@@ -94,11 +95,14 @@ export class ExpressMain {
     });
     if (!options?.disableBodyParser) this.bodyParser(app);
 
-    this.middlewareSlot
-      .toArray()
-      .flatMap(([, middlewares]) =>
-        middlewares.flatMap((middlewareManifest) => app.use(middlewareManifest.middleware))
-      );
+    const middlewaresSlot = this.middlewareSlot.values().flat();
+    middlewaresSlot.forEach(({ route, middleware }) => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      if (!route) app.use(middleware);
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      if (route) app.use(route, middleware);
+    });
+
     sortedRoutes.forEach((routeInfo) => {
       const { method, path, middlewares, disableNamespace } = routeInfo;
       // TODO: @guy make sure to support single middleware here.

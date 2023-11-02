@@ -1,5 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { SlotRegistry, Slot } from '@teambit/harmony';
+import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { ComponentID } from '@teambit/component-id';
 import IpcEventsAspect, { IpcEventsMain } from '@teambit/ipc-events';
@@ -21,7 +22,8 @@ export class WatcherMain {
     private pubsub: PubsubMain,
     private onPreWatchSlot: OnPreWatchSlot,
     readonly ipcEvents: IpcEventsMain,
-    readonly logger: Logger
+    readonly logger: Logger,
+    readonly globalConfig: GlobalConfigMain
   ) {}
 
   async watch(opts: WatchOptions) {
@@ -46,23 +48,32 @@ export class WatcherMain {
   }
 
   static slots = [Slot.withType<OnPreWatch>()];
-  static dependencies = [CLIAspect, WorkspaceAspect, ScopeAspect, PubsubAspect, LoggerAspect, IpcEventsAspect];
+  static dependencies = [
+    CLIAspect,
+    WorkspaceAspect,
+    ScopeAspect,
+    PubsubAspect,
+    LoggerAspect,
+    IpcEventsAspect,
+    GlobalConfigAspect,
+  ];
   static runtime = MainRuntime;
 
   static async provider(
-    [cli, workspace, scope, pubsub, loggerMain, ipcEvents]: [
+    [cli, workspace, scope, pubsub, loggerMain, ipcEvents, globalConfig]: [
       CLIMain,
       Workspace,
       ScopeMain,
       PubsubMain,
       LoggerMain,
-      IpcEventsMain
+      IpcEventsMain,
+      GlobalConfigMain
     ],
     _,
     [onPreWatchSlot]: [OnPreWatchSlot]
   ) {
     const logger = loggerMain.createLogger(WatcherAspect.id);
-    const watcherMain = new WatcherMain(workspace, scope, pubsub, onPreWatchSlot, ipcEvents, logger);
+    const watcherMain = new WatcherMain(workspace, scope, pubsub, onPreWatchSlot, ipcEvents, logger, globalConfig);
     const watchCmd = new WatchCommand(pubsub, logger, watcherMain);
     cli.register(watchCmd);
     return watcherMain;

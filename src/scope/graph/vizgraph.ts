@@ -5,11 +5,8 @@ import { Graph } from 'graphlib';
 import graphviz, { Digraph } from 'graphviz';
 import { Graph as ClearGraph } from '@teambit/graph.cleargraph';
 import * as path from 'path';
-
-import BitId from '../../bit-id/bit-id';
-import BitIds from '../../bit-id/bit-ids';
 import logger from '../../logger/logger';
-import { generateRandomStr, getLatestVersionNumber } from '../../utils';
+import { generateRandomStr } from '../../utils';
 
 // const Graph = GraphLib.Graph;
 // const Digraph = graphviz.digraph;
@@ -67,12 +64,17 @@ export default class VisualDependencyGraph {
 
   static async loadFromClearGraph(
     clearGraph: ClearGraph<any, any>,
-    config: ConfigProps = {}
+    config: ConfigProps = {},
+    markIds?: string[]
   ): Promise<VisualDependencyGraph> {
     const mergedConfig = Object.assign({}, defaultConfig, config);
     await checkGraphvizInstalled(config.graphVizPath);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const graph: Digraph = VisualDependencyGraph.buildDependenciesGraphFromClearGraph(clearGraph, mergedConfig);
+    const graph: Digraph = VisualDependencyGraph.buildDependenciesGraphFromClearGraph(
+      clearGraph,
+      mergedConfig,
+      markIds
+    );
     // @ts-ignore
     return new VisualDependencyGraph(clearGraph, graph, mergedConfig);
   }
@@ -107,7 +109,11 @@ export default class VisualDependencyGraph {
     return graph;
   }
 
-  static buildDependenciesGraphFromClearGraph(clearGraph: ClearGraph<any, any>, config: ConfigProps): Digraph {
+  static buildDependenciesGraphFromClearGraph(
+    clearGraph: ClearGraph<any, any>,
+    config: ConfigProps,
+    markIds?: string[]
+  ): Digraph {
     const graph = graphviz.digraph('G');
 
     if (config.graphVizPath) {
@@ -118,7 +124,9 @@ export default class VisualDependencyGraph {
     const edges = clearGraph.edges;
 
     nodes.forEach((node) => {
-      graph.addNode(node.id);
+      if (markIds?.includes(node.id)) {
+        graph.addNode(node.id, { color: 'red', style: 'filled' });
+      } else graph.addNode(node.id);
     });
     edges.forEach((edge) => {
       const edgeType = edge.attr;
@@ -128,22 +136,6 @@ export default class VisualDependencyGraph {
     });
 
     return graph;
-  }
-
-  getNode(id: BitId) {
-    if (id.hasVersion()) {
-      return this.graph.getNode(id.toString());
-    }
-    // if there is no version, search for the component with the latest version
-    const allIds = this.graphlib.nodes().map((n) => this.graphlib.node(n));
-    const bitIds = BitIds.fromArray(allIds);
-    const latestId = getLatestVersionNumber(bitIds, id);
-    return this.graph.getNode(latestId.toString());
-  }
-
-  highlightId(id: BitId) {
-    const node = this.getNode(id);
-    setNodeColor(node, this.config.highlightColor);
   }
 
   private getTmpFilename() {
@@ -181,16 +173,6 @@ export default class VisualDependencyGraph {
   dot() {
     return this.graph.to_dot();
   }
-}
-
-/**
- * Set color on a node.
- * @param  {Object} node
- * @param  {String} color
- */
-function setNodeColor(node, color) {
-  node.set('color', color);
-  node.set('fontcolor', color);
 }
 
 /**

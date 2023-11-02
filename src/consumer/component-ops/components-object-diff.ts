@@ -1,5 +1,6 @@
 import arrayDifference from 'array-difference';
 import chalk from 'chalk';
+import { ComponentIdList } from '@teambit/component-id';
 import Table from 'cli-table';
 import normalize from 'normalize-path';
 import diff from 'object-diff';
@@ -9,7 +10,6 @@ import { lt, gt } from 'semver';
 import Component from '../component/consumer-component';
 import { ExtensionDataList } from '../config';
 import { DiffOptions, FieldsDiff } from './components-diff';
-import { BitIds } from '../../bit-id';
 
 type ConfigDiff = {
   fieldName: string;
@@ -61,7 +61,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
   const peerPackageDependencies = [].concat(parsePackages(allPeerPackages)).filter((x) => x);
   const overrides = component.overrides.componentOverridesData;
 
-  obj.id = component.id.toStringWithoutScope();
+  obj.id = component.id._legacy.toStringWithoutScope();
   obj.language = lang || null;
   obj.bindingPrefix = bindingPrefix || null;
   obj.mainFile = mainFile ? normalize(mainFile) : null;
@@ -280,8 +280,8 @@ export function diffBetweenComponentsObjects(
   };
 
   const componentDependenciesOutput = (fieldName: string): string | null => {
-    const dependenciesLeft: BitIds = componentLeft.depsIdsGroupedByType[fieldName];
-    const dependenciesRight: BitIds = componentRight.depsIdsGroupedByType[fieldName];
+    const dependenciesLeft: ComponentIdList = componentLeft.depsIdsGroupedByType[fieldName];
+    const dependenciesRight: ComponentIdList = componentRight.depsIdsGroupedByType[fieldName];
     if (R.isEmpty(dependenciesLeft) && R.isEmpty(dependenciesRight)) return null;
     const diffsLeft = dependenciesLeft.reduce<DepDiff[]>((acc, dependencyLeft) => {
       const dependencyRight = dependenciesRight.searchWithoutVersion(dependencyLeft);
@@ -326,31 +326,16 @@ export function diffBetweenComponentsObjects(
     return depsDiff;
   };
 
-  const fieldsEnvsConfigOutput = getEnvsConfigOutput(componentLeft, componentRight);
   const extensionsConfigOutput = getExtensionsConfigOutput(componentLeft, componentRight);
 
   const allDiffs = [
     ...fieldsDiffOutput,
-    ...fieldsEnvsConfigOutput,
     ...extensionsConfigOutput,
     ...dependenciesRelativePathsOutput(),
     ...getAllDepsOutput(),
   ];
 
   return R.isEmpty(allDiffs) ? undefined : allDiffs;
-}
-
-function getEnvsConfigOutput(componentLeft: Component, componentRight: Component): Array<ConfigDiff> {
-  const envs = ['compiler', 'tester'];
-  const fieldsEnvsConfigOutput = envs.map((env: string) => {
-    const leftConfig = componentLeft[env] && componentLeft[env].dynamicConfig ? componentLeft[env].dynamicConfig : {};
-    const rightConfig =
-      componentRight[env] && componentRight[env].dynamicConfig ? componentRight[env].dynamicConfig : {};
-    if (JSON.stringify(leftConfig) === JSON.stringify(rightConfig)) return undefined;
-    const fieldName = `${env} configuration`;
-    return configsOutput(fieldName, leftConfig, rightConfig, componentLeft.version, componentRight.version);
-  });
-  return compact(fieldsEnvsConfigOutput);
 }
 
 function getExtensionsConfigOutput(componentLeft: Component, componentRight: Component): Array<ConfigDiff> {

@@ -15,24 +15,24 @@ export class SchemaCommand implements Command {
 
   constructor(private schema: SchemaMain, private component: ComponentMain, private logger: Logger) {}
 
-  async report([pattern]) {
+  async report([pattern]: [string]) {
     const schemas = await this.getSchemas([pattern]);
     return schemas.map((schema) => schema.toStringPerType()).join('\n\n\n');
   }
 
-  async json([pattern]) {
+  async json([pattern]: [string]): Promise<Record<string, any>> {
     const schemas = await this.getSchemas([pattern]);
     return schemas.map((schema) => schema.toObject());
   }
 
-  private async getSchemas([pattern]): Promise<APISchema[]> {
+  private async getSchemas([pattern]: [string]): Promise<APISchema[]> {
     const host = this.component.getHost();
     const ids = await host.idsByPattern(pattern, true);
     const components = await host.getMany(ids);
     const longRunningLog = this.logger.createLongProcessLogger('generating schema', ids.length);
     const results = await pMapSeries(components, (component) => {
       longRunningLog.logProgress(component.id.toString());
-      return this.schema.getSchema(component);
+      return this.schema.getSchema(component, undefined, true);
     });
     longRunningLog.end();
     return results;

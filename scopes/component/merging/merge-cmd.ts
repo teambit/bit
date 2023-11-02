@@ -1,15 +1,20 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentID } from '@teambit/component-id';
 import { compact } from 'lodash';
-import { WILDCARD_HELP, AUTO_SNAPPED_MSG, MergeConfigFilename } from '@teambit/legacy/dist/constants';
+import {
+  WILDCARD_HELP,
+  AUTO_SNAPPED_MSG,
+  MergeConfigFilename,
+  FILE_CHANGES_CHECKOUT_MSG,
+  CFG_FORCE_LOCAL_BUILD,
+} from '@teambit/legacy/dist/constants';
 import {
   FileStatus,
   ApplyVersionResult,
   MergeStrategy,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { GlobalConfigMain } from '@teambit/global-config';
 import { BitError } from '@teambit/bit-error';
 import { ApplyVersionResults, MergingMain } from './merging.main.runtime';
 import { ConfigMergeResult } from './config-merge-result';
@@ -17,7 +22,7 @@ import { ConfigMergeResult } from './config-merge-result';
 export class MergeCmd implements Command {
   name = 'merge [ids...]';
   description = 'merge changes of the remote head into local - auto-snaps all merged components';
-  helpUrl = 'docs/components/merging-changes';
+  helpUrl = 'reference/components/merging-changes';
   group = 'development';
   extendedDescription = `merge changes of the remote head into local when they are diverged. when on a lane, merge the remote head of the lane into the local
 and creates snaps for merged components that have diverged, on the lane.
@@ -48,7 +53,7 @@ ${WILDCARD_HELP('merge')}`;
   ] as CommandOptions;
   loader = true;
 
-  constructor(private merging: MergingMain) {}
+  constructor(private merging: MergingMain, private globalConfig: GlobalConfigMain) {}
 
   async report(
     [ids = []]: [string[]],
@@ -78,7 +83,7 @@ ${WILDCARD_HELP('merge')}`;
       skipDependencyInstallation?: boolean;
     }
   ) {
-    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
+    build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
     if (ours || theirs || manual) {
       throw new BitError(
         'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead'
@@ -148,10 +153,12 @@ export function mergeReport({
 }: ApplyVersionResults & { configMergeResults?: ConfigMergeResult[] }): string {
   const getSuccessOutput = () => {
     if (!components || !components.length) return '';
-    // @ts-ignore version is set in case of merge command
-    const title = `successfully merged components${version ? `from version ${chalk.bold(version)}` : ''}\n`;
-    // @ts-ignore components is set in case of merge command
-    return chalk.underline(title) + chalk.green(applyVersionReport(components));
+    const title = `successfully merged ${components.length} components${
+      version ? `from version ${chalk.bold(version)}` : ''
+    }\n`;
+    const fileChangesReport = applyVersionReport(components);
+
+    return chalk.bold(title) + fileChangesReport;
   };
 
   const getConflictSummary = () => {
@@ -185,9 +192,7 @@ ${mergeSnapError.message}
       return comps
         .map((component) => {
           let componentOutput = `     > ${component.id.toString()}`;
-          const autoTag = autoSnappedResults.filter((result) =>
-            result.triggeredBy.searchWithoutScopeAndVersion(component.id)
-          );
+          const autoTag = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
           if (autoTag.length) {
             const autoTagComp = autoTag.map((a) => a.component.id.toString());
             componentOutput += `\n       ${AUTO_SNAPPED_MSG}: ${autoTagComp.join(', ')}`;
@@ -223,7 +228,7 @@ ${mergeSnapError.message}
       failedComponents.map((failedComponent) => {
         if (!verbose && failedComponent.unchangedLegitimately) return null;
         const color = failedComponent.unchangedLegitimately ? 'white' : 'red';
-        return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.failureMessage)}`;
+        return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.unchangedMessage)}`;
       })
     ).join('\n');
     if (!body) {
@@ -263,13 +268,18 @@ ${mergeSnapError.message}
   );
 }
 
+/**
+ * shows only the file-changes section.
+ * if all files are "unchanged", it returns an empty string
+ */
 export function applyVersionReport(components: ApplyVersionResult[], addName = true, showVersion = false): string {
   const tab = addName ? '\t' : '';
-  return components
-    .map((component: ApplyVersionResult) => {
+  const fileChanges = compact(
+    components.map((component: ApplyVersionResult) => {
       const name = showVersion ? component.id.toString() : component.id.toStringWithoutVersion();
-      const files = Object.keys(component.filesStatus)
-        .map((file) => {
+      const files = compact(
+        Object.keys(component.filesStatus).map((file) => {
+          if (component.filesStatus[file] === FileStatus.unchanged) return null;
           const note =
             component.filesStatus[file] === FileStatus.manual
               ? chalk.white(
@@ -278,10 +288,16 @@ export function applyVersionReport(components: ApplyVersionResult[], addName = t
               : '';
           return `${tab}${component.filesStatus[file]} ${chalk.bold(file)} ${note}`;
         })
-        .join('\n');
+      ).join('\n');
+      if (!files) return null;
       return `${addName ? name : ''}\n${chalk.cyan(files)}`;
     })
-    .join('\n\n');
+  ).join('\n\n');
+  if (!fileChanges) {
+    return '';
+  }
+  const title = `\n${FILE_CHANGES_CHECKOUT_MSG}\n`;
+  return chalk.underline(title) + fileChanges;
 }
 
 export function conflictSummaryReport(components: ApplyVersionResult[]): string {
@@ -320,7 +336,7 @@ export function compilationErrorOutput(compilationError?: Error) {
   return `\n\n${title}\n${subTitle}\n${body}`;
 }
 
-export function getRemovedOutput(removedComponents?: BitId[]) {
+export function getRemovedOutput(removedComponents?: ComponentID[]) {
   if (!removedComponents?.length) return '';
   const title = `the following ${removedComponents.length} component(s) have been removed`;
   const body = removedComponents.join('\n');

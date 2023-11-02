@@ -1,10 +1,6 @@
 import { Component } from '@teambit/component';
 
-export type Serializable = {
-  toString(): string;
-};
-
-export type TaskMetadata = { [key: string]: Serializable };
+export type TaskMetadata = { [key: string]: any };
 
 export type ComponentResult = {
   /**
@@ -14,6 +10,8 @@ export type ComponentResult = {
 
   /**
    * metadata generated during component build.
+   * this eventually gets saved into `aspectsData` prop of the builder aspect data.
+   * it can be retrieved later on by `builder.getDataByAspect()` method.
    */
   metadata?: TaskMetadata;
 

@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { Mutex } from 'async-mutex';
 import { compact, uniqBy, differenceWith, isEqual } from 'lodash';
 import { BitError } from '@teambit/bit-error';
-import { isHash } from '@teambit/component-version';
+import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
 import pMap from 'p-map';
 import { OBJECTS_DIR } from '../../constants';
@@ -28,6 +28,7 @@ import { getMaxSizeForObjects, InMemoryCache } from '../../cache/in-memory-cache
 import { Types } from '../object-registrar';
 import { Lane, ModelComponent, Symlink } from '../models';
 import { ComponentFsCache } from '../../consumer/component/component-fs-cache';
+import { pMapPool } from '../../utils/promise-with-concurrent';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
@@ -156,6 +157,9 @@ export default class Repository {
       const inMemoryObjects = this.objects[ref.hash.toString()];
       if (inMemoryObjects) return inMemoryObjects;
     }
+    if (ref.hash.length < HASH_SIZE) {
+      ref = await this.getFullRefFromShortHash(ref);
+    }
     const cached = this.getCache(ref);
     if (cached) {
       return cached;
@@ -180,7 +184,9 @@ export default class Repository {
       return null;
     }
     const size = fileContentsRaw.byteLength;
-    const fileContents = await this.onRead(fileContentsRaw);
+    const fileContents = this.onRead(fileContentsRaw);
+    // uncomment to debug the transformed objects by onRead
+    // console.log('transformedContent load', ref.toString(), BitObject.parseSync(fileContents).getType());
     const parsedObject = await BitObject.parseObject(fileContents, objectPath);
     const maxSizeToCache = 100 * 1024; // 100KB
     if (size < maxSizeToCache) {
@@ -198,7 +204,7 @@ export default class Repository {
     const refs = await this.listRefs();
     const concurrency = concurrentIOLimit();
     const objects: BitObject[] = [];
-    await pMap(
+    await pMapPool(
       refs,
       async (ref) => {
         const object = await this.load(ref);
@@ -215,11 +221,26 @@ export default class Repository {
 
     return objects;
   }
+
   async listRefs(cwd = this.getPath()): Promise<Array<Ref>> {
     const matches = await glob(path.join('*', '*'), { cwd });
     const refs = matches.map((str) => {
       const hash = str.replace(path.sep, '');
-      if (!isHash(hash)) {
+      if (!isSnap(hash)) {
+        logger.error(`fatal: the file "${str}" is not a valid bit object path`);
+        return null;
+      }
+      return new Ref(hash);
+    });
+    return compact(refs);
+  }
+
+  async listRefsStartWith(shortHash: Ref): Promise<Array<Ref>> {
+    const pathPrefix = this.hashPath(shortHash);
+    const matches = await glob(`${pathPrefix}*`, { cwd: this.getPath() });
+    const refs = matches.map((str) => {
+      const hash = str.replace(path.sep, '');
+      if (!isSnap(hash)) {
         logger.error(`fatal: the file "${str}" is not a valid bit object path`);
         return null;
       }
@@ -299,10 +320,28 @@ export default class Repository {
   }
 
   async loadRaw(ref: Ref): Promise<Buffer> {
+    if (ref.hash.length < HASH_SIZE) {
+      ref = await this.getFullRefFromShortHash(ref);
+    }
     const raw = await fs.readFile(this.objectPath(ref));
     // Run hook to transform content pre reading
     const transformedContent = this.onRead(raw);
+    // uncomment to debug the transformed objects by onRead
+    // console.log('transformedContent loadRaw', ref.toString(), BitObject.parseSync(transformedContent).getType());
     return transformedContent;
+  }
+
+  async getFullRefFromShortHash(ref: Ref): Promise<Ref> {
+    const refs = await this.listRefsStartWith(ref);
+    if (refs.length > 1) {
+      throw new Error(
+        `found ${refs.length} objects with the same short hash ${ref.toString()}, please use longer hash`
+      );
+    }
+    if (refs.length === 0) {
+      throw new Error(`failed finding an object with the short hash ${ref.toString()}`);
+    }
+    return refs[0];
   }
 
   async loadManyRaw(refs: Ref[]): Promise<ObjectItem[]> {

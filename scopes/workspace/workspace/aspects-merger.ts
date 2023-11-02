@@ -1,11 +1,14 @@
 import { Harmony } from '@teambit/harmony';
-import { Component, ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
+import { lt } from 'semver';
+import { InvalidScopeNameFromRemote, InvalidScopeName } from '@teambit/legacy-bit-id';
 import { EnvsAspect } from '@teambit/envs';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { partition, mergeWith, merge } from 'lodash';
+import { VERSION_CHANGED_BIT_ID_TO_COMP_ID } from '@teambit/legacy/dist/constants';
+import { ExtensionDataList, ignoreVersionPredicate } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { partition, mergeWith, merge, uniq, uniqWith } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { AspectSpecificField, ExtensionsOrigin, Workspace } from './workspace';
 import { MergeConflictFile } from './merge-conflict-file';
@@ -19,7 +22,7 @@ export class AspectsMerger {
     this.mergeConflictFile = new MergeConflictFile(workspace.path);
   }
 
-  getDepsDataOfMergeConfig(id: BitId) {
+  getDepsDataOfMergeConfig(id: ComponentID) {
     return this.mergeConfigDepsResolverDataCache[id.toString()];
   }
 
@@ -44,11 +47,10 @@ export class AspectsMerger {
     // TODO: consider caching this result
     let configFileExtensions: ExtensionDataList | undefined;
     let variantsExtensions: ExtensionDataList | undefined;
-    let wsDefaultExtensions: ExtensionDataList | undefined;
     const mergeFromScope = true;
     const errors: Error[] = [];
 
-    const bitMapEntry = this.workspace.consumer.bitMap.getComponentIfExist(componentId._legacy);
+    const bitMapEntry = this.workspace.consumer.bitMap.getComponentIfExist(componentId);
     const bitMapExtensions = bitMapEntry?.config;
 
     let configMerge: Record<string, any> | undefined;
@@ -93,7 +95,7 @@ export class AspectsMerger {
       : undefined;
 
     this.removeAutoDepsFromConfig(componentId, configMergeExtensions);
-    const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
+    const scopeExtensions = this.getComponentFromScopeWithoutDuplications(componentFromScope);
     // backward compatibility. previously, it was saved as an array into the model (when there was merge-config)
     this.removeAutoDepsFromConfig(componentId, scopeExtensions, true);
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
@@ -125,11 +127,7 @@ export class AspectsMerger {
       }
       removedExtensionIds.push(...extensions.filter((extData) => extData.isRemoved).map((extData) => extData.stringId));
       const extsWithoutRemoved = extensions.filterRemovedExtensions();
-      const selfInMergedExtensions = extsWithoutRemoved.findExtension(
-        componentId._legacy.toStringWithoutScopeAndVersion(),
-        true,
-        true
-      );
+      const selfInMergedExtensions = extsWithoutRemoved.findExtension(componentId.toStringWithoutVersion(), true);
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
         ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
         : extsWithoutRemoved;
@@ -178,29 +176,35 @@ export class AspectsMerger {
       await addExtensionsToMerge(variantsExtensions, 'WorkspaceVariants', { appliedRules });
     }
     continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
-    // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)
-    const isDefaultExtension = wsDefaultExtensions?.findExtension(componentId.toString(), true, true);
-    if (
-      wsDefaultExtensions &&
-      continuePropagating &&
-      !isDefaultExtension &&
-      !excludeOrigins.includes('WorkspaceDefault')
-    ) {
-      await addExtensionsToMerge(wsDefaultExtensions, 'WorkspaceDefault');
-    }
     if (mergeFromScope && continuePropagating && !excludeOrigins.includes('ModelNonSpecific')) {
       await addExtensionsToMerge(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
-
     const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
-    await this.loadExtensions(afterMerge, componentId);
-    const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
+    const afterLoaded = await this.loadExtensions(afterMerge, componentId);
+    const withoutRemoved = afterLoaded.filter((extData) => !removedExtensionIds.includes(extData.stringId));
     const extensions = ExtensionDataList.fromArray(withoutRemoved);
     return {
       extensions,
       beforeMerge: extensionsToMerge,
       errors,
     };
+  }
+
+  /**
+   * before version 0.0.882 it was possible to save Version object with the same extension twice.
+   */
+  private getComponentFromScopeWithoutDuplications(componentFromScope?: Component) {
+    if (!componentFromScope) return new ExtensionDataList();
+    const scopeExtensions = componentFromScope.config.extensions;
+    const scopeExtIds = scopeExtensions.ids;
+    const scopeExtHasDuplications = scopeExtIds.length !== uniq(scopeExtIds).length;
+    if (!scopeExtHasDuplications) {
+      return scopeExtensions;
+    }
+    // let's remove this duplicated extension blindly without trying to merge. (no need to merge coz it's old data from scope
+    // which will be overridden anyway by the workspace or other config strategies).
+    const arr = uniqWith(scopeExtensions, ignoreVersionPredicate);
+    return ExtensionDataList.fromArray(arr);
   }
 
   /**
@@ -246,7 +250,7 @@ export class AspectsMerger {
   }
 
   private getUnmergedData(componentId: ComponentID): UnmergedComponent | undefined {
-    return this.workspace.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
+    return this.workspace.scope.legacyScope.objects.unmergedComponents.getEntry(componentId.fullName);
   }
 
   private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {
@@ -309,9 +313,9 @@ export class AspectsMerger {
       const envAspectExt = extensionDataList.find((e) => e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect);
       const ids = await this.workspace.listIds();
       const envAspectId = envAspectExt?.extensionId;
-      const found = envAspectId && ids.find((id) => id._legacy.isEqualWithoutVersion(envAspectId));
+      const found = envAspectId && ids.find((id) => id.isEqualWithoutVersion(envAspectId));
       if (found) {
-        envAspectExt.extensionId = found._legacy;
+        envAspectExt.extensionId = found;
       }
     }
     return { extensionDataListFiltered: extensionDataList, envIsCurrentlySet: Boolean(envFromEnvsAspect) };
@@ -323,11 +327,45 @@ export class AspectsMerger {
    */
   private async loadExtensions(
     extensions: ExtensionDataList,
-    originatedFrom?: ComponentID,
+    originatedFrom: ComponentID,
     opts: WorkspaceLoadAspectsOptions = {}
-  ): Promise<void> {
+  ): Promise<ExtensionDataList> {
     const workspaceAspectsLoader = this.workspace.getWorkspaceAspectsLoader();
-    return workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, opts);
+    try {
+      await workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, opts);
+      return extensions;
+    } catch (err) {
+      if (err instanceof InvalidScopeNameFromRemote || err instanceof InvalidScopeName) {
+        const scopeName = err.scopeName;
+        const shouldStrip = await this.shouldStripInvalidExtIds(originatedFrom);
+        if (shouldStrip) {
+          const newExtensions = extensions.filter((ext) => {
+            if (ext.extensionId) return ext.extensionId.scope !== scopeName;
+            const scope = ext.stringId.split('/')[0];
+            return scope !== scopeName;
+          });
+          const newExtDataList = ExtensionDataList.fromArray(newExtensions);
+          await workspaceAspectsLoader.loadComponentsExtensions(newExtDataList, originatedFrom, opts);
+          return newExtDataList;
+        }
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * we saw occurrences of ExtensionDataEntry with invalid `name` prop, e.g. "blogging/teambit".
+   * these occurrences should not happen today, and if they do, it should throw.
+   * this is a workaround to be able to fix/tag those old occurrences.
+   */
+  async shouldStripInvalidExtIds(compId: ComponentID) {
+    if (!compId.hasVersion()) return false;
+    const modelComp = await this.workspace.scope.getBitObjectModelComponent(compId);
+    if (!modelComp) return false; // probably new comp
+    const verObj = await this.workspace.scope.getBitObjectVersion(modelComp, compId.version as string);
+    if (!verObj) return false; // probably new comp
+    if (!verObj.bitVersion) return true; // super old
+    return lt(verObj.bitVersion, VERSION_CHANGED_BIT_ID_TO_COMP_ID);
   }
 
   /**
@@ -341,14 +379,14 @@ export class AspectsMerger {
   ): Promise<ExtensionDataList> {
     const promises = extensionList.map(async (entry) => {
       if (entry.extensionId) {
-        // don't pass `entry.extensionId` (as BitId) to `resolveComponentId` because then it'll use the optimization
+        // don't pass `entry.extensionId` (as ComponentID) to `resolveComponentId` because then it'll use the optimization
         // of parsing it to ComponentID without checking the workspace. Normally, this optimization is good, but here
-        // in case the extension wasn't exported, the BitId is wrong, it has the scope-name due to incorrect BitId.parse
+        // in case the extension wasn't exported, the ComponentID is wrong, it has the scope-name due to incorrect ComponentID.fromString
         // in configEntryToDataEntry() function. It'd be ideal to fix it from there but it's not easy.
         const componentId = await this.workspace.resolveComponentId(entry.extensionId.toString());
         const idFromWorkspace = preferWorkspaceVersion ? this.workspace.getIdIfExist(componentId) : undefined;
         const id = idFromWorkspace || componentId;
-        entry.extensionId = id._legacy;
+        entry.extensionId = id;
         entry.newExtensionId = id;
       }
 

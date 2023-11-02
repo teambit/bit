@@ -14,7 +14,7 @@ import { CommandNotFound } from './exceptions/command-not-found';
 
 export class CLIParser {
   public parser = yargs;
-  constructor(private commands: Command[], private groups: GroupsType, private docsDomain: string) {}
+  constructor(private commands: Command[], private groups: GroupsType) {}
 
   async parse(args = process.argv.slice(2)) {
     this.throwForNonExistsCommand(args[0]);
@@ -107,7 +107,7 @@ export class CLIParser {
   }
 
   private printHelp(shouldShowInternalCommands = false) {
-    const help = formatHelp(this.commands, this.groups, this.docsDomain, shouldShowInternalCommands);
+    const help = formatHelp(this.commands, this.groups, shouldShowInternalCommands);
     // eslint-disable-next-line no-console
     console.log(help);
   }

@@ -2,7 +2,7 @@ import * as path from 'path';
 import globby from 'globby';
 import ignore from 'ignore';
 import R from 'ramda';
-import { BitId } from '../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
@@ -14,6 +14,7 @@ import Consumer from '../consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
 import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
+import { BIT_IGNORE, getBitIgnoreFile } from '../../utils/ignore/ignore';
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
 
@@ -32,7 +33,7 @@ export type NextVersion = {
 };
 
 export type ComponentMapData = {
-  id: BitId;
+  id: ComponentID;
   files: ComponentMapFile[];
   defaultScope?: string;
   mainFile: PathLinux;
@@ -49,7 +50,7 @@ export type ComponentMapData = {
 export type PathChange = { from: PathLinux; to: PathLinux };
 
 export default class ComponentMap {
-  id: BitId;
+  id: ComponentID;
   files: ComponentMapFile[];
   defaultScope?: string;
   mainFile: PathLinux;
@@ -75,6 +76,7 @@ export default class ComponentMap {
   onLanesOnly? = false;
   nextVersion?: NextVersion; // for soft-tag (harmony only), this data is used in the CI to persist
   recentlyTracked?: boolean; // eventually the timestamp is saved in the filesystem cache so it won't be re-tracked if not changed
+  name: string; // name of the component (including namespace)
   scope?: string | null; // empty string if new/staged. (undefined if legacy).
   version?: string; // empty string if new. (undefined if legacy).
   noFilesError?: Error; // set if during finding the files an error was found
@@ -111,6 +113,7 @@ export default class ComponentMap {
 
   toPlainObject(): Record<string, any> {
     let res = {
+      name: this.name,
       scope: this.scope,
       version: this.version,
       files: null,
@@ -298,7 +301,7 @@ export default class ComponentMap {
    * if the component dir has changed since the last tracking, re-scan the component-dir to get the
    * updated list of the files
    */
-  async trackDirectoryChangesHarmony(consumer: Consumer, id: BitId): Promise<void> {
+  async trackDirectoryChangesHarmony(consumer: Consumer, id: ComponentID): Promise<void> {
     const trackDir = this.rootDir;
     if (!trackDir) {
       return;
@@ -400,14 +403,21 @@ export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore
     cwd: consumerPath,
     dot: true,
     onlyFiles: true,
+    // must ignore node_modules at this stage, although we check for gitignore later on.
+    // otherwise, it hurts performance dramatically for components that have node_modules in the comp-dir.
+    ignore: [`${dir}/node_modules/`],
   });
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
   const filteredMatches: string[] = gitIgnore.filter(matches);
   // the path is relative to consumer. remove the rootDir.
   const relativePathsLinux = filteredMatches.map((match) => pathNormalizeToLinux(match).replace(`${dir}/`, ''));
   const filteredByIgnoredFromRoot = relativePathsLinux.filter((match) => !IGNORE_ROOT_ONLY_LIST.includes(match));
-  if (!filteredByIgnoredFromRoot.length) throw new IgnoredDirectory(dir);
-  return filteredByIgnoredFromRoot.map((relativePath) => ({
+  const bitIgnore = filteredByIgnoredFromRoot.includes(BIT_IGNORE) ? await getBitIgnoreFile(dir) : '';
+  const filteredByBitIgnore = bitIgnore
+    ? ignore().add(bitIgnore).filter(filteredByIgnoredFromRoot)
+    : filteredByIgnoredFromRoot;
+  if (!filteredByBitIgnore.length) throw new IgnoredDirectory(dir);
+  return filteredByBitIgnore.map((relativePath) => ({
     relativePath,
     test: false,
     name: path.basename(relativePath),

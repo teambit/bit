@@ -6,20 +6,19 @@
 import { compact } from 'lodash';
 import R from 'ramda';
 import semver from 'semver';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 
-import { BitId, BitIds } from '../bit-id';
-
-export default function getLatestVersionNumber(bitIds: BitIds, bitId: BitId): BitId {
-  if (!bitId.getVersion().latest) return bitId;
+export default function getLatestVersionNumber(bitIds: ComponentIdList, bitId: ComponentID): ComponentID {
+  if (!bitId._legacy.getVersion().latest) return bitId;
 
   // If the bitId provided doesn't contain version we want to ignore scope during search always
   // otherwise we will have problems finding the version from the bitmap after we export the component
   // because we tag with a name without scope but the bitmap contain it with the scope name since it was exported
   // without this, we will always just return the first component in the bitmap which is really bad
-  const ignoreScope = !bitId.hasScope();
-
-  const similarIds = ignoreScope ? bitIds.filterWithoutScopeAndVersion(bitId) : bitIds.filterWithoutVersion(bitId);
-  const allVersionsForId = similarIds.filter((id) => id.hasVersion() && !id.isVersionSnap()).map((id) => id.version);
+  const similarIds = bitIds.filterWithoutVersion(bitId);
+  const allVersionsForId = similarIds
+    .filter((id) => id.hasVersion() && !id._legacy.isVersionSnap())
+    .map((id) => id.version);
 
   // A case when the provided bitId doesn't exists in the array
   if (R.isEmpty(allVersionsForId)) {
@@ -37,7 +36,7 @@ export default function getLatestVersionNumber(bitIds: BitIds, bitId: BitId): Bi
     );
   }
   const bitIdWithMaxVersion = bitId.changeVersion(maxVersion);
-  const result = ignoreScope ? bitIds.searchWithoutScope(bitIdWithMaxVersion) : bitIds.search(bitIdWithMaxVersion);
+  const result = bitIds.search(bitIdWithMaxVersion);
   if (!result) {
     throw new Error(`getLatestVersionNumber failed to find the id ${bitIdWithMaxVersion.toString()} within bitIds`);
   }

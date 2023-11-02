@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { ComponentID } from '@teambit/component-id';
 import R from 'ramda';
-import { BitId } from '../../../bit-id';
-import ShowDoctorError from '../../../error/show-doctor-error';
+import { BitError } from '@teambit/bit-error';
 import logger from '../../../logger/logger';
 import { Scope } from '../../../scope';
 import { Lane, Source } from '../../../scope/models';
@@ -10,7 +10,6 @@ import { Ref } from '../../../scope/objects';
 import { pathNormalizeToLinux } from '../../../utils';
 import { ExtensionDataList } from '../../config';
 import Component from '../consumer-component';
-
 import { ArtifactVinyl } from './artifact';
 
 export type ArtifactRef = { relativePath: string; ref: Ref; url?: string };
@@ -106,20 +105,23 @@ export class ArtifactFiles {
     });
   }
 
-  async getVinylsAndImportIfMissing(id: BitId, scope: Scope): Promise<ArtifactVinyl[]> {
+  async getVinylsAndImportIfMissing(id: ComponentID, scope: Scope): Promise<ArtifactVinyl[]> {
     if (this.isEmpty()) return [];
     if (this.vinyls.length) return this.vinyls;
     const allHashes = this.refs.map((artifact) => artifact.ref.hash);
     const scopeComponentsImporter = scope.scopeImporter;
     const lane = await scope.getCurrentLaneObject();
-    const unmergedEntry = scope.objects.unmergedComponents.getEntry(id.name);
+    const unmergedEntry = scope.objects.unmergedComponents.getEntry(id.fullName);
     let errorFromUnmergedLaneScope: Error | undefined;
     if (unmergedEntry?.laneId) {
       try {
         logger.debug(
           `getVinylsAndImportIfMissing, trying to get artifacts for ${id.toString()} from unmerged-lane-id: ${unmergedEntry.laneId.toString()}`
         );
-        await scopeComponentsImporter.importManyObjects({ [unmergedEntry.laneId.scope]: allHashes });
+        await scopeComponentsImporter.importManyObjects(
+          { [unmergedEntry.laneId.scope]: allHashes },
+          `to get artifacts for ${id.toString()} from unmerged-lane: ${unmergedEntry.laneId.toString()}`
+        );
       } catch (err: any) {
         logger.debug(
           `getVinylsAndImportIfMissing, unable to get artifacts for ${id.toString()} from ${unmergedEntry.laneId.toString()}`
@@ -128,9 +130,12 @@ export class ArtifactFiles {
       }
     }
     const isIdOnLane = await scope.isIdOnLane(id, lane);
-    const scopeName = isIdOnLane ? (lane?.scope as string) : (id.scope as string);
+    const scopeName = isIdOnLane ? (lane?.scope as string) : id.scope;
     try {
-      await scopeComponentsImporter.importManyObjects({ [scopeName]: allHashes });
+      await scopeComponentsImporter.importManyObjects(
+        { [scopeName]: allHashes },
+        `to get artifacts for ${id.toString()} from ${scopeName}`
+      );
     } catch (err) {
       if (!unmergedEntry || errorFromUnmergedLaneScope) {
         logger.error('failed fetching the following hashes', { id, isIdOnLane, scopeName, allHashes });
@@ -140,7 +145,7 @@ export class ArtifactFiles {
     }
     const getOneArtifact = async (artifact: ArtifactRef) => {
       const content = (await artifact.ref.load(scope.objects)) as Source;
-      if (!content) throw new ShowDoctorError(`failed loading file ${artifact.relativePath} from the model`);
+      if (!content) throw new BitError(`failed loading file ${artifact.relativePath} from the model`);
       return new ArtifactVinyl({
         base: '.',
         path: artifact.relativePath,
@@ -192,7 +197,10 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
     })
   );
   try {
-    await scopeComponentsImporter.importManyObjects(groupedHashes);
+    await scopeComponentsImporter.importManyObjects(
+      groupedHashes,
+      `to get dists artifacts for ${components.length} components`
+    );
   } catch (err) {
     logger.error('failed fetching the following hashes', { groupedHashes, debugHashesOrigin });
     throw err;
@@ -227,7 +235,10 @@ export async function importAllArtifacts(scope: Scope, components: Component[], 
     })
   );
   try {
-    await scopeComponentsImporter.importManyObjects(groupedHashes);
+    await scopeComponentsImporter.importManyObjects(
+      groupedHashes,
+      `to get all artifacts for ${components.length} components`
+    );
   } catch (err) {
     logger.error('failed fetching the following hashes', { groupedHashes, debugHashesOrigin });
     throw err;

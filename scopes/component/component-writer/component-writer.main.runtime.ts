@@ -3,7 +3,9 @@ import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import InstallAspect, { InstallMain } from '@teambit/install';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
+import { uniq } from 'lodash';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 import MoverAspect, { MoverMain } from '@teambit/mover';
@@ -27,6 +29,7 @@ export interface ManyComponentsWriterParams {
   resetConfig?: boolean;
   skipWritingToFs?: boolean;
   skipUpdatingBitMap?: boolean;
+  skipWriteConfigFiles?: boolean;
 }
 
 export type ComponentWriterResults = { installationError?: Error; compilationError?: Error };
@@ -53,7 +56,7 @@ export class ComponentWriterMain {
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
     if (!opts.skipDependencyInstallation) {
-      installationError = await this.installPackagesGracefully();
+      installationError = await this.installPackagesGracefully(opts.skipWriteConfigFiles);
       // no point to compile if the installation is not running. the environment is not ready.
       compilationError = await this.compileGracefully();
     }
@@ -61,13 +64,14 @@ export class ComponentWriterMain {
     return { installationError, compilationError };
   }
 
-  private async installPackagesGracefully(): Promise<Error | undefined> {
+  private async installPackagesGracefully(skipWriteConfigFiles = false): Promise<Error | undefined> {
     this.logger.debug('installPackagesGracefully, start installing packages');
     try {
       const installOpts = {
         dedupe: true,
         updateExisting: false,
         import: false,
+        writeConfigFiles: !skipWriteConfigFiles,
       };
       await this.installer.install(undefined, installOpts);
       this.logger.debug('installPackagesGracefully, completed installing packages successfully');
@@ -107,13 +111,17 @@ export class ComponentWriterMain {
       this.getWriteParamsOfOneComponent(component, opts)
     );
     const componentWriterInstances = writeComponentsParams.map((writeParams) => new ComponentWriter(writeParams));
+    this.fixDirsIfEqual(componentWriterInstances);
     this.fixDirsIfNested(componentWriterInstances);
     // add componentMap entries into .bitmap before starting the process because steps like writing package-json
     // rely on .bitmap to determine whether a dependency exists and what's its origin
-    componentWriterInstances.forEach((componentWriter: ComponentWriter) => {
-      componentWriter.existingComponentMap =
-        componentWriter.existingComponentMap || componentWriter.addComponentToBitMap(componentWriter.writeToPath);
-    });
+    await Promise.all(
+      componentWriterInstances.map(async (componentWriter: ComponentWriter) => {
+        componentWriter.existingComponentMap =
+          componentWriter.existingComponentMap ||
+          (await componentWriter.addComponentToBitMap(componentWriter.writeToPath));
+      })
+    );
     if (opts.resetConfig) {
       componentWriterInstances.forEach((componentWriter: ComponentWriter) => {
         delete componentWriter.existingComponentMap?.config;
@@ -123,6 +131,45 @@ export class ComponentWriterMain {
       componentWriter.populateComponentsFilesToWrite()
     );
   }
+
+  /**
+   * this started to be an issue once same-name different-scope is supported.
+   * by default, the component-dir consist of the scope-name part of the scope-id, without the owner part.
+   * as a result, it's possible that multiple components have the same name, same scope-name but different owner.
+   * e.g. org1.ui/button and org2.ui/button. the component-dir for both is "ui/button".
+   * in this case, we try to prefix the component-dir with the owner-name and if not possible, just increment it (ui/button_1)
+   */
+  private fixDirsIfEqual(componentWriterInstances: ComponentWriter[]) {
+    const allDirs = componentWriterInstances.map((c) => c.writeToPath);
+    const duplicatedDirs = allDirs.filter((dir) => allDirs.filter((d) => d === dir).length > 1);
+    if (!duplicatedDirs.length) return;
+    const uniqDuplicates = uniq(duplicatedDirs);
+    uniqDuplicates.forEach((compDir) => {
+      const hasDuplication = componentWriterInstances.filter((compWriter) => compWriter.writeToPath === compDir);
+      hasDuplication.forEach((compWriter) => {
+        const ownerName = compWriter.component.id.scope?.includes('.')
+          ? compWriter.component.id.scope.split('.')[0]
+          : undefined;
+        if (ownerName && !compDir.startsWith(ownerName) && !allDirs.includes(`${ownerName}/${compDir}`)) {
+          compWriter.writeToPath = `${ownerName}/${compDir}`;
+        } else {
+          compWriter.writeToPath = this.incrementPathRecursively(compWriter.writeToPath, allDirs);
+        }
+        allDirs.push(compWriter.writeToPath);
+      });
+    });
+  }
+
+  private incrementPathRecursively(p: string, allPaths: string[]) {
+    const incrementPath = (str: string, number: number) => `${str}_${number}`;
+    let num = 1;
+    let newPath = incrementPath(p, num);
+    while (allPaths.includes(newPath)) {
+      newPath = incrementPath(p, (num += 1));
+    }
+    return newPath;
+  }
+
   /**
    * e.g. [bar, bar/foo] => [bar_1, bar/foo]
    * otherwise, the bar/foo component will be saved inside "bar" component.
@@ -136,23 +183,14 @@ export class ComponentWriterMain {
       allDirs.find((d) => d.startsWith(`${writeToPath}/`))
     );
     const existingRootDirs = Object.keys(this.consumer.bitMap.getAllTrackDirs());
-    const incrementPath = (p: string, number: number) => `${p}_${number}`;
     const parentsOfOthersCompsDirs = parentsOfOthersComps.map((c) => c.writeToPath);
     const allPaths: PathLinuxRelative[] = [...existingRootDirs, ...parentsOfOthersCompsDirs];
-    const incrementRecursively = (p: string) => {
-      let num = 1;
-      let newPath = incrementPath(p, num);
-      while (allPaths.includes(newPath)) {
-        newPath = incrementPath(p, (num += 1));
-      }
-      return newPath;
-    };
 
     // this is when writing multiple components and some of them are parents of the others.
     // change the paths of all these parents root-dir to not collide with the children root-dir
     parentsOfOthersComps.forEach((componentWriter) => {
       if (existingRootDirs.includes(componentWriter.writeToPath)) return; // component already exists.
-      const newPath = incrementRecursively(componentWriter.writeToPath);
+      const newPath = this.incrementPathRecursively(componentWriter.writeToPath, allPaths);
       componentWriter.writeToPath = newPath;
     });
 
@@ -163,7 +201,7 @@ export class ComponentWriterMain {
       const existingParent = existingRootDirs.find((d) => d.startsWith(`${componentWriter.writeToPath}/`));
       if (!existingParent) return;
       if (existingRootDirs.includes(componentWriter.writeToPath)) return; // component already exists.
-      const newPath = incrementRecursively(componentWriter.writeToPath);
+      const newPath = this.incrementPathRecursively(componentWriter.writeToPath, allPaths);
       componentWriter.writeToPath = newPath;
     });
 
@@ -173,7 +211,7 @@ export class ComponentWriterMain {
       const existingChildren = existingRootDirs.find((d) => componentWriter.writeToPath.startsWith(`${d}/`));
       if (!existingChildren) return;
       // we increment the existing one, because it is used to replace the base-path of the current component
-      const newPath = incrementRecursively(existingChildren);
+      const newPath = this.incrementPathRecursively(existingChildren, allPaths);
       componentWriter.writeToPath = componentWriter.writeToPath.replace(existingChildren, newPath);
     });
   }
@@ -199,7 +237,7 @@ export class ComponentWriterMain {
       };
     };
     return {
-      consumer: this.consumer,
+      workspace: this.workspace,
       bitMap: this.consumer.bitMap,
       component,
       writeToPath: componentRootDir,
@@ -242,10 +280,10 @@ to move all component files to a different directory, run bit remove and then bi
 
     if (fs.pathExistsSync(componentDir)) {
       if (!isDir(componentDir)) {
-        throw new GeneralError(`unable to import to ${componentDir} because it's a file`);
+        throw new BitError(`unable to import to ${componentDir} because it's a file`);
       }
       if (!isDirEmptySync(componentDir) && opts.throwForExistingDir) {
-        throw new GeneralError(
+        throw new BitError(
           `unable to import to ${componentDir}, the directory is not empty. use --override flag to delete the directory and then import`
         );
       }

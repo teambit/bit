@@ -3,7 +3,7 @@ import pLocate from 'p-locate';
 import { parse } from 'comment-json';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMain, ComponentID } from '@teambit/component';
+import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
@@ -16,7 +16,7 @@ import { BitError } from '@teambit/bit-error';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { head, uniq } from 'lodash';
 import WorkerAspect, { WorkerMain } from '@teambit/worker';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { EnvService } from './services';
 import { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
@@ -835,7 +835,7 @@ export class EnvsMain {
     return envDef;
   }
 
-  async getEnvDefinitionByLegacyId(id: BitId): Promise<EnvDefinition | undefined> {
+  async getEnvDefinitionByLegacyId(id: ComponentID): Promise<EnvDefinition | undefined> {
     const host = this.componentMain.getHost();
     const newId = await host.resolveComponentId(id);
     return this.getEnvDefinitionById(newId);
@@ -918,8 +918,12 @@ export class EnvsMain {
     const services: [string, EnvService<any>][] = [];
     allServices.forEach(([id, currentServices]) => {
       currentServices.forEach((service) => {
-        if (this.implements(env, service)) {
-          services.push([id, service]);
+        try {
+          if (this.implements(env, service)) {
+            services.push([id, service]);
+          }
+        } catch (err) {
+          this.logger.warn(`failed loading service ${id} for env ${env.id}`);
         }
       });
     });

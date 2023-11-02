@@ -1,7 +1,7 @@
 import path from 'path';
 import { IssuesClasses, RelativeComponentsAuthoredEntry } from '@teambit/component-issues';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Consumer } from '..';
-import { BitId, BitIds } from '../../bit-id';
 import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '../../utils';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import replacePackageName from '../../utils/string/replace-package-name';
@@ -11,14 +11,14 @@ import { SourceFile } from '../component/sources';
 import DataToPersist from '../component/sources/data-to-persist';
 
 export type CodemodResult = {
-  id: BitId;
+  id: ComponentID;
   changedFiles: string[];
   warnings?: string[];
 };
 
 export async function changeCodeFromRelativeToModulePaths(
   consumer: Consumer,
-  bitIds: BitId[]
+  bitIds: ComponentID[]
 ): Promise<CodemodResult[]> {
   const components = await loadComponents(consumer, bitIds);
   const componentsWithRelativeIssues = components.filter(
@@ -39,7 +39,7 @@ export async function changeCodeFromRelativeToModulePaths(
   return codemodResults.filter((c) => c.changedFiles.length || c.warnings);
 }
 
-async function reloadComponents(consumer: Consumer, bitIds: BitId[]) {
+async function reloadComponents(consumer: Consumer, bitIds: ComponentID[]) {
   await consumer.clearCache();
   if (!bitIds.length) return;
   const components = await loadComponents(consumer, bitIds);
@@ -52,8 +52,8 @@ async function reloadComponents(consumer: Consumer, bitIds: BitId[]) {
   }
 }
 
-async function loadComponents(consumer: Consumer, bitIds: BitId[]): Promise<Component[]> {
-  const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : consumer.bitmapIdsFromCurrentLane;
+async function loadComponents(consumer: Consumer, bitIds: ComponentID[]): Promise<Component[]> {
+  const componentsIds = bitIds.length ? ComponentIdList.fromArray(bitIds) : consumer.bitmapIdsFromCurrentLane;
   const { components } = await consumer.loadComponents(componentsIds);
 
   return components;

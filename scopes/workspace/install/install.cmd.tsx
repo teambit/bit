@@ -1,4 +1,3 @@
-import { BitError } from '@teambit/bit-error';
 import { Command, CommandOptions } from '@teambit/cli';
 import { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
@@ -11,6 +10,7 @@ type InstallCmdOptions = {
   skipDedupe: boolean;
   skipImport: boolean;
   skipCompile: boolean;
+  skipWriteConfigFiles: boolean;
   update: boolean;
   updateExisting: boolean;
   savePrefix: string;
@@ -18,6 +18,7 @@ type InstallCmdOptions = {
   addMissingPeers: boolean;
   noOptional: boolean;
   recurringInstall: boolean;
+  lockfileOnly: boolean;
 };
 
 type FormatOutputArgs = {
@@ -35,7 +36,7 @@ export default class InstallCmd implements Command {
   description = 'installs workspace dependencies';
   extendedDescription =
     'when no package is specified, all workspace dependencies are installed and all workspace components are imported.';
-  helpUrl = 'docs/dependencies/dependency-installation';
+  helpUrl = 'reference/dependencies/dependency-installation';
   arguments = [{ name: 'packages...', description: 'a list of packages to install (separated by spaces)' }];
   alias = 'in';
   group = 'development';
@@ -44,21 +45,23 @@ export default class InstallCmd implements Command {
     ['u', 'update', 'update all dependencies to latest version according to their semver range'],
     [
       '',
-      'update-existing [updateExisting]',
+      'update-existing',
       'DEPRECATED (not needed anymore, it is the default now). update existing dependencies version and types',
     ],
     ['', 'save-prefix [savePrefix]', 'set the prefix to use when adding dependency to workspace.jsonc'],
-    ['', 'skip-dedupe [skipDedupe]', 'do not dedupe dependencies on installation'],
-    ['', 'skip-import [skipImport]', 'do not import bit objects post installation'],
-    ['', 'skip-compile [skipCompile]', 'do not compile components'],
-    ['', 'add-missing-deps [addMissingDeps]', 'install all missing dependencies'],
-    ['', 'add-missing-peers [addMissingPeers]', 'install all missing peer dependencies'],
+    ['', 'skip-dedupe', 'do not dedupe dependencies on installation'],
+    ['', 'skip-import', 'do not import bit objects post installation'],
+    ['', 'skip-compile', 'do not compile components'],
+    ['', 'skip-write-config-files', 'do not write config files (such as eslint, tsconfig, prettier, etc...)'],
+    ['', 'add-missing-deps', 'install all missing dependencies'],
+    ['', 'add-missing-peers', 'install all missing peer dependencies'],
     [
       '',
       recurringInstallFlagName,
       'automatically run install again if there are non loaded old envs in your workspace',
     ],
     ['', 'no-optional [noOptional]', 'do not install optional dependencies (works with pnpm only)'],
+    ['', 'lockfile-only', 'dependencies are not written to node_modules. Only the lockfile is updated'],
   ] as CommandOptions;
 
   constructor(
@@ -77,9 +80,6 @@ export default class InstallCmd implements Command {
   async report([packages = []]: [string[]], options: InstallCmdOptions) {
     const startTime = Date.now();
     if (!this.workspace) throw new OutsideWorkspaceError();
-    if (packages.length && options.addMissingDeps) {
-      throw new BitError('cannot use --add-missing-deps with a list of packages');
-    }
     if (options.updateExisting) {
       this.logger.consoleWarning(
         `--update-existing is deprecated, please omit it. "bit install" will update existing dependencies by default`
@@ -96,8 +96,10 @@ export default class InstallCmd implements Command {
       addMissingPeers: options.addMissingPeers,
       compile: !options.skipCompile,
       includeOptionalDeps: !options.noOptional,
+      writeConfigFiles: !options.skipWriteConfigFiles,
       updateAll: options.update,
       recurringInstall: options.recurringInstall,
+      lockfileOnly: options.lockfileOnly,
     };
     const components = await this.install.install(packages, installOpts);
     const endTime = Date.now();

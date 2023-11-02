@@ -1,16 +1,27 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { CompFiles, Workspace, FilesStatus } from '@teambit/workspace';
-import { PathLinux, PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy/dist/utils/path';
 import pMap from 'p-map';
 import { SnappingMain } from '@teambit/snapping';
 import { LanesMain } from '@teambit/lanes';
 import { InstallMain } from '@teambit/install';
 import { ExportMain } from '@teambit/export';
 import { CheckoutMain } from '@teambit/checkout';
+import { ApplyVersionResults } from '@teambit/merging';
+import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
+import { Log } from '@teambit/legacy/dist/scope/models/lane';
+import { ComponentCompareMain } from '@teambit/component-compare';
+import { GeneratorMain } from '@teambit/generator';
+import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
+import { RemoveMain } from '@teambit/remove';
+import { compact } from 'lodash';
+import { getCloudDomain } from '@teambit/legacy/dist/constants';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
+
+type PathLinux = string; // problematic to get it from @teambit/legacy/dist/utils/path.
 
 type PathFromLastSnap = { [relativeToWorkspace: PathLinux]: string };
 
@@ -22,6 +33,23 @@ type InitSCMEntry = {
 
 type DataToInitSCM = { [compId: string]: InitSCMEntry };
 
+type LaneObj = {
+  name: string;
+  scope: string;
+  id: string;
+  log: Log;
+  components: Array<{ id: string; head: string }>;
+  isNew: boolean;
+  forkedFrom?: string;
+};
+
+type ModifiedByConfig = {
+  id: string;
+  version: string;
+  dependencies?: { workspace: string[]; scope: string[] };
+  aspects?: { workspace: Record<string, any>; scope: Record<string, any> };
+};
+
 export class APIForIDE {
   constructor(
     private workspace: Workspace,
@@ -29,7 +57,11 @@ export class APIForIDE {
     private lanes: LanesMain,
     private installer: InstallMain,
     private exporter: ExportMain,
-    private checkout: CheckoutMain
+    private checkout: CheckoutMain,
+    private componentLog: ComponentLogMain,
+    private componentCompare: ComponentCompareMain,
+    private generator: GeneratorMain,
+    private remove: RemoveMain
   ) {}
 
   async listIdsWithPaths() {
@@ -55,6 +87,37 @@ export class APIForIDE {
       getAll: true,
     });
     return (results.components || []).map((c) => c.id.toString());
+  }
+
+  async getCurrentLaneObject(): Promise<LaneObj | undefined> {
+    const currentLane = await this.lanes.getCurrentLane();
+    if (!currentLane) return undefined;
+    const components = await Promise.all(
+      currentLane.components.map(async (c) => {
+        const compId = await this.workspace.resolveComponentId(c.id);
+        return {
+          id: compId.toStringWithoutVersion(),
+          head: c.head.toString(),
+        };
+      })
+    );
+    return {
+      name: currentLane.name,
+      scope: currentLane.scope,
+      id: currentLane.id(),
+      log: currentLane.log,
+      components,
+      isNew: currentLane.isNew,
+      forkedFrom: currentLane.forkedFrom?.toString(),
+    };
+  }
+
+  async listLanes() {
+    return this.lanes.getLanes({ showDefaultLane: true });
+  }
+
+  async createLane(name: string) {
+    return this.lanes.createLane(name);
   }
 
   async getCompFiles(id: string): Promise<{ dirAbs: string; filesRelative: PathOsBasedRelative[] }> {
@@ -92,6 +155,31 @@ export class APIForIDE {
     return results;
   }
 
+  async catObject(hash: string) {
+    const object = await this.workspace.scope.legacyScope.getRawObject(hash);
+    return JSON.stringify(object.content.toString());
+  }
+
+  async logFile(filePath: string) {
+    const results = await this.componentLog.getFileHistoryHashes(filePath);
+    return results;
+  }
+
+  async changedFilesFromParent(id: string): Promise<FileHashDiffFromParent[]> {
+    const results = await this.componentLog.getChangedFilesFromParent(id);
+    return results;
+  }
+
+  async getConfigForDiff(id: string) {
+    const results = await this.componentCompare.getConfigForDiffById(id);
+    return results;
+  }
+
+  async setDefaultScope(scopeName: string) {
+    await this.workspace.setDefaultScope(scopeName);
+    return scopeName;
+  }
+
   async getCompFilesDirPathFromLastSnapUsingCompFiles(
     compFiles: CompFiles
   ): Promise<{ [relativePath: string]: string }> {
@@ -117,26 +205,71 @@ export class APIForIDE {
   async warmWorkspaceCache() {
     await this.workspace.warmCache();
   }
+  async clearCache() {
+    await this.workspace.clearCache();
+  }
 
-  async install() {
-    return this.installer.install(undefined, { optimizeReportForNonTerminal: true });
+  async install(options = {}) {
+    const opts = {
+      optimizeReportForNonTerminal: true,
+      dedupe: true,
+      updateExisting: false,
+      import: false,
+      ...options,
+    };
+
+    return this.installer.install(undefined, opts);
   }
 
   async export() {
-    const { componentsIds, removedIds, exportedLanes } = await this.exporter.export();
+    const { componentsIds, removedIds, exportedLanes, rippleJobs } = await this.exporter.export();
+    const rippleJobsFullUrls = rippleJobs.map((job) => `https://${getCloudDomain()}/ripple-ci/job/${job}`);
     return {
       componentsIds: componentsIds.map((c) => c.toString()),
       removedIds: removedIds.map((c) => c.toString()),
       exportedLanes: exportedLanes.map((l) => l.id()),
+      rippleJobs: rippleJobsFullUrls,
     };
   }
 
   async checkoutHead() {
-    const { components, failedComponents } = await this.checkout.checkout({
+    const results = await this.checkout.checkout({
       head: true,
       skipNpmInstall: true,
       ids: await this.workspace.listIds(),
     });
+    return this.adjustCheckoutResultsToIde(results);
+  }
+
+  async getTemplates() {
+    const templates = await this.generator.listTemplates();
+    return templates;
+  }
+
+  async createComponent(templateName: string, idIncludeScope: string) {
+    if (!idIncludeScope.includes('/')) {
+      throw new Error('id should include the scope name');
+    }
+    const [scope, ...nameSplit] = idIncludeScope.split('/');
+    return this.generator.generateComponentTemplate([nameSplit.join('/')], templateName, { scope });
+  }
+
+  async removeComponent(id: string) {
+    const results = await this.remove.remove({
+      componentsPattern: id,
+      force: true,
+    });
+    const serializedResults = (results.localResult as RemovedObjects).serialize();
+    return serializedResults;
+  }
+
+  async switchLane(name: string) {
+    const results = await this.lanes.switchLanes(name, { skipDependencyInstallation: true });
+    return this.adjustCheckoutResultsToIde(results);
+  }
+
+  private adjustCheckoutResultsToIde(output: ApplyVersionResults) {
+    const { components, failedComponents } = output;
     const skipped = failedComponents?.filter((f) => f.unchangedLegitimately).map((f) => f.id.toString());
     const failed = failedComponents?.filter((f) => !f.unchangedLegitimately).map((f) => f.id.toString());
     return {
@@ -144,6 +277,28 @@ export class APIForIDE {
       skipped,
       failed,
     };
+  }
+
+  async getModifiedByConfig(): Promise<ModifiedByConfig[]> {
+    const modifiedComps = await this.workspace.modified();
+    const results = await Promise.all(
+      modifiedComps.map(async (comp) => {
+        const wsComp = await this.componentCompare.getConfigForDiffByCompObject(comp);
+        const scopeComp = await this.componentCompare.getConfigForDiffById(comp.id.toString());
+        const hasSameDeps = JSON.stringify(wsComp.dependencies) === JSON.stringify(scopeComp.dependencies);
+        const hasSameAspects = JSON.stringify(wsComp.aspects) === JSON.stringify(scopeComp.aspects);
+        if (hasSameDeps && hasSameAspects) return null;
+        const result: ModifiedByConfig = {
+          id: comp.id.toStringWithoutVersion(),
+          version: comp.id.version as string,
+        };
+        if (!hasSameDeps) result.dependencies = { workspace: wsComp.dependencies, scope: scopeComp.dependencies || [] };
+        if (!hasSameAspects) result.aspects = { workspace: wsComp.aspects, scope: scopeComp.aspects || {} };
+        return result;
+      })
+    );
+
+    return compact(results);
   }
 
   async getDataToInitSCM(): Promise<DataToInitSCM> {
@@ -165,6 +320,12 @@ export class APIForIDE {
     );
 
     return results;
+  }
+
+  async getFilesStatus(id: string): Promise<FilesStatus> {
+    const componentId = await this.workspace.resolveComponentId(id);
+    const compFiles = await this.workspace.getFilesModification(componentId);
+    return compFiles.getFilesStatus();
   }
 
   async getCompFilesDirPathFromLastSnapForAllComps(): Promise<{ [relativePath: string]: string }> {

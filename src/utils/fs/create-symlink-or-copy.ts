@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
 import fsNative from 'fs';
+import { BitError } from '@teambit/bit-error';
 import * as path from 'path';
 import { IS_WINDOWS } from '../../constants';
-import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import { PathOsBased } from '../path';
 
@@ -38,7 +38,7 @@ export default function createSymlinkOrCopy(
   } catch (err: any) {
     const winMsg = IS_WINDOWS ? ' (or maybe copy)' : '';
     const errorHeader = componentId ? `failed to link a component ${componentId}` : 'failed to generate a symlink';
-    throw new ShowDoctorError(`${errorHeader}.
+    throw new BitError(`${errorHeader}.
 Symlink${winMsg} from: ${srcPath}, to: ${destPath} was failed.
 Please use "--log=trace" flag to get more info about the error.
 Original error: ${err}`);

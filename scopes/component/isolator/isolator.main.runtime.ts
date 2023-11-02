@@ -5,7 +5,7 @@ import semver from 'semver';
 import chalk from 'chalk';
 import { compact, flatten, pick } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
-import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
+import { Component, ComponentMap, ComponentAspect } from '@teambit/component';
 import type { ComponentMain, ComponentFactory } from '@teambit/component';
 import { getComponentPackageVersion, snapToSemver } from '@teambit/component-package-version';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
@@ -22,9 +22,10 @@ import {
   ComponentDependency,
   KEY_NAME_BY_LIFECYCLE_TYPE,
   PackageManagerInstallOptions,
+  NodeLinker,
 } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain, LongProcessLogger } from '@teambit/logger';
-import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import {
@@ -43,9 +44,9 @@ import {
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { Scope } from '@teambit/legacy/dist/scope';
-import fs from 'fs-extra';
+import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
-import path from 'path';
+import path, { basename } from 'path';
 import equals from 'ramda/src/equals';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
@@ -53,6 +54,8 @@ import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
+import pMap from 'p-map';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
@@ -63,7 +66,7 @@ export type ListResults = {
   capsules: string[];
 };
 
-export type CapsuleTransferFn = (sourceDir: string, targetDir: string) => void;
+export type CapsuleTransferFn = (sourceDir: string, targetDir: string) => Promise<void>;
 
 export type CapsuleTransferSlot = SlotRegistry<CapsuleTransferFn>;
 
@@ -144,6 +147,17 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   useDatedDirs?: boolean;
 
   /**
+   * If this is true -
+   * the isolator will do few things:
+   * 1. in the end of the process it will only move the lock file (pnpm-lock.yaml) into the capsule cache
+   * 2. in the beginning of the process it will check if there is a lock file in the capsule cache, if yes it will move
+   * it to the temp dated dir
+   * 3. it will write env's file into the dated dir (as it only contain the lock file)
+   * 4. it will run install in the dated dir (as there is no node_modules there yet)
+   */
+  cacheLockFileOnly?: boolean;
+
+  /**
    * If set, along with useDatedDirs, then we will use the same hash dir for all capsules created with the same
    * datedDirId
    */
@@ -199,6 +213,11 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   packageManager?: string;
 
   /**
+   * Use specific node linker for the isolation process (override the package manager from the dep resolver config)
+   */
+  nodeLinker?: NodeLinker;
+
+  /**
    * Dir where to read the package manager config from
    * usually used when running package manager in the capsules dir to use the config
    * from the workspace dir
@@ -206,9 +225,17 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   packageManagerConfigRootDir?: string;
 
   context?: IsolationContext;
+
+  /**
+   * Root dir of capsulse cache (used mostly to copy lock file if used with cache lock file only option)
+   */
+  cacheCapsulesDir?: string;
 };
 
-type GetCapsuleDirOpts = Pick<IsolateComponentsOptions, 'datedDirId' | 'useHash' | 'rootBaseDir' | 'useDatedDirs'> & {
+type GetCapsuleDirOpts = Pick<
+  IsolateComponentsOptions,
+  'datedDirId' | 'useHash' | 'rootBaseDir' | 'useDatedDirs' | 'cacheLockFileOnly'
+> & {
   baseDir: string;
 };
 
@@ -229,7 +256,7 @@ const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
 /**
  * File name to indicate that the capsule is ready (all packages are installed and links are created)
  */
-const CAPSULE_READY_FILE = '.bit-capsule-ready';
+export const CAPSULE_READY_FILE = '.bit-capsule-ready';
 
 export class IsolatorMain {
   static runtime = MainRuntime;
@@ -246,6 +273,7 @@ export class IsolatorMain {
   static defaultConfig = {};
   _componentsPackagesVersionCache: { [idStr: string]: string } = {}; // cache packages versions of components
   _datedHashForName = new Map<string, string>(); // cache dated hash for a specific name
+  _movedLockFiles = new Set(); // cache moved lock files to avoid show warning about them
 
   static async provider(
     [dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader, cli]: [
@@ -315,14 +343,16 @@ export class IsolatorMain {
       useDatedDirs: shouldUseDatedDirs,
       baseDir: opts.baseDir || '',
     });
+    const cacheCapsulesDir = this.getCapsulesRootDir({ ...opts, useDatedDirs: false, baseDir: opts.baseDir || '' });
+    opts.cacheCapsulesDir = cacheCapsulesDir;
     const capsuleList = await this.createCapsules(componentsToIsolate, capsuleDir, opts, legacyScope);
     this.logger.debug(
       `creating network with base dir: ${opts.baseDir}, rootBaseDir: ${opts.rootBaseDir}. final capsule-dir: ${capsuleDir}. capsuleList: ${capsuleList.length}`
     );
-    const cacheCapsules = process.env.CACHE_CAPSULES;
+    const cacheCapsules = process.env.CACHE_CAPSULES || opts.cacheLockFileOnly;
     if (shouldUseDatedDirs && cacheCapsules) {
       const targetCapsuleDir = this.getCapsulesRootDir({ ...opts, useDatedDirs: false, baseDir: opts.baseDir || '' });
-      this.registerMoveCapsuleOnProcessExit(capsuleDir, targetCapsuleDir);
+      this.registerMoveCapsuleOnProcessExit(capsuleDir, targetCapsuleDir, opts.cacheLockFileOnly);
       // TODO: ideally this should be inside the on process exit hook
       // but this is an async op which make it a bit hard
       await this.relinkCoreAspectsInCapsuleDir(targetCapsuleDir);
@@ -354,42 +384,102 @@ export class IsolatorMain {
     return existingComps;
   }
 
-  private registerMoveCapsuleOnProcessExit(datedCapsuleDir: string, targetCapsuleDir: string): void {
+  private registerMoveCapsuleOnProcessExit(
+    datedCapsuleDir: string,
+    targetCapsuleDir: string,
+    cacheLockFileOnly = false
+  ): void {
     this.logger.info(`registering process.on(exit) to move capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
     this.cli.registerOnBeforeExit(async () => {
-      this.logger.info(`start moving capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
-      const allDirs = fs
-        .readdirSync(datedCapsuleDir, { withFileTypes: true })
-        .filter((dir) => dir.isDirectory() && dir.name !== 'node_modules');
-      const promises = allDirs.map(async (dir) => {
-        const sourceDir = path.join(datedCapsuleDir, dir.name);
-        const sourceCapsuleReadyFile = this.getCapsuleReadyFilePath(sourceDir);
-        if (!fs.pathExistsSync(sourceCapsuleReadyFile)) {
-          // Capsule is not ready, don't copy it to the cache
-          this.logger.console(`skipping moving capsule to cache as it is not ready ${sourceDir}`);
+      const allDirs = await this.getAllCapsulesDirsFromRoot(datedCapsuleDir);
+      if (cacheLockFileOnly) {
+        await this.moveCapsulesLockFileToTargetDir(allDirs, datedCapsuleDir, targetCapsuleDir);
+      } else {
+        await this.moveCapsulesToTargetDir(allDirs, datedCapsuleDir, targetCapsuleDir);
+      }
+    });
+  }
+
+  private async getAllCapsulesDirsFromRoot(rootDir: string): Promise<string[]> {
+    const allDirs = await fs.readdir(rootDir, { withFileTypes: true });
+    const capsuleDirents = allDirs.filter((dir) => dir.isDirectory() && dir.name !== 'node_modules');
+    return capsuleDirents.map((dir) => path.join(rootDir, dir.name));
+  }
+
+  private async moveCapsulesLockFileToTargetDir(
+    capsulesDirs: string[],
+    sourceRootDir: string,
+    targetCapsuleDir: string
+  ): Promise<void> {
+    this.logger.info(`start moving lock files from ${sourceRootDir} to ${targetCapsuleDir}`);
+    const promises = capsulesDirs.map(async (sourceDir) => {
+      const dirname = path.basename(sourceDir);
+      const sourceLockFile = path.join(sourceDir, 'pnpm-lock.yaml');
+      // Lock file is not exist, don't copy it to the cache
+      if (!fs.pathExistsSync(sourceLockFile)) {
+        // It was already moved during the process, do not show the log for it
+        if (!this._movedLockFiles.has(sourceLockFile)) {
+          this.logger.console(`skipping moving lock file to cache as it is not exist ${sourceDir}`);
+        }
+        return;
+      }
+      const targetDir = path.join(targetCapsuleDir, dirname);
+      const targetLockFile = path.join(targetDir, 'pnpm-lock.yaml');
+      const targetLockFileExists = await fs.pathExists(targetLockFile);
+      if (targetLockFileExists) {
+        // Lock file is already in the cache, no need to move it
+        // this.logger.console(`skipping moving lock file to cache as it is already exist at ${targetDir}`);
+
+        // Delete existing lock file so we can update it
+        await fs.remove(targetLockFile);
+        return;
+      }
+      this.logger.debug(`moving lock file from ${sourceLockFile} to ${targetDir}`);
+      const mvFunc = this.getCapsuleTransferFn();
+      try {
+        await mvFunc(sourceLockFile, path.join(targetDir, 'pnpm-lock.yaml'));
+        this._movedLockFiles.add(sourceLockFile);
+      } catch (err) {
+        this.logger.error(`failed moving lock file from ${sourceLockFile} to ${targetDir}`, err);
+      }
+    });
+    await Promise.all(promises);
+  }
+
+  private async moveCapsulesToTargetDir(
+    capsulesDirs: string[],
+    sourceRootDir: string,
+    targetCapsuleDir: string
+  ): Promise<void> {
+    this.logger.info(`start moving capsules from ${sourceRootDir} to ${targetCapsuleDir}`);
+    const promises = capsulesDirs.map(async (sourceDir) => {
+      const dirname = path.basename(sourceDir);
+      const sourceCapsuleReadyFile = this.getCapsuleReadyFilePath(sourceDir);
+      if (!fs.pathExistsSync(sourceCapsuleReadyFile)) {
+        // Capsule is not ready, don't copy it to the cache
+        this.logger.console(`skipping moving capsule to cache as it is not ready ${sourceDir}`);
+        return;
+      }
+      const targetDir = path.join(targetCapsuleDir, dirname);
+      if (fs.pathExistsSync(path.join(targetCapsuleDir, dirname))) {
+        const targetCapsuleReadyFile = this.getCapsuleReadyFilePath(targetDir);
+        if (fs.pathExistsSync(targetCapsuleReadyFile)) {
+          // Capsule is already in the cache, no need to move it
+          this.logger.console(`skipping moving capsule to cache as it is already exist at ${targetDir}`);
           return;
         }
-        const targetDir = path.join(targetCapsuleDir, dir.name);
-        if (fs.pathExistsSync(path.join(targetCapsuleDir, dir.name))) {
-          const targetCapsuleReadyFile = this.getCapsuleReadyFilePath(targetDir);
-          if (fs.pathExistsSync(targetCapsuleReadyFile)) {
-            // Capsule is already in the cache, no need to move it
-            this.logger.console(`skipping moving capsule to cache as it is already exist at ${targetDir}`);
-            return;
-          }
-          this.logger.console(`cleaning target capsule location as it's not ready at: ${targetDir}`);
-          rimraf.sync(targetDir);
-        }
-        this.logger.console(`moving specific capsule from ${sourceDir} to ${targetDir}`);
-        // We delete the ready file path first, as the move might take a long time, so we don't want to move
-        // the ready file indicator before the capsule is ready in the new location
-        this.removeCapsuleReadyFileSync(sourceDir);
-        await this.moveWithTempName(sourceDir, targetDir);
-        // Mark the capsule as ready in the new location
-        this.writeCapsuleReadyFileSync(targetDir);
-      });
-      await Promise.all(promises);
+        this.logger.console(`cleaning target capsule location as it's not ready at: ${targetDir}`);
+        rimraf.sync(targetDir);
+      }
+      this.logger.console(`moving specific capsule from ${sourceDir} to ${targetDir}`);
+      // We delete the ready file path first, as the move might take a long time, so we don't want to move
+      // the ready file indicator before the capsule is ready in the new location
+      this.removeCapsuleReadyFileSync(sourceDir);
+      await this.moveWithTempName(sourceDir, targetDir, this.getCapsuleTransferFn());
+      // Mark the capsule as ready in the new location
+      this.writeCapsuleReadyFileSync(targetDir);
     });
+    await Promise.all(promises);
   }
 
   /**
@@ -401,10 +491,9 @@ export class IsolatorMain {
    * @param sourceDir - The source directory from where the files or directories will be moved.
    * @param targetDir - The target directory where the source directory will be moved to.
    */
-  private async moveWithTempName(sourceDir, targetDir): Promise<void> {
+  private async moveWithTempName(sourceDir, targetDir, mvFunc: Function = fs.move): Promise<void> {
     const tempDir = `${targetDir}-${v4()}`;
     this.logger.console(`moving capsule from ${sourceDir} to a temp dir ${tempDir}`);
-    const mvFunc = this.getCapsuleTransferFn() || fs.move;
     await mvFunc(sourceDir, tempDir);
     const exists = await fs.pathExists(targetDir);
     // This might exist if in the time when we move to the temp dir, another process created the target dir already
@@ -457,12 +546,12 @@ export class IsolatorMain {
       return fs.existsSync(capsuleDir) && fs.existsSync(readyFilePath);
     });
     if (allCapsulesExists) {
-      this.logger.console(
+      this.logger.debug(
         `All required capsules already exists and valid in the real (cached) location: ${realCapsulesDir}`
       );
       return false;
     }
-    this.logger.console(
+    this.logger.debug(
       `Missing required capsules in the real (cached) location: ${realCapsulesDir}, using dated (temp) dir`
     );
     return true;
@@ -507,14 +596,16 @@ export class IsolatorMain {
         )} at ${chalk.bold(capsulesDir)}`
       );
     }
+    const useNesting = this.dependencyResolver.isolatedCapsules() && opts.installOptions?.useNesting;
     const installOptions = {
       ...DEFAULT_ISOLATE_INSTALL_OPTIONS,
       ...opts.installOptions,
-      useNesting: this.dependencyResolver.isolatedCapsules() && opts.installOptions?.useNesting,
+      useNesting,
     };
     if (!opts.emptyRootDir) {
       installOptions.dedupe = installOptions.dedupe && this.dependencyResolver.supportsDedupingOnExistingRoot();
     }
+
     const config = { installPackages: true, ...opts };
     if (opts.emptyRootDir) {
       await fs.emptyDir(capsulesDir);
@@ -556,6 +647,15 @@ export class IsolatorMain {
         await Promise.all(
           capsuleList.map(async (capsule) => {
             const newCapsuleList = CapsuleList.fromArray([capsule]);
+            if (opts.cacheCapsulesDir && capsulesDir !== opts.cacheCapsulesDir && opts.cacheLockFileOnly) {
+              const cacheCapsuleDir = path.join(opts.cacheCapsulesDir, basename(capsule.path));
+              const lockFilePath = path.join(cacheCapsuleDir, 'pnpm-lock.yaml');
+              const lockExists = await fs.pathExists(lockFilePath);
+              if (lockExists) {
+                // this.logger.console(`moving lock file from ${lockFilePath} to ${capsule.path}`);
+                await copyFile(lockFilePath, path.join(capsule.path, 'pnpm-lock.yaml'));
+              }
+            }
             const linkedDependencies = await this.linkInCapsules(
               capsulesDir,
               newCapsuleList,
@@ -566,6 +666,7 @@ export class IsolatorMain {
               cachePackagesOnCapsulesRoot,
               linkedDependencies,
               packageManager: opts.packageManager,
+              nodeLinker: opts.nodeLinker,
             });
           })
         );
@@ -649,6 +750,7 @@ export class IsolatorMain {
       cachePackagesOnCapsulesRoot?: boolean;
       linkedDependencies?: Record<string, Record<string, string>>;
       packageManager?: string;
+      nodeLinker?: NodeLinker;
     }
   ) {
     const installer = this.dependencyResolver.getInstaller({
@@ -656,6 +758,7 @@ export class IsolatorMain {
       cacheRootDirectory: opts.cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
       installingContext: { inCapsule: true },
       packageManager: opts.packageManager,
+      nodeLinker: opts.nodeLinker,
     });
     // When using isolator we don't want to use the policy defined in the workspace directly,
     // we only want to instal deps from components and the peer from the workspace
@@ -778,7 +881,7 @@ export class IsolatorMain {
     const legacyModifiedComps = modifiedComps.map((component) => component.state._consumer.clone());
     const legacyComponents = [...legacyUnmodifiedComps, ...legacyModifiedComps];
     if (legacyScope && unmodifiedComps.length) await importMultipleDistsArtifacts(legacyScope, legacyUnmodifiedComps);
-    const allIds = BitIds.fromArray(legacyComponents.map((c) => c.id));
+    const allIds = ComponentIdList.fromArray(legacyComponents.map((c) => c.id));
     await Promise.all(
       components.map(async (component) => {
         const capsule = capsuleList.getCapsule(component.id);
@@ -828,7 +931,13 @@ export class IsolatorMain {
   }
 
   private getCapsuleTransferFn(): CapsuleTransferFn {
-    return this.capsuleTransferSlot.values()[0];
+    return this.capsuleTransferSlot.values()[0] || this.getDefaultCapsuleTransferFn();
+  }
+
+  private getDefaultCapsuleTransferFn(): CapsuleTransferFn {
+    return async (source, target) => {
+      return fs.move(source, target, { overwrite: true });
+    };
   }
 
   /** @deprecated use the new function signature with an object parameter instead */
@@ -847,17 +956,20 @@ export class IsolatorMain {
     const getCapsuleDirOptsWithDefaults = {
       useHash: true,
       useDatedDirs: false,
+      cacheLockFileOnly: false,
       ...getCapsuleDirOpts,
     };
     const capsulesRootBaseDir = getCapsuleDirOptsWithDefaults.rootBaseDir || this.getRootDirOfAllCapsules();
     if (getCapsuleDirOptsWithDefaults.useDatedDirs) {
       const date = new Date();
-      const dateDir = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      const month = date.getMonth() < 12 ? date.getMonth() + 1 : 1;
+      const dateDir = `${date.getFullYear()}-${month}-${date.getDate()}`;
       const defaultDatedBaseDir = 'dated-capsules';
       const datedBaseDir = this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR) || defaultDatedBaseDir;
       let hashDir;
       const finalDatedDirId = getCapsuleDirOpts.datedDirId;
       if (finalDatedDirId && this._datedHashForName.has(finalDatedDirId)) {
+        // Make sure in the same process we always use the same hash for the same datedDirId
         hashDir = this._datedHashForName.get(finalDatedDirId);
       } else {
         hashDir = v4();
@@ -885,10 +997,12 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions
   ): Promise<Capsule[]> {
     this.logger.debug(`createCapsulesFromComponents: ${components.length} components`);
-    const capsules: Capsule[] = await Promise.all(
-      components.map((component: Component) => {
+    const capsules: Capsule[] = await pMap(
+      components,
+      (component: Component) => {
         return Capsule.createFromComponent(component, baseDir, opts);
-      })
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
     return capsules;
   }
@@ -986,7 +1100,7 @@ export class IsolatorMain {
 
   async populateComponentsFilesToWriteForCapsule(
     component: Component,
-    ids: BitIds,
+    ids: ComponentIdList,
     legacyScope?: Scope,
     opts?: IsolateComponentsOptions
   ): Promise<DataToPersist> {
@@ -1018,13 +1132,13 @@ export class IsolatorMain {
   private preparePackageJsonToWrite(
     component: Component,
     bitDir: string,
-    ignoreBitDependencies: BitIds | boolean = true
+    ignoreBitDependencies: ComponentIdList | boolean = true
   ): PackageJsonFile {
     const legacyComp: ConsumerComponent = component.state._consumer;
     this.logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}.`);
-    const getBitDependencies = (dependencies: BitIds) => {
+    const getBitDependencies = (dependencies: ComponentIdList) => {
       if (ignoreBitDependencies === true) return {};
-      return dependencies.reduce((acc, depId: BitId) => {
+      return dependencies.reduce((acc, depId: ComponentID) => {
         if (Array.isArray(ignoreBitDependencies) && ignoreBitDependencies.searchWithoutVersion(depId)) return acc;
         const packageDependency = depId.version;
         const packageName = componentIdToPackageName({
@@ -1039,7 +1153,7 @@ export class IsolatorMain {
     const bitDependencies = getBitDependencies(legacyComp.dependencies.getAllIds());
     const bitDevDependencies = getBitDependencies(legacyComp.devDependencies.getAllIds());
     const bitExtensionDependencies = getBitDependencies(legacyComp.extensions.extensionsBitIds);
-    const packageJson = PackageJsonFile.createFromComponent(bitDir, legacyComp, true);
+    const packageJson = PackageJsonFile.createFromComponent(bitDir, legacyComp);
     const main = pathNormalizeToLinux(legacyComp.mainFile);
     packageJson.addOrUpdateProperty('main', main);
     const addDependencies = (packageJsonFile: PackageJsonFile) => {
@@ -1085,7 +1199,7 @@ export class IsolatorMain {
             `getArtifacts: unable to find where to populate the artifacts from for ${component.id.toString()}`
           );
         }
-        const compParent = await legacyScope.getConsumerComponent(found._legacy);
+        const compParent = await legacyScope.getConsumerComponent(found);
         return getArtifactFilesExcludeExtension(compParent.extensions, 'teambit.pkg/pkg');
       }
       const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];

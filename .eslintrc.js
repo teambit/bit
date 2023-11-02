@@ -26,7 +26,7 @@ module.exports = {
     'plugin:react/recommended',
     // 'plugin:unicorn/recommended',
     // 'plugin:mocha/recommended',
-    'prettier'
+    'prettier',
   ],
   plugins: [
     '@typescript-eslint',
@@ -38,6 +38,7 @@ module.exports = {
   ],
   rules: {
     complexity: ['error', { max: 25 }],
+    'react/prop-types': 'off',
     'arrow-body-style': 'off',
     'prefer-arrow-callback': 'off',
     'no-console': ['error'],
@@ -55,6 +56,11 @@ module.exports = {
     '@typescript-eslint/ban-types': 'off',
     'no-shadow': 'off',
     '@typescript-eslint/no-shadow': ['error'],
+    // ERRORS OF plugin:@typescript-eslint as a result of upgrade eslint-config-airbnb-typescript from v5 to v12
+    '@typescript-eslint/lines-between-class-members': 'off',
+    '@typescript-eslint/naming-convention': 'off',
+    '@typescript-eslint/no-unused-expressions': 'off',
+    // END ERRORS OF plugin:@typescript-eslint as a result of upgrade eslint-config-airbnb-typescript from v5 to v12
     // ERRORS OF plugin:@typescript-eslint/recommended
     '@typescript-eslint/no-var-requires': 'off',
     '@typescript-eslint/ban-ts-ignore': 'off',
