@@ -383,6 +383,8 @@ export const CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS = 'default_resolve_envs_from_ro
  */
 export const CFG_USE_DATED_CAPSULES = 'use_dated_capsules';
 
+export const CFG_CACHE_LOCK_ONLY_CAPSULES = 'cache_lock_only_capsules';
+
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';
 export const CFG_PROXY_NO_PROXY = 'proxy.no_proxy';
@@ -614,3 +616,5 @@ export enum BuildStatus {
 export const SOURCE_DIR_SYMLINK_TO_NM = '_src'; // symlink from node_modules to the workspace sources files
 
 export const FILE_CHANGES_CHECKOUT_MSG = 'components with file changes';
+
+export const VERSION_CHANGED_BIT_ID_TO_COMP_ID = '1.2.10';

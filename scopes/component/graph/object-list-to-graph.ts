@@ -1,15 +1,15 @@
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { uniqBy } from 'lodash';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import type { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { BitObjectList } from '@teambit/legacy/dist/scope/objects/bit-object-list';
 import { getAllVersionsInfo } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
 import { Dependency } from './model/dependency';
 
-type BitIdNode = Node<BitId>;
+type BitIdNode = Node<ComponentID>;
 type DependencyEdge = Edge<Dependency>;
 
-export class IdGraph extends Graph<BitId, Dependency> {
+export class IdGraph extends Graph<ComponentID, Dependency> {
   constructor(nodes: BitIdNode[] = [], edges: DependencyEdge[] = []) {
     super(nodes, edges);
   }
@@ -30,7 +30,7 @@ export async function bitObjectListToGraph(bitObjectsList: BitObjectList): Promi
   await Promise.all(
     components.map(async (component) => {
       const compFromMetadata = exportMetadata?.exportVersions.find((c) =>
-        c.id.isEqualWithoutVersion(component.toBitId())
+        c.id.isEqualWithoutVersion(component.toComponentId())
       );
       const startFrom = compFromMetadata?.head;
       const versionsInfo = await getAllVersionsInfo({
@@ -40,14 +40,14 @@ export async function bitObjectListToGraph(bitObjectsList: BitObjectList): Promi
         throws: false,
       });
       versionsInfo.forEach((versionInfo) => {
-        const id = component.toBitId().changeVersion(versionInfo.tag || versionInfo.ref.toString());
+        const id = component.toComponentId().changeVersion(versionInfo.tag || versionInfo.ref.toString());
         const idStr = id.toString();
         nodes.push(new Node(idStr, id));
         if (!versionInfo.version) {
           return;
         }
         const { dependencies, devDependencies, extensionDependencies } = versionInfo.version.depsIdsGroupedByType;
-        const addDep = (depId: BitId, edge: Dependency) => {
+        const addDep = (depId: ComponentID, edge: Dependency) => {
           const depIdStr = depId.toString();
           nodes.push(new Node(depIdStr, depId));
           edges.push(new Edge(idStr, depIdStr, edge));

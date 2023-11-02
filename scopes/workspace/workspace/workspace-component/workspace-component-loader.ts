@@ -1,12 +1,11 @@
-import { Component, ComponentFS, ComponentID, Config, InvalidComponent, State, TagMap } from '@teambit/component';
-import { BitId } from '@teambit/legacy-bit-id';
+import { Component, ComponentFS, Config, InvalidComponent, State, TagMap } from '@teambit/component';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import mapSeries from 'p-map-series';
 import { compact, fromPairs, uniq } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
 import { IssuesClasses } from '@teambit/component-issues';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
@@ -81,7 +80,7 @@ export class WorkspaceComponentLoader {
     await mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
       try {
-        await this.workspace.consumer.loadComponent(id._legacy);
+        await this.workspace.consumer.loadComponent(id);
       } catch (err: any) {
         if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
           errors.push({
@@ -103,9 +102,9 @@ export class WorkspaceComponentLoader {
     storeInCache = true,
     loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
-    const bitIdWithVersion: BitId = getLatestVersionNumber(
+    const bitIdWithVersion: ComponentID = getLatestVersionNumber(
       this.workspace.consumer.bitmapIdsFromCurrentLaneIncludeRemoved,
-      componentId._legacy
+      componentId
     );
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
     const fromCache = this.getFromCache(id, loadOpts);
@@ -114,7 +113,7 @@ export class WorkspaceComponentLoader {
     }
     const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, loadOpts));
     // in case of out-of-sync, the id may changed during the load process
-    const updatedId = consumerComponent ? ComponentID.fromLegacy(consumerComponent.id, id.scope) : id;
+    const updatedId = consumerComponent ? consumerComponent.id : id;
     const component = await this.loadOne(updatedId, consumerComponent, loadOpts);
     if (storeInCache) {
       this.addMultipleEnvsIssueIfNeeded(component); // it's in storeInCache block, otherwise, it wasn't fully loaded
@@ -209,7 +208,7 @@ export class WorkspaceComponentLoader {
   private getFromCache(id: ComponentID, loadOpts?: ComponentLoadOptions): Component | undefined {
     const cacheKey = createComponentCacheKey(id, loadOpts);
     const fromCache = this.componentsCache.get(cacheKey);
-    if (fromCache && fromCache.id._legacy.isEqual(id._legacy)) {
+    if (fromCache && fromCache.id.isEqual(id)) {
       return fromCache;
     }
     return undefined;
@@ -222,7 +221,7 @@ export class WorkspaceComponentLoader {
     loadOpts.originatedFromHarmony = true;
     try {
       const { components, removedComponents } = await this.workspace.consumer.loadComponents(
-        BitIds.fromArray([id._legacy]),
+        ComponentIdList.fromArray([id]),
         true,
         loadOpts
       );
@@ -259,7 +258,7 @@ export class WorkspaceComponentLoader {
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const policy = await this.dependencyResolver.mergeVariantPolicies(
       component.config.extensions,
-      component.id._legacy,
+      component.id,
       component.state._consumer.files
     );
     const dependenciesList = await this.dependencyResolver.extractDepsFromLegacy(component, policy);

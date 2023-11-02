@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
 import { GlobalConfigMain } from '@teambit/global-config';
@@ -154,7 +154,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     const snapExplanation = `\n(use "bit export" to push these components to a remote")
 (use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)\n`;
 
-    const compInBold = (id: BitId) => {
+    const compInBold = (id: ComponentID) => {
       const version = id.hasVersion() ? `@${id.version}` : '';
       return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
     };
@@ -163,9 +163,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       return comps
         .map((component) => {
           let componentOutput = `     > ${compInBold(component.id)}`;
-          const autoTag = autoSnappedResults.filter((result) =>
-            result.triggeredBy.searchWithoutScopeAndVersion(component.id)
-          );
+          const autoTag = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
           if (autoTag.length) {
             const autoTagComp = autoTag.map((a) => compInBold(a.component.id));
             componentOutput += `\n       ${AUTO_SNAPPED_MSG} (${autoTagComp.length} total):

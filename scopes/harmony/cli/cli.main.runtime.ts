@@ -14,6 +14,7 @@ import { CLIParser } from './cli-parser';
 import { CompletionCmd } from './completion.cmd';
 import { CliCmd, CliGenerateCmd } from './cli.cmd';
 import { HelpCmd } from './help.cmd';
+import { VersionCmd } from './version.cmd';
 
 export type CommandList = Array<Command>;
 export type OnStart = (hasWorkspace: boolean, currentCommand: string) => Promise<void>;
@@ -166,7 +167,7 @@ export class CLIMain {
     const cliCmd = new CliCmd(cliMain);
     const helpCmd = new HelpCmd(cliMain);
     cliCmd.commands.push(cliGenerateCmd);
-    cliMain.register(...legacyCommandsAdapters, new CompletionCmd(), cliCmd, helpCmd);
+    cliMain.register(...legacyCommandsAdapters, new CompletionCmd(), cliCmd, helpCmd, new VersionCmd());
     return cliMain;
   }
 }

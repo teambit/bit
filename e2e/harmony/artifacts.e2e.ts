@@ -23,7 +23,7 @@ describe('bit artifacts command', function () {
       expect(() => helper.command.artifacts('comp1')).to.not.throw();
     });
     it('should be able to work when using the full component-id', () => {
-      expect(() => helper.command.artifacts('my-scope/comp1')).to.not.throw();
+      expect(() => helper.command.artifacts(`${helper.scopes.remote}/comp1`)).to.not.throw();
     });
   });
   describe('running the command on a snap', () => {

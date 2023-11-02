@@ -3,14 +3,14 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import semver from 'semver';
 import { isSnap } from '@teambit/component-version';
+import { BitError } from '@teambit/bit-error';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { uniq, isEmpty, union, cloneDeep } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
-import { BitId, BitIds } from '../../../../bit-id';
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
-import ShowDoctorError from '../../../../error/show-doctor-error';
 import logger from '../../../../logger/logger';
 import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
 import { PathLinux, PathLinuxRelative, PathOsBased } from '../../../../utils/path';
@@ -50,7 +50,7 @@ export type DebugDependencies = {
 };
 
 export type DebugComponentsDependency = {
-  id: BitId;
+  id: ComponentID;
   importSource?: string;
   dependencyPackageJsonPath?: string;
   dependentPackageJsonPath?: string;
@@ -73,17 +73,17 @@ export type EnvPolicyForComponent = {
 };
 
 type HarmonyEnvPeersPolicyForEnvItselfGetter = (
-  componentId: BitId,
+  componentId: ComponentID,
   files: SourceFile[]
 ) => Promise<{ [name: string]: string } | undefined>;
 
 type OnComponentAutoDetectOverrides = (
   configuredExtensions: ExtensionDataList,
-  componentId: BitId,
+  componentId: ComponentID,
   files: SourceFile[]
 ) => Promise<DependenciesOverridesData>;
 
-type OnComponentAutoDetectConfigMerge = (componentId: BitId) => DependenciesOverridesData | undefined;
+type OnComponentAutoDetectConfigMerge = (componentId: ComponentID) => DependenciesOverridesData | undefined;
 
 const DepsKeysToAllPackagesDepsKeys = {
   dependencies: 'packageDependencies',
@@ -96,7 +96,7 @@ type GetEnvDetectors = (extensions: ExtensionDataList) => Promise<DependencyDete
 export default class DependencyResolver {
   component: Component;
   consumer: Consumer;
-  componentId: BitId;
+  componentId: ComponentID;
   componentMap: ComponentMap;
   componentFromModel: Component;
   consumerPath: PathOsBased;
@@ -151,7 +151,7 @@ export default class DependencyResolver {
   constructor(component: Component, consumer: Consumer) {
     this.component = component;
     this.consumer = consumer;
-    this.componentId = component.id;
+    this.componentId = component.componentId;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentMap = this.component.componentMap;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -343,11 +343,7 @@ export default class DependencyResolver {
     DEPENDENCIES_FIELDS.forEach((depField) => {
       if (components[depField] && components[depField].length) {
         components[depField].forEach((depData) =>
-          this.allDependencies[depField].push({
-            id: depData.componentId,
-            relativePaths: [],
-            packageName: depData.packageName,
-          })
+          this.allDependencies[depField].push(new Dependency(depData.componentId, [], depData.packageName))
         );
       }
       if (packages[depField] && !R.isEmpty(packages[depField])) {
@@ -368,7 +364,7 @@ export default class DependencyResolver {
     }
   }
 
-  traverseTreeForComponentId(depFile: PathLinux): BitId | undefined {
+  traverseTreeForComponentId(depFile: PathLinux): ComponentID | undefined {
     if (!this.tree[depFile] || (!this.tree[depFile].files && !this.tree[depFile].components)) return undefined;
     if (!this.componentMap.rootDir) {
       throw Error('traverseTreeForComponentId should get called only when rootDir is set');
@@ -404,7 +400,7 @@ export default class DependencyResolver {
     return undefined;
   }
 
-  getComponentIdByResolvedPackageData(bit: ResolvedPackageData): BitId {
+  getComponentIdByResolvedPackageData(bit: ResolvedPackageData): ComponentID {
     if (!bit.componentId) {
       throw new Error(`resolved Bit component must have componentId prop in the package.json file`);
     }
@@ -417,7 +413,7 @@ export default class DependencyResolver {
    * it to the "issues", then, later, it shows a warning on bit-status and block tagging.
    */
   getComponentIdByDepFile(depFile: PathLinux): {
-    componentId: BitId | null | undefined;
+    componentId: ComponentID | undefined;
     depFileRelative: PathLinux;
     destination: string | null | undefined;
   } {
@@ -439,12 +435,12 @@ export default class DependencyResolver {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getDependencyPathsFromModel(componentId: BitId, depFile: PathLinux, rootDir: PathLinux) {
+  getDependencyPathsFromModel(componentId: ComponentID, depFile: PathLinux, rootDir: PathLinux) {
     const dependency = this.componentFromModel
       .getAllDependencies()
       .find((dep) => dep.id.isEqualWithoutVersion(componentId));
     if (!dependency) {
-      throw new ShowDoctorError( // $FlowFixMe
+      throw new BitError(
         `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${this.componentFromModel.id}`
       );
     }
@@ -453,7 +449,7 @@ export default class DependencyResolver {
       (r) => r.sourceRelativePath === depFile
     );
     if (!relativePath) {
-      throw new ShowDoctorError(
+      throw new BitError(
         `unable to find ${relativePath} path in the dependencies relativePaths of ${this.componentFromModel.id}`
       );
     }
@@ -535,7 +531,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
     // happens when in the same component one file requires another one. In this case, there is
     // noting to do regarding the dependencies
-    if (componentId.isEqualWithoutVersion(this.componentId)) {
+    if (componentId.isEqual(this.componentId, { ignoreVersion: true })) {
       return false;
     }
 
@@ -569,7 +565,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       });
       depsPaths.importSpecifiers = importSpecifiers;
     }
-    const currentComponentsDeps: Dependency = { id: componentId, relativePaths: [depsPaths] };
+    const currentComponentsDeps = new Dependency(componentId, [depsPaths]);
     this._pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource, depsPaths);
 
     const allDependencies: Dependency[] = [
@@ -693,7 +689,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
         return;
       }
-      const getExistingIdFromBitmap = (): BitId | undefined => {
+      const getExistingIdFromBitmap = (): ComponentID | undefined => {
         const existingIds = this.consumer.bitmapIdsFromCurrentLane.filterWithoutVersion(componentId);
         return existingIds.length === 1 ? existingIds[0] : undefined;
       };
@@ -707,7 +703,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         });
         return foundVersion ? componentId.changeVersion(foundVersion) : undefined;
       };
-      const getExistingIdFromModel = (): BitId | undefined => {
+      const getExistingIdFromModel = (): ComponentID | undefined => {
         if (this.componentFromModel) {
           const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
           if (modelDep) {
@@ -717,7 +713,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         }
         return undefined;
       };
-      const getExistingId = (): BitId | undefined => {
+      const getExistingId = (): ComponentID | undefined => {
         const fromBitmap = getExistingIdFromBitmap();
         if (fromBitmap) {
           depDebug.versionResolvedFrom = 'BitMap';
@@ -758,7 +754,7 @@ either, use the ignore file syntax or change the require statement to have a mod
           return;
         }
         this.addImportNonMainIssueIfNeeded(originFile, compDep);
-        const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [], packageName: compDep.name };
+        const currentComponentsDeps = new Dependency(existingId, [], compDep.name);
         this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, depDebug);
       } else {
         this._pushToMissingComponentsIssues(originFile, componentId);
@@ -932,17 +928,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     // });
 
     const coreAspectIds = Object.values(coreAspects);
-    const defaultScope = this.component.defaultScope;
-
-    let id: undefined | BitId;
-
-    if (this.component.id.scope) {
-      id = this.component.id;
-    } else {
-      id = this.component.id.changeScope(defaultScope);
-    }
-
-    if (coreAspectIds.includes(id.toStringWithoutVersion())) {
+    if (coreAspectIds.includes(this.component.id.toStringWithoutVersion())) {
       return;
     }
 
@@ -1053,13 +1039,13 @@ either, use the ignore file syntax or change the require statement to have a mod
     );
     // remove dev dependencies that are also regular dependencies
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const componentDepsIds = new BitIds(...this.allDependencies.dependencies.map((c) => c.id));
+    const componentDepsIds = new ComponentIdList(...this.allDependencies.dependencies.map((c) => c.id));
     this.allDependencies.devDependencies = this.allDependencies.devDependencies.filter(
       (d) => !componentDepsIds.has(d.id)
     );
   }
 
-  getExistingDependency(dependencies: Dependency[], id: BitId): Dependency | null | undefined {
+  getExistingDependency(dependencies: Dependency[], id: ComponentID): Dependency | null | undefined {
     return dependencies.find((d) => d.id.isEqualWithoutVersion(id));
   }
 
@@ -1398,10 +1384,15 @@ either, use the ignore file syntax or change the require statement to have a mod
       untrackIssue.data[originFile] = { nested, untrackedFiles: [newUntrackedFile] };
     }
   }
-  _pushToRelativeComponentsIssues(originFile, componentId: BitId) {
+  _pushToRelativeComponentsIssues(originFile, componentId: ComponentID) {
     (this.issues.getOrCreate(IssuesClasses.RelativeComponents).data[originFile] ||= []).push(componentId);
   }
-  _pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource: string, relativePath: RelativePath) {
+  _pushToRelativeComponentsAuthoredIssues(
+    originFile,
+    componentId: ComponentID,
+    importSource: string,
+    relativePath: RelativePath
+  ) {
     (this.issues.getOrCreate(IssuesClasses.RelativeComponentsAuthored).data[originFile] ||= []).push({
       importSource,
       componentId,
@@ -1416,7 +1407,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       ...uniq(missingPackages)
     );
   }
-  _pushToMissingComponentsIssues(originFile: PathLinuxRelative, componentId: BitId) {
+  _pushToMissingComponentsIssues(originFile: PathLinuxRelative, componentId: ComponentID) {
     (this.issues.getOrCreate(IssuesClasses.MissingComponents).data[originFile] ||= []).push(componentId);
   }
 }

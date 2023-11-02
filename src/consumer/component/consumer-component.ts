@@ -1,10 +1,10 @@
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import fs from 'fs-extra';
 import { v4 } from 'uuid';
 import * as path from 'path';
 import R from 'ramda';
 import { IssuesList } from '@teambit/component-issues';
 import BitId from '../../bit-id/bit-id';
-import BitIds from '../../bit-id/bit-ids';
 import {
   getCloudDomain,
   BIT_WORKSPACE_TMP_DIRNAME,
@@ -17,7 +17,6 @@ import GeneralError from '../../error/general-error';
 import docsParser from '../../jsdoc/parser';
 import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
-import ComponentWithDependencies from '../../scope/component-dependencies';
 import { ScopeListItem } from '../../scope/models/model-component';
 import Version, { DepEdge, Log } from '../../scope/models/version';
 import { pathNormalizeToLinux, sha1 } from '../../utils';
@@ -45,7 +44,7 @@ import { ModelComponent } from '../../scope/models';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
-export type InvalidComponent = { id: BitId; error: Error; component: Component | undefined };
+export type InvalidComponent = { id: ComponentID; error: Error; component: Component | undefined };
 
 export type ComponentProps = {
   name: string;
@@ -57,7 +56,7 @@ export type ComponentProps = {
   bitJson?: ComponentConfig;
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
-  flattenedDependencies?: BitIds;
+  flattenedDependencies?: ComponentIdList;
   flattenedEdges?: DepEdge[];
   packageDependencies?: Record<string, string>;
   devPackageDependencies?: Record<string, string>;
@@ -107,7 +106,7 @@ export default class Component {
   dependencies: Dependencies;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
-  flattenedDependencies: BitIds;
+  flattenedDependencies: ComponentIdList;
   flattenedEdges: DepEdge[];
   packageDependencies: Record<string, string>;
   devPackageDependencies: Record<string, string>;
@@ -134,8 +133,6 @@ export default class Component {
   _isModified: boolean;
   packageJsonFile: PackageJsonFile | undefined; // populated when loadedFromFileSystem or when writing the components. for author it never exists
   packageJsonChangedProps: Record<string, any> | undefined; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  _currentlyUsedVersion: BitId; // used by listScope functionality
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist: DataToPersist;
@@ -143,13 +140,22 @@ export default class Component {
   extensions: ExtensionDataList = new ExtensionDataList();
   _capsuleDir?: string; // @todo: remove this. use CapsulePaths once it's public and available
   buildStatus?: BuildStatus;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get id(): BitId {
+
+  get id(): ComponentID {
+    return this.componentId;
+  }
+  get bitId(): BitId {
     return new BitId({
       scope: this.scope,
       name: this.name,
       version: this.version,
     });
+  }
+  get componentId(): ComponentID {
+    const bitId = this.bitId;
+    if (!bitId.scope && !this.defaultScope)
+      throw new Error(`Component ${bitId.toString()} does not have a scope, neither a defaultScope`);
+    return new ComponentID(bitId, this.defaultScope as string);
   }
 
   constructor({
@@ -194,7 +200,7 @@ export default class Component {
     this.bitJson = bitJson;
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
-    this.flattenedDependencies = flattenedDependencies || new BitIds();
+    this.flattenedDependencies = flattenedDependencies || new ComponentIdList();
     this.flattenedEdges = flattenedEdges || [];
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
@@ -241,7 +247,7 @@ export default class Component {
   }
 
   getTmpFolder(workspacePrefix: PathOsBased = ''): PathOsBased {
-    let folder = path.join(workspacePrefix, BIT_WORKSPACE_TMP_DIRNAME, this.id.name);
+    let folder = path.join(workspacePrefix, BIT_WORKSPACE_TMP_DIRNAME, this.id.fullName);
     if (this.componentMap) {
       const componentDir = this.componentMap.getComponentDir();
       if (componentDir) {
@@ -260,7 +266,7 @@ export default class Component {
   }
 
   setNewVersion(version = sha1(v4())) {
-    this.previouslyUsedVersion = this.version;
+    this.previouslyUsedVersion = this.id.hasVersion() ? this.version : undefined;
     this.version = version;
   }
 
@@ -320,12 +326,16 @@ export default class Component {
     return [...this.dependencies.dependencies, ...this.devDependencies.dependencies];
   }
 
-  getAllDependenciesIds(): BitIds {
+  getAllDependenciesIds(): ComponentIdList {
     const allDependencies = R.flatten(Object.values(this.depsIdsGroupedByType));
-    return BitIds.fromArray(allDependencies);
+    return ComponentIdList.fromArray(allDependencies);
   }
 
-  get depsIdsGroupedByType(): { dependencies: BitIds; devDependencies: BitIds; extensionDependencies: BitIds } {
+  get depsIdsGroupedByType(): {
+    dependencies: ComponentIdList;
+    devDependencies: ComponentIdList;
+    extensionDependencies: ComponentIdList;
+  } {
     return {
       dependencies: this.dependencies.getAllIds(),
       devDependencies: this.devDependencies.getAllIds(),
@@ -338,7 +348,7 @@ export default class Component {
     return Boolean(allDependencies.length);
   }
 
-  getAllFlattenedDependencies(): BitId[] {
+  getAllFlattenedDependencies(): ComponentID[] {
     return [...this.flattenedDependencies];
   }
 
@@ -408,34 +418,6 @@ export default class Component {
       IgnoredDirectory,
     ];
     return invalidComponentErrors.some((errorType) => err instanceof errorType);
-  }
-
-  async toComponentWithDependencies(consumer: Consumer): Promise<ComponentWithDependencies> {
-    const getFlatten = (field: string): BitIds => {
-      // when loaded from filesystem, it doesn't have the flatten, fetch them from model.
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return this.loadedFromFileSystem ? this.componentFromModel[field] : this[field];
-    };
-    const getDependenciesComponents = (ids: BitIds): Promise<Component[]> => {
-      return Promise.all(
-        ids.map((dependencyId) => {
-          if (consumer.bitMap.isExistWithSameVersion(dependencyId)) {
-            return consumer.loadComponent(dependencyId);
-          }
-          // when dependencies are imported as npm packages, they are not in bit.map
-          this.dependenciesSavedAsComponents = false;
-          return consumer.loadComponentFromModel(dependencyId);
-        })
-      );
-    };
-
-    const dependencies = await getDependenciesComponents(getFlatten('flattenedDependencies'));
-    return new ComponentWithDependencies({
-      component: this,
-      dependencies,
-      devDependencies: [],
-      extensionDependencies: [],
-    });
   }
 
   copyAllDependenciesFromModel() {
@@ -526,13 +508,13 @@ export default class Component {
     consumer,
   }: {
     componentMap: ComponentMap;
-    id: BitId;
+    id: ComponentID;
     consumer: Consumer;
   }): Promise<Component> {
     const workspaceConfig: ILegacyWorkspaceConfig = consumer.config;
     const modelComponent = await consumer.scope.getModelComponentIfExist(id);
     const componentFromModel = await consumer.loadComponentFromModelIfExist(id);
-    if (!componentFromModel && id.scope) {
+    if (!componentFromModel && id._legacy.hasScope()) {
       const inScopeWithAnyVersion = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
       // if it's in scope with another version, the component will be synced in _handleOutOfSyncScenarios()
       if (!inScopeWithAnyVersion) throw new ComponentsPendingImport([id.toString()]);
@@ -577,15 +559,17 @@ export default class Component {
     const docsP = _getDocsForFiles(files, consumer.componentFsCache);
     const docs = await Promise.all(docsP);
     const flattenedDocs = docs ? R.flatten(docs) : [];
-    const defaultScope = componentConfig.defaultScope || null;
+    // probably componentConfig.defaultScope is not needed. try to remove it.
+    // once we changed BitId to ComponentId, the defaultScope is always part of the id.
+    const defaultScope = id.hasScope() ? componentConfig.defaultScope : id.scope;
     const getSchema = () => {
       if (componentFromModel) return componentFromModel.schema;
       return consumer.isLegacy ? undefined : CURRENT_SCHEMA;
     };
 
     return new Component({
-      name: id.name,
-      scope: id.scope,
+      name: id.fullName,
+      scope: id._legacy.scope,
       version: id.version,
       lang: componentConfig.lang,
       bindingPrefix,
@@ -601,7 +585,7 @@ export default class Component {
       deprecated,
       overrides,
       schema: getSchema(),
-      defaultScope,
+      defaultScope: defaultScope || null,
       packageJsonFile,
       packageJsonChangedProps,
       extensions,
@@ -613,7 +597,7 @@ export default class Component {
 async function getLoadedFiles(
   consumer: Consumer,
   componentMap: ComponentMap,
-  id: BitId,
+  id: ComponentID,
   bitDir: string
 ): Promise<SourceFile[]> {
   if (componentMap.noFilesError) {

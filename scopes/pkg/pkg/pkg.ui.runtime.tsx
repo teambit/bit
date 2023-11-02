@@ -30,7 +30,7 @@ export class PkgUI {
     const registry = packageName.split('/')[0];
 
     const packageVersion =
-      componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version)}`;
+      componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version as string)}`;
 
     return {
       Title: <img style={{ width: '30px' }} src="https://static.bit.dev/brands/logo-npm-new.svg" />,

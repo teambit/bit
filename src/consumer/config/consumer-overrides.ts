@@ -1,14 +1,12 @@
 import chalk from 'chalk';
 import R from 'ramda';
-
-import BitId from '../../bit-id/bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { DEPENDENCIES_FIELDS, OVERRIDE_FILE_PREFIX } from '../../constants';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
 import hasWildcard from '../../utils/string/has-wildcard';
 import { validateUserInputType } from '../../utils/validate-type';
-import Component from '../component/consumer-component';
 import { ComponentOverridesData } from './component-overrides';
 
 export type ConsumerOverridesOfComponent = ComponentOverridesData & {
@@ -35,7 +33,7 @@ export default class ConsumerOverrides {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new ConsumerOverrides(overrides);
   }
-  getOverrideComponentData(bitId: BitId): ConsumerOverridesOfComponent | undefined {
+  getOverrideComponentData(bitId: ComponentID): ConsumerOverridesOfComponent | undefined {
     const matches = this._getAllRulesMatchedById(bitId);
     if (!matches.length) {
       return undefined;
@@ -86,7 +84,7 @@ export default class ConsumerOverrides {
       }
     });
   }
-  _getAllRulesMatchedById(bitId: BitId): string[] {
+  _getAllRulesMatchedById(bitId: ComponentID): string[] {
     const exactMatch = this.findExactMatch(bitId);
     const matchByGlobPattern = Object.keys(this.overrides).filter((idStr) => this._isMatchByWildcard(bitId, idStr));
     const nonExcluded = matchByGlobPattern.filter((match) => !this._isExcluded(this.overrides[match], bitId));
@@ -94,11 +92,11 @@ export default class ConsumerOverrides {
     if (exactMatch) allMatches.unshift(exactMatch);
     return allMatches;
   }
-  _isMatchByWildcard(bitId: BitId, idWithPossibleWildcard: string): boolean {
+  _isMatchByWildcard(bitId: ComponentID, idWithPossibleWildcard: string): boolean {
     if (!hasWildcard(idWithPossibleWildcard)) return false;
     return isBitIdMatchByWildcards(bitId, idWithPossibleWildcard);
   }
-  _isExcluded(overridesValues: Record<string, any>, bitId: BitId) {
+  _isExcluded(overridesValues: Record<string, any>, bitId: ComponentID) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!overridesValues.exclude || !overridesValues.exclude.length) {
@@ -106,10 +104,7 @@ export default class ConsumerOverrides {
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return overridesValues.exclude.some(
-      (excludeRule) =>
-        this._isMatchByWildcard(bitId, excludeRule) ||
-        bitId.toStringWithoutVersion() === excludeRule ||
-        bitId.toStringWithoutScopeAndVersion() === excludeRule
+      (excludeRule) => this._isMatchByWildcard(bitId, excludeRule) || bitId.toStringWithoutVersion() === excludeRule
     );
   }
   /**
@@ -145,34 +140,11 @@ export default class ConsumerOverrides {
     return indexOfFirstWildcard(a) - indexOfFirstWildcard(b);
   }
 
-  updateOverridesIfChanged(component: Component, areEnvsChanged: boolean): boolean {
-    const overrides: ConsumerOverridesOfComponent = component.overrides.componentOverridesData;
-    const id: BitId = component.id;
-    const existingOverrides = this.getOverrideComponentData(id);
-    if (!areEnvsChanged && this.areOverridesObjectsEqual(existingOverrides, overrides)) return false;
-    const exactMatch = this.findExactMatch(id);
-    const key = exactMatch || id.toStringWithoutVersion();
-    this.overrides[key] = overrides;
-    this.hasChanged = true;
-    return true;
+  findExactMatch(bitId: ComponentID): string | null | undefined {
+    return Object.keys(this.overrides).find((idStr) => bitId.toStringWithoutVersion() === idStr);
   }
 
-  areOverridesObjectsEqual(
-    overridesA: ConsumerOverridesOfComponent | null | undefined,
-    overridesB: ConsumerOverridesOfComponent
-  ): boolean {
-    // seems like R.equals does a great job here. it compares objects by values (not by reference).
-    // also it disregards the keys order.
-    return R.equals(overridesA || {}, overridesB || {});
-  }
-
-  findExactMatch(bitId: BitId): string | null | undefined {
-    return Object.keys(this.overrides).find(
-      (idStr) => bitId.toStringWithoutVersion() === idStr || bitId.toStringWithoutScopeAndVersion() === idStr
-    );
-  }
-
-  removeExactMatch(bitId: BitId): boolean {
+  removeExactMatch(bitId: ComponentID): boolean {
     const exactMatch = this.findExactMatch(bitId);
     if (!exactMatch) return false;
     delete this.overrides[exactMatch];

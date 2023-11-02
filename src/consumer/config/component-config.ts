@@ -1,9 +1,9 @@
 import mapSeries from 'p-map-series';
 import { pickBy } from 'lodash';
 import R from 'ramda';
-import { BitId } from '../../bit-id';
+import { BitError } from '@teambit/bit-error';
+import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
-import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import Component from '../component/consumer-component';
 import PackageJsonFile from '../component/package-json-file';
@@ -64,7 +64,7 @@ export default class ComponentConfig extends AbstractConfig {
 
   validate(bitJsonPath: string) {
     if (this.extensions && typeof this.extensions !== 'object') {
-      throw new ShowDoctorError(
+      throw new BitError(
         `bit.json at "${bitJsonPath}" is invalid, re-import the component with "--conf" flag to recreate it`
       );
     }
@@ -85,7 +85,7 @@ export default class ComponentConfig extends AbstractConfig {
     this.lang = this.lang || component.lang;
   }
 
-  static async load({ componentId }: { componentId: BitId }): Promise<ComponentConfig> {
+  static async load({ componentId }: { componentId: ComponentID }): Promise<ComponentConfig> {
     const onLoadResults = await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentId);
     const wsComponentConfig = onLoadResults[0];
     const defaultScope = wsComponentConfig.defaultScope;
@@ -107,7 +107,7 @@ export default class ComponentConfig extends AbstractConfig {
    * @param {BitId} id
    * @memberof ComponentConfig
    */
-  static async runOnLoadEvent(subscribers: ConfigLoadRegistry, id: BitId): Promise<any[]> {
+  static async runOnLoadEvent(subscribers: ConfigLoadRegistry, id: ComponentID): Promise<any[]> {
     logger.debugAndAddBreadCrumb('componentConfigLoad', `running on load even for component ${id.toString()}`);
     try {
       const res = await mapSeries(Object.keys(subscribers), async (extId: string) => {

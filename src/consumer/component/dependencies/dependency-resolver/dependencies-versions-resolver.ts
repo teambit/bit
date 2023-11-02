@@ -1,5 +1,5 @@
 import R from 'ramda';
-import { BitId } from '../../../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import Consumer from '../../../../consumer/consumer';
 import logger from '../../../../logger/logger';
 import Component from '../../../component/consumer-component';
@@ -17,9 +17,9 @@ export default function updateDependenciesVersions(
   updateDependencies(component.devDependencies);
   updateExtensions(component.extensions);
 
-  function resolveVersion(id: BitId): string | undefined {
-    // @ts-ignore component.componentFromModel is set
-    const idFromModel = getIdFromModelDeps(component.componentFromModel, id);
+  function resolveVersion(id: ComponentID): string | undefined {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const idFromModel = getIdFromModelDeps(component.componentFromModel!, id);
     const idFromBitMap = getIdFromBitMap(id);
     const idFromComponentConfig = getIdFromComponentConfig(id);
     const getFromComponentConfig = () => idFromComponentConfig;
@@ -60,8 +60,8 @@ export default function updateDependenciesVersions(
   }
 
   function updateExtension(extension: ExtensionDataEntry) {
-    if (extension.extensionId) {
-      const resolvedVersion = resolveVersion(extension.extensionId);
+    if (extension.newExtensionId && extension.extensionId) {
+      const resolvedVersion = resolveVersion(extension.newExtensionId);
       if (resolvedVersion) {
         extension.extensionId = extension.extensionId.changeVersion(resolvedVersion);
       }
@@ -71,25 +71,21 @@ export default function updateDependenciesVersions(
     extensions.forEach(updateExtension);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  function getIdFromModelDeps(componentFromModel?: Component, componentId: BitId): BitId | null | undefined {
+  function getIdFromModelDeps(componentFromModel: Component, componentId: ComponentID): ComponentID | null | undefined {
     if (!componentFromModel) return null;
     const dependency = componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
     if (!dependency) return null;
     return dependency;
   }
 
-  function getIdFromBitMap(componentId: BitId): BitId | null | undefined {
-    return consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true });
+  function getIdFromBitMap(componentId: ComponentID): ComponentID | null | undefined {
+    return consumer.bitMap.getComponentIdIfExist(componentId, { ignoreVersion: true });
   }
 
-  function getIdFromComponentConfig(componentId: BitId): BitId | undefined {
+  function getIdFromComponentConfig(componentId: ComponentID): ComponentID | undefined {
     const dependencies = component.overrides.getComponentDependenciesWithVersion();
     if (R.isEmpty(dependencies)) return undefined;
-    const dependency = Object.keys(dependencies).find(
-      (idStr) =>
-        componentId.toStringWithoutVersion() === idStr || componentId.toStringWithoutScopeAndVersion() === idStr
-    );
+    const dependency = Object.keys(dependencies).find((idStr) => componentId.toStringWithoutVersion() === idStr);
     if (!dependency) return undefined;
     return componentId.changeVersion(dependencies[dependency]);
   }

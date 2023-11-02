@@ -1,11 +1,12 @@
 import React, { HTMLAttributes, useMemo } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import defaultTheme from 'react-syntax-highlighter/dist/esm/styles/prism/vsc-dark-plus';
 import { SchemaNode, SetAccessorSchema } from '@teambit/semantics.entities.semantic-schema';
 import { transformSignature } from '@teambit/api-reference.utils.schema-node-signature-transform';
 import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 import { APINodeRenderProps, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
+import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
+import defaultTheme from '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme';
 import classNames from 'classnames';
 
 import styles from './function-node-summary.module.scss';
@@ -48,30 +49,30 @@ export function FunctionNodeSummary({
     if (langFromFileEnding === 'mdx') return 'md';
     return langFromFileEnding;
   }, [filePath]);
+  const paramTypeHeadings = ['Parameter', 'type', 'default', 'description'];
 
   return (
     <div className={styles.summaryContainer}>
       <div className={styles.signatureTitle}>
         {<div className={classNames(styles.functionName, hideName && styles.hide)}>{hideName ? '' : name}</div>}
+        {doc?.comment && <div className={styles.description}>{doc?.comment || ''}</div>}
         {signature && (
           <SyntaxHighlighter
             language={lang}
             style={defaultTheme}
             customStyle={{
               borderRadius: '8px',
-              marginTop: '8px',
-              padding: '8px',
+              marginTop: '4px',
+              padding: '6px',
             }}
           >
             {signature}
           </SyntaxHighlighter>
         )}
       </div>
-      <p className={styles.description}>{doc?.comment || ''}</p>
-
       {params.length > 0 && (
         <div className={styles.paramsContainer}>
-          <h3 className={styles.subtitle}>Parameters</h3>
+          <HeadingRow className={styles.paramHeading} headings={paramTypeHeadings} colNumber={4} />
           {params.map((param) => {
             const paramRenderer = renderers.find((renderer) => renderer.predicate(param));
             if (paramRenderer?.Component) {
@@ -81,7 +82,7 @@ export function FunctionNodeSummary({
                   key={`param-${param.name}`}
                   depth={(apiNodeRendererProps.depth ?? 0) + 1}
                   apiNode={{ ...apiNodeRendererProps.apiNode, renderer: paramRenderer, api: param }}
-                  metadata={{ [param.__schema]: { columnView: true } }}
+                  metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
                 />
               );
             }
@@ -91,7 +92,7 @@ export function FunctionNodeSummary({
                 key={`param-${param.name}`}
                 depth={(apiNodeRendererProps.depth ?? 0) + 1}
                 apiNode={{ ...apiNodeRendererProps.apiNode, renderer: defaultParamRenderer, api: param }}
-                metadata={{ [param.__schema]: { columnView: true } }}
+                metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
               />
             );
           })}

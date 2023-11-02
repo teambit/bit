@@ -8,7 +8,7 @@ export function LiveExample() {
       <div>Live example, write packages to exclude separate with a comma:</div>
       <input value={text} onChange={(e) => setText(e.target.value)} style={{ width: 300 }} />
       <div style={{ backgroundColor: '#ededed', padding: 8 }}>
-        {text && generateNodeModulesPattern({ packages: text.split(',') })}
+        {text && generateNodeModulesPattern({ packages: text.split(','), isPnpmEnabled: true })}
       </div>
     </div>
   );
@@ -24,11 +24,16 @@ export function RegexExample() {
   const [webpackRegexResult, setWebpackRegexResult] = useState(true);
 
   useEffect(() => {
-    const pattern = generateNodeModulesPattern({ packages: packagesToExclude.split(','), excludeComponents }) as string;
+    const pattern = generateNodeModulesPattern({
+      packages: packagesToExclude.split(','),
+      excludeComponents,
+      isPnpmEnabled: true,
+    }) as string;
     const webpackPatterns = generateNodeModulesPattern({
       packages: packagesToExclude.split(','),
       excludeComponents,
       target: PatternTarget.WEBPACK,
+      isPnpmEnabled: true,
     });
     setDefaultCalculatedRegex(pattern);
     // @ts-ignore

@@ -1459,7 +1459,7 @@ module.exports.default = {
             'react/package.json',
           ])
         ).version
-      ).to.match(/^16\./);
+      ).to.match(/^17\./);
       expect(
         fs.readJsonSync(
           resolveFrom(path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_main-aspect@0.0.2`), [
@@ -1494,7 +1494,7 @@ module.exports.default = {
             'react/package.json',
           ])
         ).version
-      ).to.match(/^16\./);
+      ).to.match(/^17\./);
       expect(
         fs.readJsonSync(
           resolveFrom(path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_main-aspect@0.0.2`), [

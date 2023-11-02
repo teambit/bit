@@ -112,7 +112,7 @@
               },
               "type": "number"
             },
-            "isOptional": false,
+            "isOptional": true,
             "defaultValue": "4",
             "isSpread": false
           },
@@ -133,7 +133,7 @@
               },
               "type": "number"
             },
-            "isOptional": false,
+            "isOptional": true,
             "defaultValue": "5",
             "isSpread": false
           }
@@ -308,13 +308,24 @@
               ]
             },
             {
-              "__schema": "InferenceTypeSchema",
+              "__schema": "TypeRefSchema",
               "location": {
                 "filePath": "button.tsx",
                 "line": 23,
                 "character": 5
               },
-              "name": "React.ButtonHTMLAttributes"
+              "name": "React.ButtonHTMLAttributes",
+              "typeArgs": [
+                {
+                  "__schema": "TypeRefSchema",
+                  "location": {
+                    "filePath": "button.tsx",
+                    "line": 23,
+                    "character": 32
+                  },
+                  "name": "HTMLButtonElement"
+                }
+              ]
             }
           ]
         }
@@ -730,7 +741,7 @@
               },
               "type": "string"
             },
-            "isOptional": false,
+            "isOptional": true,
             "defaultValue": "''"
           },
           {
@@ -770,7 +781,8 @@
                 "filePath": "index.ts",
                 "line": 36,
                 "character": 1
-              }
+              },
+              "name": "ClassSomething"
             },
             "modifiers": []
           },
@@ -1135,14 +1147,33 @@
                   "name": "Function"
                 },
                 {
-                  "__schema": "InferenceTypeSchema",
+                  "__schema": "TypeRefSchema",
                   "location": {
                     "filePath": "index.ts",
                     "line": 71,
                     "character": 53
                   },
                   "name": "Record",
-                  "type": "{ [P in K]: T; }"
+                  "typeArgs": [
+                    {
+                      "__schema": "KeywordTypeSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 71,
+                        "character": 60
+                      },
+                      "name": "string"
+                    },
+                    {
+                      "__schema": "KeywordTypeSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 71,
+                        "character": 68
+                      },
+                      "name": "any"
+                    }
+                  ]
                 }
               ]
             },
@@ -1214,14 +1245,24 @@
         "name": "getPromise",
         "params": [],
         "returnType": {
-          "__schema": "InferenceTypeSchema",
+          "__schema": "TypeRefSchema",
           "location": {
             "filePath": "index.ts",
             "line": 79,
             "character": 37
           },
           "name": "Promise",
-          "type": ""
+          "typeArgs": [
+            {
+              "__schema": "KeywordTypeSchema",
+              "location": {
+                "filePath": "index.ts",
+                "line": 79,
+                "character": 45
+              },
+              "name": "string"
+            }
+          ]
         },
         "modifiers": [
           "export",
@@ -1774,14 +1815,13 @@
               }
             ],
             "returnType": {
-              "__schema": "InferenceTypeSchema",
+              "__schema": "TypeRefSchema",
               "location": {
                 "filePath": "index.ts",
                 "line": 121,
                 "character": 19
               },
-              "name": "T",
-              "type": "T"
+              "name": "T"
             },
             "modifiers": [],
             "typeParams": [
@@ -1818,44 +1858,40 @@
             "character": 30
           },
           "checkType": {
-            "__schema": "InferenceTypeSchema",
+            "__schema": "TypeRefSchema",
             "location": {
               "filePath": "index.ts",
               "line": 127,
               "character": 30
             },
-            "name": "T",
-            "type": "T"
+            "name": "T"
           },
           "extendsType": {
-            "__schema": "InferenceTypeSchema",
+            "__schema": "TypeRefSchema",
             "location": {
               "filePath": "index.ts",
               "line": 127,
               "character": 40
             },
-            "name": "U",
-            "type": "U"
+            "name": "U"
           },
           "trueType": {
-            "__schema": "InferenceTypeSchema",
+            "__schema": "TypeRefSchema",
             "location": {
               "filePath": "index.ts",
               "line": 127,
               "character": 44
             },
-            "name": "Y",
-            "type": "Y"
+            "name": "Y"
           },
           "falseType": {
-            "__schema": "InferenceTypeSchema",
+            "__schema": "TypeRefSchema",
             "location": {
               "filePath": "index.ts",
               "line": 127,
               "character": 48
             },
-            "name": "N",
-            "type": "N"
+            "name": "N"
           }
         }
       },
@@ -1878,14 +1914,13 @@
             },
             "name": "a",
             "type": {
-              "__schema": "InferenceTypeSchema",
+              "__schema": "TypeRefSchema",
               "location": {
                 "filePath": "index.ts",
                 "line": 129,
                 "character": 39
               },
-              "name": "T",
-              "type": "T"
+              "name": "T"
             },
             "isOptional": false,
             "isSpread": false
@@ -1971,7 +2006,7 @@
               },
               "type": "string"
             },
-            "isOptional": false,
+            "isOptional": true,
             "defaultValue": "''"
           },
           {
@@ -2011,7 +2046,8 @@
                 "filePath": "index.ts",
                 "line": 36,
                 "character": 1
-              }
+              },
+              "name": "ClassSomething"
             },
             "modifiers": []
           },
@@ -2531,13 +2567,24 @@
                 ]
               },
               {
-                "__schema": "InferenceTypeSchema",
+                "__schema": "TypeRefSchema",
                 "location": {
                   "filePath": "button.tsx",
                   "line": 23,
                   "character": 5
                 },
-                "name": "React.ButtonHTMLAttributes"
+                "name": "React.ButtonHTMLAttributes",
+                "typeArgs": [
+                  {
+                    "__schema": "TypeRefSchema",
+                    "location": {
+                      "filePath": "button.tsx",
+                      "line": 23,
+                      "character": 32
+                    },
+                    "name": "HTMLButtonElement"
+                  }
+                ]
               }
             ]
           }

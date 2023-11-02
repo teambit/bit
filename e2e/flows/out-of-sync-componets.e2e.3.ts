@@ -154,7 +154,7 @@ describe('components that are not synced between the scope and the consumer', fu
       });
       it('should throw an error saying the component does not exist', () => {
         const exportFunc = () => helper.command.exportIds('bar/foo');
-        const err = new MissingBitMapComponent('bar/foo');
+        const err = new MissingBitMapComponent(`${helper.scopes.remote}/bar/foo`);
         helper.general.expectToThrow(exportFunc, err);
       });
     });

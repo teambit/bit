@@ -430,7 +430,7 @@ export class PkgMain {
     const idWithCorrectVersion = component.id.changeVersion(snap.hash);
 
     // @todo: this is a hack. see below the right way to do it.
-    const version = await this.scope.legacyScope.getVersionInstance(idWithCorrectVersion._legacy);
+    const version = await this.scope.legacyScope.getVersionInstance(idWithCorrectVersion);
     const builderData = version.extensions.findCoreExtension(BuilderAspect.id)?.data?.aspectsData;
     const currentData = builderData?.find((a) => a.aspectId === PkgAspect.id)?.data;
 

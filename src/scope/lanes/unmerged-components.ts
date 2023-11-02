@@ -8,7 +8,7 @@ import { Ref } from '../objects';
 
 export type UnmergedComponent = {
   id: {
-    scope?: string;
+    scope: string;
     name: string;
   };
   /**

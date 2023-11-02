@@ -49,4 +49,33 @@ describe('bit delete command', function () {
       });
     }
   );
+  describe('import a scope with deleted components', () => {
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.softRemoveComponent('comp1');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('*', '-x');
+    });
+    it('should not include deleted components', () => {
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(2);
+    });
+    describe('importing the deleted component explicitly', () => {
+      before(() => {
+        helper.command.importComponent('comp1', '-x');
+      });
+      it('should import successfully', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(3);
+      });
+    });
+  });
 });

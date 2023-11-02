@@ -5,6 +5,7 @@ import {
   VariantPolicyEntry,
   VariantPolicy,
   VariantPolicyConfigObject,
+  VariantPolicyFromConfigObjectOptions,
 } from '../variant-policy';
 import { DependencyLifecycleType } from '../../dependencies';
 
@@ -47,15 +48,22 @@ export class EnvPolicy extends VariantPolicy {
     super(_policiesEntries);
   }
 
-  static fromConfigObject(configObject): EnvPolicy {
+  static fromConfigObject(
+    configObject,
+    { includeLegacyPeersInSelfPolicy }: VariantPolicyFromConfigObjectOptions = {}
+  ): EnvPolicy {
     validateEnvPolicyConfigObject(configObject);
 
     /**
      * Calculate the policy for the env itself.
      * Always force it for the env itself
      */
-    const selfPeersEntries = entriesFromKey(configObject, 'peers', 'version', 'runtime', 'env-own', true);
-
+    let selfPeersEntries: VariantPolicyEntry[];
+    if (includeLegacyPeersInSelfPolicy && !configObject.peers && configObject.peerDependencies) {
+      selfPeersEntries = handleLegacyPeers(configObject);
+    } else {
+      selfPeersEntries = entriesFromKey(configObject, 'peers', 'version', 'runtime', 'env-own', true);
+    }
     const selfPolicy = VariantPolicy.fromArray(selfPeersEntries);
 
     /**
@@ -63,7 +71,7 @@ export class EnvPolicy extends VariantPolicy {
      * when we used to configure dependencies, devDependencies, peerDependencies as objects of dependencyId: version
      * Those were always forced on the components as visible dependencies.
      */
-    const legacyPolicy = VariantPolicy.fromConfigObject(configObject, 'env', false, true);
+    const legacyPolicy = VariantPolicy.fromConfigObject(configObject, { source: 'env', force: true, hidden: false });
     const componentPeersEntries = entriesFromKey(configObject, 'peers', 'supportedRange', 'peer', 'env');
     const otherKeyNames: EnvJsoncPolicyConfigKey[] = ['dev', 'runtime'];
     const otherEntries: VariantPolicyEntry[] = otherKeyNames.reduce(
@@ -81,6 +89,16 @@ export class EnvPolicy extends VariantPolicy {
   static getEmpty(): EnvPolicy {
     return new EnvPolicy([], VariantPolicy.getEmpty());
   }
+}
+
+function handleLegacyPeers(configObject: VariantPolicyConfigObject): VariantPolicyEntry[] {
+  if (!configObject.peerDependencies) {
+    return [];
+  }
+  const entries = Object.entries(configObject.peerDependencies).map(([packageName, version]) => {
+    return createVariantPolicyEntry(packageName, version, 'runtime', 'env-own', false, true);
+  });
+  return entries;
 }
 
 function entriesFromKey(

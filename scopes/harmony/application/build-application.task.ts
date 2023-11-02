@@ -8,7 +8,7 @@ import {
   ArtifactDefinition,
   CAPSULE_ARTIFACTS_DIR,
 } from '@teambit/builder';
-import { compact, omit } from 'lodash';
+import { compact } from 'lodash';
 import { Capsule } from '@teambit/isolator';
 import { Component } from '@teambit/component';
 
@@ -89,21 +89,23 @@ export class AppsBuildTask implements BuildTask {
   ): Promise<OneAppResult | undefined> {
     if (!app.build) return undefined;
     // const { component } = capsule;
-    const appDeployContext: AppBuildContext = Object.assign(context, {
+    const appBuildContext: AppBuildContext = Object.assign(context, {
       capsule,
       appComponent: component,
       name: app.name,
       artifactsDir: this.getArtifactDirectory(),
     });
-    const deployContext = await app.build(appDeployContext);
+    const deployContext = await app.build(appBuildContext);
     const defaultArtifacts: ArtifactDefinition[] = this.getDefaultArtifactDef(app.applicationType || app.name);
     const artifacts = defaultArtifacts.concat(deployContext.artifacts || []);
 
-    const getDeployContextFormMetadata = () => {
+    const getDeployContextFromMetadata = () => {
       if (deployContext.metadata) {
         return deployContext.metadata;
       }
-      return omit(deployContext, 'errors', 'warnings');
+      // if metadata is not defined, don't save deployContext blindly. in node-app for example it includes the entire
+      // Network object, with all capsules and components.
+      return {};
     };
 
     return {
@@ -112,7 +114,7 @@ export class AppsBuildTask implements BuildTask {
         component: capsule.component,
         errors: deployContext.errors,
         warnings: deployContext.warnings,
-        metadata: { deployContext: getDeployContextFormMetadata(), name: app.name, appType: app.applicationType },
+        metadata: { deployContext: getDeployContextFromMetadata(), name: app.name, appType: app.applicationType },
         /**
          * @deprecated - please use metadata instead
          *

@@ -36,6 +36,7 @@ import {
   WorkspacePolicy,
   UpdatedComponent,
 } from '@teambit/dependency-resolver';
+import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
@@ -52,6 +53,7 @@ import UpdateCmd from './update.cmd';
 export type WorkspaceLinkOptions = LinkingOptions & {
   rootPolicy?: WorkspacePolicy;
   linkToBitRoots?: boolean;
+  includePeers?: boolean;
 };
 
 export type WorkspaceLinkResults = {
@@ -75,6 +77,7 @@ export type WorkspaceInstallOptions = {
   recurringInstall?: boolean;
   optimizeReportForNonTerminal?: boolean;
   lockfileOnly?: boolean;
+  writeConfigFiles?: boolean;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -108,6 +111,8 @@ export class InstallMain {
     private compiler: CompilerMain,
 
     private envs: EnvsMain,
+
+    private wsConfigFiles: WorkspaceConfigFilesMain,
 
     private app: ApplicationMain,
 
@@ -314,6 +319,7 @@ export class InstallMain {
         pmInstallOptions
       );
       let cacheCleared = false;
+      await this.linkCodemods(compDirMap);
       if (options?.compile ?? true) {
         const compileStartTime = process.hrtime();
         const compileOutputMessage = `compiling components`;
@@ -327,7 +333,9 @@ export class InstallMain {
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
         this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
-      await this.linkCodemods(compDirMap);
+      if (options?.writeConfigFiles ?? true) {
+        await this.tryWriteConfigFiles(!cacheCleared);
+      }
       if (!dependenciesChanged) break;
       if (!options?.recurringInstall) break;
       const oldNonLoadedEnvs = this.getOldNonLoadedEnvs();
@@ -389,17 +397,47 @@ export class InstallMain {
     };
   }
 
+  /**
+   * The function `tryWriteConfigFiles` attempts to write workspace config files, and if it fails, it logs an error
+   * message.
+   * @returns If the condition `!shouldWrite` is true, then nothing is being returned. Otherwise, if the `writeConfigFiles`
+   * function is successfully executed, nothing is being returned. If an error occurs during the execution of
+   * `writeConfigFiles`, an error message is being returned.
+   */
+  private async tryWriteConfigFiles(clearCache: boolean) {
+    const shouldWrite = this.wsConfigFiles.isWorkspaceConfigWriteEnabled();
+    if (!shouldWrite) return;
+    if (clearCache) {
+      await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+    }
+    const { err } = await this.wsConfigFiles.writeConfigFiles({
+      clean: true,
+      silent: true,
+      dedupe: true,
+      throw: false,
+    });
+    if (err) {
+      this.logger.consoleFailure(
+        `failed generating workspace config files, please run "bit ws-config write" manually. error: ${err.message}`
+      );
+    }
+  }
+
   private async addConfiguredAspectsToWorkspacePolicy(): Promise<WorkspacePolicy> {
     const rootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const aspectsPackages = await this.workspace.getConfiguredUserAspectsPackages({ externalsOnly: true });
     aspectsPackages.forEach((aspectsPackage) => {
-      rootPolicy.add({
-        dependencyId: aspectsPackage.packageName,
-        value: {
-          version: aspectsPackage.version,
+      rootPolicy.add(
+        {
+          dependencyId: aspectsPackage.packageName,
+          value: {
+            version: aspectsPackage.version,
+          },
+          lifecycleType: 'runtime',
         },
-        lifecycleType: 'runtime',
-      });
+        // If it's already exist from the root, take the version from the root policy
+        { skipIfExisting: true }
+      );
     });
     return rootPolicy;
   }
@@ -560,7 +598,7 @@ export class InstallMain {
     if (!envComponent) return undefined;
     const packageName = this.dependencyResolver.getPackageName(envComponent);
     const version = envId.version;
-    const finalVersion = snapToSemver(version);
+    const finalVersion = snapToSemver(version as string);
     return { [packageName]: finalVersion };
   }
 
@@ -604,11 +642,11 @@ export class InstallMain {
   }
 
   private async _getAllUsedEnvIds(): Promise<ComponentID[]> {
-    const envs = new Set<ComponentID>();
+    const envs = new Map<string, ComponentID>();
     const components = await this.workspace.list();
     await pMapSeries(components, async (component) => {
       const envId = await this.envs.calculateEnvId(component);
-      envs.add(envId);
+      envs.set(envId.toString(), envId);
     });
     return Array.from(envs.values());
   }
@@ -619,7 +657,7 @@ export class InstallMain {
    * @param options.all {Boolean} updates all outdated dependencies without showing a prompt.
    */
   async updateDependencies(options: {
-    forceVersionBump?: 'major' | 'minor' | 'patch';
+    forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible';
     patterns?: string[];
     all: boolean;
   }): Promise<ComponentMap<string> | null> {
@@ -635,6 +673,10 @@ export class InstallMain {
       patterns: options.patterns,
       forceVersionBump: options.forceVersionBump,
     });
+    if (outdatedPkgs == null) {
+      this.logger.consoleFailure('No dependencies found that match the patterns');
+      return null;
+    }
     let outdatedPkgsToUpdate!: MergedOutdatedPkg[];
     if (options.all) {
       outdatedPkgsToUpdate = outdatedPkgs;
@@ -645,6 +687,11 @@ export class InstallMain {
     }
     if (outdatedPkgsToUpdate.length === 0) {
       this.logger.consoleSuccess('No outdated dependencies found');
+      if (options.forceVersionBump === 'compatible') {
+        this.logger.console(
+          "If you want to find new versions that don't match the current version ranges, retry with the --latest flag"
+        );
+      }
       return null;
     }
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgsToUpdate, {
@@ -762,13 +809,13 @@ export class InstallMain {
   }
 
   async linkCodemods(compDirMap: ComponentMap<string>, options?: { rewire?: boolean }) {
-    const bitIds = compDirMap.toArray().map(([component]) => component.id._legacy);
+    const bitIds = compDirMap.toArray().map(([component]) => component.id);
     return linkToNodeModulesWithCodemod(this.workspace, bitIds, options?.rewire ?? false);
   }
 
   async link(options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
     const { linkResults, linkedRootDeps } = await this.calculateLinks(options);
-    await createLinks(options.linkToDir ?? this.workspace.path, linkedRootDeps);
+    await createLinks(options.linkToDir ?? this.workspace.path, linkedRootDeps, { avoidHardLink: true });
     return linkResults;
   }
 
@@ -842,7 +889,7 @@ export class InstallMain {
       if (this.visitedAspects.has(aspectIdStr)) return;
 
       this.visitedAspects.add(aspectIdStr);
-      const packagePath = this.workspace.getComponentPackagePath(aspectComponent);
+      const packagePath = await this.workspace.getComponentPackagePath(aspectComponent);
       const exists = await pathExists(packagePath);
       if (!exists) {
         const inWs = await this.workspace.hasId(aspectComponent.id);
@@ -876,12 +923,26 @@ export class InstallMain {
     ApplicationAspect,
     IpcEventsAspect,
     GeneratorAspect,
+    WorkspaceConfigFilesAspect,
   ];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [dependencyResolver, workspace, loggerExt, variants, cli, compiler, issues, envs, app, ipcEvents, generator]: [
+    [
+      dependencyResolver,
+      workspace,
+      loggerExt,
+      variants,
+      cli,
+      compiler,
+      issues,
+      envs,
+      app,
+      ipcEvents,
+      generator,
+      wsConfigFiles,
+    ]: [
       DependencyResolverMain,
       Workspace,
       LoggerMain,
@@ -892,7 +953,8 @@ export class InstallMain {
       EnvsMain,
       ApplicationMain,
       IpcEventsMain,
-      GeneratorMain
+      GeneratorMain,
+      WorkspaceConfigFilesMain
     ],
     _,
     [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot]
@@ -912,6 +974,7 @@ export class InstallMain {
       variants,
       compiler,
       envs,
+      wsConfigFiles,
       app,
       preLinkSlot,
       preInstallSlot,
