@@ -395,9 +395,6 @@ importers:
       '@teambit/component-id':
         specifier: ^1.1.1
         version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-issues':
-        specifier: ^0.0.101
-        version: 0.0.101(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-version':
         specifier: ^1.0.3
         version: 1.0.3
@@ -2356,6 +2353,46 @@ importers:
         specifier: 8.3.2
         version: 8.3.2
 
+  components/component-issues:
+    dependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@teambit/component-id':
+        specifier: ^1.1.1
+        version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      chalk:
+        specifier: 2.4.2
+        version: 2.4.2
+      core-js:
+        specifier: ^3.0.0
+        version: 3.13.0
+      react:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2
+      react-dom:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2(react@17.0.2)
+    devDependencies:
+      '@types/jest':
+        specifier: ^26.0.0
+        version: 26.0.20
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 12.20.4
+        version: 12.20.4
+      '@types/react':
+        specifier: ^17.0.67
+        version: 17.0.67
+      '@types/react-dom':
+        specifier: ^17.0.21
+        version: 17.0.21
+      '@types/testing-library__jest-dom':
+        specifier: 5.9.5
+        version: 5.9.5
+
   components/renderers/react:
     dependencies:
       '@teambit/api-reference.models.api-node-renderer':
@@ -2573,6 +2610,9 @@ importers:
       '@teambit/component-descriptor':
         specifier: workspace:*
         version: file:scopes/component/component-descriptor(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-issues':
+        specifier: workspace:*
+        version: file:components/component-issues(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-log':
         specifier: workspace:*
         version: file:scopes/component/component-log(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -2764,7 +2804,7 @@ importers:
         version: file:scopes/component/isolator(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/issues':
         specifier: workspace:*
-        version: file:scopes/component/issues(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/issues(react-dom@17.0.2)(react@17.0.2)
       '@teambit/jest':
         specifier: workspace:*
         version: file:scopes/defender/jest(jest@27.5.1)(react-dom@17.0.2)(react@17.0.2)
@@ -3189,6 +3229,8 @@ importers:
       '@teambit/component-compare':
         injected: true
       '@teambit/component-descriptor':
+        injected: true
+      '@teambit/component-issues':
         injected: true
       '@teambit/component-log':
         injected: true
@@ -3673,6 +3715,9 @@ importers:
       '@teambit/component-descriptor':
         specifier: workspace:*
         version: file:scopes/component/component-descriptor(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-issues':
+        specifier: workspace:*
+        version: file:components/component-issues(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-log':
         specifier: workspace:*
         version: file:scopes/component/component-log(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -3864,7 +3909,7 @@ importers:
         version: file:scopes/component/isolator(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/issues':
         specifier: workspace:*
-        version: file:scopes/component/issues(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/issues(react-dom@17.0.2)(react@17.0.2)
       '@teambit/jest':
         specifier: workspace:*
         version: file:scopes/defender/jest(jest@27.5.1)(react-dom@17.0.2)(react@17.0.2)
@@ -4289,6 +4334,8 @@ importers:
       '@teambit/component-compare':
         injected: true
       '@teambit/component-descriptor':
+        injected: true
+      '@teambit/component-issues':
         injected: true
       '@teambit/component-log':
         injected: true
@@ -4773,6 +4820,9 @@ importers:
       '@teambit/component-descriptor':
         specifier: workspace:*
         version: file:scopes/component/component-descriptor(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-issues':
+        specifier: workspace:*
+        version: file:components/component-issues(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-log':
         specifier: workspace:*
         version: file:scopes/component/component-log(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -4964,7 +5014,7 @@ importers:
         version: file:scopes/component/isolator(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/issues':
         specifier: workspace:*
-        version: file:scopes/component/issues(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/issues(react-dom@17.0.2)(react@17.0.2)
       '@teambit/jest':
         specifier: workspace:*
         version: file:scopes/defender/jest(jest@27.5.1)(react-dom@17.0.2)(react@17.0.2)
@@ -5389,6 +5439,8 @@ importers:
       '@teambit/component-compare':
         injected: true
       '@teambit/component-descriptor':
+        injected: true
+      '@teambit/component-issues':
         injected: true
       '@teambit/component-log':
         injected: true
@@ -5873,6 +5925,9 @@ importers:
       '@teambit/component-descriptor':
         specifier: workspace:*
         version: file:scopes/component/component-descriptor(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-issues':
+        specifier: workspace:*
+        version: file:components/component-issues(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-log':
         specifier: workspace:*
         version: file:scopes/component/component-log(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -6064,7 +6119,7 @@ importers:
         version: file:scopes/component/isolator(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/issues':
         specifier: workspace:*
-        version: file:scopes/component/issues(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/issues(react-dom@17.0.2)(react@17.0.2)
       '@teambit/jest':
         specifier: workspace:*
         version: file:scopes/defender/jest(jest@27.5.1)(react-dom@17.0.2)(react@17.0.2)
@@ -6483,6 +6538,8 @@ importers:
       '@teambit/component-compare':
         injected: true
       '@teambit/component-descriptor':
+        injected: true
+      '@teambit/component-issues':
         injected: true
       '@teambit/component-log':
         injected: true
@@ -6967,6 +7024,9 @@ importers:
       '@teambit/component-descriptor':
         specifier: workspace:*
         version: file:scopes/component/component-descriptor(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-issues':
+        specifier: workspace:*
+        version: file:components/component-issues(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-log':
         specifier: workspace:*
         version: file:scopes/component/component-log(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -7158,7 +7218,7 @@ importers:
         version: file:scopes/component/isolator(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/issues':
         specifier: workspace:*
-        version: file:scopes/component/issues(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/issues(react-dom@17.0.2)(react@17.0.2)
       '@teambit/jest':
         specifier: workspace:*
         version: file:scopes/defender/jest(jest@27.5.1)(react-dom@17.0.2)(react@17.0.2)
@@ -7583,6 +7643,8 @@ importers:
       '@teambit/component-compare':
         injected: true
       '@teambit/component-descriptor':
+        injected: true
+      '@teambit/component-issues':
         injected: true
       '@teambit/component-log':
         injected: true
@@ -8067,6 +8129,9 @@ importers:
       '@teambit/component-descriptor':
         specifier: workspace:*
         version: file:scopes/component/component-descriptor(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-issues':
+        specifier: workspace:*
+        version: file:components/component-issues(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-log':
         specifier: workspace:*
         version: file:scopes/component/component-log(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -8258,7 +8323,7 @@ importers:
         version: file:scopes/component/isolator(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/issues':
         specifier: workspace:*
-        version: file:scopes/component/issues(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/issues(react-dom@17.0.2)(react@17.0.2)
       '@teambit/jest':
         specifier: workspace:*
         version: file:scopes/defender/jest(jest@27.5.1)(react-dom@17.0.2)(react@17.0.2)
@@ -8683,6 +8748,8 @@ importers:
       '@teambit/component-compare':
         injected: true
       '@teambit/component-descriptor':
+        injected: true
+      '@teambit/component-issues':
         injected: true
       '@teambit/component-log':
         injected: true
@@ -10079,9 +10146,6 @@ importers:
       '@teambit/component-id':
         specifier: ^1.1.1
         version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-issues':
-        specifier: ^0.0.101
-        version: 0.0.101(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -10455,9 +10519,6 @@ importers:
       '@teambit/component-id':
         specifier: ^1.1.1
         version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-issues':
-        specifier: ^0.0.101
-        version: 0.0.101(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component.ui.deprecation-icon':
         specifier: ^0.0.509
         version: 0.0.509(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
@@ -11396,9 +11457,6 @@ importers:
       '@teambit/bit-error':
         specifier: ^0.0.404
         version: 0.0.404
-      '@teambit/component-issues':
-        specifier: ^0.0.101
-        version: 0.0.101(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -11735,9 +11793,6 @@ importers:
       '@teambit/component-id':
         specifier: ^1.1.1
         version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-issues':
-        specifier: ^0.0.101
-        version: 0.0.101(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -11860,9 +11915,6 @@ importers:
       '@teambit/component-id':
         specifier: ^1.1.1
         version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-issues':
-        specifier: ^0.0.101
-        version: 0.0.101(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-version':
         specifier: ^1.0.3
         version: 1.0.3
@@ -12015,9 +12067,6 @@ importers:
       '@teambit/component-id':
         specifier: ^1.1.1
         version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-issues':
-        specifier: ^0.0.101
-        version: 0.0.101(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-version':
         specifier: ^1.0.3
         version: 1.0.3
@@ -13259,9 +13308,6 @@ importers:
       '@teambit/component-id':
         specifier: ^1.1.1
         version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-issues':
-        specifier: ^0.0.101
-        version: 0.0.101(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-version':
         specifier: ^1.0.3
         version: 1.0.3
@@ -13810,9 +13856,6 @@ importers:
       '@teambit/component-id':
         specifier: ^1.1.1
         version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-issues':
-        specifier: ^0.0.101
-        version: 0.0.101(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -13990,9 +14033,6 @@ importers:
       '@teambit/component-id':
         specifier: ^1.1.1
         version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-issues':
-        specifier: ^0.0.101
-        version: 0.0.101(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -16436,9 +16476,6 @@ importers:
       '@teambit/component-id':
         specifier: ^1.1.1
         version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-issues':
-        specifier: ^0.0.101
-        version: 0.0.101(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-version':
         specifier: ^1.0.3
         version: 1.0.3
@@ -19991,9 +20028,6 @@ importers:
       '@teambit/bit-roots':
         specifier: ^0.0.133
         version: 0.0.133(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-issues':
-        specifier: ^0.0.101
-        version: 0.0.101(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -20294,9 +20328,6 @@ importers:
       '@teambit/component-id':
         specifier: ^1.1.1
         version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-issues':
-        specifier: ^0.0.101
-        version: 0.0.101(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-version':
         specifier: ^1.0.3
         version: 1.0.3
@@ -25445,7 +25476,7 @@ packages:
     resolution: {integrity: sha512-X4uvOR5Uzabq+sLqdqyPrWdiN2Y+FhfFlDvU3yzLJdRQz5lq4IqyK2o2s3gPTD/3ElsN73KfoNQPQMGSwDCutw==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/core-loggers': 9.0.4(@pnpm/logger@5.0.0)
       '@pnpm/error': 5.0.2
@@ -36302,7 +36333,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.1
       '@yarnpkg/fslib': 3.0.0-rc.51
-      '@yarnpkg/libzip': 3.0.0-rc.51
+      '@yarnpkg/libzip': 3.0.0-rc.51(@yarnpkg/fslib@3.0.0-rc.51)
       '@yarnpkg/parsers': 3.0.0-rc.51
       '@yarnpkg/shell': 4.0.0-rc.51
       camelcase: 5.3.1
@@ -36333,7 +36364,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.1
       '@yarnpkg/fslib': 3.0.0-rc.51
-      '@yarnpkg/libzip': 3.0.0-rc.51
+      '@yarnpkg/libzip': 3.0.0-rc.51(@yarnpkg/fslib@3.0.0-rc.51)
       '@yarnpkg/parsers': 3.0.0-rc.51
       '@yarnpkg/shell': 4.0.0-rc.51
       camelcase: 5.3.1
@@ -36406,9 +36437,11 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/libzip@3.0.0-rc.51:
+  /@yarnpkg/libzip@3.0.0-rc.51(@yarnpkg/fslib@3.0.0-rc.51):
     resolution: {integrity: sha512-OzgLMFretzeAk96hEwkbkmvDJ4y17WGxdaMnAyrpOrRK6coCIfNL8xWwTNnmXeddcRKTfD9yF4AwQTeXhLKDCA==}
     engines: {node: '>=18.12.0'}
+    peerDependencies:
+      '@yarnpkg/fslib': ^3.0.0-rc.51
     dependencies:
       '@types/emscripten': 1.39.8
       '@yarnpkg/fslib': 3.0.0-rc.51
@@ -51453,7 +51486,7 @@ packages:
     dependencies:
       object-assign: 4.1.1
       react: 17.0.2
-      react-is: 17.0.2
+      react-is: 18.2.0
     dev: false
 
   /react-syntax-highlighter@13.5.3(react@17.0.2):
@@ -56853,6 +56886,24 @@ packages:
     resolution: {integrity: sha512-V50KMwwzqJV0NpZIZFwfOD5/lyny3WlSzRiXgA0G7VUnRlqttta1L6UQIHzd6EuBY/cHGfwTIck7w1yH6Q5zUw==}
     dev: false
 
+  file:components/component-issues(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {directory: components/component-issues, type: directory}
+    id: file:components/component-issues
+    name: '@teambit/component-issues'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@babel/runtime': 7.20.0
+      '@teambit/component-id': 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      chalk: 2.4.2
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@teambit/legacy'
+    dev: false
+
   file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
     resolution: {directory: components/renderers/react, type: directory}
     id: file:components/renderers/react
@@ -57823,7 +57874,7 @@ packages:
       - supports-color
     dev: false
 
-  file:scopes/component/issues(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  file:scopes/component/issues(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/component/issues, type: directory}
     id: file:scopes/component/issues
     name: '@teambit/issues'
@@ -57833,15 +57884,12 @@ packages:
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/bit-error': 0.0.404
-      '@teambit/component-issues': 0.0.101(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
       chalk: 2.4.2
       core-js: 3.13.0
       p-map-series: 2.1.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-    transitivePeerDependencies:
-      - '@teambit/legacy'
     dev: false
 
   file:scopes/component/lister(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
