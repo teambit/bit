@@ -660,7 +660,7 @@ jobs:
             echo "nodeLinker=hoisted" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values linux &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 &&
             pnpm add @teambit/bit
       - run:
           name: copy node_modules
