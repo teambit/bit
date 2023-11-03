@@ -2,6 +2,7 @@ export type { GeneratorMain } from './generator.main.runtime';
 export type {
   ComponentContext,
   ComponentTemplate,
+  ComponentTemplateOptions,
   ComponentFile,
   ComponentConfig,
   ConfigContext,

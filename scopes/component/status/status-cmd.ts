@@ -22,6 +22,8 @@ const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `learn more at about Bit component: ${BASE_DOCS_DOMAIN}reference/components/component-anatomy/`
 )}`;
 
+type StatusFlags = { strict?: boolean; verbose?: boolean; lanes?: boolean; ignoreCircularDependencies?: boolean };
+
 type StatusJsonResults = {
   newComponents: string[];
   modifiedComponents: string[];
@@ -69,13 +71,14 @@ export class StatusCmd implements Command {
     ['', 'verbose', 'show extra data: full snap hashes for staged components, and divergence point for lanes'],
     ['l', 'lanes', 'when on a lane, show updates from main and updates from forked lanes'],
     ['', 'strict', 'in case issues found, exit with code 1'],
+    ['c', 'ignore-circular-dependencies', 'do not check for circular dependencies to get the results quicker'],
   ] as CommandOptions;
   loader = true;
   migration = true;
 
   constructor(private status: StatusMain) {}
 
-  async json(_args, { lanes }: { lanes?: boolean }): Promise<StatusJsonResults> {
+  async json(_args, { lanes, ignoreCircularDependencies }: StatusFlags): Promise<StatusJsonResults> {
     const {
       newComponents,
       modifiedComponents,
@@ -97,7 +100,7 @@ export class StatusCmd implements Command {
       currentLaneId,
       forkedLaneId,
       workspaceIssues,
-    }: StatusResult = await this.status.status({ lanes });
+    }: StatusResult = await this.status.status({ lanes, ignoreCircularDependencies });
     return {
       newComponents: newComponents.map((c) => c.toStringWithoutVersion()),
       modifiedComponents: modifiedComponents.map((c) => c.toStringWithoutVersion()),
@@ -105,7 +108,7 @@ export class StatusCmd implements Command {
       unavailableOnMain: unavailableOnMain.map((c) => c.toStringWithoutVersion()),
       componentsWithIssues: componentsWithIssues.map((c) => ({
         id: c.id.toStringWithoutVersion(),
-        issues: c.issues?.toObject(),
+        issues: c.issues?.toObjectIncludeDataAsString(),
       })),
       importPendingComponents: importPendingComponents.map((id) => id.toStringWithoutVersion()),
       autoTagPendingComponents: autoTagPendingComponents.map((s) => s.toStringWithoutVersion()),
@@ -132,7 +135,7 @@ export class StatusCmd implements Command {
   }
 
   // eslint-disable-next-line complexity
-  async report(_args, { strict, verbose, lanes }: { strict?: boolean; verbose?: boolean; lanes?: boolean }) {
+  async report(_args, { strict, verbose, lanes, ignoreCircularDependencies }: StatusFlags) {
     const {
       newComponents,
       modifiedComponents,
@@ -154,7 +157,7 @@ export class StatusCmd implements Command {
       currentLaneId,
       forkedLaneId,
       workspaceIssues,
-    }: StatusResult = await this.status.status({ lanes });
+    }: StatusResult = await this.status.status({ lanes, ignoreCircularDependencies });
     // If there is problem with at least one component we want to show a link to the
     // troubleshooting doc
     let showTroubleshootingLink = false;
