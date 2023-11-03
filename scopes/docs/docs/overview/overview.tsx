@@ -9,7 +9,7 @@ import { ComponentPreview, ComponentPreviewProps } from '@teambit/preview.ui.com
 // import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { CompositionGallery } from '@teambit/compositions.panels.composition-gallery';
-// import { ReadmeSkeleton } from './readme-skeleton';
+import { ReadmeSkeleton } from './readme-skeleton';
 import styles from './overview.module.scss';
 
 export enum BadgePosition {
@@ -92,15 +92,9 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
           component={component}
         />
       )}
-
-      {/* TODO - @oded replace with new panel card same for compositions. */}
-
-      {/* <LinkedHeading size="xs" className={styles.title}>
-        <Icon of="text" /> <span>README</span>
-      </LinkedHeading> */}
       {!buildFailed && (
         <div className={styles.readme}>
-          {/* {isLoading && <ReadmeSkeleton />} */}
+          {isLoading && <ReadmeSkeleton />}
           <ComponentPreview
             onLoad={onPreviewLoad}
             previewName="overview"
@@ -114,10 +108,7 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
             style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
           />
           {component.preview?.onlyOverview && <CompositionGallery isLoading={isLoading} component={component} />}
-          {component.preview?.onlyOverview && TaggedAPI && (
-            // <PropertiesTable className={styles.overviewPropsTable} componentId={component.id.toString()} />
-            <TaggedAPI componentId={component.id.toString()} />
-          )}
+          {component.preview?.onlyOverview && TaggedAPI && <TaggedAPI componentId={component.id.toString()} />}
         </div>
       )}
       {buildFailed && EmptyState && <EmptyState />}
