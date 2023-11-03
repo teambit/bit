@@ -1,10 +1,11 @@
 export type { GeneratorMain } from './generator.main.runtime';
-export {
+export type {
   ComponentContext,
   ComponentTemplate,
   ComponentFile,
   ComponentConfig,
   ConfigContext,
+  ComponentTemplateOptions,
 } from './component-template';
 export { WorkspaceContext, WorkspaceTemplate, WorkspaceTemplate as Starter, WorkspaceFile } from './workspace-template';
 export { GeneratorEnv } from './generator-env-type';

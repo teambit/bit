@@ -923,6 +923,9 @@ importers:
       '@teambit/node.deps-detectors.detective-es6':
         specifier: ^0.0.1
         version: 0.0.1
+      '@teambit/node.generator.node-templates':
+        specifier: ^1.0.4
+        version: 1.0.4
       '@teambit/react.generator.react-native-templates':
         specifier: ^1.0.3
         version: 1.0.3
@@ -15362,6 +15365,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/node.generator.node-templates':
+        specifier: ^1.0.4
+        version: 1.0.4
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -15614,6 +15620,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/html.generator.html-templates':
+        specifier: ^1.0.4
+        version: 1.0.4
       '@teambit/html.modules.render-template':
         specifier: 0.0.104
         version: 0.0.104
@@ -15998,6 +16007,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/mdx.generator.mdx-templates':
+        specifier: ^1.0.4
+        version: 1.0.4
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -17123,6 +17135,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/react.generator.react-templates':
+        specifier: ^1.0.5
+        version: 1.0.5
       '@teambit/react.instructions.react.adding-compositions':
         specifier: 0.0.6
         version: registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -17509,6 +17524,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/react.generator.react-native-templates':
+        specifier: ^1.0.3
+        version: 1.0.3
       '@teambit/react.instructions.react-native.adding-tests':
         specifier: 0.0.1
         version: 0.0.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -32741,6 +32759,12 @@ packages:
 
   /@teambit/node.deps-detectors.parser-helper@0.0.0-1ca3300f0fe89cba790beb930903095053a2a24a:
     resolution: {integrity: sha1-UTUJiakxdUY1KZKMoaxTLTrRap8=, tarball: https://node-registry.bit.cloud/@teambit/node.deps-detectors.parser-helper/-/teambit-node.deps-detectors.parser-helper-0.0.0-1ca3300f0fe89cba790beb930903095053a2a24a.tgz}
+    dev: false
+
+  /@teambit/node.generator.node-templates@1.0.4:
+    resolution: {integrity: sha512-zDyb3oI2aSB7bs3NI3jSP5RjA/KgeARStGxsdwwkP2ymMz8qTQ42opObMRsfr0aYe5MQBLNCo5sd49BQqpQM+Q==}
+    dependencies:
+      dedent: 0.7.0
     dev: false
 
   /@teambit/pkg.content.packages-overview@1.95.9(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2):
@@ -58660,6 +58684,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
+      '@teambit/node.generator.node-templates': 1.0.4
       core-js: 3.13.0
       jest-environment-node: 27.5.1
       ramda: 0.27.1
@@ -58753,6 +58778,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
+      '@teambit/html.generator.html-templates': 1.0.4
       '@teambit/html.modules.render-template': 0.0.104
       core-js: 3.13.0
       map-obj: 4.2.1
@@ -58900,6 +58926,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
+      '@teambit/mdx.generator.mdx-templates': 1.0.4
       core-js: 3.13.0
       fs-extra: 10.0.0
       minimatch: 3.0.5
@@ -59318,6 +59345,7 @@ packages:
       '@teambit/design.ui.input.option-button': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
+      '@teambit/react.generator.react-templates': 1.0.5
       '@teambit/react.instructions.react.adding-compositions': registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.instructions.react.adding-tests': registry.npmjs.org/@teambit/react.instructions.react.adding-tests@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.rendering.ssr': 0.0.3(react-dom@17.0.2)(react@17.0.2)
@@ -59485,6 +59513,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
+      '@teambit/react.generator.react-native-templates': 1.0.3
       '@teambit/react.instructions.react-native.adding-tests': 0.0.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.instructions.react.adding-compositions': registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/jest-native': 4.0.4
