@@ -26,7 +26,7 @@ import { concurrentIOLimit } from '../../utils/concurrency';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForObjects, InMemoryCache } from '../../cache/in-memory-cache';
 import { Types } from '../object-registrar';
-import { Lane, ModelComponent, Symlink } from '../models';
+import { Lane, ModelComponent } from '../models';
 import { ComponentFsCache } from '../../consumer/component/component-fs-cache';
 import { pMapPool } from '../../utils/promise-with-concurrent';
 
