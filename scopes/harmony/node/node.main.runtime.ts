@@ -9,15 +9,15 @@ import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BuildTask } from '@teambit/builder';
 import { Compiler } from '@teambit/compiler';
 import { PackageJsonProps } from '@teambit/pkg';
+import { NodeComponentTemplate, NodeEnvTemplate, NodeJSComponentTemplate, ExpressAppTemplate } from './node.templates';
+export { NodeComponentTemplate } from './component-template/component-template';
+export { ExpressAppTemplate } from './express-template/app-template';
+export { NodeJSComponentTemplate } from './js-module-template/js-component-template';
+export { NodeEnvTemplate } from './node-env-template/node-env-template';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactEnv, ReactMain, UseTypescriptModifiers } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
-import { nodeEnvTemplate } from './templates/node-env';
-import { nodeTemplate } from './templates/node';
-import { NodeAppType } from './node.app-type';
-import { expressAppTemplate } from './templates/express-app';
-import { expressRouteTemplate } from './templates/express-route';
 
 export class NodeMain {
   constructor(
@@ -166,7 +166,12 @@ export class NodeMain {
     const nodeAppType = new NodeAppType('node-app', nodeEnv, logger);
     application.registerAppType(nodeAppType);
     if (generator)
-      generator.registerComponentTemplate([nodeEnvTemplate, nodeTemplate, expressAppTemplate, expressRouteTemplate]);
+      generator.registerComponentTemplate([
+        NodeComponentTemplate,
+        NodeEnvTemplate,
+        NodeJSComponentTemplate,
+        ExpressAppTemplate,
+      ]);
     return new NodeMain(react, tsAspect, nodeEnv, envs);
   }
 }

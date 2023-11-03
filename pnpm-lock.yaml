@@ -819,8 +819,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/html.generator.html-templates':
-        specifier: ^1.0.4
-        version: 1.0.4
+        specifier: ^1.0.8
+        version: 1.0.8
       '@teambit/html.modules.inject-html-element':
         specifier: 0.0.4
         version: 0.0.4(react@17.0.2)
@@ -909,8 +909,8 @@ importers:
         specifier: ^0.0.402
         version: 0.0.402
       '@teambit/mdx.generator.mdx-templates':
-        specifier: ^1.0.4
-        version: 1.0.4
+        specifier: ^1.0.9
+        version: 1.0.9
       '@teambit/mdx.ui.docs.link':
         specifier: 0.0.500
         version: 0.0.500(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -924,14 +924,14 @@ importers:
         specifier: ^0.0.1
         version: 0.0.1
       '@teambit/node.generator.node-templates':
-        specifier: ^1.0.4
-        version: 1.0.4
+        specifier: ^1.0.8
+        version: 1.0.8
       '@teambit/react.generator.react-native-templates':
-        specifier: ^1.0.3
-        version: 1.0.3
+        specifier: ^1.0.7
+        version: 1.0.7
       '@teambit/react.generator.react-templates':
-        specifier: ^1.0.5
-        version: 1.0.5
+        specifier: ^1.0.9
+        version: 1.0.9
       '@teambit/react.instructions.react-native.adding-tests':
         specifier: 0.0.1
         version: 0.0.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -15415,8 +15415,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/node.generator.node-templates':
-        specifier: ^1.0.4
-        version: 1.0.4
+        specifier: ^1.0.8
+        version: 1.0.8
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -15670,8 +15670,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/html.generator.html-templates':
-        specifier: ^1.0.4
-        version: 1.0.4
+        specifier: ^1.0.8
+        version: 1.0.8
       '@teambit/html.modules.render-template':
         specifier: 0.0.104
         version: 0.0.104
@@ -16057,8 +16057,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/mdx.generator.mdx-templates':
-        specifier: ^1.0.4
-        version: 1.0.4
+        specifier: ^1.0.9
+        version: 1.0.9
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -17182,8 +17182,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/react.generator.react-templates':
-        specifier: ^1.0.5
-        version: 1.0.5
+        specifier: ^1.0.9
+        version: 1.0.9
       '@teambit/react.instructions.react.adding-compositions':
         specifier: 0.0.6
         version: registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -17571,8 +17571,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/react.generator.react-native-templates':
-        specifier: ^1.0.3
-        version: 1.0.3
+        specifier: ^1.0.7
+        version: 1.0.7
       '@teambit/react.instructions.react-native.adding-tests':
         specifier: 0.0.1
         version: 0.0.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -32090,8 +32090,8 @@ packages:
       user-home: 2.0.0
     dev: false
 
-  /@teambit/html.generator.html-templates@1.0.4:
-    resolution: {integrity: sha512-EAgZTNFi1v0JZrn5VKLSLd6z93afuYO0NAObM3w3YvGxFDrAuQrjGGXO8MKKOiUEqsZvSlTANzBSqNf6Y1rnvw==}
+  /@teambit/html.generator.html-templates@1.0.8:
+    resolution: {integrity: sha512-mJptEYvK3jSzI2rfzAofGzEcjrFpRmesw5ZTJpjLBRpEqRaAbFm6h9RFoNYkbpsXyMpPabIdCiJy3lANEeWhRQ==}
     dependencies:
       ts-dedent: 2.2.0
     dev: false
@@ -32962,8 +32962,8 @@ packages:
     engines: {node: '>=12.22.0'}
     dev: false
 
-  /@teambit/mdx.generator.mdx-templates@1.0.4:
-    resolution: {integrity: sha512-VMaYm2ASR/Ct0OwmMUvPI3GFTqCuGlfFWaVUahudWn/3WCqwFQ3zuiWdpfAmUwUNTKSVsAvvD1C7CGB+oduTrg==}
+  /@teambit/mdx.generator.mdx-templates@1.0.9:
+    resolution: {integrity: sha512-4AUfopflYHBZEQwxCaItkRDrBk8s02NO4Hch1nHwu3aL/gldGsrzwPotBGoejIivofAdrEjzNFjlfaccSVok2g==}
     dev: false
 
   /@teambit/mdx.ui.docs.link@0.0.500(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
@@ -33064,8 +33064,8 @@ packages:
     resolution: {integrity: sha1-UTUJiakxdUY1KZKMoaxTLTrRap8=, tarball: https://node-registry.bit.cloud/@teambit/node.deps-detectors.parser-helper/-/teambit-node.deps-detectors.parser-helper-0.0.0-1ca3300f0fe89cba790beb930903095053a2a24a.tgz}
     dev: false
 
-  /@teambit/node.generator.node-templates@1.0.4:
-    resolution: {integrity: sha512-zDyb3oI2aSB7bs3NI3jSP5RjA/KgeARStGxsdwwkP2ymMz8qTQ42opObMRsfr0aYe5MQBLNCo5sd49BQqpQM+Q==}
+  /@teambit/node.generator.node-templates@1.0.8:
+    resolution: {integrity: sha512-z91b00hnOo33ouXxguSYJCyFS6oaYcyjsXpEEraywoZSQOvZxDl3D4WS5uy9qWOSA5PDDJ/7L/yZAz+/O9aLdw==}
     dependencies:
       dedent: 0.7.0
     dev: false
@@ -33158,14 +33158,14 @@ packages:
       - '@teambit/legacy'
     dev: true
 
-  /@teambit/react.generator.react-native-templates@1.0.3:
-    resolution: {integrity: sha512-/j7Xyj9Hl5EMfhhkil8evnaY8WW4xwhF7y+v7ODhdCHCtwRaKjDGCb5mYUm0bPkTU28k0xu0SUCxAU9fZ/TXow==}
+  /@teambit/react.generator.react-native-templates@1.0.7:
+    resolution: {integrity: sha512-+PKhJ48ovbWsIFK4gzFlWY3e5a6Hkv2s/8xvre4L335KlcTbqjOXxwlp0Q9dn2whpMuWv6BuFUU7WQVmJn8BPw==}
     dependencies:
       dedent: 0.7.0
     dev: false
 
-  /@teambit/react.generator.react-templates@1.0.5:
-    resolution: {integrity: sha512-5QCZrOdaS4CyUtZJeht/BfHOqkHYPn+vYemFfXH31ZGkU+GApH/w+468jF3W5O6qDpqUzT8p/mmorYDjOeeWGg==}
+  /@teambit/react.generator.react-templates@1.0.9:
+    resolution: {integrity: sha512-eQ67ZYhPcfCT9npbLSVeTvHD50+ej/UkHqwRP3ky9pHNGYsOQxUyJg1tG2e988SJjYJrAQr4UORJwsWy2OMTMQ==}
     dependencies:
       dedent: 0.7.0
     dev: false
@@ -59446,7 +59446,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
-      '@teambit/node.generator.node-templates': 1.0.4
+      '@teambit/node.generator.node-templates': 1.0.8
       core-js: 3.13.0
       jest-environment-node: 27.5.1
       ramda: 0.27.1
@@ -59540,7 +59540,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
-      '@teambit/html.generator.html-templates': 1.0.4
+      '@teambit/html.generator.html-templates': 1.0.8
       '@teambit/html.modules.render-template': 0.0.104
       core-js: 3.13.0
       map-obj: 4.2.1
@@ -59688,7 +59688,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
-      '@teambit/mdx.generator.mdx-templates': 1.0.4
+      '@teambit/mdx.generator.mdx-templates': 1.0.9
       core-js: 3.13.0
       fs-extra: 10.0.0
       minimatch: 3.0.5
@@ -60107,7 +60107,7 @@ packages:
       '@teambit/design.ui.input.option-button': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
-      '@teambit/react.generator.react-templates': 1.0.5
+      '@teambit/react.generator.react-templates': 1.0.9
       '@teambit/react.instructions.react.adding-compositions': registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.instructions.react.adding-tests': registry.npmjs.org/@teambit/react.instructions.react.adding-tests@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.rendering.ssr': 0.0.3(react-dom@17.0.2)(react@17.0.2)
@@ -60275,7 +60275,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
-      '@teambit/react.generator.react-native-templates': 1.0.3
+      '@teambit/react.generator.react-native-templates': 1.0.7
       '@teambit/react.instructions.react-native.adding-tests': 0.0.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.instructions.react.adding-compositions': registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/jest-native': 4.0.4

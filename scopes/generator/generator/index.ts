@@ -6,7 +6,6 @@ export type {
   ComponentFile,
   ComponentConfig,
   ConfigContext,
-  ComponentTemplateOptions,
 } from './component-template';
 export { WorkspaceContext, WorkspaceTemplate, WorkspaceTemplate as Starter, WorkspaceFile } from './workspace-template';
 export { GeneratorEnv } from './generator-env-type';

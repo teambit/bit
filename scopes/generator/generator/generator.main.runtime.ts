@@ -310,8 +310,6 @@ export class GeneratorMain {
       this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
     );
 
-    const envId = await this.getEnvIdFromTemplateWithId(templateWithId);
-
     const componentGenerator = new ComponentGenerator(
       this.workspace,
       componentIds,
@@ -324,27 +322,9 @@ export class GeneratorMain {
       this.logger,
       this.onComponentCreateSlot,
       templateWithId.id,
-      envId
+      templateWithId.envName ? ComponentID.fromString(templateWithId.id) : undefined
     );
     return componentGenerator.generate();
-  }
-
-  private async getEnvIdFromTemplateWithId(templateWithId: ComponentTemplateWithId): Promise<ComponentID | undefined> {
-    const envIdFromTemplate = templateWithId.template.env;
-    if (envIdFromTemplate) {
-      const parsedFromTemplate = ComponentID.tryFromString(envIdFromTemplate);
-      if (!parsedFromTemplate) {
-        throw new BitError(
-          `Error: unable to parse envId from template. template name: ${templateWithId.template.name}, envId: ${envIdFromTemplate}`
-        );
-      }
-      const resolvedId = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(parsedFromTemplate);
-      return ComponentID.fromString(resolvedId);
-    }
-    if (templateWithId.envName) {
-      return ComponentID.fromString(templateWithId.id);
-    }
-    return Promise.resolve(undefined);
   }
 
   async generateWorkspaceTemplate(
