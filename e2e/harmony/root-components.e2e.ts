@@ -1618,32 +1618,43 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/${pm}`);
-    helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-    helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
-      envName: 'env1',
-      dependencies: {
-        peers: [
-          {
-            name: 'react',
-            supportedRange: '^16.8.0',
-            version: '16.14.0',
-          },
-        ],
+    helper.env.setCustomNewEnv(
+      undefined,
+      undefined,
+      {
+        policy: {
+          peers: [
+            {
+              name: 'react',
+              supportedRange: '^16.8.0',
+              version: '16.14.0',
+            },
+          ],
+        },
       },
-    });
-    helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2');
-    helper.fixtures.populateEnvMainRuntime(`custom-react/env2/env2.main.runtime.ts`, {
-      envName: 'env2',
-      dependencies: {
-        peers: [
-          {
-            name: 'react',
-            supportedRange: '^18.0.0',
-            version: '18.0.0',
-          },
-        ],
+      false,
+      'custom-react/env1',
+      'custom-react/env1'
+    );
+    helper.env.setCustomNewEnv(
+      undefined,
+      undefined,
+      {
+        policy: {
+          peers: [
+            {
+              name: 'react',
+              supportedRange: '^18.0.0',
+              version: '18.0.0',
+            },
+          ],
+        },
       },
-    });
+      true,
+      'custom-react/env2',
+      'custom-react/env2'
+    );
+
     helper.fixtures.populateComponents(2);
     helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
     helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
@@ -1655,7 +1666,6 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/custom-react/env2`, {});
     helper.extensions.addExtensionToVariant('custom-react', 'teambit.envs/env', {});
     helper.command.install();
-    helper.command.install(); // For some reason only works on second run with Yarn
   }
 });
 
