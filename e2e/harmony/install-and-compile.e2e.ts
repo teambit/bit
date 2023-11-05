@@ -97,7 +97,7 @@ CustomEnv2Aspect.addRuntime(CustomEnv2Main);
 `
     );
     helper.command.setEnv(`custom-env2`, `custom-env1`);
-    helper.command.create('node', 'comp');
+    helper.command.create('node', 'comp', '--env teambit.harmony/node');
     helper.fs.outputFile(
       `${helper.scopes.remoteWithoutOwner}/comp/comp.ts`,
       `
@@ -180,8 +180,8 @@ export function comp() {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.bitJsonc.setupDefault();
-      helper.command.create('react', 'comp1');
-      helper.command.create('react', 'comp2');
+      helper.command.create('react', 'comp1', '--env teambit.react/react');
+      helper.command.create('react', 'comp2', '--env teambit.react/react');
       helper.command.setEnv('comp1', `${helper.scopes.remote}/custom-react/env1`);
     });
     it('should not run install indefinitely', () => {

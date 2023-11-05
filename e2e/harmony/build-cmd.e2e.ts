@@ -24,7 +24,7 @@ describe('build command', function () {
   describe('an mdx dependency of a react env', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.command.create('mdx-component', 'my-mdx');
+      helper.command.create('mdx-component', 'my-mdx', '--env teambit.mdx/mdx');
       helper.command.create('react-env', 'my-env');
       const importStatement = `import { MyMdx } from '@${helper.scopes.remote}/my-mdx';\n`;
       helper.fs.prependFile(path.join(helper.scopes.remote, 'my-env/my-env.docs.mdx'), importStatement);

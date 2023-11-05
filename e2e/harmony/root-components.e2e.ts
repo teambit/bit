@@ -1564,7 +1564,7 @@ describe('env peer dependencies hoisting', function () {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-      helper.command.create('react', 'my-button', '-p my-button');
+      helper.command.create('react', 'my-button', '-p my-button --env teambit.react/react');
       helper.command.install();
     });
     after(() => {
@@ -1666,9 +1666,9 @@ describe('create with root components on', function () {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-    helper.command.create('react', 'card');
+    helper.command.create('react', 'card', '--env teambit.react/react');
     helper.command.install();
-    helper.command.create('react', 'my-button');
+    helper.command.create('react', 'my-button', '--env teambit.react/react');
   });
   it('should create the runtime component directory for the created component', () => {
     expect(path.join(helper.env.rootCompDirDep('teambit.react/react', 'my-button'), 'index.ts')).to.be.a.path();
