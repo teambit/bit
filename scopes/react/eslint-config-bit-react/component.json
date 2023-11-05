@@ -1,7 +1,8 @@
 {
   "componentId": {
     "name": "react",
-    "version": "0.0.10"
+    "version": "0.0.10",
+    "scope": "teambit.react"
   },
   "propagate": true,
   "extensions": {
@@ -36,11 +37,12 @@
           "@typescript-eslint/eslint-plugin": "5.62.0",
           "@typescript-eslint/parser": "5.62.0",
           "eslint-config-airbnb-typescript": "12.0.0",
-          "eslint-config-prettier": "8.5.0",
+          "eslint-config-prettier": "8.10.0",
           "@teambit/legacy": "-"
         },
         "devDependencies": {
-          "@teambit/legacy": "-"
+          "@teambit/legacy": "-",
+          "@types/jest": "26.0.24"
         },
         "peerDependencies": {
           "eslint": "> 7.0.0",
