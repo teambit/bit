@@ -13,11 +13,8 @@ import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs
 import { ReactAspect, ReactEnv, ReactMain, UseTypescriptModifiers } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
-import { NodeComponentTemplate, NodeEnvTemplate, NodeJSComponentTemplate, ExpressAppTemplate } from './node.templates';
-export { NodeComponentTemplate } from './component-template/component-template';
-export { ExpressAppTemplate } from './express-template/app-template';
-export { NodeJSComponentTemplate } from './js-module-template/js-component-template';
-export { NodeEnvTemplate } from './node-env-template/node-env-template';
+import { componentTemplates } from './node.templates';
+import { NodeAppType } from './node.app-type';
 
 export class NodeMain {
   constructor(
@@ -165,13 +162,7 @@ export class NodeMain {
     envs.registerEnv(nodeEnv);
     const nodeAppType = new NodeAppType('node-app', nodeEnv, logger);
     application.registerAppType(nodeAppType);
-    if (generator)
-      generator.registerComponentTemplate([
-        NodeComponentTemplate,
-        NodeEnvTemplate,
-        NodeJSComponentTemplate,
-        ExpressAppTemplate,
-      ]);
+    if (generator) generator.registerComponentTemplate(componentTemplates);
     return new NodeMain(react, tsAspect, nodeEnv, envs);
   }
 }
