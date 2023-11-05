@@ -9,15 +9,15 @@ import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BuildTask } from '@teambit/builder';
 import { Compiler } from '@teambit/compiler';
 import { PackageJsonProps } from '@teambit/pkg';
+import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
+import { ReactAspect, ReactEnv, ReactMain, UseTypescriptModifiers } from '@teambit/react';
+import { NodeAspect } from './node.aspect';
+import { NodeEnv } from './node.env';
 import { NodeComponentTemplate, NodeEnvTemplate, NodeJSComponentTemplate, ExpressAppTemplate } from './node.templates';
 export { NodeComponentTemplate } from './component-template/component-template';
 export { ExpressAppTemplate } from './express-template/app-template';
 export { NodeJSComponentTemplate } from './js-module-template/js-component-template';
 export { NodeEnvTemplate } from './node-env-template/node-env-template';
-import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
-import { ReactAspect, ReactEnv, ReactMain, UseTypescriptModifiers } from '@teambit/react';
-import { NodeAspect } from './node.aspect';
-import { NodeEnv } from './node.env';
 
 export class NodeMain {
   constructor(
