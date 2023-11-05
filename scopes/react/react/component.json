@@ -1,8 +1,8 @@
 {
   "componentId": {
+    "scope": "teambit.react",
     "name": "react",
-    "version": "0.0.10",
-    "scope": "teambit.react"
+    "version": "0.0.10"
   },
   "propagate": true,
   "extensions": {
@@ -12,8 +12,8 @@
           "react": "-",
           "react-dom": "-",
           "@svgr/webpack": "5.5.0",
-          "@babel/helper-plugin-test-runner": "7.16.7",
-          "@babel/preset-env": "7.22.15",
+          "@babel/helper-plugin-test-runner": "7.22.5",
+          "@babel/preset-env": "7.23.2",
           "@babel/preset-react": "7.22.15",
           "@typescript-eslint/parser": "5.62.0",
           "@typescript-eslint/eslint-plugin": "5.62.0",
@@ -48,8 +48,10 @@
           "less": "^4.1.1",
           "less-loader": "10.0.0",
           "@teambit/legacy": "-",
-          "@babel/runtime": "7.20.0",
-          "react-refresh": "0.10.0"
+          "@babel/runtime": "7.23.2",
+          "react-refresh": "0.10.0",
+          "@babel/plugin-proposal-decorators": "7.23.2",
+          "@babel/plugin-transform-modules-commonjs": "7.23.0"
         },
         "devDependencies": {
           "react": "-",
