@@ -492,8 +492,6 @@ jobs:
       - run:
           name: bbit install
           command: cd bit && bbit install
-          environment:
-            NODE_OPTIONS: --max-old-space-size=8000
 
       - run: cd bit && npm run link-bit-legacy
       # - run: cd bit && bbit compile
