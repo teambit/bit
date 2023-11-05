@@ -12,92 +12,47 @@ describe('all custom envs are compiled during installation', function () {
   function prepare() {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.command.create('node-env', 'custom-env1');
-    helper.fixtures.generateEnvJsoncFile(`${helper.scopes.remoteWithoutOwner}/custom-env1`, {
-      policy: {
-        runtime: [
-          {
-            name: 'is-negative',
-            version: '1.0.0',
-            force: true,
-          },
-        ],
+
+    helper.env.setCustomNewEnv(
+      'node-based-env',
+      ['@teambit/node.node'],
+      {
+        policy: {
+          runtime: [
+            {
+              name: 'is-negative',
+              version: '1.0.0',
+              force: true,
+            },
+          ],
+        },
       },
-    });
-    helper.fs.outputFile(
-      `${helper.scopes.remoteWithoutOwner}/custom-env1/custom-env1.main.runtime.ts`,
-      `
-import { MainRuntime } from '@teambit/cli';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { EnvAspect, EnvMain } from '@teambit/env';
-
-import isPositive from 'is-positive'
-import { CustomEnv1Aspect } from './custom-env1.aspect';
-
-export class CustomEnv1Main {
-  static slots = [];
-
-  static dependencies = [EnvAspect, EnvsAspect];
-
-  static runtime = MainRuntime;
-
-  static async provider([env, envs]: [EnvMain, EnvsMain]) {
-    console.log(isPositive(1));
-    const CustomEnv1Env = env.compose([]);
-    envs.registerEnv(CustomEnv1Env);
-    return new CustomEnv1Main();
-  }
-}
-
-CustomEnv1Aspect.addRuntime(CustomEnv1Main);
-`
+      false,
+      'custom-env1',
+      'custom-env1'
     );
-    helper.command.create('node-env', 'custom-env2');
-    helper.fixtures.generateEnvJsoncFile(`${helper.scopes.remoteWithoutOwner}/custom-env2`, {
-      policy: {
-        runtime: [
-          {
-            name: 'is-odd',
-            version: '1.0.0',
-            force: true,
-          },
-        ],
+
+    helper.env.setCustomNewEnv(
+      'mdx-based-env',
+      // We put here the node.node as well to save the time (only run one install)
+      ['@teambit/mdx.mdx-env', '@teambit/node.node'],
+      {
+        policy: {
+          runtime: [
+            {
+              name: 'is-odd',
+              version: '1.0.0',
+              force: true,
+            },
+          ],
+        },
       },
-    });
-    helper.fs.outputFile(
-      `${helper.scopes.remoteWithoutOwner}/custom-env2/custom-env2.main.runtime.ts`,
-      `
-import { MainRuntime } from '@teambit/cli';
-import { NodeAspect, NodeMain } from '@teambit/node'
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { CustomEnv2Aspect } from './custom-env2.aspect';
-import isNegative from 'is-negative';
-import { MDXAspect, MDXMain } from '@teambit/mdx';
-import { babelConfig } from '@teambit/mdx/dist/babel/babel.config';
-
-export class CustomEnv2Main {
-  static slots = [];
-
-  static dependencies = [NodeAspect, EnvsAspect, MDXAspect];
-
-  static runtime = MainRuntime;
-
-  static async provider([node, envs, mdx]: [NodeMain, EnvsMain, MDXMain]) {
-    console.log(isNegative(17));
-    const comp = mdx.createCompiler({ ignoredPatterns: [], babelTransformOptions: babelConfig });
-    const CustomEnv2Env = node.compose([
-      node.overrideCompiler(comp),
-    ]);
-    envs.registerEnv(CustomEnv2Env);
-    return new CustomEnv2Main();
-  }
-}
-
-CustomEnv2Aspect.addRuntime(CustomEnv2Main);
-`
+      true,
+      'custom-env2',
+      'custom-env2'
     );
-    helper.command.setEnv(`custom-env2`, `custom-env1`);
-    helper.command.create('node', 'comp', '--env teambit.harmony/node');
+
+    helper.command.create('node', 'comp', `--env ${helper.scopes.remoteWithoutOwner}/custom-env2`);
     helper.fs.outputFile(
       `${helper.scopes.remoteWithoutOwner}/comp/comp.ts`,
       `
@@ -109,13 +64,9 @@ export function comp() {
 `
     );
     helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/comp/comp.mdx`, '');
-    helper.command.setEnv(`comp`, `custom-env2`);
+    helper.command.create('node', 'comp1', `--env ${helper.scopes.remoteWithoutOwner}/custom-env1`);
+
     helper.command.install('is-positive'); // installing the dependency of custom-env1
-    // TODO: since we disabled the install compile loop this isn't working right now
-    // as in the first install we can't load the custom env.
-    // disable this rm for now, but we need to see how we fix it.
-    // fs.rmdirSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
-    helper.command.install();
   }
   describe('using pnpm', function () {
     this.timeout(0);
@@ -158,22 +109,25 @@ export function comp() {
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
-      helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-      helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
-        envName: 'env1',
-        dependencies: {
-          dependencies: {},
-          devDependencies: {},
-          peers: [
-            {
-              name: 'react',
-              supportedRange: '^16.8.0',
-              version: '16.14.0',
-            },
-          ],
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        {
+          policy: {
+            peers: [
+              {
+                name: 'react',
+                supportedRange: '^16.8.0',
+                version: '16.14.0',
+              },
+            ],
+          },
         },
-      });
-      helper.command.install();
+        true,
+        'custom-react/env1',
+        'custom-react/env1'
+      );
+
       helper.command.tagAllComponents();
       helper.command.export();
 

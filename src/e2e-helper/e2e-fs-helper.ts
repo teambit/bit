@@ -79,6 +79,7 @@ export default class FsHelper {
 
   prependFile(filePathRelativeToLocalScope: string, data = '\n'): void {
     const filePath = path.join(this.scopes.localPath, filePathRelativeToLocalScope);
+    if (!fs.existsSync(filePath)) return fs.writeFileSync(filePath, data);
     const content = fs.readFileSync(filePath).toString();
     return fs.writeFileSync(filePath, `${data}${content}`);
   }
