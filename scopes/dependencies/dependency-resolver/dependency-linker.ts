@@ -12,12 +12,7 @@ import { BitError } from '@teambit/bit-error';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
-import {
-  MainAspectNotLinkable,
-  RootDirNotDefined,
-  CoreAspectLinkError,
-  NonAspectCorePackageLinkError,
-} from './exceptions';
+import { MainAspectNotLinkable, RootDirNotDefined, NonAspectCorePackageLinkError } from './exceptions';
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
 /**
@@ -527,7 +522,8 @@ export class DependencyLinker {
     const target = path.join(dir, this.aspectLoader.mainAspect.packageName);
     const shouldSymlink = this.removeSymlinkTarget(target);
     if (!shouldSymlink) return undefined;
-    const src = this.aspectLoader.mainAspect.path;
+    const src =
+      this._getPkgPathFromCurrentBitDir(this.aspectLoader.mainAspect.packageName) ?? this.aspectLoader.mainAspect.path;
     await fs.ensureDir(path.dirname(target));
     return { packageName: this.aspectLoader.mainAspect.packageName, from: src, to: target };
   }
@@ -589,22 +585,8 @@ export class DependencyLinker {
     const target = path.join(targetModulesDir, packageName);
     const shouldSymlink = this.removeSymlinkTarget(target, hasLocalInstallation);
     if (!shouldSymlink) return undefined;
-    const isAspectDirExist = fs.pathExistsSync(aspectDir);
-    if (!isAspectDirExist) {
-      this.logger.debug(`linkCoreAspect: aspectDir ${aspectDir} does not exist, linking it to ${target}`);
-      aspectDir = getAspectDir(id);
-      return { aspectId: id, linkDetail: { packageName, from: aspectDir, to: target } };
-    }
-
-    try {
-      // eslint-disable-next-line global-require, import/no-dynamic-require
-      const module = require(aspectDir);
-      const aspectPath = path.resolve(path.join(module.path, '..', '..'));
-      this.logger.debug(`linkCoreAspect: linking aspectPath ${aspectPath} to ${target}`);
-      return { aspectId: id, linkDetail: { packageName, from: aspectPath, to: target } };
-    } catch (err: any) {
-      throw new CoreAspectLinkError(id, err);
-    }
+    this.logger.debug(`linkCoreAspect: linking aspectPath ${aspectDir} to ${target}`);
+    return { aspectId: id, linkDetail: { packageName, from: aspectDir, to: target } };
   }
 
   /**
@@ -630,13 +612,19 @@ export class DependencyLinker {
     return true;
   }
 
+  private _getPkgPathFromCurrentBitDir(packageName: string): string | undefined {
+    if (!this._currentBitDir) return undefined;
+    return path.join(this._currentBitDir, 'node_modules', packageName);
+  }
+
   private linkNonAspectCorePackages(rootDir: string, name: string, mainAspectPath: string): LinkDetail | undefined {
     const distDir = path.join(mainAspectPath, 'dist', name);
 
     const packageName = `@teambit/${name}`;
     const target = path.join(rootDir, 'node_modules', packageName);
-    if (this._currentBitDir) {
-      return { packageName, from: path.join(this._currentBitDir, 'node_modules', packageName), to: target };
+    const fromDir = this._getPkgPathFromCurrentBitDir(packageName);
+    if (fromDir) {
+      return { packageName, from: fromDir, to: target };
     }
     const isDistDirExist = fs.pathExistsSync(distDir);
     if (!isDistDirExist) {
