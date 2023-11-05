@@ -12,7 +12,12 @@ import { BitError } from '@teambit/bit-error';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
-import { MainAspectNotLinkable, RootDirNotDefined, NonAspectCorePackageLinkError } from './exceptions';
+import {
+  MainAspectNotLinkable,
+  RootDirNotDefined,
+  CoreAspectLinkError,
+  NonAspectCorePackageLinkError,
+} from './exceptions';
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
 /**
@@ -583,10 +588,28 @@ export class DependencyLinker {
     const packageName = getCoreAspectPackageName(id);
     let aspectDir = path.join(mainAspectPath, 'dist', name);
     const target = path.join(targetModulesDir, packageName);
+    const fromDir = this._getPkgPathFromCurrentBitDir(packageName);
+    if (fromDir) {
+      return { aspectId: id, linkDetail: { packageName, from: fromDir, to: target } };
+    }
     const shouldSymlink = this.removeSymlinkTarget(target, hasLocalInstallation);
     if (!shouldSymlink) return undefined;
-    this.logger.debug(`linkCoreAspect: linking aspectPath ${aspectDir} to ${target}`);
-    return { aspectId: id, linkDetail: { packageName, from: aspectDir, to: target } };
+    const isAspectDirExist = fs.pathExistsSync(aspectDir);
+    if (!isAspectDirExist) {
+      this.logger.debug(`linkCoreAspect: aspectDir ${aspectDir} does not exist, linking it to ${target}`);
+      aspectDir = getAspectDir(id);
+      return { aspectId: id, linkDetail: { packageName, from: aspectDir, to: target } };
+    }
+
+    try {
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      const module = require(aspectDir);
+      const aspectPath = path.resolve(path.join(module.path, '..', '..'));
+      this.logger.debug(`linkCoreAspect: linking aspectPath ${aspectPath} to ${target}`);
+      return { aspectId: id, linkDetail: { packageName, from: aspectPath, to: target } };
+    } catch (err: any) {
+      throw new CoreAspectLinkError(id, err);
+    }
   }
 
   /**
