@@ -1,3 +1,4 @@
+import { Harmony } from '@teambit/harmony';
 import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { TsConfigSourceFile } from 'typescript';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
@@ -6,12 +7,15 @@ import { Compiler } from '@teambit/compiler';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { MainRuntime } from '@teambit/cli';
-import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
+import { EnvsAspect, EnvsMain, EnvTransformer, Environment, EnvContext } from '@teambit/envs';
 import { ReactAspect, ReactEnv, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
+import { ComponentID } from '@teambit/component-id';
+import { LoggerMain } from '@teambit/logger';
+import { WorkerMain } from '@teambit/worker';
 import { HtmlAspect } from './html.aspect';
 import { HtmlEnv } from './html.env';
-import { componentTemplates } from './html.templates';
+import { getTemplates } from './html.templates';
 
 export class HtmlMain {
   constructor(
@@ -109,11 +113,17 @@ export class HtmlMain {
     return this.envs.compose(this.envs.merge(targetEnv, this.htmlEnv), transformers);
   }
 
-  static async provider([envs, react, generator]: [EnvsMain, ReactMain, GeneratorMain]) {
+  static async provider(
+    [envs, react, generator, loggerAspect, workerMain]: [EnvsMain, ReactMain, GeneratorMain, LoggerMain, WorkerMain],
+    config,
+    slots,
+    harmony: Harmony
+  ) {
     const htmlEnv: HtmlEnv = envs.merge<HtmlEnv, ReactEnv>(new HtmlEnv(), react.reactEnv);
     envs.registerEnv(htmlEnv);
     if (generator) {
-      generator.registerComponentTemplate(componentTemplates);
+      const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerAspect, workerMain, harmony);
+      generator.registerComponentTemplate(getTemplates(envContext));
     }
 
     return new HtmlMain(react, htmlEnv, envs);

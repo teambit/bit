@@ -1,4 +1,3 @@
-import { ComponentTemplate } from '@teambit/generator';
 import {
   ReactComponentTemplate,
   ReactHookTemplate,
@@ -7,12 +6,19 @@ import {
   ReactJSComponentTemplate,
   ReactEnvTemplate,
 } from '@teambit/react.generator.react-templates';
+import { EnvContext } from '@teambit/envs';
+import { ComponentTemplate, TemplateList } from '@teambit/generator';
 
-export const componentTemplates: ComponentTemplate[] = [
+const templateListHandler = TemplateList.from([
   ReactComponentTemplate.from({ env: 'bitdev.react/react-env' }),
   ReactHookTemplate.from({ env: 'bitdev.react/react-env' }),
   ReactContextTemplate.from({ env: 'bitdev.react/react-env' }),
   ReactAppTemplate.from({ env: 'bitdev.react/react-env' }),
   ReactJSComponentTemplate.from({ env: 'bitdev.react/react-env' }),
   ReactEnvTemplate.from({}),
-];
+]);
+
+export function getTemplates(envContext: EnvContext): ComponentTemplate[] {
+  const templateList = templateListHandler(envContext);
+  return templateList.compute();
+}
