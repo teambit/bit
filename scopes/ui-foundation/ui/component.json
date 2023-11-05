@@ -1,8 +1,8 @@
 {
   "componentId": {
-    "scope": "teambit.ui-foundation",
     "name": "ui",
-    "version": "0.0.10"
+    "version": "0.0.10",
+    "scope": "teambit.ui-foundation"
   },
   "propagate": true,
   "extensions": {
@@ -25,8 +25,7 @@
           "sass-loader": "13.3.2",
           "less": "^4.1.1",
           "less-loader": "8.0.0",
-          "@teambit/legacy": "-",
-          "@babel/runtime": "7.23.2"
+          "@teambit/legacy": "-"
         },
         "devDependencies": {
           "@types/mocha": "9.1.0",

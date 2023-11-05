@@ -1,7 +1,7 @@
 {
   "componentId": {
-    "scope": "teambit.defender",
-    "name": "eslint"
+    "name": "eslint",
+    "scope": "teambit.defender"
   },
   "propagate": true,
   "extensions": {
@@ -9,9 +9,6 @@
       "policy": {
         "devDependencies": {
           "@types/eslint": "7.28.0"
-        },
-        "dependencies": {
-          "@babel/runtime": "7.23.2"
         }
       }
     }

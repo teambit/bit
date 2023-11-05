@@ -13,7 +13,6 @@
         "@babel/core": "7.19.6",
         "@babel/preset-react": "7.22.15",
         "@babel/preset-typescript": "7.22.15",
-        "@babel/register": "7.22.15",
         "@babel/types": "7.22.3",
         "@graphql-modules/core": "0.7.17",
         "@graphql-tools/schema": "^10.0.0",
