@@ -1,4 +1,4 @@
-import { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -56,6 +56,7 @@ export class WorkspaceManifestFactory {
     // Make sure to take other default if passed options with only one option
     const optsWithDefaults = Object.assign({}, DEFAULT_CREATE_OPTIONS, options);
     const hasRootComponents = options.hasRootComponents ?? this.dependencyResolver.hasRootComponents();
+    rootPolicy = this.filterOutCoreAspects(rootPolicy);
     const componentDependenciesMap: ComponentDependenciesMap = await this.buildComponentDependenciesMap(components, {
       filterComponentsFromManifests: optsWithDefaults.filterComponentsFromManifests,
       rootPolicy: optsWithDefaults.resolveVersionsFromDependenciesOnly ? undefined : rootPolicy,
@@ -65,7 +66,6 @@ export class WorkspaceManifestFactory {
       rootDependencies: hasRootComponents ? rootPolicy.toManifest().dependencies : undefined,
     });
     let dedupedDependencies = getEmptyDedupedDependencies();
-    rootPolicy = rootPolicy.filter((dep) => dep.dependencyId !== '@teambit/legacy');
     if (hasRootComponents) {
       const { rootDependencies } = dedupeDependencies(rootPolicy, componentDependenciesMap, {
         dedupePeerDependencies: hasRootComponents,
@@ -99,6 +99,13 @@ export class WorkspaceManifestFactory {
       componentsManifestsMap
     );
     return workspaceManifest;
+  }
+
+  private filterOutCoreAspects(rootPolicy: WorkspacePolicy) {
+    const coreAspectIds = this.aspectLoader.getCoreAspectIds();
+    const coreAspectPkgNames = new Set(coreAspectIds.map((coreAspectId) => getCoreAspectPackageName(coreAspectId)));
+    coreAspectPkgNames.add('@teambit/legacy');
+    return rootPolicy.filter((dep) => !coreAspectPkgNames.has(dep.dependencyId));
   }
 
   private getEnvsSelfPeersPolicy(componentsManifestsMap: ComponentsManifestsMap) {
