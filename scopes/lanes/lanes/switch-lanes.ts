@@ -91,7 +91,7 @@ export class LaneSwitcher {
         throw new BitError('error: use --pattern only when the workspace is empty');
       }
       const allIds = await this.workspace.resolveMultipleComponentIds(this.switchProps.ids || []);
-      const patternIds = this.workspace.scope.filterIdsFromPoolIdsByPattern(this.switchProps.pattern, allIds);
+      const patternIds = await this.workspace.filterIdsFromPoolIdsByPattern(this.switchProps.pattern, allIds);
       this.switchProps.ids = patternIds.map((id) => id);
     }
   }

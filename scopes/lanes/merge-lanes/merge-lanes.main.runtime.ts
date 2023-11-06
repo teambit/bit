@@ -163,7 +163,7 @@ export class MergeLanesMain {
 
     if (pattern) {
       const componentIds = await this.workspace.resolveMultipleComponentIds(bitIds);
-      const compIdsFromPattern = this.workspace.scope.filterIdsFromPoolIdsByPattern(pattern, componentIds);
+      const compIdsFromPattern = await this.workspace.filterIdsFromPoolIdsByPattern(pattern, componentIds);
       allComponentsStatus = await filterComponentsStatus(
         allComponentsStatus,
         compIdsFromPattern,
@@ -418,7 +418,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
     const getIdsToMerge = async (): Promise<ComponentIdList> => {
       if (!options.pattern) return fromLaneBitIds;
       const laneCompIds = await this.scope.resolveMultipleComponentIds(fromLaneBitIds);
-      const ids = this.scope.filterIdsFromPoolIdsByPattern(options.pattern, laneCompIds);
+      const ids = await this.scope.filterIdsFromPoolIdsByPattern(options.pattern, laneCompIds);
       return ComponentIdList.fromArray(ids.map((id) => id));
     };
     const idsToMerge = await getIdsToMerge();
