@@ -559,7 +559,11 @@
       "@types/react": "^17.0.67",
       "@types/react-dom": "^17.0.21",
       "@babel/runtime": "7.23.2",
-      "@babel/preset-env": "7.23.2"
+      "@babel/preset-env": "7.23.2",
+      "@babel/plugin-transform-class-properties": "7.22.5",
+      "@babel/plugin-proposal-decorators": "7.23.2",
+      "@babel/plugin-transform-modules-commonjs": "7.23.0",
+      "@babel/plugin-transform-runtime": "7.23.2"
     },
     "nodeLinker": "hoisted",
     "rootComponents": true,
