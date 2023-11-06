@@ -6,7 +6,7 @@ import express, { Express } from 'express';
 import fallback from 'express-history-api-fallback';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { stripTrailingChar } from '@teambit/legacy/dist/utils';
-import { Server } from 'http';
+import { IncomingMessage, Server } from 'http';
 import httpProxy from 'http-proxy';
 import { join } from 'path';
 import webpack from 'webpack';
@@ -159,9 +159,9 @@ export class UIServer {
     const proxyEntries = await this.getProxyFromPlugins();
 
     // TODO - should use https://github.com/chimurai/http-proxy-middleware
-    server.on('upgrade', function (req, socket, head) {
+    server.on('upgrade', function (req: IncomingMessage, socket, head) {
       const entry = proxyEntries.find((proxy) =>
-        proxy.context.some((item) => item === stripTrailingChar(req.url, '/'))
+        proxy.context.some((item) => req.url && item === stripTrailingChar(req.url, '/'))
       );
       if (!entry) return;
       proxServer.ws(req, socket, head, {
