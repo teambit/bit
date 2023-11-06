@@ -1,5 +1,5 @@
 export type { GeneratorMain } from './generator.main.runtime';
-export {
+export type {
   ComponentContext,
   ComponentTemplate,
   ComponentTemplateOptions,

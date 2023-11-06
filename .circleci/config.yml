@@ -489,7 +489,10 @@ jobs:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
-      - run: cd bit && bbit install
+      - run:
+          name: bbit install
+          command: cd bit && bbit install
+
       - run: cd bit && npm run link-bit-legacy
       # - run: cd bit && bbit compile
 

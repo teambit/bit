@@ -1,11 +1,12 @@
+import { Harmony } from '@teambit/harmony';
 import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { omit } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect, Compiler } from '@teambit/compiler';
 import { BuildTask } from '@teambit/builder';
-import { Component } from '@teambit/component';
-import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
+import { Component, ComponentID } from '@teambit/component';
+import { EnvsAspect, EnvsMain, EnvTransformer, Environment, EnvContext } from '@teambit/envs';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import type { JestMain } from '@teambit/jest';
@@ -30,11 +31,13 @@ import { LinterContext } from '@teambit/linter';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
 import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
+import WorkerAspect, { WorkerMain } from '@teambit/worker';
+
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { ReactAppType } from './apps/web';
 import { reactSchema } from './react.graphql';
-import { componentTemplates } from './react.templates';
+import { getTemplates } from './react.templates';
 import { ReactAppOptions } from './apps/web/react-app-options';
 import { ReactSchema } from './react.schema';
 import { ReactAPITransformer } from './react.api.transformer';
@@ -55,7 +58,8 @@ type ReactDeps = [
   GeneratorMain,
   DependencyResolverMain,
   LoggerMain,
-  SchemaMain
+  SchemaMain,
+  WorkerMain
 ];
 
 export type ReactMainConfig = {
@@ -414,6 +418,7 @@ export class ReactMain {
     DependencyResolverAspect,
     LoggerAspect,
     SchemaAspect,
+    WorkerAspect,
   ];
 
   static async provider(
@@ -434,8 +439,11 @@ export class ReactMain {
       dependencyResolver,
       loggerMain,
       schemaMain,
+      workerMain,
     ]: ReactDeps,
-    config: ReactMainConfig
+    config: ReactMainConfig,
+    slots,
+    harmony: Harmony
   ) {
     const logger = loggerMain.createLogger(ReactAspect.id);
     const reactEnv = new ReactEnv(
@@ -458,7 +466,8 @@ export class ReactMain {
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
     if (generator) {
-      generator.registerComponentTemplate(componentTemplates);
+      const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerMain, workerMain, harmony);
+      generator.registerComponentTemplate(getTemplates(envContext));
     }
 
     if (application) application.registerAppType(appType);

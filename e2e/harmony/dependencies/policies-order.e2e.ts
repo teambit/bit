@@ -48,20 +48,25 @@ describe('policies order', function () {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-      helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
-        envName: 'env1',
-        dependencies: {
-          peers: [
-            {
-              name: 'react',
-              supportedRange: '^16.0.0',
-              version: '16.0.0',
-            },
-          ],
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        {
+          policy: {
+            peers: [
+              {
+                name: 'react',
+                supportedRange: '^16.0.0',
+                version: '16.0.0',
+              },
+            ],
+          },
         },
-      });
-      helper.extensions.addExtensionToVariant('custom-react', 'teambit.envs/env', {});
+        true,
+        'custom-react/env1',
+        'custom-react/env1'
+      );
+
       helper.command.install();
     });
     after(() => {

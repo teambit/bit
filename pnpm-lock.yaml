@@ -2795,7 +2795,7 @@ importers:
         version: file:scopes/harmony/ui/aspect-box(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html':
         specifier: workspace:*
-        version: file:scopes/html/html(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/html/html(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html.aspect-docs.html':
         specifier: workspace:*
         version: file:scopes/html/aspect-docs/html(react-dom@17.0.2)(react@17.0.2)
@@ -2846,7 +2846,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -2879,7 +2879,7 @@ importers:
         version: file:scopes/component/new-component-helper(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/node':
         specifier: workspace:*
-        version: file:scopes/harmony/node(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/harmony/node(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/notifications':
         specifier: workspace:*
         version: file:scopes/ui-foundation/notifications/aspect(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
@@ -3900,7 +3900,7 @@ importers:
         version: file:scopes/harmony/ui/aspect-box(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html':
         specifier: workspace:*
-        version: file:scopes/html/html(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/html/html(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html.aspect-docs.html':
         specifier: workspace:*
         version: file:scopes/html/aspect-docs/html(react-dom@17.0.2)(react@17.0.2)
@@ -3951,7 +3951,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -3984,7 +3984,7 @@ importers:
         version: file:scopes/component/new-component-helper(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/node':
         specifier: workspace:*
-        version: file:scopes/harmony/node(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/harmony/node(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/notifications':
         specifier: workspace:*
         version: file:scopes/ui-foundation/notifications/aspect(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
@@ -5005,7 +5005,7 @@ importers:
         version: file:scopes/harmony/ui/aspect-box(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html':
         specifier: workspace:*
-        version: file:scopes/html/html(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/html/html(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html.aspect-docs.html':
         specifier: workspace:*
         version: file:scopes/html/aspect-docs/html(react-dom@17.0.2)(react@17.0.2)
@@ -5056,7 +5056,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -5089,7 +5089,7 @@ importers:
         version: file:scopes/component/new-component-helper(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/node':
         specifier: workspace:*
-        version: file:scopes/harmony/node(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/harmony/node(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/notifications':
         specifier: workspace:*
         version: file:scopes/ui-foundation/notifications/aspect(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
@@ -6110,7 +6110,7 @@ importers:
         version: file:scopes/harmony/ui/aspect-box(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html':
         specifier: workspace:*
-        version: file:scopes/html/html(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/html/html(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html.aspect-docs.html':
         specifier: workspace:*
         version: file:scopes/html/aspect-docs/html(react-dom@17.0.2)(react@17.0.2)
@@ -6161,7 +6161,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -6194,7 +6194,7 @@ importers:
         version: file:scopes/component/new-component-helper(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/node':
         specifier: workspace:*
-        version: file:scopes/harmony/node(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/harmony/node(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/notifications':
         specifier: workspace:*
         version: file:scopes/ui-foundation/notifications/aspect(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
@@ -7209,7 +7209,7 @@ importers:
         version: file:scopes/harmony/ui/aspect-box(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html':
         specifier: workspace:*
-        version: file:scopes/html/html(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/html/html(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html.aspect-docs.html':
         specifier: workspace:*
         version: file:scopes/html/aspect-docs/html(react-dom@17.0.2)(react@17.0.2)
@@ -7260,7 +7260,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -7293,7 +7293,7 @@ importers:
         version: file:scopes/component/new-component-helper(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/node':
         specifier: workspace:*
-        version: file:scopes/harmony/node(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/harmony/node(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/notifications':
         specifier: workspace:*
         version: file:scopes/ui-foundation/notifications/aspect(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
@@ -8314,7 +8314,7 @@ importers:
         version: file:scopes/harmony/ui/aspect-box(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html':
         specifier: workspace:*
-        version: file:scopes/html/html(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/html/html(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html.aspect-docs.html':
         specifier: workspace:*
         version: file:scopes/html/aspect-docs/html(react-dom@17.0.2)(react@17.0.2)
@@ -8365,7 +8365,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -8398,7 +8398,7 @@ importers:
         version: file:scopes/component/new-component-helper(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/node':
         specifier: workspace:*
-        version: file:scopes/harmony/node(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/harmony/node(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/notifications':
         specifier: workspace:*
         version: file:scopes/ui-foundation/notifications/aspect(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
@@ -15357,6 +15357,9 @@ importers:
       '@babel/runtime':
         specifier: 7.23.2
         version: 7.23.2
+      '@teambit/component-id':
+        specifier: ^1.1.1
+        version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.empty-box':
         specifier: 0.0.363
         version: 0.0.363(react-dom@17.0.2)(react@17.0.2)
@@ -15612,6 +15615,9 @@ importers:
       '@babel/runtime':
         specifier: 7.23.2
         version: 7.23.2
+      '@teambit/component-id':
+        specifier: ^1.1.1
+        version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -15984,6 +15990,9 @@ importers:
       '@babel/runtime':
         specifier: 7.23.2
         version: 7.23.2
+      '@teambit/component-id':
+        specifier: ^1.1.1
+        version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.empty-box':
         specifier: 0.0.363
         version: 0.0.363(react-dom@17.0.2)(react@17.0.2)
@@ -59458,7 +59467,7 @@ packages:
     name: '@teambit/harmony.modules.resolved-component'
     dev: false
 
-  file:scopes/harmony/node(react-dom@17.0.2)(react@17.0.2):
+  file:scopes/harmony/node(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/harmony/node, type: directory}
     id: file:scopes/harmony/node
     name: '@teambit/node'
@@ -59467,6 +59476,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.23.2
+      '@teambit/component-id': 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
       '@teambit/node.generator.node-templates': 1.0.8
@@ -59476,6 +59486,8 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
       typescript: 4.7.4
+    transitivePeerDependencies:
+      - '@teambit/legacy'
     dev: false
 
   file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2):
@@ -59555,7 +59567,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/html/html(react-dom@17.0.2)(react@17.0.2):
+  file:scopes/html/html(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/html/html, type: directory}
     id: file:scopes/html/html
     name: '@teambit/html'
@@ -59564,6 +59576,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.23.2
+      '@teambit/component-id': 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
       '@teambit/html.generator.html-templates': 1.0.8
       '@teambit/html.modules.render-template': 0.0.104
@@ -59573,6 +59586,8 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
       typescript: 4.7.4
+    transitivePeerDependencies:
+      - '@teambit/legacy'
     dev: false
 
   file:scopes/html/modules/create-element-from-string:
@@ -59705,13 +59720,15 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/mdx/mdx:
+  file:scopes/mdx/mdx(@teambit/legacy@node_modules+@teambit+legacy):
     resolution: {directory: scopes/mdx/mdx, type: directory}
+    id: file:scopes/mdx/mdx
     name: '@teambit/mdx'
     dependencies:
       '@babel/core': 7.19.6
       '@babel/helper-plugin-test-runner': 7.16.7
       '@babel/runtime': 7.23.2
+      '@teambit/component-id': 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.generator.mdx-templates': 1.0.9
@@ -59721,6 +59738,7 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     transitivePeerDependencies:
+      - '@teambit/legacy'
       - supports-color
     dev: false
 
