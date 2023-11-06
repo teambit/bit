@@ -227,7 +227,7 @@ export default class EnvHelper {
     this.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.dependencies/dependency-resolver', {
       policy: {
         dependencies: {
-          '@babel/runtime': '^7.8.4',
+          '@babel/runtime': '^7.23.2',
           '@babel/core': '7.11.6',
           '@babel/preset-env': '7.22.15',
           '@babel/preset-typescript': '7.22.15',

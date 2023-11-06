@@ -199,7 +199,7 @@ export const descriptorMock = ComponentDescriptor.fromObject({
               },
               {
                 id: '@babel/runtime',
-                version: '7.12.18',
+                version: '7.23.2',
                 __type: 'package',
                 lifecycle: 'dev',
                 source: 'env',
@@ -260,7 +260,7 @@ export const descriptorMock = ComponentDescriptor.fromObject({
               {
                 dependencyId: '@babel/runtime',
                 value: {
-                  version: '7.12.18',
+                  version: '7.23.2',
                   resolveFromEnv: false,
                 },
                 lifecycleType: 'dev',
@@ -468,7 +468,7 @@ export const descriptorMock = ComponentDescriptor.fromObject({
                     },
                     devDependencies: {
                       '@types/testing-library__jest-dom': '5.9.5',
-                      '@babel/runtime': '7.20.0',
+                      '@babel/runtime': '7.23.2',
                       '@types/jest': '^26.0.0',
                       '@types/react-dom': '^17.0.5',
                       '@types/react': '^17.0.8',
@@ -488,7 +488,7 @@ export const descriptorMock = ComponentDescriptor.fromObject({
                         },
                         devDependencies: {
                           '@types/testing-library__jest-dom': '5.9.5',
-                          '@babel/runtime': '7.20.0',
+                          '@babel/runtime': '7.23.2',
                           '@types/jest': '^26.0.0',
                           '@types/react-dom': '^17.0.5',
                           '@types/react': '^17.0.8',
@@ -639,7 +639,7 @@ export const descriptorMock = ComponentDescriptor.fromObject({
           },
           {
             id: '@babel/runtime',
-            version: '7.12.18',
+            version: '7.23.2',
             __type: 'package',
             lifecycle: 'dev',
             source: 'env',

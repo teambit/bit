@@ -32,7 +32,7 @@ describe('babel compiler', function () {
         helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.dependencies/dependency-resolver', {
           policy: {
             dependencies: {
-              '@babel/runtime': '^7.12.0',
+              '@babel/runtime': '^7.23.2',
               '@babel/core': '7.11.6',
               '@babel/preset-env': '7.22.15',
             },
