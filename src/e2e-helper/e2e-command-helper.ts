@@ -717,6 +717,14 @@ export default class CommandHelper {
     return this.runCmd(`bit _tag '${JSON.stringify(data)}' ${options}`, cwd);
   }
   snapFromScope(cwd: string, data: Record<string, any>, options = '') {
+    data.forEach((dataItem) => {
+      if (!dataItem.files) return;
+      dataItem.files.forEach((file) => {
+        if (file.content) {
+          file.content = Buffer.from(file.content).toString('base64');
+        }
+      });
+    });
     return this.runCmd(`bit _snap '${JSON.stringify(data)}' ${options}`, cwd);
   }
   diff(id = '') {
