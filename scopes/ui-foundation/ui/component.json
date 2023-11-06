@@ -1,8 +1,8 @@
 {
   "componentId": {
-    "scope": "teambit.ui-foundation",
     "name": "ui",
-    "version": "0.0.10"
+    "version": "0.0.10",
+    "scope": "teambit.ui-foundation"
   },
   "propagate": true,
   "extensions": {
@@ -28,12 +28,11 @@
           "@teambit/legacy": "-"
         },
         "devDependencies": {
-          "@types/mocha": "9.1.1",
+          "@types/mocha": "9.1.0",
           "@types/node": "12.20.4",
-          "@types/postcss-normalize": "9.0.3",
+          "@types/postcss-normalize": "9.0.1",
           "@teambit/legacy": "-",
-          "@types/webpack-dev-server": "-",
-          "@types/jest": "26.0.24"
+          "@types/webpack-dev-server": "-"
         },
         "peerDependencies": {
           "@teambit/legacy": "1.0.588"

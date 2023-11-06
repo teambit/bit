@@ -1,8 +1,8 @@
 {
   "componentId": {
-    "scope": "teambit.react",
     "name": "react",
-    "version": "0.0.10"
+    "version": "0.0.10",
+    "scope": "teambit.react"
   },
   "propagate": true,
   "extensions": {
@@ -49,21 +49,17 @@
           "less-loader": "10.0.0",
           "@teambit/legacy": "-",
           "@babel/runtime": "7.20.0",
-          "react-refresh": "0.10.0",
-          "@babel/plugin-proposal-decorators": "7.23.2",
-          "@babel/plugin-transform-modules-commonjs": "7.23.0",
-          "babel-plugin-transform-typescript-metadata": "0.3.2"
+          "react-refresh": "0.10.0"
         },
         "devDependencies": {
           "react": "-",
           "react-dom": "-",
           "@teambit/legacy": "-",
-          "@types/mocha": "9.1.1",
+          "@types/mocha": "9.1.0",
           "@types/node": "12.20.4",
-          "@types/postcss-normalize": "9.0.3",
+          "@types/postcss-normalize": "9.0.1",
           "@types/react": "^17.0.8",
-          "@types/react-dom": "^17.0.5",
-          "@types/jest": "26.0.24"
+          "@types/react-dom": "^17.0.5"
         },
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
