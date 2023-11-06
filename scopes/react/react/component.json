@@ -13,7 +13,7 @@
           "react-dom": "-",
           "@svgr/webpack": "5.5.0",
           "@babel/helper-plugin-test-runner": "7.16.7",
-          "@babel/preset-env": "7.22.15",
+          "@babel/preset-env": "7.23.2",
           "@babel/preset-react": "7.22.15",
           "@typescript-eslint/parser": "5.62.0",
           "@typescript-eslint/eslint-plugin": "5.62.0",
