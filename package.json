@@ -148,7 +148,7 @@
     "core-js": "3.9.0",
     "cross-fetch": "3.1.5",
     "css-tree": "1.1.2",
-    "debug": "4.3.2",
+    "debug": "4.3.4",
     "decamelize": "1.2.0",
     "detect-indent": "5.0.0",
     "detect-newline": "3.1.0",
