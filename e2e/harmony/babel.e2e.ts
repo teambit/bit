@@ -34,7 +34,7 @@ describe('babel compiler', function () {
             dependencies: {
               '@babel/runtime': '^7.23.2',
               '@babel/core': '7.11.6',
-              '@babel/preset-env': '7.22.15',
+              '@babel/preset-env': '7.23.2',
             },
           },
         });
