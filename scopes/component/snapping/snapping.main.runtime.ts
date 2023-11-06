@@ -598,8 +598,7 @@ there are matching among unmodified components thought. consider using --unmodif
       return removeLocalVersionsForMultipleComponents(componentsToUntag, currentLane, head, force, consumer.scope);
     };
     const softUntag = async () => {
-      const componentsList = new ComponentsList(consumer);
-      const softTaggedComponentsIds = componentsList.listSoftTaggedComponents();
+      const softTaggedComponentsIds = this.workspace.filter.bySoftTagged();
       const idsToRemoveSoftTags = componentPattern
         ? await this.workspace.filterIdsFromPoolIdsByPattern(componentPattern, softTaggedComponentsIds)
         : softTaggedComponentsIds;
@@ -1093,7 +1092,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     const warnings: string[] = [];
     const componentsList = new ComponentsList(this.workspace.consumer);
     if (persist) {
-      const softTaggedComponents = componentsList.listSoftTaggedComponents();
+      const softTaggedComponents = this.workspace.filter.bySoftTagged();
       return { bitIds: softTaggedComponents, warnings: [] };
     }
 
@@ -1101,8 +1100,7 @@ another option, in case this dependency is not in main yet is to remove all refe
       ? await this.workspace.listPotentialTagIds()
       : await this.workspace.listTagPendingIds();
 
-    const snappedComponents = await componentsList.listSnappedComponentsOnMain();
-    const snappedComponentsIds = snappedComponents.map((c) => c.toComponentId());
+    const snappedComponentsIds = await this.workspace.filter.bySnappedOnMain();
 
     if (ids.length) {
       const componentIds = await pMapSeries(ids, async (id) => {

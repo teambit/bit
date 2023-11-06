@@ -101,6 +101,7 @@ import {
 import { MergeConflictFile } from './merge-conflict-file';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { CompFiles } from './workspace-component/comp-files';
+import { Filter } from './filter';
 
 export type EjectConfResult = {
   configPath: string;
@@ -129,9 +130,6 @@ export type ExtensionsOrigin =
   | 'ComponentJsonFile'
   | 'FinalAfterMerge';
 
-export const statesFilter = ['new', 'modified', 'deprecated', 'deleted'] as const;
-export type StatesFilter = typeof statesFilter[number];
-
 const DEFAULT_VENDOR_DIR = 'vendor';
 
 /**
@@ -158,6 +156,7 @@ export class Workspace implements ComponentFactory {
    */
   private componentPathsRegExps: RegExp[] = [];
   localAspects: string[] = [];
+  filter: Filter;
   constructor(
     /**
      * private pubsub.
@@ -241,6 +240,7 @@ export class Workspace implements ComponentFactory {
       }
     );
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
+    this.filter = new Filter(this);
   }
 
   private validateConfig() {
@@ -954,35 +954,12 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   async filterIdsFromPoolIdsByPattern(pattern: string, ids: ComponentID[], throwForNoMatch = true) {
-    return this.scope.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch, this.filterByState.bind(this));
-  }
-
-  private async filterByState(state: StatesFilter, ids: ComponentID[]): Promise<ComponentID[]> {
-    if (state === 'new') {
-      return ids.filter((id) => !id.hasVersion());
-    }
-    if (state === 'modified') {
-      const comps = await this.getMany(ids);
-      const results = await Promise.all(comps.map(async (c) => ((await c.isModified()) ? c.id : null)));
-      return compact(results);
-    }
-    if (state === 'deprecated') {
-      const comps = await this.getMany(ids);
-      const results = await Promise.all(
-        comps.map(async (c) => {
-          const modelComponent = await this.consumer.scope.getModelComponentIfExist(c.id);
-          const deprecated = await modelComponent?.isDeprecated(this.consumer.scope.objects);
-          return deprecated ? c.id : null;
-        })
-      );
-      return compact(results);
-    }
-    if (state === 'deleted') {
-      const comps = await this.getMany(ids);
-      const results = comps.filter((c) => c.isDeleted()).map((c) => c.id);
-      return compact(results);
-    }
-    return [];
+    return this.scope.filterIdsFromPoolIdsByPattern(
+      pattern,
+      ids,
+      throwForNoMatch,
+      this.filter.byState.bind(this.filter)
+    );
   }
 
   /**
