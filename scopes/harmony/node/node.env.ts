@@ -22,7 +22,7 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
     return {
       devDependencies: {
         '@types/jest': '26.0.20',
-        '@types/node': '^18.11.9',
+        '@types/node': '^18.18.8',
       },
     };
   }
