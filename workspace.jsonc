@@ -105,7 +105,7 @@
         "@teambit/base-ui.utils.string.affix": "1.0.0",
         "@teambit/base-ui.utils.time-ago": "1.0.1",
         "@teambit/bit.content.what-is-bit": "1.96.2",
-        "@teambit/bvm.config": "0.2.2",
+        "@teambit/bvm.config": "^0.2.3",
         "@teambit/bvm.path": "^0.1.2",
         "@teambit/capsule": "0.0.12",
         "@teambit/code.ui.code-compare": "^0.0.281",

@@ -342,8 +342,8 @@ importers:
         specifier: ^0.0.133
         version: 0.0.133(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bvm.config':
-        specifier: 0.2.2
-        version: 0.2.2
+        specifier: ^0.2.3
+        version: 0.2.3
       '@teambit/bvm.list':
         specifier: 0.1.6
         version: 0.1.6
@@ -14535,8 +14535,8 @@ importers:
         specifier: ^0.0.404
         version: 0.0.404
       '@teambit/bvm.config':
-        specifier: 0.2.2
-        version: 0.2.2
+        specifier: ^0.2.3
+        version: 0.2.3
       '@teambit/bvm.path':
         specifier: ^0.1.2
         version: 0.1.2
@@ -27678,8 +27678,20 @@ packages:
     dev: true
 
   /@teambit/bvm.config@0.2.2:
-    resolution: {integrity: sha1-bhhP6VU8KBxcalnz91zehIKykl0=, tarball: https://node-registry.bit.cloud/tarballs/teambit.bvm/config@0.2.2.tgz}
+    resolution: {integrity: sha1-bhhP6VU8KBxcalnz91zehIKykl0=}
     engines: {node: '>=12.15.0'}
+    dependencies:
+      chalk: 4.1.0
+      fs-extra: 9.1.0
+      lodash.pickby: 4.6.0
+      nconf: 0.11.4
+      semver: 7.3.4
+      user-home: 2.0.0
+    dev: false
+
+  /@teambit/bvm.config@0.2.3:
+    resolution: {integrity: sha1-PmgtgYkyyrRii2p2umtpdubMIEs=}
+    engines: {node: '>=16.14'}
     dependencies:
       chalk: 4.1.0
       fs-extra: 9.1.0
@@ -59091,7 +59103,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.23.2
       '@teambit/bit-error': 0.0.404
-      '@teambit/bvm.config': 0.2.2
+      '@teambit/bvm.config': 0.2.3
       '@teambit/bvm.path': 0.1.2
       '@teambit/component-id': 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/graph.cleargraph': 0.0.1
