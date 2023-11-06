@@ -342,8 +342,8 @@ importers:
         specifier: ^0.0.133
         version: 0.0.133(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bvm.config':
-        specifier: 0.2.2
-        version: 0.2.2
+        specifier: ^0.2.3
+        version: 0.2.3
       '@teambit/bvm.list':
         specifier: 0.1.6
         version: 0.1.6
@@ -14550,8 +14550,8 @@ importers:
         specifier: ^0.0.404
         version: 0.0.404
       '@teambit/bvm.config':
-        specifier: 0.2.2
-        version: 0.2.2
+        specifier: ^0.2.3
+        version: 0.2.3
       '@teambit/bvm.path':
         specifier: ^0.1.2
         version: 0.1.2
@@ -26832,8 +26832,8 @@ packages:
     resolution: {integrity: sha512-ewjLhnqXq4+X/EdVi1hIOeFDG1cWiY0RhMDv2RI+OsDCDpSYxIHmU9fu4u2BDgV7+QURt5iic/B4li7M6Xz9yQ==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
+      react: '*'
+      react-dom: '*'
     dependencies:
       '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -27717,8 +27717,20 @@ packages:
     dev: true
 
   /@teambit/bvm.config@0.2.2:
-    resolution: {integrity: sha1-bhhP6VU8KBxcalnz91zehIKykl0=, tarball: https://node-registry.bit.cloud/tarballs/teambit.bvm/config@0.2.2.tgz}
+    resolution: {integrity: sha1-bhhP6VU8KBxcalnz91zehIKykl0=}
     engines: {node: '>=12.15.0'}
+    dependencies:
+      chalk: 4.1.0
+      fs-extra: 9.1.0
+      lodash.pickby: 4.6.0
+      nconf: 0.11.4
+      semver: 7.3.4
+      user-home: 2.0.0
+    dev: false
+
+  /@teambit/bvm.config@0.2.3:
+    resolution: {integrity: sha1-PmgtgYkyyrRii2p2umtpdubMIEs=}
+    engines: {node: '>=16.14'}
     dependencies:
       chalk: 4.1.0
       fs-extra: 9.1.0
@@ -33070,8 +33082,8 @@ packages:
     resolution: {integrity: sha512-YHaNcT6Aj7sV6NqwlRhsGt0x/YWSXD3P9DVs4t732LLWIPpJVwZsO+8JXetdFQMHuw5ynJr5EuaxJq19QDERQg==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
+      react: '*'
+      react-dom: '*'
     dependencies:
       '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
@@ -59163,7 +59175,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.23.2
       '@teambit/bit-error': 0.0.404
-      '@teambit/bvm.config': 0.2.2
+      '@teambit/bvm.config': 0.2.3
       '@teambit/bvm.path': 0.1.2
       '@teambit/component-id': 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/graph.cleargraph': 0.0.1

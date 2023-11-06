@@ -527,7 +527,8 @@ export class DependencyLinker {
     const target = path.join(dir, this.aspectLoader.mainAspect.packageName);
     const shouldSymlink = this.removeSymlinkTarget(target);
     if (!shouldSymlink) return undefined;
-    const src = this.aspectLoader.mainAspect.path;
+    const src =
+      this._getPkgPathFromCurrentBitDir(this.aspectLoader.mainAspect.packageName) ?? this.aspectLoader.mainAspect.path;
     await fs.ensureDir(path.dirname(target));
     return { packageName: this.aspectLoader.mainAspect.packageName, from: src, to: target };
   }
@@ -587,6 +588,10 @@ export class DependencyLinker {
     const packageName = getCoreAspectPackageName(id);
     let aspectDir = path.join(mainAspectPath, 'dist', name);
     const target = path.join(targetModulesDir, packageName);
+    const fromDir = this._getPkgPathFromCurrentBitDir(packageName);
+    if (fromDir) {
+      return { aspectId: id, linkDetail: { packageName, from: fromDir, to: target } };
+    }
     const shouldSymlink = this.removeSymlinkTarget(target, hasLocalInstallation);
     if (!shouldSymlink) return undefined;
     const isAspectDirExist = fs.pathExistsSync(aspectDir);
@@ -630,13 +635,19 @@ export class DependencyLinker {
     return true;
   }
 
+  private _getPkgPathFromCurrentBitDir(packageName: string): string | undefined {
+    if (!this._currentBitDir) return undefined;
+    return path.join(this._currentBitDir, 'node_modules', packageName);
+  }
+
   private linkNonAspectCorePackages(rootDir: string, name: string, mainAspectPath: string): LinkDetail | undefined {
     const distDir = path.join(mainAspectPath, 'dist', name);
 
     const packageName = `@teambit/${name}`;
     const target = path.join(rootDir, 'node_modules', packageName);
-    if (this._currentBitDir) {
-      return { packageName, from: path.join(this._currentBitDir, 'node_modules', packageName), to: target };
+    const fromDir = this._getPkgPathFromCurrentBitDir(packageName);
+    if (fromDir) {
+      return { packageName, from: fromDir, to: target };
     }
     const isDistDirExist = fs.pathExistsSync(distDir);
     if (!isDistDirExist) {
