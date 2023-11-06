@@ -11,7 +11,7 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
     policy: {
       dependencies: {
         '@teambit/node.node': 'latest',
-        '@types/node': '16.18.44',
+        '@types/node': '^18.18.8',
         '@types/jest': '29.5.4',
         eslint: '7.32.0',
         '@typescript-eslint/eslint-plugin': '5.62.0',

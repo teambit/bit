@@ -227,7 +227,7 @@ export const descriptorMock = ComponentDescriptor.fromObject({
               },
               {
                 id: '@types/node',
-                version: '12.20.4',
+                version: '18.18.8',
                 __type: 'package',
                 lifecycle: 'dev',
                 source: 'env',
@@ -296,7 +296,7 @@ export const descriptorMock = ComponentDescriptor.fromObject({
               {
                 dependencyId: '@types/node',
                 value: {
-                  version: '12.20.4',
+                  version: '18.18.8',
                   resolveFromEnv: false,
                 },
                 lifecycleType: 'dev',
@@ -472,7 +472,7 @@ export const descriptorMock = ComponentDescriptor.fromObject({
                       '@types/jest': '^26.0.0',
                       '@types/react-dom': '^17.0.5',
                       '@types/react': '^17.0.8',
-                      '@types/node': '12.20.4',
+                      '@types/node': '18.18.8',
                       '@teambit/community.envs.community-react': '1.95.0',
                     },
                     peerDependencies: {
@@ -492,7 +492,7 @@ export const descriptorMock = ComponentDescriptor.fromObject({
                           '@types/jest': '^26.0.0',
                           '@types/react-dom': '^17.0.5',
                           '@types/react': '^17.0.8',
-                          '@types/node': '12.20.4',
+                          '@types/node': '18.18.8',
                           '@types/mocha': '-',
                           'react-dom': '-',
                           react: '-',
@@ -667,7 +667,7 @@ export const descriptorMock = ComponentDescriptor.fromObject({
           },
           {
             id: '@types/node',
-            version: '12.20.4',
+            version: '18.18.8',
             __type: 'package',
             lifecycle: 'dev',
             source: 'env',
