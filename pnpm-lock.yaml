@@ -15,6 +15,8 @@ overrides:
   '@babel/plugin-proposal-decorators': 7.23.2
   '@babel/plugin-transform-modules-commonjs': 7.23.0
   '@babel/plugin-transform-runtime': 7.23.2
+  '@babel/helper-plugin-test-runner': 7.22.5
+  '@babel/register': 7.22.15
   '@babel/core': 7.19.6
 
 importers:
@@ -31,8 +33,8 @@ importers:
         specifier: 7.19.6
         version: 7.19.6
       '@babel/helper-plugin-test-runner':
-        specifier: 7.16.7
-        version: 7.16.7
+        specifier: 7.22.5
+        version: 7.22.5
       '@babel/plugin-proposal-decorators':
         specifier: 7.23.2
         version: 7.23.2(@babel/core@7.19.6)
@@ -58,8 +60,8 @@ importers:
         specifier: 7.22.15
         version: 7.22.15(@babel/core@7.19.6)
       '@babel/register':
-        specifier: 7.18.9
-        version: 7.18.9(@babel/core@7.19.6)
+        specifier: 7.22.15
+        version: 7.22.15(@babel/core@7.19.6)
       '@babel/runtime':
         specifier: 7.23.2
         version: 7.23.2
@@ -12782,8 +12784,8 @@ importers:
         specifier: 7.19.6
         version: 7.19.6
       '@babel/register':
-        specifier: 7.18.9
-        version: 7.18.9(@babel/core@7.19.6)
+        specifier: 7.22.15
+        version: 7.22.15(@babel/core@7.19.6)
       '@babel/runtime':
         specifier: 7.23.2
         version: 7.23.2
@@ -15965,8 +15967,8 @@ importers:
         specifier: 7.19.6
         version: 7.19.6
       '@babel/helper-plugin-test-runner':
-        specifier: 7.16.7
-        version: 7.16.7
+        specifier: 7.22.5
+        version: 7.22.5
       '@babel/runtime':
         specifier: 7.23.2
         version: 7.23.2
@@ -17006,8 +17008,8 @@ importers:
         specifier: 7.19.6
         version: 7.19.6
       '@babel/helper-plugin-test-runner':
-        specifier: 7.16.7
-        version: 7.16.7
+        specifier: 7.22.5
+        version: 7.22.5
       '@babel/plugin-proposal-decorators':
         specifier: 7.23.2
         version: 7.23.2(@babel/core@7.19.6)
@@ -20771,8 +20773,8 @@ packages:
     dependencies:
       '@babel/types': 7.23.0
 
-  /@babel/helper-plugin-test-runner@7.16.7:
-    resolution: {integrity: sha512-8MAd2mKWTpWdLPkpCR2i1EJ/FWr31FjhSrSIJPNwWH7FzM9R7lxlfkbCiGgvDxRd4rCvb9l1oo8hS3DWCx2NQg==}
+  /@babel/helper-plugin-test-runner@7.22.5:
+    resolution: {integrity: sha512-NXNtuPnGUriFh69RV6+5xcIkErUJtDh8iSThIgxyC0uKa5AS1f6mLXO+St2joGcvGU79GB+ODE1ZyAkXgK99yg==}
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/helper-transform-fixture-test-runner': 7.22.19
@@ -22068,8 +22070,8 @@ packages:
       '@babel/plugin-transform-typescript': 7.22.15(@babel/core@7.19.6)
     dev: false
 
-  /@babel/register@7.18.9(@babel/core@7.19.6):
-    resolution: {integrity: sha512-ZlbnXDcNYHMR25ITwwNKT88JiaukkdVj/nG7r3wnuXkOTHc60Uy05PwMCPre0hSkY68E6zK3xz+vUJSP2jWmcw==}
+  /@babel/register@7.22.15(@babel/core@7.19.6):
+    resolution: {integrity: sha512-V3Q3EqoQdn65RCgTLwauZaTfd1ShhwPmbBv+1dkZV/HpCGMKVyn6oFcRlI7RaKqiDQjX2Qd3AuoEguBgdjIKlg==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': 7.19.6
@@ -41783,7 +41785,7 @@ packages:
       vue-template-compiler:
         optional: true
     dependencies:
-      '@babel/code-frame': 7.10.4
+      '@babel/code-frame': 7.22.13
       chalk: 2.4.2
       eslint: 7.32.0
       micromatch: 3.1.10
@@ -44922,7 +44924,7 @@ packages:
       '@babel/preset-env': 7.23.2(@babel/core@7.19.6)
       '@babel/preset-flow': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
-      '@babel/register': 7.18.9(@babel/core@7.19.6)
+      '@babel/register': 7.22.15(@babel/core@7.19.6)
       babel-core: 7.0.0-bridge.0(@babel/core@7.19.6)
       colors: 1.4.0
       flow-parser: 0.121.0
@@ -46153,7 +46155,7 @@ packages:
       '@babel/plugin-proposal-optional-chaining': 7.12.1(@babel/core@7.19.6)
       '@babel/plugin-transform-flow-strip-types': 7.22.5(@babel/core@7.19.6)
       '@babel/plugin-transform-modules-commonjs': 7.23.0(@babel/core@7.19.6)
-      '@babel/register': 7.18.9(@babel/core@7.19.6)
+      '@babel/register': 7.22.15(@babel/core@7.19.6)
       escape-string-regexp: 1.0.5
     transitivePeerDependencies:
       - supports-color
@@ -57181,7 +57183,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/core': 7.19.6
-      '@babel/register': 7.18.9(@babel/core@7.19.6)
+      '@babel/register': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.23.2
       '@teambit/harmony': 0.4.6
       core-js: 3.13.0
@@ -58402,7 +58404,7 @@ packages:
     name: '@teambit/mdx'
     dependencies:
       '@babel/core': 7.19.6
-      '@babel/helper-plugin-test-runner': 7.16.7
+      '@babel/helper-plugin-test-runner': 7.22.5
       '@babel/runtime': 7.23.2
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
@@ -58809,7 +58811,7 @@ packages:
     name: '@teambit/react'
     dependencies:
       '@babel/core': 7.19.6
-      '@babel/helper-plugin-test-runner': 7.16.7
+      '@babel/helper-plugin-test-runner': 7.22.5
       '@babel/plugin-proposal-decorators': 7.23.2(@babel/core@7.19.6)
       '@babel/plugin-transform-class-properties': 7.22.5(@babel/core@7.19.6)
       '@babel/plugin-transform-modules-commonjs': 7.23.0(@babel/core@7.19.6)

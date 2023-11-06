@@ -564,6 +564,8 @@
       "@babel/plugin-proposal-decorators": "7.23.2",
       "@babel/plugin-transform-modules-commonjs": "7.23.0",
       "@babel/plugin-transform-runtime": "7.23.2",
+      "@babel/helper-plugin-test-runner": "7.22.5",
+      "@babel/register": "7.22.15",
       "@babel/core": "7.19.6"
     },
     "nodeLinker": "hoisted",
