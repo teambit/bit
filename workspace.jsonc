@@ -558,7 +558,8 @@
       "signal-exit@4": "^4.0.2",
       "@types/react": "^17.0.67",
       "@types/react-dom": "^17.0.21",
-      "@babel/runtime": "7.20.0"
+      "@babel/runtime": "7.20.0",
+      "@babel/preset-env": "7.22.15"
     },
     "nodeLinker": "hoisted",
     "rootComponents": true,
