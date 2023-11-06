@@ -105,7 +105,7 @@
         "@teambit/base-ui.utils.string.affix": "1.0.0",
         "@teambit/base-ui.utils.time-ago": "1.0.1",
         "@teambit/bit.content.what-is-bit": "1.96.2",
-        "@teambit/bvm.config": "0.2.2",
+        "@teambit/bvm.config": "^0.2.3",
         "@teambit/bvm.path": "^0.1.2",
         "@teambit/capsule": "0.0.12",
         "@teambit/code.ui.code-compare": "^0.0.281",
@@ -381,7 +381,7 @@
         "@types/mime": "2.0.3",
         "@types/mini-css-extract-plugin": "2.2.0",
         "@types/mousetrap": "1.6.5",
-        "@types/node": "14.14.13",
+        "@types/node": "^18.18.8",
         "@types/pluralize": "0.0.29",
         "@types/react": "17.0.8",
         "@types/react-dev-utils": "9.0.10",
@@ -507,7 +507,7 @@
         "resolve-from": "5.0.0",
         "resolve-link-target": "^1.0.1",
         "resolve-url-loader": "5.0.0",
-        "semver": "7.3.4",
+        "semver": "7.5.4",
         "semver-intersect": "1.4.0",
         "semver-range-intersect": "0.3.1",
         "socket.io-client": "2.4.0",
@@ -541,7 +541,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.587",
+        "@teambit/legacy": "1.0.588",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
@@ -635,7 +635,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.587"
+            "@teambit/legacy": "1.0.588"
           }
         }
       },
@@ -877,7 +877,7 @@
             "postcss-loader": "7.0.1",
             "babel-loader": "9.1.2",
             "@babel/preset-react": "7.22.15",
-            "@babel/preset-env": "7.22.15",
+            "@babel/preset-env": "7.23.2",
             "resolve-url-loader": "5.0.0",
             "sass-loader": "13.3.2",
             "@svgr/webpack": "5.5.0",
@@ -899,7 +899,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.587"
+            "@teambit/legacy": "1.0.588"
           }
         }
       }
@@ -909,7 +909,7 @@
         "policy": {
           "devDependencies": {
             "@babel/preset-react": "7.22.15",
-            "@babel/preset-env": "7.22.15",
+            "@babel/preset-env": "7.23.2",
             "babel-loader": "9.1.2"
           }
         }
@@ -989,7 +989,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.587",
+            "@teambit/legacy": "1.0.588",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
@@ -1009,12 +1009,6 @@
             "buffer": "6.0.3",
             "process": "0.11.10",
             "react-router-dom": "6.3.0"
-          },
-          "devDependencies": {
-            // "@types/react": "-",
-            // "@types/mocha": "5.2.7",
-            // // why this is needed? try to automate this
-            // "@types/node": "12.20.4"
           },
           "peerDependencies": {
             "@teambit/base-react.navigation.link": "-",
@@ -1107,7 +1101,7 @@
             "@babel/plugin-transform-object-rest-spread": "7.22.15",
             "@babel/plugin-transform-modules-commonjs": "7.12.13",
             "@babel/plugin-transform-runtime": "7.12.17",
-            "@babel/preset-env": "7.22.15",
+            "@babel/preset-env": "7.23.2",
             "babel-plugin-transform-typescript-metadata": "0.3.1",
             "@babel/preset-react": "7.22.15",
             "@babel/preset-typescript": "7.22.15",
@@ -1131,7 +1125,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.587"
+            "@teambit/legacy": "1.0.588"
           }
         }
       }

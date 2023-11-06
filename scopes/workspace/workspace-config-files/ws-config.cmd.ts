@@ -40,7 +40,7 @@ export class WsConfigCmd implements Command {
 
 export class WsConfigWriteCmd implements Command {
   name = 'write';
-  description = 'EXPERIMENTAL. write config files in the workspace. useful for IDEs';
+  description = 'write config files in the workspace. useful for IDEs';
   alias = '';
   group = 'development';
   options = [
@@ -116,7 +116,7 @@ export class WsConfigWriteCmd implements Command {
 
 export class WsConfigCleanCmd implements Command {
   name = 'clean';
-  description = 'EXPERIMENTAL. clean (delete) written config files in the workspace. useful for IDEs';
+  description = 'clean (delete) written config files in the workspace. useful for IDEs';
   alias = '';
   group = 'development';
   options = [
@@ -153,7 +153,7 @@ export class WsConfigCleanCmd implements Command {
 
 export class WsConfigListCmd implements Command {
   name = 'list';
-  description = 'EXPERIMENTAL. list config writers';
+  description = 'list config writers';
   alias = '';
   group = 'development';
   options = [['j', 'json', 'json format']] as CommandOptions;
