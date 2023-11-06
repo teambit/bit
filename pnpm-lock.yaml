@@ -818,6 +818,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/html.generator.html-templates':
+        specifier: ^1.0.8
+        version: 1.0.8
       '@teambit/html.modules.inject-html-element':
         specifier: 0.0.4
         version: 0.0.4(react@17.0.2)
@@ -905,6 +908,9 @@ importers:
       '@teambit/legacy-component-log':
         specifier: ^0.0.402
         version: 0.0.402
+      '@teambit/mdx.generator.mdx-templates':
+        specifier: ^1.0.9
+        version: 1.0.9
       '@teambit/mdx.ui.docs.link':
         specifier: 0.0.500
         version: 0.0.500(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -917,6 +923,15 @@ importers:
       '@teambit/node.deps-detectors.detective-es6':
         specifier: ^0.0.1
         version: 0.0.1
+      '@teambit/node.generator.node-templates':
+        specifier: ^1.0.8
+        version: 1.0.8
+      '@teambit/react.generator.react-native-templates':
+        specifier: ^1.0.7
+        version: 1.0.7
+      '@teambit/react.generator.react-templates':
+        specifier: ^1.0.9
+        version: 1.0.9
       '@teambit/react.instructions.react-native.adding-tests':
         specifier: 0.0.1
         version: 0.0.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -15348,6 +15363,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/node.generator.node-templates':
+        specifier: ^1.0.8
+        version: 1.0.8
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -15597,6 +15615,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/html.generator.html-templates':
+        specifier: ^1.0.8
+        version: 1.0.8
       '@teambit/html.modules.render-template':
         specifier: 0.0.104
         version: 0.0.104
@@ -15969,6 +15990,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/mdx.generator.mdx-templates':
+        specifier: ^1.0.9
+        version: 1.0.9
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -17067,6 +17091,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/react.generator.react-templates':
+        specifier: ^1.0.9
+        version: 1.0.9
       '@teambit/react.instructions.react.adding-compositions':
         specifier: 0.0.6
         version: registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -17453,6 +17480,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/react.generator.react-native-templates':
+        specifier: ^1.0.7
+        version: 1.0.7
       '@teambit/react.instructions.react-native.adding-tests':
         specifier: 0.0.1
         version: 0.0.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -26793,8 +26823,8 @@ packages:
     resolution: {integrity: sha512-ewjLhnqXq4+X/EdVi1hIOeFDG1cWiY0RhMDv2RI+OsDCDpSYxIHmU9fu4u2BDgV7+QURt5iic/B4li7M6Xz9yQ==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
+      react: '*'
+      react-dom: '*'
     dependencies:
       '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -32028,6 +32058,12 @@ packages:
       user-home: 2.0.0
     dev: false
 
+  /@teambit/html.generator.html-templates@1.0.8:
+    resolution: {integrity: sha512-mJptEYvK3jSzI2rfzAofGzEcjrFpRmesw5ZTJpjLBRpEqRaAbFm6h9RFoNYkbpsXyMpPabIdCiJy3lANEeWhRQ==}
+    dependencies:
+      ts-dedent: 2.2.0
+    dev: false
+
   /@teambit/html.modules.create-element-from-string@0.0.104:
     resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=, tarball: https://node-registry.bit.cloud/tarballs/teambit.html/modules/create-element-from-string@0.0.104.tgz}
     engines: {node: '>=12.22.0'}
@@ -32894,6 +32930,10 @@ packages:
     engines: {node: '>=12.22.0'}
     dev: false
 
+  /@teambit/mdx.generator.mdx-templates@1.0.9:
+    resolution: {integrity: sha512-4AUfopflYHBZEQwxCaItkRDrBk8s02NO4Hch1nHwu3aL/gldGsrzwPotBGoejIivofAdrEjzNFjlfaccSVok2g==}
+    dev: false
+
   /@teambit/mdx.ui.docs.link@0.0.500(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-9wYyLJ4RST9XSG52npQ+3BJDgJ0=, tarball: https://node-registry.bit.cloud/tarballs/teambit.mdx/ui/docs/link@0.0.500.tgz}
     engines: {node: '>=12.22.0'}
@@ -32992,6 +33032,12 @@ packages:
     resolution: {integrity: sha1-UTUJiakxdUY1KZKMoaxTLTrRap8=, tarball: https://node-registry.bit.cloud/@teambit/node.deps-detectors.parser-helper/-/teambit-node.deps-detectors.parser-helper-0.0.0-1ca3300f0fe89cba790beb930903095053a2a24a.tgz}
     dev: false
 
+  /@teambit/node.generator.node-templates@1.0.8:
+    resolution: {integrity: sha512-z91b00hnOo33ouXxguSYJCyFS6oaYcyjsXpEEraywoZSQOvZxDl3D4WS5uy9qWOSA5PDDJ/7L/yZAz+/O9aLdw==}
+    dependencies:
+      dedent: 0.7.0
+    dev: false
+
   /@teambit/pkg.content.packages-overview@1.95.9(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-zWayNWQaoC66R1elFFytwR1vaLQ=}
     dependencies:
@@ -33027,8 +33073,8 @@ packages:
     resolution: {integrity: sha512-YHaNcT6Aj7sV6NqwlRhsGt0x/YWSXD3P9DVs4t732LLWIPpJVwZsO+8JXetdFQMHuw5ynJr5EuaxJq19QDERQg==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
+      react: '*'
+      react-dom: '*'
     dependencies:
       '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
@@ -33079,6 +33125,18 @@ packages:
     transitivePeerDependencies:
       - '@teambit/legacy'
     dev: true
+
+  /@teambit/react.generator.react-native-templates@1.0.7:
+    resolution: {integrity: sha512-+PKhJ48ovbWsIFK4gzFlWY3e5a6Hkv2s/8xvre4L335KlcTbqjOXxwlp0Q9dn2whpMuWv6BuFUU7WQVmJn8BPw==}
+    dependencies:
+      dedent: 0.7.0
+    dev: false
+
+  /@teambit/react.generator.react-templates@1.0.9:
+    resolution: {integrity: sha512-eQ67ZYhPcfCT9npbLSVeTvHD50+ej/UkHqwRP3ky9pHNGYsOQxUyJg1tG2e988SJjYJrAQr4UORJwsWy2OMTMQ==}
+    dependencies:
+      dedent: 0.7.0
+    dev: false
 
   /@teambit/react.instructions.react-native.adding-tests@0.0.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-Ej1pIaYbWdwLNUbsHMjEQQ/utnQ=, tarball: https://node-registry.bit.cloud/tarballs/teambit.react/instructions/react-native/adding-tests@0.0.1.tgz}
@@ -54641,6 +54699,11 @@ packages:
       utf8-byte-length: 1.0.4
     dev: false
 
+  /ts-dedent@2.2.0:
+    resolution: {integrity: sha512-q5W7tVM71e2xjHZTlgfTDoPF/SmqKG5hddq9SzR49CH2hayqRKJtQ4mtRlSxKaJlR/+9rEM+mnBHf7I2/BQcpQ==}
+    engines: {node: '>=6.10'}
+    dev: false
+
   /ts-deepmerge@6.2.0:
     resolution: {integrity: sha512-2qxI/FZVDPbzh63GwWIZYE7daWKtwXZYuyc8YNq0iTmMUwn4mL0jRLsp6hfFlgbdRSR4x2ppe+E86FnvEpN7Nw==}
     engines: {node: '>=14.13.1'}
@@ -59406,6 +59469,7 @@ packages:
       '@babel/runtime': 7.23.2
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
+      '@teambit/node.generator.node-templates': 1.0.8
       core-js: 3.13.0
       jest-environment-node: 27.5.1
       ramda: 0.27.1
@@ -59501,6 +59565,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.23.2
       '@teambit/harmony': 0.4.6
+      '@teambit/html.generator.html-templates': 1.0.8
       '@teambit/html.modules.render-template': 0.0.104
       core-js: 3.13.0
       map-obj: 4.2.1
@@ -59649,6 +59714,7 @@ packages:
       '@babel/runtime': 7.23.2
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
+      '@teambit/mdx.generator.mdx-templates': 1.0.9
       core-js: 3.13.0
       fs-extra: 10.0.0
       minimatch: 3.0.5
@@ -60075,6 +60141,7 @@ packages:
       '@teambit/design.ui.input.option-button': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
+      '@teambit/react.generator.react-templates': 1.0.9
       '@teambit/react.instructions.react.adding-compositions': registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.instructions.react.adding-tests': registry.npmjs.org/@teambit/react.instructions.react.adding-tests@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.rendering.ssr': 0.0.3(react-dom@17.0.2)(react@17.0.2)
@@ -60242,6 +60309,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.23.2
       '@teambit/harmony': 0.4.6
+      '@teambit/react.generator.react-native-templates': 1.0.7
       '@teambit/react.instructions.react-native.adding-tests': 0.0.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.instructions.react.adding-compositions': registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/jest-native': 4.0.4
