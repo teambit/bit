@@ -17056,8 +17056,8 @@ importers:
         specifier: 7.22.15
         version: 7.22.15(@babel/core@7.19.6)
       '@babel/runtime':
-        specifier: 7.23.2
-        version: 7.23.2
+        specifier: 7.20.0
+        version: 7.20.0
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
@@ -26832,8 +26832,8 @@ packages:
     resolution: {integrity: sha512-ewjLhnqXq4+X/EdVi1hIOeFDG1cWiY0RhMDv2RI+OsDCDpSYxIHmU9fu4u2BDgV7+QURt5iic/B4li7M6Xz9yQ==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -33082,8 +33082,8 @@ packages:
     resolution: {integrity: sha512-YHaNcT6Aj7sV6NqwlRhsGt0x/YWSXD3P9DVs4t732LLWIPpJVwZsO+8JXetdFQMHuw5ynJr5EuaxJq19QDERQg==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
@@ -60144,7 +60144,7 @@ packages:
       '@babel/preset-env': 7.23.2(@babel/core@7.19.6)
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
-      '@babel/runtime': 7.23.2
+      '@babel/runtime': 7.20.0
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.4(@types/webpack@5.28.1)(react-refresh@0.10.0)(webpack-dev-server@4.15.0)(webpack@5.84.1)
       '@prerenderer/prerenderer': 1.2.3(@types/express@4.17.13)(debug@4.3.4)
