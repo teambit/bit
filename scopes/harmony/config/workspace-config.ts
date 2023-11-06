@@ -311,7 +311,7 @@ export class WorkspaceConfig implements HostConfig {
 
   async toVinyl(workspaceDir: PathOsBasedAbsolute): Promise<AbstractVinyl[] | undefined> {
     if (this.data) {
-      const jsonStr = stringify(this.data, undefined, 2);
+      const jsonStr = `${stringify(this.data, undefined, 2)}\n`;
       const base = workspaceDir;
       const fullPath = workspaceDir ? WorkspaceConfig.composeWorkspaceJsoncPath(workspaceDir) : this.path;
       const jsonFile = new AbstractVinyl({ base, path: fullPath, contents: Buffer.from(jsonStr) });
