@@ -476,7 +476,7 @@ export class ReactEnv
       dependencies: {
         react: '-',
         'react-dom': '-',
-        'core-js': '^3.0.0',
+        // 'core-js': '^3.0.0',
       },
       // TODO: add this only if using ts
       devDependencies: {
