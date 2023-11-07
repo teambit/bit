@@ -113,7 +113,7 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
         react: '-',
         'react-dom': '-',
         '@types/mocha': '-',
-        '@types/node': '^18.18.8',
+        '@types/node': '12.20.4',
         '@types/react': '^17.0.8',
         '@types/react-dom': '^17.0.5',
         '@types/jest': '^26.0.0',

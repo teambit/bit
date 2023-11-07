@@ -386,7 +386,7 @@
         "@types/mime": "2.0.3",
         "@types/mini-css-extract-plugin": "2.2.0",
         "@types/mousetrap": "1.6.5",
-        "@types/node": "^18.18.8",
+        "@types/node": "14.14.31",
         "@types/pluralize": "0.0.29",
         "@types/react": "17.0.8",
         "@types/react-dev-utils": "9.0.10",
@@ -1014,6 +1014,12 @@
             "buffer": "6.0.3",
             "process": "0.11.10",
             "react-router-dom": "6.3.0"
+          },
+          "devDependencies": {
+            // "@types/react": "-",
+            // "@types/mocha": "5.2.7",
+            // // why this is needed? try to automate this
+            // "@types/node": "12.20.4"
           },
           "peerDependencies": {
             "@teambit/base-react.navigation.link": "-",
