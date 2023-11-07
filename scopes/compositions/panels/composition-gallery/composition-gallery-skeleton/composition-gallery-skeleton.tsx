@@ -4,11 +4,15 @@ import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { CompositionCardSkeleton } from '@teambit/composition-card';
 import styles from './composition-gallery-skeleton.module.scss';
 
-export type ComponentGallerySkeletonProps = {
+export type CompositionGallerySkeletonProps = {
   compositionsLength: number;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function ComponentGallerySkeleton({ compositionsLength, className, ...rest }: ComponentGallerySkeletonProps) {
+export function CompositionGallerySkeleton({
+  compositionsLength,
+  className,
+  ...rest
+}: CompositionGallerySkeletonProps) {
   const length = Array.from(Array(compositionsLength));
   return (
     <div {...rest} className={classnames(styles.compositionGallerySkeleton, className)}>

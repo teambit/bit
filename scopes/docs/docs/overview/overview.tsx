@@ -9,9 +9,10 @@ import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview, ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
 // import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
-import { CompositionGallery } from '@teambit/compositions.panels.composition-gallery';
+import { CompositionGallery, CompositionGallerySkeleton } from '@teambit/compositions.panels.composition-gallery';
 // import { ReadmeSkeleton } from './readme-skeleton';
 import styles from './overview.module.scss';
+import { ReadmeSkeleton } from './readme-skeleton';
 
 export enum BadgePosition {
   Title,
@@ -47,15 +48,6 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
   const [isLoading, setLoading] = useState(true);
   const EmptyState = getEmptyState && getEmptyState();
 
-  // if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
-  //   return (
-  //     <StatusMessageCard style={{ margin: 'auto' }} status="PROCESSING" title="component preview pending">
-  //       this might take some time
-  //     </StatusMessageCard>
-  //   );
-
-  // if (component?.buildStatus === 'failed' && component?.host === 'teambit.scope/scope')
-  //   return <StatusMessageCard style={{ margin: 'auto' }} status="FAILURE" title="failed to get component preview " />;
   const buildFailed = component.buildStatus?.toLowerCase() !== 'succeed' && component?.host === 'teambit.scope/scope';
 
   const isScaling = component.preview?.isScaling;
@@ -75,6 +67,11 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
     [onLoad]
   );
 
+  // reset the loading flag when components are switched
+  React.useEffect(() => {
+    if (!isLoading) setLoading(true);
+  }, [component.id.toString()]);
+
   return (
     <div className={styles.overviewWrapper} key={`${component.id.toString()}`}>
       {showHeader && (
@@ -90,15 +87,13 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
           component={component}
         />
       )}
-
-      {/* TODO - @oded replace with new panel card same for compositions. */}
-
-      {/* <LinkedHeading size="xs" className={styles.title}>
-        <Icon of="text" /> <span>README</span>
-      </LinkedHeading> */}
       {!buildFailed && (
         <div className={styles.readme}>
-          {/* {isLoading && <ReadmeSkeleton />} */}
+          {isLoading && (
+            <ReadmeSkeleton>
+              <CompositionGallerySkeleton compositionsLength={component.compositions.length || 4} />
+            </ReadmeSkeleton>
+          )}
           <ComponentPreview
             onLoad={onPreviewLoad}
             previewName="overview"
