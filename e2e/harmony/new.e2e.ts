@@ -59,7 +59,7 @@ describe('new command', function () {
       const wsPath = path.join(helper.scopes.localPath, 'my-workspace');
       const configFile = helper.bitJsonc.read(wsPath);
       const dependencies = configFile['teambit.dependencies/dependency-resolver'].policy.dependencies;
-      // expect(dependencies).to.not.have.property('@babel/runtime');
+      expect(dependencies).to.not.have.property('@babel/runtime');
       expect(dependencies).to.not.have.property('@types/jest');
       expect(dependencies).to.not.have.property('@types/node');
     });
