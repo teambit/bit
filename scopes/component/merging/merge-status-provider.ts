@@ -210,24 +210,17 @@ other:   ${otherLaneHead.toString()}`);
     const currentComponent = await getCurrentComponent();
     if (currentComponent.isRemoved()) {
       // we have a few options:
-      // 1. other is ahead. in this case, other recovered the component. so we can continue with the merge.
+      // 1. "other" is main. in this case, we don't care what happens on main, we want the component to stay deleted on
+      // this lane. (even when main is ahead, we don't want to merge it).
+      // 2. other is ahead. in this case, other recovered the component. so we can continue with the merge.
       // it is possible that it is diverged, in which case, still continue with the merge, and later on, the
       // merge-config will show a config conflict of the remove aspect.
-      // 2. other is not ahead. in this case, just ignore this component, no point to merge it, we want it removed.
-      // 3. there are errors when calculating the divergeData, e.g. no snap in common.
-      // here we need to differentiate between two cases:
-      // 3.1. the "otherLane" is main. in this case, we probably noticed that our component by accident got created
-      // with the same name of an existing component on main and therefore we removed it. so we want to keep this
-      // component removed during merges and we don't care about merging it.
-      // 3.2. the "otherLane" is a lane. in this case, it's possible that although it was removed in this lane, it's
-      // needed and is used by other components of the other other lane, so in order for this merge to work
-      // (and not throw error about deps from other lane), it needs the option to merge (user can decide whether to
-      // exclude it or to use --resolve-unrelated)
+      // 3. other is not ahead. in this case, just ignore this component, no point to merge it, we want it removed.
       const divergeData = await getDivergeData({ repo, modelComponent, targetHead: otherLaneHead, throws: false });
       const isTargetNotAhead = !divergeData.err && !divergeData.isTargetAhead();
       const shouldIgnore = this.otherLane
-        ? isTargetNotAhead // options 3.2 above. if they're not related - don't ignore.
-        : true; // isTargetNotAhead || divergeData.err; // it's main. options 3.1 above. even if they're not related - still ignore.
+        ? isTargetNotAhead // option #2 and #3 above
+        : true; // it's main. option #1 above.
       if (shouldIgnore) {
         return this.returnUnmerged(id, `component has been removed`, true);
       }
