@@ -193,7 +193,7 @@
         "@teambit/design.inputs.toggle-button": "0.0.9",
         "@teambit/design.inputs.toggle-switch": "0.0.6",
         "@teambit/design.navigation.content-tabs": "0.0.5",
-        "@teambit/design.navigation.responsive-navbar": "ec2b0c6862b1c2521340680fe310c38755d34bf8",
+        "@teambit/design.navigation.responsive-navbar": "^0.0.7",
         "@teambit/design.theme.icons-font": "2.0.26",
         "@teambit/design.themes.dark-theme": "1.91.4",
         "@teambit/design.themes.theme-toggler": "0.1.3",
