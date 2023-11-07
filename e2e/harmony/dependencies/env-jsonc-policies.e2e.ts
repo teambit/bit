@@ -69,7 +69,7 @@ describe.skip('env-jsonc-policies', function () {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     envId = `${helper.scopes.remote}/react-based-env`;
-    helper.command.create('react', 'button', '-p button');
+    helper.command.create('react', 'button', '-p button --env teambit.react/react');
     helper.fs.prependFile('button/button.tsx', 'import isPositive from "is-positive";\n');
     helper.env.setCustomNewEnv(undefined, undefined, { policy: ENV_POLICY });
     helper.command.setEnv('button', envId);
