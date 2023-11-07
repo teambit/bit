@@ -552,8 +552,8 @@ jobs:
   bit_tag:
     resource_class: xlarge
     <<: *defaults
-    # environment:
-    #   BIT_FEATURES: cloud-importer-v2
+    environment:
+      BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: ./
