@@ -68,6 +68,7 @@ export const CURRENT_FETCH_SCHEMA = '0.0.3';
 const HooksManagerInstance = HooksManager.getInstance();
 
 const openConnections: number[] = [];
+const openConnectionsMetadata: { [connectionId: string]: Record<string, any> } = {};
 let fetchCounter = 0;
 
 export default async function fetch(
@@ -90,6 +91,16 @@ memory usage: ${getMemoryUsageInMB()} MB.
 total ids: ${ids.length}.${logIds}
 fetchOptions`,
     fetchOptions
+  );
+  const dateNow = new Date().toISOString().split('.')[0];
+  openConnectionsMetadata[currentFetch] = {
+    started: dateNow,
+    ids,
+    fetchOptions,
+    headers,
+  };
+  logger.trace(
+    `DEBUG-CONNECTIONS: Date now: ${dateNow}. Connections:\n${JSON.stringify(openConnectionsMetadata, null, 2)}`
   );
 
   if (!fetchOptions.type) fetchOptions.type = 'component'; // for backward compatibility
@@ -115,6 +126,7 @@ fetchOptions`,
   const finishLog = (err?: Error) => {
     const duration = new Date().getTime() - startTime;
     openConnections.splice(openConnections.indexOf(currentFetch), 1);
+    delete openConnectionsMetadata[currentFetch];
     const successOrErr = `${err ? 'with errors' : 'successfully'}`;
     logger.debug(`scope.fetch [${currentFetch}] completed ${successOrErr}.
 open connections: [${openConnections.join(', ')}]. (total ${openConnections.length}).
