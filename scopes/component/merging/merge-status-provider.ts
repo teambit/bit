@@ -227,7 +227,7 @@ other:   ${otherLaneHead.toString()}`);
       const isTargetNotAhead = !divergeData.err && !divergeData.isTargetAhead();
       const shouldIgnore = this.otherLane
         ? isTargetNotAhead // options 3.2 above. if they're not related - don't ignore.
-        : isTargetNotAhead || divergeData.err; // it's main. options 3.1 above. even if they're not related - still ignore.
+        : true; // isTargetNotAhead || divergeData.err; // it's main. options 3.1 above. even if they're not related - still ignore.
       if (shouldIgnore) {
         return this.returnUnmerged(id, `component has been removed`, true);
       }
