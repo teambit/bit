@@ -6,6 +6,14 @@ export type StringsPerFilePath = { [filePath: string]: string[] };
 export const ISSUE_FORMAT_SPACE_COUNT = 10;
 export const ISSUE_FORMAT_SPACE = ' '.repeat(ISSUE_FORMAT_SPACE_COUNT);
 
+export type IssueObject = {
+  type: string;
+  description: string;
+  solution: string;
+  isTagBlocker: boolean;
+  data: any;
+};
+
 export class ComponentIssue {
   description: string; // issue description
   solution: string; // suggest how to fix the issue
@@ -30,11 +38,12 @@ export class ComponentIssue {
       })
       .join('\n');
   }
-  toObject() {
+  toObject(): IssueObject {
     return {
       type: this.constructor.name,
       description: this.description,
       solution: this.solution,
+      isTagBlocker: this.isTagBlocker,
       data: this.data,
     };
   }

@@ -476,19 +476,19 @@ export class ReactEnv
       dependencies: {
         react: '-',
         'react-dom': '-',
-        'core-js': '^3.0.0',
+        // 'core-js': '^3.0.0',
       },
       // TODO: add this only if using ts
       devDependencies: {
         react: '-',
         'react-dom': '-',
         '@types/mocha': '-',
-        '@types/node': '12.20.4',
+        '@types/node': '^18.18.8',
         '@types/react': '^17.0.8',
         '@types/react-dom': '^17.0.5',
         '@types/jest': '^26.0.0',
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
-        '@babel/runtime': '7.20.0',
+        // '@babel/runtime': '7.20.0',
         '@types/testing-library__jest-dom': '5.9.5',
       },
       peerDependencies: {

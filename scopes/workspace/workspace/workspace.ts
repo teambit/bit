@@ -1035,24 +1035,27 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   async importAndGetMany(ids: Array<ComponentID>, reason?: string): Promise<Component[]> {
     if (!ids.length) return [];
-    await this.importCurrentLaneIfMissing();
+    const lane = await this.importCurrentLaneIfMissing();
     await this.scope.import(ids, {
       reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion(),
       preferDependencyGraph: true,
+      // add the lane object although it was imported with all its ids previously.
+      // in some cases, this import re-fetch existing ids whose their VersionHistory is incomplete, so it needs the Lane context.
+      lane,
       reason,
     });
     return this.getMany(ids);
   }
 
-  async importCurrentLaneIfMissing() {
+  async importCurrentLaneIfMissing(): Promise<Lane | undefined> {
     const laneId = this.getCurrentLaneId();
     const laneObj = await this.scope.legacyScope.getCurrentLaneObject();
     if (laneId.isDefault() || laneObj) {
-      return;
+      return laneObj || undefined;
     }
     const lane = await this.getCurrentRemoteLane();
     if (!lane) {
-      return;
+      return undefined;
     }
     this.logger.info(`current lane ${laneId.toString()} is missing, importing it`);
     await this.scope.legacyScope.objects.writeObjectsToTheFS([lane]);
@@ -1066,6 +1069,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     });
 
     await scopeComponentsImporter.importMany({ ids, lane, reason: 'for making sure the current lane has all ' });
+    return lane;
   }
 
   async use(aspectIdStr: string): Promise<string> {
@@ -1879,9 +1883,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async setComponentPathsRegExps() {
     const workspaceComponents = await this.list();
     const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
+    const packageManager = this.dependencyResolver.getPackageManagerName();
+    const isPnpmEnabled = typeof packageManager === 'undefined' || packageManager.includes('pnpm');
     const pathsExcluding = generateNodeModulesPattern({
       packages: workspacePackageNames,
       target: PatternTarget.WEBPACK,
+      isPnpmEnabled,
     });
     this.componentPathsRegExps = [...pathsExcluding.map((stringPattern) => new RegExp(stringPattern))];
   }

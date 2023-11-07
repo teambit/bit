@@ -1,4 +1,4 @@
-import { ComponentIssue } from './component-issue';
+import { ComponentIssue, IssueObject } from './component-issue';
 import { ImportNonMainFiles } from './import-non-main-files';
 import { MissingComponents } from './missing-components';
 import { MissingDependenciesOnFs } from './missing-dependencies-on-fs';
@@ -63,6 +63,11 @@ export class IssuesList {
     return this.issues.map((issue) => issue.toObject());
   }
 
+  /**
+   * @deprecated use toObjectIncludeDataAsString instead
+   * this method changes the "data" prop to string, which can be unexpected, and at times both are needed, the raw and the string.
+   * if you change to use `toObjectIncludeDataAsString`, make sure to call "dataAsString" instead of "data" when needed.
+   */
   toObjectWithDataAsString(): { type: string; description: string; data: string }[] {
     return this.issues.map((issue) => ({
       ...issue.toObject(),
@@ -121,13 +126,10 @@ export class IssuesList {
     return new IssuesList(this.issues.filter((issue) => issue.isTagBlocker));
   }
 
-  toReadableByIDE() {
+  toObjectIncludeDataAsString(): Array<IssueObject & { dataAsString: string }> {
     return this.issues.map((issue) => ({
-      type: issue.constructor.name,
-      description: issue.description,
-      solution: issue.solution,
-      isTagBlocker: issue.isTagBlocker,
-      data: issue.dataToString(),
+      ...issue.toObject(),
+      dataAsString: issue.dataToString(),
     }));
   }
 

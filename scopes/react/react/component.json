@@ -13,7 +13,7 @@
           "react-dom": "-",
           "@svgr/webpack": "5.5.0",
           "@babel/helper-plugin-test-runner": "7.16.7",
-          "@babel/preset-env": "7.22.15",
+          "@babel/preset-env": "7.23.2",
           "@babel/preset-react": "7.22.15",
           "@typescript-eslint/parser": "5.62.0",
           "@typescript-eslint/eslint-plugin": "5.62.0",
@@ -48,7 +48,6 @@
           "less": "^4.1.1",
           "less-loader": "10.0.0",
           "@teambit/legacy": "-",
-          "@babel/runtime": "7.20.0",
           "react-refresh": "0.10.0"
         },
         "devDependencies": {
@@ -56,7 +55,6 @@
           "react-dom": "-",
           "@teambit/legacy": "-",
           "@types/mocha": "9.1.0",
-          "@types/node": "12.20.4",
           "@types/postcss-normalize": "9.0.1",
           "@types/react": "^17.0.8",
           "@types/react-dom": "^17.0.5"
@@ -64,7 +62,7 @@
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.585"
+          "@teambit/legacy": "1.0.589"
         }
       }
     }

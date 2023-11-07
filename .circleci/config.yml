@@ -489,7 +489,10 @@ jobs:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
-      - run: cd bit && bbit install
+      - run:
+          name: bbit install
+          command: cd bit && bbit install
+
       - run: cd bit && npm run link-bit-legacy
       # - run: cd bit && bbit compile
 
@@ -549,8 +552,8 @@ jobs:
   bit_tag:
     resource_class: xlarge
     <<: *defaults
-    environment:
-      BIT_FEATURES: cloud-importer-v2
+    # environment:
+    #   BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: ./
@@ -892,7 +895,6 @@ jobs:
 
   e2e_test:
     <<: *defaults
-    resource_class: medium+
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2

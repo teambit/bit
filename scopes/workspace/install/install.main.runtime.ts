@@ -815,7 +815,10 @@ export class InstallMain {
 
   async link(options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
     const { linkResults, linkedRootDeps } = await this.calculateLinks(options);
-    await createLinks(options.linkToDir ?? this.workspace.path, linkedRootDeps, { avoidHardLink: true });
+    await createLinks(options.linkToDir ?? this.workspace.path, linkedRootDeps, {
+      avoidHardLink: true,
+      skipIfSymlinkValid: true,
+    });
     return linkResults;
   }
 
