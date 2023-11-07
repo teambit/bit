@@ -91,7 +91,7 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
         <div className={styles.readme}>
           {isLoading && (
             <ReadmeSkeleton>
-              <CompositionGallerySkeleton compositionsLength={component.compositions.length || 4} />
+              <CompositionGallerySkeleton compositionsLength={component.compositions.length} />
             </ReadmeSkeleton>
           )}
           <ComponentPreview
