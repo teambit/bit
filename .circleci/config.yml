@@ -552,8 +552,8 @@ jobs:
   bit_tag:
     resource_class: xlarge
     <<: *defaults
-    # environment:
-    #   BIT_FEATURES: cloud-importer-v2
+    environment:
+      BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: ./
@@ -601,8 +601,8 @@ jobs:
           name: tag persist
           # command: cd bit && bit tag --ignore-newest-version
           # command: cd bit && bit tag --increment-by 3
-          # command: cd bit && bit tag --increment-by 2 --unmodified
-          command: cd bit && bit tag
+          command: cd bit && bit tag --increment-by 2
+          # command: cd bit && bit tag
           # command: cd bit && bit tag --persist
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'

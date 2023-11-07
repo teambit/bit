@@ -104,16 +104,16 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
       dependencies: {
         react: '-',
         'react-dom': '-',
-        // 'core-js': '^3.0.0',
+        'core-js': '^3.0.0',
         // For aspects the babel runtime should be a runtime dep not only dev as they are compiled by babel
-        // '@babel/runtime': '7.20.0',
+        '@babel/runtime': '7.23.2',
       },
       // TODO: add this only if using ts
       devDependencies: {
         react: '-',
         'react-dom': '-',
         '@types/mocha': '-',
-        '@types/node': '^18.18.8',
+        '@types/node': '12.20.4',
         '@types/react': '^17.0.8',
         '@types/react-dom': '^17.0.5',
         '@types/jest': '^26.0.0',
