@@ -1161,6 +1161,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/ui/aspect-box"
     },
+    "ui/code-compare": {
+        "name": "ui/code-compare",
+        "scope": "teambit.code",
+        "version": "0.0.281",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/code-compare"
+    },
     "ui/component-preview": {
         "scope": "teambit.preview",
         "version": "1.0.3",

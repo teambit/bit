@@ -23,7 +23,25 @@ export type MenuNavProps = {
    * A className to pass to the secondary nav, i.e dropdown
    */
   secondaryNavClassName?: string;
+  activeTabIndex?: number;
+  alwaysShowActiveTab?: boolean;
 } & React.HTMLAttributes<HTMLElement>;
+
+function TopBarNavComponent({ isInMenu, menuItemProps }: TabProps) {
+  /**
+   * to accommodate for the top level nav which should display the children
+   * in the dropdown secondary menu if there is a displayName set
+   */
+  const widgetDisplayText = menuItemProps?.displayName && isInMenu ? menuItemProps?.displayName : undefined;
+  return (
+    <TopBarNav
+      {...menuItemProps}
+      className={classnames(menuItemProps?.className, styles.topBarNav, isInMenu && styles.noBorder)}
+    >
+      {widgetDisplayText || menuItemProps?.children}
+    </TopBarNav>
+  );
+}
 
 export function CollapsibleMenuNav({
   navigationSlot,
@@ -32,6 +50,8 @@ export function CollapsibleMenuNav({
   widgetPlugins = [],
   className,
   secondaryNavClassName,
+  activeTabIndex,
+  alwaysShowActiveTab,
   children,
 }: MenuNavProps) {
   const plugins = useMemo(() => {
@@ -43,28 +63,16 @@ export function CollapsibleMenuNav({
     return (_widgetPlugins || []).sort(sortFn);
   }, [widgetSlot, widgetPlugins]);
 
-  const links = [...plugins, ...widgets].map(([id, menuItem], index) => {
+  const links = [...plugins, ...widgets].map(([, menuItem], index) => {
     // these styles keep plugins to the left and widgets to the right.
     const lastPluginStyle = plugins.length - 1 === index ? { marginRight: 'auto' } : {};
 
     const firstWidgetStyle = plugins.length === index ? { marginLeft: 'auto' } : {};
 
     return {
-      component: function TopBarNavComponent({ isInMenu }: TabProps) {
-        /**
-         * to accommodate for the top level nav which should display the children
-         * in the dropdown secondary menu if there is a displayName set
-         */
-        const widgetDisplayText = menuItem.props.displayName && isInMenu ? menuItem.props.displayName : undefined;
-        return (
-          <TopBarNav
-            {...menuItem.props}
-            className={classnames(menuItem.props.className, styles.topBarNav, isInMenu && styles.noBorder)}
-            key={id}
-          >
-            {widgetDisplayText || menuItem.props.children}
-          </TopBarNav>
-        );
+      component: TopBarNavComponent,
+      tabProps: {
+        menuItemProps: menuItem.props,
       },
       style: { ...firstWidgetStyle, ...lastPluginStyle },
       className: menuItem.props.className,
@@ -78,6 +86,8 @@ export function CollapsibleMenuNav({
       style={{ width: '100%', height: '100%' }}
       priority="none"
       tabs={links}
+      defaultActiveIndex={activeTabIndex}
+      alwaysShowActiveTab={alwaysShowActiveTab}
     >
       {children}
     </ResponsiveNavbar>
