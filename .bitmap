@@ -1360,6 +1360,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-compare"
     },
+    "ui/component-drawer": {
+        "name": "ui/component-drawer",
+        "scope": "teambit.component",
+        "version": "0.0.351",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-drawer"
+    },
     "ui/component-preview": {
         "name": "ui/component-preview",
         "scope": "teambit.preview",
@@ -1464,13 +1471,6 @@
         "version": "0.0.506",
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs"
-    },
-    "ui/side-bar": {
-        "name": "ui/side-bar",
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.868",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/side-bar"
     },
     "update-dependencies": {
         "name": "update-dependencies",
