@@ -373,6 +373,31 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-descriptor"
     },
+    "component-id": {
+        "name": "component-id",
+        "scope": "teambit.component",
+        "version": "1.1.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/component-id",
+        "config": {
+            "teambit.harmony/node": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/node"
+            },
+            "teambit.dependencies/dependency-resolver": {
+                "policy": {
+                    "dependencies": {
+                        "@teambit/legacy": "-"
+                    },
+                    "devDependencies": {
+                        "@types/mocha": "9.1.0",
+                        "@teambit/legacy": "-"
+                    },
+                    "peerDependencies": {}
+                }
+            }
+        }
+    },
     "component-issues": {
         "name": "component-issues",
         "scope": "teambit.component",
