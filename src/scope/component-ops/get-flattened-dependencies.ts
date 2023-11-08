@@ -59,7 +59,7 @@ export class FlattenedDependenciesGetter {
       cache: true,
       throwForDependencyNotFound: true,
       lane: this.lane,
-      reason: 'for fetching all flattened dependencies',
+      reason: 'for fetching all dependencies',
     });
   }
 
