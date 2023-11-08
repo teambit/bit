@@ -1465,6 +1465,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs"
     },
+    "ui/side-bar": {
+        "name": "ui/side-bar",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.868",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/side-bar"
+    },
     "update-dependencies": {
         "name": "update-dependencies",
         "scope": "teambit.scope",

@@ -38,7 +38,8 @@ export const scopeDrawer = ({
     function TreeNode(props: TreeNodeProps<PayloadType>) {
       const children = props.node.children;
 
-      if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} useLanes={useLanes} />;
+      if (!children)
+        return <ComponentView {...props} treeNodeSlot={treeNodeSlot} useLanes={useLanes} scopeName={host?.name} />;
 
       // skip over scope node and render only children
       if (props.node.payload instanceof ScopePayload) {
