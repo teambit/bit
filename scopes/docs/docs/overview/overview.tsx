@@ -10,9 +10,8 @@ import { ComponentPreview, ComponentPreviewProps } from '@teambit/preview.ui.com
 // import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { CompositionGallery, CompositionGallerySkeleton } from '@teambit/compositions.panels.composition-gallery';
-// import { ReadmeSkeleton } from './readme-skeleton';
-import styles from './overview.module.scss';
 import { ReadmeSkeleton } from './readme-skeleton';
+import styles from './overview.module.scss';
 
 export enum BadgePosition {
   Title,
@@ -67,10 +66,11 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
     [onLoad]
   );
 
-  // reset the loading flag when components are switched
+  // reset the loading flag when components are switched or when isScaling is false
   React.useEffect(() => {
-    if (!isLoading) setLoading(true);
-  }, [component.id.toString()]);
+    if (!isLoading && isScaling) setLoading(true);
+    if (!isScaling && isLoading) setLoading(false);
+  }, [component.id.toString(), isScaling]);
 
   return (
     <div className={styles.overviewWrapper} key={`${component.id.toString()}`}>
