@@ -273,7 +273,7 @@
         "@teambit/lanes.hooks.use-lane-components": "0.0.253",
         "@teambit/lanes.hooks.use-lane-readme": "0.0.253",
         "@teambit/lanes.hooks.use-lanes": "0.0.254",
-        "@teambit/lanes.hooks.use-viewed-lane-from-url": "^0.0.217",
+        "@teambit/lanes.hooks.use-viewed-lane-from-url": "0.0.217",
         "@teambit/lanes.ui.compare.lane-compare": "^0.0.170",
         "@teambit/lanes.ui.compare.lane-compare-drawer": "^0.0.149",
         "@teambit/lanes.ui.compare.lane-compare-hooks.use-lane-diff-status": "^0.0.143",
