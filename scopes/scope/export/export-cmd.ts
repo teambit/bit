@@ -22,7 +22,7 @@ export class ExportCmd implements Command {
   alias = 'e';
   helpUrl = 'reference/components/exporting-components';
   options = [
-    ['e', 'eject', 'remove component from the workspace and install it instead as a regular npm package'],
+    ['e', 'eject', 'after export, remove the components from the workspace and install them as packages'],
     [
       'a',
       'all',
