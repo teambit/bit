@@ -44,12 +44,11 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
   const componentDescriptor = useComponentDescriptor();
   const overviewProps = flatten(overviewOptions.values())[0];
   const showHeader = !component.preview?.legacyHeader;
-  const [isLoading, setLoading] = useState(true);
   const EmptyState = getEmptyState && getEmptyState();
-
   const buildFailed = component.buildStatus?.toLowerCase() !== 'succeed' && component?.host === 'teambit.scope/scope';
+  const isScaling = Boolean(component.preview?.isScaling);
 
-  const isScaling = component.preview?.isScaling;
+  const [isLoading, setLoading] = useState(() => isScaling);
 
   const iframeQueryParams = `skipIncludes=${component.preview?.skipIncludes || 'false'}`;
 
@@ -66,10 +65,10 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
     [onLoad]
   );
 
-  // reset the loading flag when components are switched or when isScaling is false
+  // reset the loading flag when components are swiched or turn it off if the component is not scaling
   React.useEffect(() => {
     if (!isLoading && isScaling) setLoading(true);
-    if (!isScaling && isLoading) setLoading(false);
+    if (isLoading && !isScaling) setLoading(false);
   }, [component.id.toString(), isScaling]);
 
   return (
