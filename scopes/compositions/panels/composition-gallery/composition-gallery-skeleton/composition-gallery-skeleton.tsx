@@ -18,9 +18,9 @@ export function CompositionGallerySkeleton({
     <div {...rest} className={classnames(styles.compositionGallerySkeleton, className)}>
       <LineSkeleton width="100px" className={styles.title} />
       <div className={classnames(styles.compositionGalleryGrid)}>
-        {length.map((i) => (
-          <CompositionCardSkeleton key={i} />
-        ))}
+        {length.map((_, index) => {
+          return <CompositionCardSkeleton key={`comp-card-skeleton-${index}`} />;
+        })}
       </div>
     </div>
   );
