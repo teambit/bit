@@ -10,9 +10,8 @@ import { ComponentPreview, ComponentPreviewProps } from '@teambit/preview.ui.com
 // import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { CompositionGallery, CompositionGallerySkeleton } from '@teambit/compositions.panels.composition-gallery';
-// import { ReadmeSkeleton } from './readme-skeleton';
-import styles from './overview.module.scss';
 import { ReadmeSkeleton } from './readme-skeleton';
+import styles from './overview.module.scss';
 
 export enum BadgePosition {
   Title,
@@ -45,12 +44,11 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
   const componentDescriptor = useComponentDescriptor();
   const overviewProps = flatten(overviewOptions.values())[0];
   const showHeader = !component.preview?.legacyHeader;
-  const [isLoading, setLoading] = useState(true);
   const EmptyState = getEmptyState && getEmptyState();
-
   const buildFailed = component.buildStatus?.toLowerCase() !== 'succeed' && component?.host === 'teambit.scope/scope';
+  const isScaling = Boolean(component.preview?.isScaling);
 
-  const isScaling = component.preview?.isScaling;
+  const [isLoading, setLoading] = useState(() => isScaling);
 
   const iframeQueryParams = `skipIncludes=${component.preview?.skipIncludes || 'false'}`;
 
@@ -67,10 +65,11 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
     [onLoad]
   );
 
-  // reset the loading flag when components are switched
+  // reset the loading flag when components are swiched or turn it off if the component is not scaling
   React.useEffect(() => {
-    if (!isLoading) setLoading(true);
-  }, [component.id.toString()]);
+    if (!isLoading && isScaling) setLoading(true);
+    if (isLoading && !isScaling) setLoading(false);
+  }, [component.id.toString(), isScaling]);
 
   return (
     <div className={styles.overviewWrapper} key={`${component.id.toString()}`}>
