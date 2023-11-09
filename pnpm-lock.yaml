@@ -485,9 +485,6 @@ importers:
       '@teambit/component.ui.component-deprecated':
         specifier: ^0.0.39
         version: 0.0.39(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component.ui.component-drawer':
-        specifier: ^0.0.351
-        version: 0.0.351(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component.ui.component-filters.component-filter-context':
         specifier: ^0.0.214
         version: 0.0.214(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -831,17 +828,17 @@ importers:
         specifier: ^0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.hooks.use-lane-components':
-        specifier: ^0.0.253
+        specifier: 0.0.253
         version: 0.0.253(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.hooks.use-lane-readme':
-        specifier: ^0.0.253
+        specifier: 0.0.253
         version: 0.0.253(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.hooks.use-lanes':
-        specifier: ^0.0.254
+        specifier: 0.0.254
         version: 0.0.254(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.hooks.use-viewed-lane-from-url':
-        specifier: ^0.0.216
-        version: 0.0.216(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 0.0.217
+        version: 0.0.217(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: ^0.0.170
         version: 0.0.170(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -885,10 +882,10 @@ importers:
         specifier: ^0.0.10
         version: 0.0.10(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/lanes.ui.menus.use-lanes-menu':
-        specifier: ^0.0.208
-        version: 0.0.208(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 0.0.207
+        version: 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model':
-        specifier: ^0.0.207
+        specifier: 0.0.207
         version: 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.navigation.lane-switcher':
         specifier: ^0.0.213
@@ -918,8 +915,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/node.deps-detectors.detective-es6':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.3
+        version: 0.0.3
       '@teambit/node.generator.node-templates':
         specifier: ^1.0.8
         version: 1.0.8
@@ -984,8 +981,8 @@ importers:
         specifier: ^0.0.554
         version: 0.0.554
       '@teambit/typescript.deps-detectors.detective-typescript':
-        specifier: ^0.0.1
-        version: 0.0.1(typescript@4.7.4)
+        specifier: ^0.0.4
+        version: 0.0.4(typescript@4.7.4)
       '@teambit/typescript.deps-lookups.lookup-typescript':
         specifier: ^0.0.1
         version: 0.0.1
@@ -1074,8 +1071,8 @@ importers:
         specifier: ^0.0.85
         version: 0.0.85(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.side-bar':
-        specifier: ^0.0.868
-        version: 0.0.868(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.869
+        version: 0.0.869(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.top-bar':
         specifier: ^0.0.514
         version: 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -2587,6 +2584,85 @@ importers:
         specifier: 5.9.5
         version: 5.9.5
 
+  components/ui/component-drawer:
+    dependencies:
+      '@teambit/base-ui.utils.composer':
+        specifier: 1.0.0
+        version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component.ui.component-filters.component-filter-context':
+        specifier: ^0.0.214
+        version: 0.0.214(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.skeletons.sidebar-loader':
+        specifier: 0.0.4
+        version: 0.0.4(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.styles.ellipsis':
+        specifier: 0.0.357
+        version: 0.0.357(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.styles.muted-italic':
+        specifier: 0.0.44
+        version: 0.0.44(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.tree':
+        specifier: 0.0.15
+        version: 0.0.15(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/harmony':
+        specifier: 0.4.6
+        version: 0.4.6
+      '@teambit/lanes.hooks.use-lanes':
+        specifier: 0.0.254
+        version: 0.0.254(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.models.lanes-model':
+        specifier: 0.0.207
+        version: 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.side-bar':
+        specifier: ^0.0.869
+        version: 0.0.869(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.tree.drawer':
+        specifier: ^0.0.517
+        version: 0.0.517(react-dom@17.0.2)(react@17.0.2)
+      classnames:
+        specifier: 2.2.6
+        version: 2.2.6
+      core-js:
+        specifier: ^3.0.0
+        version: 3.13.0
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
+      react:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2
+      react-dom:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2(react@17.0.2)
+    devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@types/classnames':
+        specifier: 2.2.11
+        version: 2.2.11
+      '@types/jest':
+        specifier: ^26.0.0
+        version: 26.0.20
+      '@types/lodash.flatten':
+        specifier: 4.4.6
+        version: 4.4.6
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 12.20.4
+        version: 12.20.4
+      '@types/react':
+        specifier: ^17.0.67
+        version: 17.0.69
+      '@types/react-dom':
+        specifier: ^17.0.21
+        version: 17.0.22
+      '@types/testing-library__jest-dom':
+        specifier: 5.9.5
+        version: 5.9.5
+
   components/ui/hooks/scope-context:
     dependencies:
       core-js:
@@ -2785,6 +2861,9 @@ importers:
       '@teambit/component.testing.mock-components':
         specifier: workspace:*
         version: file:scopes/component/testing/mock-components
+      '@teambit/component.ui.component-drawer':
+        specifier: workspace:*
+        version: file:components/ui/component-drawer(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/composition-card':
         specifier: workspace:*
         version: file:scopes/compositions/composition-card(react-dom@17.0.2)(react@17.0.2)
@@ -3397,6 +3476,8 @@ importers:
       '@teambit/component.modules.component-url':
         injected: true
       '@teambit/component.testing.mock-components':
+        injected: true
+      '@teambit/component.ui.component-drawer':
         injected: true
       '@teambit/composition-card':
         injected: true
@@ -3895,6 +3976,9 @@ importers:
       '@teambit/component.testing.mock-components':
         specifier: workspace:*
         version: file:scopes/component/testing/mock-components
+      '@teambit/component.ui.component-drawer':
+        specifier: workspace:*
+        version: file:components/ui/component-drawer(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/composition-card':
         specifier: workspace:*
         version: file:scopes/compositions/composition-card(react-dom@17.0.2)(react@17.0.2)
@@ -4507,6 +4591,8 @@ importers:
       '@teambit/component.modules.component-url':
         injected: true
       '@teambit/component.testing.mock-components':
+        injected: true
+      '@teambit/component.ui.component-drawer':
         injected: true
       '@teambit/composition-card':
         injected: true
@@ -5005,6 +5091,9 @@ importers:
       '@teambit/component.testing.mock-components':
         specifier: workspace:*
         version: file:scopes/component/testing/mock-components
+      '@teambit/component.ui.component-drawer':
+        specifier: workspace:*
+        version: file:components/ui/component-drawer(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/composition-card':
         specifier: workspace:*
         version: file:scopes/compositions/composition-card(react-dom@17.0.2)(react@17.0.2)
@@ -5617,6 +5706,8 @@ importers:
       '@teambit/component.modules.component-url':
         injected: true
       '@teambit/component.testing.mock-components':
+        injected: true
+      '@teambit/component.ui.component-drawer':
         injected: true
       '@teambit/composition-card':
         injected: true
@@ -6115,6 +6206,9 @@ importers:
       '@teambit/component.testing.mock-components':
         specifier: workspace:*
         version: file:scopes/component/testing/mock-components
+      '@teambit/component.ui.component-drawer':
+        specifier: workspace:*
+        version: file:components/ui/component-drawer(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/composition-card':
         specifier: workspace:*
         version: file:scopes/compositions/composition-card(react-dom@17.0.2)(react@17.0.2)
@@ -6721,6 +6815,8 @@ importers:
       '@teambit/component.modules.component-url':
         injected: true
       '@teambit/component.testing.mock-components':
+        injected: true
+      '@teambit/component.ui.component-drawer':
         injected: true
       '@teambit/composition-card':
         injected: true
@@ -7219,6 +7315,9 @@ importers:
       '@teambit/component.testing.mock-components':
         specifier: workspace:*
         version: file:scopes/component/testing/mock-components
+      '@teambit/component.ui.component-drawer':
+        specifier: workspace:*
+        version: file:components/ui/component-drawer(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/composition-card':
         specifier: workspace:*
         version: file:scopes/compositions/composition-card(react-dom@17.0.2)(react@17.0.2)
@@ -7831,6 +7930,8 @@ importers:
       '@teambit/component.modules.component-url':
         injected: true
       '@teambit/component.testing.mock-components':
+        injected: true
+      '@teambit/component.ui.component-drawer':
         injected: true
       '@teambit/composition-card':
         injected: true
@@ -8329,6 +8430,9 @@ importers:
       '@teambit/component.testing.mock-components':
         specifier: workspace:*
         version: file:scopes/component/testing/mock-components
+      '@teambit/component.ui.component-drawer':
+        specifier: workspace:*
+        version: file:components/ui/component-drawer(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/composition-card':
         specifier: workspace:*
         version: file:scopes/compositions/composition-card(react-dom@17.0.2)(react@17.0.2)
@@ -8941,6 +9045,8 @@ importers:
       '@teambit/component.modules.component-url':
         injected: true
       '@teambit/component.testing.mock-components':
+        injected: true
+      '@teambit/component.ui.component-drawer':
         injected: true
       '@teambit/composition-card':
         injected: true
@@ -10716,10 +10822,10 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/lanes.hooks.use-lanes':
-        specifier: ^0.0.254
+        specifier: 0.0.254
         version: 0.0.254(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model':
-        specifier: ^0.0.207
+        specifier: 0.0.207
         version: 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/legacy-component-log':
         specifier: ^0.0.402
@@ -15911,11 +16017,11 @@ importers:
         specifier: ^0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.hooks.use-lanes':
-        specifier: ^0.0.254
+        specifier: 0.0.254
         version: 0.0.254(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.hooks.use-viewed-lane-from-url':
-        specifier: ^0.0.216
-        version: 0.0.216(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 0.0.217
+        version: 0.0.217(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: ^0.0.170
         version: 0.0.170(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -15929,10 +16035,10 @@ importers:
         specifier: ^0.0.10
         version: 0.0.10(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/lanes.ui.menus.use-lanes-menu':
-        specifier: ^0.0.208
-        version: 0.0.208(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 0.0.207
+        version: 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model':
-        specifier: ^0.0.207
+        specifier: 0.0.207
         version: 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.navigation.lane-switcher':
         specifier: ^0.0.213
@@ -16206,8 +16312,8 @@ importers:
         specifier: 1.6.21
         version: 1.6.21
       '@teambit/node.deps-detectors.detective-es6':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.3
+        version: 0.0.3
       react:
         specifier: 17.0.2
         version: 17.0.2
@@ -18274,9 +18380,6 @@ importers:
       '@teambit/component-id':
         specifier: ^1.1.1
         version: 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component.ui.component-drawer':
-        specifier: ^0.0.351
-        version: 0.0.351(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component.ui.component-filters.component-filter-context':
         specifier: ^0.0.214
         version: 0.0.214(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -18311,13 +18414,13 @@ importers:
         specifier: ^0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.hooks.use-lane-components':
-        specifier: ^0.0.253
+        specifier: 0.0.253
         version: 0.0.253(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.hooks.use-lanes':
-        specifier: ^0.0.254
+        specifier: 0.0.254
         version: 0.0.254(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model':
-        specifier: ^0.0.207
+        specifier: 0.0.207
         version: 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/legacy-bit-id':
         specifier: ^1.0.4
@@ -18359,8 +18462,8 @@ importers:
         specifier: ^0.0.506
         version: 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.side-bar':
-        specifier: ^0.0.868
-        version: 0.0.868(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.869
+        version: 0.0.869(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.top-bar':
         specifier: ^0.0.514
         version: 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -20353,9 +20456,6 @@ importers:
       '@teambit/component-version':
         specifier: ^1.0.3
         version: 1.0.3
-      '@teambit/component.ui.component-drawer':
-        specifier: ^0.0.351
-        version: 0.0.351(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component.ui.component-filters.component-filter-context':
         specifier: ^0.0.214
         version: 0.0.214(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -20390,13 +20490,13 @@ importers:
         specifier: ^0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.hooks.use-lane-components':
-        specifier: ^0.0.253
+        specifier: 0.0.253
         version: 0.0.253(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.hooks.use-lanes':
-        specifier: ^0.0.254
+        specifier: 0.0.254
         version: 0.0.254(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model':
-        specifier: ^0.0.207
+        specifier: 0.0.207
         version: 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/legacy-bit-id':
         specifier: ^1.0.4
@@ -20426,8 +20526,8 @@ importers:
         specifier: ^0.0.506
         version: 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.side-bar':
-        specifier: ^0.0.868
-        version: 0.0.868(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.869
+        version: 0.0.869(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.top-bar':
         specifier: ^0.0.514
         version: 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -27256,6 +27356,30 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
+  /@teambit/base-ui.graph.tree.indent@1.0.0(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-I1b8AryymAz574SX8FoVAwfCwPU6r0PMkJ6MvonSazXjYvG2ZBQmIlFb4/3O1d9p/aHiD82IF+D3nce6NJwdHQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  /@teambit/base-ui.graph.tree.inflate-paths@1.0.0(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-GAsT6a06E6Loj0n3UlHpoynSLTD56IAGX3dspM4fq0H5JaOzEb88EGemhN2Ksk9C9MgzqpLzRNBttenJ6TnAyQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-ui.graph.tree.recursive-tree': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.utils.sub-paths': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
   /@teambit/base-ui.graph.tree.recursive-tree@1.0.0(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-jPsjiwd51/yqQ/gj4nSHn2uX0bILV/5UdC0F5/WEpMb9IVNJaTmUAwZA9wAFIjydvH+fkWCT1c2Ua2/7xkvrdw==}
     peerDependencies:
@@ -27951,6 +28075,18 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  /@teambit/base-ui.utils.sub-paths@1.0.0(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-SZiCFSzGezESxWl0m4I3WJfX0pmVgjcobOhPL4tGlCmXHqdICQ69nExY7XJsjvNJ57H54UnF/DNEBaSZv2FBdQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      core-js: 3.13.0
+      path-browserify: 1.0.1
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     dev: false
@@ -28667,7 +28803,7 @@ packages:
     resolution: {integrity: sha1-hMQBTfleQnkLfjF4VuHAmNGY8Ho=}
     engines: {node: '>=12.22.0'}
     dependencies:
-      '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.402
       query-string: 7.0.0
     transitivePeerDependencies:
@@ -28695,7 +28831,7 @@ packages:
     peerDependencies:
       react: 17.0.2
     dependencies:
-      '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.427
       query-string: 7.0.0
       react: 17.0.2
@@ -28709,11 +28845,26 @@ packages:
     peerDependencies:
       react: 17.0.2
     dependencies:
-      '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.427
       query-string: 7.0.0
       react: 17.0.2
     transitivePeerDependencies:
+      - react-dom
+    dev: false
+
+  /@teambit/component.modules.component-url@0.0.162(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-FLhpVmlH7zYC5G/L7u3BBOchjKouVxLbIymnRQ8XHXkYOjwi8CzDTzvNyMn1691Uz0AO1gFpmvbkFehs4wTv6w==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: 17.0.2
+    dependencies:
+      '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-id': 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      query-string: 7.0.0
+      react: 17.0.2
+    transitivePeerDependencies:
+      - '@teambit/legacy'
       - react-dom
     dev: false
 
@@ -31079,7 +31230,7 @@ packages:
     dev: false
 
   /@teambit/design.ui.styles.muted-italic@0.0.41(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-pJpFIAjz3jZwDqyr1Lc8G2Kj9jE=, tarball: https://node-registry.bit.cloud/@teambit/design.ui.styles.muted-italic/-/@teambit-design.ui.styles.muted-italic-0.0.41.tgz}
+    resolution: {integrity: sha1-pJpFIAjz3jZwDqyr1Lc8G2Kj9jE=}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -31091,7 +31242,7 @@ packages:
     dev: false
 
   /@teambit/design.ui.styles.muted-italic@0.0.44(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-uJlo9PPuh2V0z5RYLehmk1KGxvo=, tarball: https://node-registry.bit.cloud/@teambit/design.ui.styles.muted-italic/-/@teambit-design.ui.styles.muted-italic-0.0.44.tgz}
+    resolution: {integrity: sha1-uJlo9PPuh2V0z5RYLehmk1KGxvo=}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -32524,6 +32675,16 @@ packages:
       '@teambit/legacy': link:node_modules/@teambit/legacy
     dev: false
 
+  /@teambit/lane-id@0.0.304(@teambit/legacy@node_modules+@teambit+legacy):
+    resolution: {integrity: sha512-2pUSugeJI//2qnO74FgfHrthefLlAdeXOca+EjgRlYR5j+lSe3hJN6HVMNSF1zO8ZNe7o7sOr9W29UeWZPJa+g==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      '@teambit/legacy': 1.0.571
+    dependencies:
+      '@teambit/bit-error': 0.0.404
+      '@teambit/legacy': link:node_modules/@teambit/legacy
+    dev: false
+
   /@teambit/lane-id@0.0.305(@teambit/legacy@node_modules+@teambit+legacy):
     resolution: {integrity: sha512-jEBD2i1kQ4d76gXt4Vpt6Cetkuq6Fv0uxIMuFfVfYU5IRtKQnLHXAexjQmHhGNB40EW+JWN5xK78ueDIy47cew==}
     engines: {node: '>=12.22.0'}
@@ -32586,7 +32747,7 @@ packages:
     dev: false
 
   /@teambit/lanes.hooks.use-lane-readme@0.0.149(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-RKSkeINQXYiw5iJ+WRsQjqt0OqM=}
+    resolution: {integrity: sha512-FXiqSbwlm7ENplkKxAADQGU3GWR1IVJ1kXtMGti2UXnHjUTu6wMrnLQnVohotGUPDU6xmYTbK81/VmpMEWUglA==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@apollo/client': ^3.6.0
@@ -32618,7 +32779,7 @@ packages:
     dev: false
 
   /@teambit/lanes.hooks.use-lanes@0.0.150(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-uE0g2+AYjmmO3bOuNdBrVBDfSOw=}
+    resolution: {integrity: sha512-upErHlkce2U8V0om858hzMnNWmRpi0KuGoMu+HIA355EesVbTlutrZqkRIOU8VQAn9Wlahy5ywPkTOmkY9Ur2Q==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@apollo/client': ^3.6.0
@@ -32664,6 +32825,30 @@ packages:
       - '@types/react'
     dev: false
 
+  /@teambit/lanes.hooks.use-lanes@0.0.255(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-/FZtxHJhloHDZN5xjQhL92T8yufEZR+W0yhSr1cRL8H8XKJBexh7TuDdGDjifuDSN5cmmxdoR+I+IUhtHYCB3Q==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      '@apollo/client': ^3.6.0
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@apollo/client': 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lane-id': 0.0.305(@teambit/legacy@node_modules+@teambit+legacy)
+      '@teambit/lanes.ui.models.lanes-model': 0.0.209(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.hooks.use-data-query': 0.0.505(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+      core-js: 3.13.0
+      lodash: 4.17.21
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@teambit/legacy'
+      - '@testing-library/react'
+      - '@types/react'
+    dev: false
+
   /@teambit/lanes.hooks.use-lanes@0.0.38(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-VAc8cwDyJeOiQcjhaQbwQYT+/0o=}
     engines: {node: '>=12.22.0'}
@@ -32690,6 +32875,22 @@ packages:
       '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lane-id': 0.0.305(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.models.lanes-model': 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+    transitivePeerDependencies:
+      - '@teambit/legacy'
+      - '@testing-library/react'
+      - '@types/react'
+      - react
+      - react-dom
+    dev: false
+
+  /@teambit/lanes.hooks.use-viewed-lane-from-url@0.0.217(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-m5TJrxV+Ar4cIWB70cuEw55KlRYq9WGfNefB+gclYKvZ4EeOPJc5cOQKrX//mGC+VuwBSwrbrbVT6vNmeh01lQ==}
+    engines: {node: '>=12.22.0'}
+    dependencies:
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lane-id': 0.0.305(@teambit/legacy@node_modules+@teambit+legacy)
+      '@teambit/lanes.ui.models.lanes-model': 0.0.209(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
     transitivePeerDependencies:
       - '@teambit/legacy'
@@ -33094,8 +33295,8 @@ packages:
       - '@types/react'
     dev: false
 
-  /@teambit/lanes.ui.menus.use-lanes-menu@0.0.208(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-34JGD4i0V65Hw+BOtv5SSOrKm9e88EeMKl4QkeQMAcbZfZhV/FJCqc/Rfj5vp00IS3gfjbgyt36sllxIzGXvGA==}
+  /@teambit/lanes.ui.menus.use-lanes-menu@0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-f1AjhcjQX8q2Lfih/zrJLZy1+eBKWkSdoAAtXJGzB0VxS55iVmZTa3/TJb1epGGWWf9yZLSLaQMTsJTXz+h3oA==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -33105,8 +33306,8 @@ packages:
       '@teambit/design.ui.styles.ellipsis': 0.0.357(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.copy-box': 4.1.16(react-dom@17.0.2)(react@17.0.2)
       '@teambit/evangelist.elements.icon': 1.0.2(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lane-id': 0.0.305(@teambit/legacy@node_modules+@teambit+legacy)
-      '@teambit/lanes.ui.models.lanes-model': 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lane-id': 0.0.304(@teambit/legacy@node_modules+@teambit+legacy)
+      '@teambit/lanes.ui.models.lanes-model': 0.0.206(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.bottom-link': 0.0.118(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.dropdown': 0.0.141(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
@@ -33119,7 +33320,7 @@ packages:
     dev: false
 
   /@teambit/lanes.ui.models.lanes-model@0.0.112(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-2Ogukm35n+YDM3SlwD8MSQWmaLM=}
+    resolution: {integrity: sha512-nzRgC/qbt8KTNcZ5SbitUhgFBHYIUbGztlfbkLbcBvwq6C7vcUv4bdE2CkCXVmYcYtMueDyCoTadvUQm3S2rgg==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -33136,6 +33337,25 @@ packages:
       - '@teambit/legacy'
     dev: false
 
+  /@teambit/lanes.ui.models.lanes-model@0.0.206(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-7HJ7TbwiDJFsNzkWwwf/7WSjFATbDXLn9AamG+5QEozyWXw1Jq6Y96ZsmELw3fNlG669YmpoIZL8ZnY7Z93DkQ==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-id': 0.0.427
+      '@teambit/lane-id': 0.0.304(@teambit/legacy@node_modules+@teambit+legacy)
+      core-js: 3.13.0
+      lodash: 4.17.21
+      path-to-regexp: 6.2.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@teambit/legacy'
+    dev: false
+
   /@teambit/lanes.ui.models.lanes-model@0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-IEcD97zpt4NQur/Yywr1TvYPkphatwy5IPHhZAzvf8QqurNqTsoDgiFentgfptAzUvGj7j+f4lP9o5i5EFqvVg==}
     engines: {node: '>=12.22.0'}
@@ -33143,8 +33363,27 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.427
+      '@teambit/lane-id': 0.0.305(@teambit/legacy@node_modules+@teambit+legacy)
+      core-js: 3.13.0
+      lodash: 4.17.21
+      path-to-regexp: 6.2.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@teambit/legacy'
+    dev: false
+
+  /@teambit/lanes.ui.models.lanes-model@0.0.209(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-McJE7/rdyxSzVCvbKOxlurzPB8gwHfeLlv/9R9I9a+qgZoASKCR8M+suvF3rFCaYxDlOoOWSdRE/F62U2b51fQ==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-id': 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lane-id': 0.0.305(@teambit/legacy@node_modules+@teambit+legacy)
       core-js: 3.13.0
       lodash: 4.17.21
@@ -33162,7 +33401,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.417
       '@teambit/scope.models.scope-model': 0.0.235(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
@@ -33180,7 +33419,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.427
       '@teambit/scope.models.scope-model': 0.0.397(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
@@ -33439,15 +33678,15 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
 
-  /@teambit/node.deps-detectors.detective-es6@0.0.1:
-    resolution: {integrity: sha1-nwO+/PmFgU12kOXA1FqJvDBnVqM=}
+  /@teambit/node.deps-detectors.detective-es6@0.0.3:
+    resolution: {integrity: sha512-ltv91oJ12fq2kbFMh0lRbpyt8GK+hhPUy9+BXvgbeVz9DoYk8xOimIogiBGthGNDxlZVWzynDLLYBa7+WwCA1A==}
     dependencies:
-      '@teambit/node.deps-detectors.parser-helper': 0.0.0-1ca3300f0fe89cba790beb930903095053a2a24a
-      node-source-walk: 5.0.2
+      '@teambit/node.deps-detectors.parser-helper': 0.0.3
+      node-source-walk: 6.0.2
     dev: false
 
-  /@teambit/node.deps-detectors.parser-helper@0.0.0-1ca3300f0fe89cba790beb930903095053a2a24a:
-    resolution: {integrity: sha1-UTUJiakxdUY1KZKMoaxTLTrRap8=}
+  /@teambit/node.deps-detectors.parser-helper@0.0.3:
+    resolution: {integrity: sha512-uQb31dMOcUk9b+Jd2A+yDPqEzyBJ1XwX1w+KVJf2uiBn1hJD1Qa0uSjnSRRgQfW5njJP3G1AVQy+uiVIl5FrvA==}
     dev: false
 
   /@teambit/node.generator.node-templates@1.0.8:
@@ -33494,7 +33733,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       lodash: 4.17.21
@@ -34070,15 +34309,17 @@ packages:
     engines: {node: '>=12.22.0'}
     dev: false
 
-  /@teambit/typescript.deps-detectors.detective-typescript@0.0.1(typescript@4.7.4):
-    resolution: {integrity: sha512-uGKlGslwOBoBIy9V3yUs1c7UVP10YxDtef4nqbIiz1vqpbvF+xpj3zCcmbyWcFROIrUl87gqvEmRw1h4XzNhxg==}
+  /@teambit/typescript.deps-detectors.detective-typescript@0.0.4(typescript@4.7.4):
+    resolution: {integrity: sha512-I1gg79uolvKf/D5nSjLXscAeWPpO4qBf/am/kw0q+/nIuF1rYcPEM8lmkrPhS5jORUZSlkonBVG/0+fTkxUEZw==}
+    peerDependencies:
+      typescript: 5.2.2
     dependencies:
-      '@teambit/node.deps-detectors.parser-helper': 0.0.0-1ca3300f0fe89cba790beb930903095053a2a24a
-      '@typescript-eslint/typescript-estree': 5.62.0(typescript@4.7.4)
-      node-source-walk: 5.0.2
+      '@teambit/node.deps-detectors.parser-helper': 0.0.3
+      '@typescript-eslint/typescript-estree': 6.10.0(typescript@4.7.4)
+      node-source-walk: 6.0.2
+      typescript: 4.7.4
     transitivePeerDependencies:
       - supports-color
-      - typescript
     dev: false
 
   /@teambit/typescript.deps-lookups.lookup-typescript@0.0.1:
@@ -34830,6 +35071,40 @@ packages:
       '@teambit/lanes.hooks.use-lanes': 0.0.254(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model': 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/scope.ui.hooks.scope-context': 0.0.448(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 17.0.2
+      react-animate-height: 2.0.23(react-dom@17.0.2)(react@17.0.2)
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@apollo/client'
+      - '@teambit/legacy'
+      - '@testing-library/react'
+      - '@types/react'
+    dev: false
+
+  /@teambit/ui-foundation.ui.side-bar@0.0.869(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-X8r9d2jZhpE4YpPA2CssGluFxEdTIKn5b+N4814U/nY7S5UJvVUR/f5o8VDRZjNEPsroJWBCQcQIZvXHFeehMA==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.graph.tree.indent': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.graph.tree.inflate-paths': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.graph.tree.recursive-tree': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.graph.tree.tree-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.theme.colors': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-id': 1.1.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component.modules.component-url': 0.0.162(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component.ui.deprecation-icon': 0.0.509(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.tree': 0.0.15(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/envs.ui.env-icon': 0.0.500(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/evangelist.elements.icon': 1.0.2(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.hooks.use-lanes': 0.0.255(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.models.lanes-model': 0.0.209(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -36280,6 +36555,11 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: false
 
+  /@typescript-eslint/types@6.10.0:
+    resolution: {integrity: sha512-36Fq1PWh9dusgo3vH7qmQAj5/AZqARky1Wi6WpINxB6SkQdY5vQoT2/7rW7uBIsPDcvvGCLi4r10p0OJ7ITAeg==}
+    engines: {node: ^16.0.0 || >=18.0.0}
+    dev: false
+
   /@typescript-eslint/typescript-estree@3.10.1(typescript@3.9.10):
     resolution: {integrity: sha512-QbcXOuq6WYvnB3XPsZpIwztBoquEYLXh2MtwVU+kO8jgYCiv4G5xrSP/1wg4tkvrEE+esZVquIPX/dxPlePk1w==}
     engines: {node: ^10.12.0 || >=12.0.0}
@@ -36366,6 +36646,27 @@ packages:
       - supports-color
     dev: false
 
+  /@typescript-eslint/typescript-estree@6.10.0(typescript@4.7.4):
+    resolution: {integrity: sha512-ek0Eyuy6P15LJVeghbWhSrBCj/vJpPXXR+EpaRZqou7achUWL8IdYnMSC5WHAeTWswYQuP2hAZgij/bC9fanBg==}
+    engines: {node: ^16.0.0 || >=18.0.0}
+    peerDependencies:
+      typescript: '*'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+    dependencies:
+      '@typescript-eslint/types': 6.10.0
+      '@typescript-eslint/visitor-keys': 6.10.0
+      debug: 4.3.4(supports-color@9.4.0)
+      globby: 11.1.0
+      is-glob: 4.0.3
+      semver: 7.5.4
+      ts-api-utils: 1.0.3(typescript@4.7.4)
+      typescript: 4.7.4
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
   /@typescript-eslint/utils@5.62.0(eslint@7.32.0)(typescript@4.7.4):
     resolution: {integrity: sha512-n8oxjeb5aIbPFEtmQxQYOLI0i9n5ySBEY/ZEHHZqKQSFnxio1rv6dthascc9dLuwrL0RC5mPCxB7vnAVGAYWAQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
@@ -36414,6 +36715,14 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
       '@typescript-eslint/types': 5.62.0
+      eslint-visitor-keys: 3.4.3
+    dev: false
+
+  /@typescript-eslint/visitor-keys@6.10.0:
+    resolution: {integrity: sha512-xMGluxQIEtOM7bqFCo+rCMh5fqI+ZxV5RUUOa29iVPz1OgCZrtc7rFnz5cLUazlkPKYqX+75iuDq7m0HQ48nCg==}
+    engines: {node: ^16.0.0 || >=18.0.0}
+    dependencies:
+      '@typescript-eslint/types': 6.10.0
       eslint-visitor-keys: 3.4.3
     dev: false
 
@@ -48748,13 +49057,6 @@ packages:
       '@babel/parser': 7.23.0
     dev: false
 
-  /node-source-walk@5.0.2:
-    resolution: {integrity: sha512-Y4jr/8SRS5hzEdZ7SGuvZGwfORvNsSsNRwDXx5WisiqzsVfeftDvRgfeqWNgZvWSJbgubTRVRYBzK6UO+ErqjA==}
-    engines: {node: '>=12'}
-    dependencies:
-      '@babel/parser': 7.23.0
-    dev: false
-
   /node-source-walk@6.0.2:
     resolution: {integrity: sha512-jn9vOIK/nfqoFCcpK89/VCVaLg1IHE6UVfDOzvqmANaJ/rWCTEdH8RZ1V278nv2jr36BJdyQXIAavBLXpzdlag==}
     engines: {node: '>=14'}
@@ -54795,6 +55097,15 @@ packages:
       utf8-byte-length: 1.0.4
     dev: false
 
+  /ts-api-utils@1.0.3(typescript@4.7.4):
+    resolution: {integrity: sha512-wNMeqtMz5NtwpT/UZGY5alT+VoKdSsOOP/kqHFcUW1P/VRhH2wJ48+DN2WwUliNbQ976ETwDL0Ifd2VVvgonvg==}
+    engines: {node: '>=16.13.0'}
+    peerDependencies:
+      typescript: '>=4.2.0'
+    dependencies:
+      typescript: 4.7.4
+    dev: false
+
   /ts-dedent@2.2.0:
     resolution: {integrity: sha512-q5W7tVM71e2xjHZTlgfTDoPF/SmqKG5hddq9SzR49CH2hayqRKJtQ4mtRlSxKaJlR/+9rEM+mnBHf7I2/BQcpQ==}
     engines: {node: '>=6.10'}
@@ -57102,6 +57413,37 @@ packages:
       - '@testing-library/react'
       - '@types/react'
       - monaco-editor
+    dev: false
+
+  file:components/ui/component-drawer(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {directory: components/ui/component-drawer, type: directory}
+    id: file:components/ui/component-drawer
+    name: '@teambit/component.ui.component-drawer'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-ui.utils.composer': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component.ui.component-filters.component-filter-context': 0.0.214(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.skeletons.sidebar-loader': 0.0.4(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.styles.ellipsis': 0.0.357(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.styles.muted-italic': 0.0.44(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.tree': 0.0.15(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/harmony': 0.4.6
+      '@teambit/lanes.hooks.use-lanes': 0.0.254(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.models.lanes-model': 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.side-bar': 0.0.869(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.tree.drawer': 0.0.517(react-dom@17.0.2)(react@17.0.2)
+      classnames: 2.2.6
+      core-js: 3.13.0
+      lodash.flatten: 4.4.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@apollo/client'
+      - '@teambit/legacy'
+      - '@testing-library/react'
+      - '@types/react'
     dev: false
 
   file:components/ui/hooks/scope-context(react-dom@17.0.2)(react@17.0.2):
@@ -59700,12 +60042,12 @@ packages:
       '@teambit/harmony': 0.4.6
       '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.hooks.use-lanes': 0.0.254(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.hooks.use-viewed-lane-from-url': 0.0.216(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.hooks.use-viewed-lane-from-url': 0.0.217(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare': 0.0.170(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare-page': 0.0.152(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/lanes.ui.lane-overview': 0.0.210(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/lanes.ui.menus.lanes-overview-menu': 0.0.10(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
-      '@teambit/lanes.ui.menus.use-lanes-menu': 0.0.208(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.menus.use-lanes-menu': 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model': 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.navigation.lane-switcher': 0.0.213(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/legacy-bit-id': 1.0.4(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -59804,7 +60146,7 @@ packages:
       react: 17.0.2
     dependencies:
       '@mdx-js/mdx': 1.6.21
-      '@teambit/node.deps-detectors.detective-es6': 0.0.1
+      '@teambit/node.deps-detectors.detective-es6': 0.0.3
       react: 17.0.2
       remark-admonitions: 1.2.1
       remark-frontmatter: 2.0.0
@@ -60662,7 +61004,7 @@ packages:
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.502(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.menu': 0.0.502(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
-      '@teambit/ui-foundation.ui.side-bar': 0.0.868(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.side-bar': 0.0.869(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.top-bar': 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.drawer': 0.0.517(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.dropdown': 0.0.141(react-dom@17.0.2)(react@17.0.2)
@@ -61492,7 +61834,7 @@ packages:
       '@teambit/ui-foundation.ui.menu': 0.0.502(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.notifications.notification-context': 0.0.501(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
-      '@teambit/ui-foundation.ui.side-bar': 0.0.868(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.side-bar': 0.0.869(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.top-bar': 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.drawer': 0.0.517(react-dom@17.0.2)(react@17.0.2)
       '@teambit/workspace.ui.empty-workspace': 0.0.508(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
