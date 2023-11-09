@@ -50,7 +50,7 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
    * returns a component tester.
    */
   getTester(jestConfigPath: string, jestModulePath?: string): Tester {
-    const config = jestConfigPath || require.resolve('@teambit/node/jest/jest.config');
+    const config = jestConfigPath || require.resolve('./jest/jest.config');
     return this.reactEnv.getCjsJestTester(config, jestModulePath);
   }
 

@@ -153,7 +153,6 @@
         "@teambit/component.ui.component-compare.utils.sort-tabs": "^0.0.101",
         "@teambit/component.ui.component-compare.version-picker": "^0.0.170",
         "@teambit/component.ui.component-deprecated": "^0.0.39",
-        "@teambit/component.ui.component-drawer": "^0.0.351",
         "@teambit/component.ui.component-filters.component-filter-context": "^0.0.214",
         "@teambit/component.ui.component-filters.deprecate-filter": "^0.0.214",
         "@teambit/component.ui.component-filters.env-filter": "^0.0.220",
@@ -271,10 +270,10 @@
         "@teambit/html.generator.html-templates": "^1.0.8",
         "@teambit/html.modules.inject-html-element": "0.0.4",
         "@teambit/html.modules.render-template": "0.0.104",
-        "@teambit/lanes.hooks.use-lane-components": "^0.0.253",
-        "@teambit/lanes.hooks.use-lane-readme": "^0.0.253",
-        "@teambit/lanes.hooks.use-lanes": "^0.0.254",
-        "@teambit/lanes.hooks.use-viewed-lane-from-url": "^0.0.216",
+        "@teambit/lanes.hooks.use-lane-components": "0.0.253",
+        "@teambit/lanes.hooks.use-lane-readme": "0.0.253",
+        "@teambit/lanes.hooks.use-lanes": "0.0.254",
+        "@teambit/lanes.hooks.use-viewed-lane-from-url": "0.0.217",
         "@teambit/lanes.ui.compare.lane-compare": "^0.0.170",
         "@teambit/lanes.ui.compare.lane-compare-drawer": "^0.0.149",
         "@teambit/lanes.ui.compare.lane-compare-hooks.use-lane-diff-status": "^0.0.143",
@@ -289,8 +288,8 @@
         "@teambit/lanes.ui.lane-overview": "^0.0.210",
         "@teambit/lanes.ui.lane-readme": "0.0.116",
         "@teambit/lanes.ui.menus.lanes-overview-menu": "^0.0.10",
-        "@teambit/lanes.ui.menus.use-lanes-menu": "^0.0.208",
-        "@teambit/lanes.ui.models.lanes-model": "^0.0.207",
+        "@teambit/lanes.ui.menus.use-lanes-menu": "0.0.207",
+        "@teambit/lanes.ui.models.lanes-model": "0.0.207",
         "@teambit/lanes.ui.navigation.lane-switcher": "^0.0.213",
         "@teambit/lanes.ui.readme": "^1.0.10",
         "@teambit/lanes.ui.viewed-lane": "0.0.37",
@@ -344,7 +343,7 @@
         "@teambit/ui-foundation.ui.react-router.slot-router": "^0.0.506",
         "@teambit/ui-foundation.ui.react-router.use-query": "^0.0.501",
         "@teambit/ui-foundation.ui.rendering.html": "^0.0.85",
-        "@teambit/ui-foundation.ui.side-bar": "^0.0.868",
+        "@teambit/ui-foundation.ui.side-bar": "^0.0.869",
         "@teambit/ui-foundation.ui.top-bar": "^0.0.514",
         "@teambit/ui-foundation.ui.tree.drawer": "^0.0.517",
         "@teambit/ui-foundation.ui.tree.file-tree": "^0.0.522",
@@ -545,7 +544,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.594",
+        "@teambit/legacy": "1.0.595",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
@@ -639,7 +638,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.594"
+            "@teambit/legacy": "1.0.595"
           }
         }
       },
@@ -903,7 +902,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.594"
+            "@teambit/legacy": "1.0.595"
           }
         }
       }
@@ -993,7 +992,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.594",
+            "@teambit/legacy": "1.0.595",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
@@ -1135,7 +1134,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.594"
+            "@teambit/legacy": "1.0.595"
           }
         }
       }
