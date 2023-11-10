@@ -915,8 +915,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/node.deps-detectors.detective-es6':
-        specifier: ^0.0.3
-        version: 0.0.3
+        specifier: ^0.0.4
+        version: 0.0.4
       '@teambit/node.generator.node-templates':
         specifier: ^1.0.8
         version: 1.0.8
@@ -981,8 +981,8 @@ importers:
         specifier: ^0.0.554
         version: 0.0.554
       '@teambit/typescript.deps-detectors.detective-typescript':
-        specifier: ^0.0.4
-        version: 0.0.4(typescript@4.7.4)
+        specifier: ^0.0.5
+        version: 0.0.5(typescript@4.7.4)
       '@teambit/typescript.deps-lookups.lookup-typescript':
         specifier: ^0.0.1
         version: 0.0.1
@@ -16312,8 +16312,8 @@ importers:
         specifier: 1.6.21
         version: 1.6.21
       '@teambit/node.deps-detectors.detective-es6':
-        specifier: ^0.0.3
-        version: 0.0.3
+        specifier: ^0.0.4
+        version: 0.0.4
       react:
         specifier: 17.0.2
         version: 17.0.2
@@ -33678,15 +33678,15 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
 
-  /@teambit/node.deps-detectors.detective-es6@0.0.3:
-    resolution: {integrity: sha512-ltv91oJ12fq2kbFMh0lRbpyt8GK+hhPUy9+BXvgbeVz9DoYk8xOimIogiBGthGNDxlZVWzynDLLYBa7+WwCA1A==}
+  /@teambit/node.deps-detectors.detective-es6@0.0.4:
+    resolution: {integrity: sha512-af7Qxrqe27JJFKt3DMXxH2Op1/Chns1szNsYprbrxaOM+hu4cV1POvIg03VvZfzuEdzCmpvBOzRGOhGxZ33/CA==}
     dependencies:
-      '@teambit/node.deps-detectors.parser-helper': 0.0.3
+      '@teambit/node.deps-detectors.parser-helper': 0.0.4
       node-source-walk: 6.0.2
     dev: false
 
-  /@teambit/node.deps-detectors.parser-helper@0.0.3:
-    resolution: {integrity: sha512-uQb31dMOcUk9b+Jd2A+yDPqEzyBJ1XwX1w+KVJf2uiBn1hJD1Qa0uSjnSRRgQfW5njJP3G1AVQy+uiVIl5FrvA==}
+  /@teambit/node.deps-detectors.parser-helper@0.0.4:
+    resolution: {integrity: sha512-FeVPpC8Zxz7Ko6Em1hpXGsfo1zRdcs2Tkht5i2k5biBvmYBTwqFzrfbvZBnAoxq0p+lA/Ct7IgZ00h01/lUHIQ==}
     dev: false
 
   /@teambit/node.generator.node-templates@1.0.8:
@@ -34309,12 +34309,12 @@ packages:
     engines: {node: '>=12.22.0'}
     dev: false
 
-  /@teambit/typescript.deps-detectors.detective-typescript@0.0.4(typescript@4.7.4):
-    resolution: {integrity: sha512-I1gg79uolvKf/D5nSjLXscAeWPpO4qBf/am/kw0q+/nIuF1rYcPEM8lmkrPhS5jORUZSlkonBVG/0+fTkxUEZw==}
+  /@teambit/typescript.deps-detectors.detective-typescript@0.0.5(typescript@4.7.4):
+    resolution: {integrity: sha512-y9h7dqQM+PyAZ6/u/ppyPFQ99sS2fIOe/Maf5ctpFYus9yssk2FKFDcBWVFWwtsbneIxL1JaxzrzqDfNUBWtvA==}
     peerDependencies:
       typescript: 5.2.2
     dependencies:
-      '@teambit/node.deps-detectors.parser-helper': 0.0.3
+      '@teambit/node.deps-detectors.parser-helper': 0.0.4
       '@typescript-eslint/typescript-estree': 6.10.0(typescript@4.7.4)
       node-source-walk: 6.0.2
       typescript: 4.7.4
@@ -37124,7 +37124,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.2
       '@yarnpkg/fslib': 3.0.1
-      '@yarnpkg/libzip': 3.0.0(@yarnpkg/fslib@3.0.1)
+      '@yarnpkg/libzip': 3.0.0
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -37155,7 +37155,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.2
       '@yarnpkg/fslib': 3.0.1
-      '@yarnpkg/libzip': 3.0.0(@yarnpkg/fslib@3.0.1)
+      '@yarnpkg/libzip': 3.0.0
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -37228,11 +37228,9 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/libzip@3.0.0(@yarnpkg/fslib@3.0.1):
+  /@yarnpkg/libzip@3.0.0:
     resolution: {integrity: sha512-31NR8oHG/NLnSEqQOy48tnjNHgYPujOtammmvoItNAfsWAmaOqtDimwPRRPXGTNxC2SYYBYrk6pli5yti/Qmfw==}
     engines: {node: '>=18.12.0'}
-    peerDependencies:
-      '@yarnpkg/fslib': ^3.0.0
     dependencies:
       '@types/emscripten': 1.39.10
       '@yarnpkg/fslib': 3.0.1
@@ -60146,7 +60144,7 @@ packages:
       react: 17.0.2
     dependencies:
       '@mdx-js/mdx': 1.6.21
-      '@teambit/node.deps-detectors.detective-es6': 0.0.3
+      '@teambit/node.deps-detectors.detective-es6': 0.0.4
       react: 17.0.2
       remark-admonitions: 1.2.1
       remark-frontmatter: 2.0.0
