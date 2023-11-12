@@ -659,7 +659,7 @@ jobs:
           command: >
             cd bit-${BIT_VERSION}-install &&
             npm init -y &&
-            yarn set version 3.6.4 &&
+            yarn set version 4.0.1 &&
             yarn config set nodeLinker node-modules &&
             yarn config set npmRegistryServer https://node-registry.bit.cloud &&
             yarn config set supportedArchitectures --json '{"os":["linux"],"cpu":["x64"]}' &&
@@ -764,7 +764,7 @@ jobs:
     steps:
       # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
       - windows_set_node_version
-      - run: corepack enable; corepack prepare yarn@3.6.4 --activate
+      - run: corepack enable; corepack prepare yarn@4.0.1 --activate
       - run: 'yarn -v'
       - set_bit_cloud_registry
       - run:
@@ -779,7 +779,7 @@ jobs:
       - run: 'node -v'
       - run:
           name: install bit
-          command: cd bundle; npm init -y; corepack enable; corepack prepare yarn@3.6.4 --activate; yarn config set nodeLinker node-modules; yarn config set npmRegistryServer https://node-registry.bit.cloud; yarn add @teambit/bit
+          command: cd bundle; npm init -y; corepack enable; corepack prepare yarn@4.0.1 --activate; yarn config set nodeLinker node-modules; yarn config set npmRegistryServer https://node-registry.bit.cloud; yarn add @teambit/bit
       - run:
           name: remove leftovers
           command: Remove-Item .\bundle\package.json; Remove-Item .\bundle\yarn.lock
@@ -1209,7 +1209,7 @@ jobs:
       - attach_workspace:
           at: .
       - run: $Env:Path
-      - run: corepack enable && corepack prepare yarn@3.6.4 --activate
+      - run: corepack enable && corepack prepare yarn@4.0.1 --activate
       - run: 'npm -v'
       # -
       #   run:
