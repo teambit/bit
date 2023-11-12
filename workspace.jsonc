@@ -443,6 +443,7 @@
         "fuse.js": "6.6.2",
         "get-tsconfig": "4.2.0",
         "graceful-fs": "4.2.10",
+        "graphql-disable-introspection": "^1.2.0",
         "graphql-subscriptions": "1.2.0",
         "graphql-tag": "2.12.1",
         "graphql-type-json": "0.3.2",
