@@ -1568,24 +1568,20 @@ workflows:
   #           branches:
   #             only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  # bvm_bundle_debug:
-  #   jobs:
-  #     - checkout_code:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-yarn3
-  #     - get_linux_arm64_packages:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-yarn3
-  #     - bundle_version_posix:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-yarn3
-  #     - bundle_version_windows:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-yarn3
+  bvm_bundle_debug:
+    jobs:
+      - checkout_code:
+          filters:
+            branches:
+              only: ci-upgrade-yarn
+      - bundle_version_posix:
+          filters:
+            branches:
+              only: ci-upgrade-yarn
+      - bundle_version_windows:
+          filters:
+            branches:
+              only: ci-upgrade-yarn
   #     - harmony_publish_to_gcloud:
   #         filters:
   #           branches:
