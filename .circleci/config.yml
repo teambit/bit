@@ -1555,18 +1555,18 @@ workflows:
             - harmony_deploy_approval_job
             - docker_build_node_20
   # uncomment to debug symphony_docker_build
-  symphony_docker_build_workflow:
-    jobs:
-      - checkout_code:
-          filters:
-            branches:
-              only: circle-docker-symphony
-      - symphony_docker_build:
-          filters:
-            branches:
-              only: circle-docker-symphony
-          requires:
-            - checkout_code
+  # symphony_docker_build_workflow:
+  #   jobs:
+  #     - checkout_code:
+  #         filters:
+  #           branches:
+  #             only: circle-docker-symphony
+  #     - symphony_docker_build:
+  #         filters:
+  #           branches:
+  #             only: circle-docker-symphony
+  #         requires:
+  #           - checkout_code
 
   # uncomment to update esbuild arm64 cache
   # get_arm64_workflow_packages:
