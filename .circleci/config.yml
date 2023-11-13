@@ -757,7 +757,7 @@ jobs:
           name: install bit for Windows x64
           command: >
             cd bit-${BIT_VERSION}-install &&
-            echo "prefer-symlinked-executables=false" >> .npmrc && # We are building Bit for Windows, so no symlinks should be created
+            echo "prefer-symlinked-executables=false" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values win32 --values win32 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm install
