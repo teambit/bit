@@ -1,7 +1,7 @@
 import { Component, ComponentFS, Config, InvalidComponent, State, TagMap } from '@teambit/component';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import mapSeries from 'p-map-series';
-import { compact, fromPairs, groupBy, uniq } from 'lodash';
+import { compact, fromPairs, groupBy, pick, uniq } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
@@ -117,7 +117,7 @@ export class WorkspaceComponentLoader {
 
     const loadOrCached: { idsToLoad: ComponentID[]; fromCache: Component[] } = { idsToLoad: [], fromCache: [] };
     idsWithoutEmpty.forEach((id) => {
-      const componentFromCache = this.getFromCache(id, loadOpts);
+      const componentFromCache = this.getFromCache(id, loadOptsWithDefaults);
       if (componentFromCache) {
         loadOrCached.fromCache.push(componentFromCache);
       } else {
@@ -689,7 +689,12 @@ export class WorkspaceComponentLoader {
     const bitIdWithVersion: ComponentID = this.resolveVersion(componentId);
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
     const cacheKey = createComponentCacheKey(id, loadOpts);
-    const fromCache = this.componentsCache.get(cacheKey);
+    // If we try to look for the cache without load extensions/ without execute load slot
+    // but there is an entry after the load, we want to use it as well.
+    // as we want the component, so if we already loaded it with everything, it's fine.
+    // this sometime relevant for cases with tiny cache size (during tag)
+    const cacheKeyWithTrueLoadOpts = createComponentCacheKey(id, { loadExtensions: true, executeLoadSlot: true });
+    const fromCache = this.componentsCache.get(cacheKey) || this.componentsCache.get(cacheKeyWithTrueLoadOpts);
     if (fromCache && fromCache.id.isEqual(id)) {
       return fromCache;
     }
@@ -795,7 +800,8 @@ export class WorkspaceComponentLoader {
 }
 
 function createComponentCacheKey(id: ComponentID, loadOpts?: ComponentLoadOptions): string {
-  return `${id.toString()}:${JSON.stringify(sortKeys(loadOpts ?? {}))}`;
+  const relevantOpts = pick(loadOpts, ['loadExtensions', 'executeLoadSlot']);
+  return `${id.toString()}:${JSON.stringify(sortKeys(relevantOpts ?? {}))}`;
 }
 
 function sortKeys(obj: Object) {
