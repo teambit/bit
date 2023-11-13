@@ -152,7 +152,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
     const snapExplanation = `\n(use "bit export" to push these components to a remote")
-(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)\n`;
+(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)`;
 
     const compInBold = (id: ComponentID) => {
       const version = id.hasVersion() ? `@${id.version}` : '';
@@ -181,12 +181,12 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     const laneStr = laneName ? ` on "${laneName}" lane` : '';
 
     return (
-      warningsOutput +
-      chalk.green(`${snappedComponents.length + autoTaggedCount} component(s) snapped${laneStr}`) +
-      snapExplanation +
       outputIfExists('new components', 'first version for components', addedComponents) +
       outputIfExists('changed components', 'components that got a version bump', changedComponents) +
-      outputIdsIfExists('removed components', removedComponents)
+      outputIdsIfExists('removed components', removedComponents) +
+      warningsOutput +
+      chalk.green(`\n${snappedComponents.length + autoTaggedCount} component(s) snapped${laneStr}`) +
+      snapExplanation
     );
   }
 }
