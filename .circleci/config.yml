@@ -1548,16 +1548,16 @@ workflows:
   #           branches:
   #             only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  bvm_bundle_debug:
-    jobs:
-      - checkout_code:
-          filters:
-            branches:
-              only: release-with-pnpm
-      - bundle_version:
-          filters:
-            branches:
-              only: release-with-pnpm
+  # bvm_bundle_debug:
+  #   jobs:
+  #     - checkout_code:
+  #         filters:
+  #           branches:
+  #             only: release-with-pnpm
+  #     - bundle_version:
+  #         filters:
+  #           branches:
+  #             only: release-with-pnpm
   #     - harmony_publish_to_gcloud:
   #         filters:
   #           branches:
