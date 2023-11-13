@@ -21,7 +21,7 @@ export default function createSymlinkOrCopy(
 ) {
   if (skipIfSymlinkValid && fs.existsSync(destPath)) {
     const realDestination = fs.realpathSync(destPath);
-    if (realDestination === srcPath) {
+    if (realDestination === srcPath || linkPointsToPath(destPath, srcPath)) {
       logger.trace(`createSymlinkOrCopy, skip creating symlink, it already exists on ${destPath}`);
       return;
     }
@@ -119,4 +119,14 @@ Original error: ${err}`);
       }
     }
   }
+}
+
+function linkPointsToPath(linkPath: string, expectedPath: string) {
+  let actualPath!: string;
+  try {
+    actualPath = fs.readlinkSync(linkPath);
+  } catch {
+    return false;
+  }
+  return actualPath === expectedPath;
 }

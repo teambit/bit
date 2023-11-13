@@ -263,6 +263,33 @@ describe('merge config scenarios', function () {
       });
     });
   });
+  describe('diverge with different dependencies config when "other" adds a package (current === base)', () => {
+    let mainBeforeDiverge: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.dependenciesSet('comp1', 'lodash@3.3.1');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      mainBeforeDiverge = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.createLane();
+      helper.command.dependenciesSet('comp1', 'ramda@0.0.20');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.command.mergeLane('dev', '--no-snap -x --no-squash');
+    });
+    // previously, it was ignoring the previous config and only adding "ramda".
+    it('should not remove the packages it had previously via deps set', () => {
+      const dependencies = helper.command.getCompDepsIdsFromData('comp1');
+      expect(dependencies).to.include('lodash');
+    });
+  });
   describe('diverge with different auto-detected dependencies config', () => {
     let mainBeforeDiverge: string;
     let beforeConfigResolved: string;
