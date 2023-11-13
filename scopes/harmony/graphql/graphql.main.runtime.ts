@@ -1,4 +1,5 @@
 import { mergeSchemas } from '@graphql-tools/schema';
+import NoIntrospection from 'graphql-disable-introspection';
 import { GraphQLModule } from '@graphql-modules/core';
 import { MainRuntime } from '@teambit/cli';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
@@ -38,6 +39,7 @@ export type GraphQLServerOptions = {
   schemaSlot?: SchemaSlot;
   app?: Express;
   graphiql?: boolean;
+  disableIntrospection?: boolean;
   remoteSchemas?: GraphQLServer[];
   subscriptionsPortRange?: number[];
   onWsConnect?: Function;
@@ -103,7 +105,7 @@ export class GraphqlMain {
   }
 
   async createServer(options: GraphQLServerOptions) {
-    const { graphiql = true } = options;
+    const { graphiql = true, disableIntrospection } = options;
     const localSchema = this.createRootModule(options.schemaSlot);
     const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
     const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
@@ -140,6 +142,7 @@ export class GraphqlMain {
         schema,
         rootValue: request,
         graphiql,
+        validationRules: disableIntrospection ? [NoIntrospection] : undefined,
       }))
     );
 
