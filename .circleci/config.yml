@@ -1560,13 +1560,14 @@ workflows:
       - checkout_code:
           filters:
             branches:
-              only: origin/circle-docker-symphony
+              only: circle-docker-symphony
       - symphony_docker_build:
           filters:
             branches:
-              only: origin/circle-docker-symphony
+              only: circle-docker-symphony
           requires:
             - checkout_code
+
   # uncomment to update esbuild arm64 cache
   # get_arm64_workflow_packages:
   #   jobs:
