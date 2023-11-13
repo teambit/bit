@@ -137,7 +137,7 @@
         "@teambit/component.ui.component-compare.compare-aspects.context": "^0.0.11",
         "@teambit/component.ui.component-compare.compare-aspects.hooks.use-compare-aspects": "^0.0.117",
         "@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model": "^0.0.10",
-        "@teambit/component.ui.component-compare.component-compare": "^0.0.170",
+        "@teambit/component.ui.component-compare.component-compare": "^0.0.171",
         "@teambit/component.ui.component-compare.context": "^0.0.116",
         "@teambit/component.ui.component-compare.hooks.use-component-compare": "^0.0.113",
         "@teambit/component.ui.component-compare.hooks.use-component-compare-url": "^0.0.8",
