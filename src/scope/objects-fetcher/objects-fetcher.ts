@@ -61,7 +61,7 @@ export class ObjectFetcher {
     const scopes = Object.keys(idsGrouped);
     logger.debug(
       `[-] Running fetch on ${scopes.length} remote(s), to get ${this.ids.length} id(s), lane: ${
-        this.lane?.name || 'n/a'
+        this.lane?.id() || 'n/a'
       }, reason: ${this.reason}, with the following options`,
       this.fetchOptions
     );
@@ -98,8 +98,8 @@ ${failedScopesErr.join('\n')}`);
     loader.start(`successfully imported ${imported}${reasonStr}`);
     if (totalComponents) {
       await this.mergeAndPersistComponents(multipleComponentsMerger);
-      logger.debug(`[-] fetchFromRemoteAndWrite, completed writing ${totalComponents} components`);
     }
+    logger.debug(`[-] fetchFromRemoteAndWrite, completed writing ${totalComponents} components`);
 
     return objectsQueue.addedHashes;
   }

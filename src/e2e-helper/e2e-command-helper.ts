@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import chalk from 'chalk';
+import execa from 'execa';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import childProcess, { StdioOptions } from 'child_process';
 import rightpad from 'pad-right';
@@ -64,6 +65,36 @@ export default class CommandHelper {
       : childProcess.execSync(cmdWithFeatures, { cwd, stdio, maxBuffer: EXEC_SYNC_MAX_BUFFER });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
+  }
+
+  async runWithKill(
+    cmd: string,
+    cwd: string = this.scopes.localPath,
+    timeout = 10000,
+    overrideFeatures?: string
+  ): Promise<string> {
+    if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
+    const isBitCommand = cmd.startsWith('bit ');
+    if (isBitCommand) cmd = cmd.replace('bit', this.bitBin);
+    const featuresTogglePrefix = isBitCommand ? this._getFeatureToggleCmdPrefix(overrideFeatures) : '';
+    const cmdWithFeatures = featuresTogglePrefix + cmd;
+    if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmdWithFeatures); // eslint-disable-line no-console
+    const subprocess = execa(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, shell: true });
+    subprocess.stdout?.pipe(process.stdout);
+    setTimeout(() => {
+      subprocess.cancel();
+    }, timeout);
+
+    try {
+      const { stdout } = await subprocess;
+      return stdout;
+    } catch (error: any) {
+      if (error.isCanceled) {
+        // This is fine, it was canceled by us, we want to see the outputs
+        return error.stdout;
+      }
+      return error.stderr;
+    }
   }
 
   _getFeatureToggleCmdPrefix(overrideFeatures?: string): string {
@@ -689,6 +720,14 @@ export default class CommandHelper {
     return this.runCmd(`bit _tag '${JSON.stringify(data)}' ${options}`, cwd);
   }
   snapFromScope(cwd: string, data: Record<string, any>, options = '') {
+    data.forEach((dataItem) => {
+      if (!dataItem.files) return;
+      dataItem.files.forEach((file) => {
+        if (file.content) {
+          file.content = Buffer.from(file.content).toString('base64');
+        }
+      });
+    });
     return this.runCmd(`bit _snap '${JSON.stringify(data)}' ${options}`, cwd);
   }
   diff(id = '') {
