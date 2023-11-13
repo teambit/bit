@@ -250,8 +250,8 @@ export class DependenciesMain {
   }
 
   async usageDeep(depName: string): Promise<string | undefined> {
-    if (this.dependencyResolver.getPackageManager()?.findUsages && !isComponentId(depName)) {
-      return this.dependencyResolver.getPackageManager()!.findUsages!(depName, { lockfileDir: this.workspace.path });
+    if (!isComponentId(depName)) {
+      return this.dependencyResolver.getPackageManager()?.findUsages?.(depName, { lockfileDir: this.workspace.path });
     }
     return undefined;
   }

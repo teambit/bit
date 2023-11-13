@@ -1,4 +1,3 @@
-import path from 'path';
 import {
   DependencyResolverMain,
   extendWithComponentsFromDir,
@@ -235,7 +234,7 @@ export class PnpmPackageManager implements PackageManager {
     const lockfile = await readWantedLockfile(opts.lockfileDir, { ignoreIncompatible: false });
     const projectPaths = Object.keys(lockfile?.importers ?? {})
       .filter((id) => !id.startsWith('node_modules/.bit_roots'))
-      .map((id) => path.join(opts.lockfileDir, id))
+      .map((id) => join(opts.lockfileDir, id));
     const results = Object.entries(
       await buildDependenciesHierarchy(projectPaths, {
         depth: Infinity,
