@@ -665,7 +665,7 @@ jobs:
           name: install pnpm
           command: >
             npm config set prefix '~/.npm-global' &&
-            npm install --global pnpm@8.10.2 &&
+            npm install --global pnpm@8.10.4 &&
             echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
       - run:
           name: install bit for Linux x64
