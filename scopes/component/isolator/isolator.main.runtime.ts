@@ -66,7 +66,7 @@ export type ListResults = {
   capsules: string[];
 };
 
-export type CapsuleTransferFn = (sourceDir: string, targetDir: string) => void;
+export type CapsuleTransferFn = (sourceDir: string, targetDir: string) => Promise<void>;
 
 export type CapsuleTransferSlot = SlotRegistry<CapsuleTransferFn>;
 
@@ -435,10 +435,14 @@ export class IsolatorMain {
         await fs.remove(targetLockFile);
         return;
       }
-      this.logger.console(`moving lock file from ${sourceLockFile} to ${targetDir}`);
+      this.logger.debug(`moving lock file from ${sourceLockFile} to ${targetDir}`);
       const mvFunc = this.getCapsuleTransferFn();
-      await mvFunc(sourceLockFile, path.join(targetDir, 'pnpm-lock.yaml'));
-      this._movedLockFiles.add(sourceLockFile);
+      try {
+        await mvFunc(sourceLockFile, path.join(targetDir, 'pnpm-lock.yaml'));
+        this._movedLockFiles.add(sourceLockFile);
+      } catch (err) {
+        this.logger.error(`failed moving lock file from ${sourceLockFile} to ${targetDir}`, err);
+      }
     });
     await Promise.all(promises);
   }
@@ -543,12 +547,12 @@ export class IsolatorMain {
       return fs.existsSync(capsuleDir) && fs.existsSync(readyFilePath);
     });
     if (allCapsulesExists) {
-      this.logger.console(
+      this.logger.debug(
         `All required capsules already exists and valid in the real (cached) location: ${realCapsulesDir}`
       );
       return false;
     }
-    this.logger.console(
+    this.logger.debug(
       `Missing required capsules in the real (cached) location: ${realCapsulesDir}, using dated (temp) dir`
     );
     return true;
@@ -928,7 +932,13 @@ export class IsolatorMain {
   }
 
   private getCapsuleTransferFn(): CapsuleTransferFn {
-    return this.capsuleTransferSlot.values()[0] || fs.move;
+    return this.capsuleTransferSlot.values()[0] || this.getDefaultCapsuleTransferFn();
+  }
+
+  private getDefaultCapsuleTransferFn(): CapsuleTransferFn {
+    return async (source, target) => {
+      return fs.move(source, target, { overwrite: true });
+    };
   }
 
   /** @deprecated use the new function signature with an object parameter instead */

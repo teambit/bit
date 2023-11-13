@@ -1,0 +1,49 @@
+.componentCompareCodeTreeContainer {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  height: 100%;
+  font-size: 14px;
+  color: #fff;
+  background: var(--on-surface-neutral-low-color, #282828);
+}
+
+.componentCompareDrawerName {
+  &:hover {
+    border-color: var(--surface-neutral-color, #121212);
+    background: var(--surface-neutral-color, #121212);
+  }
+}
+.componentCompareCodeTabDrawer {
+  // drawer name
+  > div:first-child {
+    border: none;
+    border-bottom: 1px solid var(--on-surface-color, #2b2b2b);
+  }
+  height: 100%;
+}
+
+.componentCompareCodeDrawerContent {
+  overflow-y: auto;
+}
+
+.drawerIcon {
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: unset;
+  padding: 4px;
+}
+
+.node {
+  // override default tree node selection and hover styles
+  &:hover {
+    background-color: var(--surface-primary-hover-color, #3a2980) !important;
+  }
+  &.active {
+    background-color: var(--surface-primary-color, #140068) !important;
+  }
+}

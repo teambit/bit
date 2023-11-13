@@ -803,9 +803,7 @@ export default class ScopeComponentsImporter {
     const versionDeps = await this.multipleCompsDefsToVersionDeps(componentDefs, {
       lane,
       skipComponentsWithDepsGraph: preferDependencyGraph,
-      reasonForImport: reason
-        ? `${reason} - missing flattened dependencies`
-        : 'which are missing flattened dependencies',
+      reasonForImport: reason ? `${reason} - missing dependencies` : 'which are missing dependencies',
     });
     if (throwForDependencyNotFound) {
       versionDeps.forEach((verDep) => verDep.throwForMissingDependencies());

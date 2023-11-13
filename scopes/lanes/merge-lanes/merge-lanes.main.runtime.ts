@@ -607,18 +607,19 @@ async function filterComponentsStatus(
   const depsToAdd: ComponentID[] = [];
   const missingDepsFromHead = {};
   const missingDepsFromHistory: string[] = [];
-  await pMapSeries(compIdsToKeep, async (compId) => {
+
+  const versionsToCheckPerId = await pMapSeries(compIdsToKeep, async (compId) => {
     const fromStatus = allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(compId));
     if (!fromStatus) {
       throw new Error(`filterComponentsStatus: unable to find ${compId.toString()} in component-status`);
     }
     filteredComponentStatus.push(fromStatus);
     if (fromStatus.unchangedMessage) {
-      return;
+      return undefined;
     }
     if (!otherLane) {
       // if merging main, no need to check whether the deps are included in the pattern.
-      return;
+      return undefined;
     }
     const { divergeData } = fromStatus;
     if (!divergeData) {
@@ -626,7 +627,7 @@ async function filterComponentsStatus(
     }
     let targetVersions: Ref[] = divergeData.snapsOnTargetOnly;
     if (!targetVersions.length) {
-      return;
+      return undefined;
     }
     const modelComponent = await workspace.consumer.scope.getModelComponent(compId);
     if (shouldSquash) {
@@ -638,6 +639,21 @@ async function filterComponentsStatus(
       targetVersions = [headOnTarget];
     }
 
+    return { compId, targetVersions, modelComponent };
+  });
+
+  // all these versions needs to be imported to load them later and check whether they have dependencies on the target lane
+  const toImport = compact(versionsToCheckPerId)
+    .map((c) => c.targetVersions.map((v) => c.compId.changeVersion(v.toString())))
+    .flat();
+  await workspace.consumer.scope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(toImport), {
+    lane: otherLane,
+    cache: true,
+    includeVersionHistory: false,
+    reason: 'import all history of given patterns components to check whether they have dependencies on the lane',
+  });
+
+  await pMapSeries(compact(versionsToCheckPerId), async ({ compId, targetVersions, modelComponent }) => {
     await pMapSeries(targetVersions, async (remoteVersion) => {
       const versionObj = await modelComponent.loadVersion(remoteVersion.toString(), workspace.consumer.scope.objects);
       const flattenedDeps = versionObj.getAllFlattenedDependencies();
