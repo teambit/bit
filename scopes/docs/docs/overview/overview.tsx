@@ -107,8 +107,10 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
             component={component}
             style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
           />
-          {component.preview?.onlyOverview && <CompositionGallery isLoading={isLoading} component={component} />}
-          {component.preview?.onlyOverview && TaggedAPI && <TaggedAPI componentId={component.id.toString()} />}
+          {component.preview?.onlyOverview && !isLoading && <CompositionGallery component={component} />}
+          {component.preview?.onlyOverview && !isLoading && TaggedAPI && (
+            <TaggedAPI componentId={component.id.toString()} />
+          )}
         </div>
       )}
       {buildFailed && EmptyState && <EmptyState />}

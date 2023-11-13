@@ -8,10 +8,9 @@ import styles from './composition-gallery.module.scss';
 
 export type CompositionGalleryProps = {
   component: ComponentModel;
-  isLoading?: boolean;
 };
 
-export function CompositionGallery({ component, isLoading }: CompositionGalleryProps) {
+export function CompositionGallery({ component }: CompositionGalleryProps) {
   const navigate = useNavigate();
   const hasCompositions = component.compositions.length > 0;
 
@@ -25,8 +24,6 @@ export function CompositionGallery({ component, isLoading }: CompositionGalleryP
       </LinkedHeading>
       <div className={styles.carousel}>
         {component.compositions.map((composition, index) => {
-          if (isLoading && index > 2) return null;
-          if (isLoading) return <CompositionCardSkeleton />;
           return (
             <CompositionCard
               key={composition.identifier.toLowerCase()}
