@@ -1,7 +1,8 @@
 import { EnvsAspect } from './environments.aspect';
 
+export { ServiceHandlerContext as EnvContext } from './services';
+
 export type {
-  ServiceHandlerContext as EnvContext,
   ServiceHandlerFactory as EnvHandler,
   AsyncServiceHandlerFactory as AsyncEnvHandler,
   ServiceHandler,

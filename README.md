@@ -23,28 +23,27 @@
 <a href="https://github.com/prettier/prettier"><img alt ="Styled with Prettier" src="https://img.shields.io/badge/styled_with-prettier-ff69b4.svg">
 <a href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-1vq1vcxxu-CEVobR1p9BurmW8QnQFh1w" ><img alt="Join Slack" src="https://img.shields.io/badge/Slack-Join%20Bit%20Slack-blueviolet"/></a>
 
-
 Bit is a build system for development of **composable software**. It makes the composition of applications from independently versioned components seamless and fast.
 
-Bit is similar in sense, but stands as the opposite for the "Monorepo" approach, which aims to center all code under a central repository. Instead, Bit is bringing simplicity for distribution of source code into  independently versioned components, depending on each other.
+Bit is similar in sense, but stands as the opposite for the "Monorepo" approach, which aims to center all code under a central repository. Instead, Bit is bringing simplicity for distribution of source code into independently versioned components, depending on each other.
 
 People often use Bit to run a Monorepo, a Polyrepo or without using repositories at all.
 
 The core innovation of Bit is the ["Bit Component"](https://bit.dev/#component), a composable and versioned container for source code, whereas dependencies are first-class citizens. Components can be used as packages, ESM modules, runtime scripts, and any other artifact a build task can generate.
 
 - 📦 **Descriptive module names**. Use components through descriptive package names. No aliases required.
-- 🚀 **Dependency versioning.** Automatic detection and versioning of dependency changes. No more redundant  package.json files.
+- 🚀 **Dependency versioning.** Automatic detection and versioning of dependency changes. No more redundant package.json files.
 - ⚓ **Reusable development environments.** Reusable components including all of your dev config. No more duplication of countless `tsconfig.json`, `eslintrc` or `pretterrc` configs.
 - ⚒️ **Build pipelines**. Independently build and store packages, bundles, and binaries.
 - 👓 **Preview and auto-generated docs**. Every component is an asset with auto-generated docs and component previews.
 - 🛫 **Change review**. Use Lanes to propose and preview changes and collaborate on them with others.
 - 🧑‍💻 **Component generators**. Create new components using pre-built or custom templates for any type of component.
 
-
 ## Getting started
 
 ### Install Bit
-Use the Bit installer to install Bit to be available on your PATH. 
+
+Use the Bit installer to install Bit to be available on your PATH.
 
 ```bash
 npx @teambit/bvm install
@@ -55,8 +54,9 @@ For better VSCode dev experience, install the [Bit VSCode Plugin](https://market
 ### Create a new workspace
 
 Run the following to create a workspace with a few components included, using the hello-world starter:
+
 ```bash
-bit new hello-world my-hello-world --env teambit.community/starters/hello-world 
+bit new hello-world my-hello-world --env teambit.community/starters/hello-world
 ```
 
 For the quick start, we use two React components and one Node module, though you can create components using any JS-based framework. You can explore our [official starters](https://bit.dev/docs) for [Vue](https://bit.dev/docs/quick-start/hello-world-vue), [Angular](https://bit.dev/docs/quick-start/hello-world-angular), and other supported tools or [learn how to create your own](https://bit.dev/docs/node-env/set-up-your-env).
@@ -72,6 +72,7 @@ bit run hello-world-app
 You can get any component to become an app by adding a single file to it.
 
 ### Create components
+
 Start creating components using the default component generators, or [create your own](https://bit.dev/docs/node-env/generators).
 
 ```bash
@@ -99,8 +100,9 @@ bit login
 ```
 
 Once done, change to your own owner and scope names using this command:
+
 ```bash
-bit scope rename org.scope-name my-org.my-scope-name --refactor 
+bit scope rename org.scope-name my-org.my-scope-name --refactor
 ```
 
 This command will refactor your components to use the new owner and scope names.
@@ -119,7 +121,7 @@ By default, components are built using bit.cloud's CI platform, Ripple CI. Howev
 
 ### Export components to a remote scope
 
-Export your staged components from your workspace to their remote scopes. This will make them available to 
+Export your staged components from your workspace to their remote scopes. This will make them available to
 be used by components outside of your workspace, and from your other projects.
 
 ```bash
@@ -129,6 +131,7 @@ bit export
 Head over to your bit.cloud account to see your components build progress. Once the build process is completed, the components will be available for use in their remote scopes. 🎉🎉🎉
 
 ## Contributors
+
 Bit is entirely built with Bit and you can find all its components on [Bit Cloud](https://bit.cloud/teambit/~scopes).
 
 <a href="../../graphs/contributors"><img src="https://opencollective.com/bit/contributors.svg?width=890&button=false" /></a>
@@ -137,6 +140,6 @@ Your contribution, no matter how big or small, is much appreciated. Before contr
 
 See [Contributing](CONTRIBUTING.md).
 
-## License 
+## License
 
 [Apache License, Version 2.0](https://github.com/teambit/bit/blob/master/LICENSE)

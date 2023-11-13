@@ -26,7 +26,7 @@ import { concurrentIOLimit } from '../../utils/concurrency';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForObjects, InMemoryCache } from '../../cache/in-memory-cache';
 import { Types } from '../object-registrar';
-import { Lane, ModelComponent, Symlink } from '../models';
+import { Lane, ModelComponent } from '../models';
 import { ComponentFsCache } from '../../consumer/component/component-fs-cache';
 import { pMapPool } from '../../utils/promise-with-concurrent';
 
@@ -207,7 +207,23 @@ export default class Repository {
     await pMapPool(
       refs,
       async (ref) => {
-        const object = await this.load(ref);
+        let object: BitObject;
+        try {
+          object = await this.load(ref);
+        } catch (err: any) {
+          // this is needed temporarily to allow `bit reset --never-exported` to fix the bit-id-comp-id error.
+          // in a few months, we can remove this condition (around min 2024)
+          if (
+            process.argv.includes('--never-exported') &&
+            (err.constructor.name === 'BitIdCompIdError' || err.constructor.name === 'MissingScope')
+          ) {
+            logger.debug(`bit-id-comp-id error, moving an object to trash ${ref.toString()}`);
+            await this.moveOneObjectToTrash(ref);
+            return;
+          }
+          throw err;
+        }
+
         types.forEach((type) => {
           if (
             object instanceof type ||
@@ -309,7 +325,7 @@ export default class Repository {
       return scopeIndex;
     } catch (err: any) {
       if (err.code === 'ENOENT') {
-        const bitObjects: BitObject[] = await this.list([ModelComponent, Symlink, Lane]);
+        const bitObjects: BitObject[] = await this.list([ModelComponent, Lane]);
         const scopeIndex = ScopeIndex.create(this.scopePath);
         const added = scopeIndex.addMany(bitObjects);
         if (added) await scopeIndex.write();

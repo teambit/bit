@@ -1,3 +1,4 @@
+import { Harmony } from '@teambit/harmony';
 import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
 import { TsConfigTransformer } from '@teambit/typescript';
 import { BabelAspect, BabelMain } from '@teambit/babel';
@@ -5,7 +6,10 @@ import { MainRuntime } from '@teambit/cli';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import DocsAspect, { DocsMain } from '@teambit/docs';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { ComponentID } from '@teambit/component-id';
+import { LoggerMain } from '@teambit/logger';
+import { WorkerMain } from '@teambit/worker';
+import { EnvContext, EnvsAspect, EnvsMain } from '@teambit/envs';
 import MultiCompilerAspect, { MultiCompilerMain } from '@teambit/multi-compiler';
 import ReactAspect, { ReactEnv, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
@@ -13,7 +17,7 @@ import { MDXAspect } from './mdx.aspect';
 import { MDXCompiler, MDXCompilerOpts } from './mdx.compiler';
 import { MDXDependencyDetector } from './mdx.detector';
 import { MDXDocReader } from './mdx.doc-reader';
-import { componentTemplates } from './mdx.templates';
+import { getTemplates } from './mdx.templates';
 import { babelConfig } from './babel/babel.config';
 
 export type MDXConfig = {
@@ -62,7 +66,7 @@ export class MDXMain {
   };
 
   static async provider(
-    [docs, depResolver, react, envs, multiCompiler, babel, compiler, generator]: [
+    [docs, depResolver, react, envs, multiCompiler, babel, compiler, generator, loggerAspect, workerMain]: [
       DocsMain,
       DependencyResolverMain,
       ReactMain,
@@ -70,9 +74,13 @@ export class MDXMain {
       MultiCompilerMain,
       BabelMain,
       CompilerMain,
-      GeneratorMain
+      GeneratorMain,
+      LoggerMain,
+      WorkerMain
     ],
-    config: MDXConfig
+    config: MDXConfig,
+    slots,
+    harmony: Harmony
   ) {
     const mdx = new MDXMain();
     const tsTransformer: TsConfigTransformer = (tsconfig: TypescriptConfigMutator) => {
@@ -111,7 +119,10 @@ export class MDXMain {
     envs.registerEnv(mdxEnv);
     depResolver.registerDetector(new MDXDependencyDetector(config.extensions));
     docs.registerDocReader(new MDXDocReader(config.extensions));
-    if (generator) generator.registerComponentTemplate(componentTemplates);
+    if (generator) {
+      const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerAspect, workerMain, harmony);
+      generator.registerComponentTemplate(getTemplates(envContext));
+    }
 
     mdx.mdxEnv = mdxEnv as ReactEnv;
     return mdx;

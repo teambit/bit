@@ -1270,7 +1270,11 @@ export class DependencyResolverMain {
     const dependencies = get(entry, ['data', 'dependencies'], []);
     dependencies.forEach((dep) => {
       if (dep.__type === COMPONENT_DEP_TYPE) {
-        const depId = ComponentID.fromObject(dep.componentId);
+        // @todo: it's unclear why "dep.componentId" randomly becomes a ComponentID instance.
+        // this check is added because on Ripple in some scenarios it was throwing:
+        // "ComponentID.fromObject expect to get an object, got an instance of ComponentID" (locally it didn't happen)
+        const depId =
+          dep.componentId instanceof ComponentID ? dep.componentId : ComponentID.fromObject(dep.componentId);
         const newDepId = idTransformer(depId);
         dep.componentId = (newDepId || depId).serialize();
         dep.id = (newDepId || depId).toString();
