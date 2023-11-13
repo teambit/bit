@@ -1493,6 +1493,9 @@ importers:
       graphql:
         specifier: 15.8.0
         version: 15.8.0
+      graphql-disable-introspection:
+        specifier: ^1.2.0
+        version: 1.2.0(graphql@15.8.0)
       graphql-request:
         specifier: 6.1.0
         version: 6.1.0(graphql@15.8.0)
@@ -15440,6 +15443,9 @@ importers:
       graphql:
         specifier: 15.8.0
         version: 15.8.0
+      graphql-disable-introspection:
+        specifier: ^1.2.0
+        version: 1.2.0(graphql@15.8.0)
       graphql-subscriptions:
         specifier: 1.2.0
         version: 1.2.0(graphql@15.8.0)
@@ -44427,6 +44433,14 @@ packages:
       lodash: 4.17.21
     dev: false
 
+  /graphql-disable-introspection@1.2.0(graphql@15.8.0):
+    resolution: {integrity: sha512-bRY1LWCOzho/snYsLZ0N2J78zgCDtcFdbdZILxWGi8TifLLYf2bHZ3yw5r1NX42K87AMEOT0d11XScVrcJ+Zig==}
+    peerDependencies:
+      graphql: ^0.9.2 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0
+    dependencies:
+      graphql: 15.8.0
+    dev: false
+
   /graphql-extensions@0.16.0(graphql@15.8.0):
     resolution: {integrity: sha512-rZQc/USoEIw437BGRUwoHoLPR1LA791Ltj6axONqgKIyyx2sqIO3YT9kTbB/eIUdJBrCozp4KuUeZ09xKeQDxg==}
     engines: {node: '>=6.0'}
@@ -59835,6 +59849,7 @@ packages:
       express: 4.17.1
       express-graphql: 0.12.0(graphql@15.8.0)
       graphql: 15.8.0
+      graphql-disable-introspection: 1.2.0(graphql@15.8.0)
       graphql-subscriptions: 1.2.0(graphql@15.8.0)
       http-proxy: 1.18.1(debug@4.3.4)
       lodash.pick: 4.4.0
