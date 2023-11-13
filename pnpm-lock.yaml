@@ -59,6 +59,9 @@ importers:
       '@babel/types':
         specifier: 7.22.3
         version: 7.22.3
+      '@bitdev/react.generators.react-templates':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@graphql-modules/core':
         specifier: 0.7.17
         version: 0.7.17(graphql@15.8.0)(reflect-metadata@0.1.13)
@@ -923,9 +926,6 @@ importers:
       '@teambit/react.generator.react-native-templates':
         specifier: ^1.0.7
         version: 1.0.8
-      '@teambit/react.generator.react-templates':
-        specifier: ^1.0.9
-        version: 1.0.9
       '@teambit/react.instructions.react-native.adding-tests':
         specifier: 0.0.1
         version: 0.0.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -17324,6 +17324,9 @@ importers:
       '@babel/runtime':
         specifier: 7.23.2
         version: 7.23.2
+      '@bitdev/react.generators.react-templates':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
@@ -17366,9 +17369,6 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      '@teambit/react.generator.react-templates':
-        specifier: ^1.0.9
-        version: 1.0.9
       '@teambit/react.instructions.react.adding-compositions':
         specifier: 0.0.6
         version: 0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -23575,6 +23575,12 @@ packages:
 
   /@bcoe/v8-coverage@0.2.3:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
+    dev: false
+
+  /@bitdev/react.generators.react-templates@1.0.0:
+    resolution: {integrity: sha512-v0yOgP+QlRzs6T+tgsokxacetLhjF1/hlQWFvTAjeAVMIWbRB14h4hvUQzg0VSXRfrY+ERGMsiS1xzvb8ocozA==}
+    dependencies:
+      dedent: 0.7.0
     dev: false
 
   /@chevrotain/types@9.1.0:
@@ -37160,7 +37166,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.2
       '@yarnpkg/fslib': 3.0.1
-      '@yarnpkg/libzip': 3.0.0
+      '@yarnpkg/libzip': 3.0.0(@yarnpkg/fslib@3.0.1)
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -37191,7 +37197,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.2
       '@yarnpkg/fslib': 3.0.1
-      '@yarnpkg/libzip': 3.0.0
+      '@yarnpkg/libzip': 3.0.0(@yarnpkg/fslib@3.0.1)
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -37264,9 +37270,11 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/libzip@3.0.0:
+  /@yarnpkg/libzip@3.0.0(@yarnpkg/fslib@3.0.1):
     resolution: {integrity: sha512-31NR8oHG/NLnSEqQOy48tnjNHgYPujOtammmvoItNAfsWAmaOqtDimwPRRPXGTNxC2SYYBYrk6pli5yti/Qmfw==}
     engines: {node: '>=18.12.0'}
+    peerDependencies:
+      '@yarnpkg/fslib': ^3.0.0
     dependencies:
       '@types/emscripten': 1.39.10
       '@yarnpkg/fslib': 3.0.1
@@ -60580,6 +60588,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.23.2
+      '@bitdev/react.generators.react-templates': 1.0.0
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.4(@types/webpack@5.28.1)(react-refresh@0.10.0)(webpack-dev-server@4.15.0)(webpack@5.84.1)
       '@prerenderer/prerenderer': 1.2.3(@types/express@4.17.13)(debug@4.3.4)
