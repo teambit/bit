@@ -43,7 +43,7 @@ export class PnpmUI {
           isInstallable={!options?.disableInstall}
         />
       ) : null,
-      order: 30,
+      order: 10,
     };
   };
 }

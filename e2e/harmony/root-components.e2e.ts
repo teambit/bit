@@ -1459,7 +1459,7 @@ module.exports.default = {
             'react/package.json',
           ])
         ).version
-      ).to.match(/^16\./);
+      ).to.match(/^17\./);
       expect(
         fs.readJsonSync(
           resolveFrom(path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_main-aspect@0.0.2`), [
@@ -1494,7 +1494,7 @@ module.exports.default = {
             'react/package.json',
           ])
         ).version
-      ).to.match(/^16\./);
+      ).to.match(/^17\./);
       expect(
         fs.readJsonSync(
           resolveFrom(path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_main-aspect@0.0.2`), [
@@ -1564,7 +1564,7 @@ describe('env peer dependencies hoisting', function () {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-      helper.command.create('react', 'my-button', '-p my-button');
+      helper.command.create('react', 'my-button', '-p my-button --env teambit.react/react');
       helper.command.install();
     });
     after(() => {
@@ -1618,32 +1618,43 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/${pm}`);
-    helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-    helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
-      envName: 'env1',
-      dependencies: {
-        peers: [
-          {
-            name: 'react',
-            supportedRange: '^16.8.0',
-            version: '16.14.0',
-          },
-        ],
+    helper.env.setCustomNewEnv(
+      undefined,
+      undefined,
+      {
+        policy: {
+          peers: [
+            {
+              name: 'react',
+              supportedRange: '^16.8.0',
+              version: '16.14.0',
+            },
+          ],
+        },
       },
-    });
-    helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2');
-    helper.fixtures.populateEnvMainRuntime(`custom-react/env2/env2.main.runtime.ts`, {
-      envName: 'env2',
-      dependencies: {
-        peers: [
-          {
-            name: 'react',
-            supportedRange: '^18.0.0',
-            version: '18.0.0',
-          },
-        ],
+      false,
+      'custom-react/env1',
+      'custom-react/env1'
+    );
+    helper.env.setCustomNewEnv(
+      undefined,
+      undefined,
+      {
+        policy: {
+          peers: [
+            {
+              name: 'react',
+              supportedRange: '^18.0.0',
+              version: '18.0.0',
+            },
+          ],
+        },
       },
-    });
+      true,
+      'custom-react/env2',
+      'custom-react/env2'
+    );
+
     helper.fixtures.populateComponents(2);
     helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
     helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
@@ -1655,7 +1666,6 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/custom-react/env2`, {});
     helper.extensions.addExtensionToVariant('custom-react', 'teambit.envs/env', {});
     helper.command.install();
-    helper.command.install(); // For some reason only works on second run with Yarn
   }
 });
 
@@ -1666,9 +1676,9 @@ describe('create with root components on', function () {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-    helper.command.create('react', 'card');
+    helper.command.create('react', 'card', '--env teambit.react/react');
     helper.command.install();
-    helper.command.create('react', 'my-button');
+    helper.command.create('react', 'my-button', '--env teambit.react/react');
   });
   it('should create the runtime component directory for the created component', () => {
     expect(path.join(helper.env.rootCompDirDep('teambit.react/react', 'my-button'), 'index.ts')).to.be.a.path();
