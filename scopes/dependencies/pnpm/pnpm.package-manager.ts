@@ -21,6 +21,7 @@ import {
   buildDependenciesHierarchy,
   DependenciesHierarchy,
   createPackagesSearcher,
+  PackageNode,
 } from '@pnpm/reviewing.dependencies-hierarchy';
 import { renderTree } from '@pnpm/list';
 import { readWantedLockfile } from '@pnpm/lockfile-file';
@@ -221,9 +222,13 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
-    const modulesState = await readModulesManifest(join(rootDir, 'node_modules'));
+    const modulesState = await this._readModulesManifest(rootDir);
     if (modulesState?.injectedDeps == null) return [];
     return modulesState.injectedDeps[`node_modules/${packageName}`] ?? modulesState.injectedDeps[componentDir] ?? [];
+  }
+
+  _readModulesManifest(lockfileDir: string) {
+    return readModulesManifest(join(lockfileDir, 'node_modules'));
   }
 
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
@@ -241,6 +246,11 @@ export class PnpmPackageManager implements PackageManager {
       .filter((id) => !id.startsWith('node_modules/.bit_roots'))
       .map((id) => join(opts.lockfileDir, id));
     const cache = new Map();
+    const modulesManifest = await this._readModulesManifest(opts.lockfileDir);
+    const isHoisted = modulesManifest?.nodeLinker === 'hoisted';
+    const getPkgLocation: GetPkgLocation = isHoisted
+      ? ({ name }) => join(opts.lockfileDir, 'node_modules', name)
+      : ({ path }) => path;
     const results = Object.entries(
       await buildDependenciesHierarchy(projectPaths, {
         depth: Infinity,
@@ -256,7 +266,7 @@ export class PnpmPackageManager implements PackageManager {
         search,
       })
     ).map(([projectPath, builtDependenciesHierarchy]) => {
-      pkgNamesToComponentIds(builtDependenciesHierarchy, cache);
+      pkgNamesToComponentIds(builtDependenciesHierarchy, { cache, getPkgLocation });
       return {
         path: projectPath,
         ...builtDependenciesHierarchy,
@@ -272,19 +282,32 @@ export class PnpmPackageManager implements PackageManager {
   }
 }
 
-function pkgNamesToComponentIds(deps: DependenciesHierarchy, cache: Map<string, string>) {
+type GetPkgLocation = (pkgNode: PackageNode) => string;
+
+function pkgNamesToComponentIds(
+  deps: DependenciesHierarchy,
+  { cache, getPkgLocation }: { cache: Map<string, string>; getPkgLocation: GetPkgLocation }
+) {
   for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
     if (!deps[depType]) continue;
     for (const dep of deps[depType]) {
       if (!cache.has(dep.name)) {
-        const pkgJson = JSON.parse(fs.readFileSync(join(dep.path, 'package.json'), 'utf8'));
+        const pkgJson = tryReadPackageJson(getPkgLocation(dep));
         cache.set(
           dep.name,
-          pkgJson.componentId ? `${pkgJson.componentId.scope}/${pkgJson.componentId.name}` : dep.name
+          pkgJson?.componentId ? `${pkgJson.componentId.scope}/${pkgJson.componentId.name}` : dep.name
         );
       }
       dep.name = cache.get(dep.name);
-      pkgNamesToComponentIds(dep, cache);
+      pkgNamesToComponentIds(dep, { cache, getPkgLocation });
     }
+  }
+}
+
+function tryReadPackageJson(pkgDir: string) {
+  try {
+    return JSON.parse(fs.readFileSync(join(pkgDir, 'package.json'), 'utf8'));
+  } catch (err) {
+    return undefined;
   }
 }
