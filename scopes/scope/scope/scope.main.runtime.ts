@@ -10,7 +10,7 @@ import { RawBuilderData, BuilderAspect } from '@teambit/builder';
 import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import type { AspectData, ComponentMain, ComponentMap, ResolveAspectsOptions } from '@teambit/component';
-import { Component, ComponentAspect, ComponentFactory, Snap, State, AspectEntry, AspectList } from '@teambit/component';
+import { Component, ComponentAspect, ComponentFactory, Snap, State, AspectEntry } from '@teambit/component';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
