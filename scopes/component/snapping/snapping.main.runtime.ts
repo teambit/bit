@@ -60,6 +60,7 @@ import ResetCmd from './reset-cmd';
 import { tagModelComponent, updateComponentsVersions, BasicTagParams } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
+import { generateCompFromScope } from './generate-comp-from-scope';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -69,6 +70,7 @@ export type TagDataPerComp = {
   versionToTag?: string; // must be set for tag. undefined for snap.
   prereleaseId?: string;
   message?: string;
+  isNew?: boolean;
 };
 
 export type SnapResults = BasicTagResults & {
@@ -377,11 +379,15 @@ if you're willing to lose the history from the head to the specified version, us
           aspects: snapData.aspects,
           message: snapData.message,
           files: snapData.files,
+          isNew: snapData.isNew,
         };
       })
     );
-    const componentIds = snapDataPerComp.map((t) => t.componentId);
+    const componentIds = compact(snapDataPerComp.map((t) => (t.isNew ? null : t.componentId)));
+    const allCompIds = snapDataPerComp.map((s) => s.componentId);
     const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
+    const newCompsData = compact(snapDataPerComp.map((t) => (t.isNew ? t : null)));
+    const newComponents = await Promise.all(newCompsData.map((newComp) => generateCompFromScope(this.scope, newComp)));
 
     let lane: Lane | undefined;
     const laneIdStr = params.lane;
@@ -399,7 +405,8 @@ if you're willing to lose the history from the head to the specified version, us
       lane,
       reason: `seeders to snap`,
     });
-    const components = await this.scope.getMany(componentIdsLatest);
+    const existingComponents = await this.scope.getMany(componentIdsLatest);
+    const components = [...existingComponents, ...newComponents];
     await Promise.all(
       components.map(async (comp) => {
         const snapData = snapDataPerComp.find((t) => {
@@ -416,7 +423,7 @@ if you're willing to lose the history from the head to the specified version, us
       })
     );
     const consumerComponents = components.map((c) => c.state._consumer);
-    const legacyIds = ComponentIdList.fromArray(componentIds.map((id) => id));
+    const ids = ComponentIdList.fromArray(allCompIds);
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
@@ -428,7 +435,7 @@ if you're willing to lose the history from the head to the specified version, us
       skipAutoTag: true,
       persist: true,
       isSnap: true,
-      ids: legacyIds,
+      ids,
       message: params.message as string,
     });
 
@@ -438,8 +445,8 @@ if you're willing to lose the history from the head to the specified version, us
       const updatedLane = lane ? await this.scope.legacyScope.loadLane(lane.toLaneId()) : undefined;
       const { exported } = await this.exporter.exportMany({
         scope: this.scope.legacyScope,
-        ids: legacyIds,
-        idsWithFutureScope: legacyIds,
+        ids,
+        idsWithFutureScope: ids,
         allVersions: false,
         laneObject: updatedLane || undefined,
         // no need other snaps. only the latest one. without this option, when snapping on lane from another-scope, it

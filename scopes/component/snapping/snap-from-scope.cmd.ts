@@ -14,6 +14,7 @@ export type SnapDataPerCompRaw = {
   aspects?: Record<string, any>;
   message?: string;
   files?: FileData[];
+  isNew?: boolean;
 };
 
 type SnapFromScopeOptions = {
@@ -35,6 +36,7 @@ the input data is a stringified JSON of an array of the following object.
   aspects?: Record<string,any> // e.g. { "teambit.react/react": {}, "teambit.envs/envs": { "env": "teambit.react/react" } }
   message?: string;       // tag-message.
   files?: Array<{path: string, content: string}>; // replace content of specified source-files. the content is base64 encoded.
+  isNew?: boolean;        // if it's new, it'll be generated from the given files. otherwise, it'll be fetched from the scope and updated.
 }
 an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "first snap"}]'
 `;
