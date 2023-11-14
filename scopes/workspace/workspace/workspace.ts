@@ -1885,11 +1885,13 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
     const packageManager = this.dependencyResolver.getPackageManagerName();
     const isPnpmEnabled = typeof packageManager === 'undefined' || packageManager.includes('pnpm');
-    const pathsExcluding = generateNodeModulesPattern({
-      packages: workspacePackageNames,
-      target: PatternTarget.WEBPACK,
-      isPnpmEnabled,
-    });
+    const pathsExcluding = [
+      generateNodeModulesPattern({
+        packages: workspacePackageNames,
+        target: PatternTarget.WEBPACK,
+        isPnpmEnabled,
+      }),
+    ];
     this.componentPathsRegExps = [...pathsExcluding.map((stringPattern) => new RegExp(stringPattern))];
   }
 

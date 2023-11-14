@@ -137,7 +137,7 @@
         "@teambit/component.ui.component-compare.compare-aspects.context": "^0.0.11",
         "@teambit/component.ui.component-compare.compare-aspects.hooks.use-compare-aspects": "^0.0.117",
         "@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model": "^0.0.10",
-        "@teambit/component.ui.component-compare.component-compare": "^0.0.170",
+        "@teambit/component.ui.component-compare.component-compare": "^0.0.171",
         "@teambit/component.ui.component-compare.context": "^0.0.116",
         "@teambit/component.ui.component-compare.hooks.use-component-compare": "^0.0.113",
         "@teambit/component.ui.component-compare.hooks.use-component-compare-url": "^0.0.8",
@@ -294,7 +294,9 @@
         "@teambit/lanes.ui.navigation.lane-switcher": "^0.0.213",
         "@teambit/lanes.ui.readme": "^1.0.10",
         "@teambit/lanes.ui.viewed-lane": "0.0.37",
+        "@teambit/mdx.compilers.mdx-transpiler": "^1.0.6",
         "@teambit/mdx.generator.mdx-templates": "^1.0.9",
+        "@teambit/mdx.modules.mdx-loader": "^1.0.14",
         "@teambit/mdx.ui.docs.link": "0.0.500",
         "@teambit/mdx.ui.docs.snippet": "^0.0.509",
         "@teambit/mdx.ui.mdx-layout": "^1.0.6",
@@ -545,7 +547,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.596",
+        "@teambit/legacy": "1.0.597",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
@@ -639,7 +641,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.596"
+            "@teambit/legacy": "1.0.597"
           }
         }
       },
@@ -903,7 +905,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.596"
+            "@teambit/legacy": "1.0.597"
           }
         }
       }
@@ -993,7 +995,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.596",
+            "@teambit/legacy": "1.0.597",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
@@ -1135,7 +1137,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.596"
+            "@teambit/legacy": "1.0.597"
           }
         }
       }
