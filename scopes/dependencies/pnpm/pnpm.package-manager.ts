@@ -13,10 +13,15 @@ import {
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
+import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { readModulesManifest } from '@pnpm/modules-yaml';
-import { buildDependenciesHierarchy, createPackagesSearcher } from '@pnpm/reviewing.dependencies-hierarchy';
+import {
+  buildDependenciesHierarchy,
+  DependenciesHierarchy,
+  createPackagesSearcher,
+} from '@pnpm/reviewing.dependencies-hierarchy';
 import { renderTree } from '@pnpm/list';
 import { readWantedLockfile } from '@pnpm/lockfile-file';
 import { ProjectManifest } from '@pnpm/types';
@@ -235,6 +240,7 @@ export class PnpmPackageManager implements PackageManager {
     const projectPaths = Object.keys(lockfile?.importers ?? {})
       .filter((id) => !id.startsWith('node_modules/.bit_roots'))
       .map((id) => join(opts.lockfileDir, id));
+    const cache = new Map();
     const results = Object.entries(
       await buildDependenciesHierarchy(projectPaths, {
         depth: Infinity,
@@ -250,6 +256,7 @@ export class PnpmPackageManager implements PackageManager {
         search,
       })
     ).map(([projectPath, builtDependenciesHierarchy]) => {
+      pkgNamesToComponentIds(builtDependenciesHierarchy, cache);
       return {
         path: projectPath,
         ...builtDependenciesHierarchy,
@@ -262,5 +269,22 @@ export class PnpmPackageManager implements PackageManager {
       long: false,
       showExtraneous: false,
     });
+  }
+}
+
+function pkgNamesToComponentIds(deps: DependenciesHierarchy, cache: Map<string, string>) {
+  for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
+    if (!deps[depType]) continue;
+    for (const dep of deps[depType]) {
+      if (!cache.has(dep.name)) {
+        const pkgJson = JSON.parse(fs.readFileSync(join(dep.path, 'package.json'), 'utf8'));
+        cache.set(
+          dep.name,
+          pkgJson.componentId ? `${pkgJson.componentId.scope}/${pkgJson.componentId.name}` : dep.name
+        );
+      }
+      dep.name = cache.get(dep.name);
+      pkgNamesToComponentIds(dep, cache);
+    }
   }
 }
