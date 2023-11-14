@@ -51,7 +51,6 @@ export async function generateCompFromScope(scope: ScopeMain, compData: CompData
   const modelComponent = ModelComponent.fromBitId(compData.componentId);
   consumerComponent.version = version.hash().toString();
   await scope.legacyScope.objects.writeObjectsToTheFS([version, modelComponent, ...filesBitObject.map((f) => f.file)]);
-
   const component = await scope.getManyByLegacy([consumerComponent]);
 
   return component[0];

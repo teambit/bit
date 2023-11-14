@@ -422,6 +422,8 @@ if you're willing to lose the history from the head to the specified version, us
         }
       })
     );
+    await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
+
     const consumerComponents = components.map((c) => c.state._consumer);
     const ids = ComponentIdList.fromArray(allCompIds);
     const results = await tagModelComponent({

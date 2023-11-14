@@ -6,6 +6,7 @@ import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import ComponentAspect, { ComponentMain, ComponentID, Component } from '@teambit/component';
@@ -365,6 +366,7 @@ export class ApplicationMain {
     AspectLoaderAspect,
     WorkspaceAspect,
     WatcherAspect,
+    ScopeAspect,
   ];
 
   static slots = [
@@ -374,7 +376,7 @@ export class ApplicationMain {
   ];
 
   static async provider(
-    [cli, loggerAspect, builder, envs, component, aspectLoader, workspace, watcher]: [
+    [cli, loggerAspect, builder, envs, component, aspectLoader, workspace, watcher, scope]: [
       CLIMain,
       LoggerMain,
       BuilderMain,
@@ -382,7 +384,8 @@ export class ApplicationMain {
       ComponentMain,
       AspectLoaderMain,
       Workspace,
-      WatcherMain
+      WatcherMain,
+      ScopeMain
     ],
     config: ApplicationAspectConfig,
     [appTypeSlot, appSlot, deploymentProviderSlot]: [ApplicationTypeSlot, ApplicationSlot, DeploymentProviderSlot]
@@ -415,15 +418,19 @@ export class ApplicationMain {
     // cli.registerOnStart(async () => {
     //   await application.loadAppsToSlot();
     // });
+    const calcAppOnLoad = async (loadedComponent): Promise<ApplicationMetadata | undefined> => {
+      const app = application.calculateAppByComponent(loadedComponent);
+      if (!app) return undefined;
+      return {
+        appName: app.name,
+        type: app.applicationType,
+      };
+    };
     if (workspace) {
-      workspace.onComponentLoad(async (loadedComponent): Promise<ApplicationMetadata | undefined> => {
-        const app = application.calculateAppByComponent(loadedComponent);
-        if (!app) return undefined;
-        return {
-          appName: app.name,
-          type: app.applicationType,
-        };
-      });
+      workspace.registerOnComponentLoad(calcAppOnLoad);
+    }
+    if (scope) {
+      scope.registerOnCompAspectReCalc(calcAppOnLoad);
     }
 
     return application;
