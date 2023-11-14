@@ -180,24 +180,24 @@ describe('generateNodeModulesPattern()', () => {
   });
   describe('format for webpack', () => {
     describe('when packages provided is an empty array', () => {
-      it('should return an empty array', () => {
-        expect(generateNodeModulesPattern({ packages: [], target: PatternTarget.WEBPACK })).toEqual([]);
+      it('should return an empty string', () => {
+        expect(generateNodeModulesPattern({ packages: [], target: PatternTarget.WEBPACK })).toEqual('');
       });
     });
     describe('when packages contains a single package', () => {
-      let patterns;
+      let pattern;
       beforeAll(() => {
-        patterns = generateNodeModulesPattern({
+        pattern = generateNodeModulesPattern({
           packages: ['@my-org/my-scope.components'],
           target: PatternTarget.WEBPACK,
         });
       });
 
-      it('should return an array with 1 pattern', () => {
-        expect((patterns || []).length).toEqual(1);
-        expect(patterns).toEqual([
-          '^(.+?[\\/]node_modules[\\/]\\.pnpm[\\/][^\\/]+[\\/]node_modules[\\/](?!(@my-org[\\/]my-scope.components))).+',
-        ]);
+      it('should return a single string pattern', () => {
+        expect((pattern || '').length).toBeGreaterThan(1);
+        expect(pattern).toEqual(
+          '^(.+?[\\/]node_modules[\\/]\\.pnpm[\\/][^\\/]+[\\/]node_modules[\\/](?!(@my-org[\\/]my-scope.components))).+'
+        );
       });
     });
 
@@ -205,10 +205,12 @@ describe('generateNodeModulesPattern()', () => {
       let patterns;
       let regexps;
       beforeAll(() => {
-        patterns = generateNodeModulesPattern({
-          packages: ['@my-org/my-scope.components', '@other-org/my-scope.my-app'],
-          target: PatternTarget.WEBPACK,
-        });
+        patterns = [
+          generateNodeModulesPattern({
+            packages: ['@my-org/my-scope.components', '@other-org/my-scope.my-app'],
+            target: PatternTarget.WEBPACK,
+          }),
+        ];
         regexps = [...patterns.map((pattern) => new RegExp(pattern))];
       });
 
