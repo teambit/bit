@@ -289,17 +289,18 @@ function pkgNamesToComponentIds(
   { cache, getPkgLocation }: { cache: Map<string, string>; getPkgLocation: GetPkgLocation }
 ) {
   for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
-    if (!deps[depType]) continue;
-    for (const dep of deps[depType]) {
-      if (!cache.has(dep.name)) {
-        const pkgJson = tryReadPackageJson(getPkgLocation(dep));
-        cache.set(
-          dep.name,
-          pkgJson?.componentId ? `${pkgJson.componentId.scope}/${pkgJson.componentId.name}` : dep.name
-        );
+    if (deps[depType]) {
+      for (const dep of deps[depType]) {
+        if (!cache.has(dep.name)) {
+          const pkgJson = tryReadPackageJson(getPkgLocation(dep));
+          cache.set(
+            dep.name,
+            pkgJson?.componentId ? `${pkgJson.componentId.scope}/${pkgJson.componentId.name}` : dep.name
+          );
+        }
+        dep.name = cache.get(dep.name);
+        pkgNamesToComponentIds(dep, { cache, getPkgLocation });
       }
-      dep.name = cache.get(dep.name);
-      pkgNamesToComponentIds(dep, { cache, getPkgLocation });
     }
   }
 }
