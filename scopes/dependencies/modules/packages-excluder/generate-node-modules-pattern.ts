@@ -82,9 +82,8 @@ function toJestPattern<T>(packages: string[], options: PatternTargetMapOptions<T
 
 function toWebpackPattern<T>(packages: string[], { isPnpmEnabled }: PatternTargetMapOptions<T>) {
   const patterns = packages.map((pkg) => pkg.replace(/\//g, '[\\/]'));
-  return patterns.map((pattern) => {
-    return isPnpmEnabled
-      ? `^(.+?[\\/]node_modules[\\/]\\.pnpm[\\/][^\\/]+[\\/]node_modules[\\/](?!(${pattern}))).+`
-      : `^(.+?[\\/]node_modules[\\/](?!(${pattern}))).+?[\\/]`;
-  });
+  const conditionalPatterns = patterns.join('|');
+  return isPnpmEnabled
+    ? `^(.+?[\\/]node_modules[\\/]\\.pnpm[\\/][^\\/]+[\\/]node_modules[\\/](?!(${conditionalPatterns}))).+`
+    : `^(.+?[\\/]node_modules[\\/](?!(${conditionalPatterns}))).+?[\\/]`;
 }
