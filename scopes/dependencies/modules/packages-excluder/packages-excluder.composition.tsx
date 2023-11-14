@@ -29,12 +29,14 @@ export function RegexExample() {
       excludeComponents,
       isPnpmEnabled: true,
     }) as string;
-    const webpackPatterns = generateNodeModulesPattern({
-      packages: packagesToExclude.split(','),
-      excludeComponents,
-      target: PatternTarget.WEBPACK,
-      isPnpmEnabled: true,
-    });
+    const webpackPatterns = [
+      generateNodeModulesPattern({
+        packages: packagesToExclude.split(','),
+        excludeComponents,
+        target: PatternTarget.WEBPACK,
+        isPnpmEnabled: true,
+      }),
+    ];
     setDefaultCalculatedRegex(pattern);
     // @ts-ignore
     setWebpackCalculatedRegexps(webpackPatterns);
