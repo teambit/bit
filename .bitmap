@@ -863,13 +863,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/modules/compiler"
     },
-    "modules/mdx-loader": {
-        "name": "modules/mdx-loader",
-        "scope": "teambit.mdx",
-        "version": "1.0.13",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/modules/loader"
-    },
     "modules/merge-component-results": {
         "name": "modules/merge-component-results",
         "scope": "teambit.pipelines",
