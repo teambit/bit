@@ -25,7 +25,7 @@
         "@pnpm/client": "10.0.35",
         "@pnpm/colorize-semver-diff": "1.0.1",
         "@pnpm/config": "20.1.2",
-        "@pnpm/core": "13.1.6",
+        "@pnpm/core": "13.1.7",
         "@pnpm/default-reporter": "12.4.6",
         "@pnpm/dependency-path": "2.1.5",
         "@pnpm/error": "5.0.2",
@@ -39,7 +39,7 @@
         "@pnpm/parse-overrides": "4.0.2",
         "@pnpm/pick-registry-for-package": "5.0.4",
         "@pnpm/plugin-commands-publishing": "7.4.4",
-        "@pnpm/plugin-commands-rebuild": "10.0.4",
+        "@pnpm/plugin-commands-rebuild": "10.0.5",
         "@pnpm/registry-mock": "3.4.0",
         "@pnpm/semver-diff": "1.1.0",
         "@pnpm/sort-packages": "5.0.7",
@@ -137,7 +137,7 @@
         "@teambit/component.ui.component-compare.compare-aspects.context": "^0.0.11",
         "@teambit/component.ui.component-compare.compare-aspects.hooks.use-compare-aspects": "^0.0.117",
         "@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model": "^0.0.10",
-        "@teambit/component.ui.component-compare.component-compare": "^0.0.170",
+        "@teambit/component.ui.component-compare.component-compare": "^0.0.171",
         "@teambit/component.ui.component-compare.context": "^0.0.116",
         "@teambit/component.ui.component-compare.hooks.use-component-compare": "^0.0.113",
         "@teambit/component.ui.component-compare.hooks.use-component-compare-url": "^0.0.8",
@@ -545,7 +545,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.596",
+        "@teambit/legacy": "1.0.597",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
@@ -639,7 +639,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.596"
+            "@teambit/legacy": "1.0.597"
           }
         }
       },
@@ -903,7 +903,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.596"
+            "@teambit/legacy": "1.0.597"
           }
         }
       }
@@ -993,7 +993,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.596",
+            "@teambit/legacy": "1.0.597",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
@@ -1135,7 +1135,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.596"
+            "@teambit/legacy": "1.0.597"
           }
         }
       }
