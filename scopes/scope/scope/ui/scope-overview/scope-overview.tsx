@@ -17,7 +17,7 @@ export type ScopeOverviewProps = {
 
 export function ScopeOverview({ badgeSlot, overviewSlot, TargetOverview }: ScopeOverviewProps) {
   const scope = useContext(ScopeContext);
-  const { components } = scope;
+  const { components, componentDescriptors } = scope;
   if (TargetOverview) return <TargetOverview />;
   if (!components || components.length === 0) return <EmptyScope name={scope.name} />;
 
