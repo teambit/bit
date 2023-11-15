@@ -27,8 +27,8 @@ export class WatcherMain {
   ) {}
 
   async watch(opts: WatchOptions) {
-    const watcher = new Watcher(this.workspace, this.pubsub, this);
-    await watcher.watchAll(opts);
+    const watcher = new Watcher(this.workspace, this.pubsub, this, opts);
+    await watcher.watch();
   }
 
   async watchScopeInternalFiles() {
