@@ -42,6 +42,7 @@ export async function generateCompFromScope(scope: ScopeMain, compData: CompData
     overrides: ComponentOverrides.loadFromScope({}),
     defaultScope: compData.componentId.scope,
     extensions: new ExtensionDataList(),
+    // the dummy data here are not important. this Version object will be discarded later.
     log: {
       message: compData.message || '',
       date: Date.now().toString(),

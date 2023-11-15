@@ -270,11 +270,7 @@ export class ScopeMain implements ComponentFactory {
   }
 
   async executeOnCompAspectReCalcSlot(component: Component) {
-    // Special load events which runs from the workspace but should run from the correct aspect
-    // TODO: remove this once those extensions dependent on workspace
     const envsData = await this.envs.calcDescriptor(component, { skipWarnings: false });
-
-    // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const policy = await this.dependencyResolver.mergeVariantPolicies(
       component.config.extensions,
       component.id,
