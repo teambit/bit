@@ -448,6 +448,10 @@ export class GeneratorMain {
     return templates;
   }
 
+  getConfiguredEnvs(): string[] {
+    return this.config.envs || [];
+  }
+
   async listEnvComponentTemplates(ids: string[] = [], aspectId?: string): Promise<Array<ComponentTemplateWithId>> {
     const configEnvs = this.config.envs || [];
     let remoteEnvsAspect;

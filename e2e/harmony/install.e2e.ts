@@ -99,6 +99,27 @@ describe('install command', function () {
   });
 });
 
+describe('install generator configured envs', function () {
+  this.timeout(0);
+  let helper: Helper;
+  before(async () => {
+    helper = new Helper();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    const generatorConfig = {
+      envs: ['teambit.react/react-env', 'teambit.react/react'],
+    };
+    helper.extensions.bitJsonc.addKeyVal('teambit.generator/generator', generatorConfig);
+    await helper.command.install();
+  });
+  after(() => {
+    helper.scopeHelper.destroy();
+  });
+  it('should install custom envs configured for the generator aspect', async () => {
+    const reactEnvPath = path.join(helper.fixtures.scopes.localPath, 'node_modules/@teambit/react.react-env');
+    expect(reactEnvPath).to.be.a.path();
+  });
+});
+
 (supportNpmCiRegistryTesting ? describe : describe.skip)('install --no-optional', function () {
   this.timeout(0);
   let helper: Helper;
