@@ -884,13 +884,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/modules/node-modules-linker"
     },
-    "modules/packages-excluder": {
-        "name": "modules/packages-excluder",
-        "scope": "teambit.dependencies",
-        "version": "1.0.8",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/modules/packages-excluder"
-    },
     "modules/prerenderer-puppeteer": {
         "name": "modules/prerenderer-puppeteer",
         "scope": "teambit.react",

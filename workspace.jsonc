@@ -188,6 +188,7 @@
         "@teambit/defender.ui.test-page": "^0.0.34",
         "@teambit/defender.ui.test-row": "^0.0.503",
         "@teambit/defender.ui.test-table": "^0.0.510",
+        "@teambit/dependencies.modules.packages-excluder": "^1.0.8",
         "@teambit/design.elements.icon": "1.0.5",
         "@teambit/design.inputs.dropdown": "1.2.16",
         "@teambit/design.inputs.input-text": "1.0.21",
