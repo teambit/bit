@@ -51,7 +51,7 @@ export class TemplatesCmd implements Command {
       })
       .join('\n');
 
-    const learnMore = `\nfind and add templates in https://bit.dev/reference/generator/set-up-component-generator`;
+    const learnMore = `\nfind and add templates in https://bit.dev/reference/generator/use-component-generator`;
     return title + output + learnMore;
   }
 }
