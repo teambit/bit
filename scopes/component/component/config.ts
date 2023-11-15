@@ -1,31 +1,24 @@
-import { ComponentOverridesData } from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { PathLinux } from '@teambit/legacy/dist/utils/path';
-// import { CustomResolvedPath } from '@teambit/legacy/dist/consumer/component/consumer-component';
-// import { ComponentOverridesData } from '@teambit/legacy/dist/consumer/config/component-overrides';
-
-type LegacyConfigProps = {
-  lang?: string;
-  bindingPrefix: string;
-  extensions?: ExtensionDataList;
-  overrides?: ComponentOverridesData;
-};
+import { PathLinuxRelative, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 
 /**
  * in-memory representation of the component configuration.
  */
-export default class Config {
-  constructor(
-    /**
-     * version main file
-     */
-    readonly main: PathLinux,
+export class Config {
+  constructor(private consumerComponent: any) {}
 
-    /**
-     * configured extensions
-     */
-    readonly extensions: ExtensionDataList,
+  /**
+   * component main file
+   * when loaded from the workspace, it's PathOsBasedRelative. otherwise, PathLinuxRelative.
+   */
+  get main(): PathLinuxRelative | PathOsBasedRelative {
+    return this.consumerComponent.mainFile;
+  }
 
-    readonly legacyProperties?: LegacyConfigProps
-  ) {}
+  /**
+   * configured extensions
+   */
+  get extensions(): ExtensionDataList {
+    return this.consumerComponent.extensions;
+  }
 }

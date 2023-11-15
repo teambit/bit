@@ -14,7 +14,7 @@
         "@babel/preset-react": "7.22.15",
         "@babel/preset-typescript": "7.22.15",
         "@babel/types": "7.22.3",
-        "@bitdev/react.generators.react-templates": "^1.0.0",
+        "@bitdev/react.generators.react-templates": "^1.1.0",
         "@graphql-modules/core": "0.7.17",
         "@graphql-tools/schema": "^10.0.0",
         "@jest/test-result": "26.6.2",
@@ -30,6 +30,7 @@
         "@pnpm/dependency-path": "2.1.5",
         "@pnpm/error": "5.0.2",
         "@pnpm/fetch": "7.0.5",
+        "@pnpm/list": "^9.1.1",
         "@pnpm/lockfile-file": "8.1.4",
         "@pnpm/logger": "5.0.0",
         "@pnpm/modules-yaml": "12.1.4",
@@ -41,6 +42,7 @@
         "@pnpm/plugin-commands-publishing": "7.4.4",
         "@pnpm/plugin-commands-rebuild": "10.0.5",
         "@pnpm/registry-mock": "3.4.0",
+        "@pnpm/reviewing.dependencies-hierarchy": "^2.1.0",
         "@pnpm/semver-diff": "1.1.0",
         "@pnpm/sort-packages": "5.0.7",
         "@pnpm/store-connection-manager": "7.0.14",
@@ -186,6 +188,7 @@
         "@teambit/defender.ui.test-page": "^0.0.34",
         "@teambit/defender.ui.test-row": "^0.0.503",
         "@teambit/defender.ui.test-table": "^0.0.510",
+        "@teambit/dependencies.modules.packages-excluder": "^1.0.8",
         "@teambit/design.elements.icon": "1.0.5",
         "@teambit/design.inputs.dropdown": "1.2.16",
         "@teambit/design.inputs.input-text": "1.0.21",
@@ -547,7 +550,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.597",
+        "@teambit/legacy": "1.0.598",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
@@ -641,7 +644,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.597"
+            "@teambit/legacy": "1.0.598"
           }
         }
       },
@@ -905,7 +908,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.597"
+            "@teambit/legacy": "1.0.598"
           }
         }
       }
@@ -995,7 +998,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.597",
+            "@teambit/legacy": "1.0.598",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
@@ -1137,7 +1140,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.597"
+            "@teambit/legacy": "1.0.598"
           }
         }
       }

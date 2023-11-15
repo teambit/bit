@@ -109,7 +109,7 @@ export interface ComponentTemplateOptions {
 
 export interface ComponentTemplate extends ComponentTemplateOptions {
   name: string;
-  
+
   /**
    * template function for generating the file of a certain component.,
    */
