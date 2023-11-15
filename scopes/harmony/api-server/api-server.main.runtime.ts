@@ -31,7 +31,7 @@ export class ApiServerMain {
     private importer: ImporterMain
   ) {}
 
-  async runApiServer(options: { port: number }) {
+  async runApiServer(options: { port: number; compile: boolean }) {
     if (!this.workspace) {
       throw new Error(`unable to run bit-server, the current directory ${process.cwd()} is not a workspace`);
     }
@@ -70,6 +70,7 @@ export class ApiServerMain {
     this.watcher
       .watch({
         preCompile: false,
+        compile: true, // todo: once a stable release is out, change vscode to support this and change to: `options.compile`,
       })
       .catch((err) => {
         // don't throw an error, we don't want to break the "run" process

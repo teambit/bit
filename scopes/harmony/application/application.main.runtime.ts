@@ -316,6 +316,7 @@ export class ApplicationMain {
       this.watcher
         .watch({
           preCompile: false,
+          compile: true,
         })
         .catch((err) => {
           // don't throw an error, we don't want to break the "run" process

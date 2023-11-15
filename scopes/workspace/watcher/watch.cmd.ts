@@ -88,6 +88,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
     const watchOpts: WatchOptions = {
       msgs: getMessages(this.logger),
       verbose,
+      compile: true,
       preCompile: !watchCmdOpts.skipPreCompilation,
       spawnTSServer: Boolean(checkTypes), // if check-types is enabled, it must spawn the tsserver.
       checkTypes: getCheckTypesEnum(),
