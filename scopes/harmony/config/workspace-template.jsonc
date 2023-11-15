@@ -38,6 +38,19 @@
   },
 
   /**
+   * comment in to include generator templates in your workspace.
+   * browse more dev environments: https://bit.dev/docs/getting-started/composing/dev-environments
+  **/
+  // "teambit.generator/generator": {
+  //   "envs": [
+  //     "teambit.node/node",
+  //     "bitdev.react/react-env",
+  //     "bitdev.vue/vue-env",
+  //     "bitdev.angular/angular-env"
+  //   ]
+  // },
+
+  /**
    * main configuration for component dependency resolution.
    **/
   "teambit.dependencies/dependency-resolver": {

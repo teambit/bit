@@ -50,6 +50,8 @@ export class TemplatesCmd implements Command {
         return `${chalk.blue.bold(groupTitle)}\n${names}\n`;
       })
       .join('\n');
-    return title + output;
+
+    const learnMore = `\nfind and add templates in https://bit.dev/reference/generator/use-component-generator`;
+    return title + output + learnMore;
   }
 }

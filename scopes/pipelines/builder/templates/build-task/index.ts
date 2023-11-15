@@ -4,8 +4,8 @@ import { taskFile } from './files/task-file';
 
 export const buildTaskTemplate: ComponentTemplate = {
   name: 'build-task',
+  hidden: true,
   description: 'create a custom build task for your component pipelines',
-  hidden: false,
   generateFiles: (context: ComponentContext) => {
     return [
       {
