@@ -1085,14 +1085,14 @@ another option, in case this dependency is not in main yet is to remove all refe
     const dependenciesListSerialized = (await this.dependencyResolver.extractDepsFromLegacy(component)).serialize();
     const extId = DependencyResolverAspect.id;
     const data = { dependencies: dependenciesListSerialized };
-    const existingExtension = component.state._consumer.extensions.findExtension(extId);
+    const existingExtension = component.config.extensions.findExtension(extId);
     if (existingExtension) {
       // Only merge top level of extension data
       Object.assign(existingExtension.data, data);
       return;
     }
     const extension = new ExtensionDataEntry(undefined, undefined, extId, undefined, data);
-    component.state._consumer.extensions.push(extension);
+    component.config.extensions.push(extension);
   }
 
   private async getComponentsToTag(

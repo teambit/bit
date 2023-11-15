@@ -3,6 +3,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { ScopeMain } from '@teambit/scope';
+import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { Component } from '@teambit/component';
@@ -30,11 +31,14 @@ export async function generateCompFromScope(scope: ScopeMain, compData: CompData
   const files = compData.files.map((file) => {
     return new SourceFile({ base: '.', path: file.path, contents: Buffer.from(file.content), test: false });
   });
+  const id = compData.componentId;
+  const bindingPrefix = getBindingPrefixByDefaultScope(id.scope);
   const consumerComponent = new ConsumerComponent({
     mainFile: 'index.ts',
     name: compData.componentId.fullName,
     scope: compData.componentId.scope,
     files,
+    bindingPrefix,
     overrides: ComponentOverrides.loadFromScope({}),
     defaultScope: compData.componentId.scope,
     extensions: new ExtensionDataList(),
@@ -49,6 +53,7 @@ export async function generateCompFromScope(scope: ScopeMain, compData: CompData
     consumerComponent
   );
   const modelComponent = ModelComponent.fromBitId(compData.componentId);
+  modelComponent.bindingPrefix = bindingPrefix;
   consumerComponent.version = version.hash().toString();
   await scope.legacyScope.objects.writeObjectsToTheFS([version, modelComponent, ...filesBitObject.map((f) => f.file)]);
   const component = await scope.getManyByLegacy([consumerComponent]);
