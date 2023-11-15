@@ -1,7 +1,7 @@
 import { IssuesList } from '@teambit/component-issues';
 import { ComponentID } from '@teambit/component-id';
 import ComponentFS from './component-fs';
-import Config from './config';
+import { Config } from './config';
 import { AspectList } from './aspect-list';
 import { MainFileNotFound } from './exceptions';
 
