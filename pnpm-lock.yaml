@@ -581,6 +581,9 @@ importers:
       '@teambit/defender.ui.test-table':
         specifier: ^0.0.510
         version: 0.0.510(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/dependencies.modules.packages-excluder':
+        specifier: ^1.0.8
+        version: 1.0.8(react@17.0.2)
       '@teambit/design.elements.icon':
         specifier: 1.0.5
         version: 1.0.5(react-dom@17.0.2)(react@17.0.2)
@@ -2921,9 +2924,6 @@ importers:
       '@teambit/dependencies.fs.linked-dependencies':
         specifier: workspace:*
         version: file:scopes/dependencies/fs/linked-dependencies
-      '@teambit/dependencies.modules.packages-excluder':
-        specifier: workspace:*
-        version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
       '@teambit/dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.8)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@12.20.4)(@types/react@17.0.70)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -3518,8 +3518,6 @@ importers:
       '@teambit/dependencies.aspect-docs.yarn':
         injected: true
       '@teambit/dependencies.fs.linked-dependencies':
-        injected: true
-      '@teambit/dependencies.modules.packages-excluder':
         injected: true
       '@teambit/dependency-resolver':
         injected: true
@@ -4031,9 +4029,6 @@ importers:
       '@teambit/dependencies.fs.linked-dependencies':
         specifier: workspace:*
         version: file:scopes/dependencies/fs/linked-dependencies
-      '@teambit/dependencies.modules.packages-excluder':
-        specifier: workspace:*
-        version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
       '@teambit/dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.8)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@12.20.4)(@types/react@17.0.70)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -4628,8 +4623,6 @@ importers:
       '@teambit/dependencies.aspect-docs.yarn':
         injected: true
       '@teambit/dependencies.fs.linked-dependencies':
-        injected: true
-      '@teambit/dependencies.modules.packages-excluder':
         injected: true
       '@teambit/dependency-resolver':
         injected: true
@@ -5141,9 +5134,6 @@ importers:
       '@teambit/dependencies.fs.linked-dependencies':
         specifier: workspace:*
         version: file:scopes/dependencies/fs/linked-dependencies
-      '@teambit/dependencies.modules.packages-excluder':
-        specifier: workspace:*
-        version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
       '@teambit/dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.8)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@12.20.4)(@types/react@17.0.70)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -5738,8 +5728,6 @@ importers:
       '@teambit/dependencies.aspect-docs.yarn':
         injected: true
       '@teambit/dependencies.fs.linked-dependencies':
-        injected: true
-      '@teambit/dependencies.modules.packages-excluder':
         injected: true
       '@teambit/dependency-resolver':
         injected: true
@@ -6251,9 +6239,6 @@ importers:
       '@teambit/dependencies.fs.linked-dependencies':
         specifier: workspace:*
         version: file:scopes/dependencies/fs/linked-dependencies
-      '@teambit/dependencies.modules.packages-excluder':
-        specifier: workspace:*
-        version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
       '@teambit/dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.8)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@12.20.4)(@types/react@17.0.70)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -6842,8 +6827,6 @@ importers:
       '@teambit/dependencies.aspect-docs.yarn':
         injected: true
       '@teambit/dependencies.fs.linked-dependencies':
-        injected: true
-      '@teambit/dependencies.modules.packages-excluder':
         injected: true
       '@teambit/dependency-resolver':
         injected: true
@@ -7355,9 +7338,6 @@ importers:
       '@teambit/dependencies.fs.linked-dependencies':
         specifier: workspace:*
         version: file:scopes/dependencies/fs/linked-dependencies
-      '@teambit/dependencies.modules.packages-excluder':
-        specifier: workspace:*
-        version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
       '@teambit/dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.8)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@12.20.4)(@types/react@17.0.70)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -7952,8 +7932,6 @@ importers:
       '@teambit/dependencies.aspect-docs.yarn':
         injected: true
       '@teambit/dependencies.fs.linked-dependencies':
-        injected: true
-      '@teambit/dependencies.modules.packages-excluder':
         injected: true
       '@teambit/dependency-resolver':
         injected: true
@@ -8465,9 +8443,6 @@ importers:
       '@teambit/dependencies.fs.linked-dependencies':
         specifier: workspace:*
         version: file:scopes/dependencies/fs/linked-dependencies
-      '@teambit/dependencies.modules.packages-excluder':
-        specifier: workspace:*
-        version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
       '@teambit/dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.8)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@12.20.4)(@types/react@17.0.70)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -9062,8 +9037,6 @@ importers:
       '@teambit/dependencies.aspect-docs.yarn':
         injected: true
       '@teambit/dependencies.fs.linked-dependencies':
-        injected: true
-      '@teambit/dependencies.modules.packages-excluder':
         injected: true
       '@teambit/dependency-resolver':
         injected: true
@@ -13687,28 +13660,6 @@ importers:
         specifier: 12.20.4
         version: 12.20.4
 
-  scopes/dependencies/modules/packages-excluder:
-    dependencies:
-      react:
-        specifier: 17.0.2
-        version: 17.0.2
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: 26.0.20
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.70
-
   scopes/dependencies/pnpm:
     dependencies:
       '@babel/runtime':
@@ -17823,6 +17774,9 @@ importers:
       '@babel/runtime':
         specifier: 7.23.2
         version: 7.23.2
+      '@teambit/dependencies.modules.packages-excluder':
+        specifier: ^1.0.8
+        version: 1.0.8(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -20644,6 +20598,9 @@ importers:
       '@teambit/component.ui.component-status-resolver':
         specifier: ^0.0.510
         version: 0.0.510(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/dependencies.modules.packages-excluder':
+        specifier: ^1.0.8
+        version: 1.0.8(react@17.0.2)
       '@teambit/design.ui.surfaces.menu.link-item':
         specifier: 1.0.0
         version: 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2)
@@ -27530,10 +27487,10 @@ packages:
   /@teambit/base-react.navigation.link@2.0.30(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-Q5WGeEdXLYZWU/JU6L1qLoy+oNw=}
     peerDependencies:
-      '@testing-library/react': '*'
+      '@testing-library/react': ^12.1.5
       '@types/react': ^17.0.67
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.routing.compare-url': 1.0.1(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
@@ -27741,8 +27698,8 @@ packages:
   /@teambit/base-ui.layout.grid-component@1.0.2(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-/G/WOO98NHdLuEBAlctrgIWQuBMi96zLSyd55waivNFHm1RKgTzfLup/gdsnGbqhG1mYTfqboPUQI7OF1XmUQg==}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.layout.breakpoints': registry.npmjs.org/@teambit/base-ui.layout.breakpoints@1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
@@ -27766,13 +27723,8 @@ packages:
   /@teambit/base-ui.loaders.skeleton@1.0.1(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-4LCHFJkcWhYqauzTcaENE6eznCw=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/loaders/skeleton@1.0.1.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
@@ -27808,13 +27760,8 @@ packages:
   /@teambit/base-ui.surfaces.abs-container@1.0.1(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-51b87xnd65dXa3utstNjz7HXmtM=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/surfaces/abs-container@1.0.1.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
@@ -27852,13 +27799,8 @@ packages:
   /@teambit/base-ui.surfaces.drawer@1.1.3(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-EmfvFFxPhsVm6B9oBq1W7S4wzLA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/surfaces/drawer@1.1.3.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.hook.use-click-outside': 1.0.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.abs-container': 1.0.1(react-dom@17.0.2)(react@17.0.2)
@@ -27882,13 +27824,8 @@ packages:
   /@teambit/base-ui.text.paragraph@1.0.3(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-1+iy0XYAMZbJ++r57HBNzAK7hoE=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/text/paragraph@1.0.3.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.text.text-sizes': registry.npmjs.org/@teambit/base-ui.text.text-sizes@1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.theme.sizes': registry.npmjs.org/@teambit/base-ui.theme.sizes@1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -30166,6 +30103,15 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
+  /@teambit/dependencies.modules.packages-excluder@1.0.8(react@17.0.2):
+    resolution: {integrity: sha512-PsA3S56Zw6mMKuUm+RkQ5HzxrgEC0XzBSlICjgejpjXqSA8eKFn4IJfhPCpH4KPeaCMvWIkaRoJ5FZZMDYSJqw==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: 17.0.2
+    dependencies:
+      react: 17.0.2
+    dev: false
+
   /@teambit/design.elements.icon@1.0.11(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-yCfxRpQ4oY22Mumu7HeMm1oh240=, tarball: https://node-registry.bit.cloud/@teambit/design.elements.icon/-/@teambit-design.elements.icon-1.0.11.tgz}
     peerDependencies:
@@ -31649,8 +31595,8 @@ packages:
   /@teambit/documenter.ui.linked-heading@4.1.8(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-LGpmPIXZSWsXbYgkS/WR1VxJcCg=, tarball: https://node-registry.bit.cloud/@teambit/documenter.ui.linked-heading/-/@teambit-documenter.ui.linked-heading-4.1.8.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/documenter.ui.anchor': 4.0.8(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.heading': 4.1.6(react-dom@17.0.2)(react@17.0.2)
@@ -36157,14 +36103,10 @@ packages:
     resolution: {integrity: sha512-TiZzBSJja/LbhNPvk6yc0JrX9XqhQ0hdh6M2svYfsHGejaKFIAGd9MQ+ERIMzLGlN/kZoYIgdxFV0PuljTKXag==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
-      '@typescript-eslint/parser': '*'
-      eslint: '*'
+      '@typescript-eslint/parser': ^5.0.0
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
       typescript: '*'
     peerDependenciesMeta:
-      '@typescript-eslint/parser':
-        optional: true
-      eslint:
-        optional: true
       typescript:
         optional: true
     dependencies:
@@ -59005,16 +58947,6 @@ packages:
     name: '@teambit/dependencies.fs.linked-dependencies'
     dev: false
 
-  file:scopes/dependencies/modules/packages-excluder(react@17.0.2):
-    resolution: {directory: scopes/dependencies/modules/packages-excluder, type: directory}
-    id: file:scopes/dependencies/modules/packages-excluder
-    name: '@teambit/dependencies.modules.packages-excluder'
-    peerDependencies:
-      react: 17.0.2
-    dependencies:
-      react: 17.0.2
-    dev: false
-
   file:scopes/dependencies/pnpm(@testing-library/react@12.1.5)(@types/node@12.20.4)(@types/react@17.0.70)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/dependencies/pnpm, type: directory}
     id: file:scopes/dependencies/pnpm
@@ -60561,6 +60493,7 @@ packages:
       '@babel/preset-env': 7.23.2(@babel/core@7.19.6)
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.23.2
+      '@teambit/dependencies.modules.packages-excluder': 1.0.8(react@17.0.2)
       '@teambit/harmony': 0.4.6
       '@teambit/react.generator.react-native-templates': 1.0.8
       '@teambit/react.instructions.react-native.adding-tests': 0.0.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -61650,6 +61583,7 @@ packages:
       '@teambit/component.ui.component-filters.env-filter': 0.0.220(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component.ui.component-filters.show-main-filter': 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component.ui.component-status-resolver': 0.0.510(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/dependencies.modules.packages-excluder': 1.0.8(react@17.0.2)
       '@teambit/design.ui.surfaces.menu.link-item': 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tree': 0.0.15(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@17.0.2)(react@17.0.2)
@@ -61788,13 +61722,8 @@ packages:
     name: '@teambit/base-ui.elements.image'
     version: 1.0.0
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
@@ -61984,13 +61913,8 @@ packages:
     name: '@teambit/base-ui.routing.native-nav-link'
     version: 1.0.0
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.routing.compare-url': registry.npmjs.org/@teambit/base-ui.routing.compare-url@1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.routing.native-link': registry.npmjs.org/@teambit/base-ui.routing.native-link@1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -62145,13 +62069,8 @@ packages:
     name: '@teambit/base-ui.surfaces.split-pane.split-pane'
     version: 1.0.0
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.surfaces.split-pane.layout': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.layout@1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.split-pane.pane': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.pane@1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -62167,13 +62086,8 @@ packages:
     name: '@teambit/base-ui.surfaces.split-pane.splitter'
     version: 1.0.0
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
@@ -62302,13 +62216,8 @@ packages:
     name: '@teambit/base-ui.theme.colors'
     version: 1.0.0
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       core-js: 3.13.0
       react: 17.0.2
@@ -62460,13 +62369,8 @@ packages:
     name: '@teambit/base-ui.utils.string.affix'
     version: 1.0.0
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       core-js: 3.13.0
       react: 17.0.2
