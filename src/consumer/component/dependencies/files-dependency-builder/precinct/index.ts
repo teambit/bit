@@ -4,6 +4,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 
+// @ts-ignore we currently have @types/node as v12, and this is available > 16. once updated, remove the ts-ignore
+import { isBuiltin } from 'module';
+
 import getModuleType from 'module-definition';
 import Walker from 'node-source-walk';
 
@@ -71,9 +74,6 @@ const typeToDetective: Record<string, Detective> = {
 };
 
 const debug = require('debug')('precinct');
-
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-const natives = process.binding('natives');
 
 const detectorHook = new DetectorHook();
 
@@ -184,7 +184,7 @@ const getJsDetector = (fileInfo: FileInfo, options?: Options): Detective | undef
  */
 const normalizeDeps = (deps: BuiltinDeps, includeCore?: boolean): string[] => {
   const normalizedDeps = Array.isArray(deps) ? deps : Object.keys(deps);
-  return includeCore ? normalizedDeps : normalizedDeps.filter((d) => !natives[d]);
+  return includeCore ? normalizedDeps : normalizedDeps.filter((d) => !isBuiltin(d));
 };
 
 const getDepsFromFile = (filename: string, options?: Options): string[] => {
