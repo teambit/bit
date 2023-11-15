@@ -449,7 +449,7 @@ export class GeneratorMain {
   }
 
   getConfiguredEnvs(): string[] {
-    return this.config.envs || [];
+    return this.config.envs ?? [];
   }
 
   async listEnvComponentTemplates(ids: string[] = [], aspectId?: string): Promise<Array<ComponentTemplateWithId>> {
