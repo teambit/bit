@@ -60,8 +60,8 @@ importers:
         specifier: 7.22.3
         version: 7.22.3
       '@bitdev/react.generators.react-templates':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.1.0
+        version: 1.1.0
       '@graphql-modules/core':
         specifier: 0.7.17
         version: 0.7.17(graphql@15.8.0)(reflect-metadata@0.1.13)
@@ -17415,8 +17415,8 @@ importers:
         specifier: 7.23.2
         version: 7.23.2
       '@bitdev/react.generators.react-templates':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.1.0
+        version: 1.1.0
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
@@ -23757,8 +23757,8 @@ packages:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
     dev: false
 
-  /@bitdev/react.generators.react-templates@1.0.0:
-    resolution: {integrity: sha512-v0yOgP+QlRzs6T+tgsokxacetLhjF1/hlQWFvTAjeAVMIWbRB14h4hvUQzg0VSXRfrY+ERGMsiS1xzvb8ocozA==}
+  /@bitdev/react.generators.react-templates@1.1.0:
+    resolution: {integrity: sha512-D1f5fOV3DJ6zYss9S97QwfFLo2eIfTswINYi/p447/1eWb6+cKMf4HMU3yG3XBoE3LqJnhNiUBPg7gmR0GOw6A==}
     dependencies:
       dedent: 0.7.0
     dev: false
@@ -60766,7 +60766,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.23.2
-      '@bitdev/react.generators.react-templates': 1.0.0
+      '@bitdev/react.generators.react-templates': 1.1.0
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.4(@types/webpack@5.28.1)(react-refresh@0.10.0)(webpack-dev-server@4.15.0)(webpack@5.84.1)
       '@prerenderer/prerenderer': 1.2.3(@types/express@4.17.13)(debug@4.3.4)

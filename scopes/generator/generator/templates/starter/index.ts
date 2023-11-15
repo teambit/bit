@@ -10,6 +10,7 @@ export const starterTemplate: ComponentTemplate = {
   name: 'starter',
   description:
     'create your own workspace starter (env integrated) - \nDocs: https://bit.dev/reference/starters/create-starter',
+  hidden: true,
   generateFiles: (context: ComponentContext) => {
     return [
       {
