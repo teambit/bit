@@ -10,8 +10,6 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
     ...packageManagerDefaultConfig,
     policy: {
       dependencies: {
-        '@teambit/node.node': 'latest',
-        '@bitdev/react.react-env': 'latest',
         '@types/node': '16.18.44',
         '@types/jest': '29.5.4',
         eslint: '7.32.0',

@@ -42,6 +42,9 @@ export type CompileOptions = {
    */
   deleteDistDir?: boolean;
   initiator: CompilationInitiator; // describes where the compilation is coming from
+  // should we create links in node_modules for the compiled components (default = true)
+  // this will link the source files, and create the package.json
+  linkComponents?: boolean;
 };
 
 export type CompileError = { path: string; error: Error };
@@ -101,6 +104,10 @@ export class ComponentCompiler {
     dataToPersist.addManyFiles(this.dists);
     dataToPersist.addBasePath(this.workspace.path);
     await dataToPersist.persistAllToFS();
+    const linkComponents = options.linkComponents ?? true;
+    if (linkComponents) {
+      await linkToNodeModulesByComponents([this.component], this.workspace);
+    }
     const buildResults = this.dists.map((distFile) => distFile.path);
     if (this.component.state._consumer.compiler) loader.succeed();
     this.pubsub.pub(
@@ -283,7 +290,7 @@ export class WorkspaceCompiler {
       { initiator: watchOpts.initiator || CompilationInitiator.ComponentChanged, deleteDistDir },
       true
     );
-    await linkToNodeModulesByComponents([component], this.workspace);
+    // await linkToNodeModulesByComponents([component], this.workspace);
     return {
       results: buildResults,
       toString() {
