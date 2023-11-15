@@ -50,8 +50,8 @@ import { slice, isEmpty, merge, compact, uniqBy } from 'lodash';
 import { MergeConfigFilename, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy/dist/constants';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
-import { CompilationInitiator } from '@teambit/compiler';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
@@ -741,13 +741,13 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     id: ComponentID,
     files: PathOsBasedAbsolute[],
     removedFiles: PathOsBasedAbsolute[],
-    initiator?: CompilationInitiator
+    watchOpts: WatchOptions
   ): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
-      const onChangeResult = await onChangeFunc(component, files, removedFiles, initiator);
+      const onChangeResult = await onChangeFunc(component, files, removedFiles, watchOpts);
       if (onChangeResult) results.push({ extensionId: extension, results: onChangeResult });
     });
 
@@ -756,14 +756,14 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     return results;
   }
 
-  async triggerOnComponentAdd(id: ComponentID): Promise<OnComponentEventResult[]> {
+  async triggerOnComponentAdd(id: ComponentID, watchOpts: WatchOptions): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     const files = component.state.filesystem.files.map((file) => file.path);
     await mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
-      const onAddResult = await onAddFunc(component, files);
-      results.push({ extensionId: extension, results: onAddResult });
+      const onAddResult = await onAddFunc(component, files, watchOpts);
+      if (onAddResult) results.push({ extensionId: extension, results: onAddResult });
     });
 
     await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });

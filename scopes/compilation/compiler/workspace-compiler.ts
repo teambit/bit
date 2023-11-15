@@ -228,7 +228,7 @@ export class WorkspaceCompiler {
   ) {
     if (this.workspace) {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
-      this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
+      this.workspace.registerOnComponentAdd(this.onComponentAdd.bind(this));
       this.watcher.registerOnPreWatch(this.onPreWatch.bind(this));
     }
     this.ui.registerPreStart(this.onPreStart.bind(this));
@@ -261,12 +261,17 @@ export class WorkspaceCompiler {
     return false;
   }
 
+  async onComponentAdd(component: Component, files: string[], watchOpts: WatchOptions) {
+    return this.onComponentChange(component, files, undefined, watchOpts);
+  }
+
   async onComponentChange(
     component: Component,
     files: string[],
-    removedFiles?: string[],
-    initiator?: CompilationInitiator
-  ): Promise<SerializableResults> {
+    removedFiles: string[] = [],
+    watchOpts: WatchOptions
+  ): Promise<SerializableResults | void> {
+    if (!watchOpts.compile) return undefined;
     // when files are removed, we need to remove the dist directories and the old symlinks, otherwise, it has
     // symlinks to non-exist files and the dist has stale files
     const deleteDistDir = Boolean(removedFiles?.length);
@@ -275,7 +280,7 @@ export class WorkspaceCompiler {
     }
     const buildResults = await this.compileComponents(
       [component.id.toString()],
-      { initiator: initiator || CompilationInitiator.ComponentChanged, deleteDistDir },
+      { initiator: watchOpts.initiator || CompilationInitiator.ComponentChanged, deleteDistDir },
       true
     );
     await linkToNodeModulesByComponents([component], this.workspace);
