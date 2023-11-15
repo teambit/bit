@@ -107,6 +107,9 @@ importers:
       '@pnpm/fetch':
         specifier: 7.0.5
         version: 7.0.5(@pnpm/logger@5.0.0)
+      '@pnpm/list':
+        specifier: ^9.1.1
+        version: 9.1.5(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-file':
         specifier: 8.1.4
         version: 8.1.4(@pnpm/logger@5.0.0)
@@ -140,6 +143,9 @@ importers:
       '@pnpm/registry-mock':
         specifier: 3.4.0
         version: 3.4.0
+      '@pnpm/reviewing.dependencies-hierarchy':
+        specifier: ^2.1.0
+        version: 2.1.4(@pnpm/logger@5.0.0)
       '@pnpm/semver-diff':
         specifier: 1.1.0
         version: 1.1.0
@@ -899,6 +905,9 @@ importers:
       '@teambit/lanes.ui.viewed-lane':
         specifier: 0.0.37
         version: 0.0.37(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.69)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/legacy':
+        specifier: link:/Users/zoltan/.bvm/links/bit/node_modules/@teambit/legacy
+        version: link:../../../.bvm/links/bit/node_modules/@teambit/legacy
       '@teambit/legacy-bit-id':
         specifier: ^1.1.0
         version: 1.1.0
@@ -13681,6 +13690,9 @@ importers:
       '@pnpm/error':
         specifier: 5.0.2
         version: 5.0.2
+      '@pnpm/list':
+        specifier: ^9.1.1
+        version: 9.1.5(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-file':
         specifier: 8.1.4
         version: 8.1.4(@pnpm/logger@5.0.0)
@@ -13699,6 +13711,9 @@ importers:
       '@pnpm/plugin-commands-rebuild':
         specifier: 10.0.5
         version: 10.0.5(@pnpm/logger@5.0.0)(@types/node@12.20.4)(bluebird@3.7.2)
+      '@pnpm/reviewing.dependencies-hierarchy':
+        specifier: ^2.1.0
+        version: 2.1.4(@pnpm/logger@5.0.0)
       '@pnpm/sort-packages':
         specifier: 5.0.7
         version: 5.0.7
@@ -25172,7 +25187,7 @@ packages:
     resolution: {integrity: sha512-UopQ5nGUohh0antzlLLU9K9PGEdKGk9pFkxgwa5rLGWX6Wc8Ix/iMTfHqHRKQYDgCFxv/jha0u6BLwZtG/knkQ==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': ^5.0.0
+      '@pnpm/logger': '*'
     dependencies:
       '@pnpm/error': 5.0.2
       '@pnpm/logger': 5.0.0
@@ -25191,6 +25206,23 @@ packages:
       p-settle: 4.1.1
       ramda: /@pnpm/ramda@0.28.1
       symlink-dir: 5.2.0
+    dev: false
+
+  /@pnpm/list@9.1.5(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-mz3gWQb9UfpCLbNUoz/oZZSPZIXi7+NPvPdF6qzq0PgLPYGj/XXw7/s2LextqSJjxJL7XtutT9uvdpmMr2Xq6Q==}
+    engines: {node: '>=16.14'}
+    dependencies:
+      '@pnpm/read-package-json': 8.0.5
+      '@pnpm/read-project-manifest': 5.0.8
+      '@pnpm/reviewing.dependencies-hierarchy': 2.1.4(@pnpm/logger@5.0.0)
+      '@pnpm/types': 9.4.0
+      archy: 1.0.0
+      chalk: 4.1.2
+      cli-columns: 4.0.0
+      p-limit: 3.1.0
+      ramda: /@pnpm/ramda@0.28.1
+    transitivePeerDependencies:
+      - '@pnpm/logger'
     dev: false
 
   /@pnpm/local-resolver@11.0.1(@pnpm/logger@5.0.0):
@@ -25517,7 +25549,7 @@ packages:
     resolution: {integrity: sha512-X4uvOR5Uzabq+sLqdqyPrWdiN2Y+FhfFlDvU3yzLJdRQz5lq4IqyK2o2s3gPTD/3ElsN73KfoNQPQMGSwDCutw==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': ^5.0.0
+      '@pnpm/logger': '*'
     dependencies:
       '@pnpm/core-loggers': 9.0.4(@pnpm/logger@5.0.0)
       '@pnpm/error': 5.0.2
@@ -25949,6 +25981,28 @@ packages:
     engines: {node: '>=16.14'}
     dependencies:
       '@pnpm/types': 9.4.0
+    dev: false
+
+  /@pnpm/reviewing.dependencies-hierarchy@2.1.4(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-idAC4JKbJMC0RnDhkwU8BdExDjsaIMxG6ljO1vfmTsaCou7uojILQV3vacQdrVwEk1ANovS/+4eDmxSU6tmMCw==}
+    engines: {node: '>=16.14'}
+    dependencies:
+      '@pnpm/dependency-path': 2.1.5
+      '@pnpm/lockfile-file': 8.1.4(@pnpm/logger@5.0.0)
+      '@pnpm/lockfile-utils': 9.0.1
+      '@pnpm/matcher': 5.0.0
+      '@pnpm/modules-yaml': 12.1.4
+      '@pnpm/normalize-registries': 5.0.4
+      '@pnpm/npm-package-arg': 1.0.0
+      '@pnpm/read-modules-dir': 6.0.1
+      '@pnpm/read-package-json': 8.0.5
+      '@pnpm/types': 9.4.0
+      normalize-path: 3.0.0
+      realpath-missing: 1.1.0
+      resolve-link-target: 2.0.0
+      semver: 7.5.4
+    transitivePeerDependencies:
+      - '@pnpm/logger'
     dev: false
 
   /@pnpm/run-npm@6.0.0:
@@ -59495,12 +59549,14 @@ packages:
       '@pnpm/default-reporter': 12.4.6(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path': 2.1.5
       '@pnpm/error': 5.0.2
+      '@pnpm/list': 9.1.5(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-file': 8.1.4(@pnpm/logger@5.0.0)
       '@pnpm/logger': 5.0.0
       '@pnpm/modules-yaml': 12.1.4
       '@pnpm/package-store': 19.0.9(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.8)
       '@pnpm/pick-registry-for-package': 5.0.4
       '@pnpm/plugin-commands-rebuild': 10.0.5(@pnpm/logger@5.0.0)(@types/node@12.20.4)(bluebird@3.7.2)
+      '@pnpm/reviewing.dependencies-hierarchy': 2.1.4(@pnpm/logger@5.0.0)
       '@pnpm/sort-packages': 5.0.7
       '@pnpm/store-connection-manager': 7.0.14(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.8)(bluebird@3.7.2)
       '@pnpm/types': 9.4.0
