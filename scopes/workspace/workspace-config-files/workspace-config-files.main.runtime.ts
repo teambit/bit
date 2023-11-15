@@ -4,6 +4,7 @@ import globby from 'globby';
 import chalk from 'chalk';
 import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
 import pMapSeries from 'p-map-series';
+import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import yesno from 'yesno';
 import { defaults, flatMap, isFunction, pick, uniq } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
@@ -117,6 +118,9 @@ export class WorkspaceConfigFilesMain {
    * - cleanResults: array of deleted paths
    */
   async writeConfigFiles(options: WriteConfigFilesOptions = {}): Promise<WriteConfigFilesResult> {
+    if (!this.workspace) {
+      throw new ConsumerNotFound();
+    }
     const defaultOpts: WriteConfigFilesOptions = {
       clean: false,
       dedupe: false,
@@ -164,6 +168,9 @@ export class WorkspaceConfigFilesMain {
    */
   async cleanConfigFiles(options: CleanConfigFilesOptions = {}): Promise<string[]> {
     // const execContext = await this.getExecContext();
+    if (!this.workspace) {
+      throw new ConsumerNotFound();
+    }
     const cleanResults = await this.clean(options);
     return cleanResults;
   }
@@ -182,6 +189,9 @@ export class WorkspaceConfigFilesMain {
    * @returns An array of objects with aspectId and configWriter properties.
    */
   async listConfigWriters(): Promise<EnvConfigWritersList> {
+    if (!this.workspace) {
+      throw new ConsumerNotFound();
+    }
     const execContexts = await this.getExecContext();
 
     const result: EnvConfigWritersList = execContexts.map((executionContext) => {
