@@ -137,7 +137,7 @@ export class WorkspaceConfigFilesMain {
     }
 
     let writeErr;
-    let writeResults: WriteResults;
+    let writeResults;
     try {
       writeResults = await this.write(execContext, optionsWithDefaults);
       const allWrittenFiles = writeResults.writersResult.flatMap((writerResult) => {
