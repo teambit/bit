@@ -343,13 +343,19 @@ export class Http implements Network {
     };
     const importerUrl = getImporterUrl();
     const urlToFetch = importerUrl ? `${importerUrl}/${this.scopeName}` : `${this.url}/${route}`;
-    const scopeData = `scopeName: ${this.scopeName}, url: ${urlToFetch}`;
+    // generate a random number of 6 digits to be used as the request ID, so it'll be easier to debug with the remote.
+    const requestId = Math.floor(Math.random() * 1000000);
+    const scopeData = `scopeName: ${this.scopeName}, url: ${urlToFetch}. requestId: ${requestId}`;
     logger.debug(`Http.fetch, ${scopeData}`);
     const body = JSON.stringify({
       ids,
       fetchOptions,
     });
-    const headers = this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': Verb.READ });
+    const headers = this.getHeaders({
+      'Content-Type': 'application/json',
+      'x-verb': Verb.READ,
+      'x-request-id': requestId.toString(),
+    });
     const opts = this.addAgentIfExist({
       method: 'post',
       body,

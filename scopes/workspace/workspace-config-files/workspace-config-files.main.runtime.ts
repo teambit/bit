@@ -131,15 +131,29 @@ export class WorkspaceConfigFilesMain {
     const optionsWithDefaults = defaults(options, defaultOpts);
     const execContext = await this.getExecContext();
 
-    let cleanResults: string[] | undefined;
+    let pathsToClean: string[] | undefined = [];
     if (optionsWithDefaults.clean) {
-      cleanResults = await this.clean(options);
+      pathsToClean = await this.calcPathsToClean({ writers: optionsWithDefaults.writers });
     }
 
     let writeErr;
     let writeResults;
     try {
       writeResults = await this.write(execContext, optionsWithDefaults);
+      const allWrittenFiles = writeResults.writersResult.flatMap((writerResult) => {
+        return writerResult.extendingConfigFiles.flatMap((extendingConfigFile) => {
+          return extendingConfigFile.extendingConfigFile.filePaths;
+        });
+      });
+      // Avoid delete and re-create files that were written by other config writers
+      // instead of deleting at the beginning then write all
+      // we write all and then delete the files that were not written by the config writers
+      // This reduces the config files that re-created (as many times no changes needed)
+      // which prevent issues with needing to restart the ts-server in the ide
+      pathsToClean = pathsToClean.filter(
+        (pathToClean) => !allWrittenFiles.includes(join(this.workspace.path, pathToClean))
+      );
+      await this.deleteFiles(pathsToClean);
     } catch (err) {
       this.logger.info('writeConfigFiles failed', err);
       if (optionsWithDefaults.throw) {
@@ -148,7 +162,7 @@ export class WorkspaceConfigFilesMain {
       writeErr = err;
     }
 
-    return { writeResults, cleanResults, wsDir: this.workspace.path, err: writeErr };
+    return { writeResults, cleanResults: pathsToClean, wsDir: this.workspace.path, err: writeErr };
   }
 
   /**
@@ -321,6 +335,14 @@ export class WorkspaceConfigFilesMain {
    * @returns Array of paths of deleted config files
    */
   async clean({ dryRun, silent, writers }: WriteConfigFilesOptions): Promise<string[]> {
+    const paths = await this.calcPathsToClean({ writers });
+    if (dryRun) return paths;
+    if (!silent) await this.promptForCleaning(paths);
+    await this.deleteFiles(paths);
+    return paths;
+  }
+
+  private async calcPathsToClean({ writers }: WriteConfigFilesOptions): Promise<string[]> {
     const execContext = await this.getExecContext();
     const configWriters = this.getFlatConfigWriters(execContext);
     const filteredConfigWriters = writers
@@ -345,9 +367,6 @@ export class WorkspaceConfigFilesMain {
         })
         .flat()
     );
-    if (dryRun) return paths;
-    if (!silent) await this.promptForCleaning(paths);
-    await this.deleteFiles(paths);
     return paths;
   }
 
