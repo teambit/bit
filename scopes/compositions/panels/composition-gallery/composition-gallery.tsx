@@ -3,7 +3,7 @@ import type { ComponentModel } from '@teambit/component';
 import { Icon } from '@teambit/design.elements.icon';
 import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { useNavigate } from '@teambit/base-react.navigation.link';
-import { CompositionCard, CompositionCardSkeleton } from '@teambit/composition-card';
+import { CompositionCard } from '@teambit/composition-card';
 import styles from './composition-gallery.module.scss';
 
 export type CompositionGalleryProps = {
@@ -23,7 +23,7 @@ export function CompositionGallery({ component }: CompositionGalleryProps) {
         <Icon of="eye" /> <span>PREVIEW</span>
       </LinkedHeading>
       <div className={styles.carousel}>
-        {component.compositions.map((composition, index) => {
+        {component.compositions.map((composition) => {
           return (
             <CompositionCard
               key={composition.identifier.toLowerCase()}
