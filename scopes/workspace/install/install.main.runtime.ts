@@ -70,6 +70,7 @@ export type WorkspaceInstallOptions = {
   copyPeerToRuntimeOnRoot?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
   updateExisting?: boolean;
+  skipIfExisting?: boolean;
   savePrefix?: string;
   compile?: boolean;
   includeOptionalDeps?: boolean;
@@ -227,7 +228,7 @@ export class InstallMain {
     // this.logger.console(
     // `the following environments are not installed yet: ${nonLoadedEnvs.join(', ')}. installing them now...`
     // );
-    await this.install(packages, { addMissingDeps: installMissing });
+    await this.install(packages, { addMissingDeps: installMissing, skipIfExisting: true });
   }
 
   private async _addPackages(packages: string[], options?: WorkspaceInstallOptions) {
@@ -261,6 +262,7 @@ export class InstallMain {
     });
     this.dependencyResolver.addToRootPolicy(newWorkspacePolicyEntries, {
       updateExisting: options?.updateExisting ?? false,
+      skipIfExisting: options?.skipIfExisting ?? false,
     });
     await this.dependencyResolver.persistConfig(this.workspace.path);
   }
