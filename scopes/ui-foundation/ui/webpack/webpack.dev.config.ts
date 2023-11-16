@@ -225,8 +225,27 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
                 babelrc: false,
                 sourceType: 'unambiguous',
                 presets: [
-                  // Preset includes JSX, TypeScript, and some ESnext features
-                  require.resolve('babel-preset-react-app'),
+                  [
+                    require.resolve('@babel/preset-env'),
+                    {
+                      // Allow importing core-js in entrypoint and use browserlist to select polyfills
+                      useBuiltIns: 'entry',
+                      // Set the corejs version we are using to avoid warnings in console
+                      // This will need to change once we upgrade to corejs@3
+                      corejs: 3,
+                      // Exclude transforms that make all code slower
+                      exclude: ['transform-typeof-symbol'],
+                    },
+                  ],
+                  [
+                    require.resolve('@babel/preset-react'),
+                    {
+                      development: true,
+                      // Will use the native built-in instead of trying to polyfill
+                      // behavior for any plugins that require one. This option will be removed in Babel 8.
+                      useBuiltIns: true,
+                    },
+                  ],
                 ],
                 plugins: [require.resolve('react-refresh/babel')],
               },
