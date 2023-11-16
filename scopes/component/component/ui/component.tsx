@@ -58,7 +58,15 @@ export function Component({
   const useComponentOptions = {
     logFilters: {
       ...componentFiltersFromProps,
-      ...(componentFiltersFromProps.loading ? {} : { log: { limit: 3, ...componentFiltersFromProps.log } }),
+      ...(componentFiltersFromProps.loading
+        ? {}
+        : {
+            log: {
+              // @todo - enable this when we have lazy loading of logs
+              // limit: 3,
+              ...componentFiltersFromProps.log,
+            },
+          }),
     },
     customUseComponent: useComponent,
   };

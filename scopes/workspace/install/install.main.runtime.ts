@@ -116,6 +116,8 @@ export class InstallMain {
 
     private app: ApplicationMain,
 
+    private generator: GeneratorMain,
+
     private preLinkSlot: PreLinkSlot,
 
     private preInstallSlot: PreInstallSlot,
@@ -370,6 +372,7 @@ export class InstallMain {
     }
   ): Promise<{ componentsAndManifests: ComponentsAndManifests; mergedRootPolicy: WorkspacePolicy }> {
     const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy();
+    await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
     const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, options);
     if (!options?.addMissingDeps) {
       return { componentsAndManifests, mergedRootPolicy };
@@ -440,6 +443,45 @@ export class InstallMain {
       );
     });
     return rootPolicy;
+  }
+
+  private async addConfiguredGeneratorEnvsToWorkspacePolicy(rootPolicy: WorkspacePolicy): Promise<void> {
+    const configuredEnvs = this.generator.getConfiguredEnvs();
+    const resolvedEnvs = compact(
+      await Promise.all(
+        configuredEnvs.map(async (envIdStr) => {
+          if (this.envs.isCoreEnv(envIdStr)) {
+            return undefined;
+          }
+          const parsedId = await this.workspace.resolveComponentId(envIdStr);
+          const comps = await this.workspace.importAndGetMany(
+            [parsedId],
+            `to get the env ${parsedId.toString()} for installation`
+          );
+          const idWithVersion = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(parsedId);
+          const version = idWithVersion.split('@')[1] || '*';
+          const packageName = this.dependencyResolver.getPackageName(comps[0]);
+          return {
+            packageName,
+            version,
+          };
+        })
+      )
+    );
+
+    resolvedEnvs.forEach((env) => {
+      rootPolicy.add(
+        {
+          dependencyId: env.packageName,
+          value: {
+            version: env.version,
+          },
+          lifecycleType: 'runtime',
+        },
+        // If it's already exist from the root, take the version from the root policy
+        { skipIfExisting: true }
+      );
+    });
   }
 
   private async _addMissingPackagesToRootPolicy(
@@ -981,6 +1023,7 @@ export class InstallMain {
       envs,
       wsConfigFiles,
       app,
+      generator,
       preLinkSlot,
       preInstallSlot,
       postInstallSlot,

@@ -296,6 +296,8 @@ export class DependenciesUsageCmd implements Command {
   constructor(private deps: DependenciesMain) {}
 
   async report([depName]: [string]) {
+    const deepUsageResult = await this.deps.usageDeep(depName);
+    if (deepUsageResult != null) return deepUsageResult;
     const results = await this.deps.usage(depName);
     if (!Object.keys(results).length) {
       return chalk.yellow(`the specified dependency ${depName} is not used by any component`);
@@ -304,6 +306,10 @@ export class DependenciesUsageCmd implements Command {
       .map((compIdStr) => `${chalk.bold(compIdStr)} (using dep in version ${results[compIdStr]})`)
       .join('\n');
   }
+}
+
+export class WhyCmd extends DependenciesUsageCmd {
+  name = 'why <dependency-name>';
 }
 
 export class DependenciesCmd implements Command {

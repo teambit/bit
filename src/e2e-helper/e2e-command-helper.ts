@@ -280,6 +280,9 @@ export default class CommandHelper {
   dependenciesRemove(pattern: string, pkg: string, flags = '') {
     return this.runCmd(`bit dependencies remove ${pattern} ${pkg} ${flags}`);
   }
+  dependenciesUsage(depName: string) {
+    return this.runCmd(`bit dependencies usage ${depName}`);
+  }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
   }

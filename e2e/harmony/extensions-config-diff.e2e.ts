@@ -50,9 +50,9 @@ describe('extensions config diff', function () {
         expect(output).to.have.string(
           '+ [ my-scope/ext1@0.0.1, my-scope/ext2@0.0.1, my-scope/ext3@0.0.1, my-scope/ext4@0.0.1 ]'
         );
-        expect(output).to.have.string('--- My-scope/ext4@0.0.1 configuration (0.0.1 original)');
-        expect(output).to.have.string('+++ My-scope/ext4@0.0.1 configuration (0.0.1 modified)');
-        expect(output).to.have.string('+ "key": "val-component-json"');
+        expect(output).to.have.string('--- my-scope/ext4@0.0.1 configuration (0.0.1 original)');
+        expect(output).to.have.string('+++ my-scope/ext4@0.0.1 configuration (0.0.1 modified)');
+        expect(output).to.have.string('+  "key": "val-component-json"');
       });
       it('bit diff should not show internal config fields', () => {
         output = helper.command.diff();
@@ -75,9 +75,9 @@ describe('extensions config diff', function () {
         expect(output).to.have.string('+++ Extensions (0.0.1 modified)');
         expect(output).to.have.string('- [ my-scope/ext1@0.0.1, my-scope/ext2@0.0.1, my-scope/ext3@0.0.1 ]');
         expect(output).to.have.string('+ [ my-scope/ext1@0.0.1, my-scope/ext2@0.0.1 ]');
-        expect(output).to.have.string('--- My-scope/ext3@0.0.1 configuration (0.0.1 original)');
-        expect(output).to.have.string('+++ My-scope/ext3@0.0.1 configuration (0.0.1 modified)');
-        expect(output).to.have.string('- "key": "val-variant"');
+        expect(output).to.have.string('--- my-scope/ext3@0.0.1 configuration (0.0.1 original)');
+        expect(output).to.have.string('+++ my-scope/ext3@0.0.1 configuration (0.0.1 modified)');
+        expect(output).to.have.string('-  "key": "val-variant"');
       });
     });
     describe('change extension config', () => {
@@ -91,10 +91,10 @@ describe('extensions config diff', function () {
       });
       it('should show it in bit diff', () => {
         output = helper.command.diff();
-        expect(output).to.have.string('--- My-scope/ext2@0.0.1 configuration (0.0.1 original)');
-        expect(output).to.have.string('+++ My-scope/ext2@0.0.1 configuration (0.0.1 modified)');
-        expect(output).to.have.string('- "key": "val-variant"');
-        expect(output).to.have.string('+ "newKey": "newVal"');
+        expect(output).to.have.string('--- my-scope/ext2@0.0.1 configuration (0.0.1 original)');
+        expect(output).to.have.string('+++ my-scope/ext2@0.0.1 configuration (0.0.1 modified)');
+        expect(output).to.have.string('-  "key": "val-variant"');
+        expect(output).to.have.string('+  "newKey": "newVal"');
       });
     });
     // Skipped for now, because of a bug will be unskipped after bug fix

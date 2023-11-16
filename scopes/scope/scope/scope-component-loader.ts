@@ -191,7 +191,7 @@ export class ScopeComponentLoader {
     const state = new State(
       // We use here the consumerComponent.extensions instead of version.extensions
       // because as part of the conversion to consumer component the artifacts are initialized as Artifact instances
-      new Config(version.mainFile, consumerComponent.extensions),
+      new Config(consumerComponent),
       // todo: see the comment of this "createAspectListFromLegacy" method. the aspect ids may be incorrect.
       // find a better way to get the ids correctly.
       this.scope.componentExtension.createAspectListFromLegacy(consumerComponent.extensions),

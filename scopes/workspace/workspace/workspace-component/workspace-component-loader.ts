@@ -643,7 +643,7 @@ export class WorkspaceComponentLoader {
     consumerComponent.extensions = extensions;
 
     const state = new State(
-      new Config(consumerComponent.mainFile, extensions),
+      new Config(consumerComponent),
       await this.workspace.createAspectList(extensions),
       ComponentFS.fromVinyls(consumerComponent.files),
       consumerComponent.dependencies,
