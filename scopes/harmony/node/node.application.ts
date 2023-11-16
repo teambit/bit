@@ -33,6 +33,7 @@ export class NodeApp implements Application {
     child.stdout?.on('data', function (data) {
       logger.console(data.toString());
     });
+    
     return port;
   }
 

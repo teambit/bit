@@ -10,7 +10,6 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
     ...packageManagerDefaultConfig,
     policy: {
       dependencies: {
-        '@teambit/node.node': 'latest',
         '@types/node': '16.18.44',
         '@types/jest': '29.5.4',
         eslint: '7.32.0',
@@ -25,15 +24,15 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
     },
   };
 
-  configParsed['teambit.generator/generator'] = {
-    envs: [
-      'teambit.node/node',
-      //  "teambit.angular/angular",
-      //  "teambit.vue/vue",
-      //  "teambit.react/react-env",
-      //  "teambit.html/html-env"
-    ],
-  };
+  // configParsed['teambit.generator/generator'] = {
+  //   envs: [
+  //     'teambit.node/node',
+  //     "bitdev.react/react-env",
+  //      "teambit.vue/vue",
+  //      "teambit.react/react-env",
+  //      "teambit.html/html-env"
+  //   ],
+  // };
 
   return stringifyWorkspaceConfig(configParsed);
 }
