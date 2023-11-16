@@ -192,11 +192,11 @@ export class InstallMain {
     let installMissing = false;
 
     const ids = generateResults.map((generateResult) => {
-      if (generateResult.packages && generateResult.packages.length) {
-        packages = packages.concat(generateResult.packages);
+      if (generateResult.dependencies && generateResult.dependencies.length) {
+        packages = packages.concat(generateResult.dependencies);
         runInstall = true;
       }
-      if (generateResult.installMissingPackages) {
+      if (generateResult.dependencies) {
         installMissing = true;
         runInstall = true;
       }

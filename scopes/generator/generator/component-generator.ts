@@ -30,8 +30,8 @@ export type GenerateResult = {
   packageName: string;
   isApp?: boolean;
   isEnv?: boolean;
-  packages?: string[];
-  installMissingPackages?: boolean;
+  dependencies?: string[];
+  installMissingDependencies?: boolean;
 };
 
 export type OnComponentCreateFn = (generateResults: GenerateResult[]) => Promise<void>;
@@ -236,8 +236,8 @@ export class ComponentGenerator {
       envSetBy: setBy,
       isApp: this.template.isApp,
       isEnv: this.template.isEnv,
-      packages: this.template.packages,
-      installMissingPackages: this.template.installMissingPackages,
+      dependencies: this.template.dependencies,
+      installMissingDependencies: this.template.installMissingDependencies,
     };
   }
 

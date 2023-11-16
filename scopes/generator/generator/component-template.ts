@@ -122,15 +122,15 @@ export interface ComponentTemplateOptions {
   isApp?: boolean;
 
   /**
-   * list of packages to install when the component is created.
+   * list of dependencies to install when the component is created.
    */
-  packages?: string[];
+  dependencies?: string[];
 
   /**
-   * Perform installation of missing packages after component generation.
+   * Perform installation of missing dependencies after component generation.
    * This is the same as of running `bit install --add-missing-deps` after component generation.
    */
-  installMissingPackages?: boolean;
+  installMissingDependencies?: boolean;
 }
 
 export interface ComponentTemplate extends ComponentTemplateOptions {
