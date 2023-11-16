@@ -173,6 +173,9 @@ export class ComponentGenerator {
     });
     const component = await this.workspace.get(componentId);
     const hasEnvConfiguredOriginally = this.envs.hasEnvConfigured(component);
+    if (this.template.isApp) {
+      await this.workspace.use(componentId.toString());
+    }
     const envBeforeConfigChanges = this.envs.getEnv(component);
     let config = this.template.config;
     if (config && typeof config === 'function') {
