@@ -102,9 +102,35 @@ export interface ComponentTemplateOptions {
   hidden?: boolean;
 
   /**
-   * env to use for the component.
+   * env to use for the generated component.
    */
   env?: string;
+
+  /**
+   * adds a metadata that the component that this template creates is of type env.
+   * This will be used later to do further configuration for example:
+   * - ensure to create the .bit_root for it
+   */
+  isEnv?: boolean;
+
+  /**
+   * adds a metadata that the component that this template creates is of type app.
+   * This will be used later to do further configuration for example:
+   * - add it to the workspace.jsonc as app
+   * - ensure to create the .bit_root for it
+   */
+  isApp?: boolean;
+
+  /**
+   * list of packages to install when the component is created.
+   */
+  packages?: string[];
+
+  /**
+   * Perform installation of missing packages after component generation.
+   * This is the same as of running `bit install --add-missing-deps` after component generation.
+   */
+  installMissingPackages?: boolean;
 }
 
 export interface ComponentTemplate extends ComponentTemplateOptions {
