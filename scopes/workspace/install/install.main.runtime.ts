@@ -454,6 +454,11 @@ export class InstallMain {
             return undefined;
           }
           const parsedId = await this.workspace.resolveComponentId(envIdStr);
+          // If we have the env in the workspace, we don't want to install it
+          const inWs = await this.workspace.hasId(parsedId);
+          if (inWs) {
+            return undefined;
+          }
           const comps = await this.workspace.importAndGetMany(
             [parsedId],
             `to get the env ${parsedId.toString()} for installation`
