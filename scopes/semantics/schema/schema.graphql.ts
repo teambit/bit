@@ -27,9 +27,7 @@ export function schemaSchema(schema: SchemaMain): Schema {
           const api = await schema.getSchema(component);
           if (!api) return empty;
 
-          const apiSchema = filterUnimplementedSchemaNodes(api);
-
-          return apiSchema;
+          return filterUnimplementedSchemaNodes(api);
         },
       },
     },
