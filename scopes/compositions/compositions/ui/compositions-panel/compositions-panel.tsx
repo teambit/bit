@@ -57,7 +57,7 @@ export function CompositionsPanel({
     (composition: Composition) => (e: React.MouseEvent<HTMLDivElement>) => {
       e.preventDefault();
       const basePath = location?.pathname.split('/~compositions')[0];
-      navigate(`${basePath}/~code/${composition.filepath}`);
+      navigate(`${basePath}/~code/${composition.filepath}#search=${composition.identifier}`);
     },
     [location?.pathname]
   );
