@@ -129,15 +129,16 @@ export class BitMap {
 
   /**
    * write .bitmap object to the filesystem
+   * optionally pass a reason for the change to be saved in the local scope `bitmap-history-metadata.txt` file.
    */
-  async write() {
-    await this.consumer.writeBitMap();
+  async write(reasonForChange?: string) {
+    await this.consumer.writeBitMap(reasonForChange);
   }
 
   /**
    * get the data saved in the .bitmap file for this component-id.
    * throws if not found
-   * @see getBitmapEntryIfExist
+   * @see this.getBitmapEntryIfExist
    */
   getBitmapEntry(id: ComponentID, { ignoreVersion }: GetBitMapComponentOptions = {}): ComponentMap {
     return this.legacyBitMap.getComponent(id, { ignoreVersion });

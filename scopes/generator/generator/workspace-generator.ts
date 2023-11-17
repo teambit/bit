@@ -193,7 +193,7 @@ export class WorkspaceGenerator {
       );
     });
 
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write('new');
   }
 
   private async compileComponents(clearCache = true) {
