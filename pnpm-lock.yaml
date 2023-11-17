@@ -1271,9 +1271,6 @@ importers:
       babel-preset-jest:
         specifier: 27.5.1
         version: 27.5.1(@babel/core@7.19.6)
-      babel-preset-react-app:
-        specifier: 10.0.0
-        version: 10.0.0
       bluebird:
         specifier: 3.7.2
         version: 3.7.2
@@ -1918,7 +1915,7 @@ importers:
         version: 8.3.7(react-dom@17.0.2)(react@17.0.2)
       react-native:
         specifier: ^0.64.1
-        version: 0.64.4(@babel/preset-env@7.23.2)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: 0.64.4(@babel/core@7.19.6)(@babel/preset-env@7.23.2)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
       react-native-web:
         specifier: '>=0.16.0 <0.17.0'
         version: 0.16.5(react-dom@17.0.2)(react@17.0.2)
@@ -2770,7 +2767,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -2782,7 +2779,7 @@ importers:
         version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.70)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/bit-custom-aspect
+        version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
       '@teambit/builder':
         specifier: workspace:*
         version: file:scopes/pipelines/builder(@teambit/legacy@node_modules+@teambit+legacy)(@types/react@17.0.70)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -2950,7 +2947,7 @@ importers:
         version: file:scopes/web-components/elements(@testing-library/react@12.1.5)(@types/react@17.0.70)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env
+        version: file:scopes/envs/env(react-dom@17.0.2)(react@17.0.2)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@types/react@17.0.70)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -3070,7 +3067,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -3148,13 +3145,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.70)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.70)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -3205,7 +3202,7 @@ importers:
         version: file:scopes/react/ui/loader-fallback(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/readme':
         specifier: workspace:*
-        version: file:scopes/mdx/readme
+        version: file:scopes/mdx/readme(react-dom@17.0.2)(react@17.0.2)
       '@teambit/refactoring':
         specifier: workspace:*
         version: file:scopes/component/refactoring(react-dom@17.0.2)(react@17.0.2)
@@ -3374,12 +3371,6 @@ importers:
       '@teambit/yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/yarn(@testing-library/react@12.1.5)(@types/react@17.0.70)(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -3875,7 +3866,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -3887,7 +3878,7 @@ importers:
         version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.70)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/bit-custom-aspect
+        version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
       '@teambit/builder':
         specifier: workspace:*
         version: file:scopes/pipelines/builder(@teambit/legacy@node_modules+@teambit+legacy)(@types/react@17.0.70)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -4055,7 +4046,7 @@ importers:
         version: file:scopes/web-components/elements(@testing-library/react@12.1.5)(@types/react@17.0.70)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env
+        version: file:scopes/envs/env(react-dom@17.0.2)(react@17.0.2)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@types/react@17.0.70)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -4175,7 +4166,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -4253,13 +4244,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.70)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.70)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -4310,7 +4301,7 @@ importers:
         version: file:scopes/react/ui/loader-fallback(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/readme':
         specifier: workspace:*
-        version: file:scopes/mdx/readme
+        version: file:scopes/mdx/readme(react-dom@17.0.2)(react@17.0.2)
       '@teambit/refactoring':
         specifier: workspace:*
         version: file:scopes/component/refactoring(react-dom@17.0.2)(react@17.0.2)
@@ -4479,12 +4470,6 @@ importers:
       '@teambit/yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/yarn(@testing-library/react@12.1.5)(@types/react@17.0.70)(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -4980,7 +4965,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -4992,7 +4977,7 @@ importers:
         version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.70)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/bit-custom-aspect
+        version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
       '@teambit/builder':
         specifier: workspace:*
         version: file:scopes/pipelines/builder(@teambit/legacy@node_modules+@teambit+legacy)(@types/react@17.0.70)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -5160,7 +5145,7 @@ importers:
         version: file:scopes/web-components/elements(@testing-library/react@12.1.5)(@types/react@17.0.70)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env
+        version: file:scopes/envs/env(react-dom@17.0.2)(react@17.0.2)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@types/react@17.0.70)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -5280,7 +5265,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -5358,13 +5343,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.70)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.70)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -5415,7 +5400,7 @@ importers:
         version: file:scopes/react/ui/loader-fallback(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/readme':
         specifier: workspace:*
-        version: file:scopes/mdx/readme
+        version: file:scopes/mdx/readme(react-dom@17.0.2)(react@17.0.2)
       '@teambit/refactoring':
         specifier: workspace:*
         version: file:scopes/component/refactoring(react-dom@17.0.2)(react@17.0.2)
@@ -5584,12 +5569,6 @@ importers:
       '@teambit/yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/yarn(@testing-library/react@12.1.5)(@types/react@17.0.70)(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -6085,7 +6064,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -6097,7 +6076,7 @@ importers:
         version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.70)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/bit-custom-aspect
+        version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
       '@teambit/builder':
         specifier: workspace:*
         version: file:scopes/pipelines/builder(@teambit/legacy@node_modules+@teambit+legacy)(@types/react@17.0.70)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -6265,7 +6244,7 @@ importers:
         version: file:scopes/web-components/elements(@testing-library/react@12.1.5)(@types/react@17.0.70)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env
+        version: file:scopes/envs/env(react-dom@17.0.2)(react@17.0.2)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@types/react@17.0.70)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -6385,7 +6364,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -6463,13 +6442,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.70)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.70)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -6520,7 +6499,7 @@ importers:
         version: file:scopes/react/ui/loader-fallback(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/readme':
         specifier: workspace:*
-        version: file:scopes/mdx/readme
+        version: file:scopes/mdx/readme(react-dom@17.0.2)(react@17.0.2)
       '@teambit/refactoring':
         specifier: workspace:*
         version: file:scopes/component/refactoring(react-dom@17.0.2)(react@17.0.2)
@@ -7184,7 +7163,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -7196,7 +7175,7 @@ importers:
         version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.70)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/bit-custom-aspect
+        version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
       '@teambit/builder':
         specifier: workspace:*
         version: file:scopes/pipelines/builder(@teambit/legacy@node_modules+@teambit+legacy)(@types/react@17.0.70)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -7364,7 +7343,7 @@ importers:
         version: file:scopes/web-components/elements(@testing-library/react@12.1.5)(@types/react@17.0.70)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env
+        version: file:scopes/envs/env(react-dom@17.0.2)(react@17.0.2)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@types/react@17.0.70)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -7484,7 +7463,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -7562,13 +7541,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.70)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.70)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -7619,7 +7598,7 @@ importers:
         version: file:scopes/react/ui/loader-fallback(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/readme':
         specifier: workspace:*
-        version: file:scopes/mdx/readme
+        version: file:scopes/mdx/readme(react-dom@17.0.2)(react@17.0.2)
       '@teambit/refactoring':
         specifier: workspace:*
         version: file:scopes/component/refactoring(react-dom@17.0.2)(react@17.0.2)
@@ -7788,12 +7767,6 @@ importers:
       '@teambit/yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/yarn(@testing-library/react@12.1.5)(@types/react@17.0.70)(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -8289,7 +8262,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -8301,7 +8274,7 @@ importers:
         version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.70)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/bit-custom-aspect
+        version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
       '@teambit/builder':
         specifier: workspace:*
         version: file:scopes/pipelines/builder(@teambit/legacy@node_modules+@teambit+legacy)(@types/react@17.0.70)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -8469,7 +8442,7 @@ importers:
         version: file:scopes/web-components/elements(@testing-library/react@12.1.5)(@types/react@17.0.70)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env
+        version: file:scopes/envs/env(react-dom@17.0.2)(react@17.0.2)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@types/react@17.0.70)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -8589,7 +8562,7 @@ importers:
         version: file:scopes/harmony/logger(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx
+        version: file:scopes/mdx/mdx(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2)
@@ -8667,13 +8640,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.70)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.70)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -8724,7 +8697,7 @@ importers:
         version: file:scopes/react/ui/loader-fallback(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/readme':
         specifier: workspace:*
-        version: file:scopes/mdx/readme
+        version: file:scopes/mdx/readme(react-dom@17.0.2)(react@17.0.2)
       '@teambit/refactoring':
         specifier: workspace:*
         version: file:scopes/component/refactoring(react-dom@17.0.2)(react@17.0.2)
@@ -8893,12 +8866,6 @@ importers:
       '@teambit/yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/yarn(@testing-library/react@12.1.5)(@types/react@17.0.70)(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -9819,6 +9786,9 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -9826,8 +9796,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -10008,6 +9978,9 @@ importers:
 
   scopes/api-reference/utils/custom-prism-syntax-highlighter-theme:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -10015,8 +9988,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/cloud/cloud:
     dependencies:
@@ -10349,6 +10322,9 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -10356,8 +10332,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -10444,6 +10420,9 @@ importers:
         specifier: 7.19.6
         version: 7.19.6
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/babel__core':
         specifier: 7.20.0
         version: 7.20.0
@@ -10454,8 +10433,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       json-formatter-js:
         specifier: 2.3.4
         version: 2.3.4
@@ -11081,12 +11060,15 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/component/component-sizer:
     dependencies:
@@ -11183,6 +11165,9 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -11193,8 +11178,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -12347,6 +12332,9 @@ importers:
         specifier: 2.1.0
         version: 2.1.0
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -12357,8 +12345,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/component/tracker:
     dependencies:
@@ -12658,6 +12646,9 @@ importers:
         specifier: 2.1.0
         version: 2.1.0
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -12668,8 +12659,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       chai:
         specifier: 4.3.0
         version: 4.3.0
@@ -12680,6 +12671,9 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -12687,8 +12681,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -12714,6 +12708,9 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -12724,8 +12721,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -12800,6 +12797,9 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/eslint':
         specifier: 7.28.0
         version: 7.28.0
@@ -12813,8 +12813,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/defender/formatter:
     dependencies:
@@ -13161,6 +13161,9 @@ importers:
         specifier: 2.3.2
         version: 2.3.2
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -13171,8 +13174,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       '@types/prettier':
         specifier: 2.3.2
         version: 2.3.2
@@ -13273,12 +13276,15 @@ importers:
 
   scopes/defender/tests-results:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/dependencies/aspect-docs/dependency-resolver:
     dependencies:
@@ -13608,6 +13614,9 @@ importers:
 
   scopes/dependencies/fs/linked-dependencies:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -13615,8 +13624,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/dependencies/pnpm:
     dependencies:
@@ -15538,6 +15547,9 @@ importers:
 
   scopes/harmony/modules/requireable-component:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -15545,11 +15557,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/harmony/modules/resolved-component:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -15557,8 +15572,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/harmony/node:
     dependencies:
@@ -15664,6 +15679,9 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -15671,8 +15689,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/harmony/ui/aspect-box:
     dependencies:
@@ -15872,6 +15890,9 @@ importers:
 
   scopes/html/modules/create-element-from-string:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -15879,11 +15900,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/html/modules/fetch-html-from-url:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -15891,8 +15915,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/lanes/diff:
     dependencies:
@@ -15909,6 +15933,9 @@ importers:
         specifier: 2.4.2
         version: 2.4.2
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -15916,8 +15943,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/lanes/entities/lane-diff:
     dependencies:
@@ -15928,6 +15955,9 @@ importers:
         specifier: ^0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -15935,8 +15965,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/lanes/lanes:
     dependencies:
@@ -16284,6 +16314,9 @@ importers:
         specifier: 1.10.2
         version: 1.10.2
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: 4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -16297,8 +16330,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -16541,6 +16574,9 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -16551,8 +16587,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/pkg/aspect-docs/pkg:
     dependencies:
@@ -16761,6 +16797,9 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -16774,14 +16813,17 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
 
   scopes/preview/cli/webpack-events-listener:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -16789,8 +16831,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/preview/preview:
     dependencies:
@@ -17131,6 +17173,9 @@ importers:
         specifier: 0.4.15
         version: 0.4.15
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/find-root':
         specifier: 1.1.2
         version: 1.1.2
@@ -17147,8 +17192,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/react/eslint-config-bit-react:
     dependencies:
@@ -17171,12 +17216,15 @@ importers:
         specifier: 1.17.1
         version: 1.17.1(eslint@7.32.0)
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/react/modules/prerenderer-puppeteer:
     dependencies:
@@ -17187,6 +17235,9 @@ importers:
         specifier: 13.7.0
         version: 13.7.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -17194,8 +17245,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/react/react:
     dependencies:
@@ -17316,9 +17367,6 @@ importers:
       babel-preset-jest:
         specifier: 27.5.1
         version: 27.5.1(@babel/core@7.19.6)
-      babel-preset-react-app:
-        specifier: ^10.0.0
-        version: 10.0.0
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -17542,9 +17590,6 @@ importers:
       babel-loader:
         specifier: 9.1.2
         version: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
-      babel-preset-react-app:
-        specifier: ^10.0.0
-        version: 10.0.0
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -17696,9 +17741,6 @@ importers:
       react-dom:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
-      react-native:
-        specifier: ^0.64.1
-        version: 0.64.4(@babel/preset-env@7.23.2)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
       react-native-web:
         specifier: ^0.16.0
         version: 0.16.5(react-dom@17.0.2)(react@17.0.2)
@@ -18267,6 +18309,9 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18274,8 +18319,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/scope/scope:
     dependencies:
@@ -18659,6 +18704,9 @@ importers:
         specifier: ^5.1.1
         version: 5.2.0
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@teambit/defender.fs.global-bit-temp-dir':
         specifier: 0.0.1
         version: 0.0.1
@@ -18672,8 +18720,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/toolbox/modules/module-resolver:
     dependencies:
@@ -18681,6 +18729,9 @@ importers:
         specifier: 1.20.0
         version: 1.20.0
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18688,11 +18739,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/toolbox/network/get-port:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -18703,14 +18757,17 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       chai:
         specifier: 4.3.0
         version: 4.3.0
 
   scopes/toolbox/path/is-path-inside:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18718,8 +18775,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/toolbox/path/match-patterns:
     dependencies:
@@ -18727,6 +18784,9 @@ importers:
         specifier: 3.0.5
         version: 3.0.5
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -18740,14 +18800,17 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       chai:
         specifier: 4.3.0
         version: 4.3.0
 
   scopes/toolbox/path/to-windows-compatible-path:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18755,11 +18818,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/toolbox/performance/v8-cache:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18767,11 +18833,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/toolbox/string/capitalize:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18779,11 +18848,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/toolbox/string/ellipsis:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18791,11 +18863,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/toolbox/string/get-initials:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18803,11 +18878,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/toolbox/string/strip-trailing-char:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18815,8 +18893,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/toolbox/tables/cli-table:
     dependencies:
@@ -18827,6 +18905,9 @@ importers:
         specifier: 1.4.0
         version: 1.4.0
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/cli-table':
         specifier: ^0.3.0
         version: 0.3.4
@@ -18834,8 +18915,8 @@ importers:
         specifier: 26.0.20
         version: 26.0.20
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/toolbox/time/time-format:
     dependencies:
@@ -18843,6 +18924,9 @@ importers:
         specifier: 3.23.1
         version: 3.23.1
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18850,11 +18934,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/toolbox/types/serializable:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18862,11 +18949,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/toolbox/url/add-avatar-query-params:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18874,11 +18964,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/toolbox/url/query-string:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18886,8 +18979,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/typescript/aspect-docs/typescript:
     dependencies:
@@ -18944,6 +19037,9 @@ importers:
         specifier: 4.7.4
         version: 4.7.4
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18954,8 +19050,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       json-formatter-js:
         specifier: 2.3.4
         version: 2.3.4
@@ -18981,6 +19077,9 @@ importers:
         specifier: 3.16.0
         version: 3.16.0
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -18988,8 +19087,8 @@ importers:
         specifier: 26.0.20
         version: 26.0.20
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/typescript/typescript:
     dependencies:
@@ -19079,6 +19178,9 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19086,8 +19188,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -19104,6 +19206,9 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19111,8 +19216,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -19412,9 +19517,6 @@ importers:
       babel-plugin-named-asset-import:
         specifier: 0.3.7
         version: 0.3.7(@babel/core@7.19.6)
-      babel-preset-react-app:
-        specifier: 10.0.0
-        version: 10.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -19686,6 +19788,9 @@ importers:
         specifier: 5.8.0
         version: 5.8.0
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19696,8 +19801,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       '@types/webpack':
         specifier: 5.28.1
         version: 5.28.1(esbuild@0.14.29)
@@ -19711,6 +19816,9 @@ importers:
         specifier: 3.1.0
         version: 3.1.0(webpack@5.84.1)
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19718,14 +19826,17 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       json-formatter-js:
         specifier: 2.3.4
         version: 2.3.4
 
   scopes/webpack/modules/generate-externals:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19733,14 +19844,17 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       json-formatter-js:
         specifier: 2.3.4
         version: 2.3.4
 
   scopes/webpack/modules/generate-style-loaders:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19748,8 +19862,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/webpack/plugins/inject-head-webpack-plugin:
     dependencies:
@@ -19763,15 +19877,21 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/webpack/style-regexps:
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19779,8 +19899,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/webpack/webpack:
     dependencies:
@@ -20159,6 +20279,9 @@ importers:
         specifier: 0.27.1
         version: 0.27.1
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -20175,8 +20298,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
       chai:
         specifier: 4.3.0
         version: 4.3.0
@@ -20196,6 +20319,9 @@ importers:
         specifier: 2.1.0
         version: 2.1.0
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -20206,8 +20332,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/workspace/testing/mock-workspace:
     dependencies:
@@ -20218,6 +20344,9 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -20228,8 +20357,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: ^18.11.9
-        version: 18.18.9
+        specifier: 12.20.4
+        version: 12.20.4
 
   scopes/workspace/variants:
     dependencies:
@@ -23973,7 +24102,7 @@ packages:
     engines: {node: '>= 10.14.2'}
     dependencies:
       '@jest/types': 26.6.2
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       chalk: 4.1.2
       jest-message-util: 26.6.2
       jest-util: 26.6.2
@@ -23985,7 +24114,7 @@ packages:
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       chalk: 4.1.2
       jest-message-util: 27.5.1
       jest-util: 27.5.1
@@ -24006,7 +24135,7 @@ packages:
       '@jest/test-result': 27.5.1
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       emittery: 0.8.1
@@ -24050,7 +24179,7 @@ packages:
     dependencies:
       '@jest/fake-timers': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       jest-mock: 27.5.1
     dev: false
 
@@ -24060,7 +24189,7 @@ packages:
     dependencies:
       '@jest/types': 27.5.1
       '@sinonjs/fake-timers': 8.1.0
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       jest-message-util: 27.5.1
       jest-mock: 27.5.1
       jest-util: 27.5.1
@@ -24089,7 +24218,7 @@ packages:
       '@jest/test-result': 27.5.1
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       chalk: 4.1.2
       collect-v8-coverage: 1.0.2
       exit: 0.1.2
@@ -24199,7 +24328,7 @@ packages:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       '@types/yargs': 15.0.18
       chalk: 4.1.2
 
@@ -24209,7 +24338,7 @@ packages:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       '@types/yargs': 16.0.8
       chalk: 4.1.2
     dev: false
@@ -26375,7 +26504,7 @@ packages:
       ora: 3.4.0
     dev: false
 
-  /@react-native-community/cli@5.0.1(bufferutil@4.0.3)(react-native@0.64.4)(utf-8-validate@5.0.5):
+  /@react-native-community/cli@5.0.1(@babel/core@7.19.6)(bufferutil@4.0.3)(react-native@0.64.4)(utf-8-validate@5.0.5):
     resolution: {integrity: sha512-9VzSYUYSEqxEH5Ib2UNSdn2eyPiYZ4T7Y79o9DKtRBuSaUIwbCUdZtIm+UUjBpLS1XYBkW26FqL8/UdZDmQvXw==}
     engines: {node: '>=12'}
     hasBin: true
@@ -26405,7 +26534,7 @@ packages:
       metro: 0.64.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       metro-config: 0.64.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       metro-core: 0.64.0
-      metro-react-native-babel-transformer: 0.64.0
+      metro-react-native-babel-transformer: 0.64.0(@babel/core@7.19.6)
       metro-resolver: 0.64.0
       metro-runtime: 0.64.0
       minimist: 1.2.8
@@ -26414,13 +26543,14 @@ packages:
       ora: 3.4.0
       pretty-format: 26.6.2
       prompts: 2.4.2
-      react-native: 0.64.4(@babel/preset-env@7.23.2)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
+      react-native: 0.64.4(@babel/core@7.19.6)(@babel/preset-env@7.23.2)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
       semver: 6.3.1
       serve-static: 1.15.0
       strip-ansi: 5.2.0
       sudo-prompt: 9.2.1
       wcwidth: 1.0.1
     transitivePeerDependencies:
+      - '@babel/core'
       - bufferutil
       - encoding
       - supports-color
@@ -35119,7 +35249,7 @@ packages:
   /@types/accepts@1.3.7:
     resolution: {integrity: sha512-Pay9fq2lM2wXPWbteBsRAGiWH2hig4ZE2asK+mm7kUzlxRTfL961rj89I6zV/E3PcIkDqyuBEcMxFT7rccugeQ==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/archiver@5.3.1:
@@ -35164,25 +35294,25 @@ packages:
     resolution: {integrity: sha512-W98JrE0j2K78swW4ukqMleo8R7h/pFETjM2DQ90MF6XK2i4LO4W3gQ71Lt4w3bfm2EvVSyWHplECvB5sK22yFQ==}
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/body-parser@1.19.5:
     resolution: {integrity: sha512-fB3Zu92ucau0iQ0JMCFQE7b/dv8Ot07NI3KaZIkIUNXq82k4eBAqUaneXfleGY9JWskeS9y+u0nXMyspcuQrCg==}
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
 
   /@types/bonjour@3.5.13:
     resolution: {integrity: sha512-z9fJ5Im06zvUL548KvYNecEVlA7cVDkGUi6kZusb04mpyEFKCIZJvloCcmpmLaIahDpOQGHaHmG6imtPMmPXGQ==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/cacache@12.0.1:
     resolution: {integrity: sha512-w7xjwtvB8X8wItoZo16oTDDJy1ub03CbKUM/A8SORv2igg/L6AxAtnNIlV/2STbuj5PFKwb3ySV7zR/g1nqldw==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: true
 
   /@types/cacheable-request@6.0.3:
@@ -35190,7 +35320,7 @@ packages:
     dependencies:
       '@types/http-cache-semantics': 4.0.4
       '@types/keyv': 3.1.4
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       '@types/responselike': 1.0.3
     dev: false
 
@@ -35204,7 +35334,7 @@ packages:
     resolution: {integrity: sha512-nS385nRPNvi9UjSUCDE7f84IXZnIzooPh7Ky88kdRfSFk72juvQENqrqyrKkJeXJsN9bMG9/5zVGr06GcBRB5g==}
     dependencies:
       '@types/chai': 4.2.15
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/chai-string@1.4.2:
@@ -35223,7 +35353,7 @@ packages:
   /@types/clean-css@4.2.10:
     resolution: {integrity: sha512-/wop6SNAATELCIvTQEbPdxaIvXQDS+Gewx2rtkB1h8PrttLpYVDI18nH9927fIMO1dJsV01JEm0go4vTimpDxQ==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       source-map: 0.6.1
     dev: true
 
@@ -35235,12 +35365,12 @@ packages:
     resolution: {integrity: sha512-6mfQ6iNvhSKCZJoY6sIG3m0pKkdUcweVNOLuBBKvoWGzl2yRxOJcYOTRyLKt3nxXvBLJWa6QkW//tgbIwJehmA==}
     dependencies:
       '@types/express-serve-static-core': 4.17.41
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
 
   /@types/connect@3.4.38:
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
 
   /@types/content-disposition@0.5.8:
     resolution: {integrity: sha512-QVSSvno3dE0MgO76pJhmv4Qyi/j0Yk9pBp0Y7TJ2Tlj+KCgJWY6qX7nnxCOLkZ3VYRSIk1WTxCvwUSdx6CCLdg==}
@@ -35252,7 +35382,7 @@ packages:
       '@types/connect': 3.4.38
       '@types/express': 4.17.13
       '@types/keygrip': 1.0.5
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/cors@2.8.10:
@@ -35296,7 +35426,7 @@ packages:
   /@types/express-serve-static-core@4.17.41:
     resolution: {integrity: sha512-OaJ7XLaelTgrvlZD8/aa0vvvxZdUmlCn6MtWeB7TkiKW70BQLc9XEPpDLPdbo52ZhXUCrznlWdCHWxJWtdyajA==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       '@types/qs': 6.9.10
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -35316,7 +35446,7 @@ packages:
   /@types/fs-capacitor@2.0.0:
     resolution: {integrity: sha512-FKVPOCFbhCvZxpVAMhdBdTfVfXUpsh15wFHgqOKxh9N9vzWZVuWCSijZ5T4U34XYNnuj2oduh6xcs1i+LPI+BQ==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/fs-extra@9.0.7:
@@ -35329,13 +35459,13 @@ packages:
     resolution: {integrity: sha512-IO+MJPVhoqz+28h1qLAcBEH2+xHMK6MTyHJc7MTnnYb6wsoLR29POVGJ7LycmVXIqyy/4/2ShP5sUwTXuOwb/w==}
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: true
 
   /@types/graceful-fs@4.1.9:
     resolution: {integrity: sha512-olP3sd1qOEe5dXTSaFvQG+02VdRXcdytWLAZsAq1PecU8uqQAhkrnbli7DagjtXKW/Bl7YJbUsa8MPcuc8LHEQ==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/graphlib@2.1.7:
@@ -35381,13 +35511,13 @@ packages:
   /@types/http-proxy-agent@2.0.2:
     resolution: {integrity: sha512-2S6IuBRhqUnH1/AUx9k8KWtY3Esg4eqri946MnxTG5HwehF1S5mqLln8fcyMiuQkY72p2gH3W+rIPqp5li0LyQ==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/http-proxy@1.17.14:
     resolution: {integrity: sha512-SSrD0c1OQzlFX7pGu1eXxSEjemej64aaNPRhhVYUGqXh0BtldAAx37MG8btcumvpgKyZp1F5Gn3JkktdxiFv6w==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
 
   /@types/istanbul-lib-coverage@2.0.6:
     resolution: {integrity: sha512-2QF/t/auWm0lsy8XtKVPG19v3sSOQlJe/YHZgfjb/KBBHOGSV+J2q/S671rcq9uTBrLAXmZpqJiaQbMT+zNU1w==}
@@ -35426,7 +35556,7 @@ packages:
   /@types/jsdom@20.0.1:
     resolution: {integrity: sha512-d0r18sZPmMQr1eG35u12FZfhIXNrnsPU/g5wvRKCUf/tOGilKKwYMYGqh33BNR6ba+2gkHw1EUiHoN3mn7E5IQ==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       '@types/tough-cookie': 4.0.5
       parse5: 7.1.2
     dev: false
@@ -35445,7 +35575,7 @@ packages:
   /@types/keyv@3.1.4:
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/koa-compose@3.2.8:
@@ -35464,7 +35594,7 @@ packages:
       '@types/http-errors': 2.0.4
       '@types/keygrip': 1.0.5
       '@types/koa-compose': 3.2.8
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/lodash.compact@3.0.6:
@@ -35533,7 +35663,7 @@ packages:
   /@types/mini-css-extract-plugin@2.2.0(esbuild@0.14.29):
     resolution: {integrity: sha512-euW/Y51OoAWsAuqtxIGV7Y++EW4dKHMj7NSxHoTRD6SqK1vziYhGfDWTmtlf4jkjIrzUW88NpVXMfiJESysZAA==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       tapable: 2.2.1
       webpack: 5.84.1(esbuild@0.14.29)
     transitivePeerDependencies:
@@ -35561,14 +35691,14 @@ packages:
   /@types/node-fetch@2.5.12:
     resolution: {integrity: sha512-MKgC4dlq4kKNa/mYrwpKfzQMB5X3ee5U6fSprkKpToBqBmX4nFZL9cW5jl6sWn+xpRJ7ypWh2yyqqr8UUCstSw==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       form-data: 3.0.1
     dev: true
 
   /@types/node-forge@1.3.9:
     resolution: {integrity: sha512-meK88cx/sTalPSLSoCzkiUB4VPIFHmxtXm5FaaqRDqBX2i/Sy8bJ4odsan0b20RBjPh06dAQ+OTTdnyQyhJZyQ==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/node@10.17.60:
@@ -35586,6 +35716,7 @@ packages:
     resolution: {integrity: sha512-0f5klcuImLnG4Qreu9hPj/rEfFq6YRc5n2mAjSsH+ec/mJL+3voBH0+8T7o8RpFjH7ovc+TRsL/c7OYIQsPTfQ==}
     dependencies:
       undici-types: 5.26.5
+    dev: false
 
   /@types/normalize-package-data@2.4.4:
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -35670,13 +35801,13 @@ packages:
   /@types/resolve@1.17.1:
     resolution: {integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/responselike@1.0.3:
     resolution: {integrity: sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/retry@0.12.0:
@@ -35708,7 +35839,7 @@ packages:
     resolution: {integrity: sha512-x2EM6TJOybec7c52BX0ZspPodMsQUd5L6PRwOunVyVUhXiBSKf3AezDL8Dgvgt5o0UfKNfuA0eMLr2wLT4AiBA==}
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
 
   /@types/serve-index@1.9.4:
     resolution: {integrity: sha512-qLpGZ/c2fhSs5gnYsQxtDEq3Oy8SXPClIXkW5ghvAvsNuVSA8k+gCONcUCS/UjLEYvYps+e8uBtfgXgvhwfNug==}
@@ -35721,7 +35852,7 @@ packages:
     dependencies:
       '@types/http-errors': 2.0.4
       '@types/mime': 2.0.3
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
 
   /@types/socket.io-client@1.4.35:
     resolution: {integrity: sha512-MI8YmxFS+jMkIziycT5ickBWK1sZwDwy16mgH/j99Mcom6zRG/NimNGQ3vJV0uX5G6g/hEw0FG3w3b3sT5OUGw==}
@@ -35730,7 +35861,7 @@ packages:
   /@types/sockjs@0.3.36:
     resolution: {integrity: sha512-MK9V6NzAS1+Ud7JV9lJLFqW85VbC9dq3LmwZCuBe4wBDgKC0Kj/jd8Xl+nSviU+Qc3+m7umHHyHg//2KSa0a0Q==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/source-list-map@0.1.5:
@@ -35740,7 +35871,7 @@ packages:
   /@types/ssri@7.1.4:
     resolution: {integrity: sha512-K2Ys8+BVrgGFY0cVwf55rIS4fa2ZN+4Y/w2h4BnYIf8kvUdmdKT6l6VUpC3uL9HKG8I8EkD5CXIgRUXHOLHcLw==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/stack-utils@2.0.3:
@@ -35812,7 +35943,7 @@ packages:
   /@types/webpack-sources@3.2.3:
     resolution: {integrity: sha512-4nZOdMwSPHZ4pTEZzSp0AsTM4K7Qmu40UKW4tJDiOVs20UzYF9l+qUe4s0ftfN0pin06n+5cWWDJXH+sbhAiDw==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       '@types/source-list-map': 0.1.5
       source-map: 0.7.4
     dev: true
@@ -35820,7 +35951,7 @@ packages:
   /@types/webpack@4.41.36:
     resolution: {integrity: sha512-pF+DVW1pMLmgsPXqJr5QimdxIzOhe8oGKB98gdqAm0egKBy1lOLD5mRxbYboMQRkpYcG7BYcpqYblpKyvE7vhQ==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       '@types/tapable': 1.0.11
       '@types/uglify-js': 3.17.4
       '@types/webpack-sources': 3.2.3
@@ -35831,7 +35962,7 @@ packages:
   /@types/webpack@5.28.1(esbuild@0.14.29):
     resolution: {integrity: sha512-qw1MqGZclCoBrpiSe/hokSgQM/su8Ocpl3L/YHE0L6moyaypg4+5F7Uzq7NgaPKPxUxUbQ4fLPLpDWdR27bCZw==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       tapable: 2.2.1
       webpack: 5.84.1(esbuild@0.14.29)
     transitivePeerDependencies:
@@ -35843,13 +35974,13 @@ packages:
   /@types/ws@7.4.7:
     resolution: {integrity: sha512-JQbbmxZTZehdc2iszGKs5oC3NFnjeay7mtAWrdt7qNtAVK0g19muApzAy4bm9byz79xa2ZnO/BOBC2R8RC5Lww==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/ws@8.5.9:
     resolution: {integrity: sha512-jbdrY0a8lxfdTp/+r7Z4CkycbOFN8WX+IOchLJr3juT/xzbJ8URyTVSJ/hvNdadTgM1mnedb47n+Y31GsFnQlg==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /@types/yargs-parser@21.0.3:
@@ -35882,7 +36013,7 @@ packages:
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
     requiresBuild: true
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
     optional: true
 
@@ -36678,7 +36809,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.3
       '@yarnpkg/fslib': 3.0.1
-      '@yarnpkg/libzip': 3.0.0(@yarnpkg/fslib@3.0.1)
+      '@yarnpkg/libzip': 3.0.0
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -36709,7 +36840,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.3
       '@yarnpkg/fslib': 3.0.1
-      '@yarnpkg/libzip': 3.0.0(@yarnpkg/fslib@3.0.1)
+      '@yarnpkg/libzip': 3.0.0
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -36782,11 +36913,9 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/libzip@3.0.0(@yarnpkg/fslib@3.0.1):
+  /@yarnpkg/libzip@3.0.0:
     resolution: {integrity: sha512-31NR8oHG/NLnSEqQOy48tnjNHgYPujOtammmvoItNAfsWAmaOqtDimwPRRPXGTNxC2SYYBYrk6pli5yti/Qmfw==}
     engines: {node: '>=18.12.0'}
-    peerDependencies:
-      '@yarnpkg/fslib': ^3.0.0
     dependencies:
       '@types/emscripten': 1.39.10
       '@yarnpkg/fslib': 3.0.1
@@ -38639,8 +38768,6 @@ packages:
       babel-plugin-jest-hoist: 27.5.1
       babel-preset-current-node-syntax: 1.0.1(@babel/core@7.19.6)
     dev: false
-
-  /babel-preset-react-app@10.0.0:
     resolution: {integrity: sha512-itL2z8v16khpuKutx5IH8UdCdSTuzrOhRFTEdIhveZ2i1iBKDrVE0ATa4sFVy+02GLucZNVBWtoarXBy0Msdpg==}
     dependencies:
       '@babel/core': 7.12.3
@@ -45765,7 +45892,7 @@ packages:
       '@jest/environment': 27.5.1
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       chalk: 4.1.2
       co: 4.6.0
       dedent: 0.7.0
@@ -45919,7 +46046,7 @@ packages:
       '@jest/environment': 27.5.1
       '@jest/fake-timers': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       jest-mock: 27.5.1
       jest-util: 27.5.1
       jsdom: 16.7.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
@@ -45967,7 +46094,7 @@ packages:
     dependencies:
       '@jest/types': 26.6.2
       '@types/graceful-fs': 4.1.9
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.10
@@ -45990,7 +46117,7 @@ packages:
     dependencies:
       '@jest/types': 27.5.1
       '@types/graceful-fs': 4.1.9
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.10
@@ -46012,7 +46139,7 @@ packages:
       '@jest/source-map': 27.5.1
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       chalk: 4.1.2
       co: 4.6.0
       expect: 27.5.1
@@ -46092,7 +46219,7 @@ packages:
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
     dev: false
 
   /jest-pnp-resolver@1.2.3(jest-resolve@27.5.1):
@@ -46153,7 +46280,7 @@ packages:
       '@jest/test-result': 27.5.1
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       chalk: 4.1.2
       emittery: 0.8.1
       graceful-fs: 4.2.10
@@ -46210,7 +46337,7 @@ packages:
     resolution: {integrity: sha512-S5wqyz0DXnNJPd/xfIzZ5Xnp1HrJWBczg8mMfMpN78OJ5eDxXyf+Ygld9wX1DnUWbIbhM1YDY95NjR4CBXkb2g==}
     engines: {node: '>= 10.14.2'}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       graceful-fs: 4.2.10
     dev: false
 
@@ -46218,7 +46345,7 @@ packages:
     resolution: {integrity: sha512-jZCyo6iIxO1aqUxpuBlwTDMkzOAJS4a3eYz3YzgxxVQFwLeSA7Jfq5cbqCY+JLvTDrWirgusI/0KwxKMgrdf7w==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       graceful-fs: 4.2.10
     dev: false
 
@@ -46257,7 +46384,7 @@ packages:
     engines: {node: '>= 10.14.2'}
     dependencies:
       '@jest/types': 26.6.2
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       chalk: 4.1.2
       graceful-fs: 4.2.10
       is-ci: 2.0.0
@@ -46269,7 +46396,7 @@ packages:
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       chalk: 4.1.2
       ci-info: 3.9.0
       graceful-fs: 4.2.10
@@ -46322,7 +46449,7 @@ packages:
     dependencies:
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       jest-util: 27.5.1
@@ -46333,7 +46460,7 @@ packages:
     resolution: {integrity: sha512-KWYVV1c4i+jbMpaBC+U++4Va0cp8OisU185o73T1vo99hqi7w8tSJfUXYswwqqrjzwxa6KpRK54WhPvwf5w6PQ==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       merge-stream: 2.0.0
       supports-color: 7.2.0
     dev: false
@@ -46342,7 +46469,7 @@ packages:
     resolution: {integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 12.20.4
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -47712,8 +47839,10 @@ packages:
       uglify-es: 3.3.9
     dev: false
 
-  /metro-react-native-babel-preset@0.64.0:
+  /metro-react-native-babel-preset@0.64.0(@babel/core@7.19.6):
     resolution: {integrity: sha512-HcZ0RWQRuJfpPiaHyFQJzcym+/dDIVUPwUAXWoub/C4GkGu+mPjp8vqK6g0FxokCnnI2TK0gZTza2IDfiNNscQ==}
+    peerDependencies:
+      '@babel/core': '*'
     dependencies:
       '@babel/core': 7.19.6
       '@babel/plugin-proposal-class-properties': 7.18.6(@babel/core@7.19.6)
@@ -47754,17 +47883,17 @@ packages:
       '@babel/plugin-transform-unicode-regex': 7.23.3(@babel/core@7.19.6)
       '@babel/template': 7.22.15
       react-refresh: 0.4.3
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
-  /metro-react-native-babel-transformer@0.64.0:
+  /metro-react-native-babel-transformer@0.64.0(@babel/core@7.19.6):
     resolution: {integrity: sha512-K1sHO3ODBFCr7uEiCQ4RvVr+cQg0EHQF8ChVPnecGh/WDD8udrTq9ECwB0dRfMjAvlsHtRUlJm6ZSI8UPgum2w==}
+    peerDependencies:
+      '@babel/core': '*'
     dependencies:
       '@babel/core': 7.19.6
       babel-preset-fbjs: 3.4.0(@babel/core@7.19.6)
       metro-babel-transformer: 0.64.0
-      metro-react-native-babel-preset: 0.64.0
+      metro-react-native-babel-preset: 0.64.0(@babel/core@7.19.6)
       metro-source-map: 0.64.0
       nullthrows: 1.1.1
     transitivePeerDependencies:
@@ -47882,7 +48011,7 @@ packages:
       metro-hermes-compiler: 0.64.0
       metro-inspector-proxy: 0.64.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       metro-minify-uglify: 0.64.0
-      metro-react-native-babel-preset: 0.64.0
+      metro-react-native-babel-preset: 0.64.0(@babel/core@7.19.6)
       metro-resolver: 0.64.0
       metro-runtime: 0.64.0
       metro-source-map: 0.64.0
@@ -51484,7 +51613,7 @@ packages:
       - encoding
     dev: false
 
-  /react-native@0.64.4(@babel/preset-env@7.23.2)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5):
+  /react-native@0.64.4(@babel/core@7.19.6)(@babel/preset-env@7.23.2)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5):
     resolution: {integrity: sha512-nxYt/NrTmGyW6+tOd+Hqp4O8uJ2LLZkN7ispMPDprAq7bwvLkF/GXmDQCZHAEyqXuhIztTtMX41KqFQ6UMCUJQ==}
     engines: {node: '>=12'}
     deprecated: 'Issues and pull requests filed against this version are not supported. See the React Native release support policy to learn more: https://github.com/reactwg/react-native-releases#releases-support-policy'
@@ -51493,7 +51622,7 @@ packages:
       react: 17.0.1
     dependencies:
       '@jest/create-cache-key-function': 26.6.2
-      '@react-native-community/cli': 5.0.1(bufferutil@4.0.3)(react-native@0.64.4)(utf-8-validate@5.0.5)
+      '@react-native-community/cli': 5.0.1(@babel/core@7.19.6)(bufferutil@4.0.3)(react-native@0.64.4)(utf-8-validate@5.0.5)
       '@react-native-community/cli-platform-android': 5.0.1
       '@react-native-community/cli-platform-ios': 5.0.2
       '@react-native/assets': 1.0.0
@@ -51507,7 +51636,7 @@ packages:
       invariant: 2.2.4
       jsc-android: 245459.0.0
       metro-babel-register: 0.64.0
-      metro-react-native-babel-transformer: 0.64.0
+      metro-react-native-babel-transformer: 0.64.0(@babel/core@7.19.6)
       metro-runtime: 0.64.0
       metro-source-map: 0.64.0
       nullthrows: 1.1.1
@@ -51526,6 +51655,7 @@ packages:
       whatwg-fetch: 3.6.19
       ws: 6.2.2(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     transitivePeerDependencies:
+      - '@babel/core'
       - '@babel/preset-env'
       - bufferutil
       - encoding
@@ -55079,6 +55209,7 @@ packages:
 
   /undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
+    dev: false
 
   /unherit@1.1.3:
     resolution: {integrity: sha512-Ft16BJcnapDKp0+J/rqFC3Rrk6Y/Ng4nzsC028k2jdDII/rdZ7Wd3pPT/6+vIIxRagwRc9K0IUX0Ra4fKvw+WQ==}
@@ -58891,9 +59022,13 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/envs/env:
+  file:scopes/envs/env(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/envs/env, type: directory}
+    id: file:scopes/envs/env
     name: '@teambit/env'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
@@ -59098,10 +59233,13 @@ packages:
       - utf-8-validate
     dev: false
 
-  file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy):
+  file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/harmony/aspect, type: directory}
     id: file:scopes/harmony/aspect
     name: '@teambit/aspect'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/plugin-proposal-decorators': 7.12.13(@babel/core@7.19.6)
       '@babel/plugin-transform-class-properties': 7.22.5(@babel/core@7.19.6)
@@ -59228,9 +59366,13 @@ packages:
       - subscriptions-transport-ws
     dev: false
 
-  file:scopes/harmony/bit-custom-aspect:
+  file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/harmony/bit-custom-aspect, type: directory}
+    id: file:scopes/harmony/bit-custom-aspect
     name: '@teambit/bit-custom-aspect'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
@@ -59707,16 +59849,16 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/mdx/mdx:
+  file:scopes/mdx/mdx(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/mdx/mdx, type: directory}
+    id: file:scopes/mdx/mdx
     name: '@teambit/mdx'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/core': 7.19.6
       '@babel/helper-plugin-test-runner': 7.16.7
-      '@babel/plugin-transform-class-properties': 7.22.5(@babel/core@7.19.6)
-      '@babel/preset-env': 7.23.2(@babel/core@7.19.6)
-      '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
-      '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.20.0
       '@teambit/component-id': 1.2.0
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
@@ -59752,9 +59894,13 @@ packages:
       - supports-color
     dev: false
 
-  file:scopes/mdx/readme:
+  file:scopes/mdx/readme(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/mdx/readme, type: directory}
+    id: file:scopes/mdx/readme
     name: '@teambit/readme'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
@@ -60090,10 +60236,13 @@ packages:
       - utf-8-validate
     dev: false
 
-  file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.70)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
+  file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.70)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
     resolution: {directory: scopes/react/react, type: directory}
     id: file:scopes/react/react
     name: '@teambit/react'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/core': 7.19.6
       '@babel/helper-plugin-test-runner': 7.16.7
@@ -60134,7 +60283,6 @@ packages:
       babel-plugin-named-asset-import: 0.3.7(@babel/core@7.19.6)
       babel-plugin-transform-typescript-metadata: 0.3.1(@babel/core@7.19.6)
       babel-preset-jest: 27.5.1(@babel/core@7.19.6)
-      babel-preset-react-app: 10.0.0
       camelcase: 6.2.0
       chalk: 2.4.2
       core-js: 3.13.0
@@ -60172,13 +60320,11 @@ packages:
       react-dev-utils: 11.0.4(eslint@7.32.0)(typescript@4.7.4)(webpack@5.84.1)
       react-dom: 17.0.2(react@17.0.2)
       react-error-overlay: 6.0.9
-      react-native-web: 0.16.5(react-dom@17.0.2)(react@17.0.2)
       react-refresh: 0.10.0
       resolve-url-loader: 5.0.0
       sanitize.css: 12.0.1
       sass: 1.63.6
       sass-loader: 13.3.2(sass@1.63.6)(webpack@5.84.1)
-      source-map-loader: 3.0.0(webpack@5.84.1)
       strip-ansi: 6.0.0
       style-loader: 2.0.0(webpack@5.84.1)
       terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
@@ -60239,7 +60385,6 @@ packages:
       '@teambit/mdx.modules.mdx-loader': 1.0.14(@babel/core@7.19.6)(esbuild@0.14.29)
       '@teambit/mdx.ui.mdx-scope-context': 1.0.5(react-dom@17.0.2)(react@17.0.2)
       babel-loader: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
-      babel-preset-react-app: 10.0.0
       core-js: 3.13.0
       css-loader: 6.2.0(webpack@5.84.1)
       css-minimizer-webpack-plugin: 3.0.2(webpack@5.84.1)
@@ -60282,10 +60427,14 @@ packages:
       - webpack-cli
     dev: false
 
-  file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5):
+  file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2):
     resolution: {directory: scopes/react/react-native, type: directory}
     id: file:scopes/react/react-native
     name: '@teambit/react-native'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+      react-native-web: ^0.16.0
     dependencies:
       '@babel/plugin-transform-class-properties': 7.22.5(@babel/core@7.19.6)
       '@babel/preset-env': 7.23.2(@babel/core@7.19.6)
@@ -60302,16 +60451,12 @@ packages:
       ramda: 0.27.1
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-      react-native: 0.64.4(@babel/preset-env@7.23.2)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
       react-native-web: 0.16.5(react-dom@17.0.2)(react@17.0.2)
       typescript: 4.7.4
     transitivePeerDependencies:
       - '@babel/core'
       - '@teambit/legacy'
-      - bufferutil
-      - encoding
       - supports-color
-      - utf-8-validate
     dev: false
 
   file:scopes/react/ui/compositions-app(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2):
@@ -60979,7 +61124,6 @@ packages:
       '@teambit/ui-foundation.ui.hooks.use-user-agent': 0.0.197(react-dom@17.0.2)(react@17.0.2)
       babel-loader: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
       babel-plugin-named-asset-import: 0.3.7(@babel/core@7.19.6)
-      babel-preset-react-app: 10.0.0
       chalk: 2.4.2
       core-js: 3.13.0
       css-loader: 5.2.0(webpack@5.84.1)
@@ -61457,7 +61601,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.constants.storage@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-4fOXti4IhPVuW3fyq8NfYtlqT4mcBUt3587/3kBx2DAcAZE0FOrICpHyCOiUgr7q/0pKy7TZJQxxsL0PfzOwbA==, tarball: https://registry.npmjs.org/@teambit/base-ui.constants.storage/-/base-ui.constants.storage-1.0.0.tgz}
+    resolution: {integrity: sha512-4fOXti4IhPVuW3fyq8NfYtlqT4mcBUt3587/3kBx2DAcAZE0FOrICpHyCOiUgr7q/0pKy7TZJQxxsL0PfzOwbA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.constants.storage/-/base-ui.constants.storage-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.constants.storage/1.0.0
     name: '@teambit/base-ui.constants.storage'
     version: 1.0.0
@@ -61471,7 +61615,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.css-components.elevation@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-6hC8vHh0PmHU8fOUM81NXLML7rx9SYpzKkEMz1eS5sIrY/cFIdhLKupo01sARPVwcWTQ0VkVYI1fOO3Q4vi3yg==, tarball: https://registry.npmjs.org/@teambit/base-ui.css-components.elevation/-/base-ui.css-components.elevation-1.0.0.tgz}
+    resolution: {integrity: sha512-6hC8vHh0PmHU8fOUM81NXLML7rx9SYpzKkEMz1eS5sIrY/cFIdhLKupo01sARPVwcWTQ0VkVYI1fOO3Q4vi3yg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.css-components.elevation/-/base-ui.css-components.elevation-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.css-components.elevation/1.0.0
     name: '@teambit/base-ui.css-components.elevation'
     version: 1.0.0
@@ -61485,7 +61629,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.css-components.roundness@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-92TAw5Cs4wg2h+Ad9/XmY2p5yRlV8a4dIPL776A1OXw/JXR6NIePUl61VtCrW9v0EJanSJywBtka3AWG+PKOmg==, tarball: https://registry.npmjs.org/@teambit/base-ui.css-components.roundness/-/base-ui.css-components.roundness-1.0.0.tgz}
+    resolution: {integrity: sha512-92TAw5Cs4wg2h+Ad9/XmY2p5yRlV8a4dIPL776A1OXw/JXR6NIePUl61VtCrW9v0EJanSJywBtka3AWG+PKOmg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.css-components.roundness/-/base-ui.css-components.roundness-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.css-components.roundness/1.0.0
     name: '@teambit/base-ui.css-components.roundness'
     version: 1.0.0
@@ -61499,7 +61643,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.elements.icon@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-qaoHLbt6wNXzgST7N3oE+1hI/PttCzrSLQ9B7d/7yKKxUbHbhjoMX0+wViJxlQq3PYnb8LOHDzwvylfZoeBgKQ==, tarball: https://registry.npmjs.org/@teambit/base-ui.elements.icon/-/base-ui.elements.icon-1.0.0.tgz}
+    resolution: {integrity: sha512-qaoHLbt6wNXzgST7N3oE+1hI/PttCzrSLQ9B7d/7yKKxUbHbhjoMX0+wViJxlQq3PYnb8LOHDzwvylfZoeBgKQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.elements.icon/-/base-ui.elements.icon-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.elements.icon/1.0.0
     name: '@teambit/base-ui.elements.icon'
     version: 1.0.0
@@ -61513,7 +61657,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.elements.image@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-33kB66RvIaSRipV7mwL/IMwwOEThFRF4myHPFBSaF8rXmmJLKInm6bN1dWZ77gKcRlOtwJWq/UJMStC/EWtksA==, tarball: https://registry.npmjs.org/@teambit/base-ui.elements.image/-/base-ui.elements.image-1.0.0.tgz}
+    resolution: {integrity: sha512-33kB66RvIaSRipV7mwL/IMwwOEThFRF4myHPFBSaF8rXmmJLKInm6bN1dWZ77gKcRlOtwJWq/UJMStC/EWtksA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.elements.image/-/base-ui.elements.image-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.elements.image/1.0.0
     name: '@teambit/base-ui.elements.image'
     version: 1.0.0
@@ -61528,7 +61672,7 @@ packages:
     dev: true
 
   registry.npmjs.org/@teambit/base-ui.graph.tree.indent@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-I1b8AryymAz574SX8FoVAwfCwPU6r0PMkJ6MvonSazXjYvG2ZBQmIlFb4/3O1d9p/aHiD82IF+D3nce6NJwdHQ==, tarball: https://registry.npmjs.org/@teambit/base-ui.graph.tree.indent/-/base-ui.graph.tree.indent-1.0.0.tgz}
+    resolution: {integrity: sha512-I1b8AryymAz574SX8FoVAwfCwPU6r0PMkJ6MvonSazXjYvG2ZBQmIlFb4/3O1d9p/aHiD82IF+D3nce6NJwdHQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.graph.tree.indent/-/base-ui.graph.tree.indent-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.graph.tree.indent/1.0.0
     name: '@teambit/base-ui.graph.tree.indent'
     version: 1.0.0
@@ -61542,7 +61686,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.graph.tree.inflate-paths@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-GAsT6a06E6Loj0n3UlHpoynSLTD56IAGX3dspM4fq0H5JaOzEb88EGemhN2Ksk9C9MgzqpLzRNBttenJ6TnAyQ==, tarball: https://registry.npmjs.org/@teambit/base-ui.graph.tree.inflate-paths/-/base-ui.graph.tree.inflate-paths-1.0.0.tgz}
+    resolution: {integrity: sha512-GAsT6a06E6Loj0n3UlHpoynSLTD56IAGX3dspM4fq0H5JaOzEb88EGemhN2Ksk9C9MgzqpLzRNBttenJ6TnAyQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.graph.tree.inflate-paths/-/base-ui.graph.tree.inflate-paths-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.graph.tree.inflate-paths/1.0.0
     name: '@teambit/base-ui.graph.tree.inflate-paths'
     version: 1.0.0
@@ -61558,7 +61702,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.hook.use-click-outside@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-We1J6M2/jBAAIN7/zilrIJKeGILSpkR7/FSSidsiacfm/SqIn+BMuse1GXvd4ThOhvAgFUUbj0fZ4NDyQhu3BQ==, tarball: https://registry.npmjs.org/@teambit/base-ui.hook.use-click-outside/-/base-ui.hook.use-click-outside-1.0.0.tgz}
+    resolution: {integrity: sha512-We1J6M2/jBAAIN7/zilrIJKeGILSpkR7/FSSidsiacfm/SqIn+BMuse1GXvd4ThOhvAgFUUbj0fZ4NDyQhu3BQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.hook.use-click-outside/-/base-ui.hook.use-click-outside-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.hook.use-click-outside/1.0.0
     name: '@teambit/base-ui.hook.use-click-outside'
     version: 1.0.0
@@ -61572,7 +61716,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.input.checkbox.hidden@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-gGUqZs+n0F2EeJaSryGkNfE1MOslKdKqNveI6jgphoYhhQ2WEOiZaDtsxTKIAzi/tbnEe5kZlC+uAk0q7jo6Ug==, tarball: https://registry.npmjs.org/@teambit/base-ui.input.checkbox.hidden/-/base-ui.input.checkbox.hidden-1.0.1.tgz}
+    resolution: {integrity: sha512-gGUqZs+n0F2EeJaSryGkNfE1MOslKdKqNveI6jgphoYhhQ2WEOiZaDtsxTKIAzi/tbnEe5kZlC+uAk0q7jo6Ug==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.input.checkbox.hidden/-/base-ui.input.checkbox.hidden-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.input.checkbox.hidden/1.0.1
     name: '@teambit/base-ui.input.checkbox.hidden'
     version: 1.0.1
@@ -61587,7 +61731,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.input.checkbox.indicator@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-yYnwY1ax6nF+HopiSmZe/4tPigdUb5CI2JstC67L+30fitfhtWDL1bO+A3OTJU62yV4XMGtALQbkulMDqazJwg==, tarball: https://registry.npmjs.org/@teambit/base-ui.input.checkbox.indicator/-/base-ui.input.checkbox.indicator-1.0.0.tgz}
+    resolution: {integrity: sha512-yYnwY1ax6nF+HopiSmZe/4tPigdUb5CI2JstC67L+30fitfhtWDL1bO+A3OTJU62yV4XMGtALQbkulMDqazJwg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.input.checkbox.indicator/-/base-ui.input.checkbox.indicator-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.input.checkbox.indicator/1.0.0
     name: '@teambit/base-ui.input.checkbox.indicator'
     version: 1.0.0
@@ -61602,7 +61746,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.input.checkbox.label@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-5TXD6JGVLxd8vcRZ/PeoyUVp9W20AQFzlamauZt0PGKaWNl7CrGiOsnCAl9wiDO2yWu/gPwelTI3ThjoaIv+rQ==, tarball: https://registry.npmjs.org/@teambit/base-ui.input.checkbox.label/-/base-ui.input.checkbox.label-1.0.1.tgz}
+    resolution: {integrity: sha512-5TXD6JGVLxd8vcRZ/PeoyUVp9W20AQFzlamauZt0PGKaWNl7CrGiOsnCAl9wiDO2yWu/gPwelTI3ThjoaIv+rQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.input.checkbox.label/-/base-ui.input.checkbox.label-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.input.checkbox.label/1.0.1
     name: '@teambit/base-ui.input.checkbox.label'
     version: 1.0.1
@@ -61618,7 +61762,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.layout.breakpoints@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-F7+aHFncCH4iHtClKX9i7Yj6+SBQjQTQkrzxX9Jq4/r4QGEIVVbJ6Tjwa+abI2ef8Ww0fpPpLCP+ithPJWHQtA==, tarball: https://registry.npmjs.org/@teambit/base-ui.layout.breakpoints/-/base-ui.layout.breakpoints-1.0.0.tgz}
+    resolution: {integrity: sha512-F7+aHFncCH4iHtClKX9i7Yj6+SBQjQTQkrzxX9Jq4/r4QGEIVVbJ6Tjwa+abI2ef8Ww0fpPpLCP+ithPJWHQtA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.layout.breakpoints/-/base-ui.layout.breakpoints-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.layout.breakpoints/1.0.0
     name: '@teambit/base-ui.layout.breakpoints'
     version: 1.0.0
@@ -61632,7 +61776,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.layout.page-frame@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-X+lWlURlRu528ink+3e7eqQt866UMYGI3DdPC7FAJ3v1CW0p0+O95K+/mxNmYvQLtW4y2iJ+2rrv/el27d6/Xw==, tarball: https://registry.npmjs.org/@teambit/base-ui.layout.page-frame/-/base-ui.layout.page-frame-1.0.0.tgz}
+    resolution: {integrity: sha512-X+lWlURlRu528ink+3e7eqQt866UMYGI3DdPC7FAJ3v1CW0p0+O95K+/mxNmYvQLtW4y2iJ+2rrv/el27d6/Xw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.layout.page-frame/-/base-ui.layout.page-frame-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.layout.page-frame/1.0.0
     name: '@teambit/base-ui.layout.page-frame'
     version: 1.0.0
@@ -61646,7 +61790,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.loaders.loader-ribbon@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-qhCYlHvLy+U1E9a3kXMnZz7dba2PKMsputdJgE3PldsNG01gH0udyrPeOT6Re/fuWHfzXVU2zN6zDWwi+Pygdw==, tarball: https://registry.npmjs.org/@teambit/base-ui.loaders.loader-ribbon/-/base-ui.loaders.loader-ribbon-1.0.0.tgz}
+    resolution: {integrity: sha512-qhCYlHvLy+U1E9a3kXMnZz7dba2PKMsputdJgE3PldsNG01gH0udyrPeOT6Re/fuWHfzXVU2zN6zDWwi+Pygdw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.loaders.loader-ribbon/-/base-ui.loaders.loader-ribbon-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.loaders.loader-ribbon/1.0.0
     name: '@teambit/base-ui.loaders.loader-ribbon'
     version: 1.0.0
@@ -61661,7 +61805,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.routing.compare-url@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-57vlN0+yBZFGsX5JLo237OQ3Bu8eeJ+vEVbeQuioJsuvS0zEhI8EyobYssEfyaCMsbpDpbpL6HkfSvuQB0Vtmw==, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.compare-url/-/base-ui.routing.compare-url-1.0.0.tgz}
+    resolution: {integrity: sha512-57vlN0+yBZFGsX5JLo237OQ3Bu8eeJ+vEVbeQuioJsuvS0zEhI8EyobYssEfyaCMsbpDpbpL6HkfSvuQB0Vtmw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.compare-url/-/base-ui.routing.compare-url-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.routing.compare-url/1.0.0
     name: '@teambit/base-ui.routing.compare-url'
     version: 1.0.0
@@ -61675,7 +61819,7 @@ packages:
       url-parse: 1.5.1
 
   registry.npmjs.org/@teambit/base-ui.routing.link@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-kJkoNmZqsrXWFyDBM8DXH5IKa7GumBvm9l7mcs8kjawFmBtP+LnunV/KJozwQtuNTjmizMYwq8+6IWAV365RLA==, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.link/-/base-ui.routing.link-1.0.0.tgz}
+    resolution: {integrity: sha512-kJkoNmZqsrXWFyDBM8DXH5IKa7GumBvm9l7mcs8kjawFmBtP+LnunV/KJozwQtuNTjmizMYwq8+6IWAV365RLA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.link/-/base-ui.routing.link-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.routing.link/1.0.0
     name: '@teambit/base-ui.routing.link'
     version: 1.0.0
@@ -61691,7 +61835,7 @@ packages:
     dev: true
 
   registry.npmjs.org/@teambit/base-ui.routing.native-link@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-yrkm02UxkeCBWyLQC9MG7Jl6JbQrsIBz+9c57mZqAjEcVvQWY2mB3lEY+pNZAuIyOg55/DTqKR1bKQKl6ZAdzg==, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.native-link/-/base-ui.routing.native-link-1.0.0.tgz}
+    resolution: {integrity: sha512-yrkm02UxkeCBWyLQC9MG7Jl6JbQrsIBz+9c57mZqAjEcVvQWY2mB3lEY+pNZAuIyOg55/DTqKR1bKQKl6ZAdzg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.native-link/-/base-ui.routing.native-link-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.routing.native-link/1.0.0
     name: '@teambit/base-ui.routing.native-link'
     version: 1.0.0
@@ -61704,7 +61848,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.routing.native-nav-link@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-elXAzsYT7e7Y6/2n5Xv0iYS48ITG2KDBcrtUifxSlVob3zyRbaX18M6wPrHyD9z9XXwqyxEJreTKL1Gt9IdEaA==, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.native-nav-link/-/base-ui.routing.native-nav-link-1.0.0.tgz}
+    resolution: {integrity: sha512-elXAzsYT7e7Y6/2n5Xv0iYS48ITG2KDBcrtUifxSlVob3zyRbaX18M6wPrHyD9z9XXwqyxEJreTKL1Gt9IdEaA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.native-nav-link/-/base-ui.routing.native-nav-link-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.routing.native-nav-link/1.0.0
     name: '@teambit/base-ui.routing.native-nav-link'
     version: 1.0.0
@@ -61721,7 +61865,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.routing.routing-provider@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-18qOybF12VyqLHbbrHGuzgZx3YRMahiedOMkSDO7fOHQUqCUok0c8LkY3BEenaL3nK0Buy1ih3wNT9GiSWy2MA==, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.routing-provider/-/base-ui.routing.routing-provider-1.0.0.tgz}
+    resolution: {integrity: sha512-18qOybF12VyqLHbbrHGuzgZx3YRMahiedOMkSDO7fOHQUqCUok0c8LkY3BEenaL3nK0Buy1ih3wNT9GiSWy2MA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.routing-provider/-/base-ui.routing.routing-provider-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.routing.routing-provider/1.0.0
     name: '@teambit/base-ui.routing.routing-provider'
     version: 1.0.0
@@ -61737,7 +61881,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.styles.flex-center@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-kO9scMrQ5AI2+vi9Xc/VMQryBhlcR+RAAsM32mmPQ6cEbE4R1clN9SIASj2BZ2gTca+nQI37+sFvXdefviz4iw==, tarball: https://registry.npmjs.org/@teambit/base-ui.styles.flex-center/-/base-ui.styles.flex-center-1.0.0.tgz}
+    resolution: {integrity: sha512-kO9scMrQ5AI2+vi9Xc/VMQryBhlcR+RAAsM32mmPQ6cEbE4R1clN9SIASj2BZ2gTca+nQI37+sFvXdefviz4iw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.styles.flex-center/-/base-ui.styles.flex-center-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.styles.flex-center/1.0.0
     name: '@teambit/base-ui.styles.flex-center'
     version: 1.0.0
@@ -61751,7 +61895,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.abs-container@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-Gzoj5H/OeIetATQt/zf9qmW2mqEovCNbuqR5JE9Isovjt6oHhXnB0tUC2+bXBn7OIiLySTOg63R7CymWC43w6g==, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.abs-container/-/base-ui.surfaces.abs-container-1.0.0.tgz}
+    resolution: {integrity: sha512-Gzoj5H/OeIetATQt/zf9qmW2mqEovCNbuqR5JE9Isovjt6oHhXnB0tUC2+bXBn7OIiLySTOg63R7CymWC43w6g==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.abs-container/-/base-ui.surfaces.abs-container-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.abs-container/1.0.0
     name: '@teambit/base-ui.surfaces.abs-container'
     version: 1.0.0
@@ -61767,7 +61911,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.background@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-VHPPrzqkHUiYkbief6QtxCbTXUcCh69xMtkbrAsIJXZjrAAN1GhNX2PrErEEaCRIXW1joo06zekyth0+vT1HUg==, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.background/-/base-ui.surfaces.background-1.0.1.tgz}
+    resolution: {integrity: sha512-VHPPrzqkHUiYkbief6QtxCbTXUcCh69xMtkbrAsIJXZjrAAN1GhNX2PrErEEaCRIXW1joo06zekyth0+vT1HUg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.background/-/base-ui.surfaces.background-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.background/1.0.1
     name: '@teambit/base-ui.surfaces.background'
     version: 1.0.1
@@ -61781,7 +61925,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.card@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-taJIr7LqtuyIrERv9FeT3+91mSrY8WF+AbtfHttb6J8pE4xV0FaqxVXbKT9wRw06XDi5RUo6LXKMZOldkgR8Gw==, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.card/-/base-ui.surfaces.card-1.0.1.tgz}
+    resolution: {integrity: sha512-taJIr7LqtuyIrERv9FeT3+91mSrY8WF+AbtfHttb6J8pE4xV0FaqxVXbKT9wRw06XDi5RUo6LXKMZOldkgR8Gw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.card/-/base-ui.surfaces.card-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.card/1.0.1
     name: '@teambit/base-ui.surfaces.card'
     version: 1.0.1
@@ -61799,7 +61943,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.drawer@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-4eSIGZGllXif9vXmZjMbV++HjA9EU2MzHL9gud+4NXZgj8JCoplqbvkk1Ptbhvs4BLDwPuujY28+dlAosOpXXQ==, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.drawer/-/base-ui.surfaces.drawer-1.0.0.tgz}
+    resolution: {integrity: sha512-4eSIGZGllXif9vXmZjMbV++HjA9EU2MzHL9gud+4NXZgj8JCoplqbvkk1Ptbhvs4BLDwPuujY28+dlAosOpXXQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.drawer/-/base-ui.surfaces.drawer-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.drawer/1.0.0
     name: '@teambit/base-ui.surfaces.drawer'
     version: 1.0.0
@@ -61817,7 +61961,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-sbN1AgGvc3lzoeWg7KQrYD9lCa4V9s0EctfZSrPCwy/UcHGePgMipBOWJkcNwuq8GGhzSTzH8rP8McWCLUGdew==, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter/-/base-ui.surfaces.split-pane.hover-splitter-1.0.0.tgz}
+    resolution: {integrity: sha512-sbN1AgGvc3lzoeWg7KQrYD9lCa4V9s0EctfZSrPCwy/UcHGePgMipBOWJkcNwuq8GGhzSTzH8rP8McWCLUGdew==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter/-/base-ui.surfaces.split-pane.hover-splitter-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter/1.0.0
     name: '@teambit/base-ui.surfaces.split-pane.hover-splitter'
     version: 1.0.0
@@ -61832,7 +61976,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.layout@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-Ib4sVeQYp3NU8zz6lhhvQ8B9AHb8bSGDaG5qZP36bXI8N+b9a0G+gCX2kFFmFPuAx74HOYnKz3B5xUPH5yTT0Q==, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.layout/-/base-ui.surfaces.split-pane.layout-1.0.0.tgz}
+    resolution: {integrity: sha512-Ib4sVeQYp3NU8zz6lhhvQ8B9AHb8bSGDaG5qZP36bXI8N+b9a0G+gCX2kFFmFPuAx74HOYnKz3B5xUPH5yTT0Q==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.layout/-/base-ui.surfaces.split-pane.layout-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.layout/1.0.0
     name: '@teambit/base-ui.surfaces.split-pane.layout'
     version: 1.0.0
@@ -61845,7 +61989,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.pane@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-OUzOlgCzt5pkAN9FcoXzlB+TUuH+5+Hh0EE/7X488rFTDHS6lW3pEgKPsqg1XUw30ivthOdVq7cwnpnB1seRhw==, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.pane/-/base-ui.surfaces.split-pane.pane-1.0.0.tgz}
+    resolution: {integrity: sha512-OUzOlgCzt5pkAN9FcoXzlB+TUuH+5+Hh0EE/7X488rFTDHS6lW3pEgKPsqg1XUw30ivthOdVq7cwnpnB1seRhw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.pane/-/base-ui.surfaces.split-pane.pane-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.pane/1.0.0
     name: '@teambit/base-ui.surfaces.split-pane.pane'
     version: 1.0.0
@@ -61860,7 +62004,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.split-pane@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-Zomx0m2Gsf9Dl+A3YwyZy1qJO3q6LtI7BTeEWsBLrub9fO0IXMTMjelsK918oAZ3xJ+LOXnEgYYVh+A9CQm2Qg==, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.split-pane/-/base-ui.surfaces.split-pane.split-pane-1.0.0.tgz}
+    resolution: {integrity: sha512-Zomx0m2Gsf9Dl+A3YwyZy1qJO3q6LtI7BTeEWsBLrub9fO0IXMTMjelsK918oAZ3xJ+LOXnEgYYVh+A9CQm2Qg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.split-pane/-/base-ui.surfaces.split-pane.split-pane-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.split-pane/1.0.0
     name: '@teambit/base-ui.surfaces.split-pane.split-pane'
     version: 1.0.0
@@ -61877,7 +62021,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.splitter@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-5/oGHEUOQQnQUi2911fLb/rdFLLDoMy1G4fQ4DNkqoHcahi1a26tCtKlV+7FAI1LsFdk0V+wRp6WY+kX+Qbsxw==, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.splitter/-/base-ui.surfaces.split-pane.splitter-1.0.0.tgz}
+    resolution: {integrity: sha512-5/oGHEUOQQnQUi2911fLb/rdFLLDoMy1G4fQ4DNkqoHcahi1a26tCtKlV+7FAI1LsFdk0V+wRp6WY+kX+Qbsxw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.splitter/-/base-ui.surfaces.split-pane.splitter-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.splitter/1.0.0
     name: '@teambit/base-ui.surfaces.split-pane.splitter'
     version: 1.0.0
@@ -61891,7 +62035,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.text.heading@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-P6N4Mx5YUuCnkVXwpG5UK2/5b56aXJCHq2LRiqambZM/lZbLX2qO+CNolRjYztRf2cXea6/ToUdjAn+BPcwXXA==, tarball: https://registry.npmjs.org/@teambit/base-ui.text.heading/-/base-ui.text.heading-1.0.1.tgz}
+    resolution: {integrity: sha512-P6N4Mx5YUuCnkVXwpG5UK2/5b56aXJCHq2LRiqambZM/lZbLX2qO+CNolRjYztRf2cXea6/ToUdjAn+BPcwXXA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.text.heading/-/base-ui.text.heading-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.text.heading/1.0.1
     name: '@teambit/base-ui.text.heading'
     version: 1.0.1
@@ -61905,7 +62049,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.text.muted-text@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-xawuhA+NqttmKRqj0xoDqNAVCmryIUQBpJjIp8LC/0iT7Xo/QAcm5EmrpalCFLhNbcUnQzPK/bwXETz+jFAcrA==, tarball: https://registry.npmjs.org/@teambit/base-ui.text.muted-text/-/base-ui.text.muted-text-1.0.1.tgz}
+    resolution: {integrity: sha512-xawuhA+NqttmKRqj0xoDqNAVCmryIUQBpJjIp8LC/0iT7Xo/QAcm5EmrpalCFLhNbcUnQzPK/bwXETz+jFAcrA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.text.muted-text/-/base-ui.text.muted-text-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.text.muted-text/1.0.1
     name: '@teambit/base-ui.text.muted-text'
     version: 1.0.1
@@ -61920,7 +62064,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.text.paragraph@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-cs1ugxwYUCTFBNF+QSlq206u5ZcfJts3LluDO42hi5R1iQ/o1lyhQhmQ9VgTWE1mXuwGrSzkJ02/S7vigxTzJg==, tarball: https://registry.npmjs.org/@teambit/base-ui.text.paragraph/-/base-ui.text.paragraph-1.0.1.tgz}
+    resolution: {integrity: sha512-cs1ugxwYUCTFBNF+QSlq206u5ZcfJts3LluDO42hi5R1iQ/o1lyhQhmQ9VgTWE1mXuwGrSzkJ02/S7vigxTzJg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.text.paragraph/-/base-ui.text.paragraph-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.text.paragraph/1.0.1
     name: '@teambit/base-ui.text.paragraph'
     version: 1.0.1
@@ -61937,7 +62081,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.text.text-sizes@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-mCoVLxG3Hm4hgeHJeNnde/4YxpUTvNPNsKbGozErigUrBTf5cKFvLnDYXlEzGOGwNrs9hqIG/nmm3um9E9/5bg==, tarball: https://registry.npmjs.org/@teambit/base-ui.text.text-sizes/-/base-ui.text.text-sizes-1.0.0.tgz}
+    resolution: {integrity: sha512-mCoVLxG3Hm4hgeHJeNnde/4YxpUTvNPNsKbGozErigUrBTf5cKFvLnDYXlEzGOGwNrs9hqIG/nmm3um9E9/5bg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.text.text-sizes/-/base-ui.text.text-sizes-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.text.text-sizes/1.0.0
     name: '@teambit/base-ui.text.text-sizes'
     version: 1.0.0
@@ -61950,7 +62094,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.text.themed-text@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-YG/xgNwXuFkTDopsmThwea4zHjHZ5yRlN43s81kdqKAjqouHEcNZzte39A/ZA398Cx+TUrlwbKuBHxMMiijv2w==, tarball: https://registry.npmjs.org/@teambit/base-ui.text.themed-text/-/base-ui.text.themed-text-1.0.1.tgz}
+    resolution: {integrity: sha512-YG/xgNwXuFkTDopsmThwea4zHjHZ5yRlN43s81kdqKAjqouHEcNZzte39A/ZA398Cx+TUrlwbKuBHxMMiijv2w==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.text.themed-text/-/base-ui.text.themed-text-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.text.themed-text/1.0.1
     name: '@teambit/base-ui.text.themed-text'
     version: 1.0.1
@@ -61965,7 +62109,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.theme.accent-color@1.1.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-IASK1+zcJmULcWGbw57lm8kFH/SkKRZEsqYj/QaxyIKjvnrS/uBXUNDGRqgmkR/IC3Fl8rQlbFxELwASTiSNZg==, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.accent-color/-/base-ui.theme.accent-color-1.1.0.tgz}
+    resolution: {integrity: sha512-IASK1+zcJmULcWGbw57lm8kFH/SkKRZEsqYj/QaxyIKjvnrS/uBXUNDGRqgmkR/IC3Fl8rQlbFxELwASTiSNZg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.accent-color/-/base-ui.theme.accent-color-1.1.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.accent-color/1.1.0
     name: '@teambit/base-ui.theme.accent-color'
     version: 1.1.0
@@ -61980,7 +62124,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.theme.brand-definition@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-1IapashD5oxvRsw5On5eHzx3d4Cf2+u+ajb31ATcnFfaGVEvC/V3bFQ6t3VNnyI2ewOYiEuxGJOboxfZi7M+IA==, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.brand-definition/-/base-ui.theme.brand-definition-1.0.0.tgz}
+    resolution: {integrity: sha512-1IapashD5oxvRsw5On5eHzx3d4Cf2+u+ajb31ATcnFfaGVEvC/V3bFQ6t3VNnyI2ewOYiEuxGJOboxfZi7M+IA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.brand-definition/-/base-ui.theme.brand-definition-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.brand-definition/1.0.0
     name: '@teambit/base-ui.theme.brand-definition'
     version: 1.0.0
@@ -61993,7 +62137,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.color-definition@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-9JYKPLhxJhsPfA4PkSvoWGlQEb2dlG2uWiCxQuKoRVzM2YivIfEv63BMO8/4xnvGtJsPR/lOrBKDKahjN6jS8g==, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.color-definition/-/base-ui.theme.color-definition-1.0.1.tgz}
+    resolution: {integrity: sha512-9JYKPLhxJhsPfA4PkSvoWGlQEb2dlG2uWiCxQuKoRVzM2YivIfEv63BMO8/4xnvGtJsPR/lOrBKDKahjN6jS8g==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.color-definition/-/base-ui.theme.color-definition-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.color-definition/1.0.1
     name: '@teambit/base-ui.theme.color-definition'
     version: 1.0.1
@@ -62007,7 +62151,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.colors@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-3lKvT0eFMwkOGydNHu8TU2xlRHWHQVzx2Uxk50sICGlIjAcEyIZ1E655qvF8B/KPSES81rj/nozWklslhVBMeQ==, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.colors/-/base-ui.theme.colors-1.0.0.tgz}
+    resolution: {integrity: sha512-3lKvT0eFMwkOGydNHu8TU2xlRHWHQVzx2Uxk50sICGlIjAcEyIZ1E655qvF8B/KPSES81rj/nozWklslhVBMeQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.colors/-/base-ui.theme.colors-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.colors/1.0.0
     name: '@teambit/base-ui.theme.colors'
     version: 1.0.0
@@ -62020,7 +62164,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.dark-theme@1.0.2(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-Y/fLbxyb8XW7qZ4wAgl2cEmWXceOfaXN/GcfrVZEBqmM6YerlAkNq9RW3bcN9OuhSVekDjApwbDtELsE9WStdA==, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.dark-theme/-/base-ui.theme.dark-theme-1.0.2.tgz}
+    resolution: {integrity: sha512-Y/fLbxyb8XW7qZ4wAgl2cEmWXceOfaXN/GcfrVZEBqmM6YerlAkNq9RW3bcN9OuhSVekDjApwbDtELsE9WStdA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.dark-theme/-/base-ui.theme.dark-theme-1.0.2.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.dark-theme/1.0.2
     name: '@teambit/base-ui.theme.dark-theme'
     version: 1.0.2
@@ -62035,7 +62179,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.theme.fonts.book@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-yc8/+nkHE8XZs+boxJ0jc8PXMy6bCLpCfDMTuvweD1LshIFhOK01Eiv1Uxxo8IyD8abUZt4gi1LRMKwVqlGnjw==, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.fonts.book/-/base-ui.theme.fonts.book-1.0.0.tgz}
+    resolution: {integrity: sha512-yc8/+nkHE8XZs+boxJ0jc8PXMy6bCLpCfDMTuvweD1LshIFhOK01Eiv1Uxxo8IyD8abUZt4gi1LRMKwVqlGnjw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.fonts.book/-/base-ui.theme.fonts.book-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.fonts.book/1.0.0
     name: '@teambit/base-ui.theme.fonts.book'
     version: 1.0.0
@@ -62048,7 +62192,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.fonts.roboto@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-a1DUqAJDdyqGIX4s87zW0unmmlvNI+U1vNT2zgm4hfoAQayOFQHwUlA6lRfu/fomyXYFsKhWNwhSu0lIhNsmqA==, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.fonts.roboto/-/base-ui.theme.fonts.roboto-1.0.0.tgz}
+    resolution: {integrity: sha512-a1DUqAJDdyqGIX4s87zW0unmmlvNI+U1vNT2zgm4hfoAQayOFQHwUlA6lRfu/fomyXYFsKhWNwhSu0lIhNsmqA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.fonts.roboto/-/base-ui.theme.fonts.roboto-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.fonts.roboto/1.0.0
     name: '@teambit/base-ui.theme.fonts.roboto'
     version: 1.0.0
@@ -62061,7 +62205,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.heading-margin-definition@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-gPKAXOWOlBqsQ88z15yOffJOwV1nqtnSTiF/a00OUoL/Pm41yATnzM+CpxaKT4g6LFfoQvnZJHVPKQ/u3loDoA==, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.heading-margin-definition/-/base-ui.theme.heading-margin-definition-1.0.0.tgz}
+    resolution: {integrity: sha512-gPKAXOWOlBqsQ88z15yOffJOwV1nqtnSTiF/a00OUoL/Pm41yATnzM+CpxaKT4g6LFfoQvnZJHVPKQ/u3loDoA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.heading-margin-definition/-/base-ui.theme.heading-margin-definition-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.heading-margin-definition/1.0.0
     name: '@teambit/base-ui.theme.heading-margin-definition'
     version: 1.0.0
@@ -62074,7 +62218,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.shadow-definition@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-z58KOqj95gjmW48IK53NMlp/NZKhJ3iSQnrFCJ1d46XmimfIe2oQdxFW/B69W+Dc8AyM1ES/pbqLVAmE38uxAw==, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.shadow-definition/-/base-ui.theme.shadow-definition-1.0.0.tgz}
+    resolution: {integrity: sha512-z58KOqj95gjmW48IK53NMlp/NZKhJ3iSQnrFCJ1d46XmimfIe2oQdxFW/B69W+Dc8AyM1ES/pbqLVAmE38uxAw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.shadow-definition/-/base-ui.theme.shadow-definition-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.shadow-definition/1.0.0
     name: '@teambit/base-ui.theme.shadow-definition'
     version: 1.0.0
@@ -62087,7 +62231,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.size-definition@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-cOexDIzZvG37G76bn0P6SPfR68UKh4ZlH10fZKJsBcIEs4s9Ne5+zPqhDyjgKCHZVOqIj/0I4EVBFIb8o06L2w==, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.size-definition/-/base-ui.theme.size-definition-1.0.0.tgz}
+    resolution: {integrity: sha512-cOexDIzZvG37G76bn0P6SPfR68UKh4ZlH10fZKJsBcIEs4s9Ne5+zPqhDyjgKCHZVOqIj/0I4EVBFIb8o06L2w==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.size-definition/-/base-ui.theme.size-definition-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.size-definition/1.0.0
     name: '@teambit/base-ui.theme.size-definition'
     version: 1.0.0
@@ -62100,7 +62244,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.sizes@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-A2PoEhZ/8GYSeypqIMGK0Hu/bcpfDdquxQtkXZ34bIpXdYaYGn0tHIJTAuxJTInWM+qLMBAHQ32p3qkm86IuDQ==, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.sizes/-/base-ui.theme.sizes-1.0.0.tgz}
+    resolution: {integrity: sha512-A2PoEhZ/8GYSeypqIMGK0Hu/bcpfDdquxQtkXZ34bIpXdYaYGn0tHIJTAuxJTInWM+qLMBAHQ32p3qkm86IuDQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.sizes/-/base-ui.theme.sizes-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.sizes/1.0.0
     name: '@teambit/base-ui.theme.sizes'
     version: 1.0.0
@@ -62113,7 +62257,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.theme-provider@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-PywTliIBJswoOi8LU4HT8BI9dR6/OEZh7nej4Nvyv7U5alVKIgUbSF+whl8vprVjyrDDVJ3QtSdwujvbPhmmAw==, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.theme-provider/-/base-ui.theme.theme-provider-1.0.1.tgz}
+    resolution: {integrity: sha512-PywTliIBJswoOi8LU4HT8BI9dR6/OEZh7nej4Nvyv7U5alVKIgUbSF+whl8vprVjyrDDVJ3QtSdwujvbPhmmAw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.theme-provider/-/base-ui.theme.theme-provider-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.theme-provider/1.0.1
     name: '@teambit/base-ui.theme.theme-provider'
     version: 1.0.1
@@ -62133,7 +62277,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.utils.composer@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-2w+T+WdEJWxWbGcqRueoww08xeDrPyWxDnWFho4N7WsxKS6zaHp/u29b18KV34VDJV9hdHcrXzhUoaLXd8pFSA==, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.composer/-/base-ui.utils.composer-1.0.0.tgz}
+    resolution: {integrity: sha512-2w+T+WdEJWxWbGcqRueoww08xeDrPyWxDnWFho4N7WsxKS6zaHp/u29b18KV34VDJV9hdHcrXzhUoaLXd8pFSA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.composer/-/base-ui.utils.composer-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.utils.composer/1.0.0
     name: '@teambit/base-ui.utils.composer'
     version: 1.0.0
@@ -62147,7 +62291,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.utils.is-browser@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-xvMmDLJFXqO0WwEYtM+zipMFQ7yaQLxDWmUynehfrBERSA8ZaeVfR8DiTPV/X3nRM/OD2Cym4f6UZPhcXLXJeg==, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.is-browser/-/base-ui.utils.is-browser-1.0.0.tgz}
+    resolution: {integrity: sha512-xvMmDLJFXqO0WwEYtM+zipMFQ7yaQLxDWmUynehfrBERSA8ZaeVfR8DiTPV/X3nRM/OD2Cym4f6UZPhcXLXJeg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.is-browser/-/base-ui.utils.is-browser-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.utils.is-browser/1.0.0
     name: '@teambit/base-ui.utils.is-browser'
     version: 1.0.0
@@ -62160,7 +62304,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-cuXL6MNfP7XPJtJZUVUCj50JJpzF/+pS0RRlnWE1B/rNB9tKyu+QfdZQ+kmSAGwQMT1ZfTufo50Gow/suzZavw==, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.string.affix/-/base-ui.utils.string.affix-1.0.0.tgz}
+    resolution: {integrity: sha512-cuXL6MNfP7XPJtJZUVUCj50JJpzF/+pS0RRlnWE1B/rNB9tKyu+QfdZQ+kmSAGwQMT1ZfTufo50Gow/suzZavw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.string.affix/-/base-ui.utils.string.affix-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.utils.string.affix/1.0.0
     name: '@teambit/base-ui.utils.string.affix'
     version: 1.0.0
@@ -62174,7 +62318,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.utils.sub-paths@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-SZiCFSzGezESxWl0m4I3WJfX0pmVgjcobOhPL4tGlCmXHqdICQ69nExY7XJsjvNJ57H54UnF/DNEBaSZv2FBdQ==, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.sub-paths/-/base-ui.utils.sub-paths-1.0.0.tgz}
+    resolution: {integrity: sha512-SZiCFSzGezESxWl0m4I3WJfX0pmVgjcobOhPL4tGlCmXHqdICQ69nExY7XJsjvNJ57H54UnF/DNEBaSZv2FBdQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.sub-paths/-/base-ui.utils.sub-paths-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.utils.sub-paths/1.0.0
     name: '@teambit/base-ui.utils.sub-paths'
     version: 1.0.0
@@ -62189,7 +62333,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.theme.theme-context@4.0.3(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-y3A4sldyzVLvaOQX0rOg9LAVWUx1OwjzIiBCyAwiNSTTsl42emPChOWePDGycBkN+fPkQVokAUKimqMk/h/aNw==, tarball: https://registry.npmjs.org/@teambit/documenter.theme.theme-context/-/documenter.theme.theme-context-4.0.3.tgz}
+    resolution: {integrity: sha512-y3A4sldyzVLvaOQX0rOg9LAVWUx1OwjzIiBCyAwiNSTTsl42emPChOWePDGycBkN+fPkQVokAUKimqMk/h/aNw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.theme.theme-context/-/documenter.theme.theme-context-4.0.3.tgz}
     id: registry.npmjs.org/@teambit/documenter.theme.theme-context/4.0.3
     name: '@teambit/documenter.theme.theme-context'
     version: 4.0.3
@@ -62205,7 +62349,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/documenter.ui.heading@4.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-VmHd/0lSMKfUuGllXbCnqZehQ0pcTgio8q9mcbsPs9S36bZW4w5BS9oywVSo47dzLOOV3S/C1gUIdy6P468miw==, tarball: https://registry.npmjs.org/@teambit/documenter.ui.heading/-/documenter.ui.heading-4.1.1.tgz}
+    resolution: {integrity: sha512-VmHd/0lSMKfUuGllXbCnqZehQ0pcTgio8q9mcbsPs9S36bZW4w5BS9oywVSo47dzLOOV3S/C1gUIdy6P468miw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.heading/-/documenter.ui.heading-4.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.heading/4.1.1
     name: '@teambit/documenter.ui.heading'
     version: 4.1.1
@@ -62221,7 +62365,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.highlighted-text@4.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-lYt7PwLDWG49/PSgDOQmRzI0oS9GjGageLFdxxLBS29YRBRGhopphOxGnRtBONCxH67ZxLblkzduu7gRl5fvjg==, tarball: https://registry.npmjs.org/@teambit/documenter.ui.highlighted-text/-/documenter.ui.highlighted-text-4.1.1.tgz}
+    resolution: {integrity: sha512-lYt7PwLDWG49/PSgDOQmRzI0oS9GjGageLFdxxLBS29YRBRGhopphOxGnRtBONCxH67ZxLblkzduu7gRl5fvjg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.highlighted-text/-/documenter.ui.highlighted-text-4.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.highlighted-text/4.1.1
     name: '@teambit/documenter.ui.highlighted-text'
     version: 4.1.1
@@ -62236,7 +62380,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.inline-code@0.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-HVTX7QiTyeY4lEiFFEf2oyjTbTpkao4FxaD8RQXt/k4dhdxVVyP2Z/WpYWhEpdssMYzEdVHR5VMFvrcby/4RjQ==, tarball: https://registry.npmjs.org/@teambit/documenter.ui.inline-code/-/documenter.ui.inline-code-0.1.1.tgz}
+    resolution: {integrity: sha512-HVTX7QiTyeY4lEiFFEf2oyjTbTpkao4FxaD8RQXt/k4dhdxVVyP2Z/WpYWhEpdssMYzEdVHR5VMFvrcby/4RjQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.inline-code/-/documenter.ui.inline-code-0.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.inline-code/0.1.1
     name: '@teambit/documenter.ui.inline-code'
     version: 0.1.1
@@ -62251,7 +62395,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.label-list@4.0.3(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-BnAlcBLZfgkDgBq8oco2NFnk2yqEHdAYEckhVPNrBsdKiA5CXgXjEWUHkKAsMNn3xbJ7ept7xAlS4RPrLNDlaA==, tarball: https://registry.npmjs.org/@teambit/documenter.ui.label-list/-/documenter.ui.label-list-4.0.3.tgz}
+    resolution: {integrity: sha512-BnAlcBLZfgkDgBq8oco2NFnk2yqEHdAYEckhVPNrBsdKiA5CXgXjEWUHkKAsMNn3xbJ7ept7xAlS4RPrLNDlaA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.label-list/-/documenter.ui.label-list-4.0.3.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.label-list/4.0.3
     name: '@teambit/documenter.ui.label-list'
     version: 4.0.3
@@ -62267,7 +62411,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.label@4.0.3(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-5MgPgotrW7JBalA1y6iAMF9YQDyXLS5JGt24+spK0MYWsGPV+g79NirYzH5yl6k7fTehvWJ9zMS4pdT3a4lR9g==, tarball: https://registry.npmjs.org/@teambit/documenter.ui.label/-/documenter.ui.label-4.0.3.tgz}
+    resolution: {integrity: sha512-5MgPgotrW7JBalA1y6iAMF9YQDyXLS5JGt24+spK0MYWsGPV+g79NirYzH5yl6k7fTehvWJ9zMS4pdT3a4lR9g==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.label/-/documenter.ui.label-4.0.3.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.label/4.0.3
     name: '@teambit/documenter.ui.label'
     version: 4.0.3
@@ -62282,7 +62426,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.paragraph@4.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-6SGnp4qO/AOG+sETJ/uStgFt6UY5s3E/55nX7RO7BIJEEVSi+kGU3xze2z10ruK/hKXJ6//JLwP7t5Sld8zj7g==, tarball: https://registry.npmjs.org/@teambit/documenter.ui.paragraph/-/documenter.ui.paragraph-4.1.1.tgz}
+    resolution: {integrity: sha512-6SGnp4qO/AOG+sETJ/uStgFt6UY5s3E/55nX7RO7BIJEEVSi+kGU3xze2z10ruK/hKXJ6//JLwP7t5Sld8zj7g==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.paragraph/-/documenter.ui.paragraph-4.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.paragraph/4.1.1
     name: '@teambit/documenter.ui.paragraph'
     version: 4.1.1
@@ -62299,7 +62443,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.section@4.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-PwMUmernBbCKKHm4AdXfBTlanIrkF6bE/Uyjg2AobIMf5taLw0L9RiQ2lAjUnSn9Mq4VFId/TrcjdA1p7jqlmQ==, tarball: https://registry.npmjs.org/@teambit/documenter.ui.section/-/documenter.ui.section-4.1.1.tgz}
+    resolution: {integrity: sha512-PwMUmernBbCKKHm4AdXfBTlanIrkF6bE/Uyjg2AobIMf5taLw0L9RiQ2lAjUnSn9Mq4VFId/TrcjdA1p7jqlmQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.section/-/documenter.ui.section-4.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.section/4.1.1
     name: '@teambit/documenter.ui.section'
     version: 4.1.1
@@ -62314,7 +62458,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.separator@4.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-ItYHPk2tfpOCb8GvNTBzLCOWD3hXRQrnG1ZhKnvcKkBqRb351+MLWQy0vVo971pFIgI4ei6DV3fM62eJ8/oxXA==, tarball: https://registry.npmjs.org/@teambit/documenter.ui.separator/-/documenter.ui.separator-4.1.1.tgz}
+    resolution: {integrity: sha512-ItYHPk2tfpOCb8GvNTBzLCOWD3hXRQrnG1ZhKnvcKkBqRb351+MLWQy0vVo971pFIgI4ei6DV3fM62eJ8/oxXA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.separator/-/documenter.ui.separator-4.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.separator/4.1.1
     name: '@teambit/documenter.ui.separator'
     version: 4.1.1
@@ -62329,7 +62473,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/evangelist.css-components.fade-in-out@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-oi5xKYxUqVUXP3Ae6eZS2LSaVe9sthO4nA3f95SnFnJ8O5HAX4O/xGi4WCYoxNPDo1muzp5/mfJkdmyRiILLRA==, tarball: https://registry.npmjs.org/@teambit/evangelist.css-components.fade-in-out/-/evangelist.css-components.fade-in-out-1.0.1.tgz}
+    resolution: {integrity: sha512-oi5xKYxUqVUXP3Ae6eZS2LSaVe9sthO4nA3f95SnFnJ8O5HAX4O/xGi4WCYoxNPDo1muzp5/mfJkdmyRiILLRA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.css-components.fade-in-out/-/evangelist.css-components.fade-in-out-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/evangelist.css-components.fade-in-out/1.0.1
     name: '@teambit/evangelist.css-components.fade-in-out'
     version: 1.0.1
@@ -62343,7 +62487,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/evangelist.input.checkbox.indicator@1.0.2(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-Qc41v9xhW/LVJFSw8bErKpMHlqx10lwmBtp95avVPJvhlaUnrplrJph3ueqhLmQVe6TxnCBPsi849t+7Q7UKzg==, tarball: https://registry.npmjs.org/@teambit/evangelist.input.checkbox.indicator/-/evangelist.input.checkbox.indicator-1.0.2.tgz}
+    resolution: {integrity: sha512-Qc41v9xhW/LVJFSw8bErKpMHlqx10lwmBtp95avVPJvhlaUnrplrJph3ueqhLmQVe6TxnCBPsi849t+7Q7UKzg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.input.checkbox.indicator/-/evangelist.input.checkbox.indicator-1.0.2.tgz}
     id: registry.npmjs.org/@teambit/evangelist.input.checkbox.indicator/1.0.2
     name: '@teambit/evangelist.input.checkbox.indicator'
     version: 1.0.2
@@ -62360,7 +62504,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/evangelist.input.checkbox.label@1.0.3(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-xuSc5KUViJovRp1paYkOyzFYxO5JKJsoN6RTjbS4iB2oJWYRmAL8VJwJ4zOc5Cze4fJV9aZu6fYhm/3bLRy8jQ==, tarball: https://registry.npmjs.org/@teambit/evangelist.input.checkbox.label/-/evangelist.input.checkbox.label-1.0.3.tgz}
+    resolution: {integrity: sha512-xuSc5KUViJovRp1paYkOyzFYxO5JKJsoN6RTjbS4iB2oJWYRmAL8VJwJ4zOc5Cze4fJV9aZu6fYhm/3bLRy8jQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.input.checkbox.label/-/evangelist.input.checkbox.label-1.0.3.tgz}
     id: registry.npmjs.org/@teambit/evangelist.input.checkbox.label/1.0.3
     name: '@teambit/evangelist.input.checkbox.label'
     version: 1.0.3
@@ -62376,7 +62520,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/evangelist.surfaces.dropdown@1.0.2(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-6KHnfU91AZXEJDAqwIA1pafnuyOh1QdMIPHLPNm0m8LXJ6krngjIYcXBfhaAn0DRzmx+V1W7A0E+EFMalAfBCg==, tarball: https://registry.npmjs.org/@teambit/evangelist.surfaces.dropdown/-/evangelist.surfaces.dropdown-1.0.2.tgz}
+    resolution: {integrity: sha512-6KHnfU91AZXEJDAqwIA1pafnuyOh1QdMIPHLPNm0m8LXJ6krngjIYcXBfhaAn0DRzmx+V1W7A0E+EFMalAfBCg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.surfaces.dropdown/-/evangelist.surfaces.dropdown-1.0.2.tgz}
     id: registry.npmjs.org/@teambit/evangelist.surfaces.dropdown/1.0.2
     name: '@teambit/evangelist.surfaces.dropdown'
     version: 1.0.2
@@ -62397,7 +62541,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/evangelist.surfaces.tooltip@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-tHsYDm7xB2FAlPeHonfAHzFgTtY5ij7ldNZaHMpw87Ecn28J2vtmmCCpfI4/9q/aZiFa6NTtDFsqFEkRUjr3yA==, tarball: https://registry.npmjs.org/@teambit/evangelist.surfaces.tooltip/-/evangelist.surfaces.tooltip-1.0.1.tgz}
+    resolution: {integrity: sha512-tHsYDm7xB2FAlPeHonfAHzFgTtY5ij7ldNZaHMpw87Ecn28J2vtmmCCpfI4/9q/aZiFa6NTtDFsqFEkRUjr3yA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.surfaces.tooltip/-/evangelist.surfaces.tooltip-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/evangelist.surfaces.tooltip/1.0.1
     name: '@teambit/evangelist.surfaces.tooltip'
     version: 1.0.1
@@ -62417,7 +62561,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-6GzCl0ZnmpfQ923yuCahI4mXZ8wSQCeF6D4+xtCq8tk+W5GHb12ZSlHBCD5xAZsc7i7VRUUZcTdhbc8L2RhMpg==, tarball: https://registry.npmjs.org/@teambit/react.instructions.react.adding-compositions/-/react.instructions.react.adding-compositions-0.0.6.tgz}
+    resolution: {integrity: sha512-6GzCl0ZnmpfQ923yuCahI4mXZ8wSQCeF6D4+xtCq8tk+W5GHb12ZSlHBCD5xAZsc7i7VRUUZcTdhbc8L2RhMpg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/react.instructions.react.adding-compositions/-/react.instructions.react.adding-compositions-0.0.6.tgz}
     id: registry.npmjs.org/@teambit/react.instructions.react.adding-compositions/0.0.6
     name: '@teambit/react.instructions.react.adding-compositions'
     version: 0.0.6
@@ -62435,7 +62579,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/react.instructions.react.adding-tests@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-OoNj8YPPc7I9a3TtUche2IdCHe2d/5hgZbjmZXWSPJVM69JCSzxhUNXaQRbiOuCI7m7+O2bBzMS4G2UboJ5Nmg==, tarball: https://registry.npmjs.org/@teambit/react.instructions.react.adding-tests/-/react.instructions.react.adding-tests-0.0.6.tgz}
+    resolution: {integrity: sha512-OoNj8YPPc7I9a3TtUche2IdCHe2d/5hgZbjmZXWSPJVM69JCSzxhUNXaQRbiOuCI7m7+O2bBzMS4G2UboJ5Nmg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/react.instructions.react.adding-tests/-/react.instructions.react.adding-tests-0.0.6.tgz}
     id: registry.npmjs.org/@teambit/react.instructions.react.adding-tests/0.0.6
     name: '@teambit/react.instructions.react.adding-tests'
     version: 0.0.6
