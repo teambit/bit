@@ -787,7 +787,7 @@ please create a new lane instead, which will include all components of this lane
     const commonSnapsToImport = compact(
       [...snapDistancesByComponentId.values()].map((s) =>
         s.snapsDistance.commonSnapBeforeDiverge
-          ? `${s.componentId.changeVersion(s.snapsDistance.commonSnapBeforeDiverge.hash)}`
+          ? s.componentId.changeVersion(s.snapsDistance.commonSnapBeforeDiverge.hash)
           : null
       )
     );
@@ -798,14 +798,11 @@ please create a new lane instead, which will include all components of this lane
       undefined;
 
     if (commonSnapsToImport.length > 0 && !options?.skipChanges) {
-      await this.scope.legacyScope.scopeImporter.importWithoutDeps(
-        ComponentIdList.fromStringArray(commonSnapsToImport),
-        {
-          cache: true,
-          reason: `get the common snap for lane diff`,
-          lane: sourceOrTargetLane,
-        }
-      );
+      await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(commonSnapsToImport), {
+        cache: true,
+        reason: `get the common snap for lane diff`,
+        lane: sourceOrTargetLane,
+      });
     }
 
     const results = await pMapSeries(diffProps, async ({ componentId, sourceHead, targetHead }) =>
