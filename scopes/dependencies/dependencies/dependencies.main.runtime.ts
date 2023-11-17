@@ -89,7 +89,7 @@ export class DependenciesMain {
       })
     );
 
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`deps-set (${componentPattern})`);
 
     return {
       changedComps: compIds.map((compId) => compId.toStringWithoutVersion()),
@@ -144,7 +144,7 @@ export class DependenciesMain {
       await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, newDepResolverConfig);
       return { id: compId, removedPackages };
     });
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`deps-remove (${componentPattern})`);
 
     return compact(results);
   }
@@ -154,7 +154,7 @@ export class DependenciesMain {
     await pMapSeries(compIds, async (compId) => {
       await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, { policy: {} });
     });
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`deps-reset (${componentPattern})`);
 
     return compIds;
   }
@@ -172,7 +172,7 @@ export class DependenciesMain {
         }
       );
     });
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`deps-eject (${componentPattern})`);
 
     return compIds;
   }

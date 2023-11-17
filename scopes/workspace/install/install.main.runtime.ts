@@ -822,7 +822,7 @@ export class InstallMain {
         });
       })
     );
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write('update (dependencies)');
   }
 
   private _updateVariantsPolicies(variantPatterns: Record<string, any>, updateVariantPolicies: string[]) {
