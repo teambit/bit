@@ -1,4 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import pMapSeries from 'p-map-series';
+import pMap from 'p-map';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
@@ -33,6 +35,7 @@ import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
+import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -763,8 +766,9 @@ please create a new lane instead, which will include all components of this lane
       }
     >();
 
-    await Promise.all(
-      diffProps.map(async ({ componentId, sourceHead, targetHead }) => {
+    await pMap(
+      diffProps,
+      async ({ componentId, sourceHead, targetHead }) => {
         const snapsDistance = await this.getSnapsDistance(componentId, sourceHead, targetHead, false);
         if (snapsDistance) {
           snapDistancesByComponentId.set(componentId.toString(), {
@@ -774,13 +778,16 @@ please create a new lane instead, which will include all components of this lane
             componentId,
           });
         }
-      })
+      },
+      {
+        concurrency: concurrentComponentsLimit(),
+      }
     );
 
     const commonSnapsToImport = compact(
       [...snapDistancesByComponentId.values()].map((s) =>
         s.snapsDistance.commonSnapBeforeDiverge
-          ? `${s.componentId.changeVersion(s.snapsDistance.commonSnapBeforeDiverge)}`
+          ? `${s.componentId.changeVersion(s.snapsDistance.commonSnapBeforeDiverge.hash)}`
           : null
       )
     );
@@ -801,15 +808,13 @@ please create a new lane instead, which will include all components of this lane
       );
     }
 
-    const results = await Promise.all(
-      diffProps.map(async ({ componentId, sourceHead, targetHead }) =>
-        this.componentDiffStatus(
-          componentId,
-          sourceHead,
-          targetHead,
-          snapDistancesByComponentId.get(componentId.toString())?.snapsDistance,
-          options
-        )
+    const results = await pMapSeries(diffProps, async ({ componentId, sourceHead, targetHead }) =>
+      this.componentDiffStatus(
+        componentId,
+        sourceHead,
+        targetHead,
+        snapDistancesByComponentId.get(componentId.toString())?.snapsDistance,
+        options
       )
     );
 
