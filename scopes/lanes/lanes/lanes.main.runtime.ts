@@ -696,6 +696,8 @@ please create a new lane instead, which will include all components of this lane
     targetLaneId?: LaneId,
     options?: LaneDiffStatusOptions
   ): Promise<LaneDiffStatus> {
+    this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
+
     const sourceLane = sourceLaneId.isDefault()
       ? await this.getLaneDataOfDefaultLane()
       : await this.loadLane(sourceLaneId);
@@ -766,6 +768,9 @@ please create a new lane instead, which will include all components of this lane
       }
     >();
 
+    this.logger.profile(
+      `get snaps distance for source lane: ${sourceLane?.id.name} and target lane: ${targetLane?.id.name} with ${diffProps.length} components`
+    );
     await pMap(
       diffProps,
       async ({ componentId, sourceHead, targetHead }) => {
@@ -782,6 +787,9 @@ please create a new lane instead, which will include all components of this lane
       {
         concurrency: concurrentComponentsLimit(),
       }
+    );
+    this.logger.profile(
+      `get snaps distance for source lane: ${sourceLane?.id.name} and target lane: ${targetLane?.id.name} with ${diffProps.length} components`
     );
 
     const commonSnapsToImport = compact(
@@ -814,6 +822,8 @@ please create a new lane instead, which will include all components of this lane
         options
       )
     );
+
+    this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
 
     return {
       source: sourceLaneId,
