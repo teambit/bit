@@ -779,9 +779,9 @@ please create a new lane instead, which will include all components of this lane
 
     const commonSnapsToImport = compact(
       [...snapDistancesByComponentId.values()].map((s) =>
-        !s.snapsDistance.commonSnapBeforeDiverge
-          ? null
-          : `${s.componentId.toStringWithoutVersion()}@${s.snapsDistance.commonSnapBeforeDiverge}`
+        s.snapsDistance.commonSnapBeforeDiverge
+          ? `${s.componentId.changeVersion(s.snapsDistance.commonSnapBeforeDiverge)}`
+          : null
       )
     );
 
