@@ -28,7 +28,7 @@ const port = process.env.WDS_SOCKET_PORT;
 //   '@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils'
 // );
 
-const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', sep, `${sep}public`);
+const publicUrlOrPath = getPublicUrlOrPath(true, sep, `${sep}public`);
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -49,9 +49,6 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
 
   // Host
   const host = process.env.HOST || 'localhost';
-
-  // Required for babel-preset-react-app
-  process.env.NODE_ENV = 'development';
 
   return {
     // Environment mode
