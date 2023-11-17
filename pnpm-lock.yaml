@@ -1169,6 +1169,9 @@ importers:
       '@types/lodash.orderby':
         specifier: 4.6.6
         version: 4.6.6
+      '@types/mdx-js__react':
+        specifier: 1.5.5
+        version: 1.5.5
       '@types/sass':
         specifier: 1.45.0
         version: 1.45.0
@@ -1917,7 +1920,7 @@ importers:
         specifier: ^0.64.1
         version: 0.64.4(@babel/preset-env@7.23.2)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
       react-native-web:
-        specifier: 0.16.5
+        specifier: '>=0.16.0 <0.17.0'
         version: 0.16.5(react-dom@17.0.2)(react@17.0.2)
       react-refresh:
         specifier: 0.10.0
@@ -2295,9 +2298,6 @@ importers:
       '@types/lodash.pick':
         specifier: 4.4.6
         version: 4.4.6
-      '@types/mdx-js__react':
-        specifier: 1.5.5
-        version: 1.5.5
       '@types/memoizee':
         specifier: 0.4.5
         version: 0.4.5
@@ -3154,7 +3154,7 @@ importers:
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)(webpack@5.84.1)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -3310,7 +3310,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.70)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -4259,7 +4259,7 @@ importers:
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)(webpack@5.84.1)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -4415,7 +4415,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.70)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -5364,7 +5364,7 @@ importers:
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)(webpack@5.84.1)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -5520,7 +5520,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.70)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -6469,7 +6469,7 @@ importers:
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)(webpack@5.84.1)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -6625,7 +6625,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.70)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -7568,7 +7568,7 @@ importers:
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)(webpack@5.84.1)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -7724,7 +7724,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.70)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -8673,7 +8673,7 @@ importers:
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)(webpack@5.84.1)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -8829,7 +8829,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.70)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -9819,9 +9819,6 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -9829,8 +9826,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -10011,9 +10008,6 @@ importers:
 
   scopes/api-reference/utils/custom-prism-syntax-highlighter-theme:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -10021,8 +10015,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/cloud/cloud:
     dependencies:
@@ -10355,9 +10349,6 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -10365,8 +10356,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -10453,9 +10444,6 @@ importers:
         specifier: 7.19.6
         version: 7.19.6
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/babel__core':
         specifier: 7.20.0
         version: 7.20.0
@@ -10466,8 +10454,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       json-formatter-js:
         specifier: 2.3.4
         version: 2.3.4
@@ -11093,15 +11081,12 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/component/component-sizer:
     dependencies:
@@ -11198,9 +11183,6 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -11211,8 +11193,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -12365,9 +12347,6 @@ importers:
         specifier: 2.1.0
         version: 2.1.0
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -12378,8 +12357,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/component/tracker:
     dependencies:
@@ -12679,9 +12658,6 @@ importers:
         specifier: 2.1.0
         version: 2.1.0
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -12692,8 +12668,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       chai:
         specifier: 4.3.0
         version: 4.3.0
@@ -12704,9 +12680,6 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -12714,8 +12687,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -12741,9 +12714,6 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -12754,8 +12724,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -12830,9 +12800,6 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/eslint':
         specifier: 7.28.0
         version: 7.28.0
@@ -12846,8 +12813,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/defender/formatter:
     dependencies:
@@ -13194,9 +13161,6 @@ importers:
         specifier: 2.3.2
         version: 2.3.2
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -13207,8 +13171,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       '@types/prettier':
         specifier: 2.3.2
         version: 2.3.2
@@ -13309,15 +13273,12 @@ importers:
 
   scopes/defender/tests-results:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/dependencies/aspect-docs/dependency-resolver:
     dependencies:
@@ -13647,9 +13608,6 @@ importers:
 
   scopes/dependencies/fs/linked-dependencies:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -13657,8 +13615,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/dependencies/pnpm:
     dependencies:
@@ -15580,9 +15538,6 @@ importers:
 
   scopes/harmony/modules/requireable-component:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -15590,14 +15545,11 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/harmony/modules/resolved-component:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -15605,8 +15557,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/harmony/node:
     dependencies:
@@ -15712,9 +15664,6 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -15722,8 +15671,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/harmony/ui/aspect-box:
     dependencies:
@@ -15923,9 +15872,6 @@ importers:
 
   scopes/html/modules/create-element-from-string:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -15933,14 +15879,11 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/html/modules/fetch-html-from-url:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -15948,8 +15891,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/lanes/diff:
     dependencies:
@@ -15966,9 +15909,6 @@ importers:
         specifier: 2.4.2
         version: 2.4.2
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -15976,8 +15916,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/lanes/entities/lane-diff:
     dependencies:
@@ -15988,9 +15928,6 @@ importers:
         specifier: ^0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -15998,8 +15935,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/lanes/lanes:
     dependencies:
@@ -16255,18 +16192,6 @@ importers:
       '@babel/helper-plugin-test-runner':
         specifier: 7.16.7
         version: 7.16.7
-      '@babel/plugin-transform-class-properties':
-        specifier: 7.22.5
-        version: 7.22.5(@babel/core@7.19.6)
-      '@babel/preset-env':
-        specifier: 7.23.2
-        version: 7.23.2(@babel/core@7.19.6)
-      '@babel/preset-react':
-        specifier: 7.22.15
-        version: 7.22.15(@babel/core@7.19.6)
-      '@babel/preset-typescript':
-        specifier: 7.22.15
-        version: 7.22.15(@babel/core@7.19.6)
       '@babel/runtime':
         specifier: 7.20.0
         version: 7.20.0
@@ -16359,9 +16284,6 @@ importers:
         specifier: 1.10.2
         version: 1.10.2
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: 4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -16375,8 +16297,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -16619,9 +16541,6 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -16632,8 +16551,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/pkg/aspect-docs/pkg:
     dependencies:
@@ -16842,9 +16761,6 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -16858,17 +16774,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
 
   scopes/preview/cli/webpack-events-listener:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -16876,8 +16789,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/preview/preview:
     dependencies:
@@ -17218,9 +17131,6 @@ importers:
         specifier: 0.4.15
         version: 0.4.15
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/find-root':
         specifier: 1.1.2
         version: 1.1.2
@@ -17237,8 +17147,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/react/eslint-config-bit-react:
     dependencies:
@@ -17261,15 +17171,12 @@ importers:
         specifier: 1.17.1
         version: 1.17.1(eslint@7.32.0)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/react/modules/prerenderer-puppeteer:
     dependencies:
@@ -17280,9 +17187,6 @@ importers:
         specifier: 13.7.0
         version: 13.7.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -17290,8 +17194,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/react/react:
     dependencies:
@@ -17526,9 +17430,6 @@ importers:
       react-error-overlay:
         specifier: 6.0.9
         version: 6.0.9
-      react-native-web:
-        specifier: 0.16.5
-        version: 0.16.5(react-dom@17.0.2)(react@17.0.2)
       react-refresh:
         specifier: 0.10.0
         version: 0.10.0
@@ -17544,9 +17445,6 @@ importers:
       sass-loader:
         specifier: 13.3.2
         version: 13.3.2(sass@1.63.6)(webpack@5.84.1)
-      source-map-loader:
-        specifier: 3.0.0
-        version: 3.0.0(webpack@5.84.1)
       strip-ansi:
         specifier: 6.0.0
         version: 6.0.0
@@ -17641,9 +17539,6 @@ importers:
       '@teambit/mdx.modules.mdx-loader':
         specifier: ^1.0.14
         version: 1.0.14(@babel/core@7.19.6)(esbuild@0.14.29)
-      '@teambit/mdx.ui.mdx-scope-context':
-        specifier: ^1.0.5
-        version: 1.0.5(react-dom@17.0.2)(react@17.0.2)
       babel-loader:
         specifier: 9.1.2
         version: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
@@ -17726,9 +17621,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mdx-js__react':
-        specifier: 1.5.5
-        version: 1.5.5
       '@types/mini-css-extract-plugin':
         specifier: 2.2.0
         version: 2.2.0(esbuild@0.14.29)
@@ -17789,9 +17681,6 @@ importers:
       '@testing-library/jest-native':
         specifier: 4.0.4
         version: 4.0.4
-      babel-loader:
-        specifier: 9.1.2
-        version: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -18378,9 +18267,6 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18388,8 +18274,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/scope/scope:
     dependencies:
@@ -18773,9 +18659,6 @@ importers:
         specifier: ^5.1.1
         version: 5.2.0
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/defender.fs.global-bit-temp-dir':
         specifier: 0.0.1
         version: 0.0.1
@@ -18789,8 +18672,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/toolbox/modules/module-resolver:
     dependencies:
@@ -18798,9 +18681,6 @@ importers:
         specifier: 1.20.0
         version: 1.20.0
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18808,14 +18688,11 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/toolbox/network/get-port:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -18826,17 +18703,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       chai:
         specifier: 4.3.0
         version: 4.3.0
 
   scopes/toolbox/path/is-path-inside:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18844,8 +18718,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/toolbox/path/match-patterns:
     dependencies:
@@ -18853,9 +18727,6 @@ importers:
         specifier: 3.0.5
         version: 3.0.5
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -18869,17 +18740,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       chai:
         specifier: 4.3.0
         version: 4.3.0
 
   scopes/toolbox/path/to-windows-compatible-path:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18887,14 +18755,11 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/toolbox/performance/v8-cache:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18902,14 +18767,11 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/toolbox/string/capitalize:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18917,14 +18779,11 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/toolbox/string/ellipsis:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18932,14 +18791,11 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/toolbox/string/get-initials:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18947,14 +18803,11 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/toolbox/string/strip-trailing-char:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -18962,8 +18815,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/toolbox/tables/cli-table:
     dependencies:
@@ -18974,9 +18827,6 @@ importers:
         specifier: 1.4.0
         version: 1.4.0
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/cli-table':
         specifier: ^0.3.0
         version: 0.3.4
@@ -18984,8 +18834,8 @@ importers:
         specifier: 26.0.20
         version: 26.0.20
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/toolbox/time/time-format:
     dependencies:
@@ -18993,9 +18843,6 @@ importers:
         specifier: 3.23.1
         version: 3.23.1
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19003,14 +18850,11 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/toolbox/types/serializable:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19018,14 +18862,11 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/toolbox/url/add-avatar-query-params:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19033,14 +18874,11 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/toolbox/url/query-string:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19048,8 +18886,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/typescript/aspect-docs/typescript:
     dependencies:
@@ -19106,9 +18944,6 @@ importers:
         specifier: 4.7.4
         version: 4.7.4
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19119,8 +18954,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       json-formatter-js:
         specifier: 2.3.4
         version: 2.3.4
@@ -19146,9 +18981,6 @@ importers:
         specifier: 3.16.0
         version: 3.16.0
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -19156,8 +18988,8 @@ importers:
         specifier: 26.0.20
         version: 26.0.20
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/typescript/typescript:
     dependencies:
@@ -19247,9 +19079,6 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19257,8 +19086,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -19275,9 +19104,6 @@ importers:
         specifier: 17.0.2
         version: 17.0.2
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19285,8 +19111,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.70
@@ -19655,9 +19481,6 @@ importers:
       react-dom:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
-      react-refresh:
-        specifier: 0.10.0
-        version: 0.10.0
       react-router-dom:
         specifier: ^6.0.0
         version: 6.3.0(react-dom@17.0.2)(react@17.0.2)
@@ -19863,9 +19686,6 @@ importers:
         specifier: 5.8.0
         version: 5.8.0
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19876,8 +19696,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       '@types/webpack':
         specifier: 5.28.1
         version: 5.28.1(esbuild@0.14.29)
@@ -19891,9 +19711,6 @@ importers:
         specifier: 3.1.0
         version: 3.1.0(webpack@5.84.1)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19901,17 +19718,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       json-formatter-js:
         specifier: 2.3.4
         version: 2.3.4
 
   scopes/webpack/modules/generate-externals:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19919,17 +19733,14 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       json-formatter-js:
         specifier: 2.3.4
         version: 2.3.4
 
   scopes/webpack/modules/generate-style-loaders:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19937,8 +19748,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/webpack/plugins/inject-head-webpack-plugin:
     dependencies:
@@ -19952,21 +19763,15 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/webpack/style-regexps:
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -19974,8 +19779,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/webpack/webpack:
     dependencies:
@@ -20354,9 +20159,6 @@ importers:
         specifier: 0.27.1
         version: 0.27.1
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -20373,8 +20175,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
       chai:
         specifier: 4.3.0
         version: 4.3.0
@@ -20394,9 +20196,6 @@ importers:
         specifier: 2.1.0
         version: 2.1.0
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -20407,8 +20206,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/workspace/testing/mock-workspace:
     dependencies:
@@ -20419,9 +20218,6 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -20432,8 +20228,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
+        specifier: ^18.11.9
+        version: 18.18.9
 
   scopes/workspace/variants:
     dependencies:
@@ -24177,7 +23973,7 @@ packages:
     engines: {node: '>= 10.14.2'}
     dependencies:
       '@jest/types': 26.6.2
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       chalk: 4.1.2
       jest-message-util: 26.6.2
       jest-util: 26.6.2
@@ -24189,7 +23985,7 @@ packages:
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       chalk: 4.1.2
       jest-message-util: 27.5.1
       jest-util: 27.5.1
@@ -24210,7 +24006,7 @@ packages:
       '@jest/test-result': 27.5.1
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       emittery: 0.8.1
@@ -24254,7 +24050,7 @@ packages:
     dependencies:
       '@jest/fake-timers': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       jest-mock: 27.5.1
     dev: false
 
@@ -24264,7 +24060,7 @@ packages:
     dependencies:
       '@jest/types': 27.5.1
       '@sinonjs/fake-timers': 8.1.0
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       jest-message-util: 27.5.1
       jest-mock: 27.5.1
       jest-util: 27.5.1
@@ -24293,7 +24089,7 @@ packages:
       '@jest/test-result': 27.5.1
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       chalk: 4.1.2
       collect-v8-coverage: 1.0.2
       exit: 0.1.2
@@ -24403,7 +24199,7 @@ packages:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       '@types/yargs': 15.0.18
       chalk: 4.1.2
 
@@ -24413,7 +24209,7 @@ packages:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       '@types/yargs': 16.0.8
       chalk: 4.1.2
     dev: false
@@ -25308,7 +25104,7 @@ packages:
     resolution: {integrity: sha512-UopQ5nGUohh0antzlLLU9K9PGEdKGk9pFkxgwa5rLGWX6Wc8Ix/iMTfHqHRKQYDgCFxv/jha0u6BLwZtG/knkQ==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/error': 5.0.2
       '@pnpm/logger': 5.0.0
@@ -25670,7 +25466,7 @@ packages:
     resolution: {integrity: sha512-X4uvOR5Uzabq+sLqdqyPrWdiN2Y+FhfFlDvU3yzLJdRQz5lq4IqyK2o2s3gPTD/3ElsN73KfoNQPQMGSwDCutw==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/core-loggers': 9.0.4(@pnpm/logger@5.0.0)
       '@pnpm/error': 5.0.2
@@ -35323,7 +35119,7 @@ packages:
   /@types/accepts@1.3.7:
     resolution: {integrity: sha512-Pay9fq2lM2wXPWbteBsRAGiWH2hig4ZE2asK+mm7kUzlxRTfL961rj89I6zV/E3PcIkDqyuBEcMxFT7rccugeQ==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/archiver@5.3.1:
@@ -35368,25 +35164,25 @@ packages:
     resolution: {integrity: sha512-W98JrE0j2K78swW4ukqMleo8R7h/pFETjM2DQ90MF6XK2i4LO4W3gQ71Lt4w3bfm2EvVSyWHplECvB5sK22yFQ==}
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/body-parser@1.19.5:
     resolution: {integrity: sha512-fB3Zu92ucau0iQ0JMCFQE7b/dv8Ot07NI3KaZIkIUNXq82k4eBAqUaneXfleGY9JWskeS9y+u0nXMyspcuQrCg==}
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
 
   /@types/bonjour@3.5.13:
     resolution: {integrity: sha512-z9fJ5Im06zvUL548KvYNecEVlA7cVDkGUi6kZusb04mpyEFKCIZJvloCcmpmLaIahDpOQGHaHmG6imtPMmPXGQ==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/cacache@12.0.1:
     resolution: {integrity: sha512-w7xjwtvB8X8wItoZo16oTDDJy1ub03CbKUM/A8SORv2igg/L6AxAtnNIlV/2STbuj5PFKwb3ySV7zR/g1nqldw==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: true
 
   /@types/cacheable-request@6.0.3:
@@ -35394,7 +35190,7 @@ packages:
     dependencies:
       '@types/http-cache-semantics': 4.0.4
       '@types/keyv': 3.1.4
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       '@types/responselike': 1.0.3
     dev: false
 
@@ -35408,7 +35204,7 @@ packages:
     resolution: {integrity: sha512-nS385nRPNvi9UjSUCDE7f84IXZnIzooPh7Ky88kdRfSFk72juvQENqrqyrKkJeXJsN9bMG9/5zVGr06GcBRB5g==}
     dependencies:
       '@types/chai': 4.2.15
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/chai-string@1.4.2:
@@ -35427,7 +35223,7 @@ packages:
   /@types/clean-css@4.2.10:
     resolution: {integrity: sha512-/wop6SNAATELCIvTQEbPdxaIvXQDS+Gewx2rtkB1h8PrttLpYVDI18nH9927fIMO1dJsV01JEm0go4vTimpDxQ==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       source-map: 0.6.1
     dev: true
 
@@ -35439,12 +35235,12 @@ packages:
     resolution: {integrity: sha512-6mfQ6iNvhSKCZJoY6sIG3m0pKkdUcweVNOLuBBKvoWGzl2yRxOJcYOTRyLKt3nxXvBLJWa6QkW//tgbIwJehmA==}
     dependencies:
       '@types/express-serve-static-core': 4.17.41
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
 
   /@types/connect@3.4.38:
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
 
   /@types/content-disposition@0.5.8:
     resolution: {integrity: sha512-QVSSvno3dE0MgO76pJhmv4Qyi/j0Yk9pBp0Y7TJ2Tlj+KCgJWY6qX7nnxCOLkZ3VYRSIk1WTxCvwUSdx6CCLdg==}
@@ -35456,7 +35252,7 @@ packages:
       '@types/connect': 3.4.38
       '@types/express': 4.17.13
       '@types/keygrip': 1.0.5
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/cors@2.8.10:
@@ -35500,7 +35296,7 @@ packages:
   /@types/express-serve-static-core@4.17.41:
     resolution: {integrity: sha512-OaJ7XLaelTgrvlZD8/aa0vvvxZdUmlCn6MtWeB7TkiKW70BQLc9XEPpDLPdbo52ZhXUCrznlWdCHWxJWtdyajA==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       '@types/qs': 6.9.10
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -35520,7 +35316,7 @@ packages:
   /@types/fs-capacitor@2.0.0:
     resolution: {integrity: sha512-FKVPOCFbhCvZxpVAMhdBdTfVfXUpsh15wFHgqOKxh9N9vzWZVuWCSijZ5T4U34XYNnuj2oduh6xcs1i+LPI+BQ==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/fs-extra@9.0.7:
@@ -35533,13 +35329,13 @@ packages:
     resolution: {integrity: sha512-IO+MJPVhoqz+28h1qLAcBEH2+xHMK6MTyHJc7MTnnYb6wsoLR29POVGJ7LycmVXIqyy/4/2ShP5sUwTXuOwb/w==}
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: true
 
   /@types/graceful-fs@4.1.9:
     resolution: {integrity: sha512-olP3sd1qOEe5dXTSaFvQG+02VdRXcdytWLAZsAq1PecU8uqQAhkrnbli7DagjtXKW/Bl7YJbUsa8MPcuc8LHEQ==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/graphlib@2.1.7:
@@ -35585,13 +35381,13 @@ packages:
   /@types/http-proxy-agent@2.0.2:
     resolution: {integrity: sha512-2S6IuBRhqUnH1/AUx9k8KWtY3Esg4eqri946MnxTG5HwehF1S5mqLln8fcyMiuQkY72p2gH3W+rIPqp5li0LyQ==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/http-proxy@1.17.14:
     resolution: {integrity: sha512-SSrD0c1OQzlFX7pGu1eXxSEjemej64aaNPRhhVYUGqXh0BtldAAx37MG8btcumvpgKyZp1F5Gn3JkktdxiFv6w==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
 
   /@types/istanbul-lib-coverage@2.0.6:
     resolution: {integrity: sha512-2QF/t/auWm0lsy8XtKVPG19v3sSOQlJe/YHZgfjb/KBBHOGSV+J2q/S671rcq9uTBrLAXmZpqJiaQbMT+zNU1w==}
@@ -35630,7 +35426,7 @@ packages:
   /@types/jsdom@20.0.1:
     resolution: {integrity: sha512-d0r18sZPmMQr1eG35u12FZfhIXNrnsPU/g5wvRKCUf/tOGilKKwYMYGqh33BNR6ba+2gkHw1EUiHoN3mn7E5IQ==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       '@types/tough-cookie': 4.0.5
       parse5: 7.1.2
     dev: false
@@ -35649,7 +35445,7 @@ packages:
   /@types/keyv@3.1.4:
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/koa-compose@3.2.8:
@@ -35668,7 +35464,7 @@ packages:
       '@types/http-errors': 2.0.4
       '@types/keygrip': 1.0.5
       '@types/koa-compose': 3.2.8
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/lodash.compact@3.0.6:
@@ -35722,7 +35518,7 @@ packages:
     resolution: {integrity: sha512-k8pnaP6JXVlQh18HgL5X6sYFNC/qZnzO7R2+HsmwrwUd+JnnsU0d9lyyT0RQrHg1anxDU36S98TI/fsGtmYqqg==}
     dependencies:
       '@types/react': 17.0.70
-    dev: true
+    dev: false
 
   /@types/memoizee@0.4.5:
     resolution: {integrity: sha512-+ZzZZ3+0a7/ajBPeAAD4+LxrBsCat0EFZQtO3o0rwpIeLmDmSaM8KF/oYPuFxeUFAMiHIHFcGucFnY/8S4Hszg==}
@@ -35737,7 +35533,7 @@ packages:
   /@types/mini-css-extract-plugin@2.2.0(esbuild@0.14.29):
     resolution: {integrity: sha512-euW/Y51OoAWsAuqtxIGV7Y++EW4dKHMj7NSxHoTRD6SqK1vziYhGfDWTmtlf4jkjIrzUW88NpVXMfiJESysZAA==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       tapable: 2.2.1
       webpack: 5.84.1(esbuild@0.14.29)
     transitivePeerDependencies:
@@ -35765,14 +35561,14 @@ packages:
   /@types/node-fetch@2.5.12:
     resolution: {integrity: sha512-MKgC4dlq4kKNa/mYrwpKfzQMB5X3ee5U6fSprkKpToBqBmX4nFZL9cW5jl6sWn+xpRJ7ypWh2yyqqr8UUCstSw==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       form-data: 3.0.1
     dev: true
 
   /@types/node-forge@1.3.9:
     resolution: {integrity: sha512-meK88cx/sTalPSLSoCzkiUB4VPIFHmxtXm5FaaqRDqBX2i/Sy8bJ4odsan0b20RBjPh06dAQ+OTTdnyQyhJZyQ==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/node@10.17.60:
@@ -35790,7 +35586,6 @@ packages:
     resolution: {integrity: sha512-0f5klcuImLnG4Qreu9hPj/rEfFq6YRc5n2mAjSsH+ec/mJL+3voBH0+8T7o8RpFjH7ovc+TRsL/c7OYIQsPTfQ==}
     dependencies:
       undici-types: 5.26.5
-    dev: false
 
   /@types/normalize-package-data@2.4.4:
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -35875,13 +35670,13 @@ packages:
   /@types/resolve@1.17.1:
     resolution: {integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/responselike@1.0.3:
     resolution: {integrity: sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/retry@0.12.0:
@@ -35913,7 +35708,7 @@ packages:
     resolution: {integrity: sha512-x2EM6TJOybec7c52BX0ZspPodMsQUd5L6PRwOunVyVUhXiBSKf3AezDL8Dgvgt5o0UfKNfuA0eMLr2wLT4AiBA==}
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
 
   /@types/serve-index@1.9.4:
     resolution: {integrity: sha512-qLpGZ/c2fhSs5gnYsQxtDEq3Oy8SXPClIXkW5ghvAvsNuVSA8k+gCONcUCS/UjLEYvYps+e8uBtfgXgvhwfNug==}
@@ -35926,7 +35721,7 @@ packages:
     dependencies:
       '@types/http-errors': 2.0.4
       '@types/mime': 2.0.3
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
 
   /@types/socket.io-client@1.4.35:
     resolution: {integrity: sha512-MI8YmxFS+jMkIziycT5ickBWK1sZwDwy16mgH/j99Mcom6zRG/NimNGQ3vJV0uX5G6g/hEw0FG3w3b3sT5OUGw==}
@@ -35935,7 +35730,7 @@ packages:
   /@types/sockjs@0.3.36:
     resolution: {integrity: sha512-MK9V6NzAS1+Ud7JV9lJLFqW85VbC9dq3LmwZCuBe4wBDgKC0Kj/jd8Xl+nSviU+Qc3+m7umHHyHg//2KSa0a0Q==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/source-list-map@0.1.5:
@@ -35945,7 +35740,7 @@ packages:
   /@types/ssri@7.1.4:
     resolution: {integrity: sha512-K2Ys8+BVrgGFY0cVwf55rIS4fa2ZN+4Y/w2h4BnYIf8kvUdmdKT6l6VUpC3uL9HKG8I8EkD5CXIgRUXHOLHcLw==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/stack-utils@2.0.3:
@@ -36017,7 +35812,7 @@ packages:
   /@types/webpack-sources@3.2.3:
     resolution: {integrity: sha512-4nZOdMwSPHZ4pTEZzSp0AsTM4K7Qmu40UKW4tJDiOVs20UzYF9l+qUe4s0ftfN0pin06n+5cWWDJXH+sbhAiDw==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       '@types/source-list-map': 0.1.5
       source-map: 0.7.4
     dev: true
@@ -36025,7 +35820,7 @@ packages:
   /@types/webpack@4.41.36:
     resolution: {integrity: sha512-pF+DVW1pMLmgsPXqJr5QimdxIzOhe8oGKB98gdqAm0egKBy1lOLD5mRxbYboMQRkpYcG7BYcpqYblpKyvE7vhQ==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       '@types/tapable': 1.0.11
       '@types/uglify-js': 3.17.4
       '@types/webpack-sources': 3.2.3
@@ -36036,7 +35831,7 @@ packages:
   /@types/webpack@5.28.1(esbuild@0.14.29):
     resolution: {integrity: sha512-qw1MqGZclCoBrpiSe/hokSgQM/su8Ocpl3L/YHE0L6moyaypg4+5F7Uzq7NgaPKPxUxUbQ4fLPLpDWdR27bCZw==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       tapable: 2.2.1
       webpack: 5.84.1(esbuild@0.14.29)
     transitivePeerDependencies:
@@ -36048,13 +35843,13 @@ packages:
   /@types/ws@7.4.7:
     resolution: {integrity: sha512-JQbbmxZTZehdc2iszGKs5oC3NFnjeay7mtAWrdt7qNtAVK0g19muApzAy4bm9byz79xa2ZnO/BOBC2R8RC5Lww==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/ws@8.5.9:
     resolution: {integrity: sha512-jbdrY0a8lxfdTp/+r7Z4CkycbOFN8WX+IOchLJr3juT/xzbJ8URyTVSJ/hvNdadTgM1mnedb47n+Y31GsFnQlg==}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /@types/yargs-parser@21.0.3:
@@ -36087,7 +35882,7 @@ packages:
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
     requiresBuild: true
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
     optional: true
 
@@ -36883,7 +36678,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.3
       '@yarnpkg/fslib': 3.0.1
-      '@yarnpkg/libzip': 3.0.0
+      '@yarnpkg/libzip': 3.0.0(@yarnpkg/fslib@3.0.1)
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -36914,7 +36709,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.3
       '@yarnpkg/fslib': 3.0.1
-      '@yarnpkg/libzip': 3.0.0
+      '@yarnpkg/libzip': 3.0.0(@yarnpkg/fslib@3.0.1)
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -36987,9 +36782,11 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/libzip@3.0.0:
+  /@yarnpkg/libzip@3.0.0(@yarnpkg/fslib@3.0.1):
     resolution: {integrity: sha512-31NR8oHG/NLnSEqQOy48tnjNHgYPujOtammmvoItNAfsWAmaOqtDimwPRRPXGTNxC2SYYBYrk6pli5yti/Qmfw==}
     engines: {node: '>=18.12.0'}
+    peerDependencies:
+      '@yarnpkg/fslib': ^3.0.0
     dependencies:
       '@types/emscripten': 1.39.10
       '@yarnpkg/fslib': 3.0.1
@@ -45968,7 +45765,7 @@ packages:
       '@jest/environment': 27.5.1
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       chalk: 4.1.2
       co: 4.6.0
       dedent: 0.7.0
@@ -46122,7 +45919,7 @@ packages:
       '@jest/environment': 27.5.1
       '@jest/fake-timers': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       jest-mock: 27.5.1
       jest-util: 27.5.1
       jsdom: 16.7.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
@@ -46170,7 +45967,7 @@ packages:
     dependencies:
       '@jest/types': 26.6.2
       '@types/graceful-fs': 4.1.9
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.10
@@ -46193,7 +45990,7 @@ packages:
     dependencies:
       '@jest/types': 27.5.1
       '@types/graceful-fs': 4.1.9
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.10
@@ -46215,7 +46012,7 @@ packages:
       '@jest/source-map': 27.5.1
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       chalk: 4.1.2
       co: 4.6.0
       expect: 27.5.1
@@ -46295,7 +46092,7 @@ packages:
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
     dev: false
 
   /jest-pnp-resolver@1.2.3(jest-resolve@27.5.1):
@@ -46356,7 +46153,7 @@ packages:
       '@jest/test-result': 27.5.1
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       chalk: 4.1.2
       emittery: 0.8.1
       graceful-fs: 4.2.10
@@ -46413,7 +46210,7 @@ packages:
     resolution: {integrity: sha512-S5wqyz0DXnNJPd/xfIzZ5Xnp1HrJWBczg8mMfMpN78OJ5eDxXyf+Ygld9wX1DnUWbIbhM1YDY95NjR4CBXkb2g==}
     engines: {node: '>= 10.14.2'}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       graceful-fs: 4.2.10
     dev: false
 
@@ -46421,7 +46218,7 @@ packages:
     resolution: {integrity: sha512-jZCyo6iIxO1aqUxpuBlwTDMkzOAJS4a3eYz3YzgxxVQFwLeSA7Jfq5cbqCY+JLvTDrWirgusI/0KwxKMgrdf7w==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       graceful-fs: 4.2.10
     dev: false
 
@@ -46460,7 +46257,7 @@ packages:
     engines: {node: '>= 10.14.2'}
     dependencies:
       '@jest/types': 26.6.2
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       chalk: 4.1.2
       graceful-fs: 4.2.10
       is-ci: 2.0.0
@@ -46472,7 +46269,7 @@ packages:
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       chalk: 4.1.2
       ci-info: 3.9.0
       graceful-fs: 4.2.10
@@ -46525,7 +46322,7 @@ packages:
     dependencies:
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       jest-util: 27.5.1
@@ -46536,7 +46333,7 @@ packages:
     resolution: {integrity: sha512-KWYVV1c4i+jbMpaBC+U++4Va0cp8OisU185o73T1vo99hqi7w8tSJfUXYswwqqrjzwxa6KpRK54WhPvwf5w6PQ==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       merge-stream: 2.0.0
       supports-color: 7.2.0
     dev: false
@@ -46545,7 +46342,7 @@ packages:
     resolution: {integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 12.20.4
+      '@types/node': 18.18.9
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -55282,7 +55079,6 @@ packages:
 
   /undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
-    dev: false
 
   /unherit@1.1.3:
     resolution: {integrity: sha512-Ft16BJcnapDKp0+J/rqFC3Rrk6Y/Ng4nzsC028k2jdDII/rdZ7Wd3pPT/6+vIIxRagwRc9K0IUX0Ra4fKvw+WQ==}
@@ -60403,7 +60199,6 @@ packages:
       - clean-css
       - csso
       - debug
-      - encoding
       - eslint
       - eslint-import-resolver-typescript
       - eslint-import-resolver-webpack
@@ -60487,7 +60282,7 @@ packages:
       - webpack-cli
     dev: false
 
-  file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5)(webpack@5.84.1):
+  file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(utf-8-validate@5.0.5):
     resolution: {directory: scopes/react/react-native, type: directory}
     id: file:scopes/react/react-native
     name: '@teambit/react-native'
@@ -60502,7 +60297,6 @@ packages:
       '@teambit/react.instructions.react-native.adding-tests': 0.0.1(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.instructions.react.adding-compositions': registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/jest-native': 4.0.4
-      babel-loader: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
       core-js: 3.13.0
       lodash: 4.17.21
       ramda: 0.27.1
@@ -60518,7 +60312,6 @@ packages:
       - encoding
       - supports-color
       - utf-8-validate
-      - webpack
     dev: false
 
   file:scopes/react/ui/compositions-app(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2):
@@ -61159,7 +60952,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5):
+  file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5):
     resolution: {directory: scopes/ui-foundation/ui, type: directory}
     id: file:scopes/ui-foundation/ui
     name: '@teambit/ui'
@@ -61209,7 +61002,6 @@ packages:
       react: 17.0.2
       react-dev-utils: 11.0.4(eslint@7.32.0)(typescript@4.7.4)(webpack@5.84.1)
       react-dom: 17.0.2(react@17.0.2)
-      react-refresh: 0.10.0
       react-router-dom: 6.3.0(react-dom@17.0.2)(react@17.0.2)
       resolve-url-loader: 5.0.0
       sanitize.css: 12.0.1
@@ -61238,6 +61030,7 @@ packages:
       - eslint
       - fibers
       - node-sass
+      - react-refresh
       - sass-embedded
       - sockjs-client
       - supports-color
