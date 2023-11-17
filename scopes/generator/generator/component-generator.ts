@@ -77,7 +77,7 @@ export class ComponentGenerator {
       }
     });
 
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`create (${this.componentIds.length} components)`);
 
     const ids = generateResults.map((r) => r.id);
     await this.tryLinkToNodeModules(ids);

@@ -88,7 +88,7 @@ export class NewComponentHelperMain {
       throw err;
     }
 
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`adding ${targetId.toString()}`);
     await this.workspace.clearCache();
     // this takes care of compiling the component as well
     await this.workspace.triggerOnComponentAdd(targetId, { compile: true });

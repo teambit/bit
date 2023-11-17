@@ -64,7 +64,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       await this.deprecation.deprecate(sourceId, targetId);
     } else {
       this.workspace.bitMap.renameNewComponent(sourceId, targetId);
-      await this.workspace.bitMap.write();
+      await this.workspace.bitMap.write(`rename (${sourceIdStr} to ${targetName})`);
       await this.deleteLinkFromNodeModules(sourcePackageName);
     }
     await this.renameAspectIdInWorkspaceConfig(sourceId, targetId);
@@ -93,7 +93,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     }
 
     this.workspace.bitMap.renameAspectInConfig(sourceId, targetId);
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`rename (${sourceIdStr} to ${targetName})`);
 
     await linkToNodeModulesByComponents([targetComp], this.workspace); // link the new-name to node-modules
     await this.compileGracefully([targetComp.id]);
@@ -150,7 +150,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       await this.workspace.setDefaultScope(newScope);
     }
     componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.setDefaultScope(comp.id, newScope));
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`rename-scope (${oldScope} to ${newScope})`);
     await this.workspace.clearCache();
 
     await Promise.all(
@@ -256,7 +256,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       this.workspace.bitMap.setDefaultScope(comp.id, newCompScope);
       return new ComponentID(comp.id._legacy, newCompScope);
     });
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`rename-owner (${oldOwner} to ${newOwner})`);
     const refactoredIds: ComponentID[] = [];
     if (options.refactor) {
       const legacyComps = componentsUsingOldScope.map((c) => c.state._consumer);

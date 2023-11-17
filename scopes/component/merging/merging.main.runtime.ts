@@ -146,7 +146,7 @@ export class MergingMain {
         skipDependencyInstallation
       );
     }
-    await consumer.onDestroy();
+    await consumer.onDestroy('merge');
     return mergeResults;
   }
 
