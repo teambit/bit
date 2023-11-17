@@ -43,13 +43,6 @@
   font-size: 24px;
 }
 
-:global {
-  // override prismjs styles
-  .linenumber {
-    color: #fff !important;
-  }
-}
-
 .customRow,
 .customRow * {
   background-color: rgb(97, 82, 207) !important; // Ensure that this color is applied to all children as well
