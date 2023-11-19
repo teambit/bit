@@ -103,7 +103,7 @@ export class AspectMain {
         });
       })
     );
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`aspect-set (${aspectId})`);
 
     return componentIds;
   }
@@ -121,7 +121,7 @@ export class AspectMain {
         updatedCompIds.push(component.id);
       })
     );
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`aspect-unset (${aspectId})`);
     return updatedCompIds;
   }
 
@@ -187,7 +187,7 @@ export class AspectMain {
         return comp.id;
       })
     );
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`aspect-update (${aspectCompId})`);
     return { updated: compact(updatedComponentIds), alreadyUpToDate };
   }
 
