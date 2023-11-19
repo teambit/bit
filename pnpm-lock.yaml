@@ -938,6 +938,9 @@ importers:
       '@teambit/node.generator.node-templates':
         specifier: ^1.0.8
         version: 1.0.8
+      '@teambit/node.utils.esm-loader':
+        specifier: ^0.0.4
+        version: 0.0.4
       '@teambit/react.generator.react-native-templates':
         specifier: ^1.0.7
         version: 1.0.8
@@ -1169,6 +1172,9 @@ importers:
       '@types/lodash.orderby':
         specifier: 4.6.6
         version: 4.6.6
+      '@types/mdx-js__react':
+        specifier: 1.5.5
+        version: 1.5.5
       '@types/sass':
         specifier: 1.45.0
         version: 1.45.0
@@ -2295,9 +2301,6 @@ importers:
       '@types/lodash.pick':
         specifier: 4.4.6
         version: 4.4.6
-      '@types/mdx-js__react':
-        specifier: 1.5.5
-        version: 1.5.5
       '@types/memoizee':
         specifier: 0.4.5
         version: 0.4.5
@@ -14811,12 +14814,18 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/node.utils.esm-loader':
+        specifier: ^0.0.4
+        version: 0.0.4
       chalk:
         specifier: 2.4.2
         version: 2.4.2
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
+      find-root:
+        specifier: 1.1.0
+        version: 1.1.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -14833,6 +14842,9 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
+      '@types/find-root':
+        specifier: 1.1.2
+        version: 1.1.2
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -17623,9 +17635,6 @@ importers:
       '@teambit/mdx.modules.mdx-loader':
         specifier: ^1.0.14
         version: 1.0.14(@babel/core@7.19.6)(esbuild@0.14.29)
-      '@teambit/mdx.ui.mdx-scope-context':
-        specifier: ^1.0.5
-        version: 1.0.5(react-dom@17.0.2)(react@17.0.2)
       babel-loader:
         specifier: 9.1.2
         version: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
@@ -17708,9 +17717,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mdx-js__react':
-        specifier: 1.5.5
-        version: 1.5.5
       '@types/mini-css-extract-plugin':
         specifier: 2.2.0
         version: 2.2.0(esbuild@0.14.29)
@@ -25284,7 +25290,7 @@ packages:
     resolution: {integrity: sha512-UopQ5nGUohh0antzlLLU9K9PGEdKGk9pFkxgwa5rLGWX6Wc8Ix/iMTfHqHRKQYDgCFxv/jha0u6BLwZtG/knkQ==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/error': 5.0.2
       '@pnpm/logger': 5.0.0
@@ -25646,7 +25652,7 @@ packages:
     resolution: {integrity: sha512-X4uvOR5Uzabq+sLqdqyPrWdiN2Y+FhfFlDvU3yzLJdRQz5lq4IqyK2o2s3gPTD/3ElsN73KfoNQPQMGSwDCutw==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/core-loggers': 9.0.4(@pnpm/logger@5.0.0)
       '@pnpm/error': 5.0.2
@@ -33419,6 +33425,12 @@ packages:
       dedent: 0.7.0
     dev: false
 
+  /@teambit/node.utils.esm-loader@0.0.4:
+    resolution: {integrity: sha512-L7BGh8fuzOTJl9p+DEs/hd4tK6pSpS0eFKXDwbr1ddJqPmU55APTxfhfkJ613f9zEJFmUBAIY9wuXfrNhDm7RA==}
+    dependencies:
+      find-root: 1.1.0
+    dev: false
+
   /@teambit/pkg.content.packages-overview@1.95.9(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-zWayNWQaoC66R1elFFytwR1vaLQ=}
     dependencies:
@@ -35698,7 +35710,7 @@ packages:
     resolution: {integrity: sha512-k8pnaP6JXVlQh18HgL5X6sYFNC/qZnzO7R2+HsmwrwUd+JnnsU0d9lyyT0RQrHg1anxDU36S98TI/fsGtmYqqg==}
     dependencies:
       '@types/react': 17.0.70
-    dev: true
+    dev: false
 
   /@types/memoizee@0.4.5:
     resolution: {integrity: sha512-+ZzZZ3+0a7/ajBPeAAD4+LxrBsCat0EFZQtO3o0rwpIeLmDmSaM8KF/oYPuFxeUFAMiHIHFcGucFnY/8S4Hszg==}
@@ -59361,8 +59373,10 @@ packages:
       '@teambit/component-id': 1.2.0
       '@teambit/graph.cleargraph': 0.0.1
       '@teambit/harmony': 0.4.6
+      '@teambit/node.utils.esm-loader': 0.0.4
       chalk: 2.4.2
       core-js: 3.13.0
+      find-root: 1.1.0
       fs-extra: 10.0.0
       lodash: 4.17.21
       p-map-series: 2.1.0

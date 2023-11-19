@@ -91,6 +91,7 @@ export class ReactApp implements Application {
     });
 
     expressApp.listen(port);
+    this.logger.console(`listening on port ${port}`);
     return { port };
   }
 

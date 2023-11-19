@@ -1,19 +1,35 @@
 import { ExecutionContext } from '@teambit/envs';
+import { Harmony } from '@teambit/harmony';
 import { Component } from '@teambit/component';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 
 export class AppContext extends ExecutionContext {
   constructor(
     readonly appName: string,
 
     /**
+     * instance of harmony.
+     */
+    readonly harmony: Harmony,
+
+    /**
      * determine whether to serve the application in dev mode.
      */
     readonly dev: boolean,
 
+    /**
+     * application component instance.
+     */
     readonly appComponent: Component,
 
+    /**
+     * working directory of the component.
+     */
     readonly workdir: string,
 
+    /**
+     * execution context of the app.
+     */
     execContext: ExecutionContext,
 
     /**
@@ -27,11 +43,27 @@ export class AppContext extends ExecutionContext {
     /**
      * A port to run the app on
      */
-    readonly port?: number
+    readonly port?: number,
   ) {
     super(execContext.upper, execContext.envRuntime, execContext.components);
   }
-  // static fromExecContext() {
-  // return new AppContext();
-  // }
+
+  /**
+   * return a logger instance for the env.
+   */
+  createLogger(name?: string): Logger {
+    const loggerMain = this.harmony.get<LoggerMain>(LoggerAspect.id);
+    const appComponentId = this.appComponent.id;
+    const loggerName = name ? `${appComponentId.toString()}::${name}` : appComponentId.toString();
+
+    return loggerMain.createLogger(loggerName);
+  }
+
+  /**
+   * get an instance of an aspect. 
+   * make sure it is loaded prior to requesting it.
+   */
+  getAspect<T>(aspectId: string): T|undefined {
+    return this.harmony.get<T>(aspectId);
+  } 
 }
