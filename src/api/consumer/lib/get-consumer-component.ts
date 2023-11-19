@@ -44,6 +44,6 @@ export default (async function getConsumerBit({
     if (!component.componentFromModel) throw new NothingToCompareTo(id);
     return { component, componentModel: component.componentFromModel };
   }
-  await consumer.onDestroy();
+  await consumer.onDestroy('get-component');
   return { component, dependentsInfo, dependenciesInfo };
 });

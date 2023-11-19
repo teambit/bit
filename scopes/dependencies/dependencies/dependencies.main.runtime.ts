@@ -30,6 +30,7 @@ import {
   DependenciesUsageCmd,
   RemoveDependenciesFlags,
   SetDependenciesFlags,
+  WhyCmd,
 } from './dependencies-cmd';
 import { DependenciesAspect } from './dependencies.aspect';
 
@@ -88,7 +89,7 @@ export class DependenciesMain {
       })
     );
 
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`deps-set (${componentPattern})`);
 
     return {
       changedComps: compIds.map((compId) => compId.toStringWithoutVersion()),
@@ -143,7 +144,7 @@ export class DependenciesMain {
       await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, newDepResolverConfig);
       return { id: compId, removedPackages };
     });
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`deps-remove (${componentPattern})`);
 
     return compact(results);
   }
@@ -153,7 +154,7 @@ export class DependenciesMain {
     await pMapSeries(compIds, async (compId) => {
       await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, { policy: {} });
     });
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`deps-reset (${componentPattern})`);
 
     return compIds;
   }
@@ -171,7 +172,7 @@ export class DependenciesMain {
         }
       );
     });
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`deps-eject (${componentPattern})`);
 
     return compIds;
   }
@@ -248,6 +249,16 @@ export class DependenciesMain {
     return blameResults;
   }
 
+  async usageDeep(depName: string, opts?: { depth?: number }): Promise<string | undefined> {
+    if (!isComponentId(depName)) {
+      return this.dependencyResolver.getPackageManager()?.findUsages?.(depName, {
+        lockfileDir: this.workspace.path,
+        depth: opts?.depth,
+      });
+    }
+    return undefined;
+  }
+
   /**
    * @param depName either component-id-string or package-name (of the component or not component)
    * @returns a map of component-id-string to the version of the dependency
@@ -310,10 +321,15 @@ export class DependenciesMain {
       new DependenciesBlameCmd(depsMain),
       new DependenciesUsageCmd(depsMain),
     ];
-    cli.register(depsCmd);
+    const whyCmd = new WhyCmd(depsMain);
+    cli.register(depsCmd, whyCmd);
 
     return depsMain;
   }
+}
+
+function isComponentId(depName: string) {
+  return depName.includes('/') && depName[0] !== '@';
 }
 
 DependenciesAspect.addRuntime(DependenciesMain);

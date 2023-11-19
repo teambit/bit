@@ -51,7 +51,7 @@ export class DeprecationMain {
       deprecate: true,
       newId: newId?.toObject(),
     });
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`deprecate ${componentId.toString()}`);
 
     return results;
   }
@@ -61,7 +61,7 @@ export class DeprecationMain {
       deprecate: false,
       newId: '',
     });
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`undeprecate ${componentId.toString()}`);
 
     return results;
   }

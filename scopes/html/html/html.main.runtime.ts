@@ -1,4 +1,3 @@
-import { Harmony } from '@teambit/harmony';
 import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { TsConfigSourceFile } from 'typescript';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
@@ -7,15 +6,10 @@ import { Compiler } from '@teambit/compiler';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { MainRuntime } from '@teambit/cli';
-import { EnvsAspect, EnvsMain, EnvTransformer, Environment, EnvContext } from '@teambit/envs';
+import { EnvsAspect, EnvsMain, EnvTransformer, Environment} from '@teambit/envs';
 import { ReactAspect, ReactEnv, ReactMain } from '@teambit/react';
-import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
-import { ComponentID } from '@teambit/component-id';
-import { LoggerMain } from '@teambit/logger';
-import { WorkerMain } from '@teambit/worker';
 import { HtmlAspect } from './html.aspect';
 import { HtmlEnv } from './html.env';
-import { getTemplates } from './html.templates';
 
 export class HtmlMain {
   constructor(
@@ -26,7 +20,7 @@ export class HtmlMain {
     private envs: EnvsMain
   ) {}
   static slots = [];
-  static dependencies = [EnvsAspect, ReactAspect, GeneratorAspect];
+  static dependencies = [EnvsAspect, ReactAspect];
   static runtime = MainRuntime;
 
   /**
@@ -114,17 +108,17 @@ export class HtmlMain {
   }
 
   static async provider(
-    [envs, react, generator, loggerAspect, workerMain]: [EnvsMain, ReactMain, GeneratorMain, LoggerMain, WorkerMain],
-    config,
-    slots,
-    harmony: Harmony
+    [envs, react]: [EnvsMain, ReactMain],
+    // config,
+    // slots,
+    // harmony: Harmony
   ) {
     const htmlEnv: HtmlEnv = envs.merge<HtmlEnv, ReactEnv>(new HtmlEnv(), react.reactEnv);
     envs.registerEnv(htmlEnv);
-    if (generator) {
-      const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerAspect, workerMain, harmony);
-      generator.registerComponentTemplate(getTemplates(envContext));
-    }
+    // if (generator) {
+      // const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerAspect, workerMain, harmony);
+      // generator.registerComponentTemplate(getTemplates(envContext));
+    // }
 
     return new HtmlMain(react, htmlEnv, envs);
   }

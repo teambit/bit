@@ -56,7 +56,7 @@ export class TrackerMain {
     }
     const addComponents = new AddComponents(addContext, addProps);
     const addResults = await addComponents.add();
-    await this.workspace.consumer.onDestroy();
+    await this.workspace.consumer.onDestroy('add');
 
     return addResults;
   }

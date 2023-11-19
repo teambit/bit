@@ -286,7 +286,7 @@ if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-
     };
     this.scope.legacyScope.lanes.trackLane(trackLaneData);
     this.scope.legacyScope.scopeJson.setLaneAsNew(name);
-    await this.workspace.consumer.onDestroy();
+    await this.workspace.consumer.onDestroy('lane-create');
 
     const results = {
       alias,
@@ -321,7 +321,7 @@ if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-
       remoteScope,
     };
     this.scope.legacyScope.lanes.trackLane(afterTrackData);
-    await this.workspace.consumer.onDestroy();
+    await this.workspace.consumer.onDestroy('lane-track');
 
     return { beforeTrackData: beforeTrackDataCloned, afterTrackData };
   }
@@ -351,7 +351,7 @@ if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-
       : laneName;
     this.scope.legacyScope.lanes.removeTrackLane(laneNameWithoutScope);
     this.scope.legacyScope.lanes.trackLane(trackData);
-    await this.workspace.consumer.onDestroy();
+    await this.workspace.consumer.onDestroy('lane-alias');
 
     return { laneId };
   }
@@ -393,7 +393,7 @@ please create a new lane instead, which will include all components of this lane
     this.scope.legacyScope.lanes.trackLane(trackData);
     await this.scope.legacyScope.lanes.saveLane(lane);
     this.workspace.consumer.bitMap.setCurrentLane(newLaneId, false);
-    await this.workspace.consumer.onDestroy();
+    await this.workspace.consumer.onDestroy('lane-scope-change');
 
     return { remoteScopeBefore, localName: laneNameWithoutScope };
   }
@@ -445,7 +445,7 @@ please create a new lane instead, which will include all components of this lane
       this.setCurrentLane(newLaneId, undefined, isExported);
     }
 
-    await this.workspace.consumer.onDestroy();
+    await this.workspace.consumer.onDestroy('lane-rename');
 
     return { currentName };
   }
@@ -521,7 +521,7 @@ please create a new lane instead, which will include all components of this lane
       return laneNames;
     }
     const results = await removeLanes(this.workspace?.consumer, laneNames, !!opts?.remote, !!opts?.force);
-    if (this.workspace) await this.workspace.consumer.onDestroy();
+    if (this.workspace) await this.workspace.consumer.onDestroy('lane-remove');
 
     return results.laneResults;
   }
@@ -684,7 +684,7 @@ please create a new lane instead, which will include all components of this lane
 
     lane.setReadmeComponent(undefined);
     await scope.lanes.saveLane(lane);
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`lane-remove-readme`);
 
     return { result: true };
   }
@@ -886,7 +886,7 @@ please create a new lane instead, which will include all components of this lane
         },
       });
     }
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write('lane-add-readme');
     return { result: true };
   }
 
