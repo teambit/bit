@@ -1,8 +1,8 @@
 import { join, resolve } from 'path';
 import { NativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 import esmLoader from '@teambit/node.utils.esm-loader';
-import findRoot from 'find-root';
-import { readdirSync, existsSync, readFileSync } from 'fs-extra';
+// import findRoot from 'find-root';
+import { readdirSync, existsSync } from 'fs-extra';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { ComponentID } from '@teambit/component-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
@@ -24,6 +24,7 @@ import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { PluginDefinition } from './plugin-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from './constants';
+import { isEsmModule } from './is-esm-module';
 import { CannotLoadExtension } from './exceptions';
 import { getAspectDef } from './core-aspects';
 import { Plugins } from './plugins';
@@ -494,14 +495,7 @@ export class AspectLoaderMain {
   }
 
   async isEsmModule(path: string) {
-    try {
-      const root = findRoot(path);
-      const packageJsonString = readFileSync(join(root, 'package.json')).toString('utf-8');
-      const packageJson = JSON.parse(packageJsonString);
-      return packageJson.type === 'module';  
-    } catch (err) {
-      return false;
-    }
+    return isEsmModule(path);
   }
 
   async loadEsm(path: string) {

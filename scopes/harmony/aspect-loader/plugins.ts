@@ -1,12 +1,10 @@
 import { Component } from '@teambit/component';
 import esmLoader from '@teambit/node.utils.esm-loader';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import findRoot from 'find-root';
 import { NativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 import { Logger } from '@teambit/logger';
 import { Aspect } from '@teambit/harmony';
 import { PluginDefinition } from './plugin-definition';
+import { isEsmModule } from './is-esm-module';
 import { Plugin } from './plugin';
 import { OnAspectLoadErrorHandler } from './aspect-loader.main.runtime';
 
@@ -58,17 +56,6 @@ export class Plugins {
     return aspect;
   }
 
-  isModule(path: string) {
-    try {
-      const root = findRoot(path);
-      const packageJsonString = readFileSync(join(root, 'package.json')).toString('utf-8');
-      const packageJson = JSON.parse(packageJsonString);
-      return packageJson.type === 'module';  
-    } catch (err) {
-      return false;
-    }
-  }
-
   async loadModule(path: string) {
     NativeCompileCache.uninstall();
     const module = await esmLoader(path);
@@ -76,7 +63,7 @@ export class Plugins {
   }
 
   async registerPluginWithTryCatch(plugin: Plugin, aspect: Aspect) {
-    const isModule = this.isModule(plugin.path);
+    const isModule = isEsmModule(plugin.path);
     const module = isModule 
       ? await this.loadModule(plugin.path)
       : undefined;
