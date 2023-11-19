@@ -281,8 +281,10 @@ export class WorkspaceManifestFactory {
       ) {
         const blankDependencies: ManifestDependenciesObject = {
           dependencies: {},
+          optionalDependencies: {},
           devDependencies: {},
           peerDependencies: {},
+          peerDependenciesMeta: {},
         };
         let dependencies = blankDependencies;
         if (dedupedDependencies.componentDependenciesMap.has(packageName)) {

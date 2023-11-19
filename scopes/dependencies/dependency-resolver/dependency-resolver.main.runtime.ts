@@ -498,6 +498,7 @@ export class DependencyResolverMain {
       // if no policy found, the dependency was auto-resolved from the source code
       dep.source = found?.source || 'auto';
       dep.hidden = found?.hidden;
+      dep.optional = found?.optional;
     });
     return dependencyList;
   }
