@@ -37,6 +37,7 @@ import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
+import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { Registries, Registry } from './registry';
 import { applyUpdates, UpdatedComponent } from './apply-updates';
 import { ROOT_NAME } from './dependencies/constants';
@@ -1660,6 +1661,13 @@ export class DependencyResolverMain {
       });
     };
     ExtensionDataList.toModelObjectsHook.push(serializeDepResolverDataBeforePersist);
+    PackageJsonTransformer.registerPackageJsonTransformer(async (component, packageJsonObject) => {
+      const deps = await dependencyResolver.getDependencies(component);
+      const { optionalDependencies, peerDependenciesMeta } = deps.toDependenciesManifest();
+      packageJsonObject.optionalDependencies = optionalDependencies;
+      packageJsonObject.peerDependenciesMeta = peerDependenciesMeta;
+      return packageJsonObject;
+    });
 
     return dependencyResolver;
   }
