@@ -1,8 +1,8 @@
 {
   "componentId": {
+    "scope": "teambit.react",
     "name": "react",
-    "version": "0.0.10",
-    "scope": "teambit.react"
+    "version": "0.0.10"
   },
   "propagate": true,
   "extensions": {
@@ -67,6 +67,10 @@
           "@teambit/legacy": "1.0.602"
         }
       }
+    },
+    "teambit.harmony/envs/core-aspect-env@0.0.4": {},
+    "teambit.envs/envs": {
+      "env": "teambit.harmony/envs/core-aspect-env"
     }
   }
 }

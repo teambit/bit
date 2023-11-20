@@ -14,6 +14,10 @@
           "@babel/runtime": "7.23.2"
         }
       }
+    },
+    "teambit.harmony/envs/core-aspect-env@0.0.4": {},
+    "teambit.envs/envs": {
+      "env": "teambit.harmony/envs/core-aspect-env"
     }
   }
 }
