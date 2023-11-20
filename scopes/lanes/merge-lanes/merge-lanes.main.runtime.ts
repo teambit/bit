@@ -257,7 +257,7 @@ export class MergeLanesMain {
     }
     const configMergeResults = allComponentsStatus.map((c) => c.configMergeResult);
 
-    await this.workspace.consumer.onDestroy();
+    await this.workspace.consumer.onDestroy(`lane-merge (${otherLaneId.name})`);
 
     return { mergeResults, deleteResults, configMergeResults: compact(configMergeResults) };
   }

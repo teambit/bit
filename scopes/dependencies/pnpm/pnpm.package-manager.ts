@@ -239,7 +239,7 @@ export class PnpmPackageManager implements PackageManager {
     return pnpmPruneModules(rootDir);
   }
 
-  async findUsages(depName: string, opts: { lockfileDir: string }): Promise<string> {
+  async findUsages(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string> {
     const search = createPackagesSearcher([depName]);
     const lockfile = await readWantedLockfile(opts.lockfileDir, { ignoreIncompatible: false });
     const projectPaths = Object.keys(lockfile?.importers ?? {})
@@ -253,7 +253,7 @@ export class PnpmPackageManager implements PackageManager {
       : ({ path }) => path;
     const results = Object.entries(
       await buildDependenciesHierarchy(projectPaths, {
-        depth: Infinity,
+        depth: opts.depth ?? Infinity,
         include: {
           dependencies: true,
           devDependencies: true,
