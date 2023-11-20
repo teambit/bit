@@ -1346,20 +1346,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-compare"
     },
-    "ui/code-tab-page": {
-        "name": "ui/code-tab-page",
-        "scope": "teambit.code",
-        "version": "0.0.629",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/code-tab-page"
-    },
-    "ui/code-view": {
-        "name": "ui/code-view",
-        "scope": "teambit.code",
-        "version": "0.0.515",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/code-view"
-    },
     "ui/component-drawer": {
         "name": "ui/component-drawer",
         "scope": "teambit.component",
