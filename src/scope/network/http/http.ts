@@ -354,7 +354,7 @@ export class Http implements Network {
     const headers = this.getHeaders({
       'Content-Type': 'application/json',
       'x-verb': Verb.READ,
-      'x-request-id': requestId.toString(),
+      'x-bit-request-id': requestId.toString(),
     });
     const opts = this.addAgentIfExist({
       method: 'post',
