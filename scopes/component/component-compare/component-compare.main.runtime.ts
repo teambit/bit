@@ -110,7 +110,7 @@ export class ComponentCompareMain {
       verbose,
       formatDepsAsTable: table,
     });
-    await consumer.onDestroy();
+    await consumer.onDestroy('diff');
     return diffResults;
   }
 

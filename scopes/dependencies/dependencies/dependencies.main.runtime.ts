@@ -89,7 +89,7 @@ export class DependenciesMain {
       })
     );
 
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`deps-set (${componentPattern})`);
 
     return {
       changedComps: compIds.map((compId) => compId.toStringWithoutVersion()),
@@ -144,7 +144,7 @@ export class DependenciesMain {
       await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, newDepResolverConfig);
       return { id: compId, removedPackages };
     });
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`deps-remove (${componentPattern})`);
 
     return compact(results);
   }
@@ -154,7 +154,7 @@ export class DependenciesMain {
     await pMapSeries(compIds, async (compId) => {
       await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, { policy: {} });
     });
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`deps-reset (${componentPattern})`);
 
     return compIds;
   }
@@ -172,7 +172,7 @@ export class DependenciesMain {
         }
       );
     });
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`deps-eject (${componentPattern})`);
 
     return compIds;
   }
@@ -249,9 +249,12 @@ export class DependenciesMain {
     return blameResults;
   }
 
-  async usageDeep(depName: string): Promise<string | undefined> {
+  async usageDeep(depName: string, opts?: { depth?: number }): Promise<string | undefined> {
     if (!isComponentId(depName)) {
-      return this.dependencyResolver.getPackageManager()?.findUsages?.(depName, { lockfileDir: this.workspace.path });
+      return this.dependencyResolver.getPackageManager()?.findUsages?.(depName, {
+        lockfileDir: this.workspace.path,
+        depth: opts?.depth,
+      });
     }
     return undefined;
   }

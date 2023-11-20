@@ -68,7 +68,7 @@ export class ImporterMain {
     if (results.writtenComponents && results.writtenComponents.length) {
       await this.removeFromWorkspaceConfig(results.writtenComponents);
     }
-    await consumer.onDestroy();
+    await consumer.onDestroy('import');
     return results;
   }
 
@@ -193,7 +193,7 @@ export class ImporterMain {
     );
     const { importedIds, importDetails } = await importComponents.importComponents();
     Analytics.setExtraData('num_components', importedIds.length);
-    await consumer.onDestroy();
+    await consumer.onDestroy('import');
     return { importedIds, importDetails };
 
     async function getLanes(logger: Logger): Promise<Lane[]> {
