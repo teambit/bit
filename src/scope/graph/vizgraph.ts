@@ -106,7 +106,7 @@ export default class VisualDependencyGraph {
         const tag = attr.tag ? `\nTag: ${attr.tag}` : '';
         const pointers = attr.pointers ? `\n[*] ${attr.pointers.join(', ')} [*]` : '';
         props.label = `${node.id}${tag}${pointers}`;
-        if (attr.pointers) props.shape = 'doubleoctagon';
+        // if (attr.pointers) props.shape = 'doubleoctagon';
       }
 
       graph.addNode(node.id, props);
@@ -201,12 +201,18 @@ function createGraphvizOptions(config: GraphConfig) {
   return {
     G: Object.assign({
       layout: config.layout,
+      bgcolor: 'black',
     }),
     E: Object.assign({
-      // color: config.edgeColor,
+      color: 'green',
+      fontcolor: 'white',
+      labelfontcolor: 'white',
     }),
     N: Object.assign({
-      shape: 'box',
+      fontname: 'Arial',
+      color: '#c6c5fe',
+      fontcolor: '#c6c5fe',
+      fontsize: '14px',
     }),
   };
 }
