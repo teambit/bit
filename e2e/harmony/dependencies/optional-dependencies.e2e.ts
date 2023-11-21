@@ -34,7 +34,7 @@ describe.only('optional dependencies', function () {
     helper.fs.prependFile('button/button.tsx', 'import React from "react";import isOdd from "is-odd";\n');
     helper.env.setCustomNewEnv(undefined, undefined, { policy: ENV_POLICY });
     helper.command.setEnv('button', envId);
-    helper.command.install();
+    helper.command.install('--add-missing-deps');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -61,6 +61,29 @@ describe.only('optional dependencies', function () {
         'is-odd': '3.0.1',
       });
       expect(pkgJson.peerDependenciesMeta).to.eql({
+        react: {
+          optional: true,
+        },
+      });
+    });
+  });
+  describe('affect capsule', () => {
+    let workspaceCapsulesRootDir: string;
+    let buttonPkgJson;
+    before(() => {
+      helper.command.build();
+      workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
+      buttonPkgJson = fs.readJsonSync(
+        path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_button/package.json`)
+      );
+    });
+    it('should add optionalDependencies to package.json', () => {
+      expect(buttonPkgJson.optionalDependencies).to.eql({
+        'is-odd': '3.0.1',
+      });
+    });
+    it('should add peerDependenciesMeta to package.json', () => {
+      expect(buttonPkgJson.peerDependenciesMeta).to.eql({
         react: {
           optional: true,
         },
