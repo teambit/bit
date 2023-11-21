@@ -49,6 +49,8 @@ export class ReactApp implements Application {
 
     if (this.devServer) {
       await this.devServer.listen(port);
+      this.logger.console(`${context.appName} is listening on http://localhost:${port}`);
+
       return {
         appName: context.appName,
         port
@@ -63,6 +65,7 @@ export class ReactApp implements Application {
       this.webpackDevServerModulePath
     );
     await devServer.listen(port);
+    this.logger.console(`${context.appName} is listening on http://localhost:${port}`);
     
     return {
       appName: context.appName,

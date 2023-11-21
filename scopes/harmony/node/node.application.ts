@@ -33,7 +33,8 @@ export class NodeApp implements Application {
     child.stdout?.on('data', function (data) {
       logger.console(data.toString());
     });
-    
+
+    this.logger.console(`${context.appName} is listening on http://localhost:${port}`);
     return {
       appName: context.appName,
       port
