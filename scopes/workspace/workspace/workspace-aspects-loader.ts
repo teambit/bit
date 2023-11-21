@@ -28,7 +28,6 @@ import { BitError } from '@teambit/bit-error';
 import { EnvsMain } from '@teambit/envs';
 import { ConfigMain } from '@teambit/config';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { join } from 'path';
 import { ShouldLoadFunc } from './build-graph-from-fs';
 import type { Workspace } from './workspace';
 import { OnAspectsResolve, OnAspectsResolveSlot, OnRootAspectAdded, OnRootAspectAddedSlot } from './workspace.provider';
@@ -478,7 +477,8 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
         const aspect = !isModule 
           // eslint-disable-next-line global-require, import/no-dynamic-require
           ? require(localPath)  
-          : await this.aspectLoader.loadEsm(join(localPath, 'dist', 'index.js'));
+          // : await this.aspectLoader.loadEsm(join(localPath, 'dist', 'index.js'));
+          : await this.aspectLoader.loadEsm(localPath);
           
         // require aspect runtimes
         const runtimePath = await this.aspectLoader.getRuntimePath(component, localPath, MainRuntime.name);

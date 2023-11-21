@@ -10,4 +10,9 @@ export type ApplicationInstance = {
    * name of the app
    */
   appName: string;
+
+  /**
+   * url of the running app.
+   */
+  url?: string;
 };

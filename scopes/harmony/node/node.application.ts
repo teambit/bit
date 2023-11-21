@@ -2,7 +2,7 @@ import { execFile } from 'child_process';
 import { parse, join } from 'path';
 import { Logger } from '@teambit/logger';
 import { ReactEnv } from '@teambit/react';
-import { Application, DeployFn, AppBuildContext, AppContext } from '@teambit/application';
+import { Application, DeployFn, AppBuildContext, AppContext, ApplicationInstance } from '@teambit/application';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { NodeEnv } from './node.env';
 import { DeployContext, NodeAppMetadata } from './node-app-options';
@@ -19,7 +19,7 @@ export class NodeApp implements Application {
 
   applicationType = 'node';
 
-  async run(context: AppContext): Promise<number | undefined> {
+  async run(context: AppContext): Promise<ApplicationInstance> {
     const logger = this.logger;
     const [from, to] = this.portRange;
     const port = context.port || (await Port.getPort(from, to));
@@ -34,7 +34,10 @@ export class NodeApp implements Application {
       logger.console(data.toString());
     });
     
-    return port;
+    return {
+      appName: context.appName,
+      port
+    };
   }
 
   async build(context: AppBuildContext): Promise<DeployContext> {

@@ -32,7 +32,6 @@ export class RunCmd implements Command {
     ['p', 'port [port-number]', 'port to run the app on'],
     ['v', 'verbose', 'show verbose output for inspection and print stack trace'],
     ['', 'skip-watch', 'avoid running the watch process that compiles components in the background'],
-    ['', 'ssr', 'run app in server side rendering mode.'],
   ] as CommandOptions;
 
   constructor(

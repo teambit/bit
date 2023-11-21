@@ -23,7 +23,6 @@ import { AppPlugin } from './app.plugin';
 import { AppTypePlugin } from './app-type.plugin';
 import { AppContext } from './app-context';
 import { DeployTask } from './deploy.task';
-import { AppNoSsr } from './exceptions/app-no-ssr';
 
 export type ApplicationTypeSlot = SlotRegistry<ApplicationType<unknown>[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
@@ -311,14 +310,7 @@ export class ApplicationMain {
     const context = await this.createAppContext(app.name, options.port);
     if (!context) throw new AppNotFound(appName);
 
-    if (options.ssr) {
-      if (!app.runSsr) throw new AppNoSsr(appName);
-
-      const result = await app.runSsr(context);
-      return { app, ...result };
-    }
-
-    const port = await app.run(context);
+    const instance = await app.run(context);
     if (options.watch) {
       this.watcher
         .watch({
@@ -330,6 +322,11 @@ export class ApplicationMain {
           this.logger.error(`compilation failed`, err);
         });
     }
+
+    const port = typeof instance === 'number'
+      ? instance
+      : instance?.port;
+
     return { app, port, errors: undefined };
   }
 

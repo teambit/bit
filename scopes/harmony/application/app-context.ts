@@ -5,6 +5,9 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 
 export class AppContext extends ExecutionContext {
   constructor(
+    /**
+     * name of the app
+     */
     readonly appName: string,
 
     /**
@@ -30,7 +33,7 @@ export class AppContext extends ExecutionContext {
     /**
      * execution context of the app.
      */
-    execContext: ExecutionContext,
+    readonly execContext: ExecutionContext,
 
     /**
      * A path for the host root dir
@@ -65,5 +68,18 @@ export class AppContext extends ExecutionContext {
    */
   getAspect<T>(aspectId: string): T|undefined {
     return this.harmony.get<T>(aspectId);
-  } 
+  }
+
+  static compose(appContext: AppContext, overrides?: Partial<AppContext>) {
+    return new AppContext(
+      overrides?.appName || appContext.appName,
+      overrides?.harmony || appContext.harmony,
+      overrides?.dev || appContext.dev,
+      overrides?.appComponent || appContext.appComponent,
+      overrides?.workdir || appContext.workdir,
+      overrides?.execContext || appContext.execContext,
+      overrides?.hostRootDir || appContext.hostRootDir,
+      overrides?.port || appContext.port
+    );
+  }
 }
