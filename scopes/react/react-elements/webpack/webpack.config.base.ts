@@ -136,7 +136,7 @@ export default function (isEnvProduction = false): Configuration {
               options: {
                 babelrc: false,
                 configFile: false,
-                presets: [require.resolve('@babel/preset-react')],
+                presets: [require.resolve('@babel/preset-env'), require.resolve('@babel/preset-react')],
                 // This is a feature of `babel-loader` for webpack (not Babel itself).
                 // It enables caching results in ./node_modules/.cache/babel-loader/
                 // directory for faster rebuilds.
