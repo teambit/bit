@@ -22,7 +22,7 @@ const ENV_POLICY = {
   ],
 };
 
-describe.only('optional dependencies', function () {
+describe('optional dependencies', function () {
   this.timeout(0);
   let helper: Helper;
   let envId;
