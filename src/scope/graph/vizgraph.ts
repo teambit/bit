@@ -38,16 +38,14 @@ export default class VisualDependencyGraph {
   static async loadFromClearGraph(
     clearGraph: ClearGraph<any, any>,
     config: GraphConfig = {},
-    markIds?: string[],
-    printNodeAttr?: boolean
+    markIds?: string[]
   ): Promise<VisualDependencyGraph> {
     const mergedConfig = { ...defaultConfig, ...config };
     await checkGraphvizInstalled(config.graphVizPath);
     const graph: Digraph = VisualDependencyGraph.buildDependenciesGraphFromClearGraph(
       clearGraph,
       mergedConfig,
-      markIds,
-      printNodeAttr
+      markIds
     );
     // @ts-ignore
     return new VisualDependencyGraph(clearGraph, graph, mergedConfig);
@@ -83,8 +81,7 @@ export default class VisualDependencyGraph {
   static buildDependenciesGraphFromClearGraph(
     clearGraph: ClearGraph<any, any>,
     config: GraphConfig,
-    markIds?: string[],
-    printNodeAttr?: boolean
+    markIds?: string[]
   ): Digraph {
     const graph = graphviz.digraph('G');
 
