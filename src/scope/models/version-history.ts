@@ -6,6 +6,7 @@ import Ref from '../objects/ref';
 import BitObject from '../objects/object';
 import type Version from './version';
 import { getVersionParentsFromVersion } from '../component-ops/traverse-versions';
+import { ModelComponent } from '.';
 
 export type VersionParents = {
   hash: Ref;
@@ -19,6 +20,11 @@ type VersionHistoryProps = {
   scope: string;
   versions: VersionParents[];
   graphCompleteRefs?: string[];
+};
+
+type HashMetadata = {
+  tag?: string;
+  pointers?: string[];
 };
 
 export default class VersionHistory extends BitObject {
@@ -143,8 +149,8 @@ export default class VersionHistory extends BitObject {
     this.versions = newVersions;
   }
 
-  getGraph() {
-    const graph = new Graph<Ref, string>();
+  getGraph(modelComponent?: ModelComponent, laneHeads?: { [hash: string]: string[] }) {
+    const graph = new Graph<string | HashMetadata, string>();
     const allHashes = uniqBy(
       this.versions
         .map((v) => {
@@ -153,7 +159,13 @@ export default class VersionHistory extends BitObject {
         .flat(),
       'hash'
     );
-    const nodes = allHashes.map((v) => new Node(v.toString(), v));
+    const getMetadata = (ref: Ref): HashMetadata | undefined => {
+      if (!modelComponent || !laneHeads) return undefined;
+      const tag = modelComponent.getTagOfRefIfExists(ref);
+      const pointers = laneHeads[ref.toString()];
+      return { tag, pointers };
+    };
+    const nodes = allHashes.map((v) => new Node(v.toString(), getMetadata(v) || v.toString()));
     const edges = this.versions
       .map((v) => {
         const verEdges = v.parents.map((p) => new Edge(v.hash.toString(), p.toString(), 'parent'));

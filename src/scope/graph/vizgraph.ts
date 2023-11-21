@@ -8,72 +8,46 @@ import * as path from 'path';
 import logger from '../../logger/logger';
 import { generateRandomStr } from '../../utils';
 
-// const Graph = GraphLib.Graph;
-// const Digraph = graphviz.digraph;
-
-type ConfigProps = {
+export type GraphConfig = {
   layout?: string; // dot Layout to use in the graph
-  fontName?: string; // Arial font name to use in the graph
-  fontSize?: string; // 14px Font size to use in the graph
-  backgroundColor?: string; // #000000 Background color for the graph
-  nodeColor?: string; // #c6c5fe Default node color to use in the graph
-  noDependencyColor?: string; // #cfffac Color to use for nodes with no dependencies
-  edgeColor?: string; // #757575 Edge color to use in the graph
-  graphVizOptions?: Record<string, any>; // null Custom GraphViz options
   graphVizPath?: string; // null Custom GraphViz path
-  highlightColor?: string;
   colorPerEdgeType?: { [edgeType: string]: string };
 };
 
-const defaultConfig: ConfigProps = {
+const defaultConfig: GraphConfig = {
   layout: 'dot',
-  fontName: 'Arial',
-  fontSize: '14px',
-  backgroundColor: '#000000',
-  nodeColor: '#c6c5fe',
-  noDependencyColor: '#cfffac',
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  devDependencyColor: '#ff0000',
-  edgeColor: '#757575',
-  highlightColor: 'green',
 };
 
 export default class VisualDependencyGraph {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   graphlib: Graph;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   graph: Digraph;
-  config: ConfigProps;
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  constructor(graphlib: Graph, graph: Digraph, config: ConfigProps) {
+  config: GraphConfig;
+  constructor(graphlib: Graph, graph: Digraph, config: GraphConfig) {
     this.graph = graph;
     this.graphlib = graphlib;
     this.config = config;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async loadFromGraphlib(graphlib: Graph, config: ConfigProps = {}): Promise<VisualDependencyGraph> {
+  static async loadFromGraphlib(graphlib: Graph, config: GraphConfig = {}): Promise<VisualDependencyGraph> {
     const mergedConfig = Object.assign({}, defaultConfig, config);
     await checkGraphvizInstalled(config.graphVizPath);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const graph: Digraph = VisualDependencyGraph.buildDependenciesGraph(graphlib, mergedConfig);
     return new VisualDependencyGraph(graphlib, graph, mergedConfig);
   }
 
   static async loadFromClearGraph(
     clearGraph: ClearGraph<any, any>,
-    config: ConfigProps = {},
-    markIds?: string[]
+    config: GraphConfig = {},
+    markIds?: string[],
+    printNodeAttr?: boolean
   ): Promise<VisualDependencyGraph> {
-    const mergedConfig = Object.assign({}, defaultConfig, config);
+    const mergedConfig = { ...defaultConfig, ...config };
     await checkGraphvizInstalled(config.graphVizPath);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const graph: Digraph = VisualDependencyGraph.buildDependenciesGraphFromClearGraph(
       clearGraph,
       mergedConfig,
-      markIds
+      markIds,
+      printNodeAttr
     );
     // @ts-ignore
     return new VisualDependencyGraph(clearGraph, graph, mergedConfig);
@@ -82,9 +56,7 @@ export default class VisualDependencyGraph {
   /**
    * Creates the graphviz graph
    */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static buildDependenciesGraph(graphlib: Graph, config: ConfigProps): Digraph {
+  static buildDependenciesGraph(graphlib: Graph, config: GraphConfig): Digraph {
     const graph = graphviz.digraph('G');
 
     if (config.graphVizPath) {
@@ -101,8 +73,7 @@ export default class VisualDependencyGraph {
       const edgeType = graphlib.edge(edge);
       const vizEdge = graph.addEdge(edge.v, edge.w);
       if (edgeType !== 'dependencies') {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        setEdgeColor(vizEdge, config.devDependencyColor);
+        setEdgeColor(vizEdge, 'red');
       }
     });
 
@@ -111,8 +82,9 @@ export default class VisualDependencyGraph {
 
   static buildDependenciesGraphFromClearGraph(
     clearGraph: ClearGraph<any, any>,
-    config: ConfigProps,
-    markIds?: string[]
+    config: GraphConfig,
+    markIds?: string[],
+    printNodeAttr?: boolean
   ): Digraph {
     const graph = graphviz.digraph('G');
 
@@ -124,14 +96,33 @@ export default class VisualDependencyGraph {
     const edges = clearGraph.edges;
 
     nodes.forEach((node) => {
+      const attr = node.attr;
+
+      const props: any = {
+        label: node.id,
+      };
       if (markIds?.includes(node.id)) {
-        graph.addNode(node.id, { color: 'red', style: 'filled' });
-      } else graph.addNode(node.id);
+        props.color = 'red';
+        props.style = 'filled';
+      }
+      if (typeof attr === 'object' && (attr.tag || attr.pointers)) {
+        const tag = attr.tag ? `\nTag: ${attr.tag}` : '';
+        const pointers = attr.pointers ? `\n[*] ${attr.pointers.join(', ')} [*]` : '';
+        props.label = `${node.id}${tag}${pointers}`;
+        if (attr.pointers) props.shape = 'doubleoctagon';
+      }
+
+      graph.addNode(node.id, props);
     });
     edges.forEach((edge) => {
       const edgeType = edge.attr;
-      const vizEdge = graph.addEdge(edge.sourceId, edge.targetId);
-      const color = config.colorPerEdgeType?.[edgeType] || 'green';
+      const getLabel = () => {
+        if (!config.colorPerEdgeType) return undefined; // it's not version-history graph
+        if (edgeType === 'parent') return undefined;
+        return edgeType;
+      };
+      const vizEdge = graph.addEdge(edge.sourceId, edge.targetId, { label: getLabel() });
+      const color = config.colorPerEdgeType?.[edgeType];
       setEdgeColor(vizEdge, color);
     });
 
@@ -150,7 +141,6 @@ export default class VisualDependencyGraph {
   async image(imagePath: string = this.getTmpFilename()): Promise<string> {
     const options: Record<string, any> = createGraphvizOptions(this.config);
     const type: string = path.extname(imagePath).replace('.', '') || 'png';
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     options.type = type;
 
     const outputP: Promise<Buffer> = new Promise((resolve, reject) => {
@@ -210,33 +200,16 @@ function checkGraphvizInstalled(graphVizPath?: string) {
  * @param  {Object} config
  * @return {Object}
  */
-function createGraphvizOptions(config) {
-  const graphVizOptions = config.graphVizOptions || {};
-
+function createGraphvizOptions(config: GraphConfig) {
   return {
-    G: Object.assign(
-      {
-        overlap: false,
-        pad: 0.111,
-        layout: config.layout,
-        bgcolor: config.backgroundColor,
-      },
-      graphVizOptions.G
-    ),
-    E: Object.assign(
-      {
-        color: config.edgeColor,
-      },
-      graphVizOptions.E
-    ),
-    N: Object.assign(
-      {
-        fontname: config.fontName,
-        fontsize: config.fontSize,
-        color: config.nodeColor,
-        fontcolor: config.nodeColor,
-      },
-      graphVizOptions.N
-    ),
+    G: Object.assign({
+      layout: config.layout,
+    }),
+    E: Object.assign({
+      // color: config.edgeColor,
+    }),
+    N: Object.assign({
+      shape: 'box',
+    }),
   };
 }
