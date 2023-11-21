@@ -28,7 +28,13 @@
         "scope": "teambit.harmony",
         "version": "1.0.59",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/application"
+        "rootDir": "scopes/harmony/application",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "aspect": {
         "name": "aspect",
@@ -519,6 +525,13 @@
         "version": "1.0.59",
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/envs"
+    },
+    "envs/core-aspect-env": {
+        "name": "envs/core-aspect-env",
+        "scope": "teambit.harmony",
+        "version": "0.0.5",
+        "mainFile": "index.ts",
+        "rootDir": "components/envs/core-aspect-env"
     },
     "eslint": {
         "name": "eslint",
