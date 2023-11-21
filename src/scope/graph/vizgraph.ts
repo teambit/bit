@@ -107,7 +107,6 @@ export default class VisualDependencyGraph {
         const pointers = attr.pointers ? `<BR/><B>${attr.pointers.join(', ')}</B>` : '';
         // the "!" prefix enables the "html-like" syntax
         props.label = `!${node.id}${tag}${pointers}`;
-        if (attr.pointers) props.style = 'bold';
       }
 
       graph.addNode(node.id, props);

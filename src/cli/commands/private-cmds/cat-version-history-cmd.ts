@@ -26,6 +26,7 @@ export class CatVersionHistoryCmd implements LegacyCommand {
       'layout <name>',
       'GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]',
     ],
+    ['', 'short-hash', 'relevant for --graph only. show only 9 chars of the hash'],
     [
       '',
       'mark <string>',
@@ -40,15 +41,17 @@ export class CatVersionHistoryCmd implements LegacyCommand {
       mark,
       graphPath,
       layout,
+      shortHash,
     }: {
       graph: boolean;
       mark?: string;
       graphPath?: string;
       layout?: string;
+      shortHash?: boolean;
     }
   ): Promise<any> {
     if (graph) {
-      const graphHistory = await generateVersionHistoryGraph(id);
+      const graphHistory = await generateVersionHistoryGraph(id, shortHash);
       const markIds = mark ? mark.split(',').map((node) => node.trim()) : undefined;
       const config: GraphConfig = { colorPerEdgeType };
       if (layout) config.layout = layout;

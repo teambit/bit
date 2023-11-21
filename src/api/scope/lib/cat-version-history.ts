@@ -8,7 +8,7 @@ export async function catVersionHistory(id: string) {
   return versionHistoryObj;
 }
 
-export async function generateVersionHistoryGraph(id: string) {
+export async function generateVersionHistoryGraph(id: string, shortHash?: boolean) {
   const scope: Scope = await loadScope();
   const compId = await scope.getParsedId(id);
   const component = await scope.getModelComponent(compId);
@@ -25,7 +25,7 @@ export async function generateVersionHistoryGraph(id: string) {
     laneHeads[hash].push(lane);
   });
 
-  return versionHistory.getGraph(component, laneHeads);
+  return versionHistory.getGraph(component, laneHeads, shortHash);
 }
 
 async function getVersionHistory(id: string): Promise<VersionHistory> {
