@@ -103,10 +103,11 @@ export default class VisualDependencyGraph {
         props.style = 'filled';
       }
       if (typeof attr === 'object' && (attr.tag || attr.pointers)) {
-        const tag = attr.tag ? `\nTag: ${attr.tag}` : '';
-        const pointers = attr.pointers ? `\n[*] ${attr.pointers.join(', ')} [*]` : '';
-        props.label = `${node.id}${tag}${pointers}`;
-        // if (attr.pointers) props.shape = 'doubleoctagon';
+        const tag = attr.tag ? ` (${attr.tag})` : '';
+        const pointers = attr.pointers ? `<BR/><B>${attr.pointers.join(', ')}</B>` : '';
+        // the "!" prefix enables the "html-like" syntax
+        props.label = `!${node.id}${tag}${pointers}`;
+        if (attr.pointers) props.style = 'bold';
       }
 
       graph.addNode(node.id, props);
