@@ -91,6 +91,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
             </Link>
           </CompositionsMenuBar>
           <CompositionContent
+            className={styles.compositionPanel}
             emptyState={emptyState}
             component={component}
             selected={currentComposition}
@@ -141,7 +142,6 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
                   url={compositionUrl}
                   compositions={component.compositions}
                   active={currentComposition}
-                  className={styles.compost}
                 />
               </TabPanel>
               <TabPanel className={styles.tabContent}>
