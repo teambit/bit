@@ -1,6 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
+import pMap from 'p-map';
+import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
@@ -34,6 +35,7 @@ import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
+import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -694,9 +696,15 @@ please create a new lane instead, which will include all components of this lane
     targetLaneId?: LaneId,
     options?: LaneDiffStatusOptions
   ): Promise<LaneDiffStatus> {
+    this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
+
+    const sourceLane = sourceLaneId.isDefault()
+      ? await this.getLaneDataOfDefaultLane()
+      : await this.loadLane(sourceLaneId);
+
     const sourceLaneComponents = sourceLaneId.isDefault()
-      ? (await this.getLaneDataOfDefaultLane())?.components.map((main) => ({ id: main.id, head: Ref.from(main.head) }))
-      : (await this.loadLane(sourceLaneId))?.components;
+      ? sourceLane?.components.map((main) => ({ id: main.id, head: Ref.from(main.head) }))
+      : sourceLane?.components;
 
     const targetLane = targetLaneId ? await this.loadLane(targetLaneId) : undefined;
     const targetLaneIds = targetLane?.toBitIds();
@@ -750,9 +758,72 @@ please create a new lane instead, which will include all components of this lane
       )
     );
 
-    const results = await pMapSeries(diffProps, async ({ componentId, sourceHead, targetHead }) =>
-      this.componentDiffStatus(componentId, sourceHead, targetHead, options)
+    const snapDistancesByComponentId = new Map<
+      string,
+      {
+        snapsDistance: SnapsDistance;
+        sourceHead: string;
+        targetHead?: string;
+        componentId: ComponentID;
+      }
+    >();
+
+    this.logger.profile(
+      `get snaps distance for source lane: ${sourceLane?.id.name} and target lane: ${targetLane?.id.name} with ${diffProps.length} components`
     );
+    await pMap(
+      diffProps,
+      async ({ componentId, sourceHead, targetHead }) => {
+        const snapsDistance = await this.getSnapsDistance(componentId, sourceHead, targetHead, false);
+        if (snapsDistance) {
+          snapDistancesByComponentId.set(componentId.toString(), {
+            snapsDistance,
+            sourceHead,
+            targetHead,
+            componentId,
+          });
+        }
+      },
+      {
+        concurrency: concurrentComponentsLimit(),
+      }
+    );
+    this.logger.profile(
+      `get snaps distance for source lane: ${sourceLane?.id.name} and target lane: ${targetLane?.id.name} with ${diffProps.length} components`
+    );
+
+    const commonSnapsToImport = compact(
+      [...snapDistancesByComponentId.values()].map((s) =>
+        s.snapsDistance.commonSnapBeforeDiverge
+          ? s.componentId.changeVersion(s.snapsDistance.commonSnapBeforeDiverge.hash)
+          : null
+      )
+    );
+
+    const sourceOrTargetLane =
+      ((sourceLaneId.isDefault() ? null : (sourceLane as Lane)) ||
+        (targetLaneId?.isDefault() ? null : (targetLane as Lane))) ??
+      undefined;
+
+    if (commonSnapsToImport.length > 0 && !options?.skipChanges) {
+      await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(commonSnapsToImport), {
+        cache: true,
+        reason: `get the common snap for lane diff`,
+        lane: sourceOrTargetLane,
+      });
+    }
+
+    const results = await pMapSeries(diffProps, async ({ componentId, sourceHead, targetHead }) =>
+      this.componentDiffStatus(
+        componentId,
+        sourceHead,
+        targetHead,
+        snapDistancesByComponentId.get(componentId.toString())?.snapsDistance,
+        options
+      )
+    );
+
+    this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
 
     return {
       source: sourceLaneId,
@@ -761,7 +832,78 @@ please create a new lane instead, which will include all components of this lane
     };
   }
 
-  async componentDiffStatus(
+  private async componentDiffStatus(
+    componentId: ComponentID,
+    sourceHead: string,
+    targetHead?: string,
+    snapsDistance?: SnapsDistance,
+    options?: LaneDiffStatusOptions
+  ): Promise<LaneComponentDiffStatus> {
+    if (snapsDistance?.err) {
+      const noCommonSnap = snapsDistance.err instanceof NoCommonSnap;
+
+      return {
+        componentId,
+        sourceHead,
+        targetHead,
+        upToDate: snapsDistance?.isUpToDate(),
+        unrelated: noCommonSnap || undefined,
+        changes: [],
+      };
+    }
+
+    const commonSnap = snapsDistance?.commonSnapBeforeDiverge;
+
+    const getChanges = async (): Promise<ChangeType[]> => {
+      if (!commonSnap) return [ChangeType.NEW];
+
+      // import common snap before we compare
+      const compare = await this.componentCompare.compare(
+        componentId.changeVersion(commonSnap.hash).toString(),
+        componentId.changeVersion(sourceHead).toString()
+      );
+
+      if (!compare.fields.length && (!compare.code.length || !compare.code.some((c) => c.status !== 'UNCHANGED'))) {
+        return [ChangeType.NONE];
+      }
+
+      const changed: ChangeType[] = [];
+
+      if (compare.code.some((f) => f.status !== 'UNCHANGED')) {
+        changed.push(ChangeType.SOURCE_CODE);
+      }
+
+      if (compare.fields.length > 0) {
+        changed.push(ChangeType.ASPECTS);
+      }
+
+      const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
+      if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
+        changed.push(ChangeType.DEPENDENCY);
+      }
+
+      return changed;
+    };
+
+    const changes = !options?.skipChanges ? await getChanges() : undefined;
+    const changeType = changes ? changes[0] : undefined;
+
+    return {
+      componentId,
+      changeType,
+      changes,
+      sourceHead,
+      targetHead: commonSnap?.hash,
+      upToDate: snapsDistance?.isUpToDate(),
+      snapsDistance: {
+        onSource: snapsDistance?.snapsOnSourceOnly.map((s) => s.hash) ?? [],
+        onTarget: snapsDistance?.snapsOnTargetOnly.map((s) => s.hash) ?? [],
+        common: snapsDistance?.commonSnapBeforeDiverge?.hash,
+      },
+    };
+  }
+
+  async componentDiffStatusOld(
     componentId: ComponentID,
     sourceHead: string,
     targetHead?: string,

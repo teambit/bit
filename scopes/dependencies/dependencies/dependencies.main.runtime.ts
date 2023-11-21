@@ -249,9 +249,12 @@ export class DependenciesMain {
     return blameResults;
   }
 
-  async usageDeep(depName: string): Promise<string | undefined> {
+  async usageDeep(depName: string, opts?: { depth?: number }): Promise<string | undefined> {
     if (!isComponentId(depName)) {
-      return this.dependencyResolver.getPackageManager()?.findUsages?.(depName, { lockfileDir: this.workspace.path });
+      return this.dependencyResolver.getPackageManager()?.findUsages?.(depName, {
+        lockfileDir: this.workspace.path,
+        depth: opts?.depth,
+      });
     }
     return undefined;
   }
