@@ -49,7 +49,7 @@ export class RunCmd implements Command {
   ): Promise<React.ReactElement | RenderResult> {
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
     this.logger.off();
-    const { port, errors } = await this.application.runApp(appName, {
+    const { port, errors, isOldApi } = await this.application.runApp(appName, {
       dev,
       watch: !skipWatch,
       ssr,
@@ -63,15 +63,14 @@ export class RunCmd implements Command {
       };
     }
 
-    if (port) {
-      // return (
-      //   <Text>
-      //     {appName} app is running on http://localhost:{port}
-      //   </Text>
-      // );
-      return <></>;
+    if (isOldApi) {
+      return (
+        <Text>
+          {appName} app is running on http://localhost:{port}
+        </Text>
+      );
     }
-    // return <Text>{appName} app is running</Text>;
+
     return <></>;
   }
 }

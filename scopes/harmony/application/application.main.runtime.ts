@@ -323,11 +323,12 @@ export class ApplicationMain {
         });
     }
 
-    const port = typeof instance === 'number'
+    const isOldApi = typeof instance === 'number'
+    const port = isOldApi
       ? instance
       : instance?.port;
 
-    return { app, port, errors: undefined };
+    return { app, port, errors: undefined, isOldApi };
   }
 
   /**
