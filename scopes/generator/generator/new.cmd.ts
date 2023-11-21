@@ -46,6 +46,11 @@ export class NewCmd implements Command {
       'load-from <path-to-template>',
       'local path to the workspace containing the template. Helpful during a development of a workspace-template',
     ],
+    [
+      'c',
+      'current-dir',
+      'create the new workspace in current directory (default is to create a new directory, inside the current dir)',
+    ],
   ] as CommandOptions;
 
   constructor(private generator: GeneratorMain) {}
@@ -57,6 +62,7 @@ export class NewCmd implements Command {
       env?: string;
       template?: string;
       aspect?: string;
+      currentDir?: boolean;
     }
   ) {
     options.skipGit = options.skipGit ?? options.standalone;

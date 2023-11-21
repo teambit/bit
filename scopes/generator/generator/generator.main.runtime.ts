@@ -350,7 +350,7 @@ export class GeneratorMain {
   async generateWorkspaceTemplate(
     workspaceName: string,
     templateName: string,
-    options: NewOptions & { aspect?: string }
+    options: NewOptions & { aspect?: string; currentDir?: boolean }
   ): Promise<GenerateWorkspaceTemplateResult> {
     if (this.workspace) {
       throw new BitError('Error: unable to generate a new workspace inside of an existing workspace');
