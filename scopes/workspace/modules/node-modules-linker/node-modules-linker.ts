@@ -197,7 +197,7 @@ export default class NodeModuleLinker {
     // TS can't find the types
     // in order to solve it we copy the types to exports.types
     // this will be applied only to aspects to minimize how it affects users
-    let envsData = component.state.aspects.get('teambit.envs/envs');
+    const envsData = component.state.aspects.get('teambit.envs/envs');
     const isAspect = envsData?.data.type === 'aspect';
     if (
       isAspect &&
