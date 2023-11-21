@@ -372,14 +372,14 @@ importers:
         specifier: ^0.0.8
         version: 0.0.8(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-tab-page':
-        specifier: ^0.0.629
-        version: 0.0.629(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+        specifier: ^0.0.631
+        version: 0.0.631(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/code.ui.code-tab-tree':
         specifier: ^0.0.613
         version: 0.0.613(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/code.ui.code-view':
-        specifier: ^0.0.515
-        version: 0.0.515(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.517
+        version: 0.0.517(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.dependency-tree':
         specifier: 0.0.546
         version: 0.0.546(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2)
@@ -747,8 +747,8 @@ importers:
         specifier: 4.0.3
         version: registry.npmjs.org/@teambit/documenter.theme.theme-context@4.0.3(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.code-snippet':
-        specifier: 4.2.2
-        version: 4.2.2(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^4.2.4
+        version: 4.2.4(react@17.0.2)
       '@teambit/documenter.ui.consumable-link':
         specifier: 4.0.11
         version: 4.0.11(react-dom@17.0.2)(react@17.0.2)
@@ -1959,8 +1959,8 @@ importers:
         specifier: 6.8.1
         version: 6.8.1(react-dom@17.0.2)(react@17.0.2)
       react-syntax-highlighter:
-        specifier: 15.4.3
-        version: 15.4.3(react@17.0.2)
+        specifier: 15.5.0
+        version: 15.5.0(react@17.0.2)
       react-tabs:
         specifier: 3.2.0
         version: 3.2.0(react@17.0.2)
@@ -2373,6 +2373,12 @@ importers:
       '@types/react-dev-utils':
         specifier: 9.0.10
         version: 9.0.10(debug@4.3.4)
+      '@types/react-dom':
+        specifier: ^17.0.21
+        version: 17.0.23
+      '@types/react-syntax-highlighter':
+        specifier: 15.5.10
+        version: 15.5.10
       '@types/react-tabs':
         specifier: 2.3.2
         version: 2.3.2
@@ -11049,8 +11055,8 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
       react-syntax-highlighter:
-        specifier: 15.4.3
-        version: 15.4.3(react@17.0.2)
+        specifier: 15.5.0
+        version: 15.5.0(react@17.0.2)
     devDependencies:
       '@babel/runtime':
         specifier: 7.20.0
@@ -11073,6 +11079,9 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.23
+      '@types/react-syntax-highlighter':
+        specifier: 15.5.10
+        version: 15.5.10
       '@types/testing-library__jest-dom':
         specifier: 5.9.5
         version: 5.9.5
@@ -11962,8 +11971,8 @@ importers:
         specifier: ^0.0.8
         version: 0.0.8(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-tab-page':
-        specifier: ^0.0.629
-        version: 0.0.629(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+        specifier: ^0.0.631
+        version: 0.0.631(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/code.ui.utils.get-file-icon':
         specifier: 0.0.495
         version: 0.0.495(react-dom@17.0.2)(react@17.0.2)
@@ -13887,6 +13896,9 @@ importers:
       '@teambit/ui-foundation.ui.hooks.use-is-mobile':
         specifier: ^0.0.197
         version: 0.0.197(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.menu-widget-icon':
+        specifier: ^0.0.502
+        version: 0.0.502(react-dom@17.0.2)(react@17.0.2)
       classnames:
         specifier: 2.2.6
         version: 2.2.6
@@ -17363,6 +17375,9 @@ importers:
       lodash:
         specifier: 4.17.21
         version: 4.17.21
+      p-map:
+        specifier: 4.0.0
+        version: 4.0.0
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -32183,15 +32198,15 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/base-react.themes.theme-switcher@1.0.2(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha1-ohfnPt23FmLPqATiPMmBwSeIpIA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-react/themes/theme-switcher@1.0.2.tgz}
+  /@teambit/base-ui.constants.storage@1.0.0(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-4fOXti4IhPVuW3fyq8NfYtlqT4mcBUt3587/3kBx2DAcAZE0FOrICpHyCOiUgr7q/0pKy7TZJQxxsL0PfzOwbA==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       core-js: 3.13.0
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
     dev: false
 
   /@teambit/base-ui.css-components.elevation@1.0.1(react-dom@17.0.2)(react@17.0.2):
@@ -32714,45 +32729,79 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/base-ui.surfaces.drawer@1.1.3(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha1-EmfvFFxPhsVm6B9oBq1W7S4wzLA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/surfaces/drawer@1.1.3.tgz}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/base-ui.hook.use-click-outside': 1.0.1(react-dom@18.2.0)(react@18.2.0)
-      '@teambit/base-ui.surfaces.abs-container': 1.0.1(react-dom@18.2.0)(react@18.2.0)
-      classnames: 2.2.6
-      core-js: 3.13.0
-      react: 18.2.0
-      react-create-ref: 1.0.1(react@18.2.0)
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
   /@teambit/base-ui.surfaces.split-pane.hover-splitter@1.0.0(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-sbN1AgGvc3lzoeWg7KQrYD9lCa4V9s0EctfZSrPCwy/UcHGePgMipBOWJkcNwuq8GGhzSTzH8rP8McWCLUGdew==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.surfaces.split-pane.splitter': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.splitter@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.surfaces.split-pane.splitter': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/base-ui.surfaces.split-pane.hover-splitter@1.0.0(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-sbN1AgGvc3lzoeWg7KQrYD9lCa4V9s0EctfZSrPCwy/UcHGePgMipBOWJkcNwuq8GGhzSTzH8rP8McWCLUGdew==}
+  /@teambit/base-ui.surfaces.split-pane.layout@1.0.0(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-Ib4sVeQYp3NU8zz6lhhvQ8B9AHb8bSGDaG5qZP36bXI8N+b9a0G+gCX2kFFmFPuAx74HOYnKz3B5xUPH5yTT0Q==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.surfaces.split-pane.splitter': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.splitter@1.0.0(react-dom@18.2.0)(react@18.2.0)
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  /@teambit/base-ui.surfaces.split-pane.pane@1.0.0(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-OUzOlgCzt5pkAN9FcoXzlB+TUuH+5+Hh0EE/7X488rFTDHS6lW3pEgKPsqg1XUw30ivthOdVq7cwnpnB1seRhw==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-ui.surfaces.split-pane.layout': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  /@teambit/base-ui.surfaces.split-pane.split-pane@1.0.0(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-Zomx0m2Gsf9Dl+A3YwyZy1qJO3q6LtI7BTeEWsBLrub9fO0IXMTMjelsK918oAZ3xJ+LOXnEgYYVh+A9CQm2Qg==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-ui.surfaces.split-pane.layout': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.surfaces.split-pane.pane': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.surfaces.split-pane.splitter': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  /@teambit/base-ui.surfaces.split-pane.splitter@1.0.0(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-5/oGHEUOQQnQUi2911fLb/rdFLLDoMy1G4fQ4DNkqoHcahi1a26tCtKlV+7FAI1LsFdk0V+wRp6WY+kX+Qbsxw==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  /@teambit/base-ui.text.heading@1.0.1(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-P6N4Mx5YUuCnkVXwpG5UK2/5b56aXJCHq2LRiqambZM/lZbLX2qO+CNolRjYztRf2cXea6/ToUdjAn+BPcwXXA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
     dev: false
 
   /@teambit/base-ui.text.heading@1.0.4(react-dom@17.0.2)(react@17.0.2):
@@ -32814,19 +32863,8 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/base-ui.theme.fonts.book@1.0.2(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha1-TzaJASmrWjLeCze8rnRp8IZgxwA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/theme/fonts/book@1.0.2.tgz}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      core-js: 3.13.0
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
-  /@teambit/base-ui.utils.composer@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-2w+T+WdEJWxWbGcqRueoww08xeDrPyWxDnWFho4N7WsxKS6zaHp/u29b18KV34VDJV9hdHcrXzhUoaLXd8pFSA==}
+  /@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-cuXL6MNfP7XPJtJZUVUCj50JJpzF/+pS0RRlnWE1B/rNB9tKyu+QfdZQ+kmSAGwQMT1ZfTufo50Gow/suzZavw==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -32834,17 +32872,6 @@ packages:
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  /@teambit/base-ui.utils.composer@1.0.0(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-2w+T+WdEJWxWbGcqRueoww08xeDrPyWxDnWFho4N7WsxKS6zaHp/u29b18KV34VDJV9hdHcrXzhUoaLXd8pFSA==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      core-js: 3.13.0
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
     dev: false
 
   /@teambit/base-ui.utils.time-ago@1.0.1(react-dom@17.0.2)(react@17.0.2):
@@ -33170,42 +33197,26 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/code.ui.code-editor@0.0.8(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-ViM0fybBKYpvrFvRoTDwAN6UK8BxcJXKhBmPWo21JWS0s6S1kD1goqCF/mh86PqqZ9eZ8gXXvN1/iI/9blzCbg==}
+  /@teambit/code.ui.code-tab-page@0.0.631(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+    resolution: {integrity: sha512-g7vbGZU5Cqrxi+u7Muzm+PA6A91/+2N5iwUvxOxqie/m6Q/X9VPbEjcfcWIG+0ZpYJAaxMAqSi6rSVTFfSD24Q==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@monaco-editor/react': 4.4.6(monaco-editor@0.33.0)(react-dom@18.2.0)(react@18.2.0)
-      '@teambit/base-ui.theme.dark-theme': registry.npmjs.org/@teambit/base-ui.theme.dark-theme@1.0.2(react-dom@18.2.0)(react@18.2.0)
-      classnames: 2.2.6
-      core-js: 3.13.0
-      monaco-editor: 0.33.0
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
-  /@teambit/code.ui.code-tab-page@0.0.629(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2):
-    resolution: {integrity: sha512-BZ5/+5s6vuHXWcsuCiKVnPgoRz+URe6YHbOHwxIETcef2VndhbE0DC4dPW+4t375doNpZKrGmfaJ/ajbojdG1w==}
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/base-ui.surfaces.split-pane.hover-splitter': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter@1.0.0(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/base-ui.surfaces.split-pane.split-pane': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.split-pane@1.0.0(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/code.ui.code-tab-tree': 0.0.613(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
-      '@teambit/code.ui.code-view': 0.0.515(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/code.ui.hooks.use-code-params': 0.0.496(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+      '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/code.ui.code-tab-tree': 0.0.613(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/code.ui.code-view': 0.0.517(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/code.ui.hooks.use-code-params': 0.0.496(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/code.ui.queries.get-component-code': 0.0.502(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.utils.get-file-icon': 0.0.495(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component.ui.artifacts.artifacts-tree': 0.0.26(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/component.ui.artifacts.models.component-artifacts-model': 0.0.12(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component.ui.artifacts.queries.use-component-artifacts': 0.0.14(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tree': 0.0.15(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.label': registry.npmjs.org/@teambit/documenter.ui.label@4.0.3(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/documenter.ui.label': 4.0.3(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.buttons.collapser': 0.0.215(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.constants.z-indexes': 0.0.504(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.197(react-dom@17.0.2)(react@17.0.2)
@@ -33287,42 +33298,18 @@ packages:
       - react-router-dom
     dev: false
 
-  /@teambit/code.ui.code-tab-tree@0.0.613(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0):
-    resolution: {integrity: sha512-RGlxo60fPLCvbEIRpTWc9mRWJ0NeCPxwOaPtJBPNeyIwTGLAnqIJvu63mE0L2gBqDBFST1rAOGuZk/NbdU8oQQ==}
+  /@teambit/code.ui.code-view@0.0.517(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-xmO3RafN952DUWU3uBY8DuJmfk2rFZH2rKLFZIVh3qGK4t3a22Y4kX7TOU2VK2YJGB7qZ0c5n9C/N7CMZG0POw==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/code.ui.dependency-tree': 0.0.546(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@18.2.0)(react@18.2.0)
-      '@teambit/code.ui.queries.get-component-code': 0.0.502(@apollo/client@3.6.9)(react-dom@18.2.0)(react@18.2.0)
-      '@teambit/component.ui.artifacts.artifacts-tree': 0.0.26(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0)
-      '@teambit/design.ui.tree': 0.0.15(react-dom@18.2.0)(react@18.2.0)
-      '@teambit/ui-foundation.ui.tree.drawer': 0.0.517(react-dom@18.2.0)(react@18.2.0)
-      '@teambit/ui-foundation.ui.tree.file-tree': 0.0.522(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@18.2.0)(react@18.2.0)
-      '@teambit/ui-foundation.ui.tree.tree-node': 0.0.513(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@18.2.0)(react@18.2.0)
-      classnames: 2.2.6
-      core-js: 3.13.0
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    transitivePeerDependencies:
-      - '@apollo/client'
-      - '@testing-library/react'
-      - '@types/react'
-      - react-router-dom
-    dev: false
-
-  /@teambit/code.ui.code-view@0.0.515(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-NdG37111cY2dxvQUE09TDu0E+BmvL5LScF1pyLKnbAKDakqaJji3D5ZrhH9noEBesDMik+/9uNaovLBLCdwVSA==}
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/base-ui.constants.storage': registry.npmjs.org/@teambit/base-ui.constants.storage@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.constants.storage': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.queries.get-file-content': 0.0.504(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.code-snippet': 4.2.2(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.heading': registry.npmjs.org/@teambit/documenter.ui.heading@4.1.1(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/documenter.ui.heading': 4.1.1(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -33330,6 +33317,8 @@ packages:
       react-syntax-highlighter: 15.4.3(react@17.0.2)
     transitivePeerDependencies:
       - '@apollo/client'
+      - '@testing-library/react'
+      - '@types/react'
     dev: false
 
   /@teambit/code.ui.code-view@0.0.515(@apollo/client@3.6.9)(react-dom@18.2.0)(react@18.2.0):
@@ -39552,7 +39541,7 @@ packages:
     dev: false
 
   /@teambit/documenter.ui.code-snippet@4.2.2(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-dgCI6suKWJxi4A2jJFLa0UUESpQ=, tarball: https://node-registry.bit.cloud/tarballs/teambit.documenter/ui/code-snippet@4.2.2.tgz}
+    resolution: {integrity: sha1-dgCI6suKWJxi4A2jJFLa0UUESpQ=}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -39565,19 +39554,16 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
       react-syntax-highlighter: 13.5.3(react@17.0.2)
 
-  /@teambit/documenter.ui.code-snippet@4.2.2(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha1-dgCI6suKWJxi4A2jJFLa0UUESpQ=, tarball: https://node-registry.bit.cloud/tarballs/teambit.documenter/ui/code-snippet@4.2.2.tgz}
+  /@teambit/documenter.ui.code-snippet@4.2.4(react@17.0.2):
+    resolution: {integrity: sha1-ZwTK9abswAzeClUD1YSv3ay/IxI=}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/documenter.ui.copied-message': 4.1.6(react-dom@18.2.0)(react@18.2.0)
+      '@teambit/documenter.ui.copied-message': 4.1.8(react@17.0.2)
       classnames: 2.2.6
       copy-to-clipboard: 3.3.1
-      core-js: 3.13.0
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      react-syntax-highlighter: 13.5.3(react@18.2.0)
+      react: 17.0.2
+      react-syntax-highlighter: 13.5.3(react@17.0.2)
     dev: false
 
   /@teambit/documenter.ui.consumable-link@4.0.11(react-dom@17.0.2)(react@17.0.2):
@@ -39680,19 +39666,17 @@ packages:
       - react-dom
     dev: false
 
-  /@teambit/documenter.ui.copy-box@4.1.17(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-nviCx28ZPYtYBQxXq1dDMQl5GQ0PtKi4ghn0ERnlF0Od3iJFJHi4oU6IzeoY9WGRDr5Ib3CScdy7NHei1n0HRQ==}
+  /@teambit/documenter.ui.heading@4.1.1(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-VmHd/0lSMKfUuGllXbCnqZehQ0pcTgio8q9mcbsPs9S36bZW4w5BS9oywVSo47dzLOOV3S/C1gUIdy6P468miw==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.layout.grid-component': 1.0.2(react-dom@18.2.0)(react@18.2.0)
-      '@teambit/documenter.ui.copied-message': 4.1.8(react@18.2.0)
-      '@teambit/evangelist.elements.icon': 1.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@teambit/base-ui.text.heading': 1.0.1(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
-      copy-to-clipboard: 3.3.1
-      react: 18.2.0
-    transitivePeerDependencies:
-      - react-dom
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
     dev: false
 
   /@teambit/documenter.ui.heading@4.1.4(react-dom@17.0.2)(react@17.0.2):
@@ -39722,7 +39706,7 @@ packages:
     dev: false
 
   /@teambit/documenter.ui.heading@4.1.6(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-nCoruiI/7n5xcXd4GEMdtuU5nIU=, tarball: https://node-registry.bit.cloud/@teambit/documenter.ui.heading/-/@teambit-documenter.ui.heading-4.1.6.tgz}
+    resolution: {integrity: sha1-nCoruiI/7n5xcXd4GEMdtuU5nIU=}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -39803,16 +39787,16 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
 
-  /@teambit/documenter.ui.italic@4.0.7(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha1-udDO1kKFVhbtzPHibq1fT3cAjtg=, tarball: https://node-registry.bit.cloud/tarballs/teambit.documenter/ui/italic@4.0.7.tgz}
+  /@teambit/documenter.ui.label@4.0.3(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-5MgPgotrW7JBalA1y6iAMF9YQDyXLS5JGt24+spK0MYWsGPV+g79NirYzH5yl6k7fTehvWJ9zMS4pdT3a4lR9g==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
     dev: false
 
   /@teambit/documenter.ui.linked-heading@4.1.6(react-dom@17.0.2)(react@17.0.2):
@@ -44496,7 +44480,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.text.muted-text': registry.npmjs.org/@teambit/base-ui.text.muted-text@1.0.1(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.heading': registry.npmjs.org/@teambit/documenter.ui.heading@4.1.1(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/documenter.ui.heading': 4.1.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/scope.ui.scope-icon': 0.0.91(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
@@ -47749,6 +47733,12 @@ packages:
     resolution: {integrity: sha512-lnJAZfMEDxfvELeeT24w4rnUYwpzUzQAOTfJQbWYnLcx8AEfz+fXJDCbowIBqNK/Bi4D6j8ovT8Qsda2OtDApA==}
     dependencies:
       '@types/react': 17.0.70
+
+  /@types/react-syntax-highlighter@15.5.10:
+    resolution: {integrity: sha512-Vf8nNkGHnjwK37b2wDs92zJSAWS2Mb57NcYHgajCNssHeTNEixvjINnXJkKdY0V0/eLrYkPP1xDKvNmYIr4HIg==}
+    dependencies:
+      '@types/react': 17.0.70
+    dev: true
 
   /@types/react-tabs@2.3.2:
     resolution: {integrity: sha512-QfMelaJSdMcp+CenKhATp12XFFqqUcLXILgwpX3dgWfVYNZPtsLXZDDCRsVn+kwmBOWB+DFPKpQorxbUhnXINw==}
@@ -66333,8 +66323,8 @@ packages:
       refractor: 3.6.0
     dev: false
 
-  /react-syntax-highlighter@15.4.3(react@18.2.0):
-    resolution: {integrity: sha512-TnhGgZKXr5o8a63uYdRTzeb8ijJOgRGe0qjrE0eK/gajtdyqnSO6LqB3vW16hHB0cFierYSoy/AOJw8z1Dui8g==}
+  /react-syntax-highlighter@15.5.0(react@17.0.2):
+    resolution: {integrity: sha512-+zq2myprEnQmH5yw6Gqc8lD55QHnpKaU8TOcFeC/Lg/MQSs8UknEA0JC4nTZGFAXC2J2Hyj/ijJ7NlabyPi2gg==}
     peerDependencies:
       react: '>= 0.14.0'
     dependencies:
@@ -66342,7 +66332,7 @@ packages:
       highlight.js: 10.7.3
       lowlight: 1.20.0
       prismjs: 1.29.0
-      react: 18.2.0
+      react: 17.0.2
       refractor: 3.6.0
     dev: false
 
@@ -72871,7 +72861,7 @@ packages:
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-      react-syntax-highlighter: 15.4.3(react@17.0.2)
+      react-syntax-highlighter: 15.5.0(react@17.0.2)
     dev: false
 
   file:scopes/api-reference/renderers/schema-node-member-summary(react-dom@18.2.0)(react@18.2.0):
@@ -73579,7 +73569,7 @@ packages:
       '@teambit/base-ui.constants.storage': registry.npmjs.org/@teambit/base-ui.constants.storage@1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-compare-section': 0.0.5(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/code.ui.code-editor': 0.0.8(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/code.ui.code-tab-page': 0.0.629(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+      '@teambit/code.ui.code-tab-page': 0.0.631(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/code.ui.utils.get-file-icon': 0.0.495(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
       '@teambit/ui-foundation.ui.menu-widget-icon': 0.0.502(react-dom@17.0.2)(react@17.0.2)
@@ -74978,6 +74968,7 @@ packages:
       '@teambit/ui-foundation.ui.buttons.collapser': 0.0.215(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.constants.z-indexes': 0.0.504(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.197(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.menu-widget-icon': 0.0.502(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       graphql-tag: 2.12.1(graphql@15.8.0)
@@ -77384,6 +77375,7 @@ packages:
       fuse.js: 6.6.2
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
+      p-map: 4.0.0
       p-map-series: 2.1.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
