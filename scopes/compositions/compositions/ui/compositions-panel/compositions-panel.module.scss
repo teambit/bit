@@ -51,10 +51,17 @@
     }
   }
   .right {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
     opacity: 0;
     visibility: hidden;
     font-size: 13px;
     transition: visibility 200ms, opacity 100ms ease-in-out;
+  }
+  .codeLink {
+    cursor: pointer;
   }
 }
 
