@@ -48,7 +48,7 @@ export class LastMerged {
     let copyOfStagedConfig: string | undefined;
     if (!stagedConfig.isEmpty()) {
       copyOfStagedConfig = tempy.file();
-      await fs.outputFile(stagedConfig.filePath, copyOfStagedConfig);
+      await fs.copyFile(stagedConfig.filePath, copyOfStagedConfig);
     }
 
     return {
