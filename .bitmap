@@ -1859,19 +1859,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/testing/mock-workspace"
     },
-    "tests-results": {
-        "name": "tests-results",
-        "scope": "teambit.defender",
-        "version": "1.0.4",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/defender/tests-results",
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.4": {},
-            "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
-            }
-        }
-    },
     "time/time-format": {
         "name": "time/time-format",
         "scope": "teambit.toolbox",

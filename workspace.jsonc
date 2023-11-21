@@ -321,6 +321,7 @@
         "@teambit/scope.ui.scope-labels": "^0.0.505",
         "@teambit/scope.ui.scope-title": "^0.0.515",
         "@teambit/semantics.entities.semantic-schema": "^0.0.59",
+        "@teambit/tests-results": "^1.0.4",
         "@teambit/typescript.typescript-compiler": "2.0.1",
         "@teambit/ui-foundation.ui.buttons.collapser": "^0.0.215",
         "@teambit/ui-foundation.ui.constants.z-indexes": "^0.0.504",
@@ -641,7 +642,6 @@
         "env": "teambit.envs/env"
       }
     },
-
     // overrides for "@teambit/bit", the root package: (aka "teambit.harmony/bit")
     "scopes/harmony/bit": {
       "teambit.component/issues": {
