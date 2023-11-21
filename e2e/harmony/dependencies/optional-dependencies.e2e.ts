@@ -31,7 +31,7 @@ describe('optional dependencies', function () {
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     envId = `${helper.scopes.remote}/react-based-env`;
     helper.command.create('react', 'button', '-p button --env teambit.react/react');
-    helper.fs.prependFile('button/button.tsx', 'import React from "react";import isOdd from "is-odd";\n');
+    helper.fs.prependFile('button/button.tsx', 'import React from "react";import isOdd from "is-odd";\nisOdd(1);');
     helper.env.setCustomNewEnv(undefined, undefined, { policy: ENV_POLICY });
     helper.command.setEnv('button', envId);
     helper.command.install('--add-missing-deps');
