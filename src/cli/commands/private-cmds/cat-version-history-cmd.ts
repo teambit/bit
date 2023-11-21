@@ -52,7 +52,7 @@ export class CatVersionHistoryCmd implements LegacyCommand {
       const markIds = mark ? mark.split(',').map((node) => node.trim()) : undefined;
       const config: GraphConfig = { colorPerEdgeType };
       if (layout) config.layout = layout;
-      const visualDependencyGraph = await VisualDependencyGraph.loadFromClearGraph(graphHistory, config, markIds, true);
+      const visualDependencyGraph = await VisualDependencyGraph.loadFromClearGraph(graphHistory, config, markIds);
       const result = await visualDependencyGraph.image(graphPath);
       return `image created at ${result}`;
     }
