@@ -528,13 +528,7 @@
         "scope": "teambit.component",
         "version": "0.0.115",
         "mainFile": "index.ts",
-        "rootDir": "components/component-issues",
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.4": {},
-            "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
-            }
-        }
+        "rootDir": "components/component-issues"
     },
     "component-log": {
         "name": "component-log",
