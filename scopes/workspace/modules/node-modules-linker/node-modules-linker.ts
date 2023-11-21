@@ -191,6 +191,13 @@ export default class NodeModuleLinker {
     // indicate that this component exists locally and it is symlinked into the workspace. not a normal package.
     packageJson.packageJsonObject._bit_local = true;
     packageJson.packageJsonObject.source = component.mainFile.relative;
+    if (
+      packageJson.packageJsonObject.types &&
+      packageJson.packageJsonObject.exports &&
+      !packageJson.packageJsonObject.exports.types
+    ) {
+      packageJson.packageJsonObject.exports.types = packageJson.packageJsonObject.types;
+    }
 
     // packageJson.mergePropsFromExtensions(component);
     // TODO: we need to have an hook here to get the transformer from the pkg extension
