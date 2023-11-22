@@ -658,8 +658,8 @@ export default class Consumer {
     return ComponentIdList.fromArray(compact(componentIds));
   }
 
-  async writeBitMap() {
-    await this.backupBitMap();
+  async writeBitMap(reasonForChange?: string) {
+    await this.backupBitMap(reasonForChange);
     await this.bitMap.write();
   }
 
@@ -667,13 +667,16 @@ export default class Consumer {
     return path.join(this.scope.path, BITMAP_HISTORY_DIR_NAME);
   }
 
-  private async backupBitMap() {
+  private async backupBitMap(reasonForBitmapChange?: string) {
     if (!this.bitMap.hasChanged) return;
     try {
       const baseDir = this.getBitmapHistoryDir();
       await fs.ensureDir(baseDir);
-      const backupPath = path.join(baseDir, `.bitmap-${this.currentDateAndTimeToFileName()}`);
+      const fileId = this.currentDateAndTimeToFileName();
+      const backupPath = path.join(baseDir, `.bitmap-${fileId}`);
       await fs.copyFile(this.bitMap.mapPath, backupPath);
+      const metadataFile = path.join(this.scope.path, 'bitmap-history-metadata.txt');
+      await fs.appendFile(metadataFile, `${fileId} ${reasonForBitmapChange || ''}\n`);
     } catch (err: any) {
       if (err.code === 'ENOENT') return; // no such file or directory, meaning the .bitmap file doesn't exist (yet)
       // it's a nice to have feature. don't kill the process if something goes wrong.
@@ -692,9 +695,9 @@ export default class Consumer {
     return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`;
   }
 
-  async onDestroy() {
+  async onDestroy(reasonForBitmapChange?: string) {
     await this.cleanTmpFolder();
     await this.scope.scopeJson.writeIfChanged(this.scope.path);
-    await this.writeBitMap();
+    await this.writeBitMap(reasonForBitmapChange);
   }
 }

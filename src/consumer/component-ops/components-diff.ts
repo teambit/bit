@@ -8,7 +8,7 @@ import { Scope } from '../../scope';
 import { ModelComponent, Version } from '../../scope/models';
 import diffFiles from '../../utils/diff-files';
 import { saveIntoOsTmp } from '../../utils/fs/save-into-os-tmp';
-import { PathLinux, PathOsBased } from '../../utils/path';
+import { PathOsBased } from '../../utils/path';
 import Component from '../component/consumer-component';
 import { SourceFile } from '../component/sources';
 import { diffBetweenComponentsObjects } from './components-object-diff';
@@ -173,7 +173,7 @@ async function updateFieldsDiff(
   diffResult: DiffResults,
   diffOpts: DiffOptions
 ) {
-  diffResult.fieldsDiff = diffBetweenComponentsObjects(componentA, componentB, diffOpts);
+  diffResult.fieldsDiff = await diffBetweenComponentsObjects(componentA, componentB, diffOpts);
   diffResult.hasDiff = hasDiff(diffResult);
 }
 
@@ -181,12 +181,12 @@ function hasDiff(diffResult: DiffResults): boolean {
   return !!((diffResult.filesDiff && diffResult.filesDiff.find((file) => file.diffOutput)) || diffResult.fieldsDiff);
 }
 
-async function getOneFileDiff(
+export async function getOneFileDiff(
   filePathA: PathOsBased,
   filePathB: PathOsBased,
   fileALabel: string,
   fileBLabel: string,
-  fileName: PathLinux,
+  fileOrFieldName: string,
   color = true
 ): Promise<string> {
   const fileDiff = await diffFiles(filePathA, filePathB, color);
@@ -201,8 +201,8 @@ async function getOneFileDiff(
   const regExpB = /\+\+\+ ["]?b.*\n/; // exact "+++", follow by b or "b (for Windows) then \n
   return fileDiff
     .slice(diffStart)
-    .replace(regExpA, `--- ${fileName} (${fileALabel})\n`)
-    .replace(regExpB, `+++ ${fileName} (${fileBLabel})\n`);
+    .replace(regExpA, `--- ${fileOrFieldName} (${fileALabel})\n`)
+    .replace(regExpB, `+++ ${fileOrFieldName} (${fileBLabel})\n`);
 }
 
 export async function getFilesDiff(
@@ -219,7 +219,7 @@ export async function getFilesDiff(
   const fileALabel = filesAVersion === filesBVersion ? `${filesAVersion} original` : filesAVersion;
   const fileBLabel = filesAVersion === filesBVersion ? `${filesBVersion} modified` : filesBVersion;
   const filesDiffP = allPaths.map(async (relativePath) => {
-    const getFileData = async (files): Promise<{ path: PathOsBased; content: string }> => {
+    const getFileData = async (files: SourceFile[]): Promise<{ path: PathOsBased; content: string }> => {
       const file = files.find((f) => f[fileNameAttribute] === relativePath);
       const content = file ? file.contents : '';
       const path = await saveIntoOsTmp(content);

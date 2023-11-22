@@ -11,7 +11,7 @@ type ComponentConfig = { id: ComponentID; config: Config };
 
 export class StagedConfig {
   hasChanged = false;
-  constructor(private filePath: string, private componentsConfig: ComponentConfig[], private logger: Logger) {}
+  constructor(readonly filePath: string, private componentsConfig: ComponentConfig[], private logger: Logger) {}
 
   static async load(scopePath: string, logger: Logger, laneId?: LaneId): Promise<StagedConfig> {
     const lanePath = laneId ? path.join(laneId.scope, laneId.name) : DEFAULT_LANE;
@@ -45,6 +45,16 @@ export class StagedConfig {
 
   getAll() {
     return this.componentsConfig;
+  }
+
+  isEmpty() {
+    return this.componentsConfig.length === 0;
+  }
+
+  async deleteFile() {
+    this.logger.debug(`staged-config, deleting ${this.filePath}`);
+    await fs.remove(this.filePath);
+    this.componentsConfig = [];
   }
 
   addComponentConfig(id: ComponentID, config: Config) {

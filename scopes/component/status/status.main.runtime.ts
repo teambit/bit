@@ -152,7 +152,7 @@ export class StatusMain {
       return objectsWithId.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
     };
 
-    await consumer.onDestroy();
+    await consumer.onDestroy('status');
     return {
       newComponents: await convertBitIdToComponentIdsAndSort(newComponents.map((c) => c.id)),
       modifiedComponents: await convertBitIdToComponentIdsAndSort(modifiedComponents.map((c) => c.id)),

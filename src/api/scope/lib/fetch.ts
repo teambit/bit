@@ -1,4 +1,5 @@
 import { Readable } from 'stream';
+import Queue from 'p-queue';
 import { ComponentIdList } from '@teambit/component-id';
 import semver from 'semver';
 import { LaneId } from '@teambit/lane-id';
@@ -68,7 +69,27 @@ export const CURRENT_FETCH_SCHEMA = '0.0.3';
 const HooksManagerInstance = HooksManager.getInstance();
 
 const openConnections: number[] = [];
+const openConnectionsMetadata: { [connectionId: string]: Record<string, any> } = {};
 let fetchCounter = 0;
+
+// queues are needed because some fetch-request are very slow, for example, when includeParents is true.
+// we don't want multiple of slow requests to block other requests. so we created three queues with different
+// concurrency limits and different timeouts.
+const fastQueue = new Queue({ concurrency: 50, timeout: 1000 * 60 * 3, throwOnTimeout: true });
+const depsQueue = new Queue({ concurrency: 10, timeout: 1000 * 60 * 3, throwOnTimeout: true });
+const parentsQueue = new Queue({ concurrency: 3, timeout: 1000 * 60 * 10, throwOnTimeout: true });
+
+parentsQueue.on('add', () => {
+  logger.debug(
+    `scope.fetch parentsQueue added task for connection [${fetchCounter}], queue pending: ${parentsQueue.size}`
+  );
+});
+depsQueue.on('add', () => {
+  logger.debug(`scope.fetch depsQueue added task for connection [${fetchCounter}], queue pending: ${depsQueue.size}`);
+});
+fastQueue.on('add', () => {
+  logger.debug(`scope.fetch fastQueue added task for connection [${fetchCounter}], queue pending: ${fastQueue.size}`);
+});
 
 export default async function fetch(
   path: string,
@@ -88,8 +109,21 @@ path ${path}.
 open connections: [${openConnections.join(', ')}]. (total ${openConnections.length}).
 memory usage: ${getMemoryUsageInMB()} MB.
 total ids: ${ids.length}.${logIds}
+queues: fastQueue ${fastQueue.size} pending, depsQueue ${depsQueue.size} pending, parentsQueue ${
+      parentsQueue.size
+    } pending.
 fetchOptions`,
     fetchOptions
+  );
+  const dateNow = new Date().toISOString().split('.')[0];
+  openConnectionsMetadata[currentFetch] = {
+    started: dateNow,
+    ids,
+    fetchOptions,
+    headers,
+  };
+  logger.trace(
+    `DEBUG-CONNECTIONS: Date now: ${dateNow}. Connections:\n${JSON.stringify(openConnectionsMetadata, null, 2)}`
   );
 
   if (!fetchOptions.type) fetchOptions.type = 'component'; // for backward compatibility
@@ -115,6 +149,7 @@ fetchOptions`,
   const finishLog = (err?: Error) => {
     const duration = new Date().getTime() - startTime;
     openConnections.splice(openConnections.indexOf(currentFetch), 1);
+    delete openConnectionsMetadata[currentFetch];
     const successOrErr = `${err ? 'with errors' : 'successfully'}`;
     logger.debug(`scope.fetch [${currentFetch}] completed ${successOrErr}.
 open connections: [${openConnections.join(', ')}]. (total ${openConnections.length}).
@@ -156,6 +191,10 @@ async function fetchByType(
 ): Promise<void> {
   const shouldFetchDependencies = () => {
     return fetchOptions.includeDependencies;
+  };
+  const catchTimeoutErr = (err: Error) => {
+    const error = err.name === 'TimeoutError' ? new Error(`fetch timed out`) : err;
+    objectsReadableGenerator.readable.destroy(error);
   };
   switch (fetchOptions.type) {
     case 'component': {
@@ -239,8 +278,16 @@ async function fetchByType(
         }));
       };
       const componentsWithOptions = await getComponentsWithOptions();
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      objectsReadableGenerator.pushObjectsToReadable(componentsWithOptions);
+      const getQueue = () => {
+        if (componentsWithOptions.length === 1) return fastQueue;
+        if (collectParents) return parentsQueue;
+        if (shouldFetchDependencies()) return depsQueue;
+        return fastQueue;
+      };
+      const queue = getQueue();
+      queue
+        .add(async () => objectsReadableGenerator.pushObjectsToReadable(componentsWithOptions))
+        .catch(catchTimeoutErr);
       break;
     }
     case 'component-delta': {
@@ -273,8 +320,11 @@ async function fetchByType(
           collectParentsUntil: hashToStop ? Ref.from(hashToStop) : null,
         };
       });
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      objectsReadableGenerator.pushObjectsToReadable(componentsWithOptions);
+      const isSlow = componentsWithOptions.length > 1 && (shouldCollectParents() || shouldFetchDependencies());
+      const queue = isSlow ? parentsQueue : fastQueue;
+      queue
+        .add(async () => objectsReadableGenerator.pushObjectsToReadable(componentsWithOptions))
+        .catch(catchTimeoutErr);
       break;
     }
     case 'lane': {

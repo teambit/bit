@@ -146,7 +146,7 @@ export class MergingMain {
         skipDependencyInstallation
       );
     }
-    await consumer.onDestroy();
+    await consumer.onDestroy('merge');
     return mergeResults;
   }
 
@@ -269,7 +269,7 @@ export class MergingMain {
 
     await consumer.scope.objects.unmergedComponents.write();
 
-    await consumer.writeBitMap();
+    await consumer.writeBitMap(`merge ${laneId.toString()}`);
 
     if (componentIdsToRemove.length) {
       const compBitIdsToRemove = ComponentIdList.fromArray(componentIdsToRemove);

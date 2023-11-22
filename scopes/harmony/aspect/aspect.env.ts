@@ -50,7 +50,7 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
    * returns a component tester.
    */
   getTester(jestConfigPath: string, jestModulePath?: string): Tester {
-    const config = jestConfigPath || require.resolve('@teambit/node/jest/jest.config');
+    const config = jestConfigPath || require.resolve('./jest/jest.config');
     return this.reactEnv.getCjsJestTester(config, jestModulePath);
   }
 
@@ -106,7 +106,7 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
         'react-dom': '-',
         'core-js': '^3.0.0',
         // For aspects the babel runtime should be a runtime dep not only dev as they are compiled by babel
-        '@babel/runtime': '7.23.2',
+        '@babel/runtime': '7.20.0',
       },
       // TODO: add this only if using ts
       devDependencies: {

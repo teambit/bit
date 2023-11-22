@@ -740,6 +740,36 @@ describe('merge lanes', function () {
       });
     });
   });
+  describe('multiple scopes when a component in the origin is different than on the lane and the lane is forked', () => {
+    let originRemote: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      originRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.command.createLane('lane-a');
+      helper.bitJsonc.addDefaultScope(originRemote);
+      helper.fixtures.populateComponents(1, false, 'on-lane');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.command.createLane('lane-b');
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.mergeLane('lane-a', '-x');
+    });
+    it('should not throw during bit-import because it tries to import comp1 from the original scope instead of the lane scope', () => {
+      expect(() => helper.command.import()).to.not.throw();
+    });
+  });
   describe('merge unrelated between two lanes with --resolve-unrelated', () => {
     let headOnLaneA: string;
     let headOnLaneB: string;

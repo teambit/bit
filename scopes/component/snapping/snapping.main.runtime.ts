@@ -229,7 +229,7 @@ export class SnappingMain {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       R.concat(tagResults.taggedComponents, tagResults.autoTaggedResults, tagResults.newComponents).length
     );
-    await consumer.onDestroy();
+    await consumer.onDestroy(`tag (message: ${message || 'N/A'})`);
     await stagedConfig?.write();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return tagResults;
@@ -533,7 +533,7 @@ if you're willing to lose the history from the head to the specified version, us
 
     const currentLane = consumer.getCurrentLaneId();
     snapResults.laneName = currentLane.isDefault() ? null : currentLane.toString();
-    await consumer.onDestroy();
+    await consumer.onDestroy(`snap (message: ${message || 'N/A'})`);
     await stagedConfig?.write();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return snapResults;
@@ -624,7 +624,7 @@ there are matching among unmodified components thought. consider using --unmodif
       consumer.bitMap.markAsChanged();
     }
 
-    await consumer.onDestroy();
+    await consumer.onDestroy('reset');
     return { results, isSoftUntag: !isRealUntag };
   }
 
@@ -633,7 +633,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const hashes = notExported.map((id) => BitObject.makeHash(id.fullName));
     await this.scope.legacyScope.objects.deleteObjectsFromFS(hashes.map((h) => Ref.from(h)));
     notExported.map((id) => this.workspace.consumer.bitMap.updateComponentId(id.changeVersion(undefined)));
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`reset (never-exported)`);
     return notExported;
   }
 

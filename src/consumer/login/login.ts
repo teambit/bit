@@ -65,6 +65,7 @@ export default function loginToCloud(
         });
         closeConnection();
         resolve({
+          // @ts-ignore TODO: need to check why this start breaking and fix it
           username,
         });
       } catch (err: any) {
