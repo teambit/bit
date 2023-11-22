@@ -611,7 +611,6 @@ export class MergingMain {
       components: [legacyComponent],
       skipDependencyInstallation: true,
       writeConfig: false, // @todo: should write if config exists before, needs to figure out how to do it.
-      skipUpdatingBitMap: true, // .bitmap will be written later. no need to write it for each component.
     };
     await this.componentWriter.writeMany(manyComponentsWriterOpts);
 
