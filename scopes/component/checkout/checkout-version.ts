@@ -51,7 +51,7 @@ export type ComponentStatus = ComponentStatusBase & {
 export type ApplyVersionWithComps = {
   applyVersionResult: ApplyVersionResult;
   component?: ConsumerComponent;
-  shouldWrite?: boolean;
+  legacyCompToWrite?: ConsumerComponent;
 };
 
 /**

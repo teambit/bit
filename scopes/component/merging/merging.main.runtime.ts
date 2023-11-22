@@ -533,7 +533,7 @@ export class MergingMain {
       }
     );
 
-    const compsToWrite = compact(componentsResults.filter((c) => c.shouldWrite).map((c) => c.component));
+    const compsToWrite = compact(componentsResults.map((c) => c.legacyCompToWrite));
 
     const manyComponentsWriterOpts = {
       consumer: this.workspace.consumer,
@@ -649,7 +649,7 @@ export class MergingMain {
         // must be "theirs"
         const results = handleResolveUnrelated();
         // @ts-ignore
-        results.shouldWrite = true;
+        results.legacyCompToWrite = legacyComponent;
         return results;
       }
       localLane.addComponent({ id, head: remoteHead });
@@ -661,7 +661,11 @@ export class MergingMain {
       consumer.scope.objects.add(modelComponent);
     }
 
-    return { applyVersionResult: { id, filesStatus }, component: currentComponent || undefined, shouldWrite: true };
+    return {
+      applyVersionResult: { id, filesStatus },
+      component: currentComponent || undefined,
+      legacyCompToWrite: legacyComponent,
+    };
   }
 
   private async abortMerge(values: string[]): Promise<ApplyVersionResults> {
