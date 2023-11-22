@@ -1271,9 +1271,6 @@ importers:
       babel-preset-jest:
         specifier: 27.5.1
         version: 27.5.1(@babel/core@7.19.6)
-      babel-preset-react-app:
-        specifier: 10.0.0
-        version: 10.0.0
       bluebird:
         specifier: 3.7.2
         version: 3.7.2
@@ -17328,9 +17325,6 @@ importers:
       babel-preset-jest:
         specifier: 27.5.1
         version: 27.5.1(@babel/core@7.19.6)
-      babel-preset-react-app:
-        specifier: ^10.0.0
-        version: 10.0.0
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -17554,9 +17548,6 @@ importers:
       babel-loader:
         specifier: 9.1.2
         version: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
-      babel-preset-react-app:
-        specifier: ^10.0.0
-        version: 10.0.0
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -19424,9 +19415,6 @@ importers:
       babel-plugin-named-asset-import:
         specifier: 0.3.7
         version: 0.3.7(@babel/core@7.19.6)
-      babel-preset-react-app:
-        specifier: 10.0.0
-        version: 10.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -38791,29 +38779,6 @@ packages:
       '@babel/core': 7.19.6
       babel-plugin-jest-hoist: 27.5.1
       babel-preset-current-node-syntax: 1.0.1(@babel/core@7.19.6)
-    dev: false
-
-  /babel-preset-react-app@10.0.0:
-    resolution: {integrity: sha512-itL2z8v16khpuKutx5IH8UdCdSTuzrOhRFTEdIhveZ2i1iBKDrVE0ATa4sFVy+02GLucZNVBWtoarXBy0Msdpg==}
-    dependencies:
-      '@babel/core': 7.12.3
-      '@babel/plugin-proposal-class-properties': 7.12.1(@babel/core@7.12.3)
-      '@babel/plugin-proposal-decorators': 7.12.1(@babel/core@7.12.3)
-      '@babel/plugin-proposal-nullish-coalescing-operator': 7.12.1(@babel/core@7.12.3)
-      '@babel/plugin-proposal-numeric-separator': 7.12.1(@babel/core@7.12.3)
-      '@babel/plugin-proposal-optional-chaining': 7.12.1(@babel/core@7.12.3)
-      '@babel/plugin-proposal-private-property-in-object': 7.21.11(@babel/core@7.12.3)
-      '@babel/plugin-transform-flow-strip-types': 7.12.1(@babel/core@7.12.3)
-      '@babel/plugin-transform-react-display-name': 7.12.1(@babel/core@7.12.3)
-      '@babel/plugin-transform-runtime': 7.12.1(@babel/core@7.12.3)
-      '@babel/preset-env': 7.12.1(@babel/core@7.12.3)
-      '@babel/preset-react': 7.12.1(@babel/core@7.12.3)
-      '@babel/preset-typescript': 7.12.1(@babel/core@7.12.3)
-      '@babel/runtime': 7.12.1
-      babel-plugin-macros: 2.8.0
-      babel-plugin-transform-react-remove-prop-types: 0.4.24
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
   /babel-runtime@6.26.0:
@@ -60302,7 +60267,6 @@ packages:
       babel-plugin-named-asset-import: 0.3.7(@babel/core@7.19.6)
       babel-plugin-transform-typescript-metadata: 0.3.1(@babel/core@7.19.6)
       babel-preset-jest: 27.5.1(@babel/core@7.19.6)
-      babel-preset-react-app: 10.0.0
       camelcase: 6.2.0
       chalk: 2.4.2
       core-js: 3.13.0
@@ -60407,7 +60371,6 @@ packages:
       '@teambit/mdx.modules.mdx-loader': 1.0.14(@babel/core@7.19.6)(esbuild@0.14.29)
       '@teambit/mdx.ui.mdx-scope-context': 1.0.5(react-dom@17.0.2)(react@17.0.2)
       babel-loader: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
-      babel-preset-react-app: 10.0.0
       core-js: 3.13.0
       css-loader: 6.2.0(webpack@5.84.1)
       css-minimizer-webpack-plugin: 3.0.2(webpack@5.84.1)
@@ -61147,7 +61110,6 @@ packages:
       '@teambit/ui-foundation.ui.hooks.use-user-agent': 0.0.197(react-dom@17.0.2)(react@17.0.2)
       babel-loader: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
       babel-plugin-named-asset-import: 0.3.7(@babel/core@7.19.6)
-      babel-preset-react-app: 10.0.0
       chalk: 2.4.2
       core-js: 3.13.0
       css-loader: 5.2.0(webpack@5.84.1)
