@@ -1,3 +1,4 @@
+import { isObject } from 'lodash';
 import mapSeries from 'p-map-series';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import { parseScope } from '@teambit/legacy/dist/utils/bit/parse-scope';
@@ -35,12 +36,25 @@ export class PackageJsonTransformer {
       scopeId,
       owner,
     };
+    // TODO: Consider calling the replacePlaceHoldersRecursive instead
     replacePlaceHolders(newPackageJsonObject, contextForReplace);
     if (newPackageJsonObject.exports && typeof newPackageJsonObject.exports === 'object') {
-      replacePlaceHolders(newPackageJsonObject.exports, contextForReplace);
+      replacePlaceHoldersRecursive(newPackageJsonObject.exports, contextForReplace);
     }
     packageJson.mergePackageJsonObject(newPackageJsonObject);
   }
+}
+
+function replacePlaceHoldersRecursive(obj: Record<string, string>, contextForReplace): void {
+  Object.keys(obj).forEach((key) => {
+    let value = obj[key];
+    if (typeof value === 'string') {
+      value = replacePlaceHolderForPackageValue(contextForReplace, obj[key]);
+      obj[key] = value;
+    } else if (isObject(value)) {
+      replacePlaceHoldersRecursive(value, contextForReplace);
+    }
+  }, {});
 }
 
 function replacePlaceHolders(obj: Record<string, string>, contextForReplace): void {
