@@ -101,6 +101,20 @@ describe('bit rename command', function () {
       expect(list).to.have.lengthOf(1);
     });
   });
+  describe('rename a new component when the scope is different than the defaultScope', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.setScope('different-scope', 'comp1');
+      // previously it was errored with "error: component "different-scope/comp1" was not found on your local workspace".
+      helper.command.rename('comp1', 'comp2');
+    });
+    it('should rename successfully', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap).to.not.have.property('comp1');
+      expect(bitmap).to.have.property('comp2');
+    });
+  });
   describe('rename a new component scope-name', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
