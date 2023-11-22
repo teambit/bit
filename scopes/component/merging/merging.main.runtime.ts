@@ -234,26 +234,8 @@ export class MergingMain {
       .map((c) => c.id.changeVersion(undefined));
 
     const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.unchangedMessage);
-    // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
-    // which can be an issue when some components are also dependencies of others
-    const componentsResults = await mapSeries(
-      succeededComponents,
-      async ({ currentComponent, id, mergeResults, resolvedUnrelated, configMergeResult }) => {
-        const modelComponent = await consumer.scope.getModelComponent(id);
-        const updatedLaneId = laneId.isDefault() ? LaneId.from(laneId.name, id.scope as string) : laneId;
-        return this.applyVersion({
-          currentComponent,
-          id,
-          mergeResults,
-          mergeStrategy,
-          remoteHead: modelComponent.getRef(id.version as string) as Ref,
-          laneId: updatedLaneId,
-          localLane,
-          resolvedUnrelated,
-          configMergeResult,
-        });
-      }
-    );
+
+    const componentsResults = await this.applyVersionMultiple(succeededComponents, laneId, mergeStrategy, localLane);
 
     const allConfigMerge = compact(succeededComponents.map((c) => c.configMergeResult));
 
@@ -524,6 +506,46 @@ export class MergingMain {
     return mergeStatusProvider.getStatus(bitIds);
   }
 
+  private async applyVersionMultiple(
+    succeededComponents: ComponentMergeStatus[],
+    laneId: LaneId,
+    mergeStrategy: MergeStrategy,
+    localLane: Lane | null
+  ): Promise<ApplyVersionWithComps[]> {
+    // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
+    // which can be an issue when some components are also dependencies of others
+    const componentsResults = await mapSeries(
+      succeededComponents,
+      async ({ currentComponent, id, mergeResults, resolvedUnrelated, configMergeResult }) => {
+        const modelComponent = await this.workspace.consumer.scope.getModelComponent(id);
+        const updatedLaneId = laneId.isDefault() ? LaneId.from(laneId.name, id.scope as string) : laneId;
+        return this.applyVersion({
+          currentComponent,
+          id,
+          mergeResults,
+          mergeStrategy,
+          remoteHead: modelComponent.getRef(id.version as string) as Ref,
+          laneId: updatedLaneId,
+          localLane,
+          resolvedUnrelated,
+          configMergeResult,
+        });
+      }
+    );
+
+    const compsToWrite = compact(componentsResults.filter((c) => c.shouldWrite).map((c) => c.component));
+
+    const manyComponentsWriterOpts = {
+      consumer: this.workspace.consumer,
+      components: compsToWrite,
+      skipDependencyInstallation: true,
+      writeConfig: false, // @todo: should write if config exists before, needs to figure out how to do it.
+    };
+    await this.componentWriter.writeMany(manyComponentsWriterOpts);
+
+    return componentsResults;
+  }
+
   private async applyVersion({
     currentComponent,
     id,
@@ -606,18 +628,7 @@ export class MergingMain {
 
     await removeFilesIfNeeded(filesStatus, currentComponent || undefined);
 
-    const manyComponentsWriterOpts = {
-      consumer,
-      components: [legacyComponent],
-      skipDependencyInstallation: true,
-      writeConfig: false, // @todo: should write if config exists before, needs to figure out how to do it.
-    };
-    await this.componentWriter.writeMany(manyComponentsWriterOpts);
-
     if (configMergeResult) {
-      if (!legacyComponent.writtenPath) {
-        throw new Error(`component.writtenPath is missing for ${id.toString()}`);
-      }
       const successfullyMergedConfig = configMergeResult.getSuccessfullyMergedConfig();
       if (successfullyMergedConfig) {
         unmergedComponent.mergedConfig = successfullyMergedConfig;
@@ -636,7 +647,10 @@ export class MergingMain {
     } else if (localLane) {
       if (resolvedUnrelated) {
         // must be "theirs"
-        return handleResolveUnrelated();
+        const results = handleResolveUnrelated();
+        // @ts-ignore
+        results.shouldWrite = true;
+        return results;
       }
       localLane.addComponent({ id, head: remoteHead });
     } else {
@@ -647,7 +661,7 @@ export class MergingMain {
       consumer.scope.objects.add(modelComponent);
     }
 
-    return { applyVersionResult: { id, filesStatus }, component: currentComponent || undefined };
+    return { applyVersionResult: { id, filesStatus }, component: currentComponent || undefined, shouldWrite: true };
   }
 
   private async abortMerge(values: string[]): Promise<ApplyVersionResults> {

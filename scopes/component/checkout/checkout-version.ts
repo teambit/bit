@@ -48,7 +48,11 @@ export type ComponentStatus = ComponentStatusBase & {
   mergeResults?: MergeResultsThreeWay | null | undefined;
 };
 
-export type ApplyVersionWithComps = { applyVersionResult: ApplyVersionResult; component?: ConsumerComponent };
+export type ApplyVersionWithComps = {
+  applyVersionResult: ApplyVersionResult;
+  component?: ConsumerComponent;
+  shouldWrite?: boolean;
+};
 
 /**
  * 1) when the files are modified with conflicts and the strategy is "ours", leave the FS as is
