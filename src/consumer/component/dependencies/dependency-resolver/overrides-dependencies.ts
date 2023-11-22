@@ -1,4 +1,3 @@
-import minimatch from 'minimatch';
 import path from 'path';
 import _ from 'lodash';
 import { ComponentID } from '@teambit/component-id';
@@ -34,20 +33,6 @@ export default class OverridesDependencies {
     this.manuallyRemovedDependencies = {};
     this.manuallyAddedDependencies = {};
     this.missingPackageDependencies = [];
-  }
-
-  // @todo: remove. it's not supported anymore
-  shouldIgnoreFile(file: string, fileType: FileType): boolean {
-    const shouldIgnoreByGlobMatch = (patterns: string[]) => {
-      return patterns.some((pattern) => minimatch(file, pattern));
-    };
-    const field = fileType.isTestFile ? 'devDependencies' : 'dependencies';
-    const ignoreField = this.component.overrides.getIgnoredFiles(field);
-    const ignore = shouldIgnoreByGlobMatch(ignoreField);
-    if (ignore) {
-      this._addManuallyRemovedDep(field, file);
-    }
-    return ignore;
   }
 
   shouldIgnorePackage(packageName: string, fileType: FileType): boolean {
