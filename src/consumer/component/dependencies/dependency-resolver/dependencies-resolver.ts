@@ -258,9 +258,6 @@ export default class DependencyResolver {
         isTestFile: testsFiles.includes(file),
       };
       this.throwForNonExistFile(file);
-      if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {
-        return;
-      }
       this.processCoreAspects(file);
       this.processMissing(file, fileType);
       this.processErrors(file);
@@ -468,7 +465,6 @@ export default class DependencyResolver {
     const allDepsFiles = this.tree[originFile].files;
     if (!allDepsFiles || R.isEmpty(allDepsFiles)) return;
     allDepsFiles.forEach((depFile: FileObject) => {
-      if (!nested && this.overridesDependencies.shouldIgnoreFile(depFile.file, fileType)) return;
       if (depFile.isLink) this.processLinkFile(originFile, depFile, fileType);
       else {
         const isDepFileUntracked = this.processOneDepFile(
