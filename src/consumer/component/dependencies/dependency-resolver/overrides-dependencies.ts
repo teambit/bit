@@ -36,6 +36,7 @@ export default class OverridesDependencies {
     this.missingPackageDependencies = [];
   }
 
+  // @todo: remove. it's not supported anymore
   shouldIgnoreFile(file: string, fileType: FileType): boolean {
     const shouldIgnoreByGlobMatch = (patterns: string[]) => {
       return patterns.some((pattern) => minimatch(file, pattern));
