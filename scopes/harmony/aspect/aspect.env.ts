@@ -69,8 +69,11 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
     return {
       ...this.reactEnv.getCjsPackageJsonProps(),
       exports: {
-        import: './dist/esm.mjs',
-        require: './dist/{main}.js'
+        node: {
+          import: './dist/esm.mjs',
+          require: './dist/index.js'
+        },
+        default: './dist/index.js',
       }
     };
   }
