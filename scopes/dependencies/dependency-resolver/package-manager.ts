@@ -168,5 +168,5 @@ export interface PackageManager {
    */
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string>;
 
-  findUsages?(depName: string, opts: { lockfileDir: string }): Promise<string>;
+  findUsages?(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string>;
 }

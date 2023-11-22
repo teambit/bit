@@ -53,6 +53,7 @@ export const componentOverviewFields = gql`
     compositions {
       identifier
       displayName
+      filepath
     }
   }
   ${componentIdFields}

@@ -35,15 +35,20 @@ export class PackageJsonTransformer {
       scopeId,
       owner,
     };
-
-    Object.keys(newPackageJsonObject).forEach((key) => {
-      let value = newPackageJsonObject[key];
-      if (typeof value === 'string') {
-        value = replacePlaceHolderForPackageValue(contextForReplace, newPackageJsonObject[key]);
-      }
-      newPackageJsonObject[key] = value;
-    }, {});
-
+    replacePlaceHolders(newPackageJsonObject, contextForReplace);
+    if (newPackageJsonObject.exports && typeof newPackageJsonObject.exports === 'object') {
+      replacePlaceHolders(newPackageJsonObject.exports, contextForReplace);
+    }
     packageJson.mergePackageJsonObject(newPackageJsonObject);
   }
+}
+
+function replacePlaceHolders(obj: Record<string, string>, contextForReplace): void {
+  Object.keys(obj).forEach((key) => {
+    let value = obj[key];
+    if (typeof value === 'string') {
+      value = replacePlaceHolderForPackageValue(contextForReplace, obj[key]);
+    }
+    obj[key] = value;
+  }, {});
 }
