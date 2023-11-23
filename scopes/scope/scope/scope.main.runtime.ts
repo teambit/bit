@@ -831,7 +831,7 @@ export class ScopeMain implements ComponentFactory {
     pattern: string,
     ids: ComponentID[],
     throwForNoMatch = true,
-    filterByStateFunc?: (state: string, poolIds: ComponentID[]) => Promise<ComponentID[]>
+    filterByStateFunc?: (state: any, poolIds: ComponentID[]) => Promise<ComponentID[]>
   ) {
     const patterns = pattern
       .split(',')

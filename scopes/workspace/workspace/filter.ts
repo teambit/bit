@@ -18,6 +18,10 @@ export type StatesFilter = typeof statesFilter[number];
 export class Filter {
   constructor(private workspace: Workspace) {}
 
+  async by(criteria: StatesFilter | string, ids: ComponentID[]): Promise<ComponentID[]> {
+    return criteria.includes(':') ? this.byMultiParamState(criteria, ids) : this.byState(criteria as StatesFilter, ids);
+  }
+
   async byState(state: StatesFilter, ids: ComponentID[]): Promise<ComponentID[]> {
     const statePerMethod = {
       new: this.byNew,
@@ -32,6 +36,29 @@ export class Filter {
       throw new Error(`state ${state} is not recognized, possible values: ${statesFilter.join(', ')}`);
     }
     return statePerMethod[state].bind(this)(ids);
+  }
+
+  async byMultiParamState(state: string, ids: ComponentID[]): Promise<ComponentID[]> {
+    const stateSplit = state.split(':');
+    if (stateSplit.length < 2) {
+      throw new Error(`byMultiParamState expect the state to have at least one param after the colon, got ${state}`);
+    }
+    const [stateName, ...stateParams] = stateSplit;
+    if (stateName === 'env') {
+      return this.byEnv(stateParams[0], ids);
+    }
+    throw new Error(`byMultiParamState expect the state to be one of the following: ['env'], got ${stateName}`);
+  }
+
+  async byEnv(env: string, withinIds?: ComponentID[]): Promise<ComponentID[]> {
+    const ids = withinIds || (await this.workspace.listIds());
+    const comps = await this.workspace.getMany(ids);
+    const compsUsingEnv = comps.filter((c) => {
+      const envId = this.workspace.envs.getEnvId(c);
+      const envIdWithoutVer = ComponentID.getStringWithoutVersion(envId);
+      return envIdWithoutVer === env;
+    });
+    return compsUsingEnv.map((c) => c.id);
   }
 
   async byModified(withinIds?: ComponentID[]): Promise<ComponentID[]> {

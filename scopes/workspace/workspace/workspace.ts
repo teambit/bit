@@ -954,12 +954,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   async filterIdsFromPoolIdsByPattern(pattern: string, ids: ComponentID[], throwForNoMatch = true) {
-    return this.scope.filterIdsFromPoolIdsByPattern(
-      pattern,
-      ids,
-      throwForNoMatch,
-      this.filter.byState.bind(this.filter)
-    );
+    return this.scope.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch, this.filter.by.bind(this.filter));
   }
 
   /**
