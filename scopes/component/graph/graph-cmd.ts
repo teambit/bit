@@ -23,6 +23,7 @@ type GraphOpt = {
 export class GraphCmd implements Command {
   name = 'graph [id]';
   description = "generate an image file with the workspace components' dependencies graph";
+  extendedDescription: 'black arrow is a runtime dependency. red arrow is either dev or peer';
   group = 'discover';
   alias = '';
   options = [
