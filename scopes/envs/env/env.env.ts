@@ -8,10 +8,7 @@ export const EnvEnvType = 'env';
  * a component environment built for Envs.
  */
 export class EnvEnv {
-  constructor(
-    private aspectEnv: AspectEnv
-  ) {}
-
+  constructor(private aspectEnv: AspectEnv) {}
   // TODO: consider special icon for envs?
   icon = 'https://static.bit.dev/extensions-icons/default.svg';
 
@@ -23,7 +20,6 @@ export class EnvEnv {
 
   getPackageJsonProps(): PackageJsonProps {
     const packageJsonProps = this.aspectEnv.getPackageJsonProps();
-
     delete packageJsonProps.exports;
     return packageJsonProps;
   }
