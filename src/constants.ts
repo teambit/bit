@@ -545,8 +545,6 @@ export const MANUALLY_REMOVE_ENVIRONMENT = '-';
 
 export const MANUALLY_ADD_DEPENDENCY = '+';
 
-export const OVERRIDE_FILE_PREFIX = 'file://';
-
 export const OVERRIDE_COMPONENT_PREFIX = '@bit/';
 
 export const ACCEPTABLE_NPM_VERSIONS = '>=5.0.0';
@@ -568,8 +566,8 @@ use \`bit pattern --help\` to understand patterns better and \`bit pattern <patt
 `;
 
 export const COMPONENT_PATTERN_HELP = `component name, component id, or component pattern. use component pattern to select multiple components.
-use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
-wrap the pattern with quotes`;
+wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button".
+use \`bit pattern --help\` to understand patterns better and \`bit pattern <pattern>\` to validate the pattern.`;
 
 export const CURRENT_UPSTREAM = 'current';
 

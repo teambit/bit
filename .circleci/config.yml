@@ -171,6 +171,9 @@ commands: # reusable commands
       - run:
           name: set bit cloud registry in npm config
           command: npm config set @teambit:registry=https://node-registry.bit.cloud
+      - run:
+          name: set bit cloud registry in npm config
+          command: npm config set @bitdev:registry=https://node-registry.bit.cloud
 
   set_git_credentials:
     steps:
@@ -229,9 +232,13 @@ jobs:
       - attach_workspace:
           at: ./
       - run:
-          name: set bit.dev registry
+          name: set bit.dev registry (@teambit)
           # command: npm config set @teambit:registry https://node.bit.dev
           command: npm config set @teambit:registry https://node-registry.bit.cloud
+      - run:
+          name: set bit.dev registry (@bitdev)
+          # command: npm config set @teambit:registry https://node.bit.dev
+          command: npm config set @bitdev:registry https://node-registry.bit.cloud
       - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:`npm show @teambit/bit version` .
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:latest .
@@ -479,8 +486,8 @@ jobs:
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
       # - run: bvm install 0.0.910
-      # - run: bvm upgrade
-      - run: bvm install 1.3.10
+      - run: bvm upgrade
+      # - run: bvm install 1.3.10
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
@@ -543,6 +550,9 @@ jobs:
           name: 'bit status'
           command: 'cd bit && ./scripts/bit-status.sh'
       - run:
+          name: 'bit diff'
+          command: cd bit && bit diff
+      - run:
           name: 'bit build'
           command: 'cd bit && bit build'
           environment:
@@ -580,6 +590,7 @@ jobs:
       # temporary, check if we can remove it
       - run: cd bit && bit cc
       - run: cd bit && bit status
+      - run: cd bit && bit diff
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
@@ -1553,13 +1564,14 @@ workflows:
   #     - checkout_code:
   #         filters:
   #           branches:
-  #             only: upgrade-symphony-docker-node
+  #             only: circle-docker-symphony
   #     - symphony_docker_build:
   #         filters:
   #           branches:
-  #             only: upgrade-symphony-docker-node
+  #             only: circle-docker-symphony
   #         requires:
   #           - checkout_code
+
   # uncomment to update esbuild arm64 cache
   # get_arm64_workflow_packages:
   #   jobs:

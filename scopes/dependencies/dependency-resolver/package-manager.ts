@@ -167,4 +167,6 @@ export interface PackageManager {
    * These entries tell the package manager from where to the local components should be installed.
    */
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string>;
+
+  findUsages?(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string>;
 }

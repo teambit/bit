@@ -282,9 +282,9 @@ To undo local tag use the "bit reset" command.`
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
     const tagExplanationPersist = `\n(use "bit export" to push these components to a remote")
-(use "bit reset" to unstage versions)\n`;
+(use "bit reset" to unstage versions)`;
     const tagExplanationSoft = `\n(use "bit tag --persist" to persist the soft-tagged changes as a fully tagged version")
-(use "bit reset --soft" to remove the soft-tags)\n`;
+(use "bit reset --soft" to remove the soft-tags)`;
 
     const tagExplanation = results.isSoftTag ? tagExplanationSoft : tagExplanationPersist;
 
@@ -333,19 +333,19 @@ To undo local tag use the "bit reset" command.`
       : 'components that got a version bump';
     const softTagClarification = results.isSoftTag
       ? chalk.bold(
-          'keep in mind that this is a soft-tag (changes recorded to be tagged), to persist the changes use --persist flag'
+          '\nkeep in mind that this is a soft-tag (changes recorded to be tagged), to persist the changes use --persist flag'
         )
       : '';
     return (
-      warningsOutput +
-      chalk.green(
-        `${taggedComponents.length + autoTaggedCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged`
-      ) +
-      tagExplanation +
       outputIfExists('new components', newDesc, addedComponents) +
       outputIfExists('changed components', changedDesc, changedComponents) +
       outputIdsIfExists('removed components', removedComponents) +
       publishOutput() +
+      warningsOutput +
+      chalk.green(
+        `\n${taggedComponents.length + autoTaggedCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged`
+      ) +
+      tagExplanation +
       softTagClarification
     );
   }

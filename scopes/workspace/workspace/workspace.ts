@@ -50,8 +50,8 @@ import { slice, isEmpty, merge, compact, uniqBy } from 'lodash';
 import { MergeConfigFilename, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy/dist/constants';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
-import { CompilationInitiator } from '@teambit/compiler';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
@@ -741,13 +741,13 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     id: ComponentID,
     files: PathOsBasedAbsolute[],
     removedFiles: PathOsBasedAbsolute[],
-    initiator?: CompilationInitiator
+    watchOpts: WatchOptions
   ): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
-      const onChangeResult = await onChangeFunc(component, files, removedFiles, initiator);
+      const onChangeResult = await onChangeFunc(component, files, removedFiles, watchOpts);
       if (onChangeResult) results.push({ extensionId: extension, results: onChangeResult });
     });
 
@@ -756,14 +756,14 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     return results;
   }
 
-  async triggerOnComponentAdd(id: ComponentID): Promise<OnComponentEventResult[]> {
+  async triggerOnComponentAdd(id: ComponentID, watchOpts: WatchOptions): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     const files = component.state.filesystem.files.map((file) => file.path);
     await mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
-      const onAddResult = await onAddFunc(component, files);
-      results.push({ extensionId: extension, results: onAddResult });
+      const onAddResult = await onAddFunc(component, files, watchOpts);
+      if (onAddResult) results.push({ extensionId: extension, results: onAddResult });
     });
 
     await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
@@ -885,7 +885,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     await componentConfigFile.write({ override: options.override });
     // remove config from the .bitmap as it's not needed anymore. it is replaced by the component.json
     this.bitMap.removeEntireConfig(id);
-    await this.bitMap.write();
+    await this.bitMap.write(`eject-conf (${id.toString()})`);
     return {
       configPath: ComponentConfigFile.composePath(componentDir),
     };
@@ -1296,7 +1296,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       );
     }
     newComponentIds.map((comp) => this.bitMap.setDefaultScope(comp, scopeName));
-    await this.bitMap.write();
+    await this.bitMap.write('scope-set');
     return newComponentIds;
   }
 
@@ -1318,7 +1318,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
     this.config.defaultScope = scopeName;
     await config.workspaceConfig?.write({ dir: path.dirname(config.workspaceConfig.path) });
-    await this.bitMap.write();
+    await this.bitMap.write('scope-set');
   }
 
   async addSpecificComponentConfig(
@@ -1743,7 +1743,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         await this.addSpecificComponentConfig(componentId, EnvsAspect.id, { env: envIdStrNoVersion });
       })
     );
-    await this.bitMap.write();
+    await this.bitMap.write(`env-set (${envId.toString()})`);
   }
 
   /**
@@ -1799,7 +1799,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         changed.push(id);
       })
     );
-    await this.bitMap.write();
+    await this.bitMap.write(`env-unset`);
     return { changed, unchanged };
   }
 
@@ -1872,7 +1872,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         (updated[envToUpdate.toString()] ||= []).push(comp.id);
       })
     );
-    await this.bitMap.write();
+    await this.bitMap.write('env-update');
     return { updated, alreadyUpToDate };
   }
 
@@ -1885,11 +1885,13 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
     const packageManager = this.dependencyResolver.getPackageManagerName();
     const isPnpmEnabled = typeof packageManager === 'undefined' || packageManager.includes('pnpm');
-    const pathsExcluding = generateNodeModulesPattern({
-      packages: workspacePackageNames,
-      target: PatternTarget.WEBPACK,
-      isPnpmEnabled,
-    });
+    const pathsExcluding = [
+      generateNodeModulesPattern({
+        packages: workspacePackageNames,
+        target: PatternTarget.WEBPACK,
+        isPnpmEnabled,
+      }),
+    ];
     this.componentPathsRegExps = [...pathsExcluding.map((stringPattern) => new RegExp(stringPattern))];
   }
 

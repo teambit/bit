@@ -87,6 +87,18 @@ export default class RemoteLanes {
     return compact(results);
   }
 
+  async getRefsPerLaneId(compId: ComponentID): Promise<{ [laneIdStr: string]: Ref }> {
+    const allLaneIds = await this.getAllRemoteLaneIds();
+    const results = {};
+    await pMapSeries(allLaneIds, async (laneId) => {
+      const ref = await this.getRef(laneId, compId);
+      if (ref) {
+        results[laneId.toString()] = ref;
+      }
+    });
+    return results;
+  }
+
   async getRemoteBitIds(remoteLaneId: LaneId): Promise<ComponentID[]> {
     const remoteLane = await this.getRemoteLane(remoteLaneId);
     return remoteLane.map((item) => item.id.changeVersion(item.head.toString()));

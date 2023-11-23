@@ -13,7 +13,7 @@ import Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
 import logger from '../../../../logger/logger';
 import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
-import { PathLinux, PathLinuxRelative, PathOsBased } from '../../../../utils/path';
+import { PathLinux, PathLinuxRelative, PathOsBased, removeFileExtension } from '../../../../utils/path';
 import ComponentMap from '../../../bit-map/component-map';
 import Component from '../../../component/consumer-component';
 import { RelativePath } from '../dependency';
@@ -152,8 +152,8 @@ export default class DependencyResolver {
     this.component = component;
     this.consumer = consumer;
     this.componentId = component.componentId;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.componentMap = this.component.componentMap;
+    // the consumerComponent is coming from the workspace, so it must have the componentMap prop
+    this.componentMap = this.component.componentMap as ComponentMap;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
     this.consumerPath = this.consumer.getPath();
@@ -201,9 +201,7 @@ export default class DependencyResolver {
     cacheResolvedDependencies: Record<string, any>,
     cacheProjectAst: Record<string, any> | undefined
   ): Promise<DependenciesData> {
-    const componentDir = this.componentMap?.rootDir
-      ? path.join(this.consumerPath, this.componentMap?.rootDir)
-      : this.consumerPath;
+    const componentDir = path.join(this.consumerPath, this.componentMap.rootDir);
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
     const allFiles = [...nonTestsFiles, ...testsFiles];
     const envDetectors = await this.getEnvDetectors();
@@ -260,9 +258,6 @@ export default class DependencyResolver {
         isTestFile: testsFiles.includes(file),
       };
       this.throwForNonExistFile(file);
-      if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {
-        return;
-      }
       this.processCoreAspects(file);
       this.processMissing(file, fileType);
       this.processErrors(file);
@@ -420,14 +415,12 @@ export default class DependencyResolver {
     let depFileRelative: PathLinux = depFile; // dependency file path relative to consumer root
     let destination: string | null | undefined;
     const rootDir = this.componentMap.rootDir;
-    if (rootDir) {
-      // The depFileRelative is relative to rootDir, change it to be relative to current consumer.
-      // We can't use path.resolve(rootDir, fileDep) because this might not work when running
-      // bit commands not from root, because resolve take by default the process.cwd
-      const rootDirFullPath = path.join(this.consumerPath, rootDir);
-      const fullDepFile = path.resolve(rootDirFullPath, depFile);
-      depFileRelative = pathNormalizeToLinux(path.relative(this.consumerPath, fullDepFile));
-    }
+    // The depFileRelative is relative to rootDir, change it to be relative to current consumer.
+    // We can't use path.resolve(rootDir, fileDep) because this might not work when running
+    // bit commands not from root, because resolve take by default the process.cwd
+    const rootDirFullPath = path.join(this.consumerPath, rootDir);
+    const fullDepFile = path.resolve(rootDirFullPath, depFile);
+    depFileRelative = pathNormalizeToLinux(path.relative(this.consumerPath, fullDepFile));
 
     const componentId = this.consumer.bitMap.getComponentIdByPath(depFileRelative);
 
@@ -472,7 +465,6 @@ export default class DependencyResolver {
     const allDepsFiles = this.tree[originFile].files;
     if (!allDepsFiles || R.isEmpty(allDepsFiles)) return;
     allDepsFiles.forEach((depFile: FileObject) => {
-      if (!nested && this.overridesDependencies.shouldIgnoreFile(depFile.file, fileType)) return;
       if (depFile.isLink) this.processLinkFile(originFile, depFile, fileType);
       else {
         const isDepFileUntracked = this.processOneDepFile(
@@ -863,15 +855,19 @@ either, use the ignore file syntax or change the require statement to have a mod
     const missing = this.tree[originFile].missing;
     if (!missing) return;
     const processMissingFiles = () => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (isEmpty(missing.files)) return;
-      const absOriginFile = this.consumer.toAbsolutePath(originFile);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const missingFiles = missing.files.filter((missingFile) => {
-        // convert from importSource (the string inside the require/import call) to the path relative to consumer
-        const resolvedPath = path.resolve(path.dirname(absOriginFile), missingFile);
-        const relativeToConsumer = this.consumer.getPathRelativeToConsumer(resolvedPath);
-        return !this.overridesDependencies.shouldIgnoreFile(relativeToConsumer, fileType);
+      const missingFiles = missing.files.filter((file) => {
+        const hasExtension = Boolean(path.extname(file));
+        if (!hasExtension) return true;
+        // the missing file has extension, e.g. "index.js". It's possible that this file doesn't exist in the source
+        // but will be available in the dists. so if found same filename without the extension, we assume it's fine.
+        const rootDirAbs = this.consumer.toAbsolutePath(this.componentMap.rootDir);
+        const filePathAbs = path.resolve(rootDirAbs, file);
+        const relativeToCompDir = path.relative(rootDirAbs, filePathAbs);
+        const relativeToCompDirWithoutExt = removeFileExtension(relativeToCompDir);
+        const compFilesWithoutExt = this.componentMap.getAllFilesPaths().map((f) => removeFileExtension(f));
+        const existWithDifferentExt = compFilesWithoutExt.some((f) => f === relativeToCompDirWithoutExt);
+        return !existWithDifferentExt;
       });
       if (R.isEmpty(missingFiles)) return;
       this._pushToMissingDependenciesOnFs(originFile, missingFiles);

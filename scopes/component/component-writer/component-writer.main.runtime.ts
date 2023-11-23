@@ -48,6 +48,7 @@ export class ComponentWriterMain {
   }
 
   async writeMany(opts: ManyComponentsWriterParams): Promise<ComponentWriterResults> {
+    if (!opts.components.length) return {};
     this.logger.debug('writeMany, started');
     await this.populateComponentsFilesToWrite(opts);
     this.moveComponentsIfNeeded(opts);

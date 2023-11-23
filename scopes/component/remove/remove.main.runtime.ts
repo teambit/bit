@@ -68,7 +68,7 @@ export class RemoveMain {
       track,
       deleteFiles,
     });
-    if (consumer) await consumer.onDestroy();
+    if (consumer) await consumer.onDestroy('remove');
     return removeResults;
   }
 
@@ -85,7 +85,7 @@ export class RemoveMain {
       track: false,
       deleteFiles: true,
     });
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write('remove');
 
     return results;
   }
@@ -101,7 +101,7 @@ export class RemoveMain {
     const config: RemoveInfo = { removed: true };
     if (shouldUpdateMain) config.removeOnMain = true;
     componentIds.map((compId) => this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, config));
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write('delete');
     const bitIds = ComponentIdList.fromArray(componentIds.map((id) => id));
     await deleteComponentsFiles(this.workspace.consumer, bitIds);
 
@@ -155,7 +155,7 @@ export class RemoveMain {
     };
     const setAsRemovedFalse = async (compId: ComponentID) => {
       await this.workspace.addSpecificComponentConfig(compId, RemoveAspect.id, { removed: false });
-      await this.workspace.bitMap.write();
+      await this.workspace.bitMap.write('recover');
     };
     if (bitMapEntry) {
       if (bitMapEntry.config?.[RemoveAspect.id]) {

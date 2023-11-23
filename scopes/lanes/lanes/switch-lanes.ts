@@ -60,7 +60,7 @@ export class LaneSwitcher {
     const results = await this.Lanes.checkout.checkout(checkoutProps);
 
     await this.saveLanesData();
-    await this.consumer.onDestroy();
+    await this.consumer.onDestroy('lane-switch');
 
     return results;
   }
