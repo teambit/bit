@@ -1259,9 +1259,6 @@ importers:
       babel-loader:
         specifier: 9.1.2
         version: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
-      babel-plugin-add-import-extension:
-        specifier: ^1.6.0
-        version: 1.6.0(@babel/core@7.19.6)
       babel-plugin-named-asset-import:
         specifier: 0.3.7
         version: 0.3.7(@babel/core@7.19.6)
@@ -20411,6 +20408,9 @@ importers:
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
+      lodash:
+        specifier: 4.17.21
+        version: 4.17.21
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -20424,6 +20424,9 @@ importers:
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
+      '@types/lodash':
+        specifier: 4.14.165
+        version: 4.14.165
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -37836,15 +37839,6 @@ packages:
       find-cache-dir: 3.3.2
       schema-utils: 4.2.0
       webpack: 5.84.1(esbuild@0.14.29)
-    dev: false
-
-  /babel-plugin-add-import-extension@1.6.0(@babel/core@7.19.6):
-    resolution: {integrity: sha512-JVSQPMzNzN/S4wPRoKQ7+u8PlkV//BPUMnfWVbr63zcE+6yHdU2Mblz10Vf7qe+6Rmu4svF5jG7JxdcPi9VvKg==}
-    peerDependencies:
-      '@babel/core': '>=7.0.0'
-    dependencies:
-      '@babel/core': 7.19.6
-      '@babel/helper-plugin-utils': 7.22.5
     dev: false
 
   /babel-plugin-apply-mdx-type-prop@1.6.21(@babel/core@7.11.6):
@@ -60671,6 +60665,7 @@ packages:
       '@teambit/bit-roots': 0.0.133(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 1.2.0
       fs-extra: 10.0.0
+      lodash: 4.17.21
       p-map-series: 2.1.0
     transitivePeerDependencies:
       - '@teambit/legacy'
