@@ -305,6 +305,7 @@
         "@teambit/mdx.ui.mdx-layout": "^1.0.6",
         "@teambit/mdx.ui.mdx-scope-context": "^1.0.5",
         "@teambit/node.generator.node-templates": "^1.0.8",
+        "@teambit/node.utils.esm-loader": "^0.0.5",
         "@teambit/pkg.content.packages-overview": "1.95.9",
         "@teambit/react.content.react-overview": "1.95.0",
         "@teambit/react.generator.react-native-templates": "^1.0.7",

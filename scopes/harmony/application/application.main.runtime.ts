@@ -1,7 +1,7 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
 import { compact, flatten, head } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
@@ -23,7 +23,6 @@ import { AppPlugin } from './app.plugin';
 import { AppTypePlugin } from './app-type.plugin';
 import { AppContext } from './app-context';
 import { DeployTask } from './deploy.task';
-import { AppNoSsr } from './exceptions/app-no-ssr';
 
 export type ApplicationTypeSlot = SlotRegistry<ApplicationType<unknown>[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
@@ -86,7 +85,8 @@ export class ApplicationMain {
     private aspectLoader: AspectLoaderMain,
     private workspace: Workspace,
     private logger: Logger,
-    private watcher: WatcherMain
+    private watcher: WatcherMain,
+    private harmony: Harmony
   ) {}
 
   /**
@@ -183,17 +183,24 @@ export class ApplicationMain {
     });
 
     // const app = require(appPath);
-    const appManifests = compact(
-      pluginsToLoad.map((pluginPath) => {
-        try {
-          // eslint-disable-next-line
-          const appManifest = require(pluginPath)?.default;
-          return appManifest;
-        } catch (err) {
-          this.logger.error(`failed loading app manifest: ${pluginPath}`);
-          return undefined;
-        }
-      })
+    const appManifests = Promise.all(
+      compact(
+        pluginsToLoad.map(async (pluginPath) => {
+          try {
+            const isModule = await this.aspectLoader.isEsmModule(pluginPath);
+            if (isModule) {
+              const appManifest = await this.aspectLoader.loadEsm(pluginPath);
+              return appManifest;
+            }
+            // eslint-disable-next-line
+            const appManifest = require(pluginPath)?.default;
+            return appManifest;
+          } catch (err) {
+            this.logger.error(`failed loading app manifest: ${pluginPath}`);
+            return undefined;
+          }
+        })
+      )
     );
 
     return appManifests;
@@ -303,14 +310,7 @@ export class ApplicationMain {
     const context = await this.createAppContext(app.name, options.port);
     if (!context) throw new AppNotFound(appName);
 
-    if (options.ssr) {
-      if (!app.runSsr) throw new AppNoSsr(appName);
-
-      const result = await app.runSsr(context);
-      return { app, ...result };
-    }
-
-    const port = await app.run(context);
+    const instance = await app.run(context);
     if (options.watch) {
       this.watcher
         .watch({
@@ -322,7 +322,13 @@ export class ApplicationMain {
           this.logger.error(`compilation failed`, err);
         });
     }
-    return { app, port, errors: undefined };
+
+    const isOldApi = typeof instance === 'number'
+    const port = isOldApi
+      ? instance
+      : instance?.port;
+
+    return { app, port, errors: undefined, isOldApi };
   }
 
   /**
@@ -352,7 +358,16 @@ export class ApplicationMain {
     const context = res.results[0].data;
     if (!context) throw new AppNotFound(appName);
     const hostRootDir = await this.workspace.getComponentPackagePath(component);
-    const appContext = new AppContext(appName, context.dev, component, this.workspace.path, context, hostRootDir, port);
+    const appContext = new AppContext(
+      appName,
+      this.harmony,
+      context.dev,
+      component,
+      this.workspace.path,
+      context,
+      hostRootDir,
+      port
+    );
     return appContext;
   }
 
@@ -386,7 +401,8 @@ export class ApplicationMain {
       WatcherMain
     ],
     config: ApplicationAspectConfig,
-    [appTypeSlot, appSlot, deploymentProviderSlot]: [ApplicationTypeSlot, ApplicationSlot, DeploymentProviderSlot]
+    [appTypeSlot, appSlot, deploymentProviderSlot]: [ApplicationTypeSlot, ApplicationSlot, DeploymentProviderSlot],
+    harmony: Harmony
   ) {
     const logger = loggerAspect.createLogger(ApplicationAspect.id);
     const appService = new AppService();
@@ -401,7 +417,8 @@ export class ApplicationMain {
       aspectLoader,
       workspace,
       logger,
-      watcher
+      watcher,
+      harmony
     );
     appService.registerAppType = application.registerAppType.bind(application);
     const appCmd = new AppCmd();
