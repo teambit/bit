@@ -51,6 +51,7 @@ export type ComponentStatus = ComponentStatusBase & {
 export type ApplyVersionWithComps = {
   applyVersionResult: ApplyVersionResult;
   component?: ConsumerComponent;
+  // in case the component needs to be written to the filesystem, this is the component to write.
   legacyCompToWrite?: ConsumerComponent;
 };
 

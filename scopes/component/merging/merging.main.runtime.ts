@@ -512,8 +512,6 @@ export class MergingMain {
     mergeStrategy: MergeStrategy,
     localLane: Lane | null
   ): Promise<ApplyVersionWithComps[]> {
-    // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
-    // which can be an issue when some components are also dependencies of others
     const componentsResults = await mapSeries(
       succeededComponents,
       async ({ currentComponent, id, mergeResults, resolvedUnrelated, configMergeResult }) => {
@@ -578,7 +576,7 @@ export class MergingMain {
     id = currentComponent ? currentComponent.id : id;
 
     const modelComponent = await consumer.scope.getModelComponent(id);
-    const handleResolveUnrelated = () => {
+    const handleResolveUnrelated = (legacyCompToWrite?: ConsumerComponent) => {
       if (!currentComponent) throw new Error('currentComponent must be defined when resolvedUnrelated');
       // because when on a main, we don't allow merging lanes with unrelated. we asks users to switch to the lane
       // first and then merge with --resolve-unrelated
@@ -591,7 +589,7 @@ export class MergingMain {
         unrelatedLaneId: resolvedUnrelated.unrelatedLaneId,
       };
       consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
-      return { applyVersionResult: { id, filesStatus }, component: currentComponent };
+      return { applyVersionResult: { id, filesStatus }, component: currentComponent, legacyCompToWrite };
     };
 
     const markAllFilesAsUnchanged = () => {
@@ -647,10 +645,7 @@ export class MergingMain {
     } else if (localLane) {
       if (resolvedUnrelated) {
         // must be "theirs"
-        const results = handleResolveUnrelated();
-        // @ts-ignore
-        results.legacyCompToWrite = legacyComponent;
-        return results;
+        return handleResolveUnrelated(legacyComponent);
       }
       localLane.addComponent({ id, head: remoteHead });
     } else {
