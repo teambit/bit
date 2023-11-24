@@ -22,33 +22,33 @@
         "@mdx-js/react": "1.6.22",
         "@monaco-editor/react": "4.4.6",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
-        "@pnpm/client": "10.0.35",
+        "@pnpm/client": "10.0.37",
         "@pnpm/colorize-semver-diff": "1.0.1",
         "@pnpm/config": "20.1.2",
-        "@pnpm/core": "13.1.7",
+        "@pnpm/core": "13.1.9",
         "@pnpm/default-reporter": "12.4.6",
         "@pnpm/dependency-path": "2.1.5",
         "@pnpm/error": "5.0.2",
         "@pnpm/fetch": "7.0.5",
-        "@pnpm/list": "^9.1.1",
+        "@pnpm/list": "^9.1.5",
         "@pnpm/lockfile-file": "8.1.4",
         "@pnpm/logger": "5.0.0",
         "@pnpm/modules-yaml": "12.1.4",
         "@pnpm/network.agent": "0.1.0",
         "@pnpm/network.ca-file": "1.0.2",
-        "@pnpm/package-store": "19.0.9",
+        "@pnpm/package-store": "19.0.10",
         "@pnpm/parse-overrides": "4.0.2",
         "@pnpm/pick-registry-for-package": "5.0.4",
-        "@pnpm/plugin-commands-publishing": "7.4.4",
-        "@pnpm/plugin-commands-rebuild": "10.0.5",
+        "@pnpm/plugin-commands-publishing": "7.4.6",
+        "@pnpm/plugin-commands-rebuild": "10.0.7",
         "@pnpm/registry-mock": "3.4.0",
-        "@pnpm/reviewing.dependencies-hierarchy": "^2.1.0",
+        "@pnpm/reviewing.dependencies-hierarchy": "^2.1.4",
         "@pnpm/semver-diff": "1.1.0",
         "@pnpm/sort-packages": "5.0.7",
-        "@pnpm/store-connection-manager": "7.0.14",
+        "@pnpm/store-connection-manager": "7.0.16",
         "@pnpm/types": "9.4.0",
-        "@pnpm/worker": "0.3.8",
-        "@pnpm/workspace.pkgs-graph": "2.0.10",
+        "@pnpm/worker": "0.3.9",
+        "@pnpm/workspace.pkgs-graph": "2.0.11",
         "@prerenderer/prerenderer": "^1.2.0",
         "@prerenderer/renderer-jsdom": "^1.1.2",
         "@prerenderer/webpack-plugin": "^5.2.0",
@@ -113,9 +113,9 @@
         "@teambit/capsule": "0.0.12",
         "@teambit/code.ui.code-compare-section": "0.0.5",
         "@teambit/code.ui.code-editor": "^0.0.8",
-        "@teambit/code.ui.code-tab-page": "^0.0.629",
+        "@teambit/code.ui.code-tab-page": "^0.0.631",
         "@teambit/code.ui.code-tab-tree": "^0.0.613",
-        "@teambit/code.ui.code-view": "^0.0.515",
+        "@teambit/code.ui.code-view": "^0.0.517",
         "@teambit/code.ui.dependency-tree": "0.0.546",
         "@teambit/code.ui.hooks.use-code-params": "0.0.496",
         "@teambit/code.ui.object-formatter": "0.0.1",
@@ -242,7 +242,7 @@
         "@teambit/documenter.markdown.mdx": "0.1.13",
         "@teambit/documenter.theme.theme-compositions": "4.1.1",
         "@teambit/documenter.theme.theme-context": "4.0.3",
-        "@teambit/documenter.ui.code-snippet": "4.2.2",
+        "@teambit/documenter.ui.code-snippet": "^4.2.4",
         "@teambit/documenter.ui.consumable-link": "4.0.11",
         "@teambit/documenter.ui.copy-box": "4.1.17",
         "@teambit/documenter.ui.heading": "4.1.1",
@@ -308,6 +308,7 @@
         "@teambit/mdx.ui.mdx-layout": "^1.0.6",
         "@teambit/mdx.ui.mdx-scope-context": "^1.0.5",
         "@teambit/node.generator.node-templates": "^1.0.8",
+        "@teambit/node.utils.esm-loader": "^0.0.5",
         "@teambit/pkg.content.packages-overview": "1.95.9",
         "@teambit/react.content.react-overview": "1.95.0",
         "@teambit/react.generator.react-native-templates": "^1.0.7",
@@ -397,6 +398,7 @@
         "@types/react": "17.0.8",
         "@types/react-dev-utils": "9.0.10",
         "@types/react-dom": "17.0.5",
+        "@types/react-syntax-highlighter": "15.5.10",
         "@types/react-tabs": "2.3.2",
         "@types/socket.io-client": "1.4.35",
         "@types/testing-library__jest-dom": "5.9.5",
@@ -510,7 +512,7 @@
         "react-error-overlay": "6.0.9",
         "react-flow-renderer": "8.3.7",
         "react-native": "^0.64.1",
-        "react-syntax-highlighter": "15.4.3",
+        "react-syntax-highlighter": "15.5.0",
         "react-tabs": "3.2.0",
         "react-test-renderer": "17.0.2",
         "remark-admonitions": "1.2.1",
@@ -553,7 +555,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.598",
+        "@teambit/legacy": "1.0.605",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
@@ -647,7 +649,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.598"
+            "@teambit/legacy": "1.0.605"
           }
         }
       },
@@ -897,7 +899,6 @@
             "less": "^4.1.1",
             "@mdx-js/react": "1.6.22",
             "less-loader": "10.0.0",
-            "babel-preset-react-app": "^10.0.0",
             "postcss-normalize": "10.0.0",
             "postcss-preset-env": "7.8.2",
             "postcss-flexbugs-fixes": "5.0.2"
@@ -911,7 +912,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.598"
+            "@teambit/legacy": "1.0.605"
           }
         }
       }
@@ -1001,7 +1002,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.598",
+            "@teambit/legacy": "1.0.605",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
@@ -1143,7 +1144,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.598"
+            "@teambit/legacy": "1.0.605"
           }
         }
       }

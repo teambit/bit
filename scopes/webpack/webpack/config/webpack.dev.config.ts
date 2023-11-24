@@ -17,7 +17,7 @@ import { WebpackBitReporterPlugin } from '../plugins/webpack-bit-reporter-plugin
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
 
-const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
+const publicUrlOrPath = getPublicUrlOrPath(true, '/', '/public');
 
 export function configFactory(
   devServerID: string,
@@ -31,9 +31,6 @@ export function configFactory(
   favicon?: string
 ): WebpackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
-
-  // Required for babel-preset-react-app
-  process.env.NODE_ENV = 'development';
 
   const publicDirectory = `${publicRoot}/${publicPath}`;
 

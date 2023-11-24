@@ -201,7 +201,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
     // export and eject operations to function independently. we don't want to lose the changes to
     // .bitmap file done by the export action in case the eject action has failed.
-    await consumer.onDestroy();
+    await consumer.onDestroy('export');
     return {
       updatedIds,
       nonExistOnBitMap: nonExistOnBitMap.filter((id) => !removedIds.hasWithoutVersion(id)),
@@ -572,7 +572,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       throw new Error(ejectErr);
     }
     // run the consumer.onDestroy() again, to write the changes done by the eject action to .bitmap
-    await consumer.onDestroy();
+    await consumer.onDestroy('export (eject)');
     return ejectResults;
   }
 

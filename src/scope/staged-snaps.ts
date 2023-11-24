@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
+import logger from '../logger/logger';
 
 const STAGED_SNAPS = 'staged-snaps';
 
@@ -30,7 +31,12 @@ export class StagedSnaps {
     return this.snaps.includes(snap);
   }
 
+  isEmpty() {
+    return this.snaps.length === 0;
+  }
+
   async deleteFile() {
+    logger.debug(`staged-snaps, deleting ${StagedSnaps.getPath(this.scopePath)}`);
     await fs.remove(StagedSnaps.getPath(this.scopePath));
   }
 
