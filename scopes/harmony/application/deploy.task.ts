@@ -8,6 +8,7 @@ import { ApplicationMain } from './application.main.runtime';
 import { BUILD_TASK, BuildDeployContexts } from './build-application.task';
 import { AppDeployContext } from './app-deploy-context';
 import { Application } from './application';
+import { ApplicationDeployment } from './app-instance';
 
 export const DEPLOY_TASK = 'deploy_application';
 
@@ -28,12 +29,24 @@ export class DeployTask implements BuildTask {
       }
       const apps = await this.application.loadAppsFromComponent(component, capsule.path);
       if (!apps || !apps.length) return undefined;
-      await mapSeries(compact(apps), async (app) => this.runForOneApp(app, capsule, context));
-      return component;
+      const appDeployments = await mapSeries(compact(apps), async (app) => this.runForOneApp(app, capsule, context));
+      const deploys = compact(appDeployments);
+      return { component, deploys };
     });
 
-    const _componentsResults: ComponentResult[] = compact(components).map((component) => {
-      return { component };
+    const _componentsResults: ComponentResult[] = compact(components).map(({ component, deploys }) => {
+      return { 
+        component,
+        metadata: {
+          deployments: deploys.map((deploy) => {
+            return {
+              appName: deploy.appName,
+              timestamp: deploy.timestamp,
+              url: deploy.url
+            }
+          })
+        }
+      };
     });
 
     return {
@@ -41,18 +54,22 @@ export class DeployTask implements BuildTask {
     };
   }
 
-  private async runForOneApp(app: Application, capsule: Capsule, context: BuildContext): Promise<void> {
+  private async runForOneApp(
+    app: Application, 
+    capsule: Capsule, 
+    context: BuildContext
+  ): Promise<ApplicationDeployment|undefined> {
     const aspectId = this.application.getAppAspect(app.name);
-    if (!aspectId) return;
+    if (!aspectId) return undefined;
 
-    if (!capsule || !capsule?.component) return;
+    if (!capsule || !capsule?.component) return undefined;
 
     const buildTask = this.getBuildTask(context.previousTasksResults, context.envRuntime.id);
 
     const metadata = this.getBuildMetadata(buildTask, capsule.component);
-    if (!metadata) return;
+    if (!metadata) return undefined;
     const buildDeployContexts = metadata.find((ctx) => ctx.name === app.name && ctx.appType === app.applicationType);
-    if (!buildDeployContexts) return;
+    if (!buildDeployContexts) return undefined;
 
     const appDeployContext: AppDeployContext = Object.assign(context, buildDeployContexts.deployContext, {
       capsule,
@@ -60,8 +77,10 @@ export class DeployTask implements BuildTask {
     });
 
     if (app && typeof app.deploy === 'function') {
-      await app.deploy(appDeployContext);
+      return app.deploy(appDeployContext);
     }
+
+    return undefined;
   }
 
   private getBuildMetadata(

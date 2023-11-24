@@ -205,7 +205,7 @@ export default class NodeModuleLinker {
       packageJson.packageJsonObject.exports &&
       !packageJson.packageJsonObject.exports.types
     ) {
-      packageJson.packageJsonObject.exports.types = packageJson.packageJsonObject.types;
+      packageJson.packageJsonObject.exports.types = `./${packageJson.packageJsonObject.types}`;
     }
 
     // packageJson.mergePropsFromExtensions(component);

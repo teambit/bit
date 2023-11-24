@@ -47,6 +47,11 @@ export class AppContext extends ExecutionContext {
      * A port to run the app on
      */
     readonly port?: number,
+
+    /**
+     * path to the application component in the workspace
+     */
+    readonly workspaceComponentPath?: string,
   ) {
     super(execContext.upper, execContext.envRuntime, execContext.components);
   }
@@ -79,7 +84,8 @@ export class AppContext extends ExecutionContext {
       overrides?.workdir || appContext.workdir,
       overrides?.execContext || appContext.execContext,
       overrides?.hostRootDir || appContext.hostRootDir,
-      overrides?.port || appContext.port
+      overrides?.port || appContext.port,
+      overrides?.workspaceComponentPath || appContext.workspaceComponentPath,
     );
   }
 }
