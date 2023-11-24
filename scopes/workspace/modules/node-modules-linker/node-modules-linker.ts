@@ -205,7 +205,10 @@ export default class NodeModuleLinker {
       packageJson.packageJsonObject.exports &&
       !packageJson.packageJsonObject.exports.types
     ) {
+      const defaultModule = packageJson.packageJsonObject.exports.default;
+      if (defaultModule) delete packageJson.packageJsonObject.exports.default;
       packageJson.packageJsonObject.exports.types = `./${packageJson.packageJsonObject.types}`;
+      packageJson.packageJsonObject.exports.default = defaultModule;
     }
 
     // packageJson.mergePropsFromExtensions(component);
@@ -227,6 +230,13 @@ export default class NodeModuleLinker {
    */
   async _applyTransformers(component: Component, packageJson: PackageJsonFile) {
     return PackageJsonTransformer.applyTransformers(component, packageJson);
+  }
+
+  async addTypesToExports(exports: Record<string, any>) {
+    return Object.assign({}, {
+
+      default: exports.default,
+    }, exports);
   }
 }
 
