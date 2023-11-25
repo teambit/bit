@@ -1,3 +1,5 @@
+# Bit no longer uses the CHANGELOG.md file for keeping changelogs. Please refer here to get updates on new releases - https://github.com/teambit/bit/releases
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
