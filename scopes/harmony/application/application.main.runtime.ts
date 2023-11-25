@@ -358,6 +358,8 @@ export class ApplicationMain {
     const context = res.results[0].data;
     if (!context) throw new AppNotFound(appName);
     const hostRootDir = await this.workspace.getComponentPackagePath(component);
+    const workspaceComponentDir = this.workspace.componentDir(component.id);
+
     const appContext = new AppContext(
       appName,
       this.harmony,
@@ -366,7 +368,8 @@ export class ApplicationMain {
       this.workspace.path,
       context,
       hostRootDir,
-      port
+      port,
+      workspaceComponentDir
     );
     return appContext;
   }

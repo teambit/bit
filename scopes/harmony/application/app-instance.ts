@@ -16,3 +16,24 @@ export type ApplicationInstance = {
    */
   url?: string;
 };
+
+
+/**
+ * an instance of an application deployment.
+ */
+export type ApplicationDeployment = {
+  /**
+   * timestamp of the deployment.
+   */
+  timestamp?: string;
+
+  /**
+   * name of the deployed app.
+   */
+  appName?: string;
+
+  /**
+   * url the deployed app.
+   */
+  url?: string;  
+};
