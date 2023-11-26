@@ -192,6 +192,25 @@ export default class NodeModuleLinker {
     packageJson.packageJsonObject._bit_local = true;
     packageJson.packageJsonObject.source = component.mainFile.relative;
 
+    // This is a hack because we have in the workspace package.json types:index.ts
+    // but also exports for core aspects
+    // TS can't find the types
+    // in order to solve it we copy the types to exports.types
+    // this will be applied only to aspects to minimize how it affects users
+    const envsData = component.state.aspects.get('teambit.envs/envs');
+    const isAspect = envsData?.data.type === 'aspect';
+    if (
+      isAspect &&
+      packageJson.packageJsonObject.types &&
+      packageJson.packageJsonObject.exports &&
+      !packageJson.packageJsonObject.exports.types
+    ) {
+      const defaultModule = packageJson.packageJsonObject.exports.default;
+      if (defaultModule) delete packageJson.packageJsonObject.exports.default;
+      packageJson.packageJsonObject.exports.types = `./${packageJson.packageJsonObject.types}`;
+      packageJson.packageJsonObject.exports.default = defaultModule;
+    }
+
     // packageJson.mergePropsFromExtensions(component);
     // TODO: we need to have an hook here to get the transformer from the pkg extension
 
@@ -211,6 +230,13 @@ export default class NodeModuleLinker {
    */
   async _applyTransformers(component: Component, packageJson: PackageJsonFile) {
     return PackageJsonTransformer.applyTransformers(component, packageJson);
+  }
+
+  async addTypesToExports(exports: Record<string, any>) {
+    return Object.assign({}, {
+
+      default: exports.default,
+    }, exports);
   }
 }
 

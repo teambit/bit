@@ -3,9 +3,9 @@ import {
   ReactHookTemplate,
   ReactViteTemplate,
   ReactWebpackTemplate,
-  ReactJSComponentTemplate,
+  // ReactJSComponentTemplate,
   ReactEnvTemplate,
-  ReactWebpackAppTemplate,
+  // ReactWebpackAppTemplate,
   // ReactContextTemplate,
 } from '@bitdev/react.generators.react-templates';
 import { EnvContext } from '@teambit/envs';
@@ -17,8 +17,8 @@ const templateListHandler = TemplateList.from([
   ReactHookTemplate.from({ env: 'bitdev.react/react-env' }),
   // ReactContextTemplate.from({ env: 'bitdev.react/react-env' }),
   ReactWebpackTemplate.from({ env: 'bitdev.react/react-env' }),
-  ReactWebpackAppTemplate.from({ env: 'bitdev.react/react-env' }),
-  ReactJSComponentTemplate.from({ env: 'bitdev.react/react-env' }),
+  // ReactWebpackAppTemplate.from({ env: 'bitdev.react/react-env' }),
+  // ReactJSComponentTemplate.from({ env: 'bitdev.react/react-env' }),
   ReactEnvTemplate.from(),
 ]);
 
