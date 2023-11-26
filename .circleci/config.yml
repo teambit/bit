@@ -608,12 +608,6 @@ jobs:
       # temporary, check if we can remove it
       - run: cd bit && bit cc
 
-      # temporary, we should remove it once nightly is out
-      - run: cd bit && cat node_modules/@teambit/workspace/package.json
-      - run: cd bit && bit compile
-      - run: cd bit && cat node_modules/@teambit/workspace/package.json
-      # remove until here
-
       # - run: cd bit && bit config set cache.max.objects 100000
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
@@ -621,8 +615,8 @@ jobs:
           # command: cd bit && bit tag --ignore-newest-version
           # command: cd bit && bit tag --increment-by 3
           # command: cd bit && bit tag --increment-by 2
-          # command: cd bit && bit tag
-          command: cd bit && bit tag --persist
+          command: cd bit && bit tag
+          # command: cd bit && bit tag --persist
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
