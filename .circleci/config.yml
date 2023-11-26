@@ -607,6 +607,13 @@ jobs:
       - run: cd bit && npm run link-bit-legacy
       # temporary, check if we can remove it
       - run: cd bit && bit cc
+
+      # temporary, we should remove it once nightly is out
+      - run: cd bit && cat node_modules/@teambit/workspace/package.json
+      - run: cd bit && bit compile
+      - run: cd bit && cat node_modules/@teambit/workspace/package.json
+      # remove until here
+
       # - run: cd bit && bit config set cache.max.objects 100000
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
