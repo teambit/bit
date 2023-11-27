@@ -64,7 +64,7 @@ export class EnvPolicy extends VariantPolicy {
     } else {
       selfPeersEntries = entriesFromKey(configObject, 'peers', 'version', 'runtime', {
         source: 'env-own',
-        hidden: true,
+        force: true,
       });
     }
     const selfPolicy = VariantPolicy.fromArray(selfPeersEntries);
