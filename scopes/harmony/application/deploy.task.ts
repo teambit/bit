@@ -40,9 +40,9 @@ export class DeployTask implements BuildTask {
         metadata: {
           deployments: deploys.map((deploy) => {
             return {
-              appName: deploy.appName,
-              timestamp: deploy.timestamp,
-              url: deploy.url
+              appName: deploy?.appName,
+              timestamp: deploy?.timestamp,
+              url: deploy?.url
             }
           })
         }
