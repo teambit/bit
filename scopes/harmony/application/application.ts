@@ -22,7 +22,7 @@ export interface Application {
   /**
    * run the application.
    */
-  run(context: AppContext): Promise<ApplicationInstance>;
+  run(context: AppContext): Promise<ApplicationInstance|number>;
 
   /**
    * build the application.
