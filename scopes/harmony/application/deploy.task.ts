@@ -39,10 +39,11 @@ export class DeployTask implements BuildTask {
         component,
         metadata: {
           deployments: deploys.map((deploy) => {
+            const deployObject = deploy || {};
             return {
-              appName: deploy?.appName,
-              timestamp: deploy?.timestamp,
-              url: deploy?.url
+              appName: deployObject?.appName,
+              timestamp: deployObject?.timestamp,
+              url: deployObject?.url
             }
           })
         }
