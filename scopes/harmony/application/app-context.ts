@@ -77,15 +77,15 @@ export class AppContext extends ExecutionContext {
 
   static compose(appContext: AppContext, overrides?: Partial<AppContext>) {
     return new AppContext(
-      overrides?.appName || appContext.appName,
-      overrides?.harmony || appContext.harmony,
-      overrides?.dev || appContext.dev,
-      overrides?.appComponent || appContext.appComponent,
-      overrides?.workdir || appContext.workdir,
-      overrides?.execContext || appContext.execContext,
-      overrides?.hostRootDir || appContext.hostRootDir,
-      overrides?.port || appContext.port,
-      overrides?.workspaceComponentPath || appContext.workspaceComponentPath,
+      overrides?.appName || appContext?.appName,
+      overrides?.harmony || appContext?.harmony,
+      overrides?.dev || appContext?.dev,
+      overrides?.appComponent || appContext?.appComponent,
+      overrides?.workdir || appContext?.workdir,
+      overrides?.execContext || appContext?.execContext,
+      overrides?.hostRootDir || appContext?.hostRootDir,
+      overrides?.port || appContext?.port,
+      overrides?.workspaceComponentPath || appContext?.workspaceComponentPath,      
     );
   }
 }

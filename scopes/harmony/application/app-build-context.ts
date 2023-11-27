@@ -11,6 +11,7 @@ export interface AppBuildContext extends BuildContext {
    * Application capsule
    */
   capsule: Capsule;
+  
   /**
    * app Component object
    */
