@@ -58,7 +58,7 @@ export class DeployTask implements BuildTask {
     app: Application, 
     capsule: Capsule, 
     context: BuildContext
-  ): Promise<ApplicationDeployment|undefined> {
+  ): Promise<ApplicationDeployment|void|undefined> {
     const aspectId = this.application.getAppAspect(app.name);
     if (!aspectId) return undefined;
 
