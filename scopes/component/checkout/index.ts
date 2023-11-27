@@ -5,14 +5,17 @@ export default CheckoutAspect;
 export { CheckoutAspect };
 
 export {
-  CheckoutProps as CheckoutPropsLegacy,
-  ComponentStatus,
   applyModifiedVersion,
   applyVersion,
-  ComponentStatusBase,
-  ApplyVersionWithComps,
   removeFilesIfNeeded,
   updateFileStatus,
   throwForFailures,
+} from './checkout-version';
+
+export type {
+  CheckoutProps as CheckoutPropsLegacy,
+  ComponentStatus,
+  ComponentStatusBase,
+  ApplyVersionWithComps,
 } from './checkout-version';
 export { checkoutOutput } from './checkout-cmd';
