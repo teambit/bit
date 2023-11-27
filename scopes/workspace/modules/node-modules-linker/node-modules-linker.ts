@@ -231,13 +231,6 @@ export default class NodeModuleLinker {
   async _applyTransformers(component: Component, packageJson: PackageJsonFile) {
     return PackageJsonTransformer.applyTransformers(component, packageJson);
   }
-
-  async addTypesToExports(exports: Record<string, any>) {
-    return Object.assign({}, {
-
-      default: exports.default,
-    }, exports);
-  }
 }
 
 export async function linkToNodeModulesWithCodemod(

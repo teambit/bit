@@ -54,7 +54,7 @@ export type ReactAppOptions = {
   /**
    * deploy function.
    */
-  deploy?: (context: ReactDeployContext) => Promise<undefined>;
+  deploy?: (context: ReactDeployContext) => Promise<void>;
 
   /**
    * ranges of ports to use to run the app server.
