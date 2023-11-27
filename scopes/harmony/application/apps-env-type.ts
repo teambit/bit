@@ -5,5 +5,5 @@ export interface AppsEnv {
   /**
    * return a template list instance.
    */
-  apps(): EnvHandler<AppTypeList>;
+  apps?(): EnvHandler<AppTypeList>;
 }
