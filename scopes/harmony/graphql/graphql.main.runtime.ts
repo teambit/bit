@@ -27,6 +27,7 @@ export type GraphQLConfig = {
   port: number;
   subscriptionsPortRange: number[];
   subscriptionsPath: string;
+  disableCors?: boolean;
 };
 
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
@@ -115,15 +116,17 @@ export class GraphqlMain {
 
     // TODO: @guy please consider to refactor to express extension.
     const app = options.app || express();
-    // app.use(
-    //   // @ts-ignore todo: it's not clear what's the issue.
-    //   cors({
-    //     origin(origin, callback) {
-    //       callback(null, true);
-    //     },
-    //     credentials: true,
-    //   })
-    // );
+    if (!this.config.disableCors) {
+      app.use(
+        // @ts-ignore todo: it's not clear what's the issue.
+        cors({
+          origin(origin, callback) {
+            callback(null, true);
+          },
+          credentials: true,
+        })
+      );
+    }
 
     app.use(
       '/graphql',
@@ -303,6 +306,7 @@ export class GraphqlMain {
   static defaultConfig = {
     port: 4000,
     subscriptionsPortRange: [2000, 2100],
+    disableCors: false,
     subscriptionsPath: '/subscriptions',
   };
 
