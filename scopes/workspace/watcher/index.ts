@@ -1,7 +1,7 @@
 import { WatcherAspect } from './watcher.aspect';
 
 export type { WatchOptions } from './watcher';
-export type { CheckTypes } from './check-types';
+export { CheckTypes } from './check-types';
 export type { WatcherMain } from './watcher.main.runtime';
 export default WatcherAspect;
 export { WatcherAspect };
