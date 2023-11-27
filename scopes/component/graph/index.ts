@@ -18,7 +18,7 @@ export type { RawGraph } from './ui/query';
 export type { CompIdGraph, DepEdgeType } from './component-id-graph';
 export type { ComponentGraph } from './component-graph';
 export type { ComponentWidget, ComponentWidgetProps, ComponentWidgetSlot, GraphUI } from './graph.ui.runtime';
-export type { EdgeType } from './edge-type';
+export { EdgeType } from './edge-type';
 export type { GraphBuilder } from './graph-builder';
 export type { GraphFilter } from './model/graph-filters';
 export type { GraphMain } from './graph.main.runtime';

@@ -2,5 +2,6 @@
 import cjsModule from './index.js';
 
 export const ExpressAspect = cjsModule.ExpressAspect;
+export const Verb = cjsModule.Verb;
 
 export default cjsModule;

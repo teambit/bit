@@ -25,6 +25,7 @@ export const componentNodeStyles = cjsModule.componentNodeStyles;
 export const root = cjsModule.root;
 export const defaultNode = cjsModule.defaultNode;
 export const external = cjsModule.external;
+export const EdgeType = cjsModule.EdgeType;
 
 export default cjsModule;
 
