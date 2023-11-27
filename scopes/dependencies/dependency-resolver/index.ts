@@ -1,15 +1,11 @@
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 
-export { UpdatedComponent } from './apply-updates';
-export { RawComponentState, ComponentsManifestsMap, RegistriesMap } from './types';
-export {
-  WorkspaceManifest,
-  ComponentManifest,
-  CreateFromComponentsOptions,
-  ManifestDependenciesObject,
-} from './manifest';
+export type { UpdatedComponent } from './apply-updates';
+export type { RawComponentState, ComponentsManifestsMap, RegistriesMap } from './types';
+export { WorkspaceManifest, ComponentManifest } from './manifest';
+export type { CreateFromComponentsOptions, ManifestDependenciesObject } from './manifest';
 export { Registries, Registry } from './registry';
-export {
+export type {
   InstallationContext,
   PackageImportMethod,
   PackageManager,
@@ -24,28 +20,24 @@ export type {
   MergedOutdatedPkg,
   NodeLinker,
 } from './dependency-resolver.main.runtime';
-export {
-  NPM_REGISTRY,
-  BIT_CLOUD_REGISTRY,
+export { NPM_REGISTRY, BIT_CLOUD_REGISTRY } from './dependency-resolver.main.runtime';
+export type {
   ProxyConfig as PackageManagerProxyConfig,
   NetworkConfig as PackageManagerNetworkConfig,
 } from './dependency-resolver.main.runtime';
-export {
+export { DependencyList, BaseDependency, ComponentDependency, KEY_NAME_BY_LIFECYCLE_TYPE } from './dependencies';
+export type {
   DependencyLifecycleType,
   WorkspaceDependencyLifecycleType,
-  DependencyList,
   DependencyFactory,
   SerializedDependency,
   Dependency,
-  BaseDependency,
   SemverVersion,
   DependenciesManifest,
-  ComponentDependency,
-  KEY_NAME_BY_LIFECYCLE_TYPE,
 } from './dependencies';
-export {
+export { WorkspacePolicy, VariantPolicy, EnvPolicy } from './policy';
+export type {
   WorkspacePolicyEntry,
-  WorkspacePolicy,
   WorkspacePolicyConfigObject,
   VariantPolicyConfigObject,
   Policy,
@@ -53,27 +45,26 @@ export {
   PolicyConfigKeys,
   PolicyConfigKeysNames,
   PolicyEntry,
-  VariantPolicy,
   SerializedVariantPolicy,
   WorkspacePolicyConfigKeysNames,
   EnvPolicyConfigObject,
-  EnvPolicy,
 } from './policy';
-export {
+export { DependencyLinker } from './dependency-linker';
+export type {
   CoreAspectLinkResult,
   LinkDetail,
   LinkResults,
   LinkingOptions,
-  DependencyLinker,
   DepsLinkedToEnvResult,
   NestedNMDepsLinksResult,
   LinkToDirResult,
 } from './dependency-linker';
-export { GetComponentManifestsOptions, InstallOptions, InstallArgs, DependencyInstaller } from './dependency-installer';
-export { DependencyDetector, FileContext } from './dependency-detector';
-export { DependencySource, VariantPolicyEntry } from './policy/variant-policy/variant-policy';
-export { OutdatedPkg } from './get-all-policy-pkgs';
+export { DependencyInstaller } from './dependency-installer';
+export type { GetComponentManifestsOptions, InstallOptions, InstallArgs } from './dependency-installer';
+export type { DependencyDetector, FileContext } from './dependency-detector';
+export type { DependencySource, VariantPolicyEntry } from './policy/variant-policy/variant-policy';
+export type { OutdatedPkg } from './get-all-policy-pkgs';
 export { extendWithComponentsFromDir } from './extend-with-components-from-dir';
 export { isRange } from './manifest/deduping/hoist-dependencies';
-export { DependencyEnv } from './dependency-env';
+export type { DependencyEnv } from './dependency-env';
 export { DependencyResolverAspect as default, DependencyResolverAspect };
