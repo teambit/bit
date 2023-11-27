@@ -1,4 +1,4 @@
-import { UNABLE_TO_LOAD_EXTENSION } from '@teambit/aspect-loader/constants';
+import { UNABLE_TO_LOAD_EXTENSION } from '@teambit/aspect-loader';
 import chai, { expect } from 'chai';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';

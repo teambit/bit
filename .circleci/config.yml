@@ -486,8 +486,8 @@ jobs:
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
       # - run: bvm install 0.0.910
-      # - run: bvm upgrade
-      - run: bvm install 1.3.10
+      - run: bvm upgrade
+      # - run: bvm install 1.3.10
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
@@ -550,6 +550,9 @@ jobs:
           name: 'bit status'
           command: 'cd bit && ./scripts/bit-status.sh'
       - run:
+          name: 'bit diff'
+          command: cd bit && bit diff
+      - run:
           name: 'bit build'
           command: 'cd bit && bit build'
           environment:
@@ -587,6 +590,7 @@ jobs:
       # temporary, check if we can remove it
       - run: cd bit && bit cc
       - run: cd bit && bit status
+      - run: cd bit && bit diff
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
@@ -603,6 +607,7 @@ jobs:
       - run: cd bit && npm run link-bit-legacy
       # temporary, check if we can remove it
       - run: cd bit && bit cc
+
       # - run: cd bit && bit config set cache.max.objects 100000
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:

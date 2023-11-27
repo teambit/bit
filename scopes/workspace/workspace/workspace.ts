@@ -890,7 +890,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     await componentConfigFile.write({ override: options.override });
     // remove config from the .bitmap as it's not needed anymore. it is replaced by the component.json
     this.bitMap.removeEntireConfig(id);
-    await this.bitMap.write();
+    await this.bitMap.write(`eject-conf (${id.toString()})`);
     return {
       configPath: ComponentConfigFile.composePath(componentDir),
     };
@@ -1334,7 +1334,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       );
     }
     newComponentIds.map((comp) => this.bitMap.setDefaultScope(comp, scopeName));
-    await this.bitMap.write();
+    await this.bitMap.write('scope-set');
     return newComponentIds;
   }
 
@@ -1356,7 +1356,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
     this.config.defaultScope = scopeName;
     await config.workspaceConfig?.write({ dir: path.dirname(config.workspaceConfig.path) });
-    await this.bitMap.write();
+    await this.bitMap.write('scope-set');
   }
 
   async addSpecificComponentConfig(
@@ -1790,7 +1790,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         await this.addSpecificComponentConfig(componentId, EnvsAspect.id, { env: envIdStrNoVersion });
       })
     );
-    await this.bitMap.write();
+    await this.bitMap.write(`env-set (${envId.toString()})`);
   }
 
   /**
@@ -1846,7 +1846,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         changed.push(id);
       })
     );
-    await this.bitMap.write();
+    await this.bitMap.write(`env-unset`);
     return { changed, unchanged };
   }
 
@@ -1919,7 +1919,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         (updated[envToUpdate.toString()] ||= []).push(comp.id);
       })
     );
-    await this.bitMap.write();
+    await this.bitMap.write('env-update');
     return { updated, alreadyUpToDate };
   }
 

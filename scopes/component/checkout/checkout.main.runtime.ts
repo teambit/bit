@@ -227,7 +227,7 @@ export class CheckoutMain {
     if (head) await this.makeLaneComponentsAvailableOnMain();
     await this.parseValues(componentPattern, checkoutProps);
     const checkoutResults = await this.checkout(checkoutProps);
-    await consumer.onDestroy();
+    await consumer.onDestroy(`checkout (${componentPattern})`);
     return checkoutResults;
   }
 
