@@ -34,7 +34,7 @@ export class ReactApp implements Application {
     readonly ssrBundler?: Bundler,
     readonly devServer?: DevServer,
     readonly transformers: WebpackConfigTransformer[] = [],
-    readonly deploy?: (context: ReactDeployContext) => Promise<undefined>,
+    readonly deploy?: (context: ReactDeployContext) => Promise<void>,
     readonly favicon?: string,
     readonly webpackModulePath?: string,
     readonly webpackDevServerModulePath?: string

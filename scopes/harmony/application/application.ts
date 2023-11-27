@@ -4,7 +4,7 @@ import { AppBuildContext } from './app-build-context';
 import { AppBuildResult } from './app-build-result';
 import { ApplicationDeployment, ApplicationInstance } from './app-instance';
 
-export type DeployFn = (context: AppDeployContext) => Promise<ApplicationDeployment|undefined>;
+export type DeployFn = (context: AppDeployContext) => Promise<ApplicationDeployment|void|undefined>;
 
 export type BuildFn = (context: AppBuildContext) => Promise<AppBuildResult>;
 
