@@ -20,20 +20,12 @@ export type Specifier = {
  */
 export type ImportSpecifier = {
   mainFile: Specifier;
-  linkFile?: Specifier; // relevant only when the dependency is a link file (e.g. index.js which import and export the variable from other file)
 };
 
 export type FileObject = {
   file: string;
   importSpecifiers?: ImportSpecifier[];
   importSource?: string;
-  isLink?: boolean;
-  linkDependencies?: Record<string, any>[];
-};
-
-export type LinkFile = {
-  file: string;
-  importSpecifiers: ImportSpecifier[];
 };
 
 type MissingType = 'files' | 'packages' | 'components';
