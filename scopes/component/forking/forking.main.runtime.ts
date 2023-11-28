@@ -171,7 +171,7 @@ export class ForkingMain {
     };
     const patternWithScopeName = getPatternWithScopeName();
     const idsFromOriginalScope = patternWithScopeName
-      ? this.workspace.scope.filterIdsFromPoolIdsByPattern(patternWithScopeName, allIdsFromOriginalScope)
+      ? await this.workspace.scope.filterIdsFromPoolIdsByPattern(patternWithScopeName, allIdsFromOriginalScope)
       : allIdsFromOriginalScope;
     const workspaceIds = await this.workspace.listIds();
     const workspaceBitIds = ComponentIdList.fromArray(workspaceIds.map((id) => id));
