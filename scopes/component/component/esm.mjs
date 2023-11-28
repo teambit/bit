@@ -12,7 +12,6 @@ export const Tag = cjsModule.Tag;
 export const State = cjsModule.State;
 export const TagMap = cjsModule.TagMap;
 export const ComponentMap = cjsModule.ComponentMap;
-export const Section = cjsModule.Section;
 export const ComponentContext = cjsModule.ComponentContext;
 export const ComponentDescriptorContext = cjsModule.ComponentDescriptorContext;
 export const ComponentProvider = cjsModule.ComponentProvider;
