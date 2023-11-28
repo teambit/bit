@@ -19,7 +19,7 @@ import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
 import { uniq } from 'lodash';
-import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
+import { writeFileSync, existsSync, mkdirSync, readFileSync } from 'fs-extra';
 import { join } from 'path';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { AspectLoaderAspect, getAspectDir, getAspectDirFromBvm } from '@teambit/aspect-loader';
@@ -60,6 +60,8 @@ import { ComponentPreviewRoute } from './component-preview.route';
 import { previewSchema } from './preview.graphql';
 import { PreviewAssetsRoute } from './preview-assets.route';
 import { PreviewService } from './preview.service';
+import { buildPreBundlePreview, generateBundlePreviewEntry } from './pre-bundle';
+import { getBundlePath } from './foo';
 
 const noopResult = {
   results: [],
@@ -600,10 +602,37 @@ export class PreviewMain {
       this.executionRefs.set(ctxId, new ExecutionRef(context));
     });
 
-    const previewRuntime = await this.writePreviewRuntime(context);
+    // const previewRuntime = await this.writePreviewRuntime(context);
+    const previewRuntime = await this.writePreviewEntry(context);
     const linkFiles = await this.updateLinkFiles(context.components, context);
 
     return [...linkFiles, previewRuntime];
+  }
+
+  private async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
+    const [name, uiRoot] = this.getUi();
+    const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
+    const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
+    await buildPreBundlePreview(filteredAspects);
+    const preBundlePreviewPath = getBundlePath(PreviewAspect.id, 'pre-bundle-preview', '');
+    const previewPreBundlePath = preBundlePreviewPath
+      ? join(preBundlePreviewPath, 'public/bit-preview')
+      : join(uiRoot.path, 'public/bit-preview');
+
+    const previewRuntime = await generateBundlePreviewEntry(
+      name,
+      previewPreBundlePath,
+      // harmonyConfig
+      this.harmony.config.toObject()
+    );
+    // eslint-disable-next-line no-console
+    console.log('\n[writePreviewEntry]', {
+      preBundlePreviewPath,
+      uiPath: uiRoot.path,
+      previewPreBundlePath,
+      previewRuntime,
+    });
+    return previewRuntime;
   }
 
   private updateLinkFiles(components: Component[] = [], context: ExecutionContext) {
@@ -660,6 +689,23 @@ export class PreviewMain {
     const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
     const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
     const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id);
+    // eslint-disable-next-line no-console
+    console.log('\n[writePreviewRuntime 3]', {
+      name,
+      runtimeName: 'preview',
+      previewAspectId: PreviewAspect.id,
+      filePath,
+    });
+    try {
+      const contents = readFileSync(filePath, 'utf-8');
+      // eslint-disable-next-line no-console
+      console.log(contents);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log({ e });
+    }
+    // eslint-disable-next-line no-console
+    console.log('[over]');
     return filePath;
   }
 
