@@ -11,6 +11,7 @@ import { DependenciesData } from './dependencies-data';
 import PackageJsonFile from '../../../../consumer/component/package-json-file';
 import { DependencyDetector } from '../files-dependency-builder/detector-hook';
 import DependencyResolver from './dependencies-resolver';
+import { ResolvedPackageData } from '../../../../utils/packages';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -203,6 +204,67 @@ export class ApplyOverrides {
       shouldBeIncludedDev,
       this.allPackagesDependencies.devPackageDependencies
     );
+  }
+
+  // TODO: maybe cache those results??
+  private _resolvePackageData(packageName: string): ResolvedPackageData | undefined {
+    const rootDir: PathLinux | null | undefined = this.componentMap.rootDir;
+    const consumerPath = this.consumer.getPath();
+    const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const modulePath = resolvePackagePath(packageName, basePath, consumerPath);
+    if (!modulePath) return undefined; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component
+    const packageObject = resolvePackageData(basePath, modulePath);
+    return packageObject;
+  }
+
+  private _getComponentIdToAdd(
+    field: string,
+    dependency: string
+  ): { componentId?: ComponentID; packageName?: string } | undefined {
+    if (field === 'peerDependencies') return undefined;
+    const packageData = this._resolvePackageData(dependency);
+    return { componentId: packageData?.componentId, packageName: packageData?.name };
+  }
+
+  getDependenciesToAddManually(
+    packageJson: Record<string, any> | null | undefined,
+    existingDependencies: AllDependencies
+  ): { components: Record<string, any>; packages: Record<string, any> } | undefined {
+    const overrides = this.overridesDependencies.getDependenciesToAddManually();
+    if (!overrides) return undefined;
+    const components = {};
+    const packages = {};
+    DEPENDENCIES_FIELDS.forEach((depField) => {
+      if (!overrides[depField]) return;
+      Object.keys(overrides[depField]).forEach((dependency) => {
+        const dependencyValue = overrides[depField][dependency];
+        const componentData = this._getComponentIdToAdd(depField, dependency);
+        if (componentData?.componentId) {
+          const dependencyExist = existingDependencies[depField].find((d) =>
+            d.id.isEqualWithoutVersion(componentData.componentId)
+          );
+          if (!dependencyExist) {
+            this.overridesDependencies._addManuallyAddedDep(depField, componentData.componentId.toString());
+            components[depField] ? components[depField].push(componentData) : (components[depField] = [componentData]);
+          }
+          return;
+        }
+        const addedPkg = this.overridesDependencies._manuallyAddPackage(
+          depField,
+          dependency,
+          dependencyValue,
+          packageJson
+        );
+        if (addedPkg) {
+          packages[depField] = Object.assign(packages[depField] || {}, addedPkg);
+          if (componentData && !componentData.packageName) {
+            this.overridesDependencies.missingPackageDependencies.push(dependency);
+          }
+        }
+      });
+    });
+    return { components, packages };
   }
 
   private manuallyAddDependencies() {
