@@ -572,7 +572,7 @@
     },
     "nodeLinker": "hoisted",
     "rootComponents": true,
-    "nodeVersion": "18.17.1",
+    "nodeVersion": "18.18.2",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
@@ -968,7 +968,7 @@
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
           "bvm": {
-            "node": "18.17.1"
+            "node": "18.18.2"
           },
           "bin": {
             "bbit": "bin/bit"
