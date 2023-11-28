@@ -4,20 +4,13 @@ import { union, cloneDeep } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
 import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
-import Consumer from '../../../../consumer/consumer';
-import { getExt } from '../../../../utils';
-import { PathLinuxRelative, PathOsBased } from '../../../../utils/path';
-import ComponentMap from '../../../bit-map/component-map';
 import Component from '../../../component/consumer-component';
 import { DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
 import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';
-import { packageToDefinetlyTyped } from './package-to-definetly-typed';
-import { ExtensionDataList } from '../../../config';
 import PackageJsonFile from '../../../../consumer/component/package-json-file';
-import { SourceFile } from '../../sources';
-import { DependenciesOverridesData } from '../../../config/component-overrides';
 import { DependencyDetector } from '../files-dependency-builder/detector-hook';
+import DependencyResolver from './dependencies-resolver';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -51,29 +44,11 @@ export type DebugComponentsDependency = {
   packageName?: string;
 };
 
-type WorkspacePolicyGetter = () => {
-  dependencies?: Record<string, string>;
-  peerDependencies?: Record<string, string>;
-};
-
 export type EnvPolicyForComponent = {
   dependencies: { [name: string]: string };
   devDependencies: { [name: string]: string };
   peerDependencies: { [name: string]: string };
 };
-
-type HarmonyEnvPeersPolicyForEnvItselfGetter = (
-  componentId: ComponentID,
-  files: SourceFile[]
-) => Promise<{ [name: string]: string } | undefined>;
-
-type OnComponentAutoDetectOverrides = (
-  configuredExtensions: ExtensionDataList,
-  componentId: ComponentID,
-  files: SourceFile[]
-) => Promise<DependenciesOverridesData>;
-
-type OnComponentAutoDetectConfigMerge = (componentId: ComponentID) => DependenciesOverridesData | undefined;
 
 const DepsKeysToAllPackagesDepsKeys = {
   dependencies: 'packageDependencies',
@@ -81,13 +56,8 @@ const DepsKeysToAllPackagesDepsKeys = {
   peerDependencies: 'peerPackageDependencies',
 };
 
-type GetEnvDetectors = (extensions: ExtensionDataList) => Promise<DependencyDetector[] | null>;
-
-export default class DependencyResolver {
-  component: Component;
-  consumer: Consumer;
+export class ApplyOverrides {
   componentId: ComponentID;
-  componentMap: ComponentMap;
   componentFromModel: Component;
   tree: DependenciesTree;
   allDependencies: AllDependencies;
@@ -105,44 +75,8 @@ export default class DependencyResolver {
   autoDetectOverrides: Record<string, any>;
   autoDetectConfigMerge: Record<string, any>;
 
-  static getWorkspacePolicy: WorkspacePolicyGetter;
-  static registerWorkspacePolicyGetter(func: WorkspacePolicyGetter) {
-    this.getWorkspacePolicy = func;
-  }
-
-  static envDetectorsGetter: GetEnvDetectors;
-  static registerEnvDetectorGetter(getter: GetEnvDetectors) {
-    this.envDetectorsGetter = getter;
-  }
-
-  static getOnComponentAutoDetectOverrides: OnComponentAutoDetectOverrides;
-  static registerOnComponentAutoDetectOverridesGetter(func: OnComponentAutoDetectOverrides) {
-    this.getOnComponentAutoDetectOverrides = func;
-  }
-
-  static getOnComponentAutoDetectConfigMerge: OnComponentAutoDetectConfigMerge;
-  static registerOnComponentAutoDetectConfigMergeGetter(func: OnComponentAutoDetectConfigMerge) {
-    this.getOnComponentAutoDetectConfigMerge = func;
-  }
-
-  /**
-   * This will get the peers policy provided by the env of the component
-   */
-  static getHarmonyEnvPeersPolicyForEnvItself: HarmonyEnvPeersPolicyForEnvItselfGetter;
-  static registerHarmonyEnvPeersPolicyForEnvItselfGetter(func: HarmonyEnvPeersPolicyForEnvItselfGetter) {
-    this.getHarmonyEnvPeersPolicyForEnvItself = func;
-  }
-
-  static getDepResolverAspectName: () => string;
-  static getCoreAspectsPackagesAndIds: () => Record<string, string>;
-  static getDevFiles: (component: Component) => Promise<string[]>;
-
-  constructor(component: Component, consumer: Consumer) {
-    this.component = component;
-    this.consumer = consumer;
+  constructor(private component: Component) {
     this.componentId = component.componentId;
-    // the consumerComponent is coming from the workspace, so it must have the componentMap prop
-    this.componentMap = this.component.componentMap as ComponentMap;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
     this.allDependencies = {
@@ -556,49 +490,6 @@ export default class DependencyResolver {
     if (this.componentFromModel && this.componentFromModel.isLegacy) {
       this.issues.getOrCreate(IssuesClasses.LegacyInsideHarmony).data = true;
     }
-  }
-
-  /**
-   * when requiring packages in typescript, sometimes there are the types packages with the same
-   * name, which the user probably wants as well. for example, requiring `foo` package, will also
-   * add `@types/foo` to the devDependencies if it has been found in the user `package.json` file.
-   *
-   * ideally this should be in bit-javascript. however, the decision where to put these `@types`
-   * packages (dependencies/devDependencies) is done here according to the user `package.json`
-   * and can't be done there because the `Tree` we get from bit-javascript doesn't have this
-   * distinction.
-   */
-  private _addTypesPackagesForTypeScript(packageNames: string[], originFile: PathLinuxRelative): void {
-    if (packageNames.length === 0) return;
-    const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
-    if (!isTypeScript) return;
-    const depsHost = DependencyResolver.getWorkspacePolicy();
-    const addFromConfig = (packageName: string): boolean => {
-      if (!depsHost) return false;
-      return DEPENDENCIES_FIELDS.some((depField) => {
-        if (!depsHost[depField]) return false;
-        const typesPackage = packageToDefinetlyTyped(packageName);
-        if (!depsHost[depField][typesPackage]) return false;
-        Object.assign(this.allPackagesDependencies.devPackageDependencies, {
-          [typesPackage]: depsHost[depField][typesPackage],
-        });
-        return true;
-      });
-    };
-    const addFromModel = (packageName: string) => {
-      if (!this.componentFromModel) return;
-      const typesPackage = packageToDefinetlyTyped(packageName);
-      const typedPackageFromModel = this.componentFromModel.devPackageDependencies[typesPackage];
-      if (!typedPackageFromModel) return;
-      Object.assign(this.allPackagesDependencies.devPackageDependencies, {
-        [typesPackage]: typedPackageFromModel,
-      });
-    };
-
-    packageNames.forEach((packageName) => {
-      const added = addFromConfig(packageName);
-      if (!added) addFromModel(packageName);
-    });
   }
 
   private _pkgFieldMapping(field: string) {
