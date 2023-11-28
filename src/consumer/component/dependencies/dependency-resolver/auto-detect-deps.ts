@@ -462,6 +462,45 @@ export class AutoDetectDeps {
         // prefer the version from the model over the version from the node_modules
         return getExistingIdFromModel() ?? componentId;
       };
+      const getExistingId = (): ComponentID | undefined => {
+        // // @todo: see how to implement
+        // if (this.isPkgInOverrides(compDep.name)) {
+        //   return componentId;
+        // }
+
+        const fromBitmap = getExistingIdFromBitmap();
+        if (fromBitmap) {
+          depDebug.versionResolvedFrom = 'BitMap';
+          return fromBitmap;
+        }
+
+        // Happens when the dep is not in the node_modules
+        if (!version) return getExistingIdFromModel();
+
+        // In case it's resolved from the node_modules, and it's also in the ws policy or variants,
+        // use the resolved version from the node_modules / package folder
+        if (this.isPkgInWorkspacePolicies(compDep.name)) {
+          return componentId;
+        }
+
+        // merge config here is only auto-detected ones. their priority is less then the ws policy
+        // otherwise, imagine you merge a lane, you don't like the dependency you got from the other lane, you run
+        // bit-install to change it, but it won't do anything.
+        const fromMergeConfig = getFromMergeConfig();
+        if (fromMergeConfig) {
+          depDebug.versionResolvedFrom = 'MergeConfig';
+          return fromMergeConfig;
+        }
+
+        // @todo: see how to implement
+        // if (this.isPkgInAutoDetectOverrides(compDep.name)) {
+        //   return componentId;
+        // }
+
+        // If there is a version in the node_modules/package folder, but it's not in the ws policy,
+        // prefer the version from the model over the version from the node_modules
+        return getExistingIdFromModel() ?? componentId;
+      };
       const existingId = getExistingId();
       if (existingId) {
         if (existingId.isEqual(this.componentId)) {
@@ -477,6 +516,21 @@ export class AutoDetectDeps {
       }
     });
   }
+
+  // private isPkgInOverrides(pkgName: string): boolean {
+  //   const dependencies = this.overridesDependencies.getDependenciesToAddManually();
+  //   if (!dependencies) return false;
+  //   const allDeps = Object.values(dependencies)
+  //     .map((obj) => Object.keys(obj))
+  //     .flat();
+  //   return allDeps.includes(pkgName);
+  // }
+
+  // private isPkgInAutoDetectOverrides(pkgName: string): boolean {
+  //   return DEPENDENCIES_FIELDS.some(
+  //     (depField) => this.autoDetectOverrides[depField] && this.autoDetectOverrides[depField][pkgName]
+  //   );
+  // }
 
   private isPkgInWorkspacePolicies(pkgName: string) {
     return DependencyResolver.getWorkspacePolicy().dependencies?.[pkgName];
