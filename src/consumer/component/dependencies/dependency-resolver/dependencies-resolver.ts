@@ -643,7 +643,7 @@ export default class DependencyResolver {
         return undefined;
       };
       const getExistingId = (): ComponentID | undefined => {
-        if (this.isPkgInVariants(compDep.name)) {
+        if (this.isPkgInOverrides(compDep.name)) {
           return componentId;
         }
 
@@ -671,6 +671,10 @@ export default class DependencyResolver {
           return fromMergeConfig;
         }
 
+        if (this.isPkgInAutoDetectOverrides(compDep.name)) {
+          return componentId;
+        }
+
         // If there is a version in the node_modules/package folder, but it's not in the ws policy,
         // prefer the version from the model over the version from the node_modules
         return getExistingIdFromModel() ?? componentId;
@@ -694,23 +698,19 @@ export default class DependencyResolver {
   private isPkgInWorkspacePolicies(pkgName: string) {
     return DependencyResolver.getWorkspacePolicy().dependencies?.[pkgName];
   }
-  private isPkgInVariants(pkgName: string): boolean {
+  private isPkgInOverrides(pkgName: string): boolean {
     const dependencies = this.overridesDependencies.getDependenciesToAddManually();
-    const isInRegularOverrides = () => {
-      if (!dependencies) return false;
-      const allDeps = Object.values(dependencies)
-        .map((obj) => Object.keys(obj))
-        .flat();
-      return allDeps.includes(pkgName);
-    };
+    if (!dependencies) return false;
+    const allDeps = Object.values(dependencies)
+      .map((obj) => Object.keys(obj))
+      .flat();
+    return allDeps.includes(pkgName);
+  }
 
-    const autoDetectOverrides = this.autoDetectOverrides;
-    const isInAutoDetectOverrides = (autoDetectOverridesDeps) => {
-      return DEPENDENCIES_FIELDS.some(
-        (depField) => autoDetectOverridesDeps[depField] && autoDetectOverridesDeps[depField][pkgName]
-      );
-    };
-    return isInRegularOverrides() || isInAutoDetectOverrides(autoDetectOverrides);
+  private isPkgInAutoDetectOverrides(pkgName: string): boolean {
+    return DEPENDENCIES_FIELDS.some(
+      (depField) => this.autoDetectOverrides[depField] && this.autoDetectOverrides[depField][pkgName]
+    );
   }
 
   private addImportNonMainIssueIfNeeded(filePath: PathLinuxRelative, dependencyPkgData: ResolvedPackageData) {
