@@ -1,0 +1,14 @@
+.currentUser {
+  height: 32px;
+  width: 32px;
+  cursor: pointer;
+  > img {
+    height: 100%;
+    width: 100%;
+    border-radius: 50%;
+  }
+}
+
+.loader {
+  color: var(--on-surface-neutral-low-color, #9598a1);
+}
