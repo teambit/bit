@@ -15,6 +15,7 @@ import { EnvsAspect } from '@teambit/envs';
 import type { EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain, UIRoot } from '@teambit/ui';
+import { CacheAspect, CacheMain } from '@teambit/cache';
 import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
@@ -61,7 +62,7 @@ import { previewSchema } from './preview.graphql';
 import { PreviewAssetsRoute } from './preview-assets.route';
 import { PreviewService } from './preview.service';
 import { buildPreBundlePreview, generateBundlePreviewEntry } from './pre-bundle';
-import { createBundleHash, getBundlePath, readBundleHash } from './foo';
+import { createBundleHash, getBundlePath, readBundleHash } from './pre-bundle-utils';
 
 const noopResult = {
   results: [],
@@ -166,6 +167,8 @@ export class PreviewMain {
     private previewSlot: PreviewDefinitionRegistry,
 
     private ui: UiMain,
+
+    private cache: CacheMain,
 
     private envs: EnvsMain,
 
@@ -613,37 +616,54 @@ export class PreviewMain {
     const { rebuild, skipUiBuild } = this.ui.runtimeOptions;
 
     const [name, uiRoot] = this.getUi();
-    const bundleHash = await createBundleHash(uiRoot, 'preview');
-    const lastBundleHash = readBundleHash(PreviewAspect.id, 'pre-bundle-preview', '');
+    const currentBundleHash = await createBundleHash(uiRoot, 'preview');
+    const preBundleHash = readBundleHash(PreviewAspect.id, 'pre-bundle-preview', '');
+    const workspaceBundleDir = join(uiRoot.path, 'public/bit-preview');
+    const lastBundleHash = await this.cache.get(`${uiRoot.path}|preview`);
+    // eslint-disable-next-line no-console
+    console.log({
+      rebuild,
+      skipUiBuild,
+      currentBundleHash,
+      lastBundleHash,
+      preBundleHash,
+      workspaceBundleDir,
+    });
 
-    // - rebuild -> build
-    // - !rebuild && skipUiBuild -> skip
-    // - !rebuild && !skipUiBuild && bundleHash === lastBundleHash -> skip
-    // - !rebuild && !skipUiBuild && bundleHash !== lastBundleHash -> build
-    if (rebuild || (!skipUiBuild && bundleHash !== lastBundleHash)) {
+    let bundlePath = '';
+
+    if (!rebuild && !existsSync(workspaceBundleDir) && (currentBundleHash === preBundleHash || skipUiBuild)) {
+      // use pre-bundle
+      // eslint-disable-next-line no-console
+      console.log('\n[use pre bundle]');
+      bundlePath = getBundlePath(PreviewAspect.id, 'pre-bundle-preview', '') as string;
+    } else if (!rebuild && existsSync(workspaceBundleDir) && (currentBundleHash === lastBundleHash || skipUiBuild)) {
+      // use workspace bundle
+      // eslint-disable-next-line no-console
+      console.log('\n[use workspace bundle]');
+      bundlePath = workspaceBundleDir;
+    } else {
+      // do build
+      // eslint-disable-next-line no-console
+      console.log('\n[do build]');
       const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
       const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
 
       await buildPreBundlePreview(filteredAspects);
+      bundlePath = workspaceBundleDir;
+      await this.cache.set(`${uiRoot.path}|preview`, currentBundleHash);
     }
-
-    // TODO: check root public dir first, then bvm
-    const preBundlePreviewPath = getBundlePath(PreviewAspect.id, 'pre-bundle-preview', '');
-    const previewPreBundlePath = preBundlePreviewPath
-      ? join(preBundlePreviewPath, 'public/bit-preview') // TODO: double-check
-      : join(uiRoot.path, 'public/bit-preview');
 
     const previewRuntime = await generateBundlePreviewEntry(
       name,
-      previewPreBundlePath,
+      bundlePath,
       // harmonyConfig
       this.harmony.config.toObject()
     );
     // eslint-disable-next-line no-console
     console.log('\n[writePreviewEntry]', {
-      preBundlePreviewPath,
+      bundlePath,
       uiPath: uiRoot.path,
-      previewPreBundlePath,
       previewRuntime,
     });
     return previewRuntime;
@@ -860,6 +880,7 @@ export class PreviewMain {
     BuilderAspect,
     ComponentAspect,
     UIAspect,
+    CacheAspect,
     EnvsAspect,
     WorkspaceAspect,
     PkgAspect,
@@ -882,6 +903,7 @@ export class PreviewMain {
       builder,
       componentExtension,
       uiMain,
+      cache,
       envs,
       workspace,
       pkg,
@@ -896,6 +918,7 @@ export class PreviewMain {
       BuilderMain,
       ComponentMain,
       UiMain,
+      CacheMain,
       EnvsMain,
       Workspace | undefined,
       PkgMain,
@@ -916,6 +939,7 @@ export class PreviewMain {
       harmony,
       previewSlot,
       uiMain,
+      cache,
       envs,
       componentExtension,
       pkg,

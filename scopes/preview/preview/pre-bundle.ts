@@ -14,7 +14,7 @@ import webpack from 'webpack';
 import { promisify } from 'util';
 import { PreviewAspect } from './preview.aspect';
 // import createPreBundleConfig from './webpack/webpack.prebundle.config';
-import { createWebpackConfig, clearConsole } from './foo';
+import { createWebpackConfig, clearConsole } from './pre-bundle-utils';
 
 export const PRE_BUNDLE_PREVIEW_RUNTIME_NAME = 'preview';
 export const PRE_BUNDLE_PREVIEW_TASK_NAME = 'PreBundlePreview';
