@@ -25,5 +25,6 @@ export const useComponent = cjsModule.useComponent;
 export const useIdFromLocation = cjsModule.useIdFromLocation;
 export const useComponentLogs = cjsModule.useComponentLogs;
 export const Config = cjsModule.Config;
+export const ComponentModel = cjsModule.ComponentModel;
 
 export default cjsModule;

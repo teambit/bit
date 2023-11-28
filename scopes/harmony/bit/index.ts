@@ -1,4 +1,5 @@
-export { Aspect, RuntimeManifest, RuntimeDefinition } from '@teambit/harmony';
+export type { RuntimeManifest } from '@teambit/harmony';
+export { Aspect, RuntimeDefinition } from '@teambit/harmony';
 export { Hook, HookRegistry } from './hooks';
 export { manifestsMap, isCoreAspect, getAllCoreAspectsIds } from './manifests';
 export { registerCoreExtensions } from './bit.main.runtime';
