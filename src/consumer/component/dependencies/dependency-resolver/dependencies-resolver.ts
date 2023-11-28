@@ -9,7 +9,6 @@ import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
-import GeneralError from '../../../../error/general-error';
 import logger from '../../../../logger/logger';
 import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
 import { PathLinux, PathLinuxRelative, PathOsBased, removeFileExtension } from '../../../../utils/path';
@@ -446,12 +445,6 @@ export default class DependencyResolver {
       this._pushToUntrackDependenciesIssues(originFile, depFileRelative, nested);
       return true;
     }
-    if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
-      // we can't support it because on the imported side, we don't know to convert the relative path
-      // to the component name, as it won't have the component installed
-      throw new GeneralError(`unable to ignore "${componentId.toString()}" dependency of "${this.componentId.toString()}" by using ignore components syntax because the component is required with relative path.
-either, use the ignore file syntax or change the require statement to have a module path`);
-    }
     // happens when in the same component one file requires another one. In this case, there is
     // noting to do regarding the dependencies
     if (componentId.isEqual(this.componentId, { ignoreVersion: true })) {
@@ -561,7 +554,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (version) {
         componentId = componentId.changeVersion(version);
       }
-      if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
+      if (this.overridesDependencies.shouldIgnorePackage(compDep.name, fileType)) {
         return;
       }
       const getExistingIdFromBitmap = (): ComponentID | undefined => {
