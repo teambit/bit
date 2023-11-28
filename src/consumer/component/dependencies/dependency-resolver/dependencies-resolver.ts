@@ -643,6 +643,10 @@ export default class DependencyResolver {
         return undefined;
       };
       const getExistingId = (): ComponentID | undefined => {
+        if (this.isPkgInVariants(compDep.name)) {
+          return componentId;
+        }
+
         const fromBitmap = getExistingIdFromBitmap();
         if (fromBitmap) {
           depDebug.versionResolvedFrom = 'BitMap';
@@ -665,10 +669,6 @@ export default class DependencyResolver {
         if (fromMergeConfig) {
           depDebug.versionResolvedFrom = 'MergeConfig';
           return fromMergeConfig;
-        }
-
-        if (this.isPkgInVariants(compDep.name)) {
-          return componentId;
         }
 
         // If there is a version in the node_modules/package folder, but it's not in the ws policy,
