@@ -1,5 +1,4 @@
 import path from 'path';
-import _ from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import { DEPENDENCIES_FIELDS, MANUALLY_ADD_DEPENDENCY, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
@@ -65,22 +64,6 @@ export default class OverridesDependencies {
     return ignore;
   }
 
-  shouldIgnoreComponent(componentId: ComponentID, fileType: FileType): boolean {
-    const componentIdStr = componentId.toStringWithoutVersion();
-    const shouldIgnore = (ids: ComponentID[]) => {
-      return ids.some((id) => {
-        return componentId.isEqual(id, { ignoreVersion: true });
-      });
-    };
-    const field = fileType.isTestFile ? 'devDependencies' : 'dependencies';
-    const ignoredComponents = this._getIgnoredComponentsByField(field);
-    const ignore = shouldIgnore(ignoredComponents);
-    if (ignore) {
-      this._addManuallyRemovedDep(field, componentIdStr);
-    }
-    return ignore;
-  }
-
   getDependenciesToAddManually(
     packageJson: Record<string, any> | null | undefined,
     existingDependencies: AllDependencies
@@ -117,12 +100,6 @@ export default class OverridesDependencies {
     return { components, packages };
   }
 
-  _getIgnoredComponentsByField(field: 'devDependencies' | 'dependencies' | 'peerDependencies'): ComponentID[] {
-    const ignoredPackages = this.component.overrides.getIgnoredPackages(field);
-    const ignoredComponents = ignoredPackages.map((packageName) => this._getComponentIdFromPackage(packageName));
-    return _.compact(ignoredComponents);
-  }
-
   _getComponentIdToAdd(
     field: string,
     dependency: string
@@ -130,11 +107,6 @@ export default class OverridesDependencies {
     if (field === 'peerDependencies') return undefined;
     const packageData = this._resolvePackageData(dependency);
     return { componentId: packageData?.componentId, packageName: packageData?.name };
-  }
-
-  _getComponentIdFromPackage(packageName: string): ComponentID | undefined {
-    const packageData = this._resolvePackageData(packageName);
-    return packageData?.componentId;
   }
 
   _manuallyAddPackage(
