@@ -15,7 +15,7 @@ export class DependenciesData {
     public allPackagesDependencies: AllPackagesDependencies,
     public issues: IssuesList,
     public coreAspects: string[],
-    public overridesDependencies?: OverridesDependenciesData
+    public overridesDependencies: OverridesDependenciesData
   ) {}
 
   serialize(): string {

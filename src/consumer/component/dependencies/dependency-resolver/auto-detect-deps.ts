@@ -18,48 +18,15 @@ import { RelativePath } from '../dependency';
 import { getDependencyTree } from '../files-dependency-builder';
 import { FileObject, ImportSpecifier, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
 import { ResolvedPackageData } from '../../../../utils/packages';
-import { DependenciesData } from './dependencies-data';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 import { DependencyDetector } from '../files-dependency-builder/detector-hook';
-import DependencyResolver from './dependencies-resolver';
-
-export type AllDependencies = {
-  dependencies: Dependency[];
-  devDependencies: Dependency[];
-};
-
-export type AllPackagesDependencies = {
-  packageDependencies: Record<string, string>;
-  devPackageDependencies: Record<string, string>;
-  peerPackageDependencies: Record<string, string>;
-};
-
-export type FileType = {
-  isTestFile: boolean;
-};
-
-export type DebugDependencies = {
-  components: DebugComponentsDependency[];
-  unidentifiedPackages?: string[];
-};
-
-export type DebugComponentsDependency = {
-  id: ComponentID;
-  importSource?: string;
-  dependencyPackageJsonPath?: string;
-  dependentPackageJsonPath?: string;
-  // can be resolved here or can be any one of the strategies in dependencies-version-resolver
-  versionResolvedFrom?: 'DependencyPkgJson' | 'DependentPkgJson' | 'BitMap' | 'Model' | 'MergeConfig' | string;
-  version?: string;
-  componentIdResolvedFrom?: 'DependencyPkgJson' | 'DependencyPath';
-  packageName?: string;
-};
-
-export type EnvPolicyForComponent = {
-  dependencies: { [name: string]: string };
-  devDependencies: { [name: string]: string };
-  peerDependencies: { [name: string]: string };
-};
+import DependencyResolver, {
+  AllDependencies,
+  AllPackagesDependencies,
+  DebugComponentsDependency,
+  DebugDependencies,
+  FileType,
+} from './dependencies-resolver';
 
 export class AutoDetectDeps {
   component: Component;
@@ -71,11 +38,6 @@ export class AutoDetectDeps {
   tree: DependenciesTree;
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
-  /**
-   * This will store a copy of the package deps before removal
-   * in order to apply auto detected rules that are running after the removal
-   */
-  originAllPackagesDependencies: AllPackagesDependencies;
   issues: IssuesList;
   coreAspects: string[] = [];
   processedFiles: string[];
@@ -102,7 +64,6 @@ export class AutoDetectDeps {
     };
     this.processedFiles = [];
     this.issues = component.issues;
-    this.setLegacyInsideHarmonyIssue();
     this.debugDependenciesData = { components: [] };
   }
 
@@ -133,7 +94,7 @@ export class AutoDetectDeps {
   async getDependenciesData(
     cacheResolvedDependencies: Record<string, any>,
     cacheProjectAst: Record<string, any> | undefined
-  ): Promise<DependenciesData> {
+  ) {
     const componentDir = path.join(this.consumerPath, this.componentMap.rootDir);
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
     const allFiles = [...nonTestsFiles, ...testsFiles];
@@ -153,7 +114,11 @@ export class AutoDetectDeps {
     this.setTree(dependenciesTree.tree);
     const devFiles = await DependencyResolver.getDevFiles(this.component);
     await this.populateDependencies(allFiles, devFiles);
-    return new DependenciesData(this.allDependencies, this.allPackagesDependencies, this.issues, this.coreAspects);
+    return {
+      allDependencies: this.allDependencies,
+      allPackagesDependencies: this.allPackagesDependencies,
+      coreAspects: this.coreAspects,
+    };
   }
 
   async getEnvDetectors(): Promise<DependencyDetector[] | null> {
@@ -773,12 +738,6 @@ export class AutoDetectDeps {
   private getDiffSpecifiers(originSpecifiers: ImportSpecifier[], targetSpecifiers: ImportSpecifier[]) {
     const cmp = (specifier1, specifier2) => specifier1.mainFile.name === specifier2.mainFile.name;
     return R.differenceWith(cmp, targetSpecifiers, originSpecifiers);
-  }
-
-  private setLegacyInsideHarmonyIssue() {
-    if (this.componentFromModel && this.componentFromModel.isLegacy) {
-      this.issues.getOrCreate(IssuesClasses.LegacyInsideHarmony).data = true;
-    }
   }
 
   /**

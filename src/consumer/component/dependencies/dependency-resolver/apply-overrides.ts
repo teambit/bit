@@ -6,54 +6,19 @@ import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
 import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
 import Component from '../../../component/consumer-component';
-import { DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
 import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';
 import PackageJsonFile from '../../../../consumer/component/package-json-file';
 import { DependencyDetector } from '../files-dependency-builder/detector-hook';
-import DependencyResolver from './dependencies-resolver';
+import DependencyResolver, {
+  AllDependencies,
+  AllPackagesDependencies,
+  DebugDependencies,
+} from './dependencies-resolver';
 import { ResolvedPackageData, resolvePackageData } from '../../../../utils/packages';
 import { PathLinux } from '../../../../utils/path';
 import Consumer from '../../../consumer';
 import ComponentMap from '../../../bit-map/component-map';
-
-export type AllDependencies = {
-  dependencies: Dependency[];
-  devDependencies: Dependency[];
-};
-
-export type AllPackagesDependencies = {
-  packageDependencies: Record<string, string>;
-  devPackageDependencies: Record<string, string>;
-  peerPackageDependencies: Record<string, string>;
-};
-
-export type FileType = {
-  isTestFile: boolean;
-};
-
-export type DebugDependencies = {
-  components: DebugComponentsDependency[];
-  unidentifiedPackages?: string[];
-};
-
-export type DebugComponentsDependency = {
-  id: ComponentID;
-  importSource?: string;
-  dependencyPackageJsonPath?: string;
-  dependentPackageJsonPath?: string;
-  // can be resolved here or can be any one of the strategies in dependencies-version-resolver
-  versionResolvedFrom?: 'DependencyPkgJson' | 'DependentPkgJson' | 'BitMap' | 'Model' | 'MergeConfig' | string;
-  version?: string;
-  componentIdResolvedFrom?: 'DependencyPkgJson' | 'DependencyPath';
-  packageName?: string;
-};
-
-export type EnvPolicyForComponent = {
-  dependencies: { [name: string]: string };
-  devDependencies: { [name: string]: string };
-  peerDependencies: { [name: string]: string };
-};
 
 const DepsKeysToAllPackagesDepsKeys = {
   dependencies: 'packageDependencies',
@@ -64,7 +29,6 @@ const DepsKeysToAllPackagesDepsKeys = {
 export class ApplyOverrides {
   componentId: ComponentID;
   componentFromModel: Component;
-  tree: DependenciesTree;
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
   /**

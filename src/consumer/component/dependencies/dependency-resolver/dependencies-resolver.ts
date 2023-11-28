@@ -1,4 +1,3 @@
-import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
 import { IssuesList } from '@teambit/component-issues';
 import { Dependency } from '..';
@@ -12,6 +11,8 @@ import { ExtensionDataList } from '../../../config';
 import { SourceFile } from '../../sources';
 import { DependenciesOverridesData } from '../../../config/component-overrides';
 import { DependencyDetector } from '../files-dependency-builder/detector-hook';
+import { AutoDetectDeps } from './auto-detect-deps';
+import { ApplyOverrides } from './apply-overrides';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -167,39 +168,22 @@ export default class DependencyResolver {
    * 6) In case the driver found a file dependency that is not on the file-system, we add that file to
    * component.issues.missingDependenciesOnFs
    */
-  async getDependenciesData(): Promise<DependenciesData> {
-    await this.populateDependencies();
-    return new DependenciesData(this.allDependencies, this.allPackagesDependencies, this.issues, this.coreAspects, {
-      manuallyRemovedDependencies: this.overridesDependencies.manuallyRemovedDependencies,
-      manuallyAddedDependencies: this.overridesDependencies.manuallyAddedDependencies,
-      missingPackageDependencies: this.overridesDependencies.missingPackageDependencies,
-    });
-  }
+  async getDependenciesData(
+    cacheResolvedDependencies: Record<string, any>,
+    cacheProjectAst: Record<string, any> | undefined
+  ): Promise<DependenciesData> {
+    const autoDetectDeps = new AutoDetectDeps(this.component, this.consumer);
+    const autoDetectResults = await autoDetectDeps.getDependenciesData(cacheResolvedDependencies, cacheProjectAst);
 
-  async getEnvDetectors(): Promise<DependencyDetector[] | null> {
-    return DependencyResolver.envDetectorsGetter(this.component.extensions);
-  }
+    const applyOverrides = new ApplyOverrides(this.component, this.consumer);
 
-  /**
-   * Given the tree of file dependencies from the driver, find the components of these files.
-   * Each dependency file has a path, use bit.map to search for the component name by that path.
-   * If the component is found, add it to "this.allDependencies.dependencies". Otherwise, add it to "this.issues.untrackedDependencies".
-   *
-   * For the found components, add their sourceRelativePath and destinationRelativePath, they are being used for
-   * generating links upon import:
-   * sourceRelativePath - location of the link file.
-   * destinationRelativePath - destination written inside the link file.
-   *
-   * When a dependency is found in a regular (implementation) file, it goes to `dependencies`. If
-   * it found on a test file, it goes to `devDependencies`.
-   * Similarly, when a package is found in a regular file, it goes to `packageDependencies`. When
-   * if found in a test file, it goes to `devPackageDependencies`.
-   * An exception for the above is when a package is required in a regular or test file but is also
-   * mentioned in the `package.json` file as a peerDependency, in that case, the package is added
-   * to `peerPackageDependencies` and removed from other places. Unless this package is overridden
-   * and marked as ignored in the consumer or component config file.
-   */
-  private async populateDependencies() {
-    this.coreAspects = R.uniq(this.coreAspects);
+    if (autoDetectResults) {
+      applyOverrides.allDependencies = autoDetectResults.allDependencies;
+      applyOverrides.allPackagesDependencies = autoDetectResults.allPackagesDependencies;
+      applyOverrides.coreAspects = autoDetectResults.coreAspects;
+      applyOverrides.debugDependenciesData = autoDetectDeps.debugDependenciesData;
+    }
+
+    return applyOverrides.getDependenciesData();
   }
 }
