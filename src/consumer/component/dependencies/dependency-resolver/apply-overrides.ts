@@ -1,4 +1,5 @@
 import R from 'ramda';
+import path from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { union, cloneDeep } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
@@ -11,7 +12,10 @@ import { DependenciesData } from './dependencies-data';
 import PackageJsonFile from '../../../../consumer/component/package-json-file';
 import { DependencyDetector } from '../files-dependency-builder/detector-hook';
 import DependencyResolver from './dependencies-resolver';
-import { ResolvedPackageData } from '../../../../utils/packages';
+import { ResolvedPackageData, resolvePackageData } from '../../../../utils/packages';
+import { PathLinux } from '../../../../utils/path';
+import Consumer from '../../../consumer';
+import ComponentMap from '../../../bit-map/component-map';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -76,7 +80,7 @@ export class ApplyOverrides {
   autoDetectOverrides: Record<string, any>;
   autoDetectConfigMerge: Record<string, any>;
 
-  constructor(private component: Component) {
+  constructor(private component: Component, private consumer?: Consumer) {
     this.componentId = component.componentId;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
@@ -92,7 +96,7 @@ export class ApplyOverrides {
     this.processedFiles = [];
     this.issues = component.issues;
     this.setLegacyInsideHarmonyIssue();
-    this.overridesDependencies = new OverridesDependencies(component, consumer);
+    this.overridesDependencies = new OverridesDependencies(component);
     this.debugDependenciesData = { components: [] };
   }
 
@@ -208,8 +212,12 @@ export class ApplyOverrides {
 
   // TODO: maybe cache those results??
   private _resolvePackageData(packageName: string): ResolvedPackageData | undefined {
-    const rootDir: PathLinux | null | undefined = this.componentMap.rootDir;
-    const consumerPath = this.consumer.getPath();
+    const consumer = this.consumer;
+    if (!consumer) return undefined;
+    // if consumer is defined, then it has componentMap prop.
+    const componentMap = this.component.componentMap as ComponentMap;
+    const rootDir: PathLinux | null | undefined = componentMap.rootDir as string;
+    const consumerPath = consumer.getPath();
     const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const modulePath = resolvePackagePath(packageName, basePath, consumerPath);
@@ -269,7 +277,7 @@ export class ApplyOverrides {
 
   private manuallyAddDependencies() {
     const packageJson = this._getPackageJson();
-    const dependencies = this.overridesDependencies.getDependenciesToAddManually(packageJson, this.allDependencies);
+    const dependencies = this.getDependenciesToAddManually(packageJson, this.allDependencies);
     if (!dependencies) return;
     const { components, packages } = dependencies;
     DEPENDENCIES_FIELDS.forEach((depField) => {
@@ -532,7 +540,7 @@ export class ApplyOverrides {
    * when it's authored.
    */
   private _getPackageJson(): Record<string, any> | undefined {
-    return this.consumer.packageJson.packageJsonObject;
+    return this.consumer?.packageJson.packageJsonObject;
   }
 
   private _getPackageJsonFromComponentModel(): Record<string, any> | undefined {
