@@ -1,13 +1,7 @@
-import path from 'path';
-import { ComponentID } from '@teambit/component-id';
 import { DEPENDENCIES_FIELDS, MANUALLY_ADD_DEPENDENCY, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
-import Consumer from '../../../../consumer/consumer';
 import logger from '../../../../logger/logger';
-import { ResolvedPackageData, resolvePackageData, resolvePackagePath } from '../../../../utils/packages';
-import { PathLinux } from '../../../../utils/path';
-import ComponentMap from '../../../bit-map/component-map';
 import Component from '../../../component/consumer-component';
-import { AllDependencies, FileType } from './dependencies-resolver';
+import { FileType } from './dependencies-resolver';
 
 export type ManuallyChangedDependencies = {
   dependencies?: string[];
@@ -17,17 +11,13 @@ export type ManuallyChangedDependencies = {
 
 export default class OverridesDependencies {
   component: Component;
-  consumer: Consumer;
-  componentMap: ComponentMap;
   componentFromModel: Component | null | undefined;
   manuallyRemovedDependencies: ManuallyChangedDependencies;
   manuallyAddedDependencies: ManuallyChangedDependencies;
   missingPackageDependencies: string[];
-  constructor(component: Component, consumer: Consumer) {
+  constructor(component: Component) {
     this.component = component;
-    this.consumer = consumer;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.componentMap = this.component.componentMap;
     this.componentFromModel = this.component.componentFromModel;
     this.manuallyRemovedDependencies = {};
     this.manuallyAddedDependencies = {};
@@ -64,49 +54,19 @@ export default class OverridesDependencies {
     return ignore;
   }
 
-  getDependenciesToAddManually(
-    packageJson: Record<string, any> | null | undefined,
-    existingDependencies: AllDependencies
-  ): { components: Record<string, any>; packages: Record<string, any> } | null | undefined {
+  getDependenciesToAddManually(): Record<string, any> | undefined {
     const overrides = this.component.overrides.componentOverridesData;
-    if (!overrides) return null;
-    const components = {};
+    if (!overrides) return undefined;
     const packages = {};
     DEPENDENCIES_FIELDS.forEach((depField) => {
       if (!overrides[depField]) return;
       Object.keys(overrides[depField]).forEach((dependency) => {
         const dependencyValue = overrides[depField][dependency];
         if (dependencyValue === MANUALLY_REMOVE_DEPENDENCY) return;
-        const componentData = this._getComponentIdToAdd(depField, dependency);
-        if (componentData?.componentId) {
-          const dependencyExist = existingDependencies[depField].find((d) =>
-            d.id.isEqualWithoutVersion(componentData.componentId)
-          );
-          if (!dependencyExist) {
-            this._addManuallyAddedDep(depField, componentData.componentId.toString());
-            components[depField] ? components[depField].push(componentData) : (components[depField] = [componentData]);
-          }
-          return;
-        }
-        const addedPkg = this._manuallyAddPackage(depField, dependency, dependencyValue, packageJson);
-        if (addedPkg) {
-          packages[depField] = Object.assign(packages[depField] || {}, addedPkg);
-          if (componentData && !componentData.packageName) {
-            this.missingPackageDependencies.push(dependency);
-          }
-        }
+        (packages[depField] ||= {})[dependency] = dependencyValue;
       });
     });
-    return { components, packages };
-  }
-
-  _getComponentIdToAdd(
-    field: string,
-    dependency: string
-  ): { componentId?: ComponentID; packageName?: string } | undefined {
-    if (field === 'peerDependencies') return undefined;
-    const packageData = this._resolvePackageData(dependency);
-    return { componentId: packageData?.componentId, packageName: packageData?.name };
+    return packages;
   }
 
   _manuallyAddPackage(
@@ -153,17 +113,5 @@ it's not an existing component, nor existing package (in a package.json)`);
     this.manuallyAddedDependencies[field]
       ? this.manuallyAddedDependencies[field].push(value)
       : (this.manuallyAddedDependencies[field] = [value]);
-  }
-
-  // TODO: maybe cache those results??
-  _resolvePackageData(packageName: string): ResolvedPackageData | undefined {
-    const rootDir: PathLinux | null | undefined = this.componentMap.rootDir;
-    const consumerPath = this.consumer.getPath();
-    const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const modulePath = resolvePackagePath(packageName, basePath, consumerPath);
-    if (!modulePath) return undefined; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component
-    const packageObject = resolvePackageData(basePath, modulePath);
-    return packageObject;
   }
 }
