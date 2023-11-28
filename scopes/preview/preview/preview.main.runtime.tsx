@@ -61,7 +61,7 @@ import { previewSchema } from './preview.graphql';
 import { PreviewAssetsRoute } from './preview-assets.route';
 import { PreviewService } from './preview.service';
 import { buildPreBundlePreview, generateBundlePreviewEntry } from './pre-bundle';
-import { getBundlePath } from './foo';
+import { createBundleHash, getBundlePath, readBundleHash } from './foo';
 
 const noopResult = {
   results: [],
@@ -610,13 +610,27 @@ export class PreviewMain {
   }
 
   private async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
+    const { rebuild, skipUiBuild } = this.ui.runtimeOptions;
+
     const [name, uiRoot] = this.getUi();
-    const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
-    const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
-    await buildPreBundlePreview(filteredAspects);
+    const bundleHash = await createBundleHash(uiRoot, 'preview');
+    const lastBundleHash = readBundleHash(PreviewAspect.id, 'pre-bundle-preview', '');
+
+    // - rebuild -> build
+    // - !rebuild && skipUiBuild -> skip
+    // - !rebuild && !skipUiBuild && bundleHash === lastBundleHash -> skip
+    // - !rebuild && !skipUiBuild && bundleHash !== lastBundleHash -> build
+    if (rebuild || (!skipUiBuild && bundleHash !== lastBundleHash)) {
+      const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
+      const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
+
+      await buildPreBundlePreview(filteredAspects);
+    }
+
+    // TODO: check root public dir first, then bvm
     const preBundlePreviewPath = getBundlePath(PreviewAspect.id, 'pre-bundle-preview', '');
     const previewPreBundlePath = preBundlePreviewPath
-      ? join(preBundlePreviewPath, 'public/bit-preview')
+      ? join(preBundlePreviewPath, 'public/bit-preview') // TODO: double-check
       : join(uiRoot.path, 'public/bit-preview');
 
     const previewRuntime = await generateBundlePreviewEntry(
