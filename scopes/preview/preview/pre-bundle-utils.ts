@@ -56,7 +56,7 @@ export type UIRootRegistry = SlotRegistry<UIRoot>;
 
 export const BUNDLE_HASH_FILENAME = '.hash';
 
-export function readBundleHash(bundleId: string, bundleDir: string, aspectDir: string) {
+export function readBundleHash(bundleId: string, bundleDir: string, aspectDir: string): string {
   const bundleUiPathFromBvm = getBundlePath(bundleId, bundleDir, aspectDir);
   if (!bundleUiPathFromBvm) {
     return '';
