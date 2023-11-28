@@ -933,8 +933,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/node.deps-detectors.detective-es6':
-        specifier: ^0.0.4
-        version: 0.0.4
+        specifier: ^0.0.5
+        version: 0.0.5
       '@teambit/node.generator.node-templates':
         specifier: ^1.0.8
         version: 1.0.8
@@ -999,8 +999,8 @@ importers:
         specifier: ^0.0.554
         version: 0.0.554
       '@teambit/typescript.deps-detectors.detective-typescript':
-        specifier: ^0.0.5
-        version: 0.0.5(typescript@4.7.4)
+        specifier: ^0.0.6
+        version: 0.0.6(typescript@4.7.4)
       '@teambit/typescript.deps-lookups.lookup-typescript':
         specifier: ^0.0.1
         version: 0.0.1
@@ -16356,8 +16356,8 @@ importers:
         specifier: 1.6.21
         version: 1.6.21
       '@teambit/node.deps-detectors.detective-es6':
-        specifier: ^0.0.4
-        version: 0.0.4
+        specifier: ^0.0.5
+        version: 0.0.5
       react:
         specifier: 17.0.2
         version: 17.0.2
@@ -24686,7 +24686,7 @@ packages:
     resolution: {integrity: sha512-X4uvOR5Uzabq+sLqdqyPrWdiN2Y+FhfFlDvU3yzLJdRQz5lq4IqyK2o2s3gPTD/3ElsN73KfoNQPQMGSwDCutw==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/core-loggers': 9.0.4(@pnpm/logger@5.0.0)
       '@pnpm/error': 5.0.2
@@ -32691,10 +32691,10 @@ packages:
       node-source-walk: 5.0.2
     dev: false
 
-  /@teambit/node.deps-detectors.detective-es6@0.0.4:
-    resolution: {integrity: sha512-af7Qxrqe27JJFKt3DMXxH2Op1/Chns1szNsYprbrxaOM+hu4cV1POvIg03VvZfzuEdzCmpvBOzRGOhGxZ33/CA==}
+  /@teambit/node.deps-detectors.detective-es6@0.0.5:
+    resolution: {integrity: sha512-M8YCXF0p61OMTjTjuRgJEW69ldbS9jlN6BIhZqz1FqzD4ezHMjX4hLHGTtkScoiPDwCJ+izq/nd4iwKaGMacqA==}
     dependencies:
-      '@teambit/node.deps-detectors.parser-helper': 0.0.4
+      '@teambit/node.deps-detectors.parser-helper': 0.0.5
       node-source-walk: 6.0.2
     dev: false
 
@@ -32702,8 +32702,8 @@ packages:
     resolution: {integrity: sha512-vJrbAt/ci/vPU42f7HsNzYaeub0Okp99oJtAXiA58MwxmeG8oroqP4Z4kxVmAAbbpbI8d3Z4Q6rGBvpfh459CQ==}
     dev: false
 
-  /@teambit/node.deps-detectors.parser-helper@0.0.4:
-    resolution: {integrity: sha512-FeVPpC8Zxz7Ko6Em1hpXGsfo1zRdcs2Tkht5i2k5biBvmYBTwqFzrfbvZBnAoxq0p+lA/Ct7IgZ00h01/lUHIQ==}
+  /@teambit/node.deps-detectors.parser-helper@0.0.5:
+    resolution: {integrity: sha512-01MAdIlZn7uHB0Cc/8QpAROgPjaIzZpyWDMLUCPaqYRnVX7dv9e7FmfX+C362I/20KOmw0h9ypEKvUhyEHgt0Q==}
     dev: false
 
   /@teambit/node.generator.node-templates@1.0.8:
@@ -33281,12 +33281,12 @@ packages:
     engines: {node: '>=12.22.0'}
     dev: false
 
-  /@teambit/typescript.deps-detectors.detective-typescript@0.0.5(typescript@4.7.4):
-    resolution: {integrity: sha512-y9h7dqQM+PyAZ6/u/ppyPFQ99sS2fIOe/Maf5ctpFYus9yssk2FKFDcBWVFWwtsbneIxL1JaxzrzqDfNUBWtvA==}
+  /@teambit/typescript.deps-detectors.detective-typescript@0.0.6(typescript@4.7.4):
+    resolution: {integrity: sha512-vL8PnJrjBzCD3RG1GUXE6ajclEdeE8Sde+bPp+liUlHHMn/kGm2nWu8SRLGt7bSg5FS/VuJrMNIH4a99O8vReg==}
     peerDependencies:
       typescript: 5.2.2
     dependencies:
-      '@teambit/node.deps-detectors.parser-helper': 0.0.4
+      '@teambit/node.deps-detectors.parser-helper': 0.0.5
       '@typescript-eslint/typescript-estree': 6.11.0(typescript@4.7.4)
       node-source-walk: 6.0.2
       typescript: 4.7.4
@@ -59196,7 +59196,7 @@ packages:
       react: 17.0.2
     dependencies:
       '@mdx-js/mdx': 1.6.21
-      '@teambit/node.deps-detectors.detective-es6': 0.0.4
+      '@teambit/node.deps-detectors.detective-es6': 0.0.5
       react: 17.0.2
       remark-admonitions: 1.2.1
       remark-frontmatter: 2.0.0

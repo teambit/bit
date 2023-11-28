@@ -1,3 +1,4 @@
 export { ConfigMain } from './config.main.runtime';
 export { ConfigAspect, ConfigRuntime } from './config.aspect';
-export { ComponentScopeDirMap, getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from './workspace-config';
+export type { ComponentScopeDirMap } from './workspace-config';
+export { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from './workspace-config';

@@ -29,21 +29,16 @@ export { TagMap } from './tag-map';
 export { ComponentMap } from './component-map';
 export type { ComponentMain } from './component.main.runtime';
 export type { ComponentUI } from './component.ui.runtime';
-export { Section } from './section';
+export type { Section } from './section';
 export { ComponentContext, ComponentDescriptorContext, useComponentDescriptor } from './ui/context/component-context';
 export type { ComponentProviderProps, ComponentDescriptorProviderProps } from './ui/context';
 export { ComponentProvider, ComponentDescriptorProvider } from './ui/context';
 export { componentFields, componentIdFields, componentOverviewFields } from './ui';
-export {
-  NavPlugin,
-  ConsumePlugin,
-  CollapsibleMenuNav,
-  MenuNavProps,
-  ComponentMenu,
-  VersionRelatedDropdowns,
-} from './ui/menu';
-export { RegisteredComponentRoute, ComponentUrlParams } from './component.route';
-export { ComponentModel, ComponentModelProps } from './ui/component-model';
+export type { NavPlugin, ConsumePlugin, MenuNavProps } from './ui/menu';
+export { CollapsibleMenuNav, ComponentMenu, VersionRelatedDropdowns } from './ui/menu';
+export type { RegisteredComponentRoute, ComponentUrlParams } from './component.route';
+export type { ComponentModelProps } from './ui/component-model';
+export { ComponentModel } from './ui/component-model';
 export { TopBarNav } from './ui/top-bar-nav';
 export type { ShowFragment, ShowRow, ShowJSONRow } from './show';
 export { Config } from './config';
