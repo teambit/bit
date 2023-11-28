@@ -1100,7 +1100,9 @@ another option, in case this dependency is not in main yet is to remove all refe
       ? await this.workspace.listPotentialTagIds()
       : await this.workspace.listTagPendingIds();
 
-    const snappedComponentsIds = await this.workspace.filter.bySnappedOnMain();
+    const snappedComponentsIds = (await this.workspace.filter.bySnappedOnMain()).map((id) =>
+      id.changeVersion(undefined)
+    );
 
     if (ids.length) {
       const componentIds = await pMapSeries(ids, async (id) => {
