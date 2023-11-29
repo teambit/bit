@@ -100,6 +100,7 @@ import {
 import { MergeConflictFile } from './merge-conflict-file';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { CompFiles } from './workspace-component/comp-files';
+import { Filter } from './filter';
 
 export type EjectConfResult = {
   configPath: string;
@@ -159,6 +160,7 @@ export class Workspace implements ComponentFactory {
    */
   private componentPathsRegExps: RegExp[] = [];
   localAspects: string[] = [];
+  filter: Filter;
   constructor(
     /**
      * private pubsub.
@@ -242,6 +244,7 @@ export class Workspace implements ComponentFactory {
       }
     );
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
+    this.filter = new Filter(this);
   }
 
   private validateConfig() {
@@ -942,7 +945,9 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
    * it supports negate (!) character to exclude ids.
    */
   async idsByPattern(pattern: string, throwForNoMatch = true): Promise<ComponentID[]> {
-    if (!pattern.includes('*') && !pattern.includes(',')) {
+    const specialSyntax = ['*', ',', '!', '$', ':'];
+    const isId = !specialSyntax.some((char) => pattern.includes(char));
+    if (isId) {
       // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
       const id = await this.resolveComponentId(pattern);
       if (this.exists(id)) return [id];
@@ -950,7 +955,11 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       return [];
     }
     const ids = await this.listIds();
-    return this.scope.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch);
+    return this.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch);
+  }
+
+  async filterIdsFromPoolIdsByPattern(pattern: string, ids: ComponentID[], throwForNoMatch = true) {
+    return this.scope.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch, this.filter.by.bind(this.filter));
   }
 
   /**

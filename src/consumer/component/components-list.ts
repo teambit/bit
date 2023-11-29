@@ -150,25 +150,6 @@ export default class ComponentsList {
   }
 
   /**
-   * list components that their head is a snap, not a tag.
-   * this is relevant only when the lane is the default (main), otherwise, the head is always a snap.
-   * components that are during-merge are filtered out, we don't want them during tag and don't want
-   * to show them in the "snapped" section in bit-status.
-   */
-  async listSnappedComponentsOnMain() {
-    if (!this.consumer.isOnMain()) {
-      return [];
-    }
-    const componentsFromModel = await this.getModelComponents();
-    const authoredAndImportedIds = this.bitMap.getAllBitIds();
-    const compsDuringMerge = this.listDuringMergeStateComponents();
-    return componentsFromModel
-      .filter((c) => authoredAndImportedIds.hasWithoutVersion(c.toComponentId()))
-      .filter((c) => !compsDuringMerge.hasWithoutVersion(c.toComponentId()))
-      .filter((c) => c.isHeadSnap());
-  }
-
-  /**
    * list components on a lane that their main got updates.
    */
   async listUpdatesFromMainPending(): Promise<DivergeDataPerId[]> {
@@ -247,10 +228,6 @@ export default class ComponentsList {
   listDuringMergeStateComponents(): ComponentIdList {
     const unmergedComponents = this.scope.objects.unmergedComponents.getComponents();
     return ComponentIdList.fromArray(unmergedComponents.map((u) => ComponentID.fromObject(u.id)));
-  }
-
-  listSoftTaggedComponents(): ComponentID[] {
-    return this.bitMap.components.filter((c) => c.nextVersion).map((c) => c.id);
   }
 
   async newModifiedAndAutoTaggedComponents(): Promise<Component[]> {

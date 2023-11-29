@@ -48,7 +48,7 @@ import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
-import { compact, slice, difference } from 'lodash';
+import { compact, slice, difference, partition } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
@@ -827,7 +827,12 @@ export class ScopeMain implements ComponentFactory {
   }
 
   // todo: move this to somewhere else (where?)
-  filterIdsFromPoolIdsByPattern(pattern: string, ids: ComponentID[], throwForNoMatch = true) {
+  async filterIdsFromPoolIdsByPattern(
+    pattern: string,
+    ids: ComponentID[],
+    throwForNoMatch = true,
+    filterByStateFunc?: (state: any, poolIds: ComponentID[]) => Promise<ComponentID[]>
+  ) {
     const patterns = pattern
       .split(',')
       .map((p) => p.trim())
@@ -838,11 +843,36 @@ export class ScopeMain implements ComponentFactory {
     }
     // check also as legacyId.toString, as it doesn't have the defaultScope
     const idsToCheck = (id: ComponentID) => [id._legacy.toStringWithoutVersion(), id.toStringWithoutVersion()];
-    const idsFiltered = ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
-    if (throwForNoMatch && !idsFiltered.length) {
+    const [statePatterns, nonStatePatterns] = partition(patterns, (p) => p.startsWith('$'));
+    const idsFiltered = nonStatePatterns.length
+      ? ids.filter((id) => multimatch(idsToCheck(id), nonStatePatterns).length)
+      : [];
+
+    const idsStateFiltered = await mapSeries(statePatterns, async (statePattern) => {
+      if (!filterByStateFunc) {
+        throw new Error(`filter by a state (${statePattern}) is currently supported on the workspace only`);
+      }
+      statePattern = statePattern.replace('$', '');
+      if (statePattern.includes(' AND ')) {
+        const statePatternSplit = statePattern.split(' AND ').map((p) => p.trim());
+        if (statePatternSplit.length !== 2) throw new Error('invalid state pattern, can have only one "AND"');
+        const [stateF, nonStateF] = statePatternSplit;
+        const filteredByNonState = ids.filter((id) => multimatch(idsToCheck(id), [nonStateF]).length);
+        return filterByStateFunc(stateF, filteredByNonState);
+      }
+      return filterByStateFunc(statePattern, ids);
+    });
+    const idsStateFilteredFlat = idsStateFiltered.flat();
+    const combineFilteredIds = () => {
+      if (!idsStateFiltered) return idsFiltered;
+      const allIds = [...idsFiltered, ...idsStateFilteredFlat];
+      return ComponentIdList.uniqFromArray(allIds);
+    };
+    const allIdsFiltered = combineFilteredIds();
+    if (throwForNoMatch && !allIdsFiltered.length) {
       throw new NoIdMatchPattern(pattern);
     }
-    return idsFiltered;
+    return allIdsFiltered;
   }
 
   async getSnapDistance(id: ComponentID, throws = true): Promise<SnapsDistance> {

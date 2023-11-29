@@ -653,8 +653,17 @@ export class IsolatorMain {
               const lockFilePath = path.join(cacheCapsuleDir, 'pnpm-lock.yaml');
               const lockExists = await fs.pathExists(lockFilePath);
               if (lockExists) {
-                // this.logger.console(`moving lock file from ${lockFilePath} to ${capsule.path}`);
-                await copyFile(lockFilePath, path.join(capsule.path, 'pnpm-lock.yaml'));
+                try {
+                  // this.logger.console(`moving lock file from ${lockFilePath} to ${capsule.path}`);
+                  await copyFile(lockFilePath, path.join(capsule.path, 'pnpm-lock.yaml'));
+                } catch (err) {
+                  // We can ignore the error, we don't want to break the flow. the file will be anyway re-generated
+                  // in the target capsule. it will only be a bit slower.
+                  this.logger.error(
+                    `failed moving lock file from cache folder path: ${lockFilePath} to local capsule at ${capsule.path} (even though the lock file seems to exist)`,
+                    err
+                  );
+                }
               }
             }
             const linkedDependencies = await this.linkInCapsules(

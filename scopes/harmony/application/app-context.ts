@@ -52,6 +52,11 @@ export class AppContext extends ExecutionContext {
      * path to the application component in the workspace
      */
     readonly workspaceComponentPath?: string,
+
+    /**
+     * list of env variables to include.
+     */
+    readonly envVariables: Record<string, string> = {}
   ) {
     super(execContext.upper, execContext.envRuntime, execContext.components);
   }
@@ -85,7 +90,8 @@ export class AppContext extends ExecutionContext {
       overrides?.execContext || appContext?.execContext,
       overrides?.hostRootDir || appContext?.hostRootDir,
       overrides?.port || appContext?.port,
-      overrides?.workspaceComponentPath || appContext?.workspaceComponentPath,      
+      overrides?.workspaceComponentPath || appContext?.workspaceComponentPath,
+      overrides?.envVariables || appContext?.envVariables,
     );
   }
 }
