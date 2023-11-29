@@ -4,9 +4,8 @@ import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { merge } from 'webpack-merge';
-import { fallbacksProvidePluginConfig } from '@teambit/webpack';
+import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
 import { configBaseFactory } from '@teambit/react.webpack.react-webpack';
-
 import { html } from './html';
 
 export default function createWebpackConfig(
@@ -29,6 +28,21 @@ function createBrowserConfig(outputDir: string, title: string, publicDir: string
     mode: 'production',
     entry: {
       main: entryFiles,
+    },
+    resolve: {
+      fallback: {
+        module: false,
+        path: fallbacks.path,
+        dgram: false,
+        dns: false,
+        fs: false,
+        stream: false,
+        http2: false,
+        net: false,
+        tls: false,
+        child_process: false,
+        process: fallbacks.process,
+      },
     },
     output: {
       path: path.resolve(outputDir, publicDir),

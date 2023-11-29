@@ -13,7 +13,7 @@ import { sha1 } from '@teambit/legacy/dist/utils';
 
 import { Configuration, ProvidePlugin } from 'webpack';
 import { merge } from 'webpack-merge';
-import { fallbacksProvidePluginConfig } from '@teambit/webpack';
+import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
 
 /// webpack config
 
@@ -37,6 +37,21 @@ function createPreBundleConfig(outputDir: string, entryFile: string) {
     mode: 'production',
     entry: {
       main: entryFile,
+    },
+    resolve: {
+      fallback: {
+        module: false,
+        path: fallbacks.path,
+        dgram: false,
+        dns: false,
+        fs: false,
+        stream: false,
+        http2: false,
+        net: false,
+        tls: false,
+        child_process: false,
+        process: fallbacks.process,
+      },
     },
     output: {
       path: outputDir,

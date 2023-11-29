@@ -2,6 +2,7 @@ import { Configuration } from 'webpack';
 import path from 'path';
 import { merge } from 'webpack-merge';
 import { configBaseFactory } from '@teambit/react.webpack.react-webpack';
+import { fallbacks } from '@teambit/webpack';
 
 export default function createWebpackConfig(
   workspaceDir: string,
@@ -30,6 +31,21 @@ function createSsrConfig(workspaceDir: string, publicDir: string, entryFiles: st
       libraryTarget: 'commonjs',
       filename: 'index.js',
       chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
+    },
+    resolve: {
+      fallback: {
+        module: false,
+        path: fallbacks.path,
+        dgram: false,
+        dns: false,
+        fs: false,
+        stream: false,
+        http2: false,
+        net: false,
+        tls: false,
+        child_process: false,
+        process: fallbacks.process,
+      },
     },
 
     // // no optimizations for ssr at this point,
