@@ -92,8 +92,8 @@ export async function getDivergeData({
   const graph = versionParentsToGraph(versionParents);
   let sourceSubgraph = graph.successorsSubgraph(localHead.toString(), { edgeFilter: (e) => e.attr === 'parent' });
   let targetSubgraph = graph.successorsSubgraph(targetHead.toString(), { edgeFilter: (e) => e.attr === 'parent' });
-  const sourceArr = sourceSubgraph.nodes.map((n) => n.id);
-  const targetArr = targetSubgraph.nodes.map((n) => n.id);
+  let sourceArr = sourceSubgraph.nodes.map((n) => n.id);
+  let targetArr = targetSubgraph.nodes.map((n) => n.id);
   let commonSnaps = sourceArr.filter((snap) => targetArr.includes(snap));
 
   if (!commonSnaps.length) {
@@ -102,6 +102,11 @@ export async function getDivergeData({
     const sourceFullArr = sourceSubgraph.nodes.map((n) => n.id);
     const targetFullArr = targetSubgraph.nodes.map((n) => n.id);
     commonSnaps = sourceFullArr.filter((snap) => targetFullArr.includes(snap));
+    if (commonSnaps.length) {
+      // these commonSnaps are not from "parents", they're either squashed or unrelated. remove them from the arrays.
+      sourceArr = sourceArr.filter((snap) => !commonSnaps.includes(snap));
+      targetArr = targetArr.filter((snap) => !commonSnaps.includes(snap));
+    }
   }
 
   let closestCommonSnap: string | undefined;
