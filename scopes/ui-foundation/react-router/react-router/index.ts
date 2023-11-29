@@ -1,6 +1,6 @@
 import { ReactRouterAspect } from './react-router.aspect';
 
-export type { Routing } from './routing-method';
+export { Routing } from './routing-method';
 export type { ReactRouterUI } from './react-router.ui.runtime';
 
 export * as navigation from '@teambit/base-react.navigation.link';
