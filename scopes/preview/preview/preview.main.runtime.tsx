@@ -63,6 +63,7 @@ import { PreviewAssetsRoute } from './preview-assets.route';
 import { PreviewService } from './preview.service';
 import { buildPreBundlePreview, generateBundlePreviewEntry } from './pre-bundle';
 import { createBundleHash, getBundlePath, readBundleHash } from './pre-bundle-utils';
+import { PreBundlePreviewTask } from './pre-bundle.task';
 
 const noopResult = {
   results: [],
@@ -968,6 +969,8 @@ export class PreviewMain {
         entry: preview.getPreviewTarget.bind(preview),
       },
     ]);
+
+    builder.registerBuildTasks([new PreBundlePreviewTask(uiMain, logger)]);
 
     if (!config.disabled)
       builder.registerBuildTasks([
