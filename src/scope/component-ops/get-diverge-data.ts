@@ -7,7 +7,6 @@ import { VersionParents, versionParentsToGraph } from '../models/version-history
 import { Ref, Repository } from '../objects';
 import { SnapsDistance } from './snaps-distance';
 import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
-import logger from '../../logger/logger';
 
 /**
  * *** NEW WAY ***
