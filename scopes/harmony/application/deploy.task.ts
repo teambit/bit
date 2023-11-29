@@ -72,8 +72,10 @@ export class DeployTask implements BuildTask {
     const buildDeployContexts = metadata.find((ctx) => ctx.name === app.name && ctx.appType === app.applicationType);
     if (!buildDeployContexts) return undefined;
 
+    const artifacts = this.builder.getArtifacts(capsule.component);
     const appDeployContext: AppDeployContext = Object.assign(context, buildDeployContexts.deployContext, {
       capsule,
+      artifacts,
       appComponent: capsule.component,
     });
 

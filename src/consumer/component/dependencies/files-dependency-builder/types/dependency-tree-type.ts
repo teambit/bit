@@ -28,7 +28,7 @@ export type FileObject = {
   importSource?: string;
 };
 
-type MissingType = 'files' | 'packages' | 'components';
+type MissingType = 'files' | 'packages';
 
 export class DependenciesTreeItem {
   files: FileObject[] = [];
