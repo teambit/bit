@@ -130,7 +130,7 @@ describe('dependencyTree', function () {
     assert(!Object.keys(tree).length);
   });
 
-  it('handles nested tree structures', () => {
+  it.only('handles nested tree structures', () => {
     mockfs({
       [`${__dirname}/extended`]: {
         'a.js': `var b = require('./b');
@@ -150,6 +150,7 @@ describe('dependencyTree', function () {
     const filename = path.normalize(`${directory}/a.js`);
 
     const tree = dependencyTree({ filename, directory });
+    console.log('🚀 ~ file: index.spec.ts:153 ~ it ~ tree:', tree);
     assert(tree[filename] instanceof Object);
 
     // b and c
