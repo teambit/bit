@@ -4,7 +4,7 @@
 
 import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs-extra';
-import { UIRoot, createBaseConfig } from '@teambit/ui';
+import { UIRoot } from '@teambit/ui';
 import { getAspectDirFromBvm } from '@teambit/aspect-loader';
 import { SlotRegistry } from '@teambit/harmony';
 import { ArtifactDefinition } from '@teambit/builder';
@@ -13,6 +13,7 @@ import { sha1 } from '@teambit/legacy/dist/utils';
 import { Configuration, ProvidePlugin } from 'webpack';
 import { merge } from 'webpack-merge';
 import { fallbacksProvidePluginConfig } from '@teambit/webpack';
+import createBaseConfig from '@teambit/ui/dist/webpack/webpack.base.config';
 
 /// webpack config
 

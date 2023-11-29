@@ -17,7 +17,7 @@ import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { UIAspect, UiMain, BundleUiTask } from '@teambit/ui';
-import { PreBundlePreviewTask } from '@teambit/preview';
+// import { PreBundlePreviewTask } from '@teambit/preview';
 import { Artifact, ArtifactList, FsArtifact } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
@@ -467,7 +467,10 @@ export class BuilderMain {
       snapTaskSlot,
       logger
     );
-    builder.registerBuildTasks([new BundleUiTask(ui, logger), new PreBundlePreviewTask(ui, logger)]);
+    builder.registerBuildTasks([
+      new BundleUiTask(ui, logger),
+      // new PreBundlePreviewTask(ui, logger)
+    ]);
     component.registerRoute([new BuilderRoute(builder, scope, logger)]);
     graphql.register(builderSchema(builder, logger));
     if (generator) generator.registerComponentTemplate([buildTaskTemplate]);

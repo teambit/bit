@@ -6,7 +6,7 @@ import { AspectDefinition } from '@teambit/aspect-loader';
 // import { CacheMain } from '@teambit/cache';
 // import { Logger } from '@teambit/logger';
 // import { UIRoot, UiMain } from '@teambit/ui';
-import { createImports, getIdSetters, getIdentifiers } from '@teambit/ui';
+import { createImports, getIdSetters, getIdentifiers } from '@teambit/ui/dist/create-root';
 // import { UIRoot, UiMain, createImports, getIdSetters, getIdentifiers } from '@teambit/ui';
 // import { PreBundleContext, doBuild } from '@teambit/ui/pre-bundle/build';
 import { sha1 } from '@teambit/legacy/dist/utils';
