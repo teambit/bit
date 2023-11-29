@@ -43,7 +43,6 @@ export class AutoDetectDeps {
   processedFiles: string[];
   debugDependenciesData: DebugDependencies;
   autoDetectConfigMerge: Record<string, any>;
-
   constructor(component: Component, consumer: Consumer) {
     this.component = component;
     this.consumer = consumer;
@@ -118,6 +117,7 @@ export class AutoDetectDeps {
       allDependencies: this.allDependencies,
       allPackagesDependencies: this.allPackagesDependencies,
       coreAspects: this.coreAspects,
+      issues: this.issues,
     };
   }
 
@@ -365,8 +365,8 @@ export class AutoDetectDeps {
       if (version) {
         componentId = componentId.changeVersion(version);
       }
-      // @todo: see how to implement
-      // if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
+      // @todo: see how to implement => Done.
+      // if (this.overridesDependencies.shouldIgnorePackage(compDep.name, fileType)) {
       //   return;
       // }
       const getExistingIdFromBitmap = (): ComponentID | undefined => {

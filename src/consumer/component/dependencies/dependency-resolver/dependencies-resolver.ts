@@ -182,6 +182,7 @@ export default class DependencyResolver {
       applyOverrides.allPackagesDependencies = autoDetectResults.allPackagesDependencies;
       applyOverrides.coreAspects = autoDetectResults.coreAspects;
       applyOverrides.debugDependenciesData = autoDetectDeps.debugDependenciesData;
+      applyOverrides.issues = autoDetectResults.issues;
     }
 
     return applyOverrides.getDependenciesData();

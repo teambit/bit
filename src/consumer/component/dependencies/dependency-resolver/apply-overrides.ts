@@ -14,6 +14,7 @@ import DependencyResolver, {
   AllDependencies,
   AllPackagesDependencies,
   DebugDependencies,
+  FileType,
 } from './dependencies-resolver';
 import { ResolvedPackageData, resolvePackageData } from '../../../../utils/packages';
 import { PathLinux } from '../../../../utils/path';
@@ -64,25 +65,6 @@ export class ApplyOverrides {
     this.debugDependenciesData = { components: [] };
   }
 
-  /**
-   * Resolve components and packages dependencies for a component.
-   * This method should NOT have any side-effect on the component. the DependenciesLoader class is
-   * responsible for saving this data on the component object.
-   *
-   * The process is as follows:
-   * 1) Use the language driver to parse the component files and find for each file its dependencies.
-   * 2) The results we get from the driver per file tells us what are the files and packages that depend on our file.
-   * and also whether there are missing packages and files.
-   * 3) Using the information from the driver, we go over each one of the dependencies files and find its counterpart
-   * component. The way how we find it, is by using the bit.map file which has a mapping between the component name and
-   * the file paths.
-   * 4) If we find a component to the file dependency, we add it to component.dependencies. Otherwise, it's added to
-   * component.issues.untrackedDependencies
-   * 5) Similarly, when we find the packages dependencies, they are added to component.packageDependencies. Otherwise,
-   * they're added to component.issues.missingPackagesDependenciesOnFs
-   * 6) In case the driver found a file dependency that is not on the file-system, we add that file to
-   * component.issues.missingDependenciesOnFs
-   */
   async getDependenciesData(): Promise<DependenciesData> {
     await this.populateDependencies();
     return new DependenciesData(this.allDependencies, this.allPackagesDependencies, this.issues, this.coreAspects, {
@@ -116,8 +98,11 @@ export class ApplyOverrides {
    * and marked as ignored in the consumer or component config file.
    */
   private async populateDependencies() {
+    const devFiles = await DependencyResolver.getDevFiles(this.component);
     await this.loadAutoDetectOverrides();
     await this.loadAutoDetectConfigMerge();
+
+    this.removeIgnoredComponentsByOverrides(devFiles);
 
     this.cloneAllPackagesDependencies();
 
@@ -138,6 +123,27 @@ export class ApplyOverrides {
     await this.applyAutoDetectedPeersFromEnvOnEnvItSelf();
 
     this.coreAspects = R.uniq(this.coreAspects);
+  }
+
+  private removeIgnoredComponentsByOverrides(devFiles: string[]) {
+    const shouldBeIncluded = (dep: Dependency, fileType: FileType) =>
+      !this.overridesDependencies.shouldIgnorePackage(dep.packageName as string, fileType);
+    this.allDependencies.dependencies = this.allDependencies.dependencies.filter((dep) =>
+      shouldBeIncluded(dep, { isTestFile: false })
+    );
+    this.allDependencies.devDependencies = this.allDependencies.devDependencies.filter((dep) =>
+      shouldBeIncluded(dep, { isTestFile: true })
+    );
+
+    const missing = this.issues.getIssueByName('MissingPackagesDependenciesOnFs');
+    if (!missing) return;
+    Object.keys(missing.data).forEach((file) => {
+      const packages = missing.data[file];
+      const isTestFile = devFiles.includes(file);
+      missing.data[file] = packages.filter((pkg) => shouldBeIncluded(pkg, { isTestFile }));
+      if (!missing.data[file].length) delete missing.data[file];
+    });
+    if (!Object.keys(missing.data).length) this.issues.delete(IssuesClasses.MissingPackagesDependenciesOnFs);
   }
 
   private async loadAutoDetectOverrides() {
