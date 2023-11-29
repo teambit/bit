@@ -38,8 +38,6 @@ function groupDependencyList(
     }
 
     // If the package is a component add it to the components list
-    // @todo: currently, for author, the package.json doesn't have any version.
-    // we might change this decision later. see https://github.com/teambit/bit/pull/2924
     if (resolvedPackage.componentId) {
       resultGroups.components.push(resolvedPackage);
       return;
@@ -132,16 +130,6 @@ function mergeManuallyFoundPackagesToTree(
   });
   foundPackages.components.forEach((component) => {
     missingGroups.forEach((fileDep: MissingGroupItem) => {
-      if (
-        fileDep.components &&
-        ((component.fullPath && fileDep.components.includes(component.fullPath)) ||
-          fileDep.components.includes(component.name))
-      ) {
-        fileDep.components = fileDep.components.filter((existComponent) => {
-          return existComponent !== component.fullPath && existComponent !== component.name;
-        });
-        (tree[fileDep.originFile] ||= new DependenciesTreeItem()).components.push(component);
-      }
       if (fileDep.packages && fileDep.packages.includes(component.name)) {
         fileDep.packages = fileDep.packages.filter((packageName) => packageName !== component.name);
         (tree[fileDep.originFile] ||= new DependenciesTreeItem()).components.push(component);
@@ -205,8 +193,7 @@ export async function getDependencyTree({
   const { missingGroups, foundPackages } = new MissingHandler(
     skipped,
     componentDir,
-    workspacePath,
-    bindingPrefix
+    workspacePath
   ).groupAndFindMissing();
 
   if (foundPackages) mergeManuallyFoundPackagesToTree(foundPackages, missingGroups, tree);

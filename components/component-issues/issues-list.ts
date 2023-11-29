@@ -1,6 +1,5 @@
 import { ComponentIssue, IssueObject } from './component-issue';
 import { ImportNonMainFiles } from './import-non-main-files';
-import { MissingComponents } from './missing-components';
 import { MissingDependenciesOnFs } from './missing-dependencies-on-fs';
 import { MissingDists } from './missing-dists';
 import { MissingPackagesDependenciesOnFs } from './missing-packages-dependencies-on-fs';
@@ -23,7 +22,6 @@ import { RemovedDependencies } from './removed-dependencies';
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
   MissingManuallyConfiguredPackages,
-  MissingComponents,
   UntrackedDependencies,
   ResolveErrors,
   RelativeComponents,
