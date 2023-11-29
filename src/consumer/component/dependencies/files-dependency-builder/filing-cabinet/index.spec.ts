@@ -80,7 +80,6 @@ describe('filing-cabinet', () => {
           directory: `${UNIT_TEST_DIR}/js/es6/`,
           ast,
         });
-        console.log('🚀 ~ file: index.spec.ts:104 ~ it.only ~ result:', result);
         assert.ok(result.endsWith('es6/bar.js'));
       });
 
