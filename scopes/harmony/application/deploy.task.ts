@@ -35,7 +35,7 @@ export class DeployTask implements BuildTask {
     });
 
     const _componentsResults: ComponentResult[] = compact(components).map(({ component, deploys }) => {
-      return { 
+      return {
         component,
         metadata: {
           deployments: deploys.map((deploy) => {
@@ -43,10 +43,10 @@ export class DeployTask implements BuildTask {
             return {
               appName: deployObject?.appName,
               timestamp: deployObject?.timestamp,
-              url: deployObject?.url
-            }
-          })
-        }
+              url: deployObject?.url,
+            };
+          }),
+        },
       };
     });
 
@@ -56,10 +56,10 @@ export class DeployTask implements BuildTask {
   }
 
   private async runForOneApp(
-    app: Application, 
-    capsule: Capsule, 
+    app: Application,
+    capsule: Capsule,
     context: BuildContext
-  ): Promise<ApplicationDeployment|void|undefined> {
+  ): Promise<ApplicationDeployment | void | undefined> {
     const aspectId = this.application.getAppAspect(app.name);
     if (!aspectId) return undefined;
 
@@ -72,8 +72,10 @@ export class DeployTask implements BuildTask {
     const buildDeployContexts = metadata.find((ctx) => ctx.name === app.name && ctx.appType === app.applicationType);
     if (!buildDeployContexts) return undefined;
 
+    const artifacts = this.builder.getArtifacts(capsule.component);
     const appDeployContext: AppDeployContext = Object.assign(context, buildDeployContexts.deployContext, {
       capsule,
+      artifacts,
       appComponent: capsule.component,
     });
 

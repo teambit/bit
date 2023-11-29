@@ -246,13 +246,6 @@ export class AutoDetectDeps {
     const importSource: string = depFileObject.importSource as string;
     // the file dependency doesn't have any counterpart component. Add it to this.issues.untrackedDependencies
     if (!componentId) {
-      const missingComponents = this.tree[depFile]?.missing?.components;
-      if (missingComponents) {
-        // this depFile is a dependency link and this dependency is missing.
-        // it can't happen on Harmony, as Harmony doesn't have the generated dependencies files.
-        this.throwForMissingComponentsOnHarmony(missingComponents);
-        return false;
-      }
       this._pushToUntrackDependenciesIssues(originFile, depFileRelative, nested);
       return true;
     }
@@ -393,7 +386,7 @@ export class AutoDetectDeps {
         }
         return undefined;
       };
-      const getExistingId = (): ComponentID | undefined => {
+      const getExistingId = (): ComponentID => {
         // // @todo: see how to implement
         // if (this.isPkgInOverrides(compDep.name)) {
         //   return componentId;
@@ -404,9 +397,6 @@ export class AutoDetectDeps {
           depDebug.versionResolvedFrom = 'BitMap';
           return fromBitmap;
         }
-
-        // Happens when the dep is not in the node_modules
-        if (!version) return getExistingIdFromModel();
 
         // In case it's resolved from the node_modules, and it's also in the ws policy or variants,
         // use the resolved version from the node_modules / package folder
@@ -433,18 +423,14 @@ export class AutoDetectDeps {
         return getExistingIdFromModel() ?? componentId;
       };
       const existingId = getExistingId();
-      if (existingId) {
-        if (existingId.isEqual(this.componentId)) {
-          // happens when one of the component files requires another using module path
-          // no need to enter anything to the dependencies
-          return;
-        }
-        this.addImportNonMainIssueIfNeeded(originFile, compDep);
-        const currentComponentsDeps = new Dependency(existingId, [], compDep.name);
-        this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, depDebug);
-      } else {
-        this._pushToMissingComponentsIssues(originFile, componentId);
+      if (existingId.isEqual(this.componentId)) {
+        // happens when one of the component files requires another using module path
+        // no need to enter anything to the dependencies
+        return;
       }
+      this.addImportNonMainIssueIfNeeded(originFile, compDep);
+      const currentComponentsDeps = new Dependency(existingId, [], compDep.name);
+      this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, depDebug);
     });
   }
 
@@ -574,13 +560,8 @@ export class AutoDetectDeps {
         this._pushToMissingPackagesDependenciesIssues(originFile, missingPackages);
       }
     };
-    const processMissingComponents = () => {
-      if (isEmpty(missing.components)) return;
-      this.throwForMissingComponentsOnHarmony(missing.components);
-    };
     processMissingFiles();
     processMissingPackages();
-    processMissingComponents();
   }
 
   private throwForMissingComponentsOnHarmony(missingComponents: string[]) {
@@ -630,7 +611,6 @@ export class AutoDetectDeps {
 
     const components = this.tree[originFile].components;
     const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
-    const missingComponents = this.tree[originFile]?.missing?.components;
     const usedCoreAspects: string[] = [];
 
     const findMatchingCoreAspect = (packageName: string) => {
@@ -650,18 +630,6 @@ export class AutoDetectDeps {
       }
       return !matchingCoreAspectPackageName;
     });
-    const missingBitsFiltered = missingComponents?.filter((packageName) => {
-      const matchingCoreAspectPackageName = findMatchingCoreAspect(packageName);
-      if (matchingCoreAspectPackageName) {
-        usedCoreAspects.push(coreAspects[matchingCoreAspectPackageName]);
-      }
-      return !matchingCoreAspectPackageName;
-    });
-
-    if (missingComponents) {
-      // @ts-ignore not clear why this error happens, it is verified that missing.components exist
-      this.tree[originFile].missing.components = missingBitsFiltered;
-    }
 
     this.tree[originFile].unidentifiedPackages = unidentifiedPackagesFiltered;
     this.tree[originFile].components = bitsFiltered;
@@ -830,8 +798,5 @@ export class AutoDetectDeps {
     (this.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data[originFile] ||= []).push(
       ...uniq(missingPackages)
     );
-  }
-  private _pushToMissingComponentsIssues(originFile: PathLinuxRelative, componentId: ComponentID) {
-    (this.issues.getOrCreate(IssuesClasses.MissingComponents).data[originFile] ||= []).push(componentId);
   }
 }
