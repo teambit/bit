@@ -9,7 +9,6 @@ import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
-import GeneralError from '../../../../error/general-error';
 import logger from '../../../../logger/logger';
 import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
 import { PathLinux, PathLinuxRelative, PathOsBased, removeFileExtension } from '../../../../utils/path';
@@ -19,7 +18,7 @@ import { RelativePath } from '../dependency';
 import { getDependencyTree } from '../files-dependency-builder';
 import { FileObject, ImportSpecifier, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
 import OverridesDependencies from './overrides-dependencies';
-import { ResolvedPackageData } from '../../../../utils/packages';
+import { ResolvedPackageData, resolvePackageData, resolvePackagePath } from '../../../../utils/packages';
 import { DependenciesData } from './dependencies-data';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 import { ExtensionDataList } from '../../../config';
@@ -168,7 +167,7 @@ export default class DependencyResolver {
     this.processedFiles = [];
     this.issues = component.issues;
     this.setLegacyInsideHarmonyIssue();
-    this.overridesDependencies = new OverridesDependencies(component, consumer);
+    this.overridesDependencies = new OverridesDependencies(component);
     this.debugDependenciesData = { components: [] };
   }
 
@@ -329,9 +328,70 @@ export default class DependencyResolver {
     }
   }
 
+  // TODO: maybe cache those results??
+  private _resolvePackageData(packageName: string): ResolvedPackageData | undefined {
+    const rootDir: PathLinux | null | undefined = this.componentMap.rootDir;
+    const consumerPath = this.consumer.getPath();
+    const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const modulePath = resolvePackagePath(packageName, basePath, consumerPath);
+    if (!modulePath) return undefined; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component
+    const packageObject = resolvePackageData(basePath, modulePath);
+    return packageObject;
+  }
+
+  private _getComponentIdToAdd(
+    field: string,
+    dependency: string
+  ): { componentId?: ComponentID; packageName?: string } | undefined {
+    if (field === 'peerDependencies') return undefined;
+    const packageData = this._resolvePackageData(dependency);
+    return { componentId: packageData?.componentId, packageName: packageData?.name };
+  }
+
+  getDependenciesToAddManually(
+    packageJson: Record<string, any> | null | undefined,
+    existingDependencies: AllDependencies
+  ): { components: Record<string, any>; packages: Record<string, any> } | undefined {
+    const overrides = this.overridesDependencies.getDependenciesToAddManually();
+    if (!overrides) return undefined;
+    const components = {};
+    const packages = {};
+    DEPENDENCIES_FIELDS.forEach((depField) => {
+      if (!overrides[depField]) return;
+      Object.keys(overrides[depField]).forEach((dependency) => {
+        const dependencyValue = overrides[depField][dependency];
+        const componentData = this._getComponentIdToAdd(depField, dependency);
+        if (componentData?.componentId) {
+          const dependencyExist = existingDependencies[depField].find((d) =>
+            d.id.isEqualWithoutVersion(componentData.componentId)
+          );
+          if (!dependencyExist) {
+            this.overridesDependencies._addManuallyAddedDep(depField, componentData.componentId.toString());
+            components[depField] ? components[depField].push(componentData) : (components[depField] = [componentData]);
+          }
+          return;
+        }
+        const addedPkg = this.overridesDependencies._manuallyAddPackage(
+          depField,
+          dependency,
+          dependencyValue,
+          packageJson
+        );
+        if (addedPkg) {
+          packages[depField] = Object.assign(packages[depField] || {}, addedPkg);
+          if (componentData && !componentData.packageName) {
+            this.overridesDependencies.missingPackageDependencies.push(dependency);
+          }
+        }
+      });
+    });
+    return { components, packages };
+  }
+
   private manuallyAddDependencies() {
     const packageJson = this._getPackageJson();
-    const dependencies = this.overridesDependencies.getDependenciesToAddManually(packageJson, this.allDependencies);
+    const dependencies = this.getDependenciesToAddManually(packageJson, this.allDependencies);
     if (!dependencies) return;
     const { components, packages } = dependencies;
     DEPENDENCIES_FIELDS.forEach((depField) => {
@@ -446,12 +506,6 @@ export default class DependencyResolver {
       this._pushToUntrackDependenciesIssues(originFile, depFileRelative, nested);
       return true;
     }
-    if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
-      // we can't support it because on the imported side, we don't know to convert the relative path
-      // to the component name, as it won't have the component installed
-      throw new GeneralError(`unable to ignore "${componentId.toString()}" dependency of "${this.componentId.toString()}" by using ignore components syntax because the component is required with relative path.
-either, use the ignore file syntax or change the require statement to have a module path`);
-    }
     // happens when in the same component one file requires another one. In this case, there is
     // noting to do regarding the dependencies
     if (componentId.isEqual(this.componentId, { ignoreVersion: true })) {
@@ -561,7 +615,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (version) {
         componentId = componentId.changeVersion(version);
       }
-      if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
+      if (this.overridesDependencies.shouldIgnorePackage(compDep.name, fileType)) {
         return;
       }
       const getExistingIdFromBitmap = (): ComponentID | undefined => {
@@ -589,6 +643,10 @@ either, use the ignore file syntax or change the require statement to have a mod
         return undefined;
       };
       const getExistingId = (): ComponentID | undefined => {
+        if (this.isPkgInOverrides(compDep.name)) {
+          return componentId;
+        }
+
         const fromBitmap = getExistingIdFromBitmap();
         if (fromBitmap) {
           depDebug.versionResolvedFrom = 'BitMap';
@@ -613,7 +671,7 @@ either, use the ignore file syntax or change the require statement to have a mod
           return fromMergeConfig;
         }
 
-        if (this.isPkgInVariants(compDep.name)) {
+        if (this.isPkgInAutoDetectOverrides(compDep.name)) {
           return componentId;
         }
 
@@ -640,23 +698,19 @@ either, use the ignore file syntax or change the require statement to have a mod
   private isPkgInWorkspacePolicies(pkgName: string) {
     return DependencyResolver.getWorkspacePolicy().dependencies?.[pkgName];
   }
-  private isPkgInVariants(pkgName: string): boolean {
-    const dependencies = this.overridesDependencies.getDependenciesToAddManually(undefined, this.allDependencies);
-    const isInRegularOverrides = (deps) => {
-      if (!deps) return false;
-      const { components } = deps;
-      return DEPENDENCIES_FIELDS.some(
-        (depField) => components[depField] && components[depField].some((depData) => depData.packageName === pkgName)
-      );
-    };
+  private isPkgInOverrides(pkgName: string): boolean {
+    const dependencies = this.overridesDependencies.getDependenciesToAddManually();
+    if (!dependencies) return false;
+    const allDeps = Object.values(dependencies)
+      .map((obj) => Object.keys(obj))
+      .flat();
+    return allDeps.includes(pkgName);
+  }
 
-    const autoDetectOverrides = this.autoDetectOverrides;
-    const isInAutoDetectOverrides = (autoDetectOverridesDeps) => {
-      return DEPENDENCIES_FIELDS.some(
-        (depField) => autoDetectOverridesDeps[depField] && autoDetectOverridesDeps[depField][pkgName]
-      );
-    };
-    return isInRegularOverrides(dependencies) || isInAutoDetectOverrides(autoDetectOverrides);
+  private isPkgInAutoDetectOverrides(pkgName: string): boolean {
+    return DEPENDENCIES_FIELDS.some(
+      (depField) => this.autoDetectOverrides[depField] && this.autoDetectOverrides[depField][pkgName]
+    );
   }
 
   private addImportNonMainIssueIfNeeded(filePath: PathLinuxRelative, dependencyPkgData: ResolvedPackageData) {

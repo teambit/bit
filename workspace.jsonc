@@ -552,7 +552,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.606",
+        "@teambit/legacy": "1.0.607",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
@@ -572,7 +572,7 @@
     },
     "nodeLinker": "hoisted",
     "rootComponents": true,
-    "nodeVersion": "18.17.1",
+    "nodeVersion": "18.18.2",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
@@ -646,7 +646,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.606"
+            "@teambit/legacy": "1.0.607"
           }
         }
       },
@@ -909,7 +909,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.606"
+            "@teambit/legacy": "1.0.607"
           }
         }
       }
@@ -968,7 +968,7 @@
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
           "bvm": {
-            "node": "18.17.1"
+            "node": "18.18.2"
           },
           "bin": {
             "bbit": "bin/bit"
@@ -999,7 +999,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.606",
+            "@teambit/legacy": "1.0.607",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
@@ -1141,7 +1141,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.606"
+            "@teambit/legacy": "1.0.607"
           }
         }
       }
