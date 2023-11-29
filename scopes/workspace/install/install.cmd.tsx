@@ -38,7 +38,7 @@ export default class InstallCmd implements Command {
     'when no package is specified, all workspace dependencies are installed and all workspace components are imported.';
   helpUrl = 'reference/dependencies/dependency-installation';
   arguments = [{ name: 'packages...', description: 'a list of packages to install (separated by spaces)' }];
-  alias = 'i';
+  alias = 'iמ';
   group = 'development';
   options = [
     ['t', 'type [lifecycleType]', '"runtime" (default) or "peer" (dev is not a valid option)'],
