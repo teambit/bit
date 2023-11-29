@@ -6,7 +6,7 @@ import { AspectDefinition } from '@teambit/aspect-loader';
 // import { CacheMain } from '@teambit/cache';
 // import { Logger } from '@teambit/logger';
 // import { UIRoot, UiMain } from '@teambit/ui';
-import { createImports, getIdSetters, getIdentifiers } from '@teambit/ui/dist/create-root';
+import { createImports, getIdSetters, getIdentifiers } from '@teambit/ui';
 // import { UIRoot, UiMain, createImports, getIdSetters, getIdentifiers } from '@teambit/ui';
 // import { PreBundleContext, doBuild } from '@teambit/ui/pre-bundle/build';
 import { sha1 } from '@teambit/legacy/dist/utils';
@@ -172,8 +172,8 @@ export const generatePreBundlePreviewEntry = (
 //   return results;
 // }
 
-export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[]) {
-  const outputDir = resolve(PRE_BUNDLE_PREVIEW_PUBLIC_DIR);
+export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[], customOutputDir?: string) {
+  const outputDir = customOutputDir || resolve(PRE_BUNDLE_PREVIEW_PUBLIC_DIR);
   const uiRootAspectId = 'teambit.workspace/workspace';
   const mainEntry = generatePreBundlePreviewEntry(
     resolvedAspects,
