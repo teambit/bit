@@ -113,7 +113,8 @@ export function updateDependenciesVersions(
   }
 
   function getIdFromBitMap(componentId: ComponentID): ComponentID | null | undefined {
-    return consumer.bitMap.getComponentIdIfExist(componentId, { ignoreVersion: true });
+    const existingIds = consumer.bitmapIdsFromCurrentLane.filterWithoutVersion(componentId);
+    return existingIds.length === 1 ? existingIds[0] : undefined;
   }
 
   function getIdFromComponentConfig(componentId: ComponentID): ComponentID | undefined {

@@ -27,6 +27,12 @@ export class DependenciesData {
         dependencies: allDependencies.dependencies.map((dep) => dep.serialize()),
         devDependencies: allDependencies.devDependencies.map((dep) => dep.serialize()),
       },
+      // for backward compatibility. version < 1.5.1 expected this to be saved in the fs cache.
+      overridesDependencies: {
+        manuallyRemovedDependencies: {},
+        manuallyAddedDependencies: {},
+        missingPackageDependencies: [],
+      },
     });
   }
 

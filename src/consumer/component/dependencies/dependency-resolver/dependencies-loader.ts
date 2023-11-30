@@ -13,6 +13,7 @@ import { COMPONENT_CONFIG_FILE_NAME } from '../../../../constants';
 import { updateDependenciesVersions } from './dependencies-versions-resolver';
 import { AutoDetectDeps } from './auto-detect-deps';
 import OverridesDependencies from './overrides-dependencies';
+import { ApplyOverrides } from './apply-overrides';
 
 type Opts = {
   cacheResolvedDependencies: Record<string, any>;
@@ -25,17 +26,34 @@ export class DependenciesLoader {
   constructor(private component: Component, private consumer: Consumer, private opts: Opts) {
     this.idStr = this.component.id.toString();
   }
-  async load(): Promise<void> {
+  async load() {
     const dependenciesData = await this.getDependenciesData();
-    const dependencyResolver = new DependencyResolver(this.component, this.consumer);
-    const results = await dependencyResolver.getDependenciesData(dependenciesData);
+    const applyOverrides = new ApplyOverrides(this.component, this.consumer);
+    applyOverrides.allDependencies = dependenciesData.allDependencies;
+    applyOverrides.allPackagesDependencies = dependenciesData.allPackagesDependencies;
+    applyOverrides.coreAspects = dependenciesData.coreAspects;
+    if (dependenciesData.debugDependenciesData) {
+      // if it's coming from the cache, it's empty
+      applyOverrides.debugDependenciesData = dependenciesData.debugDependenciesData;
+    }
+    applyOverrides.issues = dependenciesData.issues;
+
+    const results = await applyOverrides.getDependenciesData();
+
     this.setDependenciesDataOnComponent(results.dependenciesData, results.overridesDependencies);
     updateDependenciesVersions(
       this.consumer,
       this.component,
       results.overridesDependencies,
-      results.autoDetectOverrides
+      results.autoDetectOverrides,
+      applyOverrides.debugDependenciesData.components
     );
+
+    return {
+      dependenciesData: results.dependenciesData,
+      overridesDependencies: results.overridesDependencies,
+      debugDependenciesData: applyOverrides.debugDependenciesData,
+    };
   }
 
   private async getDependenciesData() {
