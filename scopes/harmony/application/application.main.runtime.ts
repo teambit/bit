@@ -374,6 +374,33 @@ export class ApplicationMain {
     return appContext;
   }
 
+  async createAppBuildContext(id: ComponentID, appName: string, rootDir?: string) {
+    const host = this.componentAspect.getHost();
+    // const components = await host.list();
+    // const component = components.find((c) => c.id.isEqual(id));
+    const component = await host.get(id);
+    if (!component) throw new AppNotFound(appName);
+
+    const env = await this.envs.createEnvironment([component]);
+    const res = await env.run(this.appService);
+    const context = res.results[0].data;
+    if (!context) throw new AppNotFound(appName);
+
+    const appContext = new AppContext(
+      appName,
+      this.harmony,
+      context.dev,
+      component,
+      this.workspace.path,
+      context,
+      rootDir,
+      undefined,
+      undefined
+    );
+    return appContext;
+
+  }
+
   static runtime = MainRuntime;
   static dependencies = [
     CLIAspect,
