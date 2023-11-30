@@ -14,6 +14,8 @@ import { sha1 } from '@teambit/legacy/dist/utils';
 import { Configuration, ProvidePlugin } from 'webpack';
 import { merge } from 'webpack-merge';
 import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
+import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
+import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 
 /// webpack config
 
@@ -39,6 +41,11 @@ function createPreBundleConfig(outputDir: string, entryFile: string) {
       main: entryFile,
     },
     resolve: {
+      alias: {
+        'react/jsx-runtime': require.resolve('react/jsx-runtime'),
+        react: require.resolve('react'),
+        'react-dom': require.resolve('react-dom'),
+      },
       fallback: {
         module: false,
         path: fallbacks.path,
@@ -69,7 +76,50 @@ function createPreBundleConfig(outputDir: string, entryFile: string) {
       '@teambit/mdx.ui.mdx-scope-context',
       '@teambit/preview.modules.preview-modules',
     ],
-    plugins: [new ProvidePlugin({ process: fallbacksProvidePluginConfig.process })],
+    plugins: [
+      // Generate an asset manifest file with the following content:
+      // - "files" key: Mapping of all asset filenames to their corresponding
+      //   output file so that tools can pick it up without having to parse
+      //   `index.html`
+      //   can be used to reconstruct the HTML if necessary
+      new WebpackManifestPlugin({
+        fileName: 'asset-manifest.json',
+        generate: (seed, files, entrypoints) => {
+          const manifestFiles = files.reduce((manifest, file) => {
+            manifest[file.name] = file.path;
+            return manifest;
+          }, seed);
+          const entrypointFiles = entrypoints.main.filter((fileName) => !fileName.endsWith('.map'));
+
+          // @ts-ignore - https://github.com/shellscape/webpack-manifest-plugin/issues/276
+          return {
+            files: manifestFiles,
+            entrypoints: entrypointFiles,
+          } as Record<string, string>;
+        },
+      }),
+
+      // Generate a service worker script that will precache, and keep up to date,
+      // the HTML & assets that are part of the webpack build.
+      new WorkboxWebpackPlugin.GenerateSW({
+        clientsClaim: true,
+        maximumFileSizeToCacheInBytes: 5000000,
+        exclude: [/\.map$/, /asset-manifest\.json$/],
+        // importWorkboxFrom: 'cdn',
+        navigateFallback: 'public/index.html',
+        navigateFallbackDenylist: [
+          // Exclude URLs starting with /_, as they're likely an API call
+          new RegExp('^/_'),
+          // Exclude any URLs whose last part seems to be a file extension
+          // as they're likely a resource and not a SPA route.
+          // URLs containing a "?" character won't be blacklisted as they're likely
+          // a route with query params (e.g. auth callbacks).
+          new RegExp('/[^/?]+\\.[^/]+$'),
+        ],
+      }),
+
+      new ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
+    ],
   };
 
   return preBundleConfig;
