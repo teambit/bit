@@ -9,6 +9,7 @@ import { BUILD_TASK, BuildDeployContexts } from './build-application.task';
 import { AppDeployContext } from './app-deploy-context';
 import { Application } from './application';
 import { ApplicationDeployment } from './app-instance';
+import { AppBuildContext } from './app-build-context';
 
 export const DEPLOY_TASK = 'deploy_application';
 
@@ -73,11 +74,9 @@ export class DeployTask implements BuildTask {
     if (!buildDeployContexts) return undefined;
 
     const artifacts = this.builder.getArtifacts(capsule.component);
-    const appDeployContext: AppDeployContext = Object.assign(context, buildDeployContexts.deployContext, {
-      capsule,
-      artifacts,
-      appComponent: capsule.component,
-    });
+    const appContext = await this.application.createAppBuildContext(capsule.component.id, app.name, capsule.path);
+    const appBuildContext = AppBuildContext.create(appContext, context);
+    const appDeployContext = new AppDeployContext(appBuildContext, artifacts);
 
     if (app && typeof app.deploy === 'function') {
       return app.deploy(appDeployContext);
