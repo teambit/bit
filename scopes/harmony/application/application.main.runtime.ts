@@ -5,7 +5,7 @@ import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
-import { BuildContext, BuilderAspect, BuilderMain } from '@teambit/builder';
+import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import ComponentAspect, { ComponentMain, ComponentID, Component } from '@teambit/component';
