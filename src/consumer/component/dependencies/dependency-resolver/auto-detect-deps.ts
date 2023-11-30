@@ -27,6 +27,7 @@ import DependencyResolver, {
   DebugDependencies,
   FileType,
 } from './dependencies-resolver';
+import { DependenciesData } from './dependencies-data';
 
 export class AutoDetectDeps {
   component: Component;
@@ -93,7 +94,7 @@ export class AutoDetectDeps {
   async getDependenciesData(
     cacheResolvedDependencies: Record<string, any>,
     cacheProjectAst: Record<string, any> | undefined
-  ) {
+  ): Promise<DependenciesData> {
     const componentDir = path.join(this.consumerPath, this.componentMap.rootDir);
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
     const allFiles = [...nonTestsFiles, ...testsFiles];
@@ -113,12 +114,13 @@ export class AutoDetectDeps {
     this.setTree(dependenciesTree.tree);
     const devFiles = await DependencyResolver.getDevFiles(this.component);
     await this.populateDependencies(allFiles, devFiles);
-    return {
-      allDependencies: this.allDependencies,
-      allPackagesDependencies: this.allPackagesDependencies,
-      coreAspects: this.coreAspects,
-      issues: this.issues,
-    };
+    return new DependenciesData(
+      this.allDependencies,
+      this.allPackagesDependencies,
+      this.issues,
+      this.coreAspects,
+      this.debugDependenciesData
+    );
   }
 
   async getEnvDetectors(): Promise<DependencyDetector[] | null> {
@@ -342,12 +344,12 @@ export class AutoDetectDeps {
         packageName: compDep.name,
       };
       const getVersionFromPkgJson = (): string | null => {
-        const versionFromDependencyPkgJson = this.getValidVersion(compDep.concreteVersion);
+        const versionFromDependencyPkgJson = getValidVersion(compDep.concreteVersion);
         if (versionFromDependencyPkgJson) {
           depDebug.versionResolvedFrom = 'DependencyPkgJson';
           return versionFromDependencyPkgJson;
         }
-        const versionFromDependentPkgJson = this.getValidVersion(compDep.versionUsedByDependent);
+        const versionFromDependentPkgJson = getValidVersion(compDep.versionUsedByDependent);
         if (versionFromDependentPkgJson) {
           depDebug.versionResolvedFrom = 'DependentPkgJson';
           return versionFromDependentPkgJson;
@@ -358,71 +360,7 @@ export class AutoDetectDeps {
       if (version) {
         componentId = componentId.changeVersion(version);
       }
-      // @todo: see how to implement => Done.
-      // if (this.overridesDependencies.shouldIgnorePackage(compDep.name, fileType)) {
-      //   return;
-      // }
-      const getExistingIdFromBitmap = (): ComponentID | undefined => {
-        const existingIds = this.consumer.bitmapIdsFromCurrentLane.filterWithoutVersion(componentId);
-        return existingIds.length === 1 ? existingIds[0] : undefined;
-      };
-      const getFromMergeConfig = () => {
-        let foundVersion: string | undefined | null;
-        DEPENDENCIES_FIELDS.forEach((field) => {
-          if (this.autoDetectConfigMerge[field]?.[compDep.name]) {
-            foundVersion = this.autoDetectConfigMerge[field]?.[compDep.name];
-            foundVersion = foundVersion ? this.getValidVersion(foundVersion) : null;
-          }
-        });
-        return foundVersion ? componentId.changeVersion(foundVersion) : undefined;
-      };
-      const getExistingIdFromModel = (): ComponentID | undefined => {
-        if (this.componentFromModel) {
-          const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
-          if (modelDep) {
-            depDebug.versionResolvedFrom = 'Model';
-            return modelDep;
-          }
-        }
-        return undefined;
-      };
-      const getExistingId = (): ComponentID => {
-        // // @todo: see how to implement
-        // if (this.isPkgInOverrides(compDep.name)) {
-        //   return componentId;
-        // }
-
-        const fromBitmap = getExistingIdFromBitmap();
-        if (fromBitmap) {
-          depDebug.versionResolvedFrom = 'BitMap';
-          return fromBitmap;
-        }
-
-        // In case it's resolved from the node_modules, and it's also in the ws policy or variants,
-        // use the resolved version from the node_modules / package folder
-        if (this.isPkgInWorkspacePolicies(compDep.name)) {
-          return componentId;
-        }
-
-        // merge config here is only auto-detected ones. their priority is less then the ws policy
-        // otherwise, imagine you merge a lane, you don't like the dependency you got from the other lane, you run
-        // bit-install to change it, but it won't do anything.
-        const fromMergeConfig = getFromMergeConfig();
-        if (fromMergeConfig) {
-          depDebug.versionResolvedFrom = 'MergeConfig';
-          return fromMergeConfig;
-        }
-
-        // @todo: see how to implement
-        // if (this.isPkgInAutoDetectOverrides(compDep.name)) {
-        //   return componentId;
-        // }
-
-        // If there is a version in the node_modules/package folder, but it's not in the ws policy,
-        // prefer the version from the model over the version from the node_modules
-        return getExistingIdFromModel() ?? componentId;
-      };
-      const existingId = getExistingId();
+      const existingId = componentId;
       if (existingId.isEqual(this.componentId)) {
         // happens when one of the component files requires another using module path
         // no need to enter anything to the dependencies
@@ -433,21 +371,6 @@ export class AutoDetectDeps {
       this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, depDebug);
     });
   }
-
-  // private isPkgInOverrides(pkgName: string): boolean {
-  //   const dependencies = this.overridesDependencies.getDependenciesToAddManually();
-  //   if (!dependencies) return false;
-  //   const allDeps = Object.values(dependencies)
-  //     .map((obj) => Object.keys(obj))
-  //     .flat();
-  //   return allDeps.includes(pkgName);
-  // }
-
-  // private isPkgInAutoDetectOverrides(pkgName: string): boolean {
-  //   return DEPENDENCIES_FIELDS.some(
-  //     (depField) => this.autoDetectOverrides[depField] && this.autoDetectOverrides[depField][pkgName]
-  //   );
-  // }
 
   private isPkgInWorkspacePolicies(pkgName: string) {
     return DependencyResolver.getWorkspacePolicy().dependencies?.[pkgName];
@@ -483,28 +406,6 @@ export class AutoDetectDeps {
       return;
     }
     (this.issues.getOrCreate(IssuesClasses.ImportNonMainFiles).data[filePath] ||= []).push(nonMainFileShort);
-  }
-
-  private getValidVersion(version: string | undefined) {
-    if (!version) {
-      return null;
-    }
-    if (semver.valid(version)) {
-      // this takes care of pre-releases as well, as they're considered valid semver.
-      return version;
-    }
-    if (semver.validRange(version)) {
-      // if this is a range, e.g. ^1.0.0, return a valid version: 1.0.0.
-      const coerced = semver.coerce(version);
-      if (coerced) {
-        return coerced.version;
-      }
-    }
-    if (isSnap(version)) {
-      return version;
-    }
-    // it's probably a relative path to the component
-    return null;
   }
 
   private processPackages(originFile: PathLinuxRelative, fileType: FileType) {
@@ -551,10 +452,6 @@ export class AutoDetectDeps {
     };
     const processMissingPackages = () => {
       if (isEmpty(missing.packages)) return;
-      // @todo: see how to implement
-      // const missingPackages = missing.packages.filter(
-      //   (pkg) => !this.overridesDependencies.shouldIgnorePackage(pkg, fileType)
-      // );
       const missingPackages = missing.packages;
       if (!R.isEmpty(missingPackages)) {
         this._pushToMissingPackagesDependenciesIssues(originFile, missingPackages);
@@ -562,14 +459,6 @@ export class AutoDetectDeps {
     };
     processMissingFiles();
     processMissingPackages();
-  }
-
-  private throwForMissingComponentsOnHarmony(missingComponents: string[]) {
-    // on Harmony we don't guess whether a path is a component or a package based on the path only,
-    // see missing-handler.groupMissingByType() for more info.
-    throw new Error(
-      `Harmony should not have "missing.components" (only "missing.packages"). got ${missingComponents.join(',')}`
-    );
   }
 
   private processErrors(originFile: PathLinuxRelative) {
@@ -799,4 +688,26 @@ export class AutoDetectDeps {
       ...uniq(missingPackages)
     );
   }
+}
+
+export function getValidVersion(version: string | undefined) {
+  if (!version) {
+    return null;
+  }
+  if (semver.valid(version)) {
+    // this takes care of pre-releases as well, as they're considered valid semver.
+    return version;
+  }
+  if (semver.validRange(version)) {
+    // if this is a range, e.g. ^1.0.0, return a valid version: 1.0.0.
+    const coerced = semver.coerce(version);
+    if (coerced) {
+      return coerced.version;
+    }
+  }
+  if (isSnap(version)) {
+    return version;
+  }
+  // it's probably a relative path to the component
+  return null;
 }

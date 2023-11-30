@@ -11,7 +11,6 @@ import { ExtensionDataList } from '../../../config';
 import { SourceFile } from '../../sources';
 import { DependenciesOverridesData } from '../../../config/component-overrides';
 import { DependencyDetector } from '../files-dependency-builder/detector-hook';
-import { AutoDetectDeps } from './auto-detect-deps';
 import { ApplyOverrides } from './apply-overrides';
 
 export type AllDependencies = {
@@ -168,22 +167,16 @@ export default class DependencyResolver {
    * 6) In case the driver found a file dependency that is not on the file-system, we add that file to
    * component.issues.missingDependenciesOnFs
    */
-  async getDependenciesData(
-    cacheResolvedDependencies: Record<string, any>,
-    cacheProjectAst: Record<string, any> | undefined
-  ): Promise<DependenciesData> {
-    const autoDetectDeps = new AutoDetectDeps(this.component, this.consumer);
-    const autoDetectResults = await autoDetectDeps.getDependenciesData(cacheResolvedDependencies, cacheProjectAst);
-
+  async getDependenciesData(dependenciesData: DependenciesData) {
     const applyOverrides = new ApplyOverrides(this.component, this.consumer);
-
-    if (autoDetectResults) {
-      applyOverrides.allDependencies = autoDetectResults.allDependencies;
-      applyOverrides.allPackagesDependencies = autoDetectResults.allPackagesDependencies;
-      applyOverrides.coreAspects = autoDetectResults.coreAspects;
-      applyOverrides.debugDependenciesData = autoDetectDeps.debugDependenciesData;
-      applyOverrides.issues = autoDetectResults.issues;
+    applyOverrides.allDependencies = dependenciesData.allDependencies;
+    applyOverrides.allPackagesDependencies = dependenciesData.allPackagesDependencies;
+    applyOverrides.coreAspects = dependenciesData.coreAspects;
+    if (dependenciesData.debugDependenciesData) {
+      // if it's coming from the cache, it's empty
+      applyOverrides.debugDependenciesData = dependenciesData.debugDependenciesData;
     }
+    applyOverrides.issues = dependenciesData.issues;
 
     return applyOverrides.getDependenciesData();
   }

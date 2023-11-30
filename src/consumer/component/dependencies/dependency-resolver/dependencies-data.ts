@@ -1,6 +1,6 @@
 import { IssuesList } from '@teambit/component-issues';
 import Dependency from '../dependency';
-import { AllDependencies, AllPackagesDependencies } from './dependencies-resolver';
+import { AllDependencies, AllPackagesDependencies, DebugDependencies } from './dependencies-resolver';
 import { ManuallyChangedDependencies } from './overrides-dependencies';
 
 export type OverridesDependenciesData = {
@@ -15,7 +15,7 @@ export class DependenciesData {
     public allPackagesDependencies: AllPackagesDependencies,
     public issues: IssuesList,
     public coreAspects: string[],
-    public overridesDependencies: OverridesDependenciesData
+    public debugDependenciesData?: DebugDependencies
   ) {}
 
   serialize(): string {
@@ -40,8 +40,7 @@ export class DependenciesData {
       allDependencies,
       dataParsed.allPackagesDependencies,
       issuesList,
-      dataParsed.coreAspects,
-      dataParsed.overridesDependencies
+      dataParsed.coreAspects
     );
   }
 }

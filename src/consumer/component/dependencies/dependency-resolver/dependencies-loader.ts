@@ -10,6 +10,9 @@ import Component from '../../consumer-component';
 import { DependenciesData } from './dependencies-data';
 import DependencyResolver from './dependencies-resolver';
 import { COMPONENT_CONFIG_FILE_NAME } from '../../../../constants';
+import { updateDependenciesVersions } from './dependencies-versions-resolver';
+import { AutoDetectDeps } from './auto-detect-deps';
+import OverridesDependencies from './overrides-dependencies';
 
 type Opts = {
   cacheResolvedDependencies: Record<string, any>;
@@ -24,7 +27,15 @@ export class DependenciesLoader {
   }
   async load(): Promise<void> {
     const dependenciesData = await this.getDependenciesData();
-    this.setDependenciesDataOnComponent(dependenciesData);
+    const dependencyResolver = new DependencyResolver(this.component, this.consumer);
+    const results = await dependencyResolver.getDependenciesData(dependenciesData);
+    this.setDependenciesDataOnComponent(results.dependenciesData, results.overridesDependencies);
+    updateDependenciesVersions(
+      this.consumer,
+      this.component,
+      results.overridesDependencies,
+      results.autoDetectOverrides
+    );
   }
 
   private async getDependenciesData() {
@@ -32,8 +43,9 @@ export class DependenciesLoader {
     if (depsDataFromCache) {
       return depsDataFromCache;
     }
-    const dependencyResolver = new DependencyResolver(this.component, this.consumer);
-    const dependenciesData = await dependencyResolver.getDependenciesData(
+
+    const autoDetectDeps = new AutoDetectDeps(this.component, this.consumer);
+    const dependenciesData = await autoDetectDeps.getDependenciesData(
       this.opts.cacheResolvedDependencies,
       this.opts.cacheProjectAst
     );
@@ -76,20 +88,23 @@ export class DependenciesLoader {
     return !dependenciesData.issues.shouldBlockSavingInCache();
   }
 
-  private setDependenciesDataOnComponent(dependenciesData: DependenciesData) {
+  private setDependenciesDataOnComponent(
+    dependenciesData: DependenciesData,
+    overridesDependencies: OverridesDependencies
+  ) {
     this.component.setDependencies(dependenciesData.allDependencies.dependencies);
     this.component.setDevDependencies(dependenciesData.allDependencies.devDependencies);
     this.component.packageDependencies = dependenciesData.allPackagesDependencies.packageDependencies ?? {};
     this.component.devPackageDependencies = dependenciesData.allPackagesDependencies.devPackageDependencies ?? {};
     this.component.peerPackageDependencies = dependenciesData.allPackagesDependencies.peerPackageDependencies ?? {};
-    const missingFromOverrides = dependenciesData.overridesDependencies.missingPackageDependencies;
+    const missingFromOverrides = overridesDependencies.missingPackageDependencies;
     if (!R.isEmpty(missingFromOverrides)) {
       dependenciesData.issues.getOrCreate(IssuesClasses.MissingManuallyConfiguredPackages).data =
         uniq(missingFromOverrides);
     }
     if (!dependenciesData.issues.isEmpty()) this.component.issues = dependenciesData.issues;
-    this.component.manuallyRemovedDependencies = dependenciesData.overridesDependencies.manuallyRemovedDependencies;
-    this.component.manuallyAddedDependencies = dependenciesData.overridesDependencies.manuallyAddedDependencies;
+    this.component.manuallyRemovedDependencies = overridesDependencies.manuallyRemovedDependencies;
+    this.component.manuallyAddedDependencies = overridesDependencies.manuallyAddedDependencies;
     if (dependenciesData.coreAspects.length) {
       this.pushToDependencyResolverExtension('coreAspects', dependenciesData.coreAspects, 'set');
     }

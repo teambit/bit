@@ -16,7 +16,7 @@ import DependencyResolver, {
   DebugDependencies,
   FileType,
 } from './dependencies-resolver';
-import { ResolvedPackageData, resolvePackageData } from '../../../../utils/packages';
+import { ResolvedPackageData, resolvePackageData, resolvePackagePath } from '../../../../utils/packages';
 import { PathLinux } from '../../../../utils/path';
 import Consumer from '../../../consumer';
 import ComponentMap from '../../../bit-map/component-map';
@@ -43,7 +43,6 @@ export class ApplyOverrides {
   overridesDependencies: OverridesDependencies;
   debugDependenciesData: DebugDependencies;
   autoDetectOverrides: Record<string, any>;
-  autoDetectConfigMerge: Record<string, any>;
 
   constructor(private component: Component, private consumer?: Consumer) {
     this.componentId = component.componentId;
@@ -65,13 +64,23 @@ export class ApplyOverrides {
     this.debugDependenciesData = { components: [] };
   }
 
-  async getDependenciesData(): Promise<DependenciesData> {
+  async getDependenciesData(): Promise<{
+    dependenciesData: DependenciesData;
+    overridesDependencies: OverridesDependencies;
+    autoDetectOverrides: Record<string, any>;
+  }> {
     await this.populateDependencies();
-    return new DependenciesData(this.allDependencies, this.allPackagesDependencies, this.issues, this.coreAspects, {
-      manuallyRemovedDependencies: this.overridesDependencies.manuallyRemovedDependencies,
-      manuallyAddedDependencies: this.overridesDependencies.manuallyAddedDependencies,
-      missingPackageDependencies: this.overridesDependencies.missingPackageDependencies,
-    });
+    const dependenciesData = new DependenciesData(
+      this.allDependencies,
+      this.allPackagesDependencies,
+      this.issues,
+      this.coreAspects
+    );
+    return {
+      dependenciesData,
+      overridesDependencies: this.overridesDependencies,
+      autoDetectOverrides: this.autoDetectOverrides,
+    };
   }
 
   async getEnvDetectors(): Promise<DependencyDetector[] | null> {
@@ -100,7 +109,6 @@ export class ApplyOverrides {
   private async populateDependencies() {
     const devFiles = await DependencyResolver.getDevFiles(this.component);
     await this.loadAutoDetectOverrides();
-    await this.loadAutoDetectConfigMerge();
 
     this.removeIgnoredComponentsByOverrides(devFiles);
 
@@ -155,11 +163,6 @@ export class ApplyOverrides {
     this.autoDetectOverrides = autoDetectOverrides;
   }
 
-  private async loadAutoDetectConfigMerge() {
-    const autoDetectOverrides = await DependencyResolver.getOnComponentAutoDetectConfigMerge(this.component.id);
-    this.autoDetectConfigMerge = autoDetectOverrides || {};
-  }
-
   private cloneAllPackagesDependencies() {
     this.originAllPackagesDependencies = cloneDeep(this.allPackagesDependencies);
   }
@@ -189,7 +192,6 @@ export class ApplyOverrides {
     const rootDir: PathLinux | null | undefined = componentMap.rootDir as string;
     const consumerPath = consumer.getPath();
     const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const modulePath = resolvePackagePath(packageName, basePath, consumerPath);
     if (!modulePath) return undefined; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component
     const packageObject = resolvePackageData(basePath, modulePath);

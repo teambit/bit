@@ -6,30 +6,58 @@ import Component from '../../../component/consumer-component';
 import { ExtensionDataEntry, ExtensionDataList } from '../../../config/extension-data';
 import Dependencies from '../dependencies';
 import Dependency from '../dependency';
-import { DebugComponentsDependency } from './dependencies-resolver';
+import DependencyResolver, { DebugComponentsDependency } from './dependencies-resolver';
+import OverridesDependencies from './overrides-dependencies';
+import { DEPENDENCIES_FIELDS } from '../../../../constants';
+import { getValidVersion } from './auto-detect-deps';
 
-export default function updateDependenciesVersions(
+export function updateDependenciesVersions(
   consumer: Consumer,
   component: Component,
+  overridesDependencies: OverridesDependencies,
+  autoDetectOverrides: Record<string, any>,
   debugDependencies?: DebugComponentsDependency[]
 ) {
+  const autoDetectConfigMerge = DependencyResolver.getOnComponentAutoDetectConfigMerge(component.id) || {};
+
   updateDependencies(component.dependencies);
   updateDependencies(component.devDependencies);
   updateExtensions(component.extensions);
 
-  function resolveVersion(id: ComponentID): string | undefined {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const idFromModel = getIdFromModelDeps(component.componentFromModel!, id);
+  function resolveVersion(id: ComponentID, pkg?: string): string | undefined {
     const idFromBitMap = getIdFromBitMap(id);
     const idFromComponentConfig = getIdFromComponentConfig(id);
     const getFromComponentConfig = () => idFromComponentConfig;
     const getFromBitMap = () => idFromBitMap || null;
-    const getFromModel = () => idFromModel || null;
+    // later, change this to return the version from the overrides.
+    const getFromOverrides = () => (pkg && isPkgInOverrides(pkg) ? id : null);
     const debugDep = debugDependencies?.find((dep) => dep.id.isEqualWithoutVersion(id));
+    // the id we get from the auto-detect is coming from the package.json of the dependency.
+    const getFromDepPackageJson = () => (id.hasVersion() ? id : null);
+    // In case it's resolved from the node_modules, and it's also in the ws policy or variants,
+    // use the resolved version from the node_modules / package folder
+    const getFromDepPackageJsonDueToWorkspacePolicy = () =>
+      pkg && id.hasVersion() && isPkgInWorkspacePolicies(pkg) ? id : null;
+    // merge config here is only auto-detected ones. their priority is less then the ws policy
+    // otherwise, imagine you merge a lane, you don't like the dependency you got from the other lane, you run
+    // bit-install to change it, but it won't do anything.
+    const getFromMergeConfig = () => (pkg ? resolveFromMergeConfig(id, pkg) : null);
+    const getFromDepPackageJsonDueToAutoDetectOverrides = () => (pkg && isPkgInAutoDetectOverrides(pkg) ? id : null);
+    // If there is a version in the node_modules/package folder, but it's not in the ws policy,
+    // prefer the version from the model over the version from the node_modules
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const getFromModel = () => getIdFromModelDeps(component.componentFromModel!, id);
 
-    // @todo: change this once vendors feature is in.
-    const getCurrentVersion = () => (id.hasVersion() ? id : null);
-    const strategies = [getFromComponentConfig, getCurrentVersion, getFromBitMap, getFromModel];
+    const strategies = [
+      getFromComponentConfig,
+      getFromOverrides,
+      getFromBitMap,
+      getFromDepPackageJsonDueToWorkspacePolicy,
+      getFromMergeConfig,
+      getFromDepPackageJsonDueToAutoDetectOverrides,
+      getFromModel,
+      getFromDepPackageJson,
+    ];
 
     for (const strategy of strategies) {
       const strategyId = strategy();
@@ -38,8 +66,7 @@ export default function updateDependenciesVersions(
           `found dependency version ${strategyId.version} for ${id.toString()} in strategy ${strategy.name}`
         );
         if (debugDep) {
-          debugDep.versionResolvedFrom =
-            strategy.name === 'getCurrentVersion' ? debugDep.versionResolvedFrom : strategy.name.replace('getFrom', '');
+          debugDep.versionResolvedFrom = strategy.name.replace('getFrom', '');
           debugDep.version = strategyId.version;
         }
 
@@ -50,7 +77,12 @@ export default function updateDependenciesVersions(
   }
 
   function updateDependency(dependency: Dependency) {
-    const resolvedVersion = resolveVersion(dependency.id);
+    const { id, packageName } = dependency;
+    if (!packageName)
+      throw new Error(
+        `dependencyVersionResolver is unable to resolve dependency ${id.toString()} because it does not have a package name`
+      );
+    const resolvedVersion = resolveVersion(id, packageName);
     if (resolvedVersion) {
       dependency.id = dependency.id.changeVersion(resolvedVersion);
     }
@@ -71,7 +103,7 @@ export default function updateDependenciesVersions(
     extensions.forEach(updateExtension);
   }
 
-  function getIdFromModelDeps(componentFromModel: Component, componentId: ComponentID): ComponentID | null | undefined {
+  function getIdFromModelDeps(componentFromModel: Component, componentId: ComponentID): ComponentID | null {
     if (!componentFromModel) return null;
     const dependency = componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
     if (!dependency) return null;
@@ -88,5 +120,35 @@ export default function updateDependenciesVersions(
     const dependency = Object.keys(dependencies).find((idStr) => componentId.toStringWithoutVersion() === idStr);
     if (!dependency) return undefined;
     return componentId.changeVersion(dependencies[dependency]);
+  }
+
+  function isPkgInOverrides(pkgName: string): boolean {
+    const dependencies = overridesDependencies.getDependenciesToAddManually();
+    if (!dependencies) return false;
+    const allDeps = Object.values(dependencies)
+      .map((obj) => Object.keys(obj))
+      .flat();
+    return allDeps.includes(pkgName);
+  }
+
+  function isPkgInAutoDetectOverrides(pkgName: string): boolean {
+    return DEPENDENCIES_FIELDS.some(
+      (depField) => autoDetectOverrides[depField] && autoDetectOverrides[depField][pkgName]
+    );
+  }
+
+  function isPkgInWorkspacePolicies(pkgName: string) {
+    return DependencyResolver.getWorkspacePolicy().dependencies?.[pkgName];
+  }
+
+  function resolveFromMergeConfig(id: ComponentID, pkgName: string) {
+    let foundVersion: string | undefined | null;
+    DEPENDENCIES_FIELDS.forEach((field) => {
+      if (autoDetectConfigMerge[field]?.[pkgName]) {
+        foundVersion = autoDetectConfigMerge[field]?.[pkgName];
+        foundVersion = foundVersion ? getValidVersion(foundVersion) : null;
+      }
+    });
+    return foundVersion ? id.changeVersion(foundVersion) : undefined;
   }
 }

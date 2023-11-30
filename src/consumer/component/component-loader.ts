@@ -13,7 +13,6 @@ import ComponentsPendingImport from '../component-ops/exceptions/components-pend
 import Component, { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
 import { ComponentFsCache } from './component-fs-cache';
-import { updateDependenciesVersions } from './dependencies/dependency-resolver';
 import { DependenciesLoader } from './dependencies/dependency-resolver/dependencies-loader';
 import ComponentMap from '../bit-map/component-map';
 import { VERSION_ZERO } from '../../scope/models/model-component';
@@ -210,7 +209,6 @@ export default class ComponentLoader {
         useDependenciesCache: component.issues.isEmpty(),
       });
       await dependenciesLoader.load();
-      updateDependenciesVersions(this.consumer, component);
     };
 
     const runOnComponentLoadEvent = async () => {
