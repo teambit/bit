@@ -70,7 +70,7 @@ export class ApiServerMain {
     this.watcher
       .watch({
         preCompile: false,
-        compile: true, // todo: once a stable release is out, change vscode to support this and change to: `options.compile`,
+        compile: options.compile,
       })
       .catch((err) => {
         // don't throw an error, we don't want to break the "run" process
