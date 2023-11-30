@@ -88,13 +88,8 @@ export class AppsBuildTask implements BuildTask {
     context: BuildContext
   ): Promise<OneAppResult | undefined> {
     if (!app.build) return undefined;
-    // const { component } = capsule;
-    const appBuildContext: AppBuildContext = Object.assign(context, {
-      capsule,
-      appComponent: component,
-      name: app.name,
-      artifactsDir: this.getArtifactDirectory(),
-    });
+    const appContext = await this.application.createAppBuildContext(component.id, app.name, capsule.path);
+    const appBuildContext = AppBuildContext.create(appContext, context);
     const deployContext = await app.build(appBuildContext);
     const defaultArtifacts: ArtifactDefinition[] = this.getDefaultArtifactDef(app.applicationType || app.name);
     const artifacts = defaultArtifacts.concat(deployContext.artifacts || []);
@@ -119,7 +114,7 @@ export class AppsBuildTask implements BuildTask {
          * @deprecated - please use metadata instead
          *
          * @guysaar223
-         * @ram8
+         * @ranm8
          * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
          * or create new deploy context on builder
          */
