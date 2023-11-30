@@ -13,6 +13,7 @@ import {
   DependencyResolver,
   updateDependenciesVersions,
 } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
+import { AutoDetectDeps } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver/auto-detect-deps';
 import { DebugDependencies } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver/dependencies-resolver';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
@@ -198,16 +199,24 @@ export class DependenciesMain {
     const consumer = this.workspace.consumer;
     const component = await this.workspace.get(compId);
     const consumerComponent = component.state._consumer as ConsumerComponent;
+    const autoDetect = new AutoDetectDeps(consumerComponent, consumer);
+    const autoDetectResults = await autoDetect.getDependenciesData({}, undefined);
     const dependencyResolver = new DependencyResolver(consumerComponent, consumer);
-    const dependenciesData = await dependencyResolver.getDependenciesData({}, undefined);
+    const dependenciesData = await dependencyResolver.getDependenciesData(autoDetectResults);
     const debugData: DebugDependencies = dependencyResolver.debugDependenciesData;
-    updateDependenciesVersions(consumer, consumerComponent, debugData.components);
+    updateDependenciesVersions(
+      consumer,
+      consumerComponent,
+      dependenciesData.overridesDependencies,
+      dependenciesData.autoDetectOverrides,
+      debugData.components
+    );
     const results = await this.dependencyResolver.getDependencies(component);
     const sources = results.map((dep) => ({ id: dep.id, source: dep.source }));
     return {
       ...debugData,
       ...dependenciesData.overridesDependencies,
-      coreAspects: dependenciesData.coreAspects,
+      coreAspects: dependenciesData.dependenciesData.coreAspects,
       sources,
     };
   }
