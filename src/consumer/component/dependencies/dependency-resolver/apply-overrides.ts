@@ -146,9 +146,11 @@ export class ApplyOverrides {
     const missing = this.issues.getIssueByName('MissingPackagesDependenciesOnFs');
     if (!missing) return;
     Object.keys(missing.data).forEach((file) => {
-      const packages = missing.data[file];
+      const packages: string[] = missing.data[file];
       const isTestFile = devFiles.includes(file);
-      missing.data[file] = packages.filter((pkg) => shouldBeIncluded(pkg, { isTestFile }));
+      missing.data[file] = packages.filter(
+        (pkg) => !this.overridesDependencies.shouldIgnorePackage(pkg, { isTestFile })
+      );
       if (!missing.data[file].length) delete missing.data[file];
     });
     if (!Object.keys(missing.data).length) this.issues.delete(IssuesClasses.MissingPackagesDependenciesOnFs);
