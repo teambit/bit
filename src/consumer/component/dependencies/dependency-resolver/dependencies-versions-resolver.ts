@@ -24,6 +24,12 @@ export function updateDependenciesVersions(
   updateDependencies(component.devDependencies);
   updateExtensions(component.extensions);
 
+  /**
+   * the `pkg` can be missing only in two scenarios:
+   * 1: the dependency is using relative-paths, not the module path. (which bit-status shows an error and suggests
+   * running bit link --rewire).
+   * 2: this gets called for extension-id.
+   */
   function resolveVersion(id: ComponentID, pkg?: string): string | undefined {
     const idFromBitMap = getIdFromBitMap(id);
     const idFromComponentConfig = getIdFromComponentConfig(id);
@@ -78,10 +84,6 @@ export function updateDependenciesVersions(
 
   function updateDependency(dependency: Dependency) {
     const { id, packageName } = dependency;
-    if (!packageName)
-      throw new Error(
-        `dependencyVersionResolver is unable to resolve dependency ${id.toString()} because it does not have a package name`
-      );
     const resolvedVersion = resolveVersion(id, packageName);
     if (resolvedVersion) {
       dependency.id = dependency.id.changeVersion(resolvedVersion);
