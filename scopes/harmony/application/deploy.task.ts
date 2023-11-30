@@ -1,11 +1,11 @@
 import mapSeries from 'p-map-series';
-import { BuilderMain, BuildTask, BuildContext, ComponentResult, TaskResults, BuiltTaskResult } from '@teambit/builder';
-import { compact } from 'lodash';
+import { BuilderMain, BuildTask, BuildContext, ComponentResult, TaskResults, BuiltTaskResult, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
+import { compact, join } from 'lodash';
 import { Capsule } from '@teambit/isolator';
 import { Component } from '@teambit/component';
 import { ApplicationAspect } from './application.aspect';
 import { ApplicationMain } from './application.main.runtime';
-import { BUILD_TASK, BuildDeployContexts } from './build-application.task';
+import { ARTIFACTS_DIR_NAME, BUILD_TASK, BuildDeployContexts } from './build-application.task';
 import { AppDeployContext } from './app-deploy-context';
 import { Application } from './application';
 import { ApplicationDeployment } from './app-instance';
@@ -75,7 +75,16 @@ export class DeployTask implements BuildTask {
 
     const artifacts = this.builder.getArtifacts(capsule.component);
     const appContext = await this.application.createAppBuildContext(capsule.component.id, app.name, capsule.path);
-    const appBuildContext = AppBuildContext.create(appContext, context);
+    const artifactsDir = this.getArtifactDirectory();
+    const appBuildContext = AppBuildContext.create({
+      appContext, 
+      buildContext: context,
+      appComponent: capsule.component,
+      name: app.name,
+      capsule,
+      artifactsDir
+    });
+
     const appDeployContext = new AppDeployContext(appBuildContext, artifacts);
 
     if (app && typeof app.deploy === 'function') {
@@ -83,6 +92,10 @@ export class DeployTask implements BuildTask {
     }
 
     return undefined;
+  }
+
+  private getArtifactDirectory() {
+    return join(CAPSULE_ARTIFACTS_DIR, ARTIFACTS_DIR_NAME);
   }
 
   private getBuildMetadata(

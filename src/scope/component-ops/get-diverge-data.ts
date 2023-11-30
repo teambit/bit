@@ -143,12 +143,12 @@ export async function getDivergeData({
         error = err;
       }
     });
-    if (commonSnapBeforeDiverge) {
-      // only reason to traverse the "unrelated" and the "squashed" is to find the common snap and avoid the "NoCommonSnap" error.
-      // once the common snap is found, no need to deal with the unrelated and squashed, only traverse the parents to
-      // find maybe another common snap with lower depth.
-      return;
-    }
+    // if (commonSnapBeforeDiverge) {
+    //   // only reason to traverse the "unrelated" and the "squashed" is to find the common snap and avoid the "NoCommonSnap" error.
+    //   // once the common snap is found, no need to deal with the unrelated and squashed, only traverse the parents to
+    //   // find maybe another common snap with lower depth.
+    //   return;
+    // }
     if (version.unrelated) {
       const unrelatedData = getVersionData(version.unrelated);
       if (unrelatedData) {

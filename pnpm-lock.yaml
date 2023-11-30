@@ -2770,7 +2770,7 @@ importers:
         version: file:scopes/harmony/api-server(react-dom@17.0.2)(react@17.0.2)
       '@teambit/application':
         specifier: workspace:*
-        version: file:scopes/harmony/application(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/harmony/application(@teambit/legacy@node_modules+@teambit+legacy)(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
         version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
@@ -3875,7 +3875,7 @@ importers:
         version: file:scopes/harmony/api-server(react-dom@17.0.2)(react@17.0.2)
       '@teambit/application':
         specifier: workspace:*
-        version: file:scopes/harmony/application(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/harmony/application(@teambit/legacy@node_modules+@teambit+legacy)(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
         version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
@@ -4980,7 +4980,7 @@ importers:
         version: file:scopes/harmony/api-server(react-dom@17.0.2)(react@17.0.2)
       '@teambit/application':
         specifier: workspace:*
-        version: file:scopes/harmony/application(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/harmony/application(@teambit/legacy@node_modules+@teambit+legacy)(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
         version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
@@ -6085,7 +6085,7 @@ importers:
         version: file:scopes/harmony/api-server(react-dom@17.0.2)(react@17.0.2)
       '@teambit/application':
         specifier: workspace:*
-        version: file:scopes/harmony/application(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/harmony/application(@teambit/legacy@node_modules+@teambit+legacy)(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
         version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
@@ -7184,7 +7184,7 @@ importers:
         version: file:scopes/harmony/api-server(react-dom@17.0.2)(react@17.0.2)
       '@teambit/application':
         specifier: workspace:*
-        version: file:scopes/harmony/application(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/harmony/application(@teambit/legacy@node_modules+@teambit+legacy)(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
         version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
@@ -8289,7 +8289,7 @@ importers:
         version: file:scopes/harmony/api-server(react-dom@17.0.2)(react@17.0.2)
       '@teambit/application':
         specifier: workspace:*
-        version: file:scopes/harmony/application(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/harmony/application(@teambit/legacy@node_modules+@teambit+legacy)(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
         version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)
@@ -14552,6 +14552,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/lane-id':
+        specifier: ^0.0.311
+        version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -58352,7 +58355,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/harmony/application(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5):
+  file:scopes/harmony/application(@teambit/legacy@node_modules+@teambit+legacy)(@types/react@17.0.70)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5):
     resolution: {directory: scopes/harmony/application, type: directory}
     id: file:scopes/harmony/application
     name: '@teambit/application'
@@ -58363,6 +58366,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/bit-error': 0.0.404
       '@teambit/harmony': 0.4.6
+      '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       chalk: 2.4.2
       core-js: 3.13.0
       ink: 3.2.0(@types/react@17.0.70)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -58372,6 +58376,7 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     transitivePeerDependencies:
+      - '@teambit/legacy'
       - '@types/react'
       - bufferutil
       - utf-8-validate
