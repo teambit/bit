@@ -606,8 +606,8 @@ export class PreviewMain {
       this.executionRefs.set(ctxId, new ExecutionRef(context));
     });
 
-    // const previewRuntime = await this.writePreviewRuntime(context);
-    const previewRuntime = await this.writePreviewEntry(context);
+    const previewRuntime = await this.writePreviewRuntime(context);
+    // const previewRuntime = await this.writePreviewEntry(context);
     const linkFiles = await this.updateLinkFiles(context.components, context);
 
     return [...linkFiles, previewRuntime];
