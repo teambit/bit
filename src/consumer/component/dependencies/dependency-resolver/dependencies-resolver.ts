@@ -4,8 +4,8 @@ import R from 'ramda';
 import semver from 'semver';
 import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { uniq, isEmpty, union, cloneDeep } from 'lodash';
-import { IssuesList, IssuesClasses } from '@teambit/component-issues';
+import { uniq, isEmpty, cloneDeep } from 'lodash';
+import { IssuesList, IssuesClasses, MissingPackagesData } from '@teambit/component-issues';
 import { Dependency } from '..';
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
@@ -801,7 +801,7 @@ export default class DependencyResolver {
         (pkg) => !this.overridesDependencies.shouldIgnorePackage(pkg, fileType)
       );
       if (!R.isEmpty(missingPackages)) {
-        this._pushToMissingPackagesDependenciesIssues(originFile, missingPackages);
+        this._pushToMissingPackagesDependenciesIssues(originFile, missingPackages, fileType);
       }
     };
     processMissingFiles();
@@ -1065,13 +1065,11 @@ export default class DependencyResolver {
     const originallyExists: string[] = [];
     let missingPackages: string[] = [];
     // We want to also add missing packages to the peer list as we know to resolve the version from the env anyway
-    // @ts-ignore
-    const missingData = this.issues.getIssueByName<IssuesClasses.MissingPackagesDependenciesOnFs>(
-      'MissingPackagesDependenciesOnFs'
-    )?.data;
+    const missingData = this.issues.getIssueByName('MissingPackagesDependenciesOnFs')?.data as
+      | MissingPackagesData[]
+      | undefined;
     if (missingData) {
-      // @ts-ignore
-      missingPackages = union(...(Object.values(missingData) || []));
+      missingPackages = uniq(missingData.map((d) => d.missingPackages).flat());
     }
     ['dependencies', 'devDependencies', 'peerDependencies'].forEach((field) => {
       R.forEachObjIndexed((pkgVal, pkgName) => {
@@ -1301,9 +1299,17 @@ export default class DependencyResolver {
   private _pushToMissingDependenciesOnFs(originFile: PathLinuxRelative, missingFiles: string[]) {
     (this.issues.getOrCreate(IssuesClasses.MissingDependenciesOnFs).data[originFile] ||= []).push(...missingFiles);
   }
-  private _pushToMissingPackagesDependenciesIssues(originFile: PathLinuxRelative, missingPackages: string[]) {
-    (this.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data[originFile] ||= []).push(
-      ...uniq(missingPackages)
-    );
+  private _pushToMissingPackagesDependenciesIssues(
+    originFile: PathLinuxRelative,
+    missingPackages: string[],
+    fileType: FileType
+  ) {
+    const data = this.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data;
+    const foundFile = data.find((file) => file.filePath === originFile);
+    if (foundFile) {
+      foundFile.missingPackages = uniq([...missingPackages, ...foundFile.missingPackages]);
+    } else {
+      data.push({ filePath: originFile, missingPackages, isDevFile: fileType.isTestFile });
+    }
   }
 }
