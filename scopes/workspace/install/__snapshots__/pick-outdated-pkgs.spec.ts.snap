@@ -63,13 +63,13 @@ Array [
         "name": "foo",
         "value": Object {
           "componentId": ComponentID {
-            "_scope": undefined,
-            "legacyComponentId": BitId {
+            "_legacy": BitId {
               "box": undefined,
               "name": "comp1",
               "scope": "scope",
               "version": "latest",
             },
+            "_scope": undefined,
           },
           "currentRange": "1.0.0",
           "latestRange": "2.0.0",

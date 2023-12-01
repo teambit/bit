@@ -288,6 +288,8 @@ function clearGlobalsIfNeeded() {
   ComponentConfig.componentConfigLegacyLoadingRegistry = {};
   ComponentConfig.componentConfigLoadingRegistry = {};
   PackageJsonTransformer.packageJsonTransformersRegistry = [];
+  // @ts-ignore
+  ComponentLoader.loadDeps = undefined;
   ExtensionDataList.coreExtensionsNames = new Map();
   ExtensionDataList.toModelObjectsHook = [];
   // @ts-ignore
