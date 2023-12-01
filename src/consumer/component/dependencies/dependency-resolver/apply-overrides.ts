@@ -43,7 +43,6 @@ export class ApplyOverrides {
   overridesDependencies: OverridesDependencies;
   debugDependenciesData: DebugDependencies;
   autoDetectOverrides: Record<string, any>;
-  devFiles?: string[];
   constructor(private component: Component, private consumer?: Consumer) {
     this.componentId = component.componentId;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -107,9 +106,8 @@ export class ApplyOverrides {
    * and marked as ignored in the consumer or component config file.
    */
   private async populateDependencies() {
-    const devFiles = this.devFiles || (await DependencyResolver.getDevFiles(this.component));
     await this.loadAutoDetectOverrides();
-    this.removeIgnoredComponentsByOverrides(devFiles);
+    this.removeIgnoredComponentsByOverrides();
     this.cloneAllPackagesDependencies();
     this.removeIgnoredPackagesByOverrides();
     this.removeDevAndEnvDepsIfTheyAlsoRegulars();
@@ -129,7 +127,7 @@ export class ApplyOverrides {
     this.coreAspects = R.uniq(this.coreAspects);
   }
 
-  private removeIgnoredComponentsByOverrides(devFiles: string[]) {
+  private removeIgnoredComponentsByOverrides() {
     const shouldBeIncluded = (dep: Dependency, fileType: FileType) =>
       !this.overridesDependencies.shouldIgnorePackage(dep.packageName as string, fileType);
     this.allDependencies.dependencies = this.allDependencies.dependencies.filter((dep) =>
@@ -139,17 +137,16 @@ export class ApplyOverrides {
       shouldBeIncluded(dep, { isTestFile: true })
     );
 
-    const missing = this.issues.getIssueByName('MissingPackagesDependenciesOnFs');
-    if (!missing) return;
-    Object.keys(missing.data).forEach((file) => {
-      const packages: string[] = missing.data[file];
-      const isTestFile = devFiles.includes(file);
-      missing.data[file] = packages.filter(
-        (pkg) => !this.overridesDependencies.shouldIgnorePackage(pkg, { isTestFile })
+    const missingIssue = this.issues.getIssueByName('MissingPackagesDependenciesOnFs');
+    if (!missingIssue) return;
+    const missingData = missingIssue.data as MissingPackagesData[];
+    missingData.forEach((m) => {
+      m.missingPackages = m.missingPackages.filter(
+        (pkg) => !this.overridesDependencies.shouldIgnorePackage(pkg, { isTestFile: m.isDevFile })
       );
-      if (!missing.data[file].length) delete missing.data[file];
     });
-    if (!Object.keys(missing.data).length) this.issues.delete(IssuesClasses.MissingPackagesDependenciesOnFs);
+    missingIssue.data = missingData.filter((m) => m.missingPackages.length);
+    if (!missingIssue.data.length) this.issues.delete(IssuesClasses.MissingPackagesDependenciesOnFs);
   }
 
   private async loadAutoDetectOverrides() {
