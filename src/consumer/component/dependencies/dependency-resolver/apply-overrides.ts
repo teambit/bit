@@ -43,7 +43,7 @@ export class ApplyOverrides {
   overridesDependencies: OverridesDependencies;
   debugDependenciesData: DebugDependencies;
   autoDetectOverrides: Record<string, any>;
-
+  devFiles?: string[];
   constructor(private component: Component, private consumer?: Consumer) {
     this.componentId = component.componentId;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -107,13 +107,10 @@ export class ApplyOverrides {
    * and marked as ignored in the consumer or component config file.
    */
   private async populateDependencies() {
-    const devFiles = await DependencyResolver.getDevFiles(this.component);
+    const devFiles = this.devFiles || (await DependencyResolver.getDevFiles(this.component));
     await this.loadAutoDetectOverrides();
-
     this.removeIgnoredComponentsByOverrides(devFiles);
-
     this.cloneAllPackagesDependencies();
-
     this.removeIgnoredPackagesByOverrides();
     this.removeDevAndEnvDepsIfTheyAlsoRegulars();
     this.applyPeersFromComponentModel();
@@ -129,7 +126,6 @@ export class ApplyOverrides {
     // the custom react uses the "teambit.envs/env" env, which will add react ^17.0.0 to every component that uses it
     // we want to make sure that the custom react is using 16.4.0 not 17.
     await this.applyAutoDetectedPeersFromEnvOnEnvItSelf();
-
     this.coreAspects = R.uniq(this.coreAspects);
   }
 

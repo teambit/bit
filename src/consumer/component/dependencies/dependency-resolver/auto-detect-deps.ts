@@ -119,7 +119,8 @@ export class AutoDetectDeps {
       this.allPackagesDependencies,
       this.issues,
       this.coreAspects,
-      this.debugDependenciesData
+      this.debugDependenciesData,
+      devFiles
     );
   }
 

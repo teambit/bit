@@ -331,6 +331,11 @@ const defaultCreateFromComponentsOptions: CreateFromComponentsOptions = {
 };
 
 export class DependencyResolverMain {
+  /**
+   * cache the workspace policy to improve performance. when workspace.jsonc is changed, this gets cleared.
+   * @see workspace.triggerOnWorkspaceConfigChange
+   */
+  private _workspacePolicy: WorkspacePolicy | undefined;
   constructor(
     /**
      * Dependency resolver  extension configuration.
@@ -551,12 +556,18 @@ export class DependencyResolverMain {
 
   /**
    * Getting the merged workspace policy (from dep resolver config and others like root package.json)
-   * @returns
    */
   getWorkspacePolicy(): WorkspacePolicy {
-    const policyFromConfig = this.getWorkspacePolicyFromConfig();
-    const externalPolicies = this.rootPolicyRegistry.toArray().map(([, policy]) => policy);
-    return this.mergeWorkspacePolices([policyFromConfig, ...externalPolicies]);
+    if (!this._workspacePolicy) {
+      const policyFromConfig = this.getWorkspacePolicyFromConfig();
+      const externalPolicies = this.rootPolicyRegistry.toArray().map(([, policy]) => policy);
+      this._workspacePolicy = this.mergeWorkspacePolices([policyFromConfig, ...externalPolicies]);
+    }
+    return this._workspacePolicy;
+  }
+
+  clearCache() {
+    this._workspacePolicy = undefined;
   }
 
   /**

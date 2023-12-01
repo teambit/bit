@@ -808,6 +808,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.config = configOfWorkspaceAspect.config as WorkspaceExtConfig;
     const configOfDepResolverAspect = workspaceConfig.extensions.findExtension(DependencyResolverAspect.id);
     if (configOfDepResolverAspect) this.dependencyResolver.setConfig(configOfDepResolverAspect.config as any);
+    this.dependencyResolver.clearCache();
   }
 
   getState(id: ComponentID, hash: string) {

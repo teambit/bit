@@ -15,7 +15,8 @@ export class DependenciesData {
     public allPackagesDependencies: AllPackagesDependencies,
     public issues: IssuesList,
     public coreAspects: string[],
-    public debugDependenciesData?: DebugDependencies
+    public debugDependenciesData?: DebugDependencies,
+    public devFiles?: string[]
   ) {}
 
   serialize(): string {
@@ -42,11 +43,14 @@ export class DependenciesData {
     const devDependencies = dataParsed.allDependencies.devDependencies.map((dep) => Dependency.deserialize(dep));
     const issuesList = IssuesList.deserialize(dataParsed.issues);
     const allDependencies = { dependencies, devDependencies };
+    const devFiles = dataParsed.devFiles;
     return new DependenciesData(
       allDependencies,
       dataParsed.allPackagesDependencies,
       issuesList,
-      dataParsed.coreAspects
+      dataParsed.coreAspects,
+      undefined,
+      devFiles
     );
   }
 }
