@@ -77,7 +77,12 @@ export function PreviewPlaceholder({
       </div>
     );
 
-  return <ComponentComposition component={component} composition={selectedPreview} pubsub={false} />;
+  return (
+    <>
+      <ComponentComposition component={component} composition={selectedPreview} pubsub={false} />
+      <div className={styles.previewOverlay} />
+    </>
+  );
 
   // return (
   //   <div className={styles.previewPlaceholder} data-tip="" data-for={name}>
