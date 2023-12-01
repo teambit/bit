@@ -455,7 +455,7 @@ export class AutoDetectDeps {
       if (isEmpty(missing.packages)) return;
       const missingPackages = missing.packages;
       if (!R.isEmpty(missingPackages)) {
-        this._pushToMissingPackagesDependenciesIssues(originFile, missingPackages);
+        this._pushToMissingPackagesDependenciesIssues(originFile, missingPackages, fileType);
       }
     };
     processMissingFiles();
@@ -684,10 +684,18 @@ export class AutoDetectDeps {
   private _pushToMissingDependenciesOnFs(originFile: PathLinuxRelative, missingFiles: string[]) {
     (this.issues.getOrCreate(IssuesClasses.MissingDependenciesOnFs).data[originFile] ||= []).push(...missingFiles);
   }
-  private _pushToMissingPackagesDependenciesIssues(originFile: PathLinuxRelative, missingPackages: string[]) {
-    (this.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data[originFile] ||= []).push(
-      ...uniq(missingPackages)
-    );
+  private _pushToMissingPackagesDependenciesIssues(
+    originFile: PathLinuxRelative,
+    missingPackages: string[],
+    fileType: FileType
+  ) {
+    const data = this.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data;
+    const foundFile = data.find((file) => file.filePath === originFile);
+    if (foundFile) {
+      foundFile.missingPackages = uniq([...missingPackages, ...foundFile.missingPackages]);
+    } else {
+      data.push({ filePath: originFile, missingPackages, isDevFile: fileType.isTestFile });
+    }
   }
 }
 

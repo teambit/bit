@@ -1,8 +1,8 @@
 import R from 'ramda';
 import path from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { union, cloneDeep } from 'lodash';
-import { IssuesList, IssuesClasses } from '@teambit/component-issues';
+import { cloneDeep, uniq } from 'lodash';
+import { IssuesList, IssuesClasses, MissingPackagesData } from '@teambit/component-issues';
 import { Dependency } from '..';
 import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
 import Component from '../../../component/consumer-component';
@@ -395,13 +395,11 @@ export class ApplyOverrides {
     const originallyExists: string[] = [];
     let missingPackages: string[] = [];
     // We want to also add missing packages to the peer list as we know to resolve the version from the env anyway
-    // @ts-ignore
-    const missingData = this.issues.getIssueByName<IssuesClasses.MissingPackagesDependenciesOnFs>(
-      'MissingPackagesDependenciesOnFs'
-    )?.data;
+    const missingData = this.issues.getIssueByName('MissingPackagesDependenciesOnFs')?.data as
+      | MissingPackagesData[]
+      | undefined;
     if (missingData) {
-      // @ts-ignore
-      missingPackages = union(...(Object.values(missingData) || []));
+      missingPackages = uniq(missingData.map((d) => d.missingPackages).flat());
     }
     ['dependencies', 'devDependencies', 'peerDependencies'].forEach((field) => {
       R.forEachObjIndexed((pkgVal, pkgName) => {
