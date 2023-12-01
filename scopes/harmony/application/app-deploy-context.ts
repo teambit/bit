@@ -1,11 +1,21 @@
-import { Component } from '@teambit/component';
-import { Capsule } from '@teambit/isolator';
-import { BuildContext, ArtifactDefinition } from '@teambit/builder';
+import { ArtifactDefinition } from '@teambit/builder';
+import { AppBuildContext } from './app-build-context';
 
-export interface AppDeployContext extends BuildContext {
-  capsule: Capsule;
-
-  appComponent: Component;
-
-  artifacts?: ArtifactDefinition[];
+export class AppDeployContext extends AppBuildContext {
+  constructor(
+    appBuildContext: AppBuildContext,
+    readonly artifacts: ArtifactDefinition[],
+  ) {
+    super(
+      appBuildContext.appContext,
+      appBuildContext.capsuleNetwork,
+      appBuildContext.previousTasksResults,
+      appBuildContext.pipeName,
+      appBuildContext.capsule,
+      appBuildContext.name,
+      appBuildContext.appComponent,
+      appBuildContext.artifactsDir,
+      appBuildContext.laneId
+    );
+  }
 }

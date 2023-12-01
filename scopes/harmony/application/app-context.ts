@@ -47,6 +47,16 @@ export class AppContext extends ExecutionContext {
      * A port to run the app on
      */
     readonly port?: number,
+
+    /**
+     * path to the application component in the workspace
+     */
+    readonly workspaceComponentPath?: string,
+
+    /**
+     * list of env variables to include.
+     */
+    readonly envVariables: Record<string, string> = {}
   ) {
     super(execContext.upper, execContext.envRuntime, execContext.components);
   }
@@ -72,14 +82,16 @@ export class AppContext extends ExecutionContext {
 
   static compose(appContext: AppContext, overrides?: Partial<AppContext>) {
     return new AppContext(
-      overrides?.appName || appContext.appName,
-      overrides?.harmony || appContext.harmony,
-      overrides?.dev || appContext.dev,
-      overrides?.appComponent || appContext.appComponent,
-      overrides?.workdir || appContext.workdir,
-      overrides?.execContext || appContext.execContext,
-      overrides?.hostRootDir || appContext.hostRootDir,
-      overrides?.port || appContext.port
+      overrides?.appName || appContext?.appName,
+      overrides?.harmony || appContext?.harmony,
+      overrides?.dev || appContext?.dev,
+      overrides?.appComponent || appContext?.appComponent,
+      overrides?.workdir || appContext?.workdir,
+      overrides?.execContext || appContext?.execContext,
+      overrides?.hostRootDir || appContext?.hostRootDir,
+      overrides?.port || appContext?.port,
+      overrides?.workspaceComponentPath || appContext?.workspaceComponentPath,
+      overrides?.envVariables || appContext?.envVariables,
     );
   }
 }

@@ -1,15 +1,8 @@
-export type { ComponentGraph } from './component-graph';
-export type { CompIdGraph, DepEdgeType } from './component-id-graph';
-export { DuplicateDependency, VersionSubgraph } from './duplicate-dependency';
-export { EdgeType } from './edge-type';
-export type { GraphBuilder } from './graph-builder';
-export { GraphAspect as default, GraphAspect } from './graph.aspect';
-export type { GraphMain } from './graph.main.runtime';
-export type { ComponentWidget, ComponentWidgetProps, ComponentWidgetSlot, GraphUI } from './graph.ui.runtime';
-export { Dependency } from './model/dependency';
-export { GraphFilter } from './model/graph-filters';
-export { IdGraph, objectListToGraph, bitObjectListToGraph } from './object-list-to-graph';
 export { DependenciesCompare } from './ui/dependencies-compare';
+export { Dependency } from './model/dependency';
+export { DuplicateDependency } from './duplicate-dependency';
+export { GraphAspect as default, GraphAspect } from './graph.aspect';
+export { IdGraph, objectListToGraph, bitObjectListToGraph } from './object-list-to-graph';
 export {
   calcElements,
   calcLayout,
@@ -19,5 +12,14 @@ export {
   styles as dependenciesGraphStyles,
 } from './ui/dependencies-graph';
 export { GraphFilters, styles as graphPageStyles } from './ui/graph-page';
-export { EdgeModel, GraphModel, NodeModel, RawGraph, useGraph, useGraphQuery } from './ui/query';
+export { EdgeModel, GraphModel, NodeModel, useGraph, useGraphQuery } from './ui/query';
 export { styles as componentNodeStyles, root, defaultNode, external } from './ui/component-node';
+export type { RawGraph } from './ui/query';
+export type { CompIdGraph, DepEdgeType } from './component-id-graph';
+export type { ComponentGraph } from './component-graph';
+export type { ComponentWidget, ComponentWidgetProps, ComponentWidgetSlot, GraphUI } from './graph.ui.runtime';
+export { EdgeType } from './edge-type';
+export type { GraphBuilder } from './graph-builder';
+export type { GraphFilter } from './model/graph-filters';
+export type { GraphMain } from './graph.main.runtime';
+export type { VersionSubgraph } from './duplicate-dependency';
