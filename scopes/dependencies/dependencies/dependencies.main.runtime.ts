@@ -9,11 +9,6 @@ import {
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { cloneDeep, compact, set } from 'lodash';
 import pMapSeries from 'p-map-series';
-import {
-  DependencyResolver,
-  updateDependenciesVersions,
-} from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
-import { AutoDetectDeps } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver/auto-detect-deps';
 import { DebugDependencies } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver/dependencies-resolver';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { DependenciesLoader } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver/dependencies-loader';
