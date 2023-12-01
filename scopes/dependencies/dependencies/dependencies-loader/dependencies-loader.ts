@@ -2,33 +2,40 @@ import R from 'ramda';
 import path from 'path';
 import { uniq } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
-import { Consumer } from '../../..';
-import logger from '../../../../logger/logger';
-import { getLastModifiedComponentTimestampMs } from '../../../../utils/fs/last-modified';
-import { ExtensionDataEntry } from '../../../config';
-import Component from '../../consumer-component';
+import { Consumer } from '@teambit/legacy/dist/consumer';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { getLastModifiedComponentTimestampMs } from '@teambit/legacy/dist/utils/fs/last-modified';
+import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { DependencyLoaderOpts } from '@teambit/legacy/dist/consumer/component/component-loader';
+import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
+import { Workspace } from '@teambit/workspace';
+import DependencyResolverAspect, { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DevFilesMain } from '@teambit/dev-files';
+import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependenciesData } from './dependencies-data';
-import DependencyResolver, { DebugDependencies } from './dependencies-resolver';
-import { COMPONENT_CONFIG_FILE_NAME } from '../../../../constants';
 import { updateDependenciesVersions } from './dependencies-versions-resolver';
-import { AutoDetectDeps } from './auto-detect-deps';
+import { AutoDetectDeps, DebugDependencies } from './auto-detect-deps';
 import OverridesDependencies from './overrides-dependencies';
 import { ApplyOverrides } from './apply-overrides';
 
-type Opts = {
-  cacheResolvedDependencies: Record<string, any>;
-  cacheProjectAst?: Record<string, any>;
-  useDependenciesCache: boolean;
-};
-
 export class DependenciesLoader {
   private idStr: string;
-  constructor(private component: Component, private consumer: Consumer, private opts: Opts) {
+  private consumer: Consumer;
+  constructor(
+    private component: Component,
+    private workspace: Workspace,
+    private depsResolver: DependencyResolverMain,
+    private devFiles: DevFilesMain,
+    private aspectLoader: AspectLoaderMain,
+    private opts: DependencyLoaderOpts
+  ) {
+    this.consumer = this.workspace.consumer;
     this.idStr = this.component.id.toString();
   }
   async load() {
     const { dependenciesData, debugDependenciesData } = await this.getDependenciesData();
-    const applyOverrides = new ApplyOverrides(this.component, this.consumer);
+    const applyOverrides = new ApplyOverrides(this.component, this.depsResolver, this.workspace);
     applyOverrides.allDependencies = dependenciesData.allDependencies;
     applyOverrides.allPackagesDependencies = dependenciesData.allPackagesDependencies;
     if (debugDependenciesData) {
@@ -39,7 +46,8 @@ export class DependenciesLoader {
     const results = await applyOverrides.getDependenciesData();
     this.setDependenciesDataOnComponent(results.dependenciesData, results.overridesDependencies);
     updateDependenciesVersions(
-      this.consumer,
+      this.depsResolver,
+      this.workspace,
       this.component,
       results.overridesDependencies,
       results.autoDetectOverrides,
@@ -62,7 +70,13 @@ export class DependenciesLoader {
       return { dependenciesData: depsDataFromCache };
     }
 
-    const autoDetectDeps = new AutoDetectDeps(this.component, this.consumer);
+    const autoDetectDeps = new AutoDetectDeps(
+      this.component,
+      this.workspace,
+      this.devFiles,
+      this.depsResolver,
+      this.aspectLoader
+    );
     const results = await autoDetectDeps.getDependenciesData(
       this.opts.cacheResolvedDependencies,
       this.opts.cacheProjectAst
@@ -132,9 +146,7 @@ export class DependenciesLoader {
   }
 
   private pushToDependencyResolverExtension(dataField: string, data: any, operation: 'add' | 'set' = 'add') {
-    const depResolverAspectName = DependencyResolver.getDepResolverAspectName();
-    if (!depResolverAspectName) return;
-
+    const depResolverAspectName = DependencyResolverAspect.id;
     let extExistOnComponent = true;
     let ext = this.component.extensions.findCoreExtension(depResolverAspectName);
     if (!ext) {

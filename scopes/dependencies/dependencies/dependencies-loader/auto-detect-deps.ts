@@ -6,32 +6,53 @@ import { isSnap } from '@teambit/component-version';
 import { ComponentID } from '@teambit/component-id';
 import { uniq, isEmpty } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
-import { Dependency } from '..';
-import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '../../../../constants';
-import Consumer from '../../../../consumer/consumer';
-import logger from '../../../../logger/logger';
-import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
-import { PathLinux, PathLinuxRelative, PathOsBased, removeFileExtension } from '../../../../utils/path';
-import ComponentMap from '../../../bit-map/component-map';
-import Component from '../../../component/consumer-component';
-import { RelativePath } from '../dependency';
-import { getDependencyTree } from '../files-dependency-builder';
-import { FileObject, ImportSpecifier, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
-import { ResolvedPackageData } from '../../../../utils/packages';
+import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
+import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/legacy/dist/utils';
+import { PathLinux, PathLinuxRelative, PathOsBased, removeFileExtension } from '@teambit/legacy/dist/utils/path';
+import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { RelativePath } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
+import { getDependencyTree } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder';
+import {
+  FileObject,
+  ImportSpecifier,
+  DependenciesTree,
+} from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
+import { DevFilesMain } from '@teambit/dev-files';
+import { Workspace } from '@teambit/workspace';
+import { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
+import { ResolvedPackageData } from '@teambit/legacy/dist/utils/packages';
+import { DependencyDetector } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
-import { DependencyDetector } from '../files-dependency-builder/detector-hook';
-import DependencyResolver, {
-  AllDependencies,
-  AllPackagesDependencies,
-  DebugComponentsDependency,
-  DebugDependencies,
-  FileType,
-} from './dependencies-resolver';
 import { DependenciesData } from './dependencies-data';
+import { AllDependencies, AllPackagesDependencies } from './apply-overrides';
+
+export type FileType = {
+  isTestFile: boolean;
+};
+
+export type DebugDependencies = {
+  components: DebugComponentsDependency[];
+  unidentifiedPackages?: string[];
+};
+
+export type DebugComponentsDependency = {
+  id: ComponentID;
+  importSource?: string;
+  dependencyPackageJsonPath?: string;
+  dependentPackageJsonPath?: string;
+  // can be resolved here or can be any one of the strategies in dependencies-version-resolver
+  versionResolvedFrom?: 'DependencyPkgJson' | 'DependentPkgJson' | 'BitMap' | 'Model' | 'MergeConfig' | string;
+  version?: string;
+  componentIdResolvedFrom?: 'DependencyPkgJson' | 'DependencyPath';
+  packageName?: string;
+};
 
 export class AutoDetectDeps {
-  component: Component;
-  consumer: Consumer;
   componentId: ComponentID;
   componentMap: ComponentMap;
   componentFromModel: Component;
@@ -44,9 +65,13 @@ export class AutoDetectDeps {
   processedFiles: string[];
   debugDependenciesData: DebugDependencies;
   autoDetectConfigMerge: Record<string, any>;
-  constructor(component: Component, consumer: Consumer) {
-    this.component = component;
-    this.consumer = consumer;
+  constructor(
+    private component: Component,
+    private workspace: Workspace,
+    private devFiles: DevFilesMain,
+    private depsResolver: DependencyResolverMain,
+    private aspectLoader: AspectLoaderMain
+  ) {
     this.componentId = component.componentId;
     // the consumerComponent is coming from the workspace, so it must have the componentMap prop
     this.componentMap = this.component.componentMap as ComponentMap;
@@ -65,6 +90,10 @@ export class AutoDetectDeps {
     this.processedFiles = [];
     this.issues = component.issues;
     this.debugDependenciesData = { components: [] };
+  }
+
+  get consumer(): Consumer {
+    return this.workspace.consumer;
   }
 
   private setTree(tree: DependenciesTree) {
@@ -112,7 +141,7 @@ export class AutoDetectDeps {
     // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
     // they are referred as "untracked components" and the user should add them later on in order to tag
     this.setTree(dependenciesTree.tree);
-    const devFiles = await DependencyResolver.getDevFiles(this.component);
+    const devFiles = await this.devFiles.getDevFilesForConsumerComp(this.component);
     await this.populateDependencies(allFiles, devFiles);
     return {
       dependenciesData: new DependenciesData(
@@ -126,7 +155,7 @@ export class AutoDetectDeps {
   }
 
   async getEnvDetectors(): Promise<DependencyDetector[] | null> {
-    return DependencyResolver.envDetectorsGetter(this.component.extensions);
+    return this.depsResolver.calcComponentEnvDepDetectors(this.component.extensions);
   }
 
   /**
@@ -375,7 +404,7 @@ export class AutoDetectDeps {
   }
 
   private isPkgInWorkspacePolicies(pkgName: string) {
-    return DependencyResolver.getWorkspacePolicy().dependencies?.[pkgName];
+    return this.depsResolver.getWorkspacePolicyManifest().dependencies?.[pkgName];
   }
 
   private addImportNonMainIssueIfNeeded(filePath: PathLinuxRelative, dependencyPkgData: ResolvedPackageData) {
@@ -477,6 +506,18 @@ export class AutoDetectDeps {
     } else this.issues.getOrCreate(IssuesClasses.ResolveErrors).data[originFile] = error.message;
   }
 
+  private getCoreAspectsPackagesAndIds(): Record<string, string> {
+    const allCoreAspectsIds = this.aspectLoader.getCoreAspectIds();
+    const coreAspectsPackagesAndIds = {};
+
+    allCoreAspectsIds.forEach((id) => {
+      const packageName = getCoreAspectPackageName(id);
+      coreAspectsPackagesAndIds[packageName] = id;
+    });
+
+    return coreAspectsPackagesAndIds;
+  }
+
   /**
    * when a user uses core-extensions these core-extensions should not be dependencies.
    * here, we filter them out from all places they could entered as dependencies.
@@ -484,10 +525,7 @@ export class AutoDetectDeps {
    * which case we recognizes that the current originFile is a core-extension and avoid filtering.
    */
   private processCoreAspects(originFile: PathLinuxRelative) {
-    const coreAspects = DependencyResolver.getCoreAspectsPackagesAndIds?.();
-    if (!coreAspects) {
-      return;
-    }
+    const coreAspects = this.getCoreAspectsPackagesAndIds();
 
     // const scopes = coreAspects.map((id) => {
     //   const id = id.split()
@@ -613,7 +651,7 @@ export class AutoDetectDeps {
     if (packageNames.length === 0) return;
     const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
     if (!isTypeScript) return;
-    const depsHost = DependencyResolver.getWorkspacePolicy();
+    const depsHost = this.depsResolver.getWorkspacePolicyManifest();
     const addFromConfig = (packageName: string): boolean => {
       if (!depsHost) return false;
       return DEPENDENCIES_FIELDS.some((depField) => {

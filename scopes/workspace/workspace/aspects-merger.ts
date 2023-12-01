@@ -211,7 +211,7 @@ export class AspectsMerger {
    * from the merge-config we get the dep-resolver policy as an array, because it needs to support "force" prop.
    * however, when we save the config, we want to save it as an object, so we need split the data into two:
    * 1. force: true, which gets saved into the config.
-   * 2. force: false, which gets saved into the data.dependencies later on. see the LegacyDependencyResolver.registerOnComponentAutoDetectOverridesGetter hook
+   * 2. force: false, which gets saved into the data.dependencies later on. see the workspace.getAutoDetectOverrides()
    */
   private removeAutoDepsFromConfig(componentId: ComponentID, conf?: ExtensionDataList, fromScope = false) {
     if (!conf) return;

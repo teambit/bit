@@ -3,23 +3,30 @@ import path from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { cloneDeep, uniq } from 'lodash';
 import { IssuesList, IssuesClasses, MissingPackagesData } from '@teambit/component-issues';
-import { Dependency } from '..';
-import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
-import Component from '../../../component/consumer-component';
+import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy/dist/constants';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
+import { ResolvedPackageData, resolvePackageData, resolvePackagePath } from '@teambit/legacy/dist/utils/packages';
+import { PathLinux } from '@teambit/legacy/dist/utils/path';
+import { Workspace } from '@teambit/workspace';
+import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';
-import PackageJsonFile from '../../../../consumer/component/package-json-file';
-import { DependencyDetector } from '../files-dependency-builder/detector-hook';
-import DependencyResolver, {
-  AllDependencies,
-  AllPackagesDependencies,
-  DebugDependencies,
-  FileType,
-} from './dependencies-resolver';
-import { ResolvedPackageData, resolvePackageData, resolvePackagePath } from '../../../../utils/packages';
-import { PathLinux } from '../../../../utils/path';
-import Consumer from '../../../consumer';
-import ComponentMap from '../../../bit-map/component-map';
+import { DebugDependencies, FileType } from './auto-detect-deps';
+
+export type AllDependencies = {
+  dependencies: Dependency[];
+  devDependencies: Dependency[];
+};
+
+export type AllPackagesDependencies = {
+  packageDependencies: Record<string, string>;
+  devPackageDependencies: Record<string, string>;
+  peerPackageDependencies: Record<string, string>;
+};
 
 const DepsKeysToAllPackagesDepsKeys = {
   dependencies: 'packageDependencies',
@@ -42,8 +49,12 @@ export class ApplyOverrides {
   processedFiles: string[];
   overridesDependencies: OverridesDependencies;
   debugDependenciesData: DebugDependencies;
-  autoDetectOverrides: Record<string, any>;
-  constructor(private component: Component, private consumer?: Consumer) {
+  autoDetectOverrides: Record<string, any> | undefined;
+  constructor(
+    private component: Component,
+    private depsResolver: DependencyResolverMain,
+    private workspace?: Workspace
+  ) {
     this.componentId = component.componentId;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
@@ -63,10 +74,14 @@ export class ApplyOverrides {
     this.debugDependenciesData = { components: [] };
   }
 
+  get consumer(): Consumer | undefined {
+    return this.workspace?.consumer;
+  }
+
   async getDependenciesData(): Promise<{
     dependenciesData: DependenciesData;
     overridesDependencies: OverridesDependencies;
-    autoDetectOverrides: Record<string, any>;
+    autoDetectOverrides?: Record<string, any>;
   }> {
     await this.populateDependencies();
     const dependenciesData = new DependenciesData(
@@ -80,10 +95,6 @@ export class ApplyOverrides {
       overridesDependencies: this.overridesDependencies,
       autoDetectOverrides: this.autoDetectOverrides,
     };
-  }
-
-  async getEnvDetectors(): Promise<DependencyDetector[] | null> {
-    return DependencyResolver.envDetectorsGetter(this.component.extensions);
   }
 
   /**
@@ -150,12 +161,11 @@ export class ApplyOverrides {
   }
 
   private async loadAutoDetectOverrides() {
-    const autoDetectOverrides = await DependencyResolver.getOnComponentAutoDetectOverrides(
+    this.autoDetectOverrides = await this.workspace?.getAutoDetectOverrides(
       this.component.extensions,
       this.component.id,
       this.component.files
     );
-    this.autoDetectOverrides = autoDetectOverrides;
   }
 
   private cloneAllPackagesDependencies() {
@@ -340,7 +350,7 @@ export class ApplyOverrides {
   }
 
   private applyWorkspacePolicy(): void {
-    const wsPolicy = DependencyResolver.getWorkspacePolicy();
+    const wsPolicy = this.depsResolver.getWorkspacePolicyManifest();
     if (!wsPolicy) return;
     const wsPeer = wsPolicy.peerDependencies || {};
     const wsRegular = wsPolicy.dependencies || {};
@@ -477,11 +487,11 @@ export class ApplyOverrides {
   }
 
   private async applyAutoDetectedPeersFromEnvOnEnvItSelf(): Promise<void> {
-    const envPolicy = await DependencyResolver.getHarmonyEnvPeersPolicyForEnvItself(
-      this.component.id,
-      this.component.files
-    );
-    if (!envPolicy || !Object.keys(envPolicy).length) {
+    const envPolicy = await this.depsResolver.getEnvPolicyFromEnvLegacyId(this.component.id, this.component.files);
+    if (!envPolicy) return;
+    const envPolicyManifest = envPolicy.selfPolicy.toVersionManifest();
+
+    if (!envPolicyManifest || !Object.keys(envPolicyManifest).length) {
       return;
     }
     const deps = this.allPackagesDependencies.packageDependencies || {};
@@ -489,13 +499,13 @@ export class ApplyOverrides {
     // the policy used for installation only in that case
     ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
       R.forEachObjIndexed((_pkgVal, pkgName) => {
-        const peerVersionFromEnvPolicy = envPolicy[pkgName];
+        const peerVersionFromEnvPolicy = envPolicyManifest[pkgName];
         if (peerVersionFromEnvPolicy) {
           delete this.allPackagesDependencies[field][pkgName];
         }
       }, this.allPackagesDependencies[field]);
     });
-    Object.assign(deps, envPolicy);
+    Object.assign(deps, envPolicyManifest);
     // TODO: handle component deps once we support peers between components
     this.allPackagesDependencies.packageDependencies = deps;
   }

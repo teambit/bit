@@ -21,8 +21,6 @@ import {
   CFG_ISOLATED_SCOPE_CAPSULES,
   getCloudDomain,
 } from '@teambit/legacy/dist/constants';
-// TODO: it's weird we take it from here.. think about it../workspace/utils
-import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
@@ -564,6 +562,11 @@ export class DependencyResolverMain {
       this._workspacePolicy = this.mergeWorkspacePolices([policyFromConfig, ...externalPolicies]);
     }
     return this._workspacePolicy;
+  }
+
+  getWorkspacePolicyManifest() {
+    const workspacePolicy = this.getWorkspacePolicy();
+    return workspacePolicy.toManifest();
   }
 
   clearCache() {
@@ -1629,8 +1632,6 @@ export class DependencyResolverMain {
     // @ts-ignore
     dependencyResolver.registerDependencyFactories([new ComponentDependencyFactory(componentAspect)]);
 
-    DependencyResolver.getDepResolverAspectName = () => DependencyResolverAspect.id;
-
     LegacyComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
       async (configuredExtensions: ExtensionDataList, id: ComponentID, legacyFiles: SourceFile[]) => {
@@ -1638,18 +1639,6 @@ export class DependencyResolverMain {
         return policy.toLegacyDepsOverrides();
       }
     );
-    DependencyResolver.registerWorkspacePolicyGetter(() => {
-      const workspacePolicy = dependencyResolver.getWorkspacePolicy();
-      return workspacePolicy.toManifest();
-    });
-    DependencyResolver.registerEnvDetectorGetter(async (extensions: ExtensionDataList) => {
-      return dependencyResolver.calcComponentEnvDepDetectors(extensions);
-    });
-    DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: ComponentID, files: SourceFile[]) => {
-      const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id, files);
-      if (!envPolicy) return undefined;
-      return envPolicy.selfPolicy.toVersionManifest();
-    });
     if (aspectLoader)
       aspectLoader.registerOnLoadRequireableExtensionSlot(
         dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)

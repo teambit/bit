@@ -1,24 +1,27 @@
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
-import Consumer from '../../../../consumer/consumer';
-import logger from '../../../../logger/logger';
-import Component from '../../../component/consumer-component';
-import { ExtensionDataEntry, ExtensionDataList } from '../../../config/extension-data';
-import Dependencies from '../dependencies';
-import Dependency from '../dependency';
-import DependencyResolver, { DebugComponentsDependency } from './dependencies-resolver';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { Workspace } from '@teambit/workspace';
+import logger from '@teambit/legacy/dist/logger/logger';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import Dependencies from '@teambit/legacy/dist/consumer/component/dependencies/dependencies';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
+import Dependency from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
 import OverridesDependencies from './overrides-dependencies';
-import { DEPENDENCIES_FIELDS } from '../../../../constants';
-import { getValidVersion } from './auto-detect-deps';
+import { DebugComponentsDependency, getValidVersion } from './auto-detect-deps';
 
 export function updateDependenciesVersions(
-  consumer: Consumer,
+  depsResolver: DependencyResolverMain,
+  workspace: Workspace,
   component: Component,
   overridesDependencies: OverridesDependencies,
-  autoDetectOverrides: Record<string, any>,
+  autoDetectOverrides?: Record<string, any>,
   debugDependencies?: DebugComponentsDependency[]
 ) {
-  const autoDetectConfigMerge = DependencyResolver.getOnComponentAutoDetectConfigMerge(component.id) || {};
+  const consumer: Consumer = workspace.consumer;
+  const autoDetectConfigMerge = workspace.getAutoDetectConfigMerge(component.id) || {};
 
   updateDependencies(component.dependencies);
   updateDependencies(component.devDependencies);
@@ -136,12 +139,12 @@ export function updateDependenciesVersions(
 
   function isPkgInAutoDetectOverrides(pkgName: string): boolean {
     return DEPENDENCIES_FIELDS.some(
-      (depField) => autoDetectOverrides[depField] && autoDetectOverrides[depField][pkgName]
+      (depField) => autoDetectOverrides?.[depField] && autoDetectOverrides[depField][pkgName]
     );
   }
 
   function isPkgInWorkspacePolicies(pkgName: string) {
-    return DependencyResolver.getWorkspacePolicy().dependencies?.[pkgName];
+    return depsResolver.getWorkspacePolicyManifest().dependencies?.[pkgName];
   }
 
   function resolveFromMergeConfig(id: ComponentID, pkgName: string) {

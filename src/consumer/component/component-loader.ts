@@ -13,7 +13,6 @@ import ComponentsPendingImport from '../component-ops/exceptions/components-pend
 import Component, { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
 import { ComponentFsCache } from './component-fs-cache';
-import { DependenciesLoader } from './dependencies/dependency-resolver/dependencies-loader';
 import ComponentMap from '../bit-map/component-map';
 import { VERSION_ZERO } from '../../scope/models/model-component';
 import loader from '../../cli/loader';
@@ -31,6 +30,14 @@ export type LoadManyResult = {
 
 type OnComponentLoadSubscriber = (component: Component, loadOpts?: ComponentLoadOptions) => Promise<Component>;
 type OnComponentIssuesCalcSubscriber = (component: Component) => Promise<ComponentIssue[]>;
+
+export type DependencyLoaderOpts = {
+  cacheResolvedDependencies: Record<string, any>;
+  cacheProjectAst?: Record<string, any>;
+  useDependenciesCache: boolean;
+};
+
+type LoadDepsFunc = (component: Component, opts: DependencyLoaderOpts) => Promise<any>;
 
 export default class ComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
@@ -55,6 +62,8 @@ export default class ComponentLoader {
   static registerOnComponentIssuesCalcSubscriber(func: OnComponentIssuesCalcSubscriber) {
     this.onComponentIssuesCalcSubscribers.push(func);
   }
+
+  static loadDeps: LoadDepsFunc;
 
   clearComponentsCache() {
     this.componentsCache.deleteAll();
@@ -203,12 +212,11 @@ export default class ComponentLoader {
 
     const loadDependencies = async () => {
       await this.invalidateDependenciesCacheIfNeeded();
-      const dependenciesLoader = new DependenciesLoader(component, this.consumer, {
+      await ComponentLoader.loadDeps(component, {
         cacheResolvedDependencies: this.cacheResolvedDependencies,
         cacheProjectAst: this.cacheProjectAst,
         useDependenciesCache: component.issues.isEmpty(),
       });
-      await dependenciesLoader.load();
     };
 
     const runOnComponentLoadEvent = async () => {

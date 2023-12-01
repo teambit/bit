@@ -14,7 +14,6 @@ import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-o
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
-import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 
 function getPackageName(aspect: any, id: ComponentID) {
   return `@teambit/${id.name}`;
@@ -120,8 +119,6 @@ function clearGlobalsIfNeeded() {
   ComponentConfig.componentConfigLegacyLoadingRegistry = {};
   ComponentConfig.componentConfigLoadingRegistry = {};
   PackageJsonTransformer.packageJsonTransformersRegistry = [];
-  // @ts-ignore
-  DependencyResolver.getWorkspacePolicy = undefined;
   ExtensionDataList.coreExtensionsNames = new Map();
   // @ts-ignore
   WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;
