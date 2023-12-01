@@ -646,6 +646,30 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/hooks/use-api-ref-url"
     },
+    "hooks/use-cloud-scopes": {
+        "name": "hooks/use-cloud-scopes",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.cloud",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/cloud/hooks/use-cloud-scopes"
+    },
+    "hooks/use-current-user": {
+        "name": "hooks/use-current-user",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.cloud",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/cloud/hooks/use-current-user"
+    },
+    "hooks/use-logout": {
+        "name": "hooks/use-logout",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.cloud",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/cloud/hooks/use-logout"
+    },
     "hooks/use-schema": {
         "name": "hooks/use-schema",
         "scope": "teambit.api-reference",
@@ -778,6 +802,22 @@
         "version": "0.0.501",
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/model/composition-type"
+    },
+    "models/cloud-scope": {
+        "name": "models/cloud-scope",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.cloud",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/cloud/models/cloud-scope"
+    },
+    "models/cloud-user": {
+        "name": "models/cloud-user",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.cloud",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/cloud/models/cloud-user"
     },
     "models/scope-model": {
         "name": "models/scope-model",
@@ -1366,6 +1406,20 @@
         "version": "0.0.20",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/compositions-app"
+    },
+    "ui/current-user": {
+        "name": "ui/current-user",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.cloud",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/cloud/ui/current-user",
+        "config": {
+            "teambit.react/react-env@1.0.32": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/docs-app": {
         "name": "ui/docs-app",

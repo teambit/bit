@@ -1,44 +1,43 @@
 import gql from 'graphql-tag';
 import { Schema } from '@teambit/graphql';
-import { Component } from '@teambit/component';
+import { ScopeDescriptor } from '@teambit/scopes.scope-descriptor';
 import { CloudMain } from './cloud.main.runtime';
 
 export function cloudSchema(cloud: CloudMain): Schema {
   return {
     typeDefs: gql`
-      type BitCloudScope {
-        name: String
+      type CloudScope {
+        id: String!
         icon: String
+        backgroundIconColor: String
+        stripColor: String
+        displayName: String
       }
-      type BitCloudUser {
+      type CloudUser {
         displayName: String
         username: String
         profileImage: String
-        isLoggedIn: Boolean
       }
       type Query {
-        getCurrentUser: BitCloudUser
+        getCurrentUser: CloudUser
         loginUrl(redirectUrl: String!): String!
+        getCloudScopes(ids: [String!]): [CloudScope!]
+        isLoggedIn: Boolean
       }
-      extend type Component {
-        scope: BitCloudScope
+      type Mutation {
+        logout: Boolean
       }
     `,
     resolvers: {
-      Component: {
-        scope: async (component: Component) => {
-          const scope = await cloud.getScope();
-          return {
-            ...scope,
-          };
-        },
-      },
-      BitCloudUser: {
-        isLoggedIn: () => {
-          return CloudMain.isLoggedIn();
+      CloudScope: {
+        id: (scope?: ScopeDescriptor) => {
+          return scope?.id.toString();
         },
       },
       Query: {
+        isLoggedIn: () => {
+          return CloudMain.isLoggedIn();
+        },
         loginUrl: (_, { redirectUrl }) => {
           return cloud.getLoginUrl(redirectUrl);
         },
@@ -47,6 +46,16 @@ export function cloudSchema(cloud: CloudMain): Schema {
           return {
             ...user,
           };
+        },
+        getCloudScopes: async (_, { ids }) => {
+          const scopes = await cloud.getCloudScopes(ids);
+          return scopes;
+        },
+      },
+      Mutation: {
+        logout: async () => {
+          cloud.logout();
+          return true;
         },
       },
     },

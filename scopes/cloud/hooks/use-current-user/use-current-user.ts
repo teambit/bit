@@ -1,12 +1,6 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
-
-export type CurrentUser = {
-  username?: string;
-  displayName?: string;
-  profileImage?: string;
-  isLoggedIn?: boolean;
-};
+import { CloudUser } from '@teambit/cloud.models.cloud-user';
 
 export const CURRENT_USER_QUERY = gql`
   query CurrentUser($redirectUrl: String!) {
@@ -14,14 +8,19 @@ export const CURRENT_USER_QUERY = gql`
       username
       displayName
       profileImage
-      isLoggedIn
     }
     loginUrl(redirectUrl: $redirectUrl)
+    isLoggedIn
   }
 `;
 
-export function useCurrentUser(): { currentUser?: CurrentUser; loginUrl?: string } {
-  const { data } = useDataQuery(CURRENT_USER_QUERY, {
+export function useCurrentUser(): {
+  currentUser?: CloudUser;
+  loginUrl?: string;
+  isLoggedIn?: boolean;
+  loading?: boolean;
+} {
+  const { data, loading } = useDataQuery(CURRENT_USER_QUERY, {
     variables: {
       redirectUrl: window.location.href,
     },
@@ -29,5 +28,7 @@ export function useCurrentUser(): { currentUser?: CurrentUser; loginUrl?: string
   return {
     currentUser: data?.getCurrentUser,
     loginUrl: data?.loginUrl,
+    isLoggedIn: data?.isLoggedIn,
+    loading,
   };
 }

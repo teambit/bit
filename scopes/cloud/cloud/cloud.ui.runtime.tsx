@@ -1,8 +1,7 @@
-import React from 'react';
 import { UIRuntime } from '@teambit/ui';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
+import { CurrentUser } from '@teambit/cloud.ui.current-user';
 import { CloudAspect } from './cloud.aspect';
-import { CurrentUser } from './ui/current-user/current-user';
 
 export class CloudUI {
   static runtime = UIRuntime;

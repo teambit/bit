@@ -1,6 +1,10 @@
 import { MainRuntime } from '@teambit/cli';
 import { v4 } from 'uuid';
 import os from 'os';
+import { GetScopesGQLResponse } from '@teambit/cloud.models.cloud-scope';
+import { CloudUser, CloudUserAPIResponse } from '@teambit/cloud.models.cloud-user';
+import { ScopeDescriptor } from '@teambit/scopes.scope-descriptor';
+import { ScopeID } from '@teambit/scopes.scope-id';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import {
   getCloudDomain,
@@ -14,9 +18,10 @@ import {
   CENTRAL_BIT_HUB_NAME,
   CFG_USER_TOKEN_KEY,
 } from '@teambit/legacy/dist/constants';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import globalFlags from '@teambit/legacy/dist/cli/global-flags';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
-import { getSync, setSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import { delSync, getSync, setSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { cloudSchema } from './cloud.graphql';
@@ -34,24 +39,20 @@ export interface CloudWorkspaceConfig {
   cloudHubName: string;
 }
 
-export type CloudUser = {
-  displayName?: string;
-  username?: string;
-  profileImage?: string;
-  isLoggedIn?: boolean;
-};
 export class CloudMain {
   static ERROR_RESPONSE = 500;
   static DEFAULT_PORT = 8888;
   static REDIRECT = 302;
   static CLIENT_ID = v4();
   static REDIRECT_URL;
+  static GRAPHQL_ENDPOINT = '/graphql';
 
   constructor(
     private config: CloudWorkspaceConfig,
     public logger: Logger,
     public express: ExpressMain,
-    public workspace: Workspace
+    public workspace: Workspace,
+    public scope: ScopeMain
   ) {}
 
   getCloudDomain(): string {
@@ -90,7 +91,7 @@ export class CloudMain {
   }
 
   static isLoggedIn(): boolean {
-    return !!CloudMain.getAuthToken();
+    return Boolean(CloudMain.getAuthToken());
   }
 
   static getAuthToken() {
@@ -109,10 +110,9 @@ export class CloudMain {
 
   async getCurrentUser(): Promise<CloudUser | null> {
     const isLoggedIn = CloudMain.isLoggedIn();
-    if (!isLoggedIn)
-      return {
-        isLoggedIn: false,
-      };
+    if (!isLoggedIn) {
+      return null;
+    }
 
     const route = 'user/user';
     this.logger.debug(`getCurrentUser, url: ${this.getCloudApi()}/${route}`);
@@ -129,14 +129,12 @@ export class CloudMain {
       .then(async (res) => {
         try {
           if (res.status === 401) {
-            return {
-              isLoggedIn: false,
-            };
+            return null;
           }
-          const response = await res.json();
-          return { ...response.payload, isLoggedIn: false };
+          const response: CloudUserAPIResponse = await res.json();
+          return { ...(response.payload || {}) };
         } catch (e) {
-          return null;
+          throw e;
         }
       })
       .catch((err) => {
@@ -157,7 +155,11 @@ export class CloudMain {
     );
   }
 
-  public setupAuthListener() {
+  logout() {
+    delSync(CFG_USER_TOKEN_KEY);
+  }
+
+  setupAuthListener() {
     if (this.workspace) {
       const expectedClientId = CloudMain.CLIENT_ID;
       const app = this.express.createApp();
@@ -196,8 +198,68 @@ export class CloudMain {
     }
   }
 
+  static GET_SCOPES = `
+      query GET_SCOPES($ids: [String]!) {
+        getScopes(ids: $ids) {
+          scopeStyle {
+            icon
+            backgroundIconColor
+            stripColor
+          }
+        }
+      }
+    `;
+
+  async getCloudScopes(scopes: string[]): Promise<ScopeDescriptor[]> {
+    const remotes = await this.scope._legacyRemotes();
+    const filteredScopesToFetch = scopes.filter((scope) => {
+      return remotes.isHub(scope);
+    });
+    const queryResponse = await this.fetchFromSymphonyViaGQL<GetScopesGQLResponse>(CloudMain.GET_SCOPES, {
+      ids: filteredScopesToFetch,
+    });
+    const scopesFromQuery = queryResponse?.data?.getScopes;
+    if (!scopesFromQuery) return [];
+    return scopesFromQuery.map((scope, index) => {
+      const scopeDescriptorObj = {
+        ...scope,
+        id: ScopeID.fromString(filteredScopesToFetch[index]),
+      };
+      return ScopeDescriptor.fromObject(scopeDescriptorObj);
+    });
+  }
+
+  async fetchFromSymphonyViaGQL<T>(query: string, variables?: Record<string, any>): Promise<T | null> {
+    if (!CloudMain.isLoggedIn()) return null;
+    const graphqlUrl = `https://${this.getCloudApi()}${CloudMain.GRAPHQL_ENDPOINT}`;
+    const body = JSON.stringify({
+      query,
+      variables,
+    });
+    const headers = {
+      'Content-Type': 'application/json',
+      ...CloudMain.getAuthHeader(),
+    };
+    try {
+      const response = await fetch(graphqlUrl, {
+        method: 'POST',
+        headers,
+        body,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.log('🚀 ~ file: cloud.main.runtime.ts:260 ~ CloudMain ~ error:', error);
+      this.logger.debug('fetchFromSymphonyViaGQL. ', 'Error fetching data: ', error);
+      return null;
+    }
+  }
+
   static slots = [];
-  static dependencies = [LoggerAspect, GraphqlAspect, ExpressAspect, WorkspaceAspect];
+  static dependencies = [LoggerAspect, GraphqlAspect, ExpressAspect, WorkspaceAspect, ScopeAspect];
   static runtime = MainRuntime;
   static defaultConfig: CloudWorkspaceConfig = {
     cloudDomain: getCloudDomain(),
@@ -211,11 +273,11 @@ export class CloudMain {
     cloudHubName: CENTRAL_BIT_HUB_NAME,
   };
   static async provider(
-    [loggerMain, graphql, express, workspace]: [LoggerMain, GraphqlMain, ExpressMain, Workspace],
+    [loggerMain, graphql, express, workspace, scope]: [LoggerMain, GraphqlMain, ExpressMain, Workspace, ScopeMain],
     config: CloudWorkspaceConfig
   ) {
     const logger = loggerMain.createLogger(CloudAspect.id);
-    const cloudMain = new CloudMain(config, logger, express, workspace);
+    const cloudMain = new CloudMain(config, logger, express, workspace, scope);
     graphql.register(cloudSchema(cloudMain));
     cloudMain.setupAuthListener();
     return cloudMain;
