@@ -8,7 +8,7 @@ import { getLastModifiedComponentTimestampMs } from '../../../../utils/fs/last-m
 import { ExtensionDataEntry } from '../../../config';
 import Component from '../../consumer-component';
 import { DependenciesData } from './dependencies-data';
-import DependencyResolver from './dependencies-resolver';
+import DependencyResolver, { DebugDependencies } from './dependencies-resolver';
 import { COMPONENT_CONFIG_FILE_NAME } from '../../../../constants';
 import { updateDependenciesVersions } from './dependencies-versions-resolver';
 import { AutoDetectDeps } from './auto-detect-deps';
@@ -27,14 +27,13 @@ export class DependenciesLoader {
     this.idStr = this.component.id.toString();
   }
   async load() {
-    const dependenciesData = await this.getDependenciesData();
+    const { dependenciesData, debugDependenciesData } = await this.getDependenciesData();
     const applyOverrides = new ApplyOverrides(this.component, this.consumer);
     applyOverrides.allDependencies = dependenciesData.allDependencies;
     applyOverrides.allPackagesDependencies = dependenciesData.allPackagesDependencies;
-    applyOverrides.coreAspects = dependenciesData.coreAspects;
-    if (dependenciesData.debugDependenciesData) {
+    if (debugDependenciesData) {
       // if it's coming from the cache, it's empty
-      applyOverrides.debugDependenciesData = dependenciesData.debugDependenciesData;
+      applyOverrides.debugDependenciesData = debugDependenciesData;
     }
     applyOverrides.issues = dependenciesData.issues;
     const results = await applyOverrides.getDependenciesData();
@@ -54,22 +53,28 @@ export class DependenciesLoader {
     };
   }
 
-  private async getDependenciesData() {
+  private async getDependenciesData(): Promise<{
+    dependenciesData: DependenciesData;
+    debugDependenciesData?: DebugDependencies;
+  }> {
     const depsDataFromCache = await this.getDependenciesDataFromCacheIfPossible();
     if (depsDataFromCache) {
-      return depsDataFromCache;
+      return { dependenciesData: depsDataFromCache };
     }
 
     const autoDetectDeps = new AutoDetectDeps(this.component, this.consumer);
-    const dependenciesData = await autoDetectDeps.getDependenciesData(
+    const results = await autoDetectDeps.getDependenciesData(
       this.opts.cacheResolvedDependencies,
       this.opts.cacheProjectAst
     );
-    if (this.shouldSaveInCache(dependenciesData)) {
-      await this.consumer.componentFsCache.saveDependenciesDataInCache(this.idStr, dependenciesData.serialize());
+    if (this.shouldSaveInCache(results.dependenciesData)) {
+      await this.consumer.componentFsCache.saveDependenciesDataInCache(
+        this.idStr,
+        results.dependenciesData.serialize()
+      );
     }
 
-    return dependenciesData;
+    return results;
   }
 
   private async getDependenciesDataFromCacheIfPossible(): Promise<DependenciesData | null> {

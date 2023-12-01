@@ -94,7 +94,7 @@ export class AutoDetectDeps {
   async getDependenciesData(
     cacheResolvedDependencies: Record<string, any>,
     cacheProjectAst: Record<string, any> | undefined
-  ): Promise<DependenciesData> {
+  ): Promise<{ dependenciesData: DependenciesData; debugDependenciesData: DebugDependencies }> {
     const componentDir = path.join(this.consumerPath, this.componentMap.rootDir);
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
     const allFiles = [...nonTestsFiles, ...testsFiles];
@@ -114,14 +114,15 @@ export class AutoDetectDeps {
     this.setTree(dependenciesTree.tree);
     const devFiles = await DependencyResolver.getDevFiles(this.component);
     await this.populateDependencies(allFiles, devFiles);
-    return new DependenciesData(
-      this.allDependencies,
-      this.allPackagesDependencies,
-      this.issues,
-      this.coreAspects,
-      this.debugDependenciesData,
-      devFiles
-    );
+    return {
+      dependenciesData: new DependenciesData(
+        this.allDependencies,
+        this.allPackagesDependencies,
+        this.issues,
+        this.coreAspects
+      ),
+      debugDependenciesData: this.debugDependenciesData,
+    };
   }
 
   async getEnvDetectors(): Promise<DependencyDetector[] | null> {
