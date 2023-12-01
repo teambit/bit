@@ -20,7 +20,7 @@ import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
 import { uniq } from 'lodash';
-import { writeFileSync, existsSync, mkdirSync, readFileSync } from 'fs-extra';
+import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
 import { join } from 'path';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { AspectLoaderAspect, getAspectDir, getAspectDirFromBvm } from '@teambit/aspect-loader';
@@ -606,8 +606,8 @@ export class PreviewMain {
       this.executionRefs.set(ctxId, new ExecutionRef(context));
     });
 
-    const previewRuntime = await this.writePreviewRuntime(context);
-    // const previewRuntime = await this.writePreviewEntry(context);
+    // const previewRuntime = await this.writePreviewRuntime(context);
+    const previewRuntime = await this.writePreviewEntry(context);
     const linkFiles = await this.updateLinkFiles(context.components, context);
 
     return [...linkFiles, previewRuntime];
@@ -731,14 +731,14 @@ export class PreviewMain {
       previewAspectId: PreviewAspect.id,
       filePath,
     });
-    try {
-      const contents = readFileSync(filePath, 'utf-8');
-      // eslint-disable-next-line no-console
-      console.log(contents);
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.log({ e });
-    }
+    // try {
+    //   const contents = readFileSync(filePath, 'utf-8');
+    //   // eslint-disable-next-line no-console
+    //   console.log(contents);
+    // } catch (e) {
+    //   // eslint-disable-next-line no-console
+    //   console.log({ e });
+    // }
     // eslint-disable-next-line no-console
     console.log('[over]');
     return filePath;
@@ -970,12 +970,15 @@ export class PreviewMain {
       },
     ]);
 
-    builder.registerBuildTasks([new PreBundlePreviewTask(uiMain, logger)]);
+    // eslint-disable-next-line no-console
+    console.log('\n[[registering pre-bundle-preview task]]');
+    // builder.registerBuildTasks([new PreBundlePreviewTask(uiMain, logger)]);
 
     if (!config.disabled)
       builder.registerBuildTasks([
         new EnvPreviewTemplateTask(preview, envs, aspectLoader, dependencyResolver, logger),
         new PreviewTask(bundler, preview, dependencyResolver, logger),
+        new PreBundlePreviewTask(uiMain, logger),
       ]);
 
     if (workspace) {

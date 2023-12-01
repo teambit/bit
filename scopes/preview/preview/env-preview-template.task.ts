@@ -54,6 +54,8 @@ export class EnvPreviewTemplateTask implements BuildTask {
   ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
+    // eslint-disable-next-line no-console
+    console.log('\n[EnvPreviewTemplateTask.execute]');
     const previewDefs = this.preview.getDefs();
     const htmlConfig = previewDefs.map((previewModule) => generateHtmlConfig(previewModule, { dev: context.dev }));
     const originalSeedersIds = context.capsuleNetwork.originalSeedersCapsules.map((c) => c.component.id.toString());

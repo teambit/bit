@@ -34,6 +34,8 @@ export class PreviewTask implements BuildTask {
   // readonly dependencies = [CompilerAspect.id];
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
+    // eslint-disable-next-line no-console
+    console.log('\n[PreviewTask.execute]');
     const defs = this.preview.getDefs();
     const url = `/preview/${context.envRuntime.id}`;
     const bundlingStrategy = this.preview.getBundlingStrategy(context.env);
