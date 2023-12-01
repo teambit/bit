@@ -24,13 +24,13 @@ export const PRE_BUNDLE_PREVIEW_PUBLIC_DIR = 'public/bit-preview';
 
 const ENTRY_CONTENT_TEMPLATE = `__IMPORTS__
 export const run = (config, customAspects = []) => {
-  console.log('run', config, customAspects)
+  // console.log('run', config, customAspects)
   const isBrowser = typeof window !== "undefined";
   const windowConfig = isBrowser ? window.harmonyAppConfig : undefined;
   const mergedConfig = { ...config, ...windowConfig };
   __ID_SETTERS__
   function render(...props) {
-    console.log('render', props)
+    // console.log('render', props)
     return Harmony.load(
       [
         ...customAspects,
@@ -39,29 +39,29 @@ export const run = (config, customAspects = []) => {
       __RUNTIME_NAME__,
       mergedConfig
     ).then((harmony) => {
-      console.log('harmony', harmony)
+      // console.log('harmony', harmony)
       return harmony
         .run()
         .then(() => harmony.get(__ROOT_ASPECT__))
         .then((rootExtension) => {
-          console.log('rootExtension', rootExtension)
+          // console.log('rootExtension', rootExtension)
           const ssrSetup = !isBrowser && rootExtension.setupSsr;
           const setup = rootExtension.setup;
           const setupFunc = (ssrSetup || setup || function noop() {}).bind(
             rootExtension
           );
-          console.log('setupFunc', setupFunc)
+          // console.log('setupFunc', setupFunc)
           return Promise.resolve(setupFunc()).then(
             () => {
-              console.log('rootExtension 2', rootExtension)
+              // console.log('rootExtension 2', rootExtension)
               return rootExtension
             }
           );
         })
         .then((rootExtension) => {
-          console.log('rootExtension 3', rootExtension)
+          // console.log('rootExtension 3', rootExtension)
           if (isBrowser) {
-            console.log('render', rootExtension)
+            // console.log('render', rootExtension)
             return rootExtension.render(
               __ROOT_EXTENSION_NAME__,
               ...props
@@ -187,11 +187,11 @@ export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[],
     mainEntry,
   });
   const config = createWebpackConfig(outputDir, mainEntry);
-  console.log('\n[buildPreBundlePreview] config', config);
+  // console.log('\n[buildPreBundlePreview] config', config);
   const compiler = webpack(config);
   const compilerRun = promisify(compiler.run.bind(compiler));
   const results = await compilerRun();
-  console.log('\n[buildPreBundlePreview] results', results && results.hasErrors());
+  // console.log('\n[buildPreBundlePreview] results', results && results.hasErrors());
   if (!results) throw new Error();
   if (results?.hasErrors()) {
     clearConsole();
@@ -213,7 +213,11 @@ export async function generateBundlePreviewEntry(rootAspectId: string, previewPr
     .join('\n');
   config['teambit.harmony/bit'] = rootAspectId;
 
-  const contents = [imports, `console.log('preview-run', run)`, `run(${JSON.stringify(config, null, 2)});`].join('\n');
+  const contents = [
+    imports,
+    // `console.log('preview-run', run)`,
+    `run(${JSON.stringify(config, null, 2)});`,
+  ].join('\n');
   const previewRuntime = resolve(join(__dirname, `preview.entry.${sha1(contents)}.js`));
   console.log('\n[generateBundlePreviewEntry]', {
     name: rootAspectId,

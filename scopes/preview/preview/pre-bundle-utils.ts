@@ -178,6 +178,14 @@ export function getBundlePath(bundleId: string, bundleDir: string, aspectDir: st
   try {
     const dirFromBvms = getAspectDirFromBvm(bundleId);
     const bundlePath = join(dirFromBvms, getBundleArtifactDirectory(bundleDir, aspectDir));
+    // // eslint-disable-next-line no-console
+    // console.log('\n[getBundlePath]', {
+    //   bundleId,
+    //   bundleDir,
+    //   aspectDir,
+    //   dirFromBvms,
+    //   bundlePath,
+    // })
     if (!existsSync(bundlePath)) {
       return undefined;
     }

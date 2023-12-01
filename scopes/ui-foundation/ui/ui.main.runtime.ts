@@ -231,12 +231,12 @@ export class UiMain {
     const ssrConfig = ssr && createSsrWebpackConfig(outputPath, [mainEntry], await this.publicDir(uiRoot));
 
     const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
-    // eslint-disable-next-line no-console
-    console.log('\n[ui webpack config]');
-    config.forEach((c) => {
-      // eslint-disable-next-line no-console
-      console.log(c);
-    });
+    // // eslint-disable-next-line no-console
+    // console.log('\n[ui webpack config]');
+    // config.forEach((c) => {
+    //   // eslint-disable-next-line no-console
+    //   console.log(c);
+    // });
     const compiler = webpack(config);
     this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" running webpack`);
     const compilerRun = promisify(compiler.run.bind(compiler));
