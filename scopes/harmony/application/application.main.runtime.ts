@@ -19,7 +19,7 @@ import { AppsBuildTask } from './build-application.task';
 import { RunCmd } from './run.cmd';
 import { AppService } from './application.service';
 import { AppCmd, AppListCmd } from './app.cmd';
-import { AppPlugin } from './app.plugin';
+import { AppPlugin, BIT_APP_PATTERN } from './app.plugin';
 import { AppTypePlugin } from './app-type.plugin';
 import { AppContext } from './app-context';
 import { DeployTask } from './deploy.task';
@@ -170,7 +170,7 @@ export class ApplicationMain {
       return this.getAppPattern(appType);
     });
 
-    return appTypesPatterns;
+    return appTypesPatterns.concat(BIT_APP_PATTERN);
   }
 
   async loadApps(): Promise<Application[]> {

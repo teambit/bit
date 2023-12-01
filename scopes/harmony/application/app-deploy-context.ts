@@ -11,6 +11,10 @@ export class AppDeployContext extends AppBuildContext {
       appBuildContext.capsuleNetwork,
       appBuildContext.previousTasksResults,
       appBuildContext.pipeName,
+      appBuildContext.capsule,
+      appBuildContext.name,
+      appBuildContext.appComponent,
+      appBuildContext.artifactsDir,
       appBuildContext.laneId
     );
   }

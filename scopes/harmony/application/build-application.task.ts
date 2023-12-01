@@ -88,8 +88,16 @@ export class AppsBuildTask implements BuildTask {
     context: BuildContext
   ): Promise<OneAppResult | undefined> {
     if (!app.build) return undefined;
+    const artifactsDir = this.getArtifactDirectory();
     const appContext = await this.application.createAppBuildContext(component.id, app.name, capsule.path);
-    const appBuildContext = AppBuildContext.create(appContext, context);
+    const appBuildContext = AppBuildContext.create({
+      appContext, 
+      buildContext: context,
+      appComponent: component,
+      name: app.name,
+      capsule,
+      artifactsDir,
+    });
     const deployContext = await app.build(appBuildContext);
     const defaultArtifacts: ArtifactDefinition[] = this.getDefaultArtifactDef(app.applicationType || app.name);
     const artifacts = defaultArtifacts.concat(deployContext.artifacts || []);
