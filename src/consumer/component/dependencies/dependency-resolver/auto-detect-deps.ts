@@ -154,7 +154,7 @@ export class AutoDetectDeps {
       };
       this.throwForNonExistFile(file);
       this.processCoreAspects(file);
-      this.processMissing(file);
+      this.processMissing(file, fileType);
       this.processErrors(file);
       this.processPackages(file, fileType);
       this.processComponents(file, fileType);
@@ -430,7 +430,7 @@ export class AutoDetectDeps {
     }
   }
 
-  private processMissing(originFile: PathLinuxRelative) {
+  private processMissing(originFile: PathLinuxRelative, fileType: FileType) {
     const missing = this.tree[originFile].missing;
     if (!missing) return;
     const processMissingFiles = () => {
