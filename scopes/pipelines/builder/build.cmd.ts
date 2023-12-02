@@ -18,11 +18,13 @@ type BuildOpts = {
   listTasks?: string;
   skipTests?: boolean;
   failFast?: boolean;
+  includeSnap?: boolean;
+  includeTag?: boolean;
 };
 
 export class BuilderCmd implements Command {
   name = 'build [component-pattern]';
-  description = 'run set of tasks for build. ';
+  description = 'run set of tasks for build.';
   extendedDescription = 'by default, only new and modified components are built';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   helpUrl = 'reference/build-pipeline/builder-overview';
@@ -52,6 +54,16 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       'fail-fast',
       'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
+    [
+      '',
+      'include-snap',
+      'EXPERIMENTAL. include snap pipeline tasks. Warning: this may deploy/publish if you have such tasks',
+    ],
+    [
+      '',
+      'include-tag',
+      'EXPERIMENTAL. include tag pipeline tasks. Warning: this may deploy/publish if you have such tasks',
+    ],
   ] as CommandOptions;
 
   constructor(private builder: BuilderMain, private workspace: Workspace, private logger: Logger) {}
@@ -69,6 +81,8 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       listTasks,
       skipTests,
       failFast,
+      includeSnap,
+      includeTag,
     }: BuildOpts
   ): Promise<string> {
     if (!this.workspace) throw new OutsideWorkspaceError();
@@ -106,6 +120,10 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
         tasks: tasks ? tasks.split(',').map((task) => task.trim()) : [],
         skipTests,
         exitOnFirstFailedTask: failFast,
+      },
+      {
+        includeSnap,
+        includeTag,
       }
     );
     this.logger.console(`build output can be found in path: ${envsExecutionResults.capsuleRootDir}`);
