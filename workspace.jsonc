@@ -257,7 +257,6 @@
         "@teambit/documenter.ui.sub-title": "4.1.1",
         "@teambit/documenter.ui.table-heading-row": "4.0.11",
         "@teambit/documenter.ui.table-row": "4.1.13",
-        "@teambit/dot-ripple-ci.ui.display-status": "^0.0.100",
         "@teambit/evangelist.elements.button": "1.0.6",
         "@teambit/evangelist.elements.icon": "1.0.2",
         "@teambit/evangelist.elements.x-button": "1.0.7",
