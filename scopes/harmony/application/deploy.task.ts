@@ -77,6 +77,7 @@ export class DeployTask implements BuildTask {
     const appContext = await this.application.createAppBuildContext(capsule.component.id, app.name, capsule.path);
     const artifactsDir = this.getArtifactDirectory();
     const appBuildContext = AppBuildContext.create({
+      ...buildDeployContexts.deployContext,
       appContext, 
       buildContext: context,
       appComponent: capsule.component,
