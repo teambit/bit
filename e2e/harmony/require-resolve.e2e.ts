@@ -28,7 +28,7 @@ describe('require.resolve detection', function () {
       expect(status.componentsWithIssues[0].issues[0].type).to.equal(
         IssuesClasses.MissingPackagesDependenciesOnFs.name
       );
-      expect(status.componentsWithIssues[0].issues[0].data['babel.config.js'][0]).to.equal(
+      expect(status.componentsWithIssues[0].issues[0].data[0].missingPackages[0]).to.equal(
         '@babel/plugin-transform-modules-commonjs'
       );
     });
