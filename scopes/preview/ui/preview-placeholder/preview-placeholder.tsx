@@ -39,10 +39,12 @@ export function PreviewPlaceholder({
   component,
   componentDescriptor,
   Container = ({ children, className }) => <div className={className}>{children}</div>,
+  shouldShowPreview = true,
 }: {
   component?: ComponentModel;
   componentDescriptor?: ComponentDescriptor;
   Container?: ComponentType<{ component: any; children: ReactNode; className: string }>;
+  shouldShowPreview?: boolean;
 }) {
   if (!component || !componentDescriptor) return null;
 
@@ -65,8 +67,9 @@ export function PreviewPlaceholder({
   }
 
   const selectedPreview = useMemo(() => {
+    if (!shouldShowPreview) return undefined;
     return selectDefaultComposition(component);
-  }, [component]);
+  }, [component, shouldShowPreview]);
 
   const name = component.id.toString();
   if (component.buildStatus === 'pending')
