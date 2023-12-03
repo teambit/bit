@@ -1,5 +1,5 @@
 export { ApplicationAspect } from './application.aspect';
-export type { ApplicationInstance } from './app-instance';
+export type { ApplicationInstance, ApplicationDeployment } from './app-instance';
 export type { ApplicationMain, ApplicationMetadata } from './application.main.runtime';
 export type { Application, DeployFn, BuildFn, AppResult } from './application';
 export { AppContext } from './app-context';
