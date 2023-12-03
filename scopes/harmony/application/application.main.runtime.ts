@@ -374,7 +374,7 @@ export class ApplicationMain {
     return appContext;
   }
 
-  async createAppBuildContext(id: ComponentID, appName: string, rootDir?: string) {
+  async createAppBuildContext(id: ComponentID, appName: string, capsuleRootDir: string, rootDir?: string) {
     const host = this.componentAspect.getHost();
     // const components = await host.list();
     // const component = components.find((c) => c.id.isEqual(id));
@@ -391,7 +391,7 @@ export class ApplicationMain {
       this.harmony,
       context.dev,
       component,
-      this.workspace.path,
+      capsuleRootDir,
       context,
       rootDir,
       undefined,
