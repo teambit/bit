@@ -6,19 +6,8 @@ import { DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
 import { resolvePackageData } from '../../../../utils/packages';
 import generateTree, { MadgeTree } from './generate-tree-madge';
 import { FoundPackages, MissingGroupItem, MissingHandler } from './missing-handler';
-import { convertPathMapToRelativePaths, getPathMapWithLinkFilesData, PathMapItem } from './path-map';
-import {
-  DependencyTreeParams,
-  FileObject,
-  ImportSpecifier,
-  DependenciesTree,
-  DependenciesTreeItem,
-} from './types/dependency-tree-type';
-
-export type LinkFile = {
-  file: string;
-  importSpecifiers: ImportSpecifier[];
-};
+import { convertPathMapToRelativePaths, PathMapItem } from './path-map';
+import { DependencyTreeParams, FileObject, DependenciesTree, DependenciesTreeItem } from './types/dependency-tree-type';
 
 /**
  * Gets a list of dependencies and group them by types (files, components, packages)
@@ -49,8 +38,6 @@ function groupDependencyList(
     }
 
     // If the package is a component add it to the components list
-    // @todo: currently, for author, the package.json doesn't have any version.
-    // we might change this decision later. see https://github.com/teambit/bit/pull/2924
     if (resolvedPackage.componentId) {
       resultGroups.components.push(resolvedPackage);
       return;
@@ -98,8 +85,7 @@ function MadgeTreeToDependenciesTree(tree: MadgeTree, componentDir: string, bind
  */
 function updateTreeWithPathMap(tree: DependenciesTree, pathMapAbsolute: PathMapItem[], baseDir: string): void {
   if (!pathMapAbsolute.length) return;
-  const pathMapRelative = convertPathMapToRelativePaths(pathMapAbsolute, baseDir);
-  const pathMap = getPathMapWithLinkFilesData(pathMapRelative);
+  const pathMap = convertPathMapToRelativePaths(pathMapAbsolute, baseDir);
   Object.keys(tree).forEach((filePath: string) => {
     const treeFiles = tree[filePath].files;
     if (!treeFiles.length) return; // file has no dependency
@@ -113,11 +99,6 @@ function updateTreeWithPathMap(tree: DependenciesTree, pathMapAbsolute: PathMapI
         throw new Error(`updateTreeWithPathMap: dependencyPathMap is missing for ${fileObject.file}`);
       }
       fileObject.importSource = dependencyPathMap.importSource;
-      if (dependencyPathMap.linkFile) {
-        fileObject.isLink = true;
-        fileObject.linkDependencies = dependencyPathMap.realDependencies;
-        return fileObject;
-      }
       if (dependencyPathMap.importSpecifiers && dependencyPathMap.importSpecifiers.length) {
         const depImportSpecifiers = dependencyPathMap.importSpecifiers.map((importSpecifier) => {
           return {
@@ -149,16 +130,6 @@ function mergeManuallyFoundPackagesToTree(
   });
   foundPackages.components.forEach((component) => {
     missingGroups.forEach((fileDep: MissingGroupItem) => {
-      if (
-        fileDep.components &&
-        ((component.fullPath && fileDep.components.includes(component.fullPath)) ||
-          fileDep.components.includes(component.name))
-      ) {
-        fileDep.components = fileDep.components.filter((existComponent) => {
-          return existComponent !== component.fullPath && existComponent !== component.name;
-        });
-        (tree[fileDep.originFile] ||= new DependenciesTreeItem()).components.push(component);
-      }
       if (fileDep.packages && fileDep.packages.includes(component.name)) {
         fileDep.packages = fileDep.packages.filter((packageName) => packageName !== component.name);
         (tree[fileDep.originFile] ||= new DependenciesTreeItem()).components.push(component);
@@ -222,8 +193,7 @@ export async function getDependencyTree({
   const { missingGroups, foundPackages } = new MissingHandler(
     skipped,
     componentDir,
-    workspacePath,
-    bindingPrefix
+    workspacePath
   ).groupAndFindMissing();
 
   if (foundPackages) mergeManuallyFoundPackagesToTree(foundPackages, missingGroups, tree);

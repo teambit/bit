@@ -1,7 +1,10 @@
 import { Component } from '@teambit/component';
+import esmLoader from '@teambit/node.utils.esm-loader';
+import { NativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 import { Logger } from '@teambit/logger';
 import { Aspect } from '@teambit/harmony';
 import { PluginDefinition } from './plugin-definition';
+import { isEsmModule } from './is-esm-module';
 import { Plugin } from './plugin';
 import { OnAspectLoadErrorHandler } from './aspect-loader.main.runtime';
 
@@ -53,9 +56,24 @@ export class Plugins {
     return aspect;
   }
 
+  async loadModule(path: string) {
+    NativeCompileCache.uninstall();
+    const module = await esmLoader(path);
+    return module.default;
+  }
+
   async registerPluginWithTryCatch(plugin: Plugin, aspect: Aspect) {
+    const isModule = isEsmModule(plugin.path);
+    const module = isModule 
+      ? await this.loadModule(plugin.path)
+      : undefined;
+      
     try {
-      return plugin.register(aspect);
+      if (isModule && !module) {
+        this.logger.consoleFailure(`failed to load plugin ${plugin.path}, make sure to use 'export default' to expose your plugin`);
+        return undefined;
+      }
+      return plugin.register(aspect, module);
     } catch (firstErr: any) {
       this.logger.warn(
         `failed loading plugin with pattern "${
@@ -72,7 +90,7 @@ export class Plugins {
           }", in component ${this.component.id.toString()}`
         );
         try {
-          return plugin.register(aspect);
+          return plugin.register(aspect, module);
         } catch (err: any) {
           this.logger.warn(
             `re-load of the plugin with pattern "${

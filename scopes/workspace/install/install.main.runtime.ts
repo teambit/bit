@@ -533,8 +533,8 @@ export class InstallMain {
     return uniq(
       comps
         .map((comp) => {
-          const data = comp.state.issues.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data || {};
-          return Object.values(data).flat();
+          const data = comp.state.issues.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data || [];
+          return data.map((d) => d.missingPackages).flat();
         })
         .flat()
     );
@@ -1090,7 +1090,7 @@ function hasComponentsFromWorkspaceInMissingDeps({
       .map(([{ state }]) => {
         const issue = state.issues.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs);
         if (!issue) return [];
-        return Object.values(issue.data).flat();
+        return issue.data.map((d) => d.missingPackages).flat();
       })
       .flat()
   );

@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: cimg/node:18.18.2
+    - image: cimg/node:20.10.0
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -87,7 +87,7 @@ commands: # reusable commands
         default: 'BASE_IMAGE'
         type: string
       docker_build_arg_value:
-        default: 'node:18.18.2'
+        default: 'node:20.10.0'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -116,7 +116,7 @@ commands: # reusable commands
         default: 'BASE_IMAGE'
         type: string
       docker_build_arg_value:
-        default: 'node:18.18.2'
+        default: 'node:20.10.0'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -198,13 +198,13 @@ commands: # reusable commands
   windows_set_node_version:
     parameters:
       version:
-        default: 18.18.2
+        default: 20.10.0
         type: string
     steps:
       - run: choco upgrade nvm -y
       - run: nvm -v
-      - run: nvm install 18.18.2
-      - run: nvm use 18.18.2
+      - run: nvm install 20.10.0
+      - run: nvm use 20.10.0
       - run: node -v
   windows_add_bvm_to_path:
     steps:
@@ -253,16 +253,6 @@ jobs:
   #         at: ./
   #     - docker_build_and_push
 
-  docker_build_node_18:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - attach_workspace:
-          at: ./
-      - docker_build_and_push:
-          docker_build_arg_value: "node:18.18.2"
-          docker_tag_suffix: "-node-18.18.2"
-
   docker_build_node_20:
     machine:
       image: ubuntu-2004:202111-02
@@ -270,8 +260,8 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:20.3.1"
-          docker_tag_suffix: "-node-20.3.1"
+          docker_build_arg_value: "node:20.10.0"
+          docker_tag_suffix: "-node-20.10.0"
 
   # docker_non_root_build:
   #   machine:
@@ -283,19 +273,6 @@ jobs:
   #         image_name: "bitcli/bit-non-root"
   #         docker_file_name: "Dockerfile-bit-non-root"
 
-  docker_non_root_build_node_18:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - attach_workspace:
-          at: ./
-      - docker_build_and_push:
-          docker_build_arg_value: "node:18.18.2"
-          image_name: "bitcli/bit-non-root"
-          docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-18.18.2"
-
-
   docker_non_root_build_node_20:
     machine:
       image: ubuntu-2004:202111-02
@@ -303,23 +280,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:20.3.1"
+          docker_build_arg_value: "node:20.10.0"
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-20.3.1"
-
-  server_docker_build_node_18:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - attach_workspace:
-          at: ./
-      - docker_build_and_push:
-          docker_build_arg_name: "BIT_IMAGE"
-          docker_build_arg_value: "`npm show @teambit/bit version`-node-18.18.2"
-          image_name: "bitcli/bit-server"
-          docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-18.18.2"
+          docker_tag_suffix: "-node-20.10.0"
 
   server_docker_build_node_20:
     machine:
@@ -329,10 +293,10 @@ jobs:
           at: ./
       - docker_build_and_push:
           docker_build_arg_name: "BIT_IMAGE"
-          docker_build_arg_value: "`npm show @teambit/bit version`-node-20.3.1"
+          docker_build_arg_value: "`npm show @teambit/bit version`-node-20.10.0"
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-20.3.1"
+          docker_tag_suffix: "-node-20.10.0"
 
   set_ssh_key:
     <<: *defaults
@@ -486,8 +450,8 @@ jobs:
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
       # - run: bvm install 0.0.910
-      # - run: bvm upgrade
-      - run: bvm install 1.3.10
+      - run: bvm upgrade
+      # - run: bvm install 1.3.10
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
@@ -550,6 +514,9 @@ jobs:
           name: 'bit status'
           command: 'cd bit && ./scripts/bit-status.sh'
       - run:
+          name: 'bit diff'
+          command: cd bit && bit diff
+      - run:
           name: 'bit build'
           command: 'cd bit && bit build'
           environment:
@@ -587,6 +554,7 @@ jobs:
       # temporary, check if we can remove it
       - run: cd bit && bit cc
       - run: cd bit && bit status
+      - run: cd bit && bit diff
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
@@ -603,6 +571,7 @@ jobs:
       - run: cd bit && npm run link-bit-legacy
       # temporary, check if we can remove it
       - run: cd bit && bit cc
+
       # - run: cd bit && bit config set cache.max.objects 100000
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
@@ -943,9 +912,9 @@ jobs:
       # - run: node -v
       # - run: npm -v
       # - run: yarn -v
-      # # - run: choco install nodejs --version 18.18.2
+      # # - run: choco install nodejs --version 20.10.0
       # # - run: node -v
-      # - run: cinst nodejs --version 18.18.2
+      # - run: cinst nodejs --version 20.10.0
       # - run: node -v
 
   windows_checkout_code:
@@ -1366,15 +1335,15 @@ workflows:
       # - server_docker_build:
       #     requires:
       #       - docker_build
-      - docker_build_node_18:
-          requires:
-            - harmony_publish_to_gcloud
-      - docker_non_root_build_node_18:
-          requires:
-            - harmony_publish_to_gcloud
-      - server_docker_build_node_18:
-          requires:
-            - docker_build_node_18
+      # - docker_build_node_18:
+      #     requires:
+      #       - harmony_publish_to_gcloud
+      # - docker_non_root_build_node_18:
+      #     requires:
+      #       - harmony_publish_to_gcloud
+      # - server_docker_build_node_18:
+      #     requires:
+      #       - docker_build_node_18
       - docker_build_node_20:
           requires:
             - harmony_publish_to_gcloud
@@ -1502,18 +1471,18 @@ workflows:
       #     requires:
       #       - harmony_deploy_approval_job
       #       - docker_build
-      - docker_build_node_18:
-          requires:
-            - harmony_deploy_approval_job
-            - harmony_publish_to_gcloud
-      - docker_non_root_build_node_18:
-          requires:
-            - harmony_deploy_approval_job
-            - harmony_publish_to_gcloud
-      - server_docker_build_node_18:
-          requires:
-            - harmony_deploy_approval_job
-            - docker_build_node_18
+      # - docker_build_node_18:
+      #     requires:
+      #       - harmony_deploy_approval_job
+      #       - harmony_publish_to_gcloud
+      # - docker_non_root_build_node_18:
+      #     requires:
+      #       - harmony_deploy_approval_job
+      #       - harmony_publish_to_gcloud
+      # - server_docker_build_node_18:
+      #     requires:
+      #       - harmony_deploy_approval_job
+      #       - docker_build_node_18
       - docker_build_node_20:
           requires:
             - harmony_deploy_approval_job
@@ -1569,10 +1538,10 @@ workflows:
   #     #     requires:
   #     #       - checkout_code
   #     #       - harmony_publish_to_gcloud
-  #     - docker_build_node_18:
-  #         requires:
-  #           - checkout_code
-  #           - harmony_publish_to_gcloud
+  # #     - docker_build_node_18:
+  # #         requires:
+  # #           - checkout_code
+  # #           - harmony_publish_to_gcloud
   #     - docker_build_node_20:
   #         requires:
   #           - checkout_code
@@ -1581,10 +1550,10 @@ workflows:
   #     #     requires:
   #     #       - checkout_code
   #     #       - harmony_publish_to_gcloud
-  #     - docker_non_root_build_node_18:
-  #         requires:
-  #           - checkout_code
-  #           - harmony_publish_to_gcloud
+  # #     - docker_non_root_build_node_18:
+  # #         requires:
+  # #           - checkout_code
+  # #           - harmony_publish_to_gcloud
   #     - docker_non_root_build_node_20:
   #         requires:
   #           - checkout_code
@@ -1592,9 +1561,9 @@ workflows:
   #     # - server_docker_build:
   #     #     requires:
   #     #       - docker_build
-  #     - server_docker_build_node_18:
-  #         requires:
-  #           - docker_build_node_18
+  # #     - server_docker_build_node_18:
+  # #         requires:
+  # #           - docker_build_node_18
   #     - server_docker_build_node_20:
   #         requires:
   #           - docker_build_node_20

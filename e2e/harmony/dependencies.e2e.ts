@@ -108,4 +108,15 @@ const isPositive = require('is-positive');
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
     });
   });
+  describe('a file-dependency exists with a different extension', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fs.outputFile('comp1/index.ts', `export const foo = 'foo';`);
+      helper.fs.outputFile('comp1/bar.cjs', `import { foo } from './index.js';`);
+      helper.command.addComponent('comp1');
+    });
+    it('should not show an issue of missing-files because the file could exist later in the dist', () => {
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingDependenciesOnFs.name);
+    });
+  });
 });

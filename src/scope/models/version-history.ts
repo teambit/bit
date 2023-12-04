@@ -6,6 +6,7 @@ import Ref from '../objects/ref';
 import BitObject from '../objects/object';
 import type Version from './version';
 import { getVersionParentsFromVersion } from '../component-ops/traverse-versions';
+import { ModelComponent } from '.';
 
 export type VersionParents = {
   hash: Ref;
@@ -19,6 +20,11 @@ type VersionHistoryProps = {
   scope: string;
   versions: VersionParents[];
   graphCompleteRefs?: string[];
+};
+
+type HashMetadata = {
+  tag?: string;
+  pointers?: string[];
 };
 
 export default class VersionHistory extends BitObject {
@@ -143,8 +149,9 @@ export default class VersionHistory extends BitObject {
     this.versions = newVersions;
   }
 
-  getGraph() {
-    const graph = new Graph<Ref, string>();
+  getGraph(modelComponent?: ModelComponent, laneHeads?: { [hash: string]: string[] }, shortHash = false) {
+    const refToStr = (ref: Ref) => (shortHash ? ref.toShortString() : ref.toString());
+    const graph = new Graph<string | HashMetadata, string>();
     const allHashes = uniqBy(
       this.versions
         .map((v) => {
@@ -153,14 +160,20 @@ export default class VersionHistory extends BitObject {
         .flat(),
       'hash'
     );
-    const nodes = allHashes.map((v) => new Node(v.toString(), v));
+    const getMetadata = (ref: Ref): HashMetadata | undefined => {
+      if (!modelComponent || !laneHeads) return undefined;
+      const tag = modelComponent.getTagOfRefIfExists(ref);
+      const pointers = laneHeads[ref.toString()];
+      return { tag, pointers };
+    };
+    const nodes = allHashes.map((v) => new Node(refToStr(v), getMetadata(v) || refToStr(v)));
     const edges = this.versions
       .map((v) => {
-        const verEdges = v.parents.map((p) => new Edge(v.hash.toString(), p.toString(), 'parent'));
-        if (v.unrelated) verEdges.push(new Edge(v.hash.toString(), v.unrelated.toString(), 'unrelated'));
+        const verEdges = v.parents.map((p) => new Edge(refToStr(v.hash), refToStr(p), 'parent'));
+        if (v.unrelated) verEdges.push(new Edge(refToStr(v.hash), refToStr(v.unrelated), 'unrelated'));
         if (v.squashed) {
           const squashed = v.squashed.filter((s) => !v.parents.find((p) => p.isEqual(s)));
-          squashed.map((p) => verEdges.push(new Edge(v.hash.toString(), p.toString(), 'squashed')));
+          squashed.map((p) => verEdges.push(new Edge(refToStr(v.hash), refToStr(p), 'squashed')));
         }
         return verEdges;
       })
@@ -197,4 +210,32 @@ export default class VersionHistory extends BitObject {
     };
     return new VersionHistory(props);
   }
+}
+
+export function versionParentsToGraph(versions: VersionParents[]): Graph<string, string> {
+  const refToStr = (ref: Ref) => ref.toString();
+  const graph = new Graph<string, string>();
+  const allHashes = uniqBy(
+    versions
+      .map((v) => {
+        return compact([v.hash, ...v.parents, ...(v.squashed || []), v.unrelated]);
+      })
+      .flat(),
+    'hash'
+  );
+  const nodes = allHashes.map((v) => new Node(refToStr(v), refToStr(v)));
+  const edges = versions
+    .map((v) => {
+      const verEdges = v.parents.map((p) => new Edge(refToStr(v.hash), refToStr(p), 'parent'));
+      if (v.unrelated) verEdges.push(new Edge(refToStr(v.hash), refToStr(v.unrelated), 'unrelated'));
+      if (v.squashed) {
+        const squashed = v.squashed.filter((s) => !v.parents.find((p) => p.isEqual(s)));
+        squashed.map((p) => verEdges.push(new Edge(refToStr(v.hash), refToStr(p), 'squashed')));
+      }
+      return verEdges;
+    })
+    .flat();
+  graph.setNodes(nodes);
+  graph.setEdges(edges);
+  return graph;
 }
