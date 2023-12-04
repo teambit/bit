@@ -4,8 +4,8 @@ import R from 'ramda';
 import semver from 'semver';
 import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { uniq, isEmpty, union, cloneDeep } from 'lodash';
-import { IssuesList, IssuesClasses } from '@teambit/component-issues';
+import { uniq, isEmpty, cloneDeep } from 'lodash';
+import { IssuesList, IssuesClasses, MissingPackagesData } from '@teambit/component-issues';
 import { Dependency } from '..';
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
@@ -18,7 +18,7 @@ import { RelativePath } from '../dependency';
 import { getDependencyTree } from '../files-dependency-builder';
 import { FileObject, ImportSpecifier, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
 import OverridesDependencies from './overrides-dependencies';
-import { ResolvedPackageData } from '../../../../utils/packages';
+import { ResolvedPackageData, resolvePackageData, resolvePackagePath } from '../../../../utils/packages';
 import { DependenciesData } from './dependencies-data';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 import { ExtensionDataList } from '../../../config';
@@ -167,7 +167,7 @@ export default class DependencyResolver {
     this.processedFiles = [];
     this.issues = component.issues;
     this.setLegacyInsideHarmonyIssue();
-    this.overridesDependencies = new OverridesDependencies(component, consumer);
+    this.overridesDependencies = new OverridesDependencies(component);
     this.debugDependenciesData = { components: [] };
   }
 
@@ -328,9 +328,70 @@ export default class DependencyResolver {
     }
   }
 
+  // TODO: maybe cache those results??
+  private _resolvePackageData(packageName: string): ResolvedPackageData | undefined {
+    const rootDir: PathLinux | null | undefined = this.componentMap.rootDir;
+    const consumerPath = this.consumer.getPath();
+    const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const modulePath = resolvePackagePath(packageName, basePath, consumerPath);
+    if (!modulePath) return undefined; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component
+    const packageObject = resolvePackageData(basePath, modulePath);
+    return packageObject;
+  }
+
+  private _getComponentIdToAdd(
+    field: string,
+    dependency: string
+  ): { componentId?: ComponentID; packageName?: string } | undefined {
+    if (field === 'peerDependencies') return undefined;
+    const packageData = this._resolvePackageData(dependency);
+    return { componentId: packageData?.componentId, packageName: packageData?.name };
+  }
+
+  getDependenciesToAddManually(
+    packageJson: Record<string, any> | null | undefined,
+    existingDependencies: AllDependencies
+  ): { components: Record<string, any>; packages: Record<string, any> } | undefined {
+    const overrides = this.overridesDependencies.getDependenciesToAddManually();
+    if (!overrides) return undefined;
+    const components = {};
+    const packages = {};
+    DEPENDENCIES_FIELDS.forEach((depField) => {
+      if (!overrides[depField]) return;
+      Object.keys(overrides[depField]).forEach((dependency) => {
+        const dependencyValue = overrides[depField][dependency];
+        const componentData = this._getComponentIdToAdd(depField, dependency);
+        if (componentData?.componentId) {
+          const dependencyExist = existingDependencies[depField].find((d) =>
+            d.id.isEqualWithoutVersion(componentData.componentId)
+          );
+          if (!dependencyExist) {
+            this.overridesDependencies._addManuallyAddedDep(depField, componentData.componentId.toString());
+            components[depField] ? components[depField].push(componentData) : (components[depField] = [componentData]);
+          }
+          return;
+        }
+        const addedPkg = this.overridesDependencies._manuallyAddPackage(
+          depField,
+          dependency,
+          dependencyValue,
+          packageJson
+        );
+        if (addedPkg) {
+          packages[depField] = Object.assign(packages[depField] || {}, addedPkg);
+          if (componentData && !componentData.packageName) {
+            this.overridesDependencies.missingPackageDependencies.push(dependency);
+          }
+        }
+      });
+    });
+    return { components, packages };
+  }
+
   private manuallyAddDependencies() {
     const packageJson = this._getPackageJson();
-    const dependencies = this.overridesDependencies.getDependenciesToAddManually(packageJson, this.allDependencies);
+    const dependencies = this.getDependenciesToAddManually(packageJson, this.allDependencies);
     if (!dependencies) return;
     const { components, packages } = dependencies;
     DEPENDENCIES_FIELDS.forEach((depField) => {
@@ -435,13 +496,6 @@ export default class DependencyResolver {
     const importSource: string = depFileObject.importSource as string;
     // the file dependency doesn't have any counterpart component. Add it to this.issues.untrackedDependencies
     if (!componentId) {
-      const missingComponents = this.tree[depFile]?.missing?.components;
-      if (missingComponents) {
-        // this depFile is a dependency link and this dependency is missing.
-        // it can't happen on Harmony, as Harmony doesn't have the generated dependencies files.
-        this.throwForMissingComponentsOnHarmony(missingComponents);
-        return false;
-      }
       this._pushToUntrackDependenciesIssues(originFile, depFileRelative, nested);
       return true;
     }
@@ -581,15 +635,16 @@ export default class DependencyResolver {
         }
         return undefined;
       };
-      const getExistingId = (): ComponentID | undefined => {
+      const getExistingId = (): ComponentID => {
+        if (this.isPkgInOverrides(compDep.name)) {
+          return componentId;
+        }
+
         const fromBitmap = getExistingIdFromBitmap();
         if (fromBitmap) {
           depDebug.versionResolvedFrom = 'BitMap';
           return fromBitmap;
         }
-
-        // Happens when the dep is not in the node_modules
-        if (!version) return getExistingIdFromModel();
 
         // In case it's resolved from the node_modules, and it's also in the ws policy or variants,
         // use the resolved version from the node_modules / package folder
@@ -606,7 +661,7 @@ export default class DependencyResolver {
           return fromMergeConfig;
         }
 
-        if (this.isPkgInVariants(compDep.name)) {
+        if (this.isPkgInAutoDetectOverrides(compDep.name)) {
           return componentId;
         }
 
@@ -615,41 +670,33 @@ export default class DependencyResolver {
         return getExistingIdFromModel() ?? componentId;
       };
       const existingId = getExistingId();
-      if (existingId) {
-        if (existingId.isEqual(this.componentId)) {
-          // happens when one of the component files requires another using module path
-          // no need to enter anything to the dependencies
-          return;
-        }
-        this.addImportNonMainIssueIfNeeded(originFile, compDep);
-        const currentComponentsDeps = new Dependency(existingId, [], compDep.name);
-        this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, depDebug);
-      } else {
-        this._pushToMissingComponentsIssues(originFile, componentId);
+      if (existingId.isEqualWithoutVersion(this.componentId)) {
+        // happens when one of the component files requires another using module path
+        // no need to enter anything to the dependencies
+        return;
       }
+      this.addImportNonMainIssueIfNeeded(originFile, compDep);
+      const currentComponentsDeps = new Dependency(existingId, [], compDep.name);
+      this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, depDebug);
     });
   }
 
   private isPkgInWorkspacePolicies(pkgName: string) {
     return DependencyResolver.getWorkspacePolicy().dependencies?.[pkgName];
   }
-  private isPkgInVariants(pkgName: string): boolean {
-    const dependencies = this.overridesDependencies.getDependenciesToAddManually(undefined, this.allDependencies);
-    const isInRegularOverrides = (deps) => {
-      if (!deps) return false;
-      const { components } = deps;
-      return DEPENDENCIES_FIELDS.some(
-        (depField) => components[depField] && components[depField].some((depData) => depData.packageName === pkgName)
-      );
-    };
+  private isPkgInOverrides(pkgName: string): boolean {
+    const dependencies = this.overridesDependencies.getDependenciesToAddManually();
+    if (!dependencies) return false;
+    const allDeps = Object.values(dependencies)
+      .map((obj) => Object.keys(obj))
+      .flat();
+    return allDeps.includes(pkgName);
+  }
 
-    const autoDetectOverrides = this.autoDetectOverrides;
-    const isInAutoDetectOverrides = (autoDetectOverridesDeps) => {
-      return DEPENDENCIES_FIELDS.some(
-        (depField) => autoDetectOverridesDeps[depField] && autoDetectOverridesDeps[depField][pkgName]
-      );
-    };
-    return isInRegularOverrides(dependencies) || isInAutoDetectOverrides(autoDetectOverrides);
+  private isPkgInAutoDetectOverrides(pkgName: string): boolean {
+    return DEPENDENCIES_FIELDS.some(
+      (depField) => this.autoDetectOverrides[depField] && this.autoDetectOverrides[depField][pkgName]
+    );
   }
 
   private addImportNonMainIssueIfNeeded(filePath: PathLinuxRelative, dependencyPkgData: ResolvedPackageData) {
@@ -754,24 +801,11 @@ export default class DependencyResolver {
         (pkg) => !this.overridesDependencies.shouldIgnorePackage(pkg, fileType)
       );
       if (!R.isEmpty(missingPackages)) {
-        this._pushToMissingPackagesDependenciesIssues(originFile, missingPackages);
+        this._pushToMissingPackagesDependenciesIssues(originFile, missingPackages, fileType);
       }
-    };
-    const processMissingComponents = () => {
-      if (isEmpty(missing.components)) return;
-      this.throwForMissingComponentsOnHarmony(missing.components);
     };
     processMissingFiles();
     processMissingPackages();
-    processMissingComponents();
-  }
-
-  private throwForMissingComponentsOnHarmony(missingComponents: string[]) {
-    // on Harmony we don't guess whether a path is a component or a package based on the path only,
-    // see missing-handler.groupMissingByType() for more info.
-    throw new Error(
-      `Harmony should not have "missing.components" (only "missing.packages"). got ${missingComponents.join(',')}`
-    );
   }
 
   private processErrors(originFile: PathLinuxRelative) {
@@ -813,7 +847,6 @@ export default class DependencyResolver {
 
     const components = this.tree[originFile].components;
     const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
-    const missingComponents = this.tree[originFile]?.missing?.components;
     const usedCoreAspects: string[] = [];
 
     const findMatchingCoreAspect = (packageName: string) => {
@@ -833,18 +866,6 @@ export default class DependencyResolver {
       }
       return !matchingCoreAspectPackageName;
     });
-    const missingBitsFiltered = missingComponents?.filter((packageName) => {
-      const matchingCoreAspectPackageName = findMatchingCoreAspect(packageName);
-      if (matchingCoreAspectPackageName) {
-        usedCoreAspects.push(coreAspects[matchingCoreAspectPackageName]);
-      }
-      return !matchingCoreAspectPackageName;
-    });
-
-    if (missingComponents) {
-      // @ts-ignore not clear why this error happens, it is verified that missing.components exist
-      this.tree[originFile].missing.components = missingBitsFiltered;
-    }
 
     this.tree[originFile].unidentifiedPackages = unidentifiedPackagesFiltered;
     this.tree[originFile].components = bitsFiltered;
@@ -1044,13 +1065,11 @@ export default class DependencyResolver {
     const originallyExists: string[] = [];
     let missingPackages: string[] = [];
     // We want to also add missing packages to the peer list as we know to resolve the version from the env anyway
-    // @ts-ignore
-    const missingData = this.issues.getIssueByName<IssuesClasses.MissingPackagesDependenciesOnFs>(
-      'MissingPackagesDependenciesOnFs'
-    )?.data;
+    const missingData = this.issues.getIssueByName('MissingPackagesDependenciesOnFs')?.data as
+      | MissingPackagesData[]
+      | undefined;
     if (missingData) {
-      // @ts-ignore
-      missingPackages = union(...(Object.values(missingData) || []));
+      missingPackages = uniq(missingData.map((d) => d.missingPackages).flat());
     }
     ['dependencies', 'devDependencies', 'peerDependencies'].forEach((field) => {
       R.forEachObjIndexed((pkgVal, pkgName) => {
@@ -1280,12 +1299,17 @@ export default class DependencyResolver {
   private _pushToMissingDependenciesOnFs(originFile: PathLinuxRelative, missingFiles: string[]) {
     (this.issues.getOrCreate(IssuesClasses.MissingDependenciesOnFs).data[originFile] ||= []).push(...missingFiles);
   }
-  private _pushToMissingPackagesDependenciesIssues(originFile: PathLinuxRelative, missingPackages: string[]) {
-    (this.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data[originFile] ||= []).push(
-      ...uniq(missingPackages)
-    );
-  }
-  private _pushToMissingComponentsIssues(originFile: PathLinuxRelative, componentId: ComponentID) {
-    (this.issues.getOrCreate(IssuesClasses.MissingComponents).data[originFile] ||= []).push(componentId);
+  private _pushToMissingPackagesDependenciesIssues(
+    originFile: PathLinuxRelative,
+    missingPackages: string[],
+    fileType: FileType
+  ) {
+    const data = this.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data;
+    const foundFile = data.find((file) => file.filePath === originFile);
+    if (foundFile) {
+      foundFile.missingPackages = uniq([...missingPackages, ...foundFile.missingPackages]);
+    } else {
+      data.push({ filePath: originFile, missingPackages, isDevFile: fileType.isTestFile });
+    }
   }
 }

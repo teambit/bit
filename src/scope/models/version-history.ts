@@ -211,3 +211,31 @@ export default class VersionHistory extends BitObject {
     return new VersionHistory(props);
   }
 }
+
+export function versionParentsToGraph(versions: VersionParents[]): Graph<string, string> {
+  const refToStr = (ref: Ref) => ref.toString();
+  const graph = new Graph<string, string>();
+  const allHashes = uniqBy(
+    versions
+      .map((v) => {
+        return compact([v.hash, ...v.parents, ...(v.squashed || []), v.unrelated]);
+      })
+      .flat(),
+    'hash'
+  );
+  const nodes = allHashes.map((v) => new Node(refToStr(v), refToStr(v)));
+  const edges = versions
+    .map((v) => {
+      const verEdges = v.parents.map((p) => new Edge(refToStr(v.hash), refToStr(p), 'parent'));
+      if (v.unrelated) verEdges.push(new Edge(refToStr(v.hash), refToStr(v.unrelated), 'unrelated'));
+      if (v.squashed) {
+        const squashed = v.squashed.filter((s) => !v.parents.find((p) => p.isEqual(s)));
+        squashed.map((p) => verEdges.push(new Edge(refToStr(v.hash), refToStr(p), 'squashed')));
+      }
+      return verEdges;
+    })
+    .flat();
+  graph.setNodes(nodes);
+  graph.setEdges(edges);
+  return graph;
+}

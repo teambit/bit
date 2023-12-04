@@ -1,14 +1,15 @@
 import mapSeries from 'p-map-series';
-import { BuilderMain, BuildTask, BuildContext, ComponentResult, TaskResults, BuiltTaskResult } from '@teambit/builder';
-import { compact } from 'lodash';
+import { BuilderMain, BuildTask, BuildContext, ComponentResult, TaskResults, BuiltTaskResult, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
+import { compact, join } from 'lodash';
 import { Capsule } from '@teambit/isolator';
 import { Component } from '@teambit/component';
 import { ApplicationAspect } from './application.aspect';
 import { ApplicationMain } from './application.main.runtime';
-import { BUILD_TASK, BuildDeployContexts } from './build-application.task';
+import { ARTIFACTS_DIR_NAME, BUILD_TASK, BuildDeployContexts } from './build-application.task';
 import { AppDeployContext } from './app-deploy-context';
 import { Application } from './application';
 import { ApplicationDeployment } from './app-instance';
+import { AppBuildContext } from './app-build-context';
 
 export const DEPLOY_TASK = 'deploy_application';
 
@@ -72,16 +73,30 @@ export class DeployTask implements BuildTask {
     const buildDeployContexts = metadata.find((ctx) => ctx.name === app.name && ctx.appType === app.applicationType);
     if (!buildDeployContexts) return undefined;
 
-    const appDeployContext: AppDeployContext = Object.assign(context, buildDeployContexts.deployContext, {
-      capsule,
+    const artifacts = this.builder.getArtifacts(capsule.component);
+    const appContext = await this.application.createAppBuildContext(capsule.component.id, app.name, capsule.path);
+    const artifactsDir = this.getArtifactDirectory();
+    const appBuildContext = AppBuildContext.create({
+      ...buildDeployContexts.deployContext,
+      appContext, 
+      buildContext: context,
       appComponent: capsule.component,
+      name: app.name,
+      capsule,
+      artifactsDir
     });
+
+    const appDeployContext = new AppDeployContext(appBuildContext, artifacts);
 
     if (app && typeof app.deploy === 'function') {
       return app.deploy(appDeployContext);
     }
 
     return undefined;
+  }
+
+  private getArtifactDirectory() {
+    return join(CAPSULE_ARTIFACTS_DIR, ARTIFACTS_DIR_NAME);
   }
 
   private getBuildMetadata(

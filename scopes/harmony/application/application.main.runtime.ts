@@ -19,7 +19,7 @@ import { AppsBuildTask } from './build-application.task';
 import { RunCmd } from './run.cmd';
 import { AppService } from './application.service';
 import { AppCmd, AppListCmd } from './app.cmd';
-import { AppPlugin } from './app.plugin';
+import { AppPlugin, BIT_APP_PATTERN } from './app.plugin';
 import { AppTypePlugin } from './app-type.plugin';
 import { AppContext } from './app-context';
 import { DeployTask } from './deploy.task';
@@ -170,7 +170,7 @@ export class ApplicationMain {
       return this.getAppPattern(appType);
     });
 
-    return appTypesPatterns;
+    return appTypesPatterns.concat(BIT_APP_PATTERN);
   }
 
   async loadApps(): Promise<Application[]> {
@@ -372,6 +372,33 @@ export class ApplicationMain {
       workspaceComponentDir
     );
     return appContext;
+  }
+
+  async createAppBuildContext(id: ComponentID, appName: string, capsuleRootDir: string, rootDir?: string) {
+    const host = this.componentAspect.getHost();
+    // const components = await host.list();
+    // const component = components.find((c) => c.id.isEqual(id));
+    const component = await host.get(id);
+    if (!component) throw new AppNotFound(appName);
+
+    const env = await this.envs.createEnvironment([component]);
+    const res = await env.run(this.appService);
+    const context = res.results[0].data;
+    if (!context) throw new AppNotFound(appName);
+
+    const appContext = new AppContext(
+      appName,
+      this.harmony,
+      context.dev,
+      component,
+      capsuleRootDir,
+      context,
+      rootDir,
+      undefined,
+      undefined
+    );
+    return appContext;
+
   }
 
   static runtime = MainRuntime;
