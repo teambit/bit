@@ -2,7 +2,7 @@ import { ComponentIssue, ISSUE_FORMAT_SPACE } from './component-issue';
 
 export class RemovedDependencies extends ComponentIssue {
   description = 'removed dependencies';
-  solution = 'run "bit install <missing-dep>" or remove any unneeded references to <missing-dep> from your code';
+  solution = 'run "bit install <missing-dep>" or remove any unneeded references to that component from your code';
   data: string[]; // deps ids
   isTagBlocker = true;
   dataToString() {
