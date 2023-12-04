@@ -1,5 +1,13 @@
 import mapSeries from 'p-map-series';
-import { BuilderMain, BuildTask, BuildContext, ComponentResult, TaskResults, BuiltTaskResult, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
+import {
+  BuilderMain,
+  BuildTask,
+  BuildContext,
+  ComponentResult,
+  TaskResults,
+  BuiltTaskResult,
+  CAPSULE_ARTIFACTS_DIR,
+} from '@teambit/builder';
 import { compact, join } from 'lodash';
 import { Capsule } from '@teambit/isolator';
 import { Component } from '@teambit/component';
@@ -36,7 +44,7 @@ export class DeployTask implements BuildTask {
     });
 
     const _componentsResults: ComponentResult[] = compact(components).map(({ component, deploys }) => {
-      return { 
+      return {
         component,
         metadata: {
           deployments: deploys.map((deploy) => {
@@ -44,10 +52,10 @@ export class DeployTask implements BuildTask {
             return {
               appName: deployObject?.appName,
               timestamp: deployObject?.timestamp,
-              url: deployObject?.url
-            }
-          })
-        }
+              url: deployObject?.url,
+            };
+          }),
+        },
       };
     });
 
@@ -57,10 +65,10 @@ export class DeployTask implements BuildTask {
   }
 
   private async runForOneApp(
-    app: Application, 
-    capsule: Capsule, 
+    app: Application,
+    capsule: Capsule,
     context: BuildContext
-  ): Promise<ApplicationDeployment|void|undefined> {
+  ): Promise<ApplicationDeployment | void | undefined> {
     const aspectId = this.application.getAppAspect(app.name);
     if (!aspectId) return undefined;
 
@@ -77,16 +85,20 @@ export class DeployTask implements BuildTask {
     const appContext = await this.application.createAppBuildContext(capsule.component.id, app.name, capsule.path);
     const artifactsDir = this.getArtifactDirectory();
     const appBuildContext = AppBuildContext.create({
-      ...buildDeployContexts.deployContext,
-      appContext, 
+      appContext,
       buildContext: context,
       appComponent: capsule.component,
       name: app.name,
       capsule,
-      artifactsDir
+      artifactsDir,
     });
 
-    const appDeployContext = new AppDeployContext(appBuildContext, artifacts);
+    const appDeployContext = new AppDeployContext(
+      appBuildContext,
+      artifacts,
+      buildDeployContexts.deployContext.publicDir,
+      buildDeployContexts.deployContext.ssrPublicDir
+    );
 
     if (app && typeof app.deploy === 'function') {
       return app.deploy(appDeployContext);
