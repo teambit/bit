@@ -127,15 +127,11 @@ export class CloudMain {
 
     return fetch(url, opts)
       .then(async (res) => {
-        try {
-          if (res.status === 401) {
-            return null;
-          }
-          const response: CloudUserAPIResponse = await res.json();
-          return { ...(response.payload || {}) };
-        } catch (e) {
-          throw e;
+        if (res.status === 401) {
+          return null;
         }
+        const response: CloudUserAPIResponse = await res.json();
+        return { ...(response.payload || {}) };
       })
       .catch((err) => {
         this.logger.error(`failed to get current user, err: ${err}`);
@@ -252,7 +248,6 @@ export class CloudMain {
       }
       return await response.json();
     } catch (error) {
-      console.log('🚀 ~ file: cloud.main.runtime.ts:260 ~ CloudMain ~ error:', error);
       this.logger.debug('fetchFromSymphonyViaGQL. ', 'Error fetching data: ', error);
       return null;
     }

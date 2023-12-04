@@ -3,8 +3,7 @@ import { CircleSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { useCurrentUser } from '@teambit/cloud.hooks.use-current-user';
 import { useLogout } from '@teambit/cloud.hooks.use-logout';
-import { useNavigate } from '@teambit/base-react.navigation.link';
-import { Link } from '@teambit/base-react.navigation.link';
+import { useNavigate, Link } from '@teambit/base-react.navigation.link';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import styles from './current-user.module.scss';
 
@@ -67,9 +66,8 @@ export function CurrentUser() {
         </div>
         <div
           className={styles.logout}
-          onClick={async () => {
-            console.log('logout');
-            await logout?.();
+          onClick={() => {
+            logout?.();
           }}
         >
           Logout

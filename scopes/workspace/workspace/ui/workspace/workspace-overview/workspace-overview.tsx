@@ -57,14 +57,14 @@ export function useCardPlugins({
   const plugins = React.useMemo(
     () => [
       {
-        preview: ({ component }) => {
+        preview: function Preview({ component }) {
           const compModel = compModelsById.get(component.id.toString());
           if (!compModel) return null;
           return <PreviewPlaceholder componentDescriptor={component} component={compModel} />;
         },
       },
       {
-        previewBottomRight: ({ component }) => {
+        previewBottomRight: function PreviewBottomRight({ component }) {
           const env = component.get('teambit.envs/envs');
           const envComponentId = env?.id ? ComponentID.fromString(env?.id) : undefined;
 
