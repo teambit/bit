@@ -48,11 +48,11 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
   const buildFailed = component.buildStatus?.toLowerCase() !== 'succeed' && component?.host === 'teambit.scope/scope';
   const isScaling = Boolean(component.preview?.isScaling);
   const includesEnvTemplate = Boolean(component.preview?.includesEnvTemplate);
-  const calcDefaultLoadingState = React.useCallback(() => {
+  const defaultLoadingState = React.useMemo(() => {
     return isScaling && !includesEnvTemplate;
   }, [isScaling, includesEnvTemplate]);
 
-  const [isLoading, setLoading] = useState(calcDefaultLoadingState);
+  const [isLoading, setLoading] = useState(defaultLoadingState);
 
   const iframeQueryParams = `skipIncludes=${component.preview?.skipIncludes || 'false'}`;
 
@@ -70,10 +70,9 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
   );
 
   React.useEffect(() => {
-    const defaultLoadingState = calcDefaultLoadingState();
     if (!isLoading && defaultLoadingState) setLoading(true);
     if (isLoading && !defaultLoadingState) setLoading(false);
-  }, [component.id.toString(), isScaling, includesEnvTemplate]);
+  }, [component.id.toString(), defaultLoadingState]);
 
   return (
     <div className={styles.overviewWrapper} key={`${component.id.toString()}`}>
