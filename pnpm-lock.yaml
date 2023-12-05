@@ -939,8 +939,8 @@ importers:
         specifier: ^0.0.5
         version: 0.0.5
       '@teambit/node.utils.esm-loader':
-        specifier: ^0.0.5
-        version: 0.0.5
+        specifier: ^0.0.6
+        version: 0.0.6
       '@teambit/react.generator.react-native-templates':
         specifier: ^1.0.7
         version: 1.0.8
@@ -14827,8 +14827,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/node.utils.esm-loader':
-        specifier: ^0.0.5
-        version: 0.0.5
+        specifier: ^0.0.6
+        version: 0.0.6
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -33127,8 +33127,8 @@ packages:
       dedent: 0.7.0
     dev: false
 
-  /@teambit/node.utils.esm-loader@0.0.5:
-    resolution: {integrity: sha512-OpT7bypWkn8CRqW+QYhtmDeWaYU8XQoEc3EHyxeYHtD7jtCrGqJNB4V+H/zV/bvKjvXgDWu5DXPreVwfj2/okw==}
+  /@teambit/node.utils.esm-loader@0.0.6:
+    resolution: {integrity: sha512-XoOjoDY02H+/jVY6FAI0GqbrWOB/K35KITdboqqSV4KJz31+weaqKe3yD2I6c0FdgMwulsQXHdx5GHuFpGGhhQ==}
     dependencies:
       find-root: 1.1.0
     dev: false
@@ -58889,7 +58889,7 @@ packages:
       '@teambit/component-id': 1.2.0
       '@teambit/graph.cleargraph': 0.0.1
       '@teambit/harmony': 0.4.6
-      '@teambit/node.utils.esm-loader': 0.0.5
+      '@teambit/node.utils.esm-loader': 0.0.6
       chalk: 2.4.2
       core-js: 3.13.0
       find-root: 1.1.0
