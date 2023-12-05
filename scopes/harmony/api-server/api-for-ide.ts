@@ -50,6 +50,11 @@ type ModifiedByConfig = {
   aspects?: { workspace: Record<string, any>; scope: Record<string, any> };
 };
 
+type WorkspaceHistory = {
+  current: PathOsBasedAbsolute;
+  history: Array<{ path: PathOsBasedAbsolute; fileId: string; reason?: string }>;
+};
+
 export class APIForIDE {
   constructor(
     private workspace: Workspace,
@@ -76,6 +81,32 @@ export class APIForIDE {
     const compId = await this.workspace.resolveComponentId(id);
     const comp = await this.workspace.get(compId);
     return path.join(this.workspace.componentDir(compId), comp.state._consumer.mainFile);
+  }
+
+  private async getSortedBitmapHistoryFiles(): Promise<string[]> {
+    const bitmapHistoryDir = this.workspace.consumer.getBitmapHistoryDir();
+    const historyPaths = await fs.readdir(bitmapHistoryDir);
+    const historyPathsSortedByDate = historyPaths.sort((a, b) => {
+      const aDate = fs.statSync(path.join(bitmapHistoryDir, a)).mtimeMs;
+      const bDate = fs.statSync(path.join(bitmapHistoryDir, b)).mtimeMs;
+      return aDate - bDate;
+    });
+    return historyPathsSortedByDate.reverse();
+  }
+
+  async getWorkspaceHistory(): Promise<WorkspaceHistory> {
+    const current = this.workspace.bitMap.getPath();
+    const bitmapHistoryDir = this.workspace.consumer.getBitmapHistoryDir();
+    const historyPaths = await this.getSortedBitmapHistoryFiles();
+    const historyMetadata = await this.workspace.consumer.getParsedBitmapHistoryMetadata();
+    const history = historyPaths.map((historyPath) => {
+      const fileName = path.basename(historyPath);
+      const fileId = fileName.replace('.bitmap-', '');
+      const reason = historyMetadata[fileId];
+      return { path: path.join(bitmapHistoryDir, fileName), fileId, reason };
+    });
+
+    return { current, history };
   }
 
   async importLane(
