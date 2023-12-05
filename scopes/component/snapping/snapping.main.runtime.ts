@@ -1056,13 +1056,14 @@ another option, in case this dependency is not in main yet is to remove all refe
       }
     });
     legacyComponent.extensions.forEach((ext) => {
-      if (!ext.newExtensionId) return;
-      const updatedBitId = updatedIds.searchWithoutVersion(ext.newExtensionId);
+      if (!ext.extensionId) return;
+      const updatedBitId = updatedIds.searchWithoutVersion(ext.extensionId);
       if (updatedBitId) {
         this.logger.debug(
-          `updating "${componentIdStr}", extension ${ext.newExtensionId.toString()} to version ${updatedBitId.version}}`
+          `updating "${componentIdStr}", extension ${ext.extensionId.toString()} to version ${updatedBitId.version}}`
         );
         ext.extensionId = updatedBitId;
+        if (ext.newExtensionId) ext.newExtensionId = updatedBitId;
       }
     });
 

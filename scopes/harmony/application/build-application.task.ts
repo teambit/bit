@@ -89,9 +89,15 @@ export class AppsBuildTask implements BuildTask {
   ): Promise<OneAppResult | undefined> {
     if (!app.build) return undefined;
     const artifactsDir = this.getArtifactDirectory();
-    const appContext = await this.application.createAppBuildContext(component.id, app.name, capsule.path);
+    const capsuleRootDir = context.capsuleNetwork.capsulesRootDir;
+    const appContext = await this.application.createAppBuildContext(
+      component.id,
+      app.name,
+      capsuleRootDir,
+      capsule.path,
+    );
     const appBuildContext = AppBuildContext.create({
-      appContext, 
+      appContext,
       buildContext: context,
       appComponent: component,
       name: app.name,

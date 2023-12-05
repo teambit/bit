@@ -1,5 +1,13 @@
 import mapSeries from 'p-map-series';
-import { BuilderMain, BuildTask, BuildContext, ComponentResult, TaskResults, BuiltTaskResult, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
+import {
+  BuilderMain,
+  BuildTask,
+  BuildContext,
+  ComponentResult,
+  TaskResults,
+  BuiltTaskResult,
+  CAPSULE_ARTIFACTS_DIR,
+} from '@teambit/builder';
 import { compact, join } from 'lodash';
 import { Capsule } from '@teambit/isolator';
 import { Component } from '@teambit/component';
@@ -77,15 +85,20 @@ export class DeployTask implements BuildTask {
     const appContext = await this.application.createAppBuildContext(capsule.component.id, app.name, capsule.path);
     const artifactsDir = this.getArtifactDirectory();
     const appBuildContext = AppBuildContext.create({
-      appContext, 
+      appContext,
       buildContext: context,
       appComponent: capsule.component,
       name: app.name,
       capsule,
-      artifactsDir
+      artifactsDir,
     });
 
-    const appDeployContext = new AppDeployContext(appBuildContext, artifacts);
+    const appDeployContext = new AppDeployContext(
+      appBuildContext,
+      artifacts,
+      buildDeployContexts.deployContext.publicDir,
+      buildDeployContexts.deployContext.ssrPublicDir
+    );
 
     if (app && typeof app.deploy === 'function') {
       return app.deploy(appDeployContext);
