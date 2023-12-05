@@ -47,8 +47,12 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
   const EmptyState = getEmptyState && getEmptyState();
   const buildFailed = component.buildStatus?.toLowerCase() !== 'succeed' && component?.host === 'teambit.scope/scope';
   const isScaling = Boolean(component.preview?.isScaling);
+  const includesEnvTemplate = Boolean(component.preview?.includesEnvTemplate);
+  const calcDefaultLoadingState = React.useCallback(() => {
+    return isScaling && !includesEnvTemplate;
+  }, [isScaling, includesEnvTemplate]);
 
-  const [isLoading, setLoading] = useState(() => isScaling);
+  const [isLoading, setLoading] = useState(calcDefaultLoadingState);
 
   const iframeQueryParams = `skipIncludes=${component.preview?.skipIncludes || 'false'}`;
 
@@ -65,10 +69,10 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
     [onLoad]
   );
 
-  // reset the loading flag when components are swiched or turn it off if the component is not scaling
   React.useEffect(() => {
-    if (!isLoading && isScaling) setLoading(true);
-    if (isLoading && !isScaling) setLoading(false);
+    const defaultLoadingState = calcDefaultLoadingState();
+    if (!isLoading && defaultLoadingState) setLoading(true);
+    if (isLoading && !defaultLoadingState) setLoading(false);
   }, [component.id.toString(), isScaling]);
 
   return (
