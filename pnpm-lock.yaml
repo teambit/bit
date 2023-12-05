@@ -59,12 +59,9 @@ importers:
       '@babel/types':
         specifier: 7.22.3
         version: 7.22.3
-      '@bitdev/node.generators.node-templates':
-        specifier: ^0.0.1
-        version: 0.0.1
       '@bitdev/react.generators.react-templates':
-        specifier: ^1.1.0
-        version: 1.1.0
+        specifier: ^1.1.3
+        version: 1.1.3
       '@graphql-modules/core':
         specifier: 0.7.17
         version: 0.7.17(graphql@15.8.0)(reflect-metadata@0.1.13)
@@ -938,6 +935,9 @@ importers:
       '@teambit/node.deps-detectors.detective-es6':
         specifier: ^0.0.5
         version: 0.0.5
+      '@teambit/node.generator.node-templates':
+        specifier: ^1.0.8
+        version: 1.0.8
       '@teambit/node.utils.esm-loader':
         specifier: ^0.0.5
         version: 0.0.5
@@ -1172,6 +1172,12 @@ importers:
       '@types/lodash.orderby':
         specifier: 4.6.6
         version: 4.6.6
+      '@types/react':
+        specifier: ^17.0.67
+        version: 17.0.70
+      '@types/react-dom':
+        specifier: ^17.0.21
+        version: 17.0.23
       '@types/sass':
         specifier: 1.45.0
         version: 1.45.0
@@ -2340,15 +2346,9 @@ importers:
       '@types/prettier':
         specifier: 2.3.2
         version: 2.3.2
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.70
       '@types/react-dev-utils':
         specifier: 9.0.10
         version: 9.0.10(debug@4.3.4)
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.23
       '@types/react-syntax-highlighter':
         specifier: 15.5.10
         version: 15.5.10
@@ -2785,7 +2785,7 @@ importers:
         version: file:scopes/compilation/babel(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit':
         specifier: workspace:*
-        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.70)(subscriptions-transport-ws@0.9.18)
+        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/bit-custom-aspect
@@ -3890,7 +3890,7 @@ importers:
         version: file:scopes/compilation/babel(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit':
         specifier: workspace:*
-        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.70)(subscriptions-transport-ws@0.9.18)
+        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/bit-custom-aspect
@@ -4995,7 +4995,7 @@ importers:
         version: file:scopes/compilation/babel(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit':
         specifier: workspace:*
-        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.70)(subscriptions-transport-ws@0.9.18)
+        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/bit-custom-aspect
@@ -6100,7 +6100,7 @@ importers:
         version: file:scopes/compilation/babel(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit':
         specifier: workspace:*
-        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.70)(subscriptions-transport-ws@0.9.18)
+        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/bit-custom-aspect
@@ -7199,7 +7199,7 @@ importers:
         version: file:scopes/compilation/babel(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit':
         specifier: workspace:*
-        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.70)(subscriptions-transport-ws@0.9.18)
+        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/bit-custom-aspect
@@ -8304,7 +8304,7 @@ importers:
         version: file:scopes/compilation/babel(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit':
         specifier: workspace:*
-        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.70)(subscriptions-transport-ws@0.9.18)
+        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/bit-custom-aspect
@@ -14905,6 +14905,12 @@ importers:
       '@teambit/ui-foundation.ui.navigation.react-router-adapter':
         specifier: 6.1.1
         version: 6.1.1(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@types/react':
+        specifier: ^17.0.67
+        version: 17.0.70
+      '@types/react-dom':
+        specifier: ^17.0.21
+        version: 17.0.23
       '@yarnpkg/cli':
         specifier: 3.6.1
         version: 3.6.1(@yarnpkg/core@3.5.2)
@@ -14981,12 +14987,6 @@ importers:
       '@types/node':
         specifier: 12.20.4
         version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.70
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.23
       '@types/semver':
         specifier: 7.3.4
         version: 7.3.4
@@ -15640,9 +15640,6 @@ importers:
       '@babel/runtime':
         specifier: 7.20.0
         version: 7.20.0
-      '@bitdev/node.generators.node-templates':
-        specifier: ^0.0.1
-        version: 0.0.1
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
@@ -15652,6 +15649,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/node.generator.node-templates':
+        specifier: ^1.0.8
+        version: 1.0.8
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -17356,8 +17356,8 @@ importers:
         specifier: 7.23.2
         version: 7.23.2
       '@bitdev/react.generators.react-templates':
-        specifier: ^1.1.0
-        version: 1.1.0
+        specifier: ^1.1.3
+        version: 1.1.3
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
@@ -22790,14 +22790,8 @@ packages:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
     dev: false
 
-  /@bitdev/node.generators.node-templates@0.0.1:
-    resolution: {integrity: sha512-YQWp1KNPfzQrgxQD2yRX9ogJDSJxcoDrslKFZC0rwdd0+qZBxy7YuN+r/bfMoXyhav/JSK62sPq+VBpDJBZvJA==}
-    dependencies:
-      lodash: 4.17.21
-    dev: false
-
-  /@bitdev/react.generators.react-templates@1.1.0:
-    resolution: {integrity: sha512-D1f5fOV3DJ6zYss9S97QwfFLo2eIfTswINYi/p447/1eWb6+cKMf4HMU3yG3XBoE3LqJnhNiUBPg7gmR0GOw6A==}
+  /@bitdev/react.generators.react-templates@1.1.3:
+    resolution: {integrity: sha512-YjtG9NQpnSoj4OIa0hLIyRf4H8AylAjse4wvY1fx20cZq6kiDNwa/DR6voXn+FmmtWY0JVDN/wo7rhRKrLf1mA==}
     dependencies:
       dedent: 0.7.0
     dev: false
@@ -58900,7 +58894,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.70)(subscriptions-transport-ws@0.9.18):
+  file:scopes/harmony/bit(@testing-library/react@12.1.5)(subscriptions-transport-ws@0.9.18):
     resolution: {directory: scopes/harmony/bit, type: directory}
     id: file:scopes/harmony/bit
     name: '@teambit/bit'
@@ -58912,6 +58906,8 @@ packages:
       '@teambit/harmony': 0.4.6
       '@teambit/legacy-bit-id': 1.1.0
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.1(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@types/react': 17.0.70
+      '@types/react-dom': 17.0.23
       '@yarnpkg/cli': 3.6.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core': 3.5.2
       '@yarnpkg/plugin-pack': 3.2.0(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
@@ -58934,7 +58930,6 @@ packages:
       typescript: 4.7.4
     transitivePeerDependencies:
       - '@testing-library/react'
-      - '@types/react'
       - graphql-ws
       - subscriptions-transport-ws
     dev: false
@@ -59185,7 +59180,6 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@bitdev/node.generators.node-templates': 0.0.1
       '@teambit/component-id': 1.2.0
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
@@ -59818,7 +59812,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.23.2
-      '@bitdev/react.generators.react-templates': 1.1.0
+      '@bitdev/react.generators.react-templates': 1.1.3
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.4(@types/webpack@5.28.1)(react-refresh@0.10.0)(webpack-dev-server@4.15.0)(webpack@5.84.1)
       '@prerenderer/prerenderer': 1.2.3(@types/express@4.17.13)(debug@4.3.4)
