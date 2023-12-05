@@ -162,6 +162,7 @@ export class CheckoutMain {
         verbose: checkoutProps.verbose,
         resetConfig: checkoutProps.reset,
         skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap,
+        reasonForBitmapChange: 'checkout',
       };
       componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
     }

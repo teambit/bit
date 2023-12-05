@@ -89,6 +89,7 @@ make sure this argument is the name only, without the scope-name. to change the 
         components: [targetComp.state._consumer],
         skipDependencyInstallation: true,
         writeToPath: this.newComponentHelper.getNewComponentPath(targetId),
+        reasonForBitmapChange: 'rename',
       });
     }
 
