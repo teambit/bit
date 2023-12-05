@@ -581,7 +581,7 @@ export default class Consumer {
     await consumer.setBitMap();
     scope.currentLaneIdFunc = consumer.getCurrentLaneIdIfExist.bind(consumer);
     scope.notExportedIdsFunc = consumer.getNotExportedIds.bind(consumer);
-    logger.commandHistory.fileBasePath = scope.getPath();
+    logger.commandHistoryBasePath = scope.getPath();
     return consumer;
   }
 
