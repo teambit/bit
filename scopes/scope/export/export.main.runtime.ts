@@ -528,6 +528,11 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       });
     };
 
+    process.on('SIGINT', () => {
+      this.logger.consoleWarning(
+        `unable to cancel the export process at this point because the communication with the remote already started`
+      );
+    });
     let centralHubResults;
     if (resumeExportId) {
       const remotes = manyObjectsPerRemote.map((o) => o.remote);
