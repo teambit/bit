@@ -73,7 +73,7 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
     const defaultLoadingState = calcDefaultLoadingState();
     if (!isLoading && defaultLoadingState) setLoading(true);
     if (isLoading && !defaultLoadingState) setLoading(false);
-  }, [component.id.toString(), isScaling]);
+  }, [component.id.toString(), isScaling, includesEnvTemplate]);
 
   return (
     <div className={styles.overviewWrapper} key={`${component.id.toString()}`}>
