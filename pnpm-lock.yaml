@@ -59,6 +59,9 @@ importers:
       '@babel/types':
         specifier: 7.22.3
         version: 7.22.3
+      '@bitdev/node.generators.node-templates':
+        specifier: ^0.0.1
+        version: 0.0.1
       '@bitdev/react.generators.react-templates':
         specifier: ^1.1.3
         version: 1.1.3
@@ -935,9 +938,6 @@ importers:
       '@teambit/node.deps-detectors.detective-es6':
         specifier: ^0.0.5
         version: 0.0.5
-      '@teambit/node.generator.node-templates':
-        specifier: ^1.0.8
-        version: 1.0.8
       '@teambit/node.utils.esm-loader':
         specifier: ^0.0.5
         version: 0.0.5
@@ -15640,6 +15640,9 @@ importers:
       '@babel/runtime':
         specifier: 7.20.0
         version: 7.20.0
+      '@bitdev/node.generators.node-templates':
+        specifier: ^0.0.1
+        version: 0.0.1
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
@@ -15649,9 +15652,6 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      '@teambit/node.generator.node-templates':
-        specifier: ^1.0.8
-        version: 1.0.8
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -22788,6 +22788,12 @@ packages:
 
   /@bcoe/v8-coverage@0.2.3:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
+    dev: false
+
+  /@bitdev/node.generators.node-templates@0.0.1:
+    resolution: {integrity: sha512-YQWp1KNPfzQrgxQD2yRX9ogJDSJxcoDrslKFZC0rwdd0+qZBxy7YuN+r/bfMoXyhav/JSK62sPq+VBpDJBZvJA==}
+    dependencies:
+      lodash: 4.17.21
     dev: false
 
   /@bitdev/react.generators.react-templates@1.1.3:
@@ -59180,6 +59186,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
+      '@bitdev/node.generators.node-templates': 0.0.1
       '@teambit/component-id': 1.2.0
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
