@@ -196,15 +196,7 @@ export default class Dependencies {
                 `${message} expected properties of importSpecifier.mainFile "${specifierProps}", got "${mainFileProps}"`
               );
             }
-            if (importSpecifier.linkFile) {
-              const linkFileProps = Object.keys(importSpecifier.linkFile).sort().toString();
-              if (linkFileProps !== specifierProps) {
-                throw new ValidationError(
-                  `${message} expected properties of importSpecifier.linkFile "${specifierProps}", got "${linkFileProps}"`
-                );
-              }
-            }
-            const specifierPermittedProps = ['mainFile', 'linkFile'];
+            const specifierPermittedProps = ['mainFile'];
             Object.keys(importSpecifier).forEach((prop) => {
               if (!specifierPermittedProps.includes(prop)) {
                 throw new ValidationError(`${message} undetected property of importSpecifier "${prop}"`);

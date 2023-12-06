@@ -678,10 +678,10 @@ export class EnvsMain {
     // we search in the component aspect list a matching aspect which is match the id from the teambit.envs/envs
     if (envIdFromEnvsConfigWithoutVersion) {
       const matchedEntry = extensions.find((extension) => {
-        if (extension.newExtensionId) {
+        if (extension.extensionId) {
           return (
-            envIdFromEnvsConfigWithoutVersion === extension.newExtensionId.toString() ||
-            envIdFromEnvsConfigWithoutVersion === extension.newExtensionId.toString({ ignoreVersion: true })
+            envIdFromEnvsConfigWithoutVersion === extension.extensionId.toString() ||
+            envIdFromEnvsConfigWithoutVersion === extension.extensionId.toString({ ignoreVersion: true })
           );
         }
         return envIdFromEnvsConfigWithoutVersion === extension.stringId;
@@ -692,9 +692,8 @@ export class EnvsMain {
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
     const ids: string[] = [];
     extensions.forEach((extension) => {
-      if (extension.newExtensionId) {
-        ids.push(extension.newExtensionId.toString());
-        // ids.push(extension.newExtensionId.toString({ ignoreVersion: true }));
+      if (extension.extensionId) {
+        ids.push(extension.extensionId.toString());
       } else {
         ids.push(extension.stringId);
       }
@@ -727,10 +726,10 @@ export class EnvsMain {
     // we search in the component aspect list a matching aspect which is match the id from the teambit.envs/envs
     if (envIdFromEnvsConfigWithoutVersion) {
       const matchedEntry = extensions.find((extension) => {
-        if (extension.newExtensionId) {
+        if (extension.extensionId) {
           return (
-            envIdFromEnvsConfigWithoutVersion === extension.newExtensionId.toString() ||
-            envIdFromEnvsConfigWithoutVersion === extension.newExtensionId.toString({ ignoreVersion: true })
+            envIdFromEnvsConfigWithoutVersion === extension.extensionId.toString() ||
+            envIdFromEnvsConfigWithoutVersion === extension.extensionId.toString({ ignoreVersion: true })
           );
         }
         return envIdFromEnvsConfigWithoutVersion === extension.stringId;
@@ -757,9 +756,8 @@ export class EnvsMain {
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
     const ids: string[] = [];
     extensions.forEach((extension) => {
-      if (extension.newExtensionId) {
-        ids.push(extension.newExtensionId.toString());
-        // ids.push(extension.newExtensionId.toString({ ignoreVersion: true }));
+      if (extension.extensionId) {
+        ids.push(extension.extensionId.toString());
       } else {
         ids.push(extension.stringId);
       }
@@ -808,8 +806,8 @@ export class EnvsMain {
   }
 
   private getEnvDefinitionByLegacyExtension(extension: ExtensionDataEntry): EnvDefinition | undefined {
-    const envDef = extension.newExtensionId
-      ? this.getEnvDefinitionById(extension.newExtensionId)
+    const envDef = extension.extensionId
+      ? this.getEnvDefinitionById(extension.extensionId)
       : this.getEnvDefinitionByStringId(extension.stringId);
     return envDef;
   }

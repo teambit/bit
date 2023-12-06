@@ -1,9 +1,13 @@
+import { BIT_TEMP_ROOT } from '@teambit/defender.fs.global-bit-temp-dir';
+import fs from 'fs-extra';
 import assert from 'assert';
-import mock from 'mock-fs';
 import path from 'path';
 import rewire from 'rewire';
 import sinon from 'sinon';
+
 import { DependencyDetector } from '../detector-hook';
+
+const UNIT_TEST_DIR = path.join(BIT_TEMP_ROOT, 'unit-test');
 
 const cabinetNonDefault = rewire('./');
 const cabinet = cabinetNonDefault.default;
@@ -14,13 +18,23 @@ const fixtures = `${__dirname}/../../../../../../fixtures/filing-cabinet`;
 const mockedFiles = require(`${fixtures}/mockedJSFiles`);
 // eslint-disable-next-line import/no-dynamic-require, global-require
 const mockAST = require(`${fixtures}/ast`);
-const mockRootDir = path.join(__dirname, '..', '..', '..', '..', '..', '..');
 
-// needed for the lazy loading
-require('resolve-dependency-path');
-require('sass-lookup');
-require('app-module-path');
-require('module-definition');
+function mockfs(obj: any, acc?: string) {
+  Object.entries(obj).forEach(([key, value]) => {
+    if (typeof value === 'string') {
+      const filePath = acc ? path.join(acc, key) : key;
+      const fullFilePath = path.join(UNIT_TEST_DIR, filePath);
+      const content = value;
+      return fs.outputFileSync(fullFilePath, content);
+    }
+    mockfs(value, acc ? path.join(acc, key) : key);
+    return undefined;
+  });
+}
+
+function cleanUnitDir() {
+  fs.removeSync(UNIT_TEST_DIR);
+}
 
 // try {
 //   // eslint-disable-next-line global-require
@@ -40,18 +54,18 @@ require('module-definition');
 describe('filing-cabinet', () => {
   describe('JavaScript', () => {
     beforeEach(() => {
-      mock(mockedFiles);
+      mockfs(mockedFiles);
     });
 
     afterEach(() => {
-      mock.restore();
+      cleanUnitDir();
     });
 
     it('uses a generic resolve for unsupported file extensions', () => {
       const resolvedFile = cabinet({
         dependency: './bar',
-        filename: 'js/commonjs/foo.baz',
-        directory: 'js/commonjs/',
+        filename: `${UNIT_TEST_DIR}/js/commonjs/foo.baz`,
+        directory: `${UNIT_TEST_DIR}/js/commonjs/`,
       });
       assert.ok(resolvedFile.endsWith('bar.baz'));
     });
@@ -62,8 +76,8 @@ describe('filing-cabinet', () => {
 
         const result = cabinet({
           dependency: './bar',
-          filename: 'js/es6/foo.js',
-          directory: 'js/es6/',
+          filename: `${UNIT_TEST_DIR}/js/es6/foo.js`,
+          directory: `${UNIT_TEST_DIR}/js/es6/`,
           ast,
         });
         assert.ok(result.endsWith('es6/bar.js'));
@@ -72,11 +86,11 @@ describe('filing-cabinet', () => {
       it('resolves the dependency successfully', () => {
         const result = cabinet({
           dependency: './bar',
-          filename: 'js/es6/foo.js',
-          directory: 'js/es6/',
+          filename: `${UNIT_TEST_DIR}/js/es6/foo.js`,
+          directory: `${UNIT_TEST_DIR}/js/es6/`,
           ast: mockAST,
         });
-        assert.equal(result, path.join(mockRootDir, 'js/es6/bar.js'));
+        assert.equal(result, path.join(UNIT_TEST_DIR, 'js/es6/bar.js'));
       });
     });
 
@@ -84,12 +98,12 @@ describe('filing-cabinet', () => {
       it('uses the filename to look for the module type', () => {
         const options = {
           dependency: './bar',
-          filename: 'js/es6/foo.js',
-          directory: 'js/es6/',
+          filename: `${UNIT_TEST_DIR}/js/es6/foo.js`,
+          directory: `${UNIT_TEST_DIR}/js/es6/`,
         };
 
         const result = cabinet(options);
-        assert.equal(result, path.join(mockRootDir, 'js/es6/bar.js'));
+        assert.equal(result, path.join(UNIT_TEST_DIR, 'js/es6/bar.js'));
       });
     });
 
@@ -101,8 +115,8 @@ describe('filing-cabinet', () => {
 
         cabinet({
           dependency: './bar',
-          filename: 'js/es6/foo.js',
-          directory: 'js/es6/',
+          filename: `${UNIT_TEST_DIR}/js/es6/foo.js`,
+          directory: `${UNIT_TEST_DIR}/js/es6/`,
         });
 
         assert.ok(stub.called);
@@ -115,11 +129,11 @@ describe('filing-cabinet', () => {
       it('resolves files with the .jsx extension', () => {
         const result = cabinet({
           dependency: './bar',
-          filename: 'js/es6/foo.jsx',
-          directory: 'js/es6/',
+          filename: `${UNIT_TEST_DIR}/js/es6/foo.jsx`,
+          directory: `${UNIT_TEST_DIR}/js/es6/`,
         });
 
-        assert.equal(result, `${path.join(mockRootDir, 'js/es6/bar.js')}`);
+        assert.equal(result, `${path.join(UNIT_TEST_DIR, 'js/es6/bar.js')}`);
       });
     });
 
@@ -127,8 +141,8 @@ describe('filing-cabinet', () => {
     //   it('uses the amd resolver', () => {
     //     const resolvedFile = cabinet({
     //       dependency: './bar',
-    //       filename: 'js/amd/foo.js',
-    //       directory: 'js/amd/',
+    //       filename: `${UNIT_TEST_DIR}/js/amd/foo.js`,
+    //       directory: `${UNIT_TEST_DIR}/js/amd/`,
     //     });
     //     assert.ok(resolvedFile.endsWith('amd/bar.js'));
     //   });
@@ -143,8 +157,8 @@ describe('filing-cabinet', () => {
     //       dependency: 'bar',
     //       config,
     //       configPath: 'config.js',
-    //       filename: 'js/amd/foo.js',
-    //       directory: 'js/amd/',
+    //       filename: `${UNIT_TEST_DIR}/js/amd/foo.js`,
+    //       directory: `${UNIT_TEST_DIR}/js/amd/`,
     //     });
 
     //     const args = stub.getCall(0).args[0];
@@ -169,8 +183,8 @@ describe('filing-cabinet', () => {
 
         cabinet({
           dependency: './bar',
-          filename: 'js/commonjs/foo.js',
-          directory: 'js/commonjs/',
+          filename: `${UNIT_TEST_DIR}/js/commonjs/foo.js`,
+          directory: `${UNIT_TEST_DIR}/js/commonjs/`,
         });
 
         assert.ok(stub.called);
@@ -181,18 +195,18 @@ describe('filing-cabinet', () => {
       it('returns an empty string for an unresolved module', () => {
         const result = cabinet({
           dependency: 'foobar',
-          filename: 'js/commonjs/foo.js',
-          directory: 'js/commonjs/',
+          filename: `${UNIT_TEST_DIR}/js/commonjs/foo.js`,
+          directory: `${UNIT_TEST_DIR}/js/commonjs/`,
         });
 
         assert.equal(result, '');
       });
 
       it('adds the directory to the require resolution paths', () => {
-        const directory = 'js/commonjs/';
+        const directory = `${UNIT_TEST_DIR}/js/commonjs/`;
         cabinet({
           dependency: 'foobar',
-          filename: 'js/commonjs/foo.js',
+          filename: `${UNIT_TEST_DIR}/js/commonjs/foo.js`,
           directory,
         });
 
@@ -205,7 +219,7 @@ describe('filing-cabinet', () => {
       });
 
       it('resolves a relative dependency about the filename', () => {
-        const directory = 'js/commonjs/';
+        const directory = `${UNIT_TEST_DIR}/js/commonjs/`;
         const filename = `${directory}foo.js`;
 
         const result = cabinet({
@@ -218,7 +232,7 @@ describe('filing-cabinet', () => {
       });
 
       it("resolves a .. dependency to its parent directory's index.js file", () => {
-        const directory = 'js/commonjs/';
+        const directory = `${UNIT_TEST_DIR}/js/commonjs/`;
         const filename = `${directory}subdir/module.js`;
 
         const result = cabinet({
@@ -232,7 +246,7 @@ describe('filing-cabinet', () => {
 
       // @todo: fix
       it.skip('resolves a dependency within a directory outside of the given file', () => {
-        const directory = 'js/commonjs/';
+        const directory = `${UNIT_TEST_DIR}/js/commonjs/`;
         const filename = `${directory}test/index.spec.js`;
 
         const result = cabinet({
@@ -246,7 +260,7 @@ describe('filing-cabinet', () => {
 
       // @todo: fix
       it.skip('resolves a node module with module entry in package.json', () => {
-        const directory = 'js/commonjs/';
+        const directory = `${UNIT_TEST_DIR}/js/commonjs/`;
         const filename = `${directory}module.entry.js`;
 
         const result = cabinet({
@@ -265,7 +279,7 @@ describe('filing-cabinet', () => {
       });
 
       it('resolves a nested module', () => {
-        const directory = 'js/node_modules/nested/';
+        const directory = `${UNIT_TEST_DIR}/js/node_modules/nested/`;
         const filename = `${directory}index.js`;
 
         const result = cabinet({
@@ -278,7 +292,7 @@ describe('filing-cabinet', () => {
       });
 
       it('resolves to the index.js file of a directory', () => {
-        const directory = 'js/withIndex';
+        const directory = `${UNIT_TEST_DIR}/js/withIndex`;
         const filename = `${directory}/index.js`;
 
         const result = cabinet({
@@ -293,37 +307,37 @@ describe('filing-cabinet', () => {
       it('resolves implicit .jsx requires', () => {
         const result = cabinet({
           dependency: './bar',
-          filename: 'js/cjs/foo.js',
-          directory: 'js/cjs/',
+          filename: `${UNIT_TEST_DIR}/js/cjs/foo.js`,
+          directory: `${UNIT_TEST_DIR}/js/cjs/`,
         });
 
-        assert.equal(result, `${path.join(mockRootDir, 'js/cjs/bar.jsx')}`);
+        assert.equal(result, `${path.join(UNIT_TEST_DIR, 'js/cjs/bar.jsx')}`);
       });
 
       it('resolves implicit .scss requires', () => {
         const result = cabinet({
           dependency: './baz',
-          filename: 'js/cjs/foo.js',
-          directory: 'js/cjs/',
+          filename: `${UNIT_TEST_DIR}/js/cjs/foo.js`,
+          directory: `${UNIT_TEST_DIR}/js/cjs/`,
         });
 
-        assert.equal(result, `${path.join(mockRootDir, 'js/cjs/baz.scss')}`);
+        assert.equal(result, `${path.join(UNIT_TEST_DIR, 'js/cjs/baz.scss')}`);
       });
 
       it('resolves implicit .json requires', () => {
         const result = cabinet({
           dependency: './pkg',
-          filename: 'js/cjs/foo.js',
-          directory: 'js/cjs/',
+          filename: `${UNIT_TEST_DIR}/js/cjs/foo.js`,
+          directory: `${UNIT_TEST_DIR}/js/cjs/`,
         });
 
-        assert.equal(result, `${path.join(mockRootDir, 'js/cjs/pkg.json')}`);
+        assert.equal(result, `${path.join(UNIT_TEST_DIR, 'js/cjs/pkg.json')}`);
       });
     });
 
     describe('typescript', () => {
       it('resolves an import', () => {
-        const directory = 'js/ts';
+        const directory = `${UNIT_TEST_DIR}/js/ts`;
         const filename = `${directory}/index.ts`;
 
         const result = cabinet({
@@ -337,7 +351,7 @@ describe('filing-cabinet', () => {
 
       describe('when a dependency does not exist', () => {
         it('returns an empty result', () => {
-          const directory = 'js/ts';
+          const directory = `${UNIT_TEST_DIR}/js/ts`;
           const filename = `${directory}/index.ts`;
 
           const result = cabinet({
@@ -354,7 +368,7 @@ describe('filing-cabinet', () => {
 
   describe('CSS', () => {
     beforeEach(() => {
-      mock({
+      mockfs({
         stylus: {
           'foo.styl': '',
           'bar.styl': '',
@@ -376,28 +390,28 @@ describe('filing-cabinet', () => {
     });
 
     afterEach(() => {
-      mock.restore();
+      cleanUnitDir();
     });
 
     describe('sass', () => {
       it('uses the sass resolver for .scss files', () => {
         const result = cabinet({
           dependency: 'bar',
-          filename: 'sass/foo.scss',
-          directory: 'sass/',
+          filename: `${UNIT_TEST_DIR}/sass/foo.scss`,
+          directory: `${UNIT_TEST_DIR}/sass/`,
         });
 
-        assert.equal(result, path.normalize(`${mockRootDir}/sass/bar.scss`));
+        assert.equal(result, path.normalize(`${UNIT_TEST_DIR}/sass/bar.scss`));
       });
 
       it('uses the sass resolver for .sass files', () => {
         const result = cabinet({
           dependency: 'bar',
-          filename: 'sass/foo.sass',
-          directory: 'sass/',
+          filename: `${UNIT_TEST_DIR}/sass/foo.sass`,
+          directory: `${UNIT_TEST_DIR}/sass/`,
         });
 
-        assert.equal(result, path.normalize(`${mockRootDir}/sass/bar.sass`));
+        assert.equal(result, path.normalize(`${UNIT_TEST_DIR}/sass/bar.sass`));
       });
     });
 
@@ -405,11 +419,11 @@ describe('filing-cabinet', () => {
       it('uses the stylus resolver', () => {
         const result = cabinet({
           dependency: 'bar',
-          filename: 'stylus/foo.styl',
-          directory: 'stylus/',
+          filename: `${UNIT_TEST_DIR}/stylus/foo.styl`,
+          directory: `${UNIT_TEST_DIR}/stylus/`,
         });
 
-        assert.equal(result, path.normalize(`${mockRootDir}/stylus/bar.styl`));
+        assert.equal(result, path.normalize(`${UNIT_TEST_DIR}/stylus/bar.styl`));
       });
     });
 
@@ -417,31 +431,31 @@ describe('filing-cabinet', () => {
       it('resolves extensionless dependencies', () => {
         const result = cabinet({
           dependency: 'bar',
-          filename: 'less/foo.less',
-          directory: 'less/',
+          filename: `${UNIT_TEST_DIR}/less/foo.less`,
+          directory: `${UNIT_TEST_DIR}/less/`,
         });
 
-        assert.equal(result, path.normalize(`${mockRootDir}/less/bar.less`));
+        assert.equal(result, path.normalize(`${UNIT_TEST_DIR}/less/bar.less`));
       });
 
       it('resolves dependencies with a less extension', () => {
         const result = cabinet({
           dependency: 'bar.less',
-          filename: 'less/foo.less',
-          directory: 'less/',
+          filename: `${UNIT_TEST_DIR}/less/foo.less`,
+          directory: `${UNIT_TEST_DIR}/less/`,
         });
 
-        assert.equal(result, path.normalize(`${mockRootDir}/less/bar.less`));
+        assert.equal(result, path.normalize(`${UNIT_TEST_DIR}/less/bar.less`));
       });
 
       it('resolves dependencies with a css extension', () => {
         const result = cabinet({
           dependency: 'bar.css',
-          filename: 'less/foo.less',
-          directory: 'less/',
+          filename: `${UNIT_TEST_DIR}/less/foo.less`,
+          directory: `${UNIT_TEST_DIR}/less/`,
         });
 
-        assert.equal(result, path.normalize(`${mockRootDir}/less/bar.css`));
+        assert.equal(result, path.normalize(`${UNIT_TEST_DIR}/less/bar.css`));
       });
     });
   });
@@ -450,11 +464,11 @@ describe('filing-cabinet', () => {
     it('uses a generic resolve for unsupported file extensions', () => {
       const result = cabinet({
         dependency: './bar',
-        filename: 'barbazim/foo.baz',
-        directory: 'barbazim/',
+        filename: `${UNIT_TEST_DIR}/barbazim/foo.baz`,
+        directory: `${UNIT_TEST_DIR}/barbazim/`,
       });
 
-      assert.equal(result, path.normalize(`${mockRootDir}/barbazim/bar.baz`));
+      assert.equal(result, path.normalize(`${UNIT_TEST_DIR}/barbazim/bar.baz`));
     });
   });
 
@@ -473,8 +487,8 @@ describe('filing-cabinet', () => {
         type: 'foo',
       };
       const result = cabinet({
-        directory: 'barbazim/',
-        filename: 'barbazim/xxx.foo',
+        directory: `${UNIT_TEST_DIR}/barbazim/`,
+        filename: `${UNIT_TEST_DIR}/barbazim/xxx.foo`,
         ext: '.foo',
         dependency: 'bar',
         envDetectors: [detector],
@@ -491,8 +505,8 @@ describe('filing-cabinet', () => {
 
       const pathResult = cabinet({
         dependency: './bar',
-        filename: 'js/amd/foo.foobar',
-        directory: 'js/amd/',
+        filename: `${UNIT_TEST_DIR}/js/amd/foo.foobar`,
+        directory: `${UNIT_TEST_DIR}/js/amd/`,
       });
 
       assert.ok(stub.called);
@@ -500,7 +514,7 @@ describe('filing-cabinet', () => {
     });
 
     it('allows does not break default resolvers', () => {
-      mock({
+      mockfs({
         stylus: {
           'foo.styl': '',
           'bar.styl': '',
@@ -513,20 +527,20 @@ describe('filing-cabinet', () => {
 
       cabinet({
         dependency: './bar',
-        filename: 'js/amd/foo.foobar',
-        directory: 'js/amd/',
+        filename: `${UNIT_TEST_DIR}/js/amd/foo.foobar`,
+        directory: `${UNIT_TEST_DIR}/js/amd/`,
       });
 
       const result = cabinet({
         dependency: './bar',
-        filename: 'stylus/foo.styl',
-        directory: 'stylus/',
+        filename: `${UNIT_TEST_DIR}/stylus/foo.styl`,
+        directory: `${UNIT_TEST_DIR}/stylus/`,
       });
 
       assert.ok(stub.called);
       assert.ok(result);
 
-      mock.restore();
+      cleanUnitDir();
     });
 
     it('can be called multiple times', () => {
@@ -538,14 +552,14 @@ describe('filing-cabinet', () => {
 
       cabinet({
         dependency: './bar',
-        filename: 'js/amd/foo.foobar',
-        directory: 'js/amd/',
+        filename: `${UNIT_TEST_DIR}/js/amd/foo.foobar`,
+        directory: `${UNIT_TEST_DIR}/js/amd/`,
       });
 
       cabinet({
         dependency: './bar',
-        filename: 'js/amd/foo.barbar',
-        directory: 'js/amd/',
+        filename: `${UNIT_TEST_DIR}/js/amd/foo.barbar`,
+        directory: `${UNIT_TEST_DIR}/js/amd/`,
       });
 
       assert.ok(stub.called);

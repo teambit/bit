@@ -25,6 +25,7 @@
   },
   "exclude": [
     "dist",
+    "esm.mjs",
     "package.json"
   ],
   "include": [

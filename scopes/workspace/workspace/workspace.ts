@@ -19,7 +19,7 @@ import {
 import { BitError } from '@teambit/bit-error';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
-import { DependencyResolverMain, DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { DependencyResolverMain, DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
@@ -101,6 +101,7 @@ import {
 import { MergeConflictFile } from './merge-conflict-file';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { CompFiles } from './workspace-component/comp-files';
+import { Filter } from './filter';
 
 export type EjectConfResult = {
   configPath: string;
@@ -155,6 +156,7 @@ export class Workspace implements ComponentFactory {
    */
   private componentPathsRegExps: RegExp[] = [];
   localAspects: string[] = [];
+  filter: Filter;
   constructor(
     /**
      * private pubsub.
@@ -238,6 +240,7 @@ export class Workspace implements ComponentFactory {
       }
     );
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
+    this.filter = new Filter(this);
   }
 
   private validateConfig() {
@@ -805,6 +808,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.config = configOfWorkspaceAspect.config as WorkspaceExtConfig;
     const configOfDepResolverAspect = workspaceConfig.extensions.findExtension(DependencyResolverAspect.id);
     if (configOfDepResolverAspect) this.dependencyResolver.setConfig(configOfDepResolverAspect.config as any);
+    this.dependencyResolver.clearCache();
   }
 
   getState(id: ComponentID, hash: string) {
@@ -937,7 +941,9 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
    * it supports negate (!) character to exclude ids.
    */
   async idsByPattern(pattern: string, throwForNoMatch = true): Promise<ComponentID[]> {
-    if (!pattern.includes('*') && !pattern.includes(',')) {
+    const specialSyntax = ['*', ',', '!', '$', ':'];
+    const isId = !specialSyntax.some((char) => pattern.includes(char));
+    if (isId) {
       // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
       const id = await this.resolveComponentId(pattern);
       if (this.exists(id)) return [id];
@@ -945,7 +951,11 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       return [];
     }
     const ids = await this.listIds();
-    return this.scope.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch);
+    return this.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch);
+  }
+
+  async filterIdsFromPoolIdsByPattern(pattern: string, ids: ComponentID[], throwForNoMatch = true) {
+    return this.scope.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch, this.filter.by.bind(this.filter));
   }
 
   /**
@@ -1904,6 +1914,26 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       relativeCompDir,
       this.dependencyResolver.getPackageName(component)
     );
+  }
+
+  async getAutoDetectOverrides(configuredExtensions: ExtensionDataList, id: ComponentID, legacyFiles: SourceFile[]) {
+    let policy = await this.dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
+    // this is needed for "bit install" to install the dependencies from the merge config (see https://github.com/teambit/bit/pull/6849)
+    const depsDataOfMergeConfig = this.getDepsDataOfMergeConfig(id);
+    if (depsDataOfMergeConfig) {
+      const policiesFromMergeConfig = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, { source: 'auto' });
+      policy = VariantPolicy.mergePolices([policy, policiesFromMergeConfig]);
+    }
+    return policy.toLegacyAutoDetectOverrides();
+  }
+
+  getAutoDetectConfigMerge(id: ComponentID) {
+    const depsDataOfMergeConfig = this.getDepsDataOfMergeConfig(id);
+    if (depsDataOfMergeConfig) {
+      const policy = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, { source: 'auto' });
+      return policy.toLegacyAutoDetectOverrides();
+    }
+    return undefined;
   }
 }
 

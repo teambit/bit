@@ -362,7 +362,8 @@ export class BuilderMain {
   async build(
     components: Component[],
     isolateOptions?: IsolateComponentsOptions,
-    builderOptions?: BuilderServiceOptions
+    builderOptions?: BuilderServiceOptions,
+    extraOptions?: { includeTag?: boolean; includeSnap?: boolean }
   ): Promise<TaskResultsList> {
     const ids = components.map((c) => c.id);
     const capsulesBaseDir = this.buildService.getComponentsCapsulesBaseDir();
@@ -384,7 +385,19 @@ export class BuilderMain {
       ...(builderOptions || {}),
     };
     this.logger.consoleTitle(`Total ${components.length} components to build`);
-    const buildResult = await envs.runOnce(this.buildService, builderServiceOptions);
+    const buildResult: TaskResultsList = await envs.runOnce(this.buildService, builderServiceOptions);
+
+    if (extraOptions?.includeSnap || extraOptions?.includeTag) {
+      const builderOptionsForTagSnap: BuilderServiceOptions = {
+        ...builderServiceOptions,
+        previousTasksResults: buildResult.tasksResults,
+      };
+      const deployEnvsExecutionResults = extraOptions?.includeSnap
+        ? await this.runSnapTasks(components, builderOptionsForTagSnap)
+        : await this.runTagTasks(components, builderOptionsForTagSnap);
+      buildResult.tasksResults.push(...deployEnvsExecutionResults.tasksResults);
+    }
+
     return buildResult;
   }
 

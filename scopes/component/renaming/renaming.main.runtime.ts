@@ -53,7 +53,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     const isTagged = sourceId.hasVersion();
     const sourceComp = await this.workspace.get(sourceId);
     const sourcePackageName = this.workspace.componentPackageName(sourceComp);
-    const targetId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope);
+    const targetId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope || sourceId.scope);
     if (!options.preserve) {
       await this.refactoring.refactorVariableAndClasses(sourceComp, sourceId, targetId);
       this.refactoring.refactorFilenames(sourceComp, sourceId, targetId);
@@ -89,6 +89,7 @@ make sure this argument is the name only, without the scope-name. to change the 
         components: [targetComp.state._consumer],
         skipDependencyInstallation: true,
         writeToPath: this.newComponentHelper.getNewComponentPath(targetId),
+        reasonForBitmapChange: 'rename',
       });
     }
 

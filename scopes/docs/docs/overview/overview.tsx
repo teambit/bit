@@ -47,8 +47,12 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
   const EmptyState = getEmptyState && getEmptyState();
   const buildFailed = component.buildStatus?.toLowerCase() !== 'succeed' && component?.host === 'teambit.scope/scope';
   const isScaling = Boolean(component.preview?.isScaling);
+  const includesEnvTemplate = Boolean(component.preview?.includesEnvTemplate);
+  const defaultLoadingState = React.useMemo(() => {
+    return isScaling && !includesEnvTemplate;
+  }, [isScaling, includesEnvTemplate]);
 
-  const [isLoading, setLoading] = useState(() => isScaling);
+  const [isLoading, setLoading] = useState(defaultLoadingState);
 
   const iframeQueryParams = `onlyOverview=${component.preview?.onlyOverview || 'false'}&skipIncludes=${
     component.preview?.skipIncludes || component.preview?.onlyOverview
@@ -67,11 +71,10 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
     [onLoad]
   );
 
-  // reset the loading flag when components are swiched or turn it off if the component is not scaling
   React.useEffect(() => {
-    if (!isLoading && isScaling) setLoading(true);
-    if (isLoading && !isScaling) setLoading(false);
-  }, [component.id.toString(), isScaling]);
+    if (!isLoading && defaultLoadingState) setLoading(true);
+    if (isLoading && !defaultLoadingState) setLoading(false);
+  }, [component.id.toString(), defaultLoadingState]);
 
   return (
     <div className={styles.overviewWrapper} key={`${component.id.toString()}`}>
@@ -92,7 +95,7 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
         <div className={styles.readme}>
           {isLoading && (
             <ReadmeSkeleton>
-              <CompositionGallerySkeleton compositionsLength={component.compositions.length} />
+              <CompositionGallerySkeleton compositionsLength={Math.min(component.compositions.length, 3)} />
             </ReadmeSkeleton>
           )}
           <ComponentPreview

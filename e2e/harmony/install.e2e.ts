@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { addDistTag } from '@pnpm/registry-mock';
 import { IssuesClasses } from '@teambit/component-issues';
-import { getAnotherInstallRequiredOutput } from '@teambit/install/install.cmd';
+import { getAnotherInstallRequiredOutput } from '@teambit/install';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { IS_WINDOWS } from '../../src/constants';

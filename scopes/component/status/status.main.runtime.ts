@@ -117,8 +117,8 @@ export class StatusMain {
       this.issues.removeIgnoredIssuesFromComponents(allComps);
     }
     const componentsWithIssues = allComps.filter((component) => !component.state.issues.isEmpty());
-    const softTaggedComponents = componentsList.listSoftTaggedComponents();
-    const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toComponentId());
+    const softTaggedComponents = this.workspace.filter.bySoftTagged();
+    const snappedComponents = await this.workspace.filter.bySnappedOnMain();
     const pendingUpdatesFromMain = lanes ? await componentsList.listUpdatesFromMainPending() : [];
     const updatesFromForked = lanes ? await this.lanes.listUpdatesFromForked(componentsList) : [];
     const currentLaneId = consumer.getCurrentLaneId();

@@ -14,8 +14,8 @@ export class Plugin {
     return this.def.runtimes.includes(runtime);
   }
 
-  register(sourceAspect: Aspect) {
-    const object = this.require();
+  register(sourceAspect: Aspect, module?: unknown) {
+    const object = module || this.require();
     this.def.register<unknown>(object, sourceAspect);
   }
 
