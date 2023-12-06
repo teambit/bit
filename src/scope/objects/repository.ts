@@ -204,38 +204,45 @@ export default class Repository {
     const refs = await this.listRefs();
     const concurrency = concurrentIOLimit();
     const objects: BitObject[] = [];
+    const loadGracefully = process.argv.includes('--never-exported');
+    const isTypeIncluded = (obj: BitObject) => types.some((type) => type.name === obj.constructor.name); // avoid using "obj instanceof type" for Harmony to call this function successfully
     await pMapPool(
       refs,
       async (ref) => {
-        let object: BitObject;
-        try {
-          object = await this.load(ref);
-        } catch (err: any) {
-          // this is needed temporarily to allow `bit reset --never-exported` to fix the bit-id-comp-id error.
-          // in a few months, we can remove this condition (around min 2024)
-          if (
-            process.argv.includes('--never-exported') &&
-            (err.constructor.name === 'BitIdCompIdError' || err.constructor.name === 'MissingScope')
-          ) {
-            logger.debug(`bit-id-comp-id error, moving an object to trash ${ref.toString()}`);
-            await this.moveOneObjectToTrash(ref);
-            return;
-          }
-          throw err;
-        }
-
-        types.forEach((type) => {
-          if (
-            object instanceof type ||
-            type.name === object.constructor.name // needed when Harmony calls this function
-          )
-            objects.push(object);
-        });
+        const object = loadGracefully
+          ? await this.loadRefDeleteIfInvalid(ref)
+          : await this.loadRefOnlyIfType(ref, types);
+        if (!object) return;
+        if (loadGracefully && !isTypeIncluded(object)) return;
+        objects.push(object);
       },
       { concurrency }
     );
-
     return objects;
+  }
+
+  async loadRefDeleteIfInvalid(ref: Ref) {
+    try {
+      return await this.load(ref, true);
+    } catch (err: any) {
+      // this is needed temporarily to allow `bit reset --never-exported` to fix the bit-id-comp-id error.
+      // in a few months, we can remove this condition (around min 2024)
+      if (err.constructor.name === 'BitIdCompIdError' || err.constructor.name === 'MissingScope') {
+        logger.debug(`bit-id-comp-id error, moving an object to trash ${ref.toString()}`);
+        await this.moveOneObjectToTrash(ref);
+        return undefined;
+      }
+      throw err;
+    }
+  }
+
+  async loadRefOnlyIfType(ref: Ref, types: Types): Promise<BitObject | null> {
+    const objectPath = this.objectPath(ref);
+    const fileContentsRaw = await fs.readFile(objectPath);
+    const fileContents = this.onRead(fileContentsRaw);
+    const typeNames = types.map((type) => type.name);
+    const parsedObject = await BitObject.parseObjectOnlyIfType(fileContents, typeNames, objectPath);
+    return parsedObject;
   }
 
   async listRefs(cwd = this.getPath()): Promise<Array<Ref>> {
