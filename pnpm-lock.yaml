@@ -96,8 +96,8 @@ importers:
         specifier: 20.1.2
         version: 20.1.2(@pnpm/logger@5.0.0)
       '@pnpm/core':
-        specifier: 13.1.10
-        version: 13.1.10(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.9)(@types/node@12.20.4)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
+        specifier: 13.1.11
+        version: 13.1.11(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.9)(@types/node@12.20.4)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
       '@pnpm/default-reporter':
         specifier: 12.4.8
         version: 12.4.8(@pnpm/logger@5.0.0)
@@ -13563,8 +13563,8 @@ importers:
         specifier: 7.20.0
         version: 7.20.0
       '@pnpm/core':
-        specifier: 13.1.10
-        version: 13.1.10(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.9)(@types/node@12.20.4)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
+        specifier: 13.1.11
+        version: 13.1.11(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.9)(@types/node@12.20.4)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
       '@pnpm/network.ca-file':
         specifier: 1.0.2
         version: 1.0.2
@@ -13708,8 +13708,8 @@ importers:
         specifier: 20.1.2
         version: 20.1.2(@pnpm/logger@5.0.0)
       '@pnpm/core':
-        specifier: 13.1.10
-        version: 13.1.10(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.9)(@types/node@12.20.4)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
+        specifier: 13.1.11
+        version: 13.1.11(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.9)(@types/node@12.20.4)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
       '@pnpm/default-reporter':
         specifier: 12.4.8
         version: 12.4.8(@pnpm/logger@5.0.0)
@@ -23886,8 +23886,8 @@ packages:
       '@pnpm/types': 9.4.0
     dev: false
 
-  /@pnpm/core@13.1.10(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.9)(@types/node@12.20.4)(@yarnpkg/core@3.5.2)(bluebird@3.7.2):
-    resolution: {integrity: sha512-gTkPGK5RAUH5CgtXXtBQJp8IP898/FA9novXwwwmlBeJiskwesopX0vA7Vj4R131ISmr8o/TQ+gq8vIJCQ4FzA==}
+  /@pnpm/core@13.1.11(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.9)(@types/node@12.20.4)(@yarnpkg/core@3.5.2)(bluebird@3.7.2):
+    resolution: {integrity: sha512-h5InU6+ELdZ1n3Ik/z0zkkR9PPU4v9HpsnVCvBpOM1cMwPc5UVy9kHW9qjHh6uwfXG2vWfAFhSGec0L51q9vcQ==}
     engines: {node: '>=16.14'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -23929,7 +23929,7 @@ packages:
       '@pnpm/read-package-json': 8.0.5
       '@pnpm/read-project-manifest': 5.0.8
       '@pnpm/remove-bins': 5.0.5(@pnpm/logger@5.0.0)
-      '@pnpm/resolve-dependencies': 31.2.5(@pnpm/logger@5.0.0)
+      '@pnpm/resolve-dependencies': 31.2.6(@pnpm/logger@5.0.0)
       '@pnpm/resolver-base': 11.0.0
       '@pnpm/store-controller-types': 17.1.2
       '@pnpm/symlink-dependency': 7.1.2(@pnpm/logger@5.0.0)
@@ -25120,8 +25120,8 @@ packages:
       cli-columns: 4.0.0
     dev: false
 
-  /@pnpm/resolve-dependencies@31.2.5(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-D2JXfViMRug2QCKwYWBBwyVn6MpNqpJlLoQ3QdrZgxsr80G6b6JAxxQnZLrv/Eo7mDUnwsMPuoBIl96C3dI/Xg==}
+  /@pnpm/resolve-dependencies@31.2.6(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-BrwZX0PRFAetyrBhnxdGpWP7hA2QRDy36Xgp+LSe96d9Jw73aXRY4tn3/2yf8B8m+55GPkFBc4SoynM3IxB0xQ==}
     engines: {node: '>=16.14'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -58433,7 +58433,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@pnpm/core': 13.1.10(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.9)(@types/node@12.20.4)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
+      '@pnpm/core': 13.1.11(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.9)(@types/node@12.20.4)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
       '@pnpm/network.ca-file': 1.0.2
       '@pnpm/types': 9.4.0
       '@teambit/bit-error': 0.0.404
@@ -58492,7 +58492,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@pnpm/client': 10.0.39(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.9)(bluebird@3.7.2)
       '@pnpm/config': 20.1.2(@pnpm/logger@5.0.0)
-      '@pnpm/core': 13.1.10(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.9)(@types/node@12.20.4)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
+      '@pnpm/core': 13.1.11(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.9)(@types/node@12.20.4)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
       '@pnpm/default-reporter': 12.4.8(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path': 2.1.5
       '@pnpm/error': 5.0.2
