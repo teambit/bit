@@ -269,7 +269,6 @@
         "@teambit/explorer.ui.gallery.component-card": "^0.0.513",
         "@teambit/explorer.ui.gallery.component-grid": "0.0.496",
         "@teambit/explorer.ui.search.search-input": "1.95.7",
-        "@teambit/graph.cleargraph": "0.0.1",
         "@teambit/graphql.hooks.use-query-light": "1.0.0",
         "@teambit/harmony": "0.4.6",
         "@teambit/html.generator.html-templates": "^1.0.8",
@@ -416,6 +415,7 @@
         "apollo-server": "2.19.2",
         "apollo-utilities": "1.3.4",
         "archiver": "5.3.1",
+        "archy": "1.0.0",
         "async-retry": "^1.3.3",
         "aws-sdk": "2.756.0",
         "babel-jest": "27.5.1",
@@ -553,7 +553,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.611",
+        "@teambit/legacy": "1.0.613",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
@@ -647,7 +647,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.611"
+            "@teambit/legacy": "1.0.613"
           }
         }
       },
@@ -910,7 +910,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.611"
+            "@teambit/legacy": "1.0.613"
           }
         }
       }
@@ -1000,7 +1000,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.611",
+            "@teambit/legacy": "1.0.613",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
@@ -1146,7 +1146,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.611"
+            "@teambit/legacy": "1.0.613"
           }
         }
       }

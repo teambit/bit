@@ -19,7 +19,7 @@ import {
 import { BitError } from '@teambit/bit-error';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
-import { DependencyResolverMain, DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { DependencyResolverMain, DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
@@ -808,6 +808,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.config = configOfWorkspaceAspect.config as WorkspaceExtConfig;
     const configOfDepResolverAspect = workspaceConfig.extensions.findExtension(DependencyResolverAspect.id);
     if (configOfDepResolverAspect) this.dependencyResolver.setConfig(configOfDepResolverAspect.config as any);
+    this.dependencyResolver.clearCache();
   }
 
   getState(id: ComponentID, hash: string) {
@@ -1913,6 +1914,26 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       relativeCompDir,
       this.dependencyResolver.getPackageName(component)
     );
+  }
+
+  async getAutoDetectOverrides(configuredExtensions: ExtensionDataList, id: ComponentID, legacyFiles: SourceFile[]) {
+    let policy = await this.dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
+    // this is needed for "bit install" to install the dependencies from the merge config (see https://github.com/teambit/bit/pull/6849)
+    const depsDataOfMergeConfig = this.getDepsDataOfMergeConfig(id);
+    if (depsDataOfMergeConfig) {
+      const policiesFromMergeConfig = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, { source: 'auto' });
+      policy = VariantPolicy.mergePolices([policy, policiesFromMergeConfig]);
+    }
+    return policy.toLegacyAutoDetectOverrides();
+  }
+
+  getAutoDetectConfigMerge(id: ComponentID) {
+    const depsDataOfMergeConfig = this.getDepsDataOfMergeConfig(id);
+    if (depsDataOfMergeConfig) {
+      const policy = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, { source: 'auto' });
+      return policy.toLegacyAutoDetectOverrides();
+    }
+    return undefined;
   }
 }
 
