@@ -14,7 +14,7 @@ import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-o
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
-import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
+import DependenciesAspect from '@teambit/dependencies';
 
 function getPackageName(aspect: any, id: ComponentID) {
   return `@teambit/${id.name}`;
@@ -49,7 +49,8 @@ export async function loadManyAspects(
 
   // CLIAspect is needed for register the main runtime. NodeAspect is needed to get the default env if nothing
   // was configured. If it's not loaded here, it'll throw an error later that there is no node-env.
-  const harmony = await Harmony.load([CLIAspect, NodeAspect, ...targetAspects], runtime, configMap);
+  // DependenciesAspect is needed to make ComponentLoader.loadDeps hook works.
+  const harmony = await Harmony.load([CLIAspect, DependenciesAspect, NodeAspect, ...targetAspects], runtime, configMap);
 
   await harmony.run(async (aspect, runtimeDef) => {
     const id = ComponentID.fromString(aspect.id);
@@ -121,7 +122,7 @@ function clearGlobalsIfNeeded() {
   ComponentConfig.componentConfigLoadingRegistry = {};
   PackageJsonTransformer.packageJsonTransformersRegistry = [];
   // @ts-ignore
-  DependencyResolver.getWorkspacePolicy = undefined;
+  ComponentLoader.loadDeps = undefined;
   ExtensionDataList.coreExtensionsNames = new Map();
   // @ts-ignore
   WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;

@@ -29,7 +29,7 @@ export type ComponentOverridesData = DependenciesOverridesData & {
 type OverridesLoadRegistry = { [extId: string]: Function };
 
 export default class ComponentOverrides {
-  overrides: ConsumerOverridesOfComponent;
+  private overrides: ConsumerOverridesOfComponent;
   constructor(overrides: ConsumerOverridesOfComponent | null | undefined) {
     this.overrides = overrides || {};
   }

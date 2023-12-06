@@ -28,7 +28,6 @@ import { Harmony, RuntimeDefinition, Extension } from '@teambit/harmony';
 import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
 
 import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
-import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { ConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
@@ -243,7 +242,6 @@ export async function loadBit(path = process.cwd()) {
   const aspectLoader = harmony.get<AspectLoaderMain>('teambit.harmony/aspect-loader');
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
   aspectLoader.setMainAspect(getMainAspect());
-  registerCoreAspectsToLegacyDepResolver(aspectLoader);
   return harmony;
 }
 
@@ -274,18 +272,6 @@ export async function runCLI() {
   await cli.run(hasWorkspace);
 }
 
-function registerCoreAspectsToLegacyDepResolver(aspectLoader: AspectLoaderMain) {
-  const allCoreAspectsIds = aspectLoader.getCoreAspectIds();
-  const coreAspectsPackagesAndIds = {};
-
-  allCoreAspectsIds.forEach((id) => {
-    const packageName = getCoreAspectPackageName(id);
-    coreAspectsPackagesAndIds[packageName] = id;
-  });
-  // @ts-ignore
-  DependencyResolver.getCoreAspectsPackagesAndIds = () => coreAspectsPackagesAndIds;
-}
-
 /**
  * loadBit may gets called multiple times (currently, it's happening during e2e-tests that call loadBit).
  * when it happens, the static methods in this function still have the callbacks that were added in
@@ -303,7 +289,7 @@ function clearGlobalsIfNeeded() {
   ComponentConfig.componentConfigLoadingRegistry = {};
   PackageJsonTransformer.packageJsonTransformersRegistry = [];
   // @ts-ignore
-  DependencyResolver.getWorkspacePolicy = undefined;
+  ComponentLoader.loadDeps = undefined;
   ExtensionDataList.coreExtensionsNames = new Map();
   ExtensionDataList.toModelObjectsHook = [];
   // @ts-ignore

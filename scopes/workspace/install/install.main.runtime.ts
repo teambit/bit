@@ -825,7 +825,7 @@ export class InstallMain {
     await this.workspace.bitMap.write('update (dependencies)');
   }
 
-  private _updateVariantsPolicies(variantPatterns: Record<string, any>, updateVariantPolicies: string[]) {
+  private async _updateVariantsPolicies(variantPatterns: Record<string, any>, updateVariantPolicies: string[]) {
     for (const variantPattern of updateVariantPolicies) {
       this.variants.setExtension(
         variantPattern,
@@ -834,7 +834,7 @@ export class InstallMain {
         { overrideExisting: true }
       );
     }
-    return this.dependencyResolver.persistConfig(this.workspace.path);
+    await this.dependencyResolver.persistConfig(this.workspace.path);
   }
 
   /**
