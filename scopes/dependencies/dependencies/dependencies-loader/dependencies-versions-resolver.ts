@@ -97,8 +97,8 @@ export function updateDependenciesVersions(
   }
 
   function updateExtension(extension: ExtensionDataEntry) {
-    if (extension.newExtensionId && extension.extensionId) {
-      const resolvedVersion = resolveVersion(extension.newExtensionId);
+    if (extension.extensionId) {
+      const resolvedVersion = resolveVersion(extension.extensionId);
       if (resolvedVersion) {
         extension.extensionId = extension.extensionId.changeVersion(resolvedVersion);
       }
