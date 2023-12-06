@@ -13477,6 +13477,9 @@ importers:
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
+      '@teambit/component-version':
+        specifier: ^1.0.3
+        version: 1.0.3
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -13492,6 +13495,9 @@ importers:
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
+      fs-extra:
+        specifier: 10.0.0
+        version: 10.0.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -13501,16 +13507,28 @@ importers:
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
+      ramda:
+        specifier: 0.27.1
+        version: 0.27.1
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
       react-dom:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
+      semver:
+        specifier: 7.5.2
+        version: 7.5.2
     devDependencies:
+      '@types/chai':
+        specifier: 4.2.15
+        version: 4.2.15
       '@types/cli-table':
         specifier: ^0.3.0
         version: 0.3.4
+      '@types/fs-extra':
+        specifier: 9.0.7
+        version: 9.0.7
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -13529,9 +13547,15 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.23
+      '@types/semver':
+        specifier: 7.3.4
+        version: 7.3.4
       '@types/testing-library__jest-dom':
         specifier: 5.9.5
         version: 5.9.5
+      chai:
+        specifier: 4.3.0
+        version: 4.3.0
 
   scopes/dependencies/dependency-resolver:
     dependencies:
@@ -58384,16 +58408,20 @@ packages:
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/component-id': 1.2.0
+      '@teambit/component-version': 1.0.3
       '@teambit/harmony': 0.4.6
       archy: 1.0.0
       chalk: 2.4.2
       cli-table: 0.3.6
       core-js: 3.13.0
+      fs-extra: 10.0.0
       lodash: 4.17.21
       moment: 2.29.4
       p-map-series: 2.1.0
+      ramda: 0.27.1
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
+      semver: 7.5.2
     dev: false
 
   file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.9)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@12.20.4)(@types/react@17.0.70)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5):
