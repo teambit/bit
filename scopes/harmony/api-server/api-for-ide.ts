@@ -20,6 +20,7 @@ import { getCloudDomain } from '@teambit/legacy/dist/constants';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
+const CMD_HISTORY = 'command-history-ide';
 
 type PathLinux = string; // problematic to get it from @teambit/legacy/dist/utils/path.
 
@@ -68,6 +69,21 @@ export class APIForIDE {
     private generator: GeneratorMain,
     private remove: RemoveMain
   ) {}
+
+  async logStartCmdHistory(op: string) {
+    const str = `${op}, started`;
+    await this.writeToCmdHistory(str);
+  }
+
+  async logFinishCmdHistory(op: string, code: number) {
+    const endStr = code === 0 ? 'succeeded' : 'failed';
+    const str = `${op}, ${endStr}`;
+    await this.writeToCmdHistory(str);
+  }
+
+  private async writeToCmdHistory(str: string) {
+    await fs.appendFile(path.join(this.workspace.scope.path, CMD_HISTORY), `${new Date().toISOString()} ${str}\n`);
+  }
 
   async listIdsWithPaths() {
     const ids = await this.workspace.listIds();
