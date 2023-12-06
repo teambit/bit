@@ -1,5 +1,6 @@
 import { ClientError, gql, GraphQLClient } from 'graphql-request';
 import fetch, { Response } from 'cross-fetch';
+import retry from 'async-retry';
 import readLine from 'readline';
 import HttpAgent from 'agentkeepalive';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -148,9 +149,9 @@ export class Http implements Network {
     // Reading strictSSL from both network.strict-ssl and network.strict_ssl for backward compatibility.
     const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj['network.strict_ssl'] ?? obj[CFG_PROXY_STRICT_SSL];
     const networkConfig = {
-      fetchRetries: obj[CFG_FETCH_RETRIES] ?? 2,
+      fetchRetries: obj[CFG_FETCH_RETRIES] ?? 5,
       fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR] ?? 10,
-      fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT] ?? 10000,
+      fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT] ?? 1000,
       fetchRetryMaxtimeout: obj[CFG_FETCH_RETRY_MAXTIMEOUT] ?? 60000,
       fetchTimeout: obj[CFG_FETCH_TIMEOUT] ?? 60000,
       localAddress: obj[CFG_LOCAL_ADDRESS],
@@ -362,7 +363,22 @@ export class Http implements Network {
       headers,
     });
 
-    const res = await fetch(urlToFetch, opts);
+    const res = await retry(
+      async () => {
+        const retiedRes = await fetch(urlToFetch, opts);
+        return retiedRes;
+      },
+      {
+        retries: this.networkConfig?.fetchRetries,
+        factor: this.networkConfig?.fetchRetryFactor,
+        minTimeout: this.networkConfig?.fetchRetryMintimeout,
+        maxTimeout: this.networkConfig?.fetchRetryMaxtimeout,
+        onRetry: (e: any) => {
+          logger.debug(`failed to fetch import with error: ${e?.message || ''}`);
+        },
+      }
+    );
+    // const res = await fetch(urlToFetch, opts);
     logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
     // @ts-ignore TODO: need to fix this

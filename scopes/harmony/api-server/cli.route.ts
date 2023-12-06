@@ -3,6 +3,7 @@ import prettyTime from 'pretty-time';
 import { Route, Request, Response } from '@teambit/express';
 import { Logger } from '@teambit/logger';
 import { camelCase } from 'lodash';
+import { APIForIDE } from './api-for-ide';
 
 /**
  * example usage:
@@ -17,7 +18,7 @@ import { camelCase } from 'lodash';
 }
  */
 export class CLIRoute implements Route {
-  constructor(private logger: Logger, private cli: CLIMain) {}
+  constructor(private logger: Logger, private cli: CLIMain, private apiForIDE: APIForIDE) {}
 
   method = 'post';
   route = '/cli/:cmd';
@@ -25,6 +26,7 @@ export class CLIRoute implements Route {
   middlewares = [
     async (req: Request, res: Response) => {
       this.logger.debug(`cli server: got request for ${req.params.cmd}`);
+      let cmdStrLog: string | undefined;
       try {
         const command = this.cli.getCommand(req.params.cmd);
         if (!command) throw new Error(`command "${req.params.cmd}" was not found`);
@@ -37,9 +39,13 @@ export class CLIRoute implements Route {
         const optsToString = Object.keys(options || {})
           .map((key) => `--${key}`)
           .join(' ');
-        this.logger.console(
-          `[*] started a new ${outputMethod} command: ${req.params.cmd} ${(args || []).join(' ')} ${optsToString}`
-        );
+        const argsStr = args ? ` ${args.join(' ')}` : '';
+        const optsStr = optsToString ? ` ${optsToString}` : '';
+        const cmdStr = req.params.cmd + argsStr + optsStr;
+        this.logger.console(`[*] started a new ${outputMethod} command: ${cmdStr}`);
+        const randomNumber = Math.floor(Math.random() * 10000); // helps to distinguish between commands in the log
+        cmdStrLog = `${randomNumber} ${cmdStr}`;
+        await this.apiForIDE.logStartCmdHistory(cmdStrLog);
         const optionsAsCamelCase = Object.keys(options || {}).reduce((acc, key) => {
           const camelCaseKey = camelCase(key);
           acc[camelCaseKey] = options[key];
@@ -50,6 +56,7 @@ export class CLIRoute implements Route {
         const result = await command[outputMethod]!(args || [], optionsAsCamelCase);
         const duration = prettyTime(process.hrtime(startTask));
         this.logger.consoleSuccess(`command "${req.params.cmd}" had been completed in ${duration}`);
+        await this.apiForIDE.logFinishCmdHistory(cmdStrLog, 0);
         if (outputMethod === 'json') {
           res.json(result);
         } else {
@@ -60,6 +67,7 @@ export class CLIRoute implements Route {
       } catch (err: any) {
         this.logger.error(`command "${req.params.cmd}" had failed`, err);
         this.logger.consoleFailure(`command "${req.params.cmd}" had failed. ${err.message}`);
+        if (cmdStrLog) await this.apiForIDE.logFinishCmdHistory(cmdStrLog, 1);
         res.status(500);
         res.jsonp({
           message: err.message,

@@ -1,14 +1,23 @@
 import mapSeries from 'p-map-series';
-import { BuilderMain, BuildTask, BuildContext, ComponentResult, TaskResults, BuiltTaskResult } from '@teambit/builder';
-import { compact } from 'lodash';
+import {
+  BuilderMain,
+  BuildTask,
+  BuildContext,
+  ComponentResult,
+  TaskResults,
+  BuiltTaskResult,
+  CAPSULE_ARTIFACTS_DIR,
+} from '@teambit/builder';
+import { compact, join } from 'lodash';
 import { Capsule } from '@teambit/isolator';
 import { Component } from '@teambit/component';
 import { ApplicationAspect } from './application.aspect';
 import { ApplicationMain } from './application.main.runtime';
-import { BUILD_TASK, BuildDeployContexts } from './build-application.task';
+import { ARTIFACTS_DIR_NAME, BUILD_TASK, BuildDeployContexts } from './build-application.task';
 import { AppDeployContext } from './app-deploy-context';
 import { Application } from './application';
 import { ApplicationDeployment } from './app-instance';
+import { AppBuildContext } from './app-build-context';
 
 export const DEPLOY_TASK = 'deploy_application';
 
@@ -35,7 +44,7 @@ export class DeployTask implements BuildTask {
     });
 
     const _componentsResults: ComponentResult[] = compact(components).map(({ component, deploys }) => {
-      return { 
+      return {
         component,
         metadata: {
           deployments: deploys.map((deploy) => {
@@ -43,10 +52,10 @@ export class DeployTask implements BuildTask {
             return {
               appName: deployObject?.appName,
               timestamp: deployObject?.timestamp,
-              url: deployObject?.url
-            }
-          })
-        }
+              url: deployObject?.url,
+            };
+          }),
+        },
       };
     });
 
@@ -56,10 +65,10 @@ export class DeployTask implements BuildTask {
   }
 
   private async runForOneApp(
-    app: Application, 
-    capsule: Capsule, 
+    app: Application,
+    capsule: Capsule,
     context: BuildContext
-  ): Promise<ApplicationDeployment|void|undefined> {
+  ): Promise<ApplicationDeployment | void | undefined> {
     const aspectId = this.application.getAppAspect(app.name);
     if (!aspectId) return undefined;
 
@@ -73,17 +82,33 @@ export class DeployTask implements BuildTask {
     if (!buildDeployContexts) return undefined;
 
     const artifacts = this.builder.getArtifacts(capsule.component);
-    const appDeployContext: AppDeployContext = Object.assign(context, buildDeployContexts.deployContext, {
-      capsule,
-      artifacts,
+    const appContext = await this.application.createAppBuildContext(capsule.component.id, app.name, capsule.path);
+    const artifactsDir = this.getArtifactDirectory();
+    const appBuildContext = AppBuildContext.create({
+      appContext,
+      buildContext: context,
       appComponent: capsule.component,
+      name: app.name,
+      capsule,
+      artifactsDir,
     });
+
+    const appDeployContext = new AppDeployContext(
+      appBuildContext,
+      artifacts,
+      buildDeployContexts.deployContext.publicDir,
+      buildDeployContexts.deployContext.ssrPublicDir
+    );
 
     if (app && typeof app.deploy === 'function') {
       return app.deploy(appDeployContext);
     }
 
     return undefined;
+  }
+
+  private getArtifactDirectory() {
+    return join(CAPSULE_ARTIFACTS_DIR, ARTIFACTS_DIR_NAME);
   }
 
   private getBuildMetadata(

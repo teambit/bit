@@ -27,6 +27,9 @@ export class ExtensionDataEntry {
     public name?: string,
     public rawConfig: ExtensionConfig = {},
     public data: { [key: string]: any } = {},
+    /**
+     * @deprecated use extensionId instead (it's the same)
+     */
     public newExtensionId?: ComponentID
   ) {}
 

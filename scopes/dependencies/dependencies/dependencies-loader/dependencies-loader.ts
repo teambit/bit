@@ -2,47 +2,93 @@ import R from 'ramda';
 import path from 'path';
 import { uniq } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
-import { Consumer } from '../../..';
-import logger from '../../../../logger/logger';
-import { getLastModifiedComponentTimestampMs } from '../../../../utils/fs/last-modified';
-import { ExtensionDataEntry } from '../../../config';
-import Component from '../../consumer-component';
+import { Consumer } from '@teambit/legacy/dist/consumer';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { getLastModifiedComponentTimestampMs } from '@teambit/legacy/dist/utils/fs/last-modified';
+import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { DependencyLoaderOpts } from '@teambit/legacy/dist/consumer/component/component-loader';
+import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
+import { Workspace } from '@teambit/workspace';
+import DependencyResolverAspect, { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DevFilesMain } from '@teambit/dev-files';
+import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependenciesData } from './dependencies-data';
-import DependencyResolver from './dependencies-resolver';
-import { COMPONENT_CONFIG_FILE_NAME } from '../../../../constants';
-
-type Opts = {
-  cacheResolvedDependencies: Record<string, any>;
-  cacheProjectAst?: Record<string, any>;
-  useDependenciesCache: boolean;
-  storeInFsCache?: boolean;
-};
+import { updateDependenciesVersions } from './dependencies-versions-resolver';
+import { AutoDetectDeps, DebugDependencies } from './auto-detect-deps';
+import OverridesDependencies from './overrides-dependencies';
+import { ApplyOverrides } from './apply-overrides';
 
 export class DependenciesLoader {
   private idStr: string;
-  constructor(private component: Component, private consumer: Consumer, private opts: Opts) {
+  private consumer: Consumer;
+  constructor(
+    private component: Component,
+    private workspace: Workspace,
+    private depsResolver: DependencyResolverMain,
+    private devFiles: DevFilesMain,
+    private aspectLoader: AspectLoaderMain,
+    private opts: DependencyLoaderOpts
+  ) {
+    this.consumer = this.workspace.consumer;
     this.idStr = this.component.id.toString();
   }
-  async load(): Promise<void> {
-    const dependenciesData = await this.getDependenciesData();
-    this.setDependenciesDataOnComponent(dependenciesData);
+  async load() {
+    const { dependenciesData, debugDependenciesData } = await this.getDependenciesData();
+    const applyOverrides = new ApplyOverrides(this.component, this.depsResolver, this.workspace);
+    applyOverrides.allDependencies = dependenciesData.allDependencies;
+    applyOverrides.allPackagesDependencies = dependenciesData.allPackagesDependencies;
+    if (debugDependenciesData) {
+      // if it's coming from the cache, it's empty
+      applyOverrides.debugDependenciesData = debugDependenciesData;
+    }
+    applyOverrides.issues = dependenciesData.issues;
+    const results = await applyOverrides.getDependenciesData();
+    this.setDependenciesDataOnComponent(results.dependenciesData, results.overridesDependencies);
+    updateDependenciesVersions(
+      this.depsResolver,
+      this.workspace,
+      this.component,
+      results.overridesDependencies,
+      results.autoDetectOverrides,
+      applyOverrides.debugDependenciesData.components
+    );
+
+    return {
+      dependenciesData: results.dependenciesData,
+      overridesDependencies: results.overridesDependencies,
+      debugDependenciesData: applyOverrides.debugDependenciesData,
+    };
   }
 
-  private async getDependenciesData() {
+  private async getDependenciesData(): Promise<{
+    dependenciesData: DependenciesData;
+    debugDependenciesData?: DebugDependencies;
+  }> {
     const depsDataFromCache = await this.getDependenciesDataFromCacheIfPossible();
     if (depsDataFromCache) {
-      return depsDataFromCache;
+      return { dependenciesData: depsDataFromCache };
     }
-    const dependencyResolver = new DependencyResolver(this.component, this.consumer);
-    const dependenciesData = await dependencyResolver.getDependenciesData(
+
+    const autoDetectDeps = new AutoDetectDeps(
+      this.component,
+      this.workspace,
+      this.devFiles,
+      this.depsResolver,
+      this.aspectLoader
+    );
+    const results = await autoDetectDeps.getDependenciesData(
       this.opts.cacheResolvedDependencies,
       this.opts.cacheProjectAst
     );
-    if (this.shouldSaveInCache(dependenciesData)) {
-      await this.consumer.componentFsCache.saveDependenciesDataInCache(this.idStr, dependenciesData.serialize());
+    if (this.shouldSaveInCache(results.dependenciesData)) {
+      await this.consumer.componentFsCache.saveDependenciesDataInCache(
+        this.idStr,
+        results.dependenciesData.serialize()
+      );
     }
 
-    return dependenciesData;
+    return results;
   }
 
   private async getDependenciesDataFromCacheIfPossible(): Promise<DependenciesData | null> {
@@ -79,29 +125,30 @@ export class DependenciesLoader {
     return !dependenciesData.issues.shouldBlockSavingInCache();
   }
 
-  private setDependenciesDataOnComponent(dependenciesData: DependenciesData) {
+  private setDependenciesDataOnComponent(
+    dependenciesData: DependenciesData,
+    overridesDependencies: OverridesDependencies
+  ) {
     this.component.setDependencies(dependenciesData.allDependencies.dependencies);
     this.component.setDevDependencies(dependenciesData.allDependencies.devDependencies);
     this.component.packageDependencies = dependenciesData.allPackagesDependencies.packageDependencies ?? {};
     this.component.devPackageDependencies = dependenciesData.allPackagesDependencies.devPackageDependencies ?? {};
     this.component.peerPackageDependencies = dependenciesData.allPackagesDependencies.peerPackageDependencies ?? {};
-    const missingFromOverrides = dependenciesData.overridesDependencies.missingPackageDependencies;
+    const missingFromOverrides = overridesDependencies.missingPackageDependencies;
     if (!R.isEmpty(missingFromOverrides)) {
       dependenciesData.issues.getOrCreate(IssuesClasses.MissingManuallyConfiguredPackages).data =
         uniq(missingFromOverrides);
     }
     if (!dependenciesData.issues.isEmpty()) this.component.issues = dependenciesData.issues;
-    this.component.manuallyRemovedDependencies = dependenciesData.overridesDependencies.manuallyRemovedDependencies;
-    this.component.manuallyAddedDependencies = dependenciesData.overridesDependencies.manuallyAddedDependencies;
+    this.component.manuallyRemovedDependencies = overridesDependencies.manuallyRemovedDependencies;
+    this.component.manuallyAddedDependencies = overridesDependencies.manuallyAddedDependencies;
     if (dependenciesData.coreAspects.length) {
       this.pushToDependencyResolverExtension('coreAspects', dependenciesData.coreAspects, 'set');
     }
   }
 
   private pushToDependencyResolverExtension(dataField: string, data: any, operation: 'add' | 'set' = 'add') {
-    const depResolverAspectName = DependencyResolver.getDepResolverAspectName();
-    if (!depResolverAspectName) return;
-
+    const depResolverAspectName = DependencyResolverAspect.id;
     let extExistOnComponent = true;
     let ext = this.component.extensions.findCoreExtension(depResolverAspectName);
     if (!ext) {

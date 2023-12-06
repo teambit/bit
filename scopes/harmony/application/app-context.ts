@@ -73,10 +73,10 @@ export class AppContext extends ExecutionContext {
   }
 
   /**
-   * get an instance of an aspect. 
+   * get an instance of an aspect.
    * make sure it is loaded prior to requesting it.
    */
-  getAspect<T>(aspectId: string): T|undefined {
+  getAspect<T>(aspectId: string): T | undefined {
     return this.harmony.get<T>(aspectId);
   }
 
@@ -91,7 +91,7 @@ export class AppContext extends ExecutionContext {
       overrides?.hostRootDir || appContext?.hostRootDir,
       overrides?.port || appContext?.port,
       overrides?.workspaceComponentPath || appContext?.workspaceComponentPath,
-      overrides?.envVariables || appContext?.envVariables,
+      overrides?.envVariables || appContext?.envVariables
     );
   }
 }
