@@ -43,7 +43,7 @@ export const IssuesClasses = {
 export type IssuesNames = keyof typeof IssuesClasses;
 
 export class IssuesList {
-  constructor(private issues: ComponentIssue[] = []) {}
+  constructor(protected issues: ComponentIssue[] = []) {}
 
   get count() {
     return this.issues.length;
