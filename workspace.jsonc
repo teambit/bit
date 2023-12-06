@@ -269,6 +269,7 @@
         "@teambit/explorer.ui.gallery.component-card": "^0.0.513",
         "@teambit/explorer.ui.gallery.component-grid": "0.0.496",
         "@teambit/explorer.ui.search.search-input": "1.95.7",
+        "@teambit/git.modules.git-ignore": "^1.0.2",
         "@teambit/graphql.hooks.use-query-light": "1.0.0",
         "@teambit/harmony": "0.4.6",
         "@teambit/html.generator.html-templates": "^1.0.8",

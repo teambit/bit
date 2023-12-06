@@ -821,6 +821,9 @@ importers:
       '@teambit/explorer.ui.search.search-input':
         specifier: 1.95.7
         version: 1.95.7(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/git.modules.git-ignore':
+        specifier: ^1.0.2
+        version: 1.0.2
       '@teambit/graph.cleargraph':
         specifier: 0.0.1
         version: 0.0.1
@@ -14399,6 +14402,9 @@ importers:
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
+      '@teambit/git.modules.git-ignore':
+        specifier: ^1.0.2
+        version: 1.0.2
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -24342,7 +24348,7 @@ packages:
     resolution: {integrity: sha512-2cUOUcP7ms2hXE2+jqBU9+muvNW6QQYsXK0rNxcokVBaA08ToTLQlT3gnsR7/FILqDcvDnoQdSkUlMIE8jCAZQ==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/constants': 7.1.1
       '@pnpm/core-loggers': 9.0.4(@pnpm/logger@5.0.0)
@@ -24744,7 +24750,7 @@ packages:
     resolution: {integrity: sha512-X4uvOR5Uzabq+sLqdqyPrWdiN2Y+FhfFlDvU3yzLJdRQz5lq4IqyK2o2s3gPTD/3ElsN73KfoNQPQMGSwDCutw==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/core-loggers': 9.0.4(@pnpm/logger@5.0.0)
       '@pnpm/error': 5.0.2
@@ -31962,6 +31968,10 @@ packages:
     transitivePeerDependencies:
       - encoding
       - supports-color
+    dev: false
+
+  /@teambit/git.modules.git-ignore@1.0.2:
+    resolution: {integrity: sha512-0aLXxZQywXzuR2527KYd8JXRwIFFtRBqFtzhrpoxu2aWkadx5THYanG9wMXcDiXLtmuJCLW5h6WbrUmpPoWLvg==}
     dev: false
 
   /@teambit/graph.algorithms.tarjan@0.0.1:
@@ -58753,6 +58763,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
+      '@teambit/git.modules.git-ignore': 1.0.2
       '@teambit/harmony': 0.4.6
       camelcase: 6.2.0
       chalk: 2.4.2
