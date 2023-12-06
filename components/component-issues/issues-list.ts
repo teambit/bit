@@ -43,7 +43,10 @@ export const IssuesClasses = {
 export type IssuesNames = keyof typeof IssuesClasses;
 
 export class IssuesList {
-  constructor(protected issues: ComponentIssue[] = []) {}
+  // @todo: only reason to have "issues" as public is to avoid the error "Types have separate declarations of a private property"
+  // because it is used in the legacy as well. it's possible to remove it from bit-repo and install as a package, but it's not
+  // convenient for now.
+  constructor(public issues: ComponentIssue[] = []) {}
 
   get count() {
     return this.issues.length;
