@@ -67,7 +67,7 @@ export class AutoDetectDeps {
   autoDetectConfigMerge: Record<string, any>;
   constructor(
     private component: Component,
-    private workspace: Workspace,
+    private workspace: Workspace | undefined,
     private devFiles: DevFilesMain,
     private depsResolver: DependencyResolverMain,
     private aspectLoader: AspectLoaderMain
@@ -92,8 +92,8 @@ export class AutoDetectDeps {
     this.debugDependenciesData = { components: [] };
   }
 
-  get consumer(): Consumer {
-    return this.workspace.consumer;
+  get consumer(): Consumer | undefined {
+    return this.workspace?.consumer;
   }
 
   private setTree(tree: DependenciesTree) {

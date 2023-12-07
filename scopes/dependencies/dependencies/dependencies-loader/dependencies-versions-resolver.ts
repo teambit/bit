@@ -14,14 +14,14 @@ import { DebugComponentsDependency, getValidVersion } from './auto-detect-deps';
 
 export function updateDependenciesVersions(
   depsResolver: DependencyResolverMain,
-  workspace: Workspace,
+  workspace: Workspace | undefined,
   component: Component,
   overridesDependencies: OverridesDependencies,
   autoDetectOverrides?: Record<string, any>,
   debugDependencies?: DebugComponentsDependency[]
 ) {
-  const consumer: Consumer = workspace.consumer;
-  const autoDetectConfigMerge = workspace.getAutoDetectConfigMerge(component.id) || {};
+  const consumer: Consumer | undefined = workspace?.consumer;
+  const autoDetectConfigMerge = workspace ? workspace.getAutoDetectConfigMerge(component.id) || {} : {};
 
   updateDependencies(component.dependencies);
   updateDependencies(component.devDependencies);
@@ -116,7 +116,7 @@ export function updateDependenciesVersions(
   }
 
   function getIdFromBitMap(componentId: ComponentID): ComponentID | null | undefined {
-    const existingIds = consumer.bitmapIdsFromCurrentLane.filterWithoutVersion(componentId);
+    const existingIds = consumer?.bitmapIdsFromCurrentLane.filterWithoutVersion(componentId) || [];
     return existingIds.length === 1 ? existingIds[0] : undefined;
   }
 

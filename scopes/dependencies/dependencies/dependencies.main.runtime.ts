@@ -353,6 +353,9 @@ export class DependenciesMain {
     ];
     const whyCmd = new WhyCmd(depsMain);
     cli.register(depsCmd, whyCmd);
+    if (!workspace) {
+      console.trace('🚀 ~ file: dependencies.main.runtime.ts:357 ~ DependenciesMain ~ depsMain:', depsMain.workspace);
+    }
 
     ComponentLoader.loadDeps = depsMain.loadDependencies.bind(depsMain);
 

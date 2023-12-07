@@ -195,8 +195,10 @@ export class GeneratorMain {
   private async getGlobalGeneratorEnvs(
     aspectId: string
   ): Promise<{ remoteGenerator: GeneratorMain; fullAspectId: string; remoteEnvsAspect: EnvsMain; aspect: any }> {
+    console.log('🚀 ~ file: generator.main.runtime.ts:196 ~ GeneratorMain ~ getGlobalGeneratorEnvs:');
     const { globalScopeHarmony, components } = await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
     const remoteGenerator = globalScopeHarmony.get<GeneratorMain>(GeneratorAspect.id);
+    console.log('🚀 ~ file: generator.main.runtime.ts:200 ~ GeneratorMain ~ remoteGenerator:', remoteGenerator);
     const remoteEnvsAspect = globalScopeHarmony.get<EnvsMain>(EnvsAspect.id);
     const aspect = components[0];
     const fullAspectId = aspect.id.toString();

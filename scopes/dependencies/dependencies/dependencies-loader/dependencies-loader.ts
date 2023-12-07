@@ -21,17 +21,18 @@ import { ApplyOverrides } from './apply-overrides';
 
 export class DependenciesLoader {
   private idStr: string;
-  private consumer: Consumer;
   constructor(
     private component: Component,
-    private workspace: Workspace,
+    private workspace: Workspace | undefined,
     private depsResolver: DependencyResolverMain,
     private devFiles: DevFilesMain,
     private aspectLoader: AspectLoaderMain,
     private opts: DependencyLoaderOpts
   ) {
-    this.consumer = this.workspace.consumer;
     this.idStr = this.component.id.toString();
+  }
+  get consumer(): Consumer | undefined {
+    return this.workspace?.consumer;
   }
   async load() {
     const { dependenciesData, debugDependenciesData } = await this.getDependenciesData();
@@ -81,7 +82,7 @@ export class DependenciesLoader {
       this.opts.cacheResolvedDependencies,
       this.opts.cacheProjectAst
     );
-    if (this.shouldSaveInCache(results.dependenciesData)) {
+    if (this.shouldSaveInCache(results.dependenciesData) && this.consumer) {
       await this.consumer.componentFsCache.saveDependenciesDataInCache(
         this.idStr,
         results.dependenciesData.serialize()
@@ -95,9 +96,11 @@ export class DependenciesLoader {
     if (!this.opts.useDependenciesCache) {
       return null;
     }
-    const cacheData = await this.consumer.componentFsCache.getDependenciesDataFromCache(this.idStr);
-    if (!cacheData) {
-      return null; // probably the first time, so it wasn't entered to the cache yet.
+    if (this.consumer) {
+      const cacheData = await this.consumer.componentFsCache.getDependenciesDataFromCache(this.idStr);
+      if (!cacheData) {
+        return null; // probably the first time, so it wasn't entered to the cache yet.
+      }
     }
     const rootDir = this.component.componentMap?.getComponentDir();
     if (!rootDir) {
@@ -107,8 +110,10 @@ export class DependenciesLoader {
       return null;
     }
     const filesPaths = this.component.files.map((f) => f.path);
-    const componentConfigPath = path.join(this.consumer.getPath(), rootDir, COMPONENT_CONFIG_FILE_NAME);
-    filesPaths.push(componentConfigPath);
+    if (this.consumer) {
+      const componentConfigPath = path.join(this.consumer.getPath(), rootDir, COMPONENT_CONFIG_FILE_NAME);
+      filesPaths.push(componentConfigPath);
+    }
     const lastModifiedComponent = await getLastModifiedComponentTimestampMs(rootDir, filesPaths);
     const wasModifiedAfterCache = lastModifiedComponent > cacheData.timestamp;
     if (wasModifiedAfterCache) {
