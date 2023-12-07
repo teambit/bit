@@ -130,7 +130,7 @@ describe('scope components index mechanism', function () {
         helper.fixtures.addComponentBarFooAsDir();
         helper.command.tagAllWithoutBuild();
         const indexJsonWithBarFoo = helper.general.getComponentsFromIndexJson();
-        helper.command.untag('bar/foo');
+        helper.command.reset('bar/foo');
         helper.general.writeIndexJson(indexJsonWithBarFoo);
         // now, index.json has barFoo, however the scope doesn't have it
       });

@@ -101,7 +101,7 @@ describe('custom env', function () {
       });
       // previously it used to throw "error: component "node-env@0.0.1" was not found."
       it('should untag successfully', () => {
-        expect(() => helper.command.untag('--all')).to.not.throw();
+        expect(() => helper.command.reset('--all')).to.not.throw();
       });
     });
     describe('out-of-sync scenario where the id is changed during the process', () => {
