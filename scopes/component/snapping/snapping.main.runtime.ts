@@ -13,7 +13,6 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import HooksManager from '@teambit/legacy/dist/hooks';
 import pMapSeries from 'p-map-series';
-import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { validateVersion } from '@teambit/legacy/dist/utils/semver-helper';
 import loader from '@teambit/legacy/dist/cli/loader';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
@@ -161,8 +160,8 @@ export class SnappingMain {
 
     const exactVersion = version;
     if (!this.workspace) throw new OutsideWorkspaceError();
-    const idsHasWildcard = hasWildcard(ids);
-    const isAll = Boolean(!ids.length || idsHasWildcard);
+    const idsHasPattern = this.workspace.hasPattern(ids);
+    const isAll = Boolean(!ids.length || idsHasPattern);
     const validExactVersion = validateVersion(exactVersion);
     const consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
@@ -1108,8 +1107,8 @@ another option, in case this dependency is not in main yet is to remove all refe
     if (ids.length) {
       const componentIds = await pMapSeries(ids, async (id) => {
         const [idWithoutVer, version] = id.split('@');
-        const idHasWildcard = hasWildcard(id);
-        if (idHasWildcard) {
+        const idIsPattern = this.workspace.isPattern(id);
+        if (idIsPattern) {
           const allIds = await this.workspace.filterIdsFromPoolIdsByPattern(idWithoutVer, tagPendingComponentsIds);
           return allIds.map((componentId) => componentId.changeVersion(version));
         }
