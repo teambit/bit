@@ -375,14 +375,14 @@ importers:
         specifier: ^0.0.8
         version: 0.0.8(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-tab-page':
-        specifier: ^0.0.631
-        version: 0.0.631(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        specifier: ^0.0.632
+        version: 0.0.632(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/code.ui.code-tab-tree':
         specifier: ^0.0.613
         version: 0.0.613(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/code.ui.code-view':
-        specifier: ^0.0.517
-        version: 0.0.517(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.518
+        version: 0.0.518(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.dependency-tree':
         specifier: 0.0.546
         version: 0.0.546(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2)
@@ -741,8 +741,8 @@ importers:
         specifier: 4.0.3
         version: registry.npmjs.org/@teambit/documenter.theme.theme-context@4.0.3(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.code-snippet':
-        specifier: ^4.2.4
-        version: 4.2.4(react@17.0.2)
+        specifier: ^4.2.5
+        version: 4.2.5(@testing-library/react@12.1.5)(react@17.0.2)
       '@teambit/documenter.ui.consumable-link':
         specifier: 4.0.11
         version: 4.0.11(react-dom@17.0.2)(react@17.0.2)
@@ -821,6 +821,9 @@ importers:
       '@teambit/explorer.ui.search.search-input':
         specifier: 1.95.7
         version: 1.95.7(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/git.modules.git-ignore':
+        specifier: ^1.0.2
+        version: 1.0.2
       '@teambit/graph.cleargraph':
         specifier: 0.0.1
         version: 0.0.1
@@ -10701,8 +10704,8 @@ importers:
         specifier: ^0.0.8
         version: 0.0.8(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-tab-page':
-        specifier: ^0.0.631
-        version: 0.0.631(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        specifier: ^0.0.632
+        version: 0.0.632(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/code.ui.utils.get-file-icon':
         specifier: 0.0.495
         version: 0.0.495(react-dom@17.0.2)(react@17.0.2)
@@ -14399,6 +14402,9 @@ importers:
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
+      '@teambit/git.modules.git-ignore':
+        specifier: ^1.0.2
+        version: 1.0.2
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -24342,7 +24348,7 @@ packages:
     resolution: {integrity: sha512-2cUOUcP7ms2hXE2+jqBU9+muvNW6QQYsXK0rNxcokVBaA08ToTLQlT3gnsR7/FILqDcvDnoQdSkUlMIE8jCAZQ==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/constants': 7.1.1
       '@pnpm/core-loggers': 9.0.4(@pnpm/logger@5.0.0)
@@ -24744,7 +24750,7 @@ packages:
     resolution: {integrity: sha512-X4uvOR5Uzabq+sLqdqyPrWdiN2Y+FhfFlDvU3yzLJdRQz5lq4IqyK2o2s3gPTD/3ElsN73KfoNQPQMGSwDCutw==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/core-loggers': 9.0.4(@pnpm/logger@5.0.0)
       '@pnpm/error': 5.0.2
@@ -27643,8 +27649,8 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/code.ui.code-tab-page@0.0.631(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
-    resolution: {integrity: sha512-g7vbGZU5Cqrxi+u7Muzm+PA6A91/+2N5iwUvxOxqie/m6Q/X9VPbEjcfcWIG+0ZpYJAaxMAqSi6rSVTFfSD24Q==}
+  /@teambit/code.ui.code-tab-page@0.0.632(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+    resolution: {integrity: sha512-k2oG+TjuXBtZmcco/EAmDU/+vgdNxoV3ebsrlZ8+r1vWBtXXZ4LiscfrxjVZOcyKIAx4/61WAZ6KoHQ/4NQF1w==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -27654,7 +27660,7 @@ packages:
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-tab-tree': 0.0.613(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
-      '@teambit/code.ui.code-view': 0.0.517(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/code.ui.code-view': 0.0.518(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.hooks.use-code-params': 0.0.496(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/code.ui.queries.get-component-code': 0.0.502(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.utils.get-file-icon': 0.0.495(react-dom@17.0.2)(react@17.0.2)
@@ -27706,8 +27712,8 @@ packages:
       - react-router-dom
     dev: false
 
-  /@teambit/code.ui.code-view@0.0.517(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-xmO3RafN952DUWU3uBY8DuJmfk2rFZH2rKLFZIVh3qGK4t3a22Y4kX7TOU2VK2YJGB7qZ0c5n9C/N7CMZG0POw==}
+  /@teambit/code.ui.code-view@0.0.518(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-pKz2r6U5btsGOD5lrouguJjwJq/QkPJFSaac/6mOIPw1HMrbBqXkzHSs1gN8U3qgQZ+8mHE9LTig5Ku/k1/XiQ==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -27716,13 +27722,13 @@ packages:
       '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.constants.storage': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.queries.get-file-content': 0.0.504(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.code-snippet': 4.2.2(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/documenter.ui.code-snippet': 4.2.5(@testing-library/react@12.1.5)(react@17.0.2)
       '@teambit/documenter.ui.heading': 4.1.1(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-      react-syntax-highlighter: 15.4.3(react@17.0.2)
+      react-syntax-highlighter: 15.5.0(react@17.0.2)
     transitivePeerDependencies:
       - '@apollo/client'
       - '@testing-library/react'
@@ -31041,16 +31047,18 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
       react-syntax-highlighter: 13.5.3(react@17.0.2)
 
-  /@teambit/documenter.ui.code-snippet@4.2.4(react@17.0.2):
-    resolution: {integrity: sha1-ZwTK9abswAzeClUD1YSv3ay/IxI=}
+  /@teambit/documenter.ui.code-snippet@4.2.5(@testing-library/react@12.1.5)(react@17.0.2):
+    resolution: {integrity: sha512-8ts/GRatJNNX/aifQ67+xVYMfk7bNtceHOyUE+/JM2506Yg6UUkgD2VYuwj3L0ew/0g0AeT7IWWVO0WJKuwZ0w==}
     peerDependencies:
+      '@testing-library/react': ^12.1.5
       react: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/documenter.ui.copied-message': 4.1.8(react@17.0.2)
+      '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       copy-to-clipboard: 3.3.1
       react: 17.0.2
-      react-syntax-highlighter: 13.5.3(react@17.0.2)
+      react-syntax-highlighter: 15.5.0(react@17.0.2)
     dev: false
 
   /@teambit/documenter.ui.consumable-link@4.0.11(react-dom@17.0.2)(react@17.0.2):
@@ -31962,6 +31970,10 @@ packages:
     transitivePeerDependencies:
       - encoding
       - supports-color
+    dev: false
+
+  /@teambit/git.modules.git-ignore@1.0.2:
+    resolution: {integrity: sha512-0aLXxZQywXzuR2527KYd8JXRwIFFtRBqFtzhrpoxu2aWkadx5THYanG9wMXcDiXLtmuJCLW5h6WbrUmpPoWLvg==}
     dev: false
 
   /@teambit/graph.algorithms.tarjan@0.0.1:
@@ -57365,7 +57377,7 @@ packages:
       '@teambit/base-ui.constants.storage': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-compare-section': 0.0.5(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/code.ui.code-editor': 0.0.8(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/code.ui.code-tab-page': 0.0.631(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/code.ui.code-tab-page': 0.0.632(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.70)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/code.ui.utils.get-file-icon': 0.0.495(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
       '@teambit/ui-foundation.ui.menu-widget-icon': 0.0.502(react-dom@17.0.2)(react@17.0.2)
@@ -58753,6 +58765,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
+      '@teambit/git.modules.git-ignore': 1.0.2
       '@teambit/harmony': 0.4.6
       camelcase: 6.2.0
       chalk: 2.4.2
