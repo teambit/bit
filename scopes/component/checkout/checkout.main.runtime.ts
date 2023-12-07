@@ -290,9 +290,7 @@ export class CheckoutMain {
           includeDeleted: checkoutProps.includeLocallyDeleted,
         });
       }
-      return checkoutProps.includeLocallyDeleted
-        ? this.workspace.listIdsIncludeRemoved()
-        : await this.workspace.listIds();
+      return checkoutProps.includeLocallyDeleted ? this.workspace.listIdsIncludeRemoved() : this.workspace.listIds();
     };
 
     const idsOnWorkspace = await getIds();
@@ -343,6 +341,7 @@ export class CheckoutMain {
         if (checkoutProps.allowAddingComponentsFromScope && !existingBitMapId) return undefined;
         throw err;
       }
+      return undefined;
     };
     const component = await getComponent();
     if (component) {
