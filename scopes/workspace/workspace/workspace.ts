@@ -936,13 +936,21 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     return components;
   }
 
+  hasPattern(strArr: string[]) {
+    return strArr.some((str) => this.isPattern(str));
+  }
+
+  isPattern(str: string) {
+    const specialSyntax = ['*', ',', '!', '$', ':'];
+    return specialSyntax.some((char) => str.includes(char));
+  }
+
   /**
    * get component-ids matching the given pattern. a pattern can have multiple patterns separated by a comma.
    * it supports negate (!) character to exclude ids.
    */
   async idsByPattern(pattern: string, throwForNoMatch = true): Promise<ComponentID[]> {
-    const specialSyntax = ['*', ',', '!', '$', ':'];
-    const isId = !specialSyntax.some((char) => pattern.includes(char));
+    const isId = !this.isPattern(pattern);
     if (isId) {
       // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
       const id = await this.resolveComponentId(pattern);
