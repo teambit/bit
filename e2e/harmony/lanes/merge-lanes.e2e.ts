@@ -952,10 +952,12 @@ describe('merge lanes', function () {
       bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
       beforeMerging = helper.scopeHelper.cloneScope(bareMerge.scopePath);
+      const title = 'this is the title of the CR';
+      const titleBase64 = Buffer.from(title).toString('base64');
       helper.command.mergeLaneFromScope(
         bareMerge.scopePath,
         `${helper.scopes.remote}/dev`,
-        '--title "this is the title of the CR"'
+        `--title-base64 ${titleBase64}`
       );
     });
     it('should merge to main', () => {

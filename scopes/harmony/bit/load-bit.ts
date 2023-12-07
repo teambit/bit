@@ -272,6 +272,8 @@ export async function runCLI() {
   await cli.run(hasWorkspace);
 }
 
+const globalsState: Record<string, any> = {};
+
 /**
  * loadBit may gets called multiple times (currently, it's happening during e2e-tests that call loadBit).
  * when it happens, the static methods in this function still have the callbacks that were added in
@@ -288,6 +290,7 @@ function clearGlobalsIfNeeded() {
   ComponentConfig.componentConfigLegacyLoadingRegistry = {};
   ComponentConfig.componentConfigLoadingRegistry = {};
   PackageJsonTransformer.packageJsonTransformersRegistry = [];
+  globalsState.loadDeps = ComponentLoader.loadDeps;
   // @ts-ignore
   ComponentLoader.loadDeps = undefined;
   ExtensionDataList.coreExtensionsNames = new Map();
@@ -299,4 +302,8 @@ function clearGlobalsIfNeeded() {
   // @ts-ignore
   WorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
   ExternalActions.externalActions = [];
+}
+
+export function restoreGlobals() {
+  if (globalsState.loadDeps) ComponentLoader.loadDeps = globalsState.loadDeps;
 }
