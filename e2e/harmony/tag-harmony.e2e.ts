@@ -177,7 +177,7 @@ describe('tag components on Harmony', function () {
     describe('untag', () => {
       before(() => {
         helper.command.softTag('-a -s 3.0.0');
-        helper.command.untagSoft('--all');
+        helper.command.resetSoft('--all');
       });
       it('should remove the nextVersion from the .bitmap file', () => {
         const bitMap = helper.bitMap.readComponentsMapOnly();

@@ -119,7 +119,7 @@ describe('bit snap command', function () {
     });
     describe('untag the head snap', () => {
       before(() => {
-        helper.command.untag(`bar/foo`, true);
+        helper.command.reset(`bar/foo`, true);
       });
       it('should change the head to the first snap', () => {
         const compAfterUntag = helper.command.catComponent('bar/foo');
@@ -465,7 +465,7 @@ describe('bit snap command', function () {
             helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
             // change it so the file would be valid without conflicts marks
             helper.fixtures.createComponentBarFoo('');
-            helper.command.untag('bar/foo');
+            helper.command.reset('bar/foo');
           });
           it('bit status should not show the component as a component with conflicts but as modified', () => {
             const status = helper.command.statusJson();
@@ -717,7 +717,7 @@ describe('bit snap command', function () {
       });
       describe('reset all local versions', () => {
         before(() => {
-          helper.command.untagAll();
+          helper.command.resetAll();
         });
         it('should change the head to point to the parent of the untagged version not to the remote head', () => {
           const head = helper.command.getHead('comp1');
@@ -735,7 +735,7 @@ describe('bit snap command', function () {
       describe('reset only head', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(beforeUntag);
-          helper.command.untagAll('--head');
+          helper.command.resetAll('--head');
         });
         it('should change the head to point to the parent of the head and not to the remote head', () => {
           const head = helper.command.getHead('comp1');
