@@ -183,7 +183,9 @@ export class ComponentGenerator {
       config = boundConfig({ aspectId: this.aspectId });
     }
 
-    if (!config && this.envId) {
+    const userEnv = this.options.env;
+
+    if (!config && this.envId && !userEnv) {
       const isInWorkspace = this.workspace.exists(this.envId);
       config = {
         [isInWorkspace ? this.envId.toStringWithoutVersion() : this.envId.toString()]: {},
