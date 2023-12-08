@@ -78,4 +78,24 @@ describe('bit delete command', function () {
       });
     });
   });
+  describe('bit checkout reset after local delete', () => {
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.softRemoveComponent('comp1');
+
+      // make sure it's deleted
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(2);
+
+      helper.command.checkoutReset('--all');
+    });
+    it('should bring the component back', () => {
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(3);
+    });
+  });
 });
