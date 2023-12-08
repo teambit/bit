@@ -280,7 +280,7 @@ export class CheckoutMain {
     if (checkoutProps.revert) {
       checkoutProps.skipUpdatingBitmap = true;
     }
-    if (checkoutProps.reset) {
+    if (checkoutProps.reset || checkoutProps.head) {
       checkoutProps.includeLocallyDeleted = true;
     }
 
