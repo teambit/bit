@@ -274,7 +274,7 @@ export default class ComponentsList {
   }
 
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<ComponentIdList> {
-    const fromBitMap = this.bitMap.getAllBitIds();
+    const fromBitMap = this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
     const modelComponents = await this.getModelComponents();
     const pendingExportComponents = await pFilter(modelComponents, async (component: ModelComponent) => {
       if (!fromBitMap.searchWithoutVersion(component.toComponentId())) {
