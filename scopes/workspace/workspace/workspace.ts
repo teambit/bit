@@ -383,6 +383,10 @@ export class Workspace implements ComponentFactory {
     return this._cachedListIds;
   }
 
+  listIdsIncludeRemoved(): ComponentIdList {
+    return this.consumer.bitmapIdsFromCurrentLaneIncludeRemoved;
+  }
+
   /**
    * Check if a specific id exist in the workspace
    * @param componentId
@@ -949,16 +953,20 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
    * get component-ids matching the given pattern. a pattern can have multiple patterns separated by a comma.
    * it supports negate (!) character to exclude ids.
    */
-  async idsByPattern(pattern: string, throwForNoMatch = true): Promise<ComponentID[]> {
+  async idsByPattern(
+    pattern: string,
+    throwForNoMatch = true,
+    opts: { includeDeleted?: boolean } = {}
+  ): Promise<ComponentID[]> {
     const isId = !this.isPattern(pattern);
     if (isId) {
       // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
       const id = await this.resolveComponentId(pattern);
-      if (this.exists(id)) return [id];
+      if (this.exists(id, { includeDeleted: opts.includeDeleted })) return [id];
       if (throwForNoMatch) throw new MissingBitMapComponent(pattern);
       return [];
     }
-    const ids = await this.listIds();
+    const ids = opts.includeDeleted ? this.listIdsIncludeRemoved() : await this.listIds();
     return this.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch);
   }
 
@@ -1030,8 +1038,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   /**
    * whether a component exists in the workspace
    */
-  exists(componentId: ComponentID): boolean {
-    return Boolean(this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId)));
+  exists(componentId: ComponentID, opts: { includeDeleted?: boolean } = {}): boolean {
+    const allIds = opts.includeDeleted ? this.listIdsIncludeRemoved() : this.consumer.bitmapIdsFromCurrentLane;
+    return allIds.hasWithoutVersion(componentId);
   }
 
   getIdIfExist(componentId: ComponentID): ComponentID | undefined {
