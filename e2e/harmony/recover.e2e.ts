@@ -2,6 +2,7 @@ import { IssuesClasses } from '@teambit/component-issues';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { Extensions } from '../../src/constants';
+import { help } from 'yargs';
 
 chai.use(require('chai-fs'));
 
@@ -270,7 +271,6 @@ describe('bit recover command', function () {
       helper.bitMap.expectToHaveId('comp1');
     });
   });
-
   describe('remove in one lane, recover in an empty lane', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -286,6 +286,30 @@ describe('bit recover command', function () {
     // currently it threw version "0.0.0" of component onpp7beq-remote/comp1 was not found
     it('should show a descriptive error', () => {
       expect(() => helper.command.recover(`${helper.scopes.remote}/comp1`)).to.throw('unable to find the component');
+    });
+  });
+  describe('recover diverged component before snapping', () => {
+    let beforeDiverge: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+      beforeDiverge = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(beforeDiverge);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.import();
+
+      helper.command.softRemoveComponent('comp1');
+    });
+    it('should not throw', () => {
+      expect(() => helper.command.recover('comp1')).not.to.throw();
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(1);
     });
   });
 });
