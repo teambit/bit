@@ -1,7 +1,10 @@
+import path from 'path';
 import { IssuesClasses } from '@teambit/component-issues';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+
+chai.use(require('chai-fs'));
 
 describe('bit delete command', function () {
   let helper: Helper;
@@ -96,6 +99,90 @@ describe('bit delete command', function () {
     it('should bring the component back', () => {
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(3);
+    });
+  });
+  describe('bit checkout head after local delete', () => {
+    let beforeUpdates: string;
+    let checkoutOutput: string;
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      beforeUpdates = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(beforeUpdates);
+
+      helper.command.softRemoveComponent('comp1');
+      // make sure it's deleted
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(2);
+
+      checkoutOutput = helper.command.checkoutHead('-x');
+    });
+    it('should checkout also the deleted component same as it checks out any other modified component', () => {
+      expect(checkoutOutput).to.have.string('successfully switched 3 components');
+    });
+    it('should write the deleted component files to the filesystem', () => {
+      const comp1Dir = path.join(helper.scopes.localPath, 'comp1');
+      expect(comp1Dir).to.be.a.directory();
+    });
+    it('bit status should still show the component as deleted', () => {
+      const status = helper.command.statusJson();
+      expect(status.locallySoftRemoved).to.have.lengthOf(1);
+    });
+  });
+  describe('deleted component that is also diverged (merge pending)', () => {
+    let beforeUpdates: string;
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      beforeUpdates = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(beforeUpdates);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+
+      helper.command.softRemoveComponent('comp1');
+      // make sure it's deleted
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(2);
+
+      helper.command.import();
+    });
+    describe('bit checkout head', () => {
+      let checkoutOutput: string;
+      before(() => {
+        checkoutOutput = helper.general.runWithTryCatch('bit checkout head comp1');
+      });
+      it('should block the checkout as any other diverged component', () => {
+        expect(checkoutOutput).to.have.string('comp1');
+        expect(checkoutOutput).to.have.string('component is merge-pending and cannot be checked out');
+      });
+    });
+    describe('bit status', () => {
+      it('should show the component as both, deleted and merge-pending', () => {
+        const status = helper.command.statusJson();
+        expect(status.locallySoftRemoved).to.have.lengthOf(1);
+        expect(status.mergePendingComponents).to.have.lengthOf(3);
+      });
+    });
+    describe('bit reset', () => {
+      before(() => {
+        helper.command.reset('comp1');
+      });
+      it('should reset the component successfully', () => {
+        const status = helper.command.statusJson();
+        expect(status.mergePendingComponents).to.have.lengthOf(2);
+        expect(status.locallySoftRemoved).to.have.lengthOf(1);
+      });
     });
   });
 });
