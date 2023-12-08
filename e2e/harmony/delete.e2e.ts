@@ -135,9 +135,8 @@ describe('bit delete command', function () {
       expect(status.locallySoftRemoved).to.have.lengthOf(1);
     });
   });
-  describe('bit checkout head after local delete when it is diverged', () => {
+  describe('deleted component that is also diverged (merge pending)', () => {
     let beforeUpdates: string;
-    let checkoutOutput: string;
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -156,16 +155,34 @@ describe('bit delete command', function () {
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(2);
 
-      checkoutOutput = helper.general.runWithTryCatch('bit checkout head comp1');
+      helper.command.import();
     });
-    it('should block the checkout as any other diverged component', () => {
-      expect(checkoutOutput).to.have.string('comp1');
-      expect(checkoutOutput).to.have.string('component is merge-pending and cannot be checked out');
+    describe('bit checkout head', () => {
+      let checkoutOutput: string;
+      before(() => {
+        checkoutOutput = helper.general.runWithTryCatch('bit checkout head comp1');
+      });
+      it('should block the checkout as any other diverged component', () => {
+        expect(checkoutOutput).to.have.string('comp1');
+        expect(checkoutOutput).to.have.string('component is merge-pending and cannot be checked out');
+      });
     });
-    it('bit status should show the component as both, deleted and merge-pending', () => {
-      const status = helper.command.statusJson();
-      expect(status.locallySoftRemoved).to.have.lengthOf(1);
-      expect(status.mergePendingComponents).to.have.lengthOf(3);
+    describe('bit status', () => {
+      it('should show the component as both, deleted and merge-pending', () => {
+        const status = helper.command.statusJson();
+        expect(status.locallySoftRemoved).to.have.lengthOf(1);
+        expect(status.mergePendingComponents).to.have.lengthOf(3);
+      });
+    });
+    describe('bit reset', () => {
+      before(() => {
+        helper.command.reset('comp1');
+      });
+      it('should reset the component successfully', () => {
+        const status = helper.command.statusJson();
+        expect(status.mergePendingComponents).to.have.lengthOf(2);
+        expect(status.locallySoftRemoved).to.have.lengthOf(1);
+      });
     });
   });
 });

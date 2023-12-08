@@ -589,8 +589,8 @@ there are matching among unmodified components thought. consider using --unmodif
         return removeLocalVersionsForAllComponents(consumer, currentLane, head);
       }
       const candidateComponents = await getComponentsWithOptionToUntag(consumer);
-      const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern);
-      const idsMatchingPatternBitIds = ComponentIdList.fromArray(idsMatchingPattern.map((id) => id));
+      const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern, true, { includeDeleted: true });
+      const idsMatchingPatternBitIds = ComponentIdList.fromArray(idsMatchingPattern);
       const componentsToUntag = candidateComponents.filter((modelComponent) =>
         idsMatchingPatternBitIds.hasWithoutVersion(modelComponent.toComponentId())
       );
