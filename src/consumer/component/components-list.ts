@@ -203,18 +203,18 @@ export default class ComponentsList {
     return compact(results);
   }
 
-  async listMergePendingComponents(loadOpts?: ComponentLoadOptions): Promise<DivergedComponent[]> {
+  async listMergePendingComponents(): Promise<DivergedComponent[]> {
     if (!this._mergePendingComponents) {
-      const componentsFromFs = await this.getComponentsFromFS(loadOpts);
+      const allIds = this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
       const componentsFromModel = await this.getModelComponents();
       const duringMergeComps = this.listDuringMergeStateComponents();
       this._mergePendingComponents = (
         await Promise.all(
-          componentsFromFs.map(async (component: Component) => {
+          allIds.map(async (componentId: ComponentID) => {
             const modelComponent = componentsFromModel.find((c) =>
-              c.toComponentId().isEqualWithoutVersion(component.componentId)
+              c.toComponentId().isEqualWithoutVersion(componentId)
             );
-            if (!modelComponent || duringMergeComps.hasWithoutVersion(component.componentId)) return null;
+            if (!modelComponent || duringMergeComps.hasWithoutVersion(componentId)) return null;
             const divergedData = await modelComponent.getDivergeDataForMergePending(this.scope.objects);
             if (!divergedData.isDiverged()) return null;
             return { id: modelComponent.toComponentId(), diverge: divergedData };
@@ -274,7 +274,7 @@ export default class ComponentsList {
   }
 
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<ComponentIdList> {
-    const fromBitMap = this.bitMap.getAllBitIds();
+    const fromBitMap = this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
     const modelComponents = await this.getModelComponents();
     const pendingExportComponents = await pFilter(modelComponents, async (component: ModelComponent) => {
       if (!fromBitMap.searchWithoutVersion(component.toComponentId())) {
