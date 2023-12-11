@@ -333,7 +333,9 @@ export class CheckoutMain {
     const getComponent = async () => {
       try {
         // TODO: check if we really need the { loadExtensions: true } here
-        const results = await consumer.loadComponents(ComponentIdList.fromArray([id]), { loadExtensions: true });
+        const results = await consumer.loadComponents(ComponentIdList.fromArray([id]), undefined, {
+          loadExtensions: true,
+        });
         if (results.components[0]) return results.components[0];
         if (checkoutProps.includeLocallyDeleted && results.removedComponents[0]) {
           return results.removedComponents[0];
