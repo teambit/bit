@@ -189,7 +189,7 @@ export const CFG_SYMPHONY_URL_KEY = 'symphony_url';
 let resolvedSymphonyUrl;
 export const getSymphonyUrl = (): string => {
   if (resolvedSymphonyUrl) return resolvedSymphonyUrl;
-  resolvedSymphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || `symphony.${getCloudDomain()}`;
+  resolvedSymphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || `api.v2.${getCloudDomain()}`;
   return resolvedSymphonyUrl;
 };
 
