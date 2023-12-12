@@ -200,7 +200,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.untag('"*/is/*"');
+          output = helper.command.reset('"*/is/*"');
         });
         it('should indicate the untagged components', () => {
           expect(output).to.have.string('2 component(s) were untagged');

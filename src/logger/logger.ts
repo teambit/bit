@@ -51,7 +51,6 @@ export interface IBitLogger {
   console(msg: string): void;
 }
 
-type CommandHistory = { started?: string; completed?: string; fileBasePath?: string };
 const commandHistoryFile = 'command-history';
 
 /**
@@ -81,7 +80,7 @@ class BitLogger implements IBitLogger {
    * helpful to get a list in the .bit/command-history of all commands that were running on this workspace.
    * it's written only if the consumer is loaded. otherwise, the commandHistory.fileBasePath is undefined
    */
-  commandHistory: CommandHistory = { started: `${new Date().toISOString()} start ${process.argv.slice(2).join(' ')}` };
+  commandHistoryBasePath: string | undefined;
   constructor(logger: PinoLogger) {
     this.logger = logger;
     this.profiler = new Profiler();
@@ -196,22 +195,33 @@ class BitLogger implements IBitLogger {
     // const finalLogger = pino.final(pinoLogger);
     // finalLogger[level](msg);
     this.logger[level](msg);
-    this.commandHistory.completed = `${new Date().toISOString()} end ${process.argv.slice(2).join(' ')}, code: ${code}`;
-    this.writeCommandHistory();
+    this.writeCommandHistoryEnd(code);
     await this.runOnBeforeExitFns();
     if (!this.isDaemon) process.exit(code);
+  }
+
+  private commandHistoryMsgPrefix() {
+    return `${new Date().toISOString()} ${process.pid} ${process.argv.slice(2).join(' ')}`;
+  }
+
+  writeCommandHistoryStart() {
+    const str = `${this.commandHistoryMsgPrefix()}, started`;
+    this.writeToCommandHistory(str);
+  }
+
+  private writeCommandHistoryEnd(code: number) {
+    const endStr = code === 0 ? 'succeeded' : 'failed';
+    const str = `${this.commandHistoryMsgPrefix()}, ${endStr}`;
+    this.writeToCommandHistory(str);
   }
 
   /**
    * keep this method sync. for some reason, if it's promise, the exit-code is zero when Jest/Mocha tests fail.
    */
-  writeCommandHistory() {
-    if (!this.commandHistory.fileBasePath) return;
+  private writeToCommandHistory(str: string) {
+    if (!this.commandHistoryBasePath) return;
     try {
-      fs.appendFileSync(
-        path.join(this.commandHistory.fileBasePath, commandHistoryFile),
-        `${this.commandHistory.started}\n${this.commandHistory.completed}\n`
-      );
+      fs.appendFileSync(path.join(this.commandHistoryBasePath, commandHistoryFile), `${str}\n`);
     } catch (error) {
       // never mind
     }

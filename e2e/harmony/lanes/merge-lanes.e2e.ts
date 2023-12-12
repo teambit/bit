@@ -429,7 +429,7 @@ describe('merge lanes', function () {
         // previously it was throwing:
         // removeComponentVersions found multiple parents for a local (un-exported) version 368fb583865af40a8823d2ac1d556f4b65582ba2 of iw4j2eko-remote/comp1
         it('bit reset should not throw', () => {
-          expect(() => helper.command.untagAll()).to.not.throw();
+          expect(() => helper.command.resetAll()).to.not.throw();
         });
       });
       describe('switching to main and merging the lane to main (with squash)', () => {
@@ -952,10 +952,12 @@ describe('merge lanes', function () {
       bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
       beforeMerging = helper.scopeHelper.cloneScope(bareMerge.scopePath);
+      const title = 'this is the title of the CR';
+      const titleBase64 = Buffer.from(title).toString('base64');
       helper.command.mergeLaneFromScope(
         bareMerge.scopePath,
         `${helper.scopes.remote}/dev`,
-        '--title "this is the title of the CR"'
+        `--title-base64 ${titleBase64}`
       );
     });
     it('should merge to main', () => {
