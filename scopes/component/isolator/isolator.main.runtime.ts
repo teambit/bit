@@ -644,9 +644,10 @@ export class IsolatorMain {
           `install packages in ${capsuleList.length} capsules`
         );
       }
+      const rootLinks = await this.linkInCapsulesRoot(capsulesDir, capsuleList, linkingOptions);
       if (installOptions.useNesting) {
         await Promise.all(
-          capsuleList.map(async (capsule) => {
+          capsuleList.map(async (capsule, index) => {
             const newCapsuleList = CapsuleList.fromArray([capsule]);
             if (opts.cacheCapsulesDir && capsulesDir !== opts.cacheCapsulesDir && opts.cacheLockFileOnly) {
               const cacheCapsuleDir = path.join(opts.cacheCapsulesDir, basename(capsule.path));
@@ -666,12 +667,10 @@ export class IsolatorMain {
                 }
               }
             }
-            const linkedDependencies = await this.linkInCapsules(
-              capsulesDir,
-              newCapsuleList,
-              capsulesWithPackagesData,
-              linkingOptions
-            );
+            const linkedDependencies = await this.linkInCapsules(newCapsuleList, capsulesWithPackagesData);
+            if (index === 0) {
+              linkedDependencies[capsulesDir] = rootLinks;
+            }
             await this.installInCapsules(capsule.path, newCapsuleList, installOptions, {
               cachePackagesOnCapsulesRoot,
               linkedDependencies,
@@ -681,12 +680,8 @@ export class IsolatorMain {
           })
         );
       } else {
-        const linkedDependencies = await this.linkInCapsules(
-          capsulesDir,
-          capsuleList,
-          capsulesWithPackagesData,
-          linkingOptions
-        );
+        const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
+        linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
           cachePackagesOnCapsulesRoot,
           linkedDependencies,
@@ -805,11 +800,22 @@ export class IsolatorMain {
   }
 
   private async linkInCapsules(
+    capsuleList: CapsuleList,
+    capsulesWithPackagesData: CapsulePackageJsonData[]
+  ): Promise<Record<string, Record<string, string>>> {
+    let nestedLinks: Record<string, Record<string, string>> | undefined;
+    if (!this.dependencyResolver.isolatedCapsules()) {
+      const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
+      nestedLinks = await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
+    }
+    return nestedLinks ?? {};
+  }
+
+  private async linkInCapsulesRoot(
     capsulesDir: string,
     capsuleList: CapsuleList,
-    capsulesWithPackagesData: CapsulePackageJsonData[],
     linkingOptions: LinkingOptions
-  ): Promise<Record<string, Record<string, string>>> {
+  ): Promise<Record<string, string>> {
     const linker = this.dependencyResolver.getLinker({
       rootDir: capsulesDir,
       linkingOptions,
@@ -820,11 +826,8 @@ export class IsolatorMain {
       linkNestedDepsInNM: !this.dependencyResolver.isolatedCapsules() && linkingOptions.linkNestedDepsInNM,
     });
     let rootLinks: LinkDetail[] | undefined;
-    let nestedLinks: Record<string, Record<string, string>> | undefined;
     if (!this.dependencyResolver.isolatedCapsules()) {
       rootLinks = await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
-      const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
-      nestedLinks = await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
     } else {
       const coreAspectIds = this.aspectLoader.getCoreAspectIds();
       const coreAspectCapsules = CapsuleList.fromArray(
@@ -836,11 +839,8 @@ export class IsolatorMain {
       rootLinks = await symlinkOnCapsuleRoot(coreAspectCapsules, this.logger, capsulesDir);
     }
     return {
-      ...nestedLinks,
-      [capsulesDir]: {
-        ...linkedRootDeps,
-        ...this.toLocalLinks(rootLinks),
-      },
+      ...linkedRootDeps,
+      ...this.toLocalLinks(rootLinks),
     };
   }
 
