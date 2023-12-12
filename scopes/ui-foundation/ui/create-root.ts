@@ -12,7 +12,9 @@ export async function createRoot(
   rootAspect = UIAspect.id,
   runtime = 'ui',
   config = {},
-  ignoreVersion?: boolean
+  ignoreVersion?: boolean,
+  addRuntimes = false,
+  harmonyPackage?: string
 ) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
   const identifiers = getIdentifiers(aspectDefs, 'Aspect');
@@ -24,7 +26,13 @@ export async function createRoot(
   const stringifiedConfig = toWindowsCompatiblePath(JSON.stringify(config)).replace(/'/g, "\\'");
 
   return `
+${createHarmonyImports(harmonyPackage)}
 ${createImports(aspectDefs)}
+
+${generateSlotsFn()}
+
+${addRuntimes ? addSlots(aspectDefs): ''}
+${addRuntimes ? createAddRuntime(aspectDefs, runtime): ''}
 
 const isBrowser = typeof window !== "undefined";
 const windowConfig = isBrowser ? window.harmonyAppConfig: undefined;
@@ -64,12 +72,40 @@ if (isBrowser || '${runtime}' === 'main') render();
 `;
 }
 
+function createAddRuntime(aspectDefs: AspectDefinition[], runtime: string) {
+  return aspectDefs.map((aspectDef) => {
+    const aspectId = getIdentifier(aspectDef, 'Aspect', 'aspectFilePath');
+    const runtimeId = getIdentifier(aspectDef, 'Runtime', 'runtimePath');
+    const setRuntime = `${runtimeId}.runtime = "${runtime}";\n`;
+    return `${setRuntime}${aspectId}.addRuntime(${runtimeId});`;
+  }).join('\n')
+}
+ 
 function createImports(aspectDefs: AspectDefinition[]) {
   const defs = aspectDefs.filter((def) => def.runtimePath);
 
-  return `import { Harmony } from '@teambit/harmony';
-${getImportStatements(aspectDefs, 'aspectFilePath', 'Aspect')}
+  return `${getImportStatements(aspectDefs, 'aspectFilePath', 'Aspect')}
 ${getImportStatements(defs, 'runtimePath', 'Runtime')}`;
+}
+
+function createHarmonyImports(harmonyPackage = '@teambit/harmony') {
+  return `import { Harmony, Slot } from '${harmonyPackage}';`;
+}
+
+function generateSlotsFn() {
+return `
+function generateSlot(length = 5) {
+  return Array.from(Array(length)).map(() => Slot.withType());
+}
+`
+}
+
+function addSlots(aspectDefs: AspectDefinition[]) {
+  return aspectDefs.map((aspectDef) => {
+    const runtimeId = getIdentifier(aspectDef, 'Runtime', 'runtimePath');
+    const setSlots = `${runtimeId}.slots = generateSlot(${runtimeId}?.slotCount)`;
+    return `if (!${runtimeId}.slots?.length && ${runtimeId}.provider.length >= 3) ${setSlots} `;
+  }).join('\n');
 }
 
 function getImportStatements(aspectDefs: AspectDefinition[], pathProp: string, suffix: string): string {
