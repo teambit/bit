@@ -1,3 +1,5 @@
+import pMap from 'p-map';
+import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
 import { Component, ComponentFS, Config, InvalidComponent, State, TagMap } from '@teambit/component';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import mapSeries from 'p-map-series';
@@ -279,11 +281,15 @@ export class WorkspaceComponentLoader {
     // We don't want to ignore version here, as we do want to load different extensions with same id but different versions here
     const mergedExtensions = ExtensionDataList.mergeConfigs(allExtensions, false);
     await this.workspace.loadComponentsExtensions(mergedExtensions);
-    const withAspects = await Promise.all(
-      components.map((component) => {
-        return this.executeLoadSlot(component);
-      })
-    );
+    const withAspects = await pMap(components, (component) => this.executeLoadSlot(component), {
+      concurrency: concurrentComponentsLimit(),
+    });
+
+    // const withAspects = await Promise.all(
+    //   components.map((component) => {
+    //     return this.executeLoadSlot(component);
+    //   })
+    // );
     await this.warnAboutMisconfiguredEnvs(withAspects);
     // It's important to load the workspace components as aspects here
     // otherwise the envs from the workspace won't be loaded at time
@@ -479,9 +485,11 @@ export class WorkspaceComponentLoader {
     };
 
     // await this.getConsumerComponent(id, loadOpts)
-
-    const componentsP = Promise.all(
-      allLegacyComponents.map(async (legacyComponent) => {
+    const componentsP = pMap(
+      allLegacyComponents,
+      (legacyComponent) => {
+        // const componentsP = Promise.all(
+        //   allLegacyComponents.map(async (legacyComponent) => {
         let id = idsIndex[legacyComponent.id.toString()];
         if (!id) {
           const withoutVersion = idsIndex[legacyComponent.id.toStringWithoutVersion()] || legacyComponent.id;
@@ -491,7 +499,10 @@ export class WorkspaceComponentLoader {
           }
         }
         return getWithCatch(id, legacyComponent);
-      })
+      },
+      {
+        concurrency: concurrentComponentsLimit(),
+      }
     );
 
     errors.forEach((err) => {
