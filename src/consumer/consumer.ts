@@ -60,6 +60,7 @@ type ConsumerProps = {
 };
 
 const BITMAP_HISTORY_DIR_NAME = 'bitmap-history';
+const BITMAP_HISTORY_METADATA_FILE_NAME = 'bitmap-history-metadata.txt';
 
 /**
  * @todo: change the class name to Workspace
@@ -580,7 +581,7 @@ export default class Consumer {
     await consumer.setBitMap();
     scope.currentLaneIdFunc = consumer.getCurrentLaneIdIfExist.bind(consumer);
     scope.notExportedIdsFunc = consumer.getNotExportedIds.bind(consumer);
-    logger.commandHistory.fileBasePath = scope.getPath();
+    logger.commandHistoryBasePath = scope.getPath();
     return consumer;
   }
 
@@ -663,8 +664,29 @@ export default class Consumer {
     await this.bitMap.write();
   }
 
-  getBitmapHistoryDir() {
+  getBitmapHistoryDir(): PathOsBasedAbsolute {
     return path.join(this.scope.path, BITMAP_HISTORY_DIR_NAME);
+  }
+
+  getBitmapHistoryMetadataPath() {
+    return path.join(this.scope.path, BITMAP_HISTORY_METADATA_FILE_NAME);
+  }
+
+  async getParsedBitmapHistoryMetadata(): Promise<{ [fileId: string]: string }> {
+    let fileContent: string | undefined;
+    try {
+      fileContent = await fs.readFile(this.getBitmapHistoryMetadataPath(), 'utf-8');
+    } catch (err: any) {
+      if (err.code === 'ENOENT') return {}; // no such file or directory, meaning the history-metadata file doesn't exist (yet)
+    }
+    const lines = fileContent?.split('\n') || [];
+    const metadata = {};
+    lines.forEach((line) => {
+      const [fileId, ...reason] = line.split(' ');
+      if (!fileId) return;
+      metadata[fileId] = reason.join(' ');
+    });
+    return metadata;
   }
 
   private async backupBitMap(reasonForBitmapChange?: string) {
@@ -675,7 +697,7 @@ export default class Consumer {
       const fileId = this.currentDateAndTimeToFileName();
       const backupPath = path.join(baseDir, `.bitmap-${fileId}`);
       await fs.copyFile(this.bitMap.mapPath, backupPath);
-      const metadataFile = path.join(this.scope.path, 'bitmap-history-metadata.txt');
+      const metadataFile = this.getBitmapHistoryMetadataPath();
       await fs.appendFile(metadataFile, `${fileId} ${reasonForBitmapChange || ''}\n`);
     } catch (err: any) {
       if (err.code === 'ENOENT') return; // no such file or directory, meaning the .bitmap file doesn't exist (yet)

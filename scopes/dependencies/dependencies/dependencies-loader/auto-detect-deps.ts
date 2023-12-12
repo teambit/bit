@@ -3,40 +3,33 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import semver from 'semver';
 import { isSnap } from '@teambit/component-version';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { uniq, isEmpty, cloneDeep } from 'lodash';
-import { IssuesList, IssuesClasses, MissingPackagesData } from '@teambit/component-issues';
-import { Dependency } from '..';
-import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
-import Consumer from '../../../../consumer/consumer';
-import logger from '../../../../logger/logger';
-import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
-import { PathLinux, PathLinuxRelative, PathOsBased, removeFileExtension } from '../../../../utils/path';
-import ComponentMap from '../../../bit-map/component-map';
-import Component from '../../../component/consumer-component';
-import { RelativePath } from '../dependency';
-import { getDependencyTree } from '../files-dependency-builder';
-import { FileObject, ImportSpecifier, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
-import OverridesDependencies from './overrides-dependencies';
-import { ResolvedPackageData, resolvePackageData, resolvePackagePath } from '../../../../utils/packages';
-import { DependenciesData } from './dependencies-data';
+import { ComponentID } from '@teambit/component-id';
+import { uniq, isEmpty } from 'lodash';
+import { IssuesList, IssuesClasses } from '@teambit/component-issues';
+import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
+import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/legacy/dist/utils';
+import { PathLinux, PathLinuxRelative, PathOsBased, removeFileExtension } from '@teambit/legacy/dist/utils/path';
+import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { RelativePath } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
+import { getDependencyTree } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder';
+import {
+  FileObject,
+  ImportSpecifier,
+  DependenciesTree,
+} from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
+import { DevFilesMain } from '@teambit/dev-files';
+import { Workspace } from '@teambit/workspace';
+import { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
+import { ResolvedPackageData } from '@teambit/legacy/dist/utils/packages';
+import { DependencyDetector } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
-import { ExtensionDataList } from '../../../config';
-import PackageJsonFile from '../../../../consumer/component/package-json-file';
-import { SourceFile } from '../../sources';
-import { DependenciesOverridesData } from '../../../config/component-overrides';
-import { DependencyDetector } from '../files-dependency-builder/detector-hook';
-
-export type AllDependencies = {
-  dependencies: Dependency[];
-  devDependencies: Dependency[];
-};
-
-export type AllPackagesDependencies = {
-  packageDependencies: Record<string, string>;
-  devPackageDependencies: Record<string, string>;
-  peerPackageDependencies: Record<string, string>;
-};
+import { DependenciesData } from './dependencies-data';
+import { AllDependencies, AllPackagesDependencies } from './apply-overrides';
 
 export type FileType = {
   isTestFile: boolean;
@@ -59,41 +52,7 @@ export type DebugComponentsDependency = {
   packageName?: string;
 };
 
-type WorkspacePolicyGetter = () => {
-  dependencies?: Record<string, string>;
-  peerDependencies?: Record<string, string>;
-};
-
-export type EnvPolicyForComponent = {
-  dependencies: { [name: string]: string };
-  devDependencies: { [name: string]: string };
-  peerDependencies: { [name: string]: string };
-};
-
-type HarmonyEnvPeersPolicyForEnvItselfGetter = (
-  componentId: ComponentID,
-  files: SourceFile[]
-) => Promise<{ [name: string]: string } | undefined>;
-
-type OnComponentAutoDetectOverrides = (
-  configuredExtensions: ExtensionDataList,
-  componentId: ComponentID,
-  files: SourceFile[]
-) => Promise<DependenciesOverridesData>;
-
-type OnComponentAutoDetectConfigMerge = (componentId: ComponentID) => DependenciesOverridesData | undefined;
-
-const DepsKeysToAllPackagesDepsKeys = {
-  dependencies: 'packageDependencies',
-  devDependencies: 'devPackageDependencies',
-  peerDependencies: 'peerPackageDependencies',
-};
-
-type GetEnvDetectors = (extensions: ExtensionDataList) => Promise<DependencyDetector[] | null>;
-
-export default class DependencyResolver {
-  component: Component;
-  consumer: Consumer;
+export class AutoDetectDeps {
   componentId: ComponentID;
   componentMap: ComponentMap;
   componentFromModel: Component;
@@ -101,54 +60,18 @@ export default class DependencyResolver {
   tree: DependenciesTree;
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
-  /**
-   * This will store a copy of the package deps before removal
-   * in order to apply auto detected rules that are running after the removal
-   */
-  originAllPackagesDependencies: AllPackagesDependencies;
   issues: IssuesList;
   coreAspects: string[] = [];
   processedFiles: string[];
-  overridesDependencies: OverridesDependencies;
   debugDependenciesData: DebugDependencies;
-  autoDetectOverrides: Record<string, any>;
   autoDetectConfigMerge: Record<string, any>;
-
-  static getWorkspacePolicy: WorkspacePolicyGetter;
-  static registerWorkspacePolicyGetter(func: WorkspacePolicyGetter) {
-    this.getWorkspacePolicy = func;
-  }
-
-  static envDetectorsGetter: GetEnvDetectors;
-  static registerEnvDetectorGetter(getter: GetEnvDetectors) {
-    this.envDetectorsGetter = getter;
-  }
-
-  static getOnComponentAutoDetectOverrides: OnComponentAutoDetectOverrides;
-  static registerOnComponentAutoDetectOverridesGetter(func: OnComponentAutoDetectOverrides) {
-    this.getOnComponentAutoDetectOverrides = func;
-  }
-
-  static getOnComponentAutoDetectConfigMerge: OnComponentAutoDetectConfigMerge;
-  static registerOnComponentAutoDetectConfigMergeGetter(func: OnComponentAutoDetectConfigMerge) {
-    this.getOnComponentAutoDetectConfigMerge = func;
-  }
-
-  /**
-   * This will get the peers policy provided by the env of the component
-   */
-  static getHarmonyEnvPeersPolicyForEnvItself: HarmonyEnvPeersPolicyForEnvItselfGetter;
-  static registerHarmonyEnvPeersPolicyForEnvItselfGetter(func: HarmonyEnvPeersPolicyForEnvItselfGetter) {
-    this.getHarmonyEnvPeersPolicyForEnvItself = func;
-  }
-
-  static getDepResolverAspectName: () => string;
-  static getCoreAspectsPackagesAndIds: () => Record<string, string>;
-  static getDevFiles: (component: Component) => Promise<string[]>;
-
-  constructor(component: Component, consumer: Consumer) {
-    this.component = component;
-    this.consumer = consumer;
+  constructor(
+    private component: Component,
+    private workspace: Workspace,
+    private devFiles: DevFilesMain,
+    private depsResolver: DependencyResolverMain,
+    private aspectLoader: AspectLoaderMain
+  ) {
     this.componentId = component.componentId;
     // the consumerComponent is coming from the workspace, so it must have the componentMap prop
     this.componentMap = this.component.componentMap as ComponentMap;
@@ -166,9 +89,11 @@ export default class DependencyResolver {
     };
     this.processedFiles = [];
     this.issues = component.issues;
-    this.setLegacyInsideHarmonyIssue();
-    this.overridesDependencies = new OverridesDependencies(component);
     this.debugDependenciesData = { components: [] };
+  }
+
+  get consumer(): Consumer {
+    return this.workspace.consumer;
   }
 
   private setTree(tree: DependenciesTree) {
@@ -198,7 +123,7 @@ export default class DependencyResolver {
   async getDependenciesData(
     cacheResolvedDependencies: Record<string, any>,
     cacheProjectAst: Record<string, any> | undefined
-  ): Promise<DependenciesData> {
+  ): Promise<{ dependenciesData: DependenciesData; debugDependenciesData: DebugDependencies }> {
     const componentDir = path.join(this.consumerPath, this.componentMap.rootDir);
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
     const allFiles = [...nonTestsFiles, ...testsFiles];
@@ -216,17 +141,21 @@ export default class DependencyResolver {
     // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
     // they are referred as "untracked components" and the user should add them later on in order to tag
     this.setTree(dependenciesTree.tree);
-    const devFiles = await DependencyResolver.getDevFiles(this.component);
+    const devFiles = await this.devFiles.getDevFilesForConsumerComp(this.component);
     await this.populateDependencies(allFiles, devFiles);
-    return new DependenciesData(this.allDependencies, this.allPackagesDependencies, this.issues, this.coreAspects, {
-      manuallyRemovedDependencies: this.overridesDependencies.manuallyRemovedDependencies,
-      manuallyAddedDependencies: this.overridesDependencies.manuallyAddedDependencies,
-      missingPackageDependencies: this.overridesDependencies.missingPackageDependencies,
-    });
+    return {
+      dependenciesData: new DependenciesData(
+        this.allDependencies,
+        this.allPackagesDependencies,
+        this.issues,
+        this.coreAspects
+      ),
+      debugDependenciesData: this.debugDependenciesData,
+    };
   }
 
   async getEnvDetectors(): Promise<DependencyDetector[] | null> {
-    return DependencyResolver.envDetectorsGetter(this.component.extensions);
+    return this.depsResolver.calcComponentEnvDepDetectors(this.component.extensions);
   }
 
   /**
@@ -249,8 +178,6 @@ export default class DependencyResolver {
    * and marked as ignored in the consumer or component config file.
    */
   private async populateDependencies(files: string[], testsFiles: string[]) {
-    await this.loadAutoDetectOverrides();
-    await this.loadAutoDetectConfigMerge();
     files.forEach((file) => {
       const fileType: FileType = {
         isTestFile: testsFiles.includes(file),
@@ -264,60 +191,6 @@ export default class DependencyResolver {
       this.processDepFiles(file, fileType);
       this.processUnidentifiedPackages(file);
     });
-
-    this.cloneAllPackagesDependencies();
-
-    this.removeIgnoredPackagesByOverrides();
-    this.removeDevAndEnvDepsIfTheyAlsoRegulars();
-    this.applyPeersFromComponentModel();
-    this.applyPackageJson();
-    this.applyWorkspacePolicy();
-    this.makeLegacyAsPeer();
-    await this.applyAutoDetectOverridesOnComponent();
-    this.manuallyAddDependencies();
-    // Doing this here (after manuallyAddDependencies) because usually the env of the env is adding dependencies as peer of the env
-    // which will make this not work if it come before
-    // example:
-    // custom react has peers with react 16.4.0.
-    // the custom react uses the "teambit.envs/env" env, which will add react ^17.0.0 to every component that uses it
-    // we want to make sure that the custom react is using 16.4.0 not 17.
-    await this.applyAutoDetectedPeersFromEnvOnEnvItSelf();
-
-    this.coreAspects = R.uniq(this.coreAspects);
-  }
-
-  private async loadAutoDetectOverrides() {
-    const autoDetectOverrides = await DependencyResolver.getOnComponentAutoDetectOverrides(
-      this.component.extensions,
-      this.component.id,
-      this.component.files
-    );
-    this.autoDetectOverrides = autoDetectOverrides;
-  }
-
-  private async loadAutoDetectConfigMerge() {
-    const autoDetectOverrides = await DependencyResolver.getOnComponentAutoDetectConfigMerge(this.component.id);
-    this.autoDetectConfigMerge = autoDetectOverrides || {};
-  }
-
-  private cloneAllPackagesDependencies() {
-    this.originAllPackagesDependencies = cloneDeep(this.allPackagesDependencies);
-  }
-
-  private removeIgnoredPackagesByOverrides() {
-    const shouldBeIncluded = (pkgVersion, pkgName) =>
-      !this.overridesDependencies.shouldIgnorePackageByType(pkgName, 'dependencies');
-    const shouldBeIncludedDev = (pkgVersion, pkgName) =>
-      !this.overridesDependencies.shouldIgnorePackageByType(pkgName, 'devDependencies');
-
-    this.allPackagesDependencies.packageDependencies = R.pickBy(
-      shouldBeIncluded,
-      this.allPackagesDependencies.packageDependencies
-    );
-    this.allPackagesDependencies.devPackageDependencies = R.pickBy(
-      shouldBeIncludedDev,
-      this.allPackagesDependencies.devPackageDependencies
-    );
   }
 
   private throwForNonExistFile(file: string) {
@@ -325,96 +198,6 @@ export default class DependencyResolver {
       throw new Error(
         `DependencyResolver: a file "${file}" was not returned from the driver, its dependencies are unknown`
       );
-    }
-  }
-
-  // TODO: maybe cache those results??
-  private _resolvePackageData(packageName: string): ResolvedPackageData | undefined {
-    const rootDir: PathLinux | null | undefined = this.componentMap.rootDir;
-    const consumerPath = this.consumer.getPath();
-    const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const modulePath = resolvePackagePath(packageName, basePath, consumerPath);
-    if (!modulePath) return undefined; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component
-    const packageObject = resolvePackageData(basePath, modulePath);
-    return packageObject;
-  }
-
-  private _getComponentIdToAdd(
-    field: string,
-    dependency: string
-  ): { componentId?: ComponentID; packageName?: string } | undefined {
-    if (field === 'peerDependencies') return undefined;
-    const packageData = this._resolvePackageData(dependency);
-    return { componentId: packageData?.componentId, packageName: packageData?.name };
-  }
-
-  getDependenciesToAddManually(
-    packageJson: Record<string, any> | null | undefined,
-    existingDependencies: AllDependencies
-  ): { components: Record<string, any>; packages: Record<string, any> } | undefined {
-    const overrides = this.overridesDependencies.getDependenciesToAddManually();
-    if (!overrides) return undefined;
-    const components = {};
-    const packages = {};
-    DEPENDENCIES_FIELDS.forEach((depField) => {
-      if (!overrides[depField]) return;
-      Object.keys(overrides[depField]).forEach((dependency) => {
-        const dependencyValue = overrides[depField][dependency];
-        const componentData = this._getComponentIdToAdd(depField, dependency);
-        if (componentData?.componentId) {
-          const dependencyExist = existingDependencies[depField].find((d) =>
-            d.id.isEqualWithoutVersion(componentData.componentId)
-          );
-          if (!dependencyExist) {
-            this.overridesDependencies._addManuallyAddedDep(depField, componentData.componentId.toString());
-            components[depField] ? components[depField].push(componentData) : (components[depField] = [componentData]);
-          }
-          return;
-        }
-        const addedPkg = this.overridesDependencies._manuallyAddPackage(
-          depField,
-          dependency,
-          dependencyValue,
-          packageJson
-        );
-        if (addedPkg) {
-          packages[depField] = Object.assign(packages[depField] || {}, addedPkg);
-          if (componentData && !componentData.packageName) {
-            this.overridesDependencies.missingPackageDependencies.push(dependency);
-          }
-        }
-      });
-    });
-    return { components, packages };
-  }
-
-  private manuallyAddDependencies() {
-    const packageJson = this._getPackageJson();
-    const dependencies = this.getDependenciesToAddManually(packageJson, this.allDependencies);
-    if (!dependencies) return;
-    const { components, packages } = dependencies;
-    DEPENDENCIES_FIELDS.forEach((depField) => {
-      if (components[depField] && components[depField].length) {
-        components[depField].forEach((depData) =>
-          this.allDependencies[depField].push(new Dependency(depData.componentId, [], depData.packageName))
-        );
-      }
-      if (packages[depField] && !R.isEmpty(packages[depField])) {
-        Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], packages[depField]);
-      }
-    });
-    // The automatic dependency detector considers all found dependencies to be runtime dependencies.
-    // But this breaks proper installation of injected subdependencies that are resolved from workspace components.
-    if (this.allPackagesDependencies.packageDependencies && packages.peerDependencies) {
-      for (const peerName of Object.keys(packages.peerDependencies)) {
-        delete this.allPackagesDependencies.packageDependencies[peerName];
-      }
-    }
-    if (this.allPackagesDependencies.packageDependencies && packages.peerPackageDependencies) {
-      for (const peerName of Object.keys(packages.peerPackageDependencies)) {
-        delete this.allPackagesDependencies.packageDependencies[peerName];
-      }
     }
   }
 
@@ -592,12 +375,12 @@ export default class DependencyResolver {
         packageName: compDep.name,
       };
       const getVersionFromPkgJson = (): string | null => {
-        const versionFromDependencyPkgJson = this.getValidVersion(compDep.concreteVersion);
+        const versionFromDependencyPkgJson = getValidVersion(compDep.concreteVersion);
         if (versionFromDependencyPkgJson) {
           depDebug.versionResolvedFrom = 'DependencyPkgJson';
           return versionFromDependencyPkgJson;
         }
-        const versionFromDependentPkgJson = this.getValidVersion(compDep.versionUsedByDependent);
+        const versionFromDependentPkgJson = getValidVersion(compDep.versionUsedByDependent);
         if (versionFromDependentPkgJson) {
           depDebug.versionResolvedFrom = 'DependentPkgJson';
           return versionFromDependentPkgJson;
@@ -608,69 +391,8 @@ export default class DependencyResolver {
       if (version) {
         componentId = componentId.changeVersion(version);
       }
-      if (this.overridesDependencies.shouldIgnorePackage(compDep.name, fileType)) {
-        return;
-      }
-      const getExistingIdFromBitmap = (): ComponentID | undefined => {
-        const existingIds = this.consumer.bitmapIdsFromCurrentLane.filterWithoutVersion(componentId);
-        return existingIds.length === 1 ? existingIds[0] : undefined;
-      };
-      const getFromMergeConfig = () => {
-        let foundVersion: string | undefined | null;
-        DEPENDENCIES_FIELDS.forEach((field) => {
-          if (this.autoDetectConfigMerge[field]?.[compDep.name]) {
-            foundVersion = this.autoDetectConfigMerge[field]?.[compDep.name];
-            foundVersion = foundVersion ? this.getValidVersion(foundVersion) : null;
-          }
-        });
-        return foundVersion ? componentId.changeVersion(foundVersion) : undefined;
-      };
-      const getExistingIdFromModel = (): ComponentID | undefined => {
-        if (this.componentFromModel) {
-          const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
-          if (modelDep) {
-            depDebug.versionResolvedFrom = 'Model';
-            return modelDep;
-          }
-        }
-        return undefined;
-      };
-      const getExistingId = (): ComponentID => {
-        if (this.isPkgInOverrides(compDep.name)) {
-          return componentId;
-        }
-
-        const fromBitmap = getExistingIdFromBitmap();
-        if (fromBitmap) {
-          depDebug.versionResolvedFrom = 'BitMap';
-          return fromBitmap;
-        }
-
-        // In case it's resolved from the node_modules, and it's also in the ws policy or variants,
-        // use the resolved version from the node_modules / package folder
-        if (this.isPkgInWorkspacePolicies(compDep.name)) {
-          return componentId;
-        }
-
-        // merge config here is only auto-detected ones. their priority is less then the ws policy
-        // otherwise, imagine you merge a lane, you don't like the dependency you got from the other lane, you run
-        // bit-install to change it, but it won't do anything.
-        const fromMergeConfig = getFromMergeConfig();
-        if (fromMergeConfig) {
-          depDebug.versionResolvedFrom = 'MergeConfig';
-          return fromMergeConfig;
-        }
-
-        if (this.isPkgInAutoDetectOverrides(compDep.name)) {
-          return componentId;
-        }
-
-        // If there is a version in the node_modules/package folder, but it's not in the ws policy,
-        // prefer the version from the model over the version from the node_modules
-        return getExistingIdFromModel() ?? componentId;
-      };
-      const existingId = getExistingId();
-      if (existingId.isEqualWithoutVersion(this.componentId)) {
+      const existingId = componentId;
+      if (existingId.isEqual(this.componentId)) {
         // happens when one of the component files requires another using module path
         // no need to enter anything to the dependencies
         return;
@@ -682,21 +404,7 @@ export default class DependencyResolver {
   }
 
   private isPkgInWorkspacePolicies(pkgName: string) {
-    return DependencyResolver.getWorkspacePolicy().dependencies?.[pkgName];
-  }
-  private isPkgInOverrides(pkgName: string): boolean {
-    const dependencies = this.overridesDependencies.getDependenciesToAddManually();
-    if (!dependencies) return false;
-    const allDeps = Object.values(dependencies)
-      .map((obj) => Object.keys(obj))
-      .flat();
-    return allDeps.includes(pkgName);
-  }
-
-  private isPkgInAutoDetectOverrides(pkgName: string): boolean {
-    return DEPENDENCIES_FIELDS.some(
-      (depField) => this.autoDetectOverrides[depField] && this.autoDetectOverrides[depField][pkgName]
-    );
+    return this.depsResolver.getWorkspacePolicyManifest().dependencies?.[pkgName];
   }
 
   private addImportNonMainIssueIfNeeded(filePath: PathLinuxRelative, dependencyPkgData: ResolvedPackageData) {
@@ -729,28 +437,6 @@ export default class DependencyResolver {
       return;
     }
     (this.issues.getOrCreate(IssuesClasses.ImportNonMainFiles).data[filePath] ||= []).push(nonMainFileShort);
-  }
-
-  private getValidVersion(version: string | undefined) {
-    if (!version) {
-      return null;
-    }
-    if (semver.valid(version)) {
-      // this takes care of pre-releases as well, as they're considered valid semver.
-      return version;
-    }
-    if (semver.validRange(version)) {
-      // if this is a range, e.g. ^1.0.0, return a valid version: 1.0.0.
-      const coerced = semver.coerce(version);
-      if (coerced) {
-        return coerced.version;
-      }
-    }
-    if (isSnap(version)) {
-      return version;
-    }
-    // it's probably a relative path to the component
-    return null;
   }
 
   private processPackages(originFile: PathLinuxRelative, fileType: FileType) {
@@ -797,9 +483,7 @@ export default class DependencyResolver {
     };
     const processMissingPackages = () => {
       if (isEmpty(missing.packages)) return;
-      const missingPackages = missing.packages.filter(
-        (pkg) => !this.overridesDependencies.shouldIgnorePackage(pkg, fileType)
-      );
+      const missingPackages = missing.packages;
       if (!R.isEmpty(missingPackages)) {
         this._pushToMissingPackagesDependenciesIssues(originFile, missingPackages, fileType);
       }
@@ -822,6 +506,18 @@ export default class DependencyResolver {
     } else this.issues.getOrCreate(IssuesClasses.ResolveErrors).data[originFile] = error.message;
   }
 
+  private getCoreAspectsPackagesAndIds(): Record<string, string> {
+    const allCoreAspectsIds = this.aspectLoader.getCoreAspectIds();
+    const coreAspectsPackagesAndIds = {};
+
+    allCoreAspectsIds.forEach((id) => {
+      const packageName = getCoreAspectPackageName(id);
+      coreAspectsPackagesAndIds[packageName] = id;
+    });
+
+    return coreAspectsPackagesAndIds;
+  }
+
   /**
    * when a user uses core-extensions these core-extensions should not be dependencies.
    * here, we filter them out from all places they could entered as dependencies.
@@ -829,10 +525,7 @@ export default class DependencyResolver {
    * which case we recognizes that the current originFile is a core-extension and avoid filtering.
    */
   private processCoreAspects(originFile: PathLinuxRelative) {
-    const coreAspects = DependencyResolver.getCoreAspectsPackagesAndIds?.();
-    if (!coreAspects) {
-      return;
-    }
+    const coreAspects = this.getCoreAspectsPackagesAndIds();
 
     // const scopes = coreAspects.map((id) => {
     //   const id = id.split()
@@ -926,27 +619,6 @@ export default class DependencyResolver {
     this.debugDependenciesData.components.push(depDebug);
   }
 
-  /**
-   * Remove the dependencies which appear both in dev and regular deps from the dev
-   * Because if a dependency is both dev dependency and regular dependency it should be treated as regular one
-   * Apply for both packages and components dependencies
-   */
-  private removeDevAndEnvDepsIfTheyAlsoRegulars() {
-    // remove dev and env packages that are also regular packages
-    const getNotRegularPackages = (packages) =>
-      R.difference(R.keys(packages), R.keys(this.allPackagesDependencies.packageDependencies));
-    this.allPackagesDependencies.devPackageDependencies = R.pick(
-      getNotRegularPackages(this.allPackagesDependencies.devPackageDependencies),
-      this.allPackagesDependencies.devPackageDependencies
-    );
-    // remove dev dependencies that are also regular dependencies
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const componentDepsIds = new ComponentIdList(...this.allDependencies.dependencies.map((c) => c.id));
-    this.allDependencies.devDependencies = this.allDependencies.devDependencies.filter(
-      (d) => !componentDepsIds.has(d.id)
-    );
-  }
-
   private getExistingDependency(dependencies: Dependency[], id: ComponentID): Dependency | null | undefined {
     return dependencies.find((d) => d.id.isEqualWithoutVersion(id));
   }
@@ -965,241 +637,6 @@ export default class DependencyResolver {
     return R.differenceWith(cmp, targetSpecifiers, originSpecifiers);
   }
 
-  private applyPeersFromComponentModel(): void {
-    const getPeerDependencies = (): Record<string, any> => {
-      const packageJson = this._getPackageJsonFromComponentModel();
-      if (packageJson && packageJson.peerDependencies) return packageJson.peerDependencies;
-      return {};
-    };
-    const projectPeerDependencies = getPeerDependencies();
-    const peerPackages = {};
-    if (R.isEmpty(projectPeerDependencies)) return;
-
-    // check whether the peer-dependencies was actually require in the code. if so, remove it from
-    // the packages/dev-packages and add it as a peer-package.
-    // if it was not required in the code, don't add it to the peerPackages
-    Object.keys(projectPeerDependencies).forEach((pkg) => {
-      if (this.overridesDependencies.shouldIgnorePeerPackage(pkg)) return;
-      ['packageDependencies', 'devPackageDependencies'].forEach((field) => {
-        if (Object.keys(this.allPackagesDependencies[field]).includes(pkg)) {
-          delete this.allPackagesDependencies[field][pkg];
-          peerPackages[pkg] = projectPeerDependencies[pkg];
-        }
-      });
-    });
-    this.allPackagesDependencies.peerPackageDependencies = peerPackages;
-  }
-
-  private applyPackageJson(): void {
-    const packageJson = this._getPackageJson();
-    if (!packageJson) return;
-    const pkgJsonPeer = packageJson.peerDependencies || {};
-    const pkgJsonRegularDeps = packageJson.dependencies || {};
-    const peerDeps = this.allPackagesDependencies.peerPackageDependencies || {};
-    ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
-      R.forEachObjIndexed((_pkgVal, pkgName) => {
-        const peerVersionFromPkgJson = pkgJsonPeer[pkgName];
-        const regularVersionFromPkgJson = pkgJsonRegularDeps[pkgName];
-        if (peerVersionFromPkgJson) {
-          delete this.allPackagesDependencies[field][pkgName];
-          peerDeps[pkgName] = peerVersionFromPkgJson;
-        } else if (regularVersionFromPkgJson) {
-          delete this.allPackagesDependencies.peerPackageDependencies?.[pkgName];
-          this.allPackagesDependencies[field][pkgName] = regularVersionFromPkgJson;
-        }
-      }, this.allPackagesDependencies[field]);
-    });
-    this.allPackagesDependencies.peerPackageDependencies = peerDeps;
-  }
-
-  private applyWorkspacePolicy(): void {
-    const wsPolicy = DependencyResolver.getWorkspacePolicy();
-    if (!wsPolicy) return;
-    const wsPeer = wsPolicy.peerDependencies || {};
-    const wsRegular = wsPolicy.dependencies || {};
-    const peerDeps = this.allPackagesDependencies.peerPackageDependencies || {};
-    // we are not iterate component deps since they are resolved from what actually installed
-    // the policy used for installation only in that case
-    ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
-      R.forEachObjIndexed((_pkgVal, pkgName) => {
-        const peerVersionFromWsPolicy = wsPeer[pkgName];
-        const regularVersionFromWsPolicy = wsRegular[pkgName];
-        if (peerVersionFromWsPolicy) {
-          delete this.allPackagesDependencies[field][pkgName];
-          peerDeps[pkgName] = peerVersionFromWsPolicy;
-        } else if (regularVersionFromWsPolicy) {
-          delete this.allPackagesDependencies.peerPackageDependencies?.[pkgName];
-          this.allPackagesDependencies[field][pkgName] = regularVersionFromWsPolicy;
-        }
-      }, this.allPackagesDependencies[field]);
-    });
-    this.allPackagesDependencies.peerPackageDependencies = peerDeps;
-  }
-
-  /**
-   * It removes the @teambit/legacy dependency from the dependencies/devDeps and adds it as a peer dependency with ^.
-   */
-  private makeLegacyAsPeer(): void {
-    let version;
-    if (this.allPackagesDependencies.packageDependencies['@teambit/legacy']) {
-      version = this.allPackagesDependencies.packageDependencies['@teambit/legacy'];
-      delete this.allPackagesDependencies.packageDependencies['@teambit/legacy'];
-    }
-    if (this.allPackagesDependencies.devPackageDependencies['@teambit/legacy']) {
-      if (!version) version = this.allPackagesDependencies.devPackageDependencies['@teambit/legacy'];
-      delete this.allPackagesDependencies.devPackageDependencies['@teambit/legacy'];
-    }
-    if (version) {
-      if (!Number.isNaN(version[0])) version = `^${version}`;
-      this.allPackagesDependencies.peerPackageDependencies['@teambit/legacy'] = version;
-    }
-  }
-
-  private async applyAutoDetectOverridesOnComponent(): Promise<void> {
-    const autoDetectOverrides = this.autoDetectOverrides;
-
-    if (!autoDetectOverrides || !Object.keys(autoDetectOverrides).length) {
-      return;
-    }
-
-    const originallyExists: string[] = [];
-    let missingPackages: string[] = [];
-    // We want to also add missing packages to the peer list as we know to resolve the version from the env anyway
-    const missingData = this.issues.getIssueByName('MissingPackagesDependenciesOnFs')?.data as
-      | MissingPackagesData[]
-      | undefined;
-    if (missingData) {
-      missingPackages = uniq(missingData.map((d) => d.missingPackages).flat());
-    }
-    ['dependencies', 'devDependencies', 'peerDependencies'].forEach((field) => {
-      R.forEachObjIndexed((pkgVal, pkgName) => {
-        if (this.overridesDependencies.shouldIgnorePeerPackage(pkgName)) return;
-        // Validate it was auto detected, we only affect stuff that were detected
-        const existsInCompsDeps = this.allDependencies.dependencies.find((dep) => {
-          return dep.packageName === pkgName;
-        });
-
-        const existsInCompsDevDeps = this.allDependencies.devDependencies.find((dep) => {
-          return dep.packageName === pkgName;
-        });
-
-        if (
-          // We are checking originAllPackagesDependencies instead of allPackagesDependencies
-          // as it might be already removed from allPackagesDependencies at this point if it was set with
-          // "-" in runtime/dev
-          // in such case we still want to apply it here
-          !this.originAllPackagesDependencies.packageDependencies[pkgName] &&
-          !this.originAllPackagesDependencies.devPackageDependencies[pkgName] &&
-          !this.originAllPackagesDependencies.peerPackageDependencies[pkgName] &&
-          !existsInCompsDeps &&
-          !existsInCompsDevDeps &&
-          // Check if it was orignally exists in the component
-          // as we might have a policy which looks like this:
-          // "components": {
-          //   "dependencies": {
-          //       "my-dep": "-"
-          //    },
-          //   "devDependencies": {
-          //       "my-dep": "1.0.0"
-          //    },
-          // }
-          // in that case we might remove it before getting to the devDeps then we will think that it wasn't required in the component
-          // which is incorrect
-          !originallyExists.includes(pkgName) &&
-          !missingPackages.includes(pkgName)
-        ) {
-          return;
-        }
-        originallyExists.push(pkgName);
-        const key = DepsKeysToAllPackagesDepsKeys[field];
-
-        delete this.allPackagesDependencies[key][pkgName];
-        // When changing peer dependency we want it to be stronger than the other types
-        if (field === 'peerDependencies') {
-          delete this.allPackagesDependencies.devPackageDependencies[pkgName];
-          delete this.allPackagesDependencies.packageDependencies[pkgName];
-          if (existsInCompsDeps) {
-            this.allDependencies.dependencies = this.allDependencies.dependencies.filter(
-              (dep) => dep.packageName !== pkgName
-            );
-          }
-          if (existsInCompsDevDeps) {
-            this.allDependencies.devDependencies = this.allDependencies.devDependencies.filter(
-              (dep) => dep.packageName !== pkgName
-            );
-          }
-        }
-        // delete this.allPackagesDependencies.packageDependencies[pkgName];
-        // delete this.allPackagesDependencies.devPackageDependencies[pkgName];
-        // delete this.allPackagesDependencies.peerPackageDependencies[pkgName];
-
-        // If it exists in comps deps / comp dev deps, we don't want to add it to the allPackagesDependencies
-        // as it will make the same dep both a dev and runtime dep
-        // since we are here only for auto detected deps, it means we already resolved the version correctly
-        // so we don't need to really modify the version
-        // also the version here might have a range (^ or ~ for example) so we can't
-        // just put it as is, as it is not valid for component deps to have range
-        if (
-          pkgVal !== MANUALLY_REMOVE_DEPENDENCY &&
-          ((!existsInCompsDeps && !existsInCompsDevDeps) || field === 'peerDependencies')
-        ) {
-          this.allPackagesDependencies[key][pkgName] = pkgVal;
-        }
-      }, autoDetectOverrides[field]);
-    });
-  }
-
-  private async applyAutoDetectedPeersFromEnvOnEnvItSelf(): Promise<void> {
-    const envPolicy = await DependencyResolver.getHarmonyEnvPeersPolicyForEnvItself(
-      this.component.id,
-      this.component.files
-    );
-    if (!envPolicy || !Object.keys(envPolicy).length) {
-      return;
-    }
-    const deps = this.allPackagesDependencies.packageDependencies || {};
-    // we are not iterate component deps since they are resolved from what actually installed
-    // the policy used for installation only in that case
-    ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
-      R.forEachObjIndexed((_pkgVal, pkgName) => {
-        const peerVersionFromEnvPolicy = envPolicy[pkgName];
-        if (peerVersionFromEnvPolicy) {
-          delete this.allPackagesDependencies[field][pkgName];
-        }
-      }, this.allPackagesDependencies[field]);
-    });
-    Object.assign(deps, envPolicy);
-    // TODO: handle component deps once we support peers between components
-    this.allPackagesDependencies.packageDependencies = deps;
-  }
-
-  /**
-   * returns `package.json` of the component when it's imported, or `package.json` of the workspace
-   * when it's authored.
-   */
-  private _getPackageJson(): Record<string, any> | undefined {
-    return this.consumer.packageJson.packageJsonObject;
-  }
-
-  private _getPackageJsonFromComponentModel(): Record<string, any> | undefined {
-    if (this.componentFromModel && this.component.componentMap) {
-      // a component is imported but the package.json file is missing or never written
-      // read the values from the model
-      const packageJson = PackageJsonFile.createFromComponent(
-        this.component.componentMap.rootDir,
-        this.componentFromModel
-      );
-      return packageJson.packageJsonObject;
-    }
-    return undefined;
-  }
-
-  private setLegacyInsideHarmonyIssue() {
-    if (this.componentFromModel && this.componentFromModel.isLegacy) {
-      this.issues.getOrCreate(IssuesClasses.LegacyInsideHarmony).data = true;
-    }
-  }
-
   /**
    * when requiring packages in typescript, sometimes there are the types packages with the same
    * name, which the user probably wants as well. for example, requiring `foo` package, will also
@@ -1214,7 +651,7 @@ export default class DependencyResolver {
     if (packageNames.length === 0) return;
     const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
     if (!isTypeScript) return;
-    const depsHost = DependencyResolver.getWorkspacePolicy();
+    const depsHost = this.depsResolver.getWorkspacePolicyManifest();
     const addFromConfig = (packageName: string): boolean => {
       if (!depsHost) return false;
       return DEPENDENCIES_FIELDS.some((depField) => {
@@ -1241,19 +678,6 @@ export default class DependencyResolver {
       const added = addFromConfig(packageName);
       if (!added) addFromModel(packageName);
     });
-  }
-
-  private _pkgFieldMapping(field: string) {
-    switch (field) {
-      case 'dependencies':
-        return 'packageDependencies';
-      case 'devDependencies':
-        return 'devPackageDependencies';
-      case 'peerDependencies':
-        return 'peerPackageDependencies';
-      default:
-        throw new Error(`${field} is not recognized`);
-    }
   }
 
   private _pushToUntrackDependenciesIssues(originFile: PathLinuxRelative, depFileRelative, nested = false) {
@@ -1312,4 +736,26 @@ export default class DependencyResolver {
       data.push({ filePath: originFile, missingPackages, isDevFile: fileType.isTestFile });
     }
   }
+}
+
+export function getValidVersion(version: string | undefined) {
+  if (!version) {
+    return null;
+  }
+  if (semver.valid(version)) {
+    // this takes care of pre-releases as well, as they're considered valid semver.
+    return version;
+  }
+  if (semver.validRange(version)) {
+    // if this is a range, e.g. ^1.0.0, return a valid version: 1.0.0.
+    const coerced = semver.coerce(version);
+    if (coerced) {
+      return coerced.version;
+    }
+  }
+  if (isSnap(version)) {
+    return version;
+  }
+  // it's probably a relative path to the component
+  return null;
 }
