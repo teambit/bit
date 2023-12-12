@@ -14,7 +14,8 @@ export async function createRoot(
   config = {},
   ignoreVersion?: boolean,
   addRuntimes = false,
-  harmonyPackage?: string
+  harmonyPackage?: string,
+  shouldRun = false,
 ) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
   const identifiers = getIdentifiers(aspectDefs, 'Aspect');
@@ -56,6 +57,7 @@ export default function render(...props){
         );
       })
       .then((rootExtension) => {
+        if (rootExtension.run) return rootExtension.run();
         if (isBrowser) {
           return rootExtension.render(${rootId}, ...props);
         } else {
@@ -68,7 +70,7 @@ export default function render(...props){
     });
 }
 
-if (isBrowser || '${runtime}' === 'main') render();
+if (isBrowser || '${runtime}' === 'main' || ${shouldRun}) render();
 `;
 }
 

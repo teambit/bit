@@ -453,6 +453,7 @@ export class UiMain {
     ignoreVersion?: boolean,
     addRuntimes?: boolean,
     harmonyPackage?: string,
+    shouldRun = false
   ) {
     const contents = await createRoot(
       aspectDefs,
@@ -462,7 +463,8 @@ export class UiMain {
       config || this.harmony.config.toObject(),
       ignoreVersion,
       addRuntimes,
-      harmonyPackage
+      harmonyPackage,
+      shouldRun
     );
     const filepath = resolve(join(path || __dirname, `${runtimeName}.root${sha1(contents)}.js`));
     if (fs.existsSync(filepath)) return filepath;
