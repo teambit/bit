@@ -24,6 +24,7 @@ export type ComponentLoadOptions = {
   loadExtensions?: boolean;
   storeInCache?: boolean;
   storeDepsInFsCache?: boolean;
+  resolveExtensionsVersions?: boolean;
 };
 export type LoadManyResult = {
   components: Component[];
@@ -39,6 +40,7 @@ export type DependencyLoaderOpts = {
   cacheProjectAst?: Record<string, any>;
   useDependenciesCache: boolean;
   storeInFsCache?: boolean;
+  resolveExtensionsVersions?: boolean;
 };
 
 type LoadDepsFunc = (component: Component, opts: DependencyLoaderOpts) => Promise<any>;
@@ -227,6 +229,7 @@ export default class ComponentLoader {
         cacheProjectAst: this.cacheProjectAst,
         useDependenciesCache: component.issues.isEmpty(),
         storeInFsCache: loadOpts?.storeDepsInFsCache,
+        resolveExtensionsVersions: loadOpts?.resolveExtensionsVersions,
       });
     };
 

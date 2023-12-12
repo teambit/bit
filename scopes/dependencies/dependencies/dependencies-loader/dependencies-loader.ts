@@ -51,7 +51,8 @@ export class DependenciesLoader {
       this.component,
       results.overridesDependencies,
       results.autoDetectOverrides,
-      applyOverrides.debugDependenciesData.components
+      applyOverrides.debugDependenciesData.components,
+      this.opts.resolveExtensionsVersions
     );
 
     return {

@@ -30,6 +30,7 @@ export type ComponentLoadOptions = LegacyComponentLoadOptions & {
   executeLoadSlot?: boolean;
   idsToNotLoadAsAspects?: string[];
   loadSeedersAsAspects?: boolean;
+  resolveExtensionsVersions?: boolean;
 };
 
 type LoadGroup = { workspaceIds: ComponentID[]; scopeIds: ComponentID[] } & LoadGroupMetadata;
@@ -111,7 +112,10 @@ export class WorkspaceComponentLoader {
       // We don't want to load extension or execute the load slot at this step
       // we will do it later
       // this important for better performance
-      { loadExtensions: false, executeLoadSlot: false, loadSeedersAsAspects: true },
+      // We don't want to resolveExtensionsVersions as with get many we call aspect merger merge before update dependencies
+      // so we will have the correct versions for extensions already and update them after will resolve wrong versions
+      // in some cases
+      { loadExtensions: false, executeLoadSlot: false, loadSeedersAsAspects: true, resolveExtensionsVersions: false },
       loadOpts || {}
     );
 
