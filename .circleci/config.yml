@@ -81,7 +81,6 @@ commands: # reusable commands
       # - run: '<<parameters.bin_name>> config set user.token <<parameters.token>>'
       - run: '<<parameters.bin_name>> config set hub_domain <<parameters.env>>.bit.dev'
       - run: '<<parameters.bin_name>> config set package-manager.cache /home/circleci/package-manager-cache'
-      - run: '<<parameters.bin_name>> config set symphony_url api.v2.bit.cloud'
   docker_build_and_push:
     parameters:
       docker_build_arg_name:
