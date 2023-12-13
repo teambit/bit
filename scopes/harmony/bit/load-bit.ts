@@ -197,8 +197,8 @@ function shouldLoadInSafeMode() {
     'cat-component',
     'cmp',
     'cat-lane',
-    'login',
-    'logout',
+    // 'login',
+    // 'logout',
     'config',
     'remote',
   ];

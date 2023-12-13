@@ -1,3 +1,4 @@
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import CLIAspect, { CLIMain, MainRuntime } from '@teambit/cli';
 import { v4 } from 'uuid';
 import chalk from 'chalk';
@@ -53,6 +54,8 @@ type CloudAuthListener = {
   username?: string | null;
 };
 
+export type OnSuccessLogin = ({ username, token }: { username?: string; token?: string }) => void;
+export type OnSuccessLoginSlot = SlotRegistry<OnSuccessLogin>;
 export class CloudMain {
   static ERROR_RESPONSE = 500;
   static DEFAULT_PORT = 8888;
@@ -69,17 +72,16 @@ export class CloudMain {
     public express: ExpressMain,
     public workspace: Workspace,
     public scope: ScopeMain,
-    public globalConfig: GlobalConfigMain
+    public globalConfig: GlobalConfigMain,
+    public onSuccessLoginSlot: OnSuccessLoginSlot
   ) {
     this.setupGracefulShutdown();
   }
 
   setupAuthListener({
     port: portFromParams,
-    onLoggedIn,
   }: {
     port?: number;
-    onLoggedIn?: ({ username, token }: { username?: string; token?: string }) => void;
   } = {}): Promise<CloudAuthListener | null> {
     return new Promise((resolve, reject) => {
       const expectedClientId = CloudMain.CLIENT_ID;
@@ -96,7 +98,7 @@ export class CloudMain {
         })
         .on('error', (err) => {
           // @ts-ignore
-          const { code, port } = err;
+          const { code } = err;
           if (code === 'EADDRINUSE') {
             this.logger.error(`port: ${port} already in use, please run bit login --port <port>`);
             reject(new Error(`port: ${port} already in use, please run bit login --port <port>`));
@@ -132,7 +134,8 @@ export class CloudMain {
             server: authServer,
             username,
           };
-          onLoggedIn?.({ username, token });
+          const onLoggedInFns = this.onSuccessLoginSlot.values();
+          onLoggedInFns.forEach((fn) => fn({ username, token: token as string }));
           return res;
         } catch (err) {
           this.logger.error(`Error on login: ${err}`);
@@ -145,8 +148,13 @@ export class CloudMain {
   }
 
   setupGracefulShutdown() {
-    process.on('SIGINT', this.gracefulShutdown.bind(this));
-    process.on('SIGTERM', this.gracefulShutdown.bind(this));
+    // process.on('SIGINT', this.gracefulShutdown.bind(this));
+    // process.on('SIGTERM', this.gracefulShutdown.bind(this));
+  }
+
+  registerOnSuccessLogin(onSuccessLoginFn: OnSuccessLogin) {
+    this.onSuccessLoginSlot.register(onSuccessLoginFn);
+    return this;
   }
 
   gracefulShutdown() {
@@ -280,7 +288,13 @@ export class CloudMain {
     username?: string;
     token?: string;
   } | null> {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
+      this.registerOnSuccessLogin((loggedInParams) => {
+        resolve({
+          username: loggedInParams.username,
+          token: loggedInParams.token,
+        });
+      });
       if (this.isLoggedIn()) {
         resolve({
           isAlreadyLoggedIn: true,
@@ -288,31 +302,34 @@ export class CloudMain {
           token: this.globalConfig.getSync(CFG_USER_TOKEN_KEY),
         });
       }
+      const promptLogin = () => {
+        const loginUrl = this.getLoginUrl({
+          machineName,
+          cloudDomain,
+        });
+        if (!suppressBrowserLaunch) {
+          console.log(chalk.yellow(`Your browser has been opened to visit:\n${loginUrl}`)); // eslint-disable-line no-console
+          open(loginUrl).catch((err) => {
+            this.logger.error(`failed to open browser on login, err: ${err}`);
+            reject(err);
+          });
+        } else {
+          console.log(chalk.yellow(`Go to the following link in your browser::\n${loginUrl}`)); // eslint-disable-line no-console
+        }
+      };
+
       if (!this.authListener?.server) {
         try {
-          await this.setupAuthListener({
+          this.setupAuthListener({
             port: Number(port),
-            onLoggedIn: (loggedInParams) => {
-              resolve({
-                username: loggedInParams.username,
-                token: loggedInParams.token,
-              });
-            },
-          });
+          })
+            .then(promptLogin)
+            .catch((e) => reject(e));
         } catch (err) {
           reject(err);
         }
       }
-      const loginUrl = this.getLoginUrl({
-        machineName,
-        cloudDomain,
-      });
-      if (!suppressBrowserLaunch) {
-        console.log(chalk.yellow(`Your browser has been opened to visit:\n${loginUrl}`)); // eslint-disable-line no-console
-        open(loginUrl);
-      } else {
-        console.log(chalk.yellow(`Go to the following link in your browser::\n${loginUrl}`)); // eslint-disable-line no-console
-      }
+      promptLogin();
     });
   }
 
@@ -375,7 +392,7 @@ export class CloudMain {
     }
   }
 
-  static slots = [];
+  static slots = [Slot.withType<OnSuccessLogin>()];
   static dependencies = [
     LoggerAspect,
     GraphqlAspect,
@@ -408,18 +425,16 @@ export class CloudMain {
       GlobalConfigMain,
       CLIMain
     ],
-    config: CloudWorkspaceConfig
+    config: CloudWorkspaceConfig,
+    [onSuccessLoginSlot]: [OnSuccessLoginSlot]
   ) {
     const logger = loggerMain.createLogger(CloudAspect.id);
-    const cloudMain = new CloudMain(config, logger, express, workspace, scope, globalConfig);
+    const cloudMain = new CloudMain(config, logger, express, workspace, scope, globalConfig, onSuccessLoginSlot);
     const loginCmd = new LoginCmd(cloudMain);
-    console.log('🚀 ~ file: cloud.main.runtime.ts:422 ~ CloudMain ~ loginCmd:', loginCmd);
     const logoutCmd = new LogoutCmd(cloudMain);
-    console.log('🚀 ~ file: cloud.main.runtime.ts:424 ~ CloudMain ~ logoutCmd:', logoutCmd);
     cli.register(loginCmd, logoutCmd);
-    console.log('🚀 ~ file: cloud.main.runtime.ts:419 ~ CloudMain ~ cli:', cli);
     graphql.register(cloudSchema(cloudMain));
-    if (workspace) cloudMain.setupAuthListener();
+    if (workspace) await cloudMain.setupAuthListener();
     return cloudMain;
   }
 }

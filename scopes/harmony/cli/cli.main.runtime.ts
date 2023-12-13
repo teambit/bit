@@ -69,8 +69,6 @@ export class CLIMain {
    * get an instance of a registered command. (useful for aspects to modify and extend existing commands)
    */
   getCommand(name: string): Command | undefined {
-    console.log('🚀 ~ file: cli.main.runtime.ts:72 ~ CLIMain ~ getCommand ~ name:', name);
-    console.log('🚀 ~ file: cli.main.runtime.ts:74 ~ CLIMain ~ getCommand ~ this.commands:', this.commands);
     return this.commands.find((command) => getCommandId(command.name) === name);
   }
 
@@ -119,7 +117,6 @@ export class CLIMain {
    */
   async run(hasWorkspace: boolean) {
     await this.invokeOnStart(hasWorkspace);
-    console.log('🚀 ~ file: cli.main.runtime.ts:125 ~ CLIMain ~ run ~ this.commands:', this.commands);
     const CliParser = new CLIParser(this.commands, this.groups);
     await CliParser.parse();
   }
