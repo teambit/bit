@@ -100,8 +100,8 @@ export default class Lane extends BitObject {
   ) {
     const log = {
       date: Date.now().toString(),
-      username: globalConfig.getSync(CFG_USER_NAME_KEY) || bitCloudUser?.username,
-      email: globalConfig.getSync(CFG_USER_EMAIL_KEY) || bitCloudUser?.email,
+      username: bitCloudUser?.username || globalConfig.getSync(CFG_USER_NAME_KEY),
+      email: bitCloudUser?.email || globalConfig.getSync(CFG_USER_EMAIL_KEY),
       profileImage: bitCloudUser?.profileImage,
     };
     return new Lane({ name, scope, hash: sha1(v4()), log, forkedFrom });

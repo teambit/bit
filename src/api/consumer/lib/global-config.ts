@@ -140,7 +140,7 @@ function gitCache() {
   };
 }
 
-function invalidateCache() {
+export function invalidateCache() {
   cache().set(null);
 }
 

@@ -4,7 +4,7 @@ import open from 'open';
 import os from 'os';
 import url from 'url';
 import { v4 } from 'uuid';
-
+import { Express } from 'express';
 import { getSync, setSync } from '../../api/consumer/lib/global-config';
 import { CFG_USER_TOKEN_KEY, getLoginUrl, CFG_CLOUD_DOMAIN_KEY } from '../../constants';
 import GeneralError from '../../error/general-error';
@@ -59,7 +59,6 @@ export default function loginToCloud(
         if (cloudDomain) {
           setSync(CFG_CLOUD_DOMAIN_KEY, cloudDomain);
         }
-
         response.writeHead(REDIRECT, {
           Location: redirectUri,
         });

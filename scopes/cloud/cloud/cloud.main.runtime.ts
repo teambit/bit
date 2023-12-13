@@ -1,6 +1,10 @@
-import { MainRuntime } from '@teambit/cli';
+import CLIAspect, { CLIMain, MainRuntime } from '@teambit/cli';
 import { v4 } from 'uuid';
+import chalk from 'chalk';
 import os from 'os';
+import open from 'open';
+import * as http from 'http';
+import { Express } from 'express';
 import { GetScopesGQLResponse } from '@teambit/cloud.models.cloud-scope';
 import { CloudUser, CloudUserAPIResponse } from '@teambit/cloud.models.cloud-user';
 import { ScopeDescriptor } from '@teambit/scopes.scope-descriptor';
@@ -17,15 +21,18 @@ import {
   CENTRAL_BIT_HUB_URL,
   CENTRAL_BIT_HUB_NAME,
   CFG_USER_TOKEN_KEY,
+  CFG_USER_NAME_KEY,
 } from '@teambit/legacy/dist/constants';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import globalFlags from '@teambit/legacy/dist/cli/global-flags';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
-import { delSync, getSync, setSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
+import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import { cloudSchema } from './cloud.graphql';
 import { CloudAspect } from './cloud.aspect';
+import { LoginCmd } from './login.cmd';
+import { LogoutCmd } from './logout.cmd';
 
 export interface CloudWorkspaceConfig {
   cloudDomain: string;
@@ -37,7 +44,14 @@ export interface CloudWorkspaceConfig {
   registryUrl: string;
   cloudExporterUrl: string;
   cloudHubName: string;
+  loginPort?: number;
 }
+
+type CloudAuthListener = {
+  port: number;
+  server: http.Server;
+  username?: string | null;
+};
 
 export class CloudMain {
   static ERROR_RESPONSE = 500;
@@ -46,14 +60,113 @@ export class CloudMain {
   static CLIENT_ID = v4();
   static REDIRECT_URL;
   static GRAPHQL_ENDPOINT = '/graphql';
+  private authListener: CloudAuthListener | null = null;
+  private expressApp: Express | null = null;
 
   constructor(
     private config: CloudWorkspaceConfig,
     public logger: Logger,
     public express: ExpressMain,
     public workspace: Workspace,
-    public scope: ScopeMain
-  ) {}
+    public scope: ScopeMain,
+    public globalConfig: GlobalConfigMain
+  ) {
+    this.setupGracefulShutdown();
+  }
+
+  setupAuthListener({
+    port: portFromParams,
+    onLoggedin,
+    onlyResolveOnSuccessfulLogin,
+  }: {
+    port?: number;
+    onLoggedin?: (params: { username?: string | null; token?: string }) => void;
+    onlyResolveOnSuccessfulLogin?: boolean;
+  } = {}): Promise<CloudAuthListener | null> {
+    return new Promise((resolve, reject) => {
+      if (this.workspace) {
+        const expectedClientId = CloudMain.CLIENT_ID;
+        this.expressApp = this.express.createApp();
+        const port = portFromParams || this.getLoginPort();
+        const authServer = this.expressApp
+          .listen(port, () => {
+            this.logger.debug(`cloud express server started on port ${port}`);
+            this.authListener = {
+              port,
+              server: authServer,
+            };
+            if (!onlyResolveOnSuccessfulLogin) {
+              resolve(this.authListener);
+            }
+          })
+          .on('error', (err) => {
+            // @ts-ignore
+            const { code, port } = err;
+            if (code === 'EADDRINUSE') {
+              this.logger.error(`port: ${port} already in use, please run bit login --port <port>`);
+              reject(new Error(`port: ${port} already in use, please run bit login --port <port>`));
+            }
+            this.logger.error(`cloud express server failed to start on port ${port}`, err);
+            reject(err);
+          });
+        this.expressApp.get('/', (req, res) => {
+          this.logger.debug('cloud.authListener', 'received request', req.query);
+          try {
+            const { clientId, redirectUri, username: usernameFromReq } = req.query;
+            const username = typeof usernameFromReq === 'string' ? usernameFromReq : null;
+            let { token } = req.query;
+            if (Array.isArray(token)) {
+              token = token[0];
+            }
+            if (typeof token !== 'string') {
+              res.status(400).send('Invalid token format');
+              return res;
+            }
+            if (clientId !== expectedClientId) {
+              this.logger.error('cloud.authListener', 'clientId mismatch', { expectedClientId, clientId });
+              return res.status(CloudMain.ERROR_RESPONSE).send('Client ID mismatch');
+            }
+
+            this.globalConfig.setSync(CFG_USER_TOKEN_KEY, token);
+            if (typeof username === 'string' && username) this.globalConfig.setSync(CFG_USER_NAME_KEY, username);
+            if (CloudMain.REDIRECT_URL) res.redirect(CloudMain.REDIRECT_URL);
+            else if (typeof redirectUri === 'string') res.redirect(redirectUri);
+            else res.status(200).send('Login successful');
+            onLoggedin?.({ username, token });
+            if (onlyResolveOnSuccessfulLogin) {
+              this.authListener = {
+                port,
+                server: authServer,
+                username,
+              };
+              resolve(this.authListener);
+            }
+            return res;
+          } catch (err) {
+            this.logger.error(`Error on login: ${err}`);
+            res.status(CloudMain.ERROR_RESPONSE).send('Login failed');
+            reject(err);
+            return res;
+          }
+        });
+      }
+      reject(new Error('workspace not found'));
+    });
+  }
+
+  setupGracefulShutdown() {
+    process.on('SIGINT', this.gracefulShutdown.bind(this));
+    process.on('SIGTERM', this.gracefulShutdown.bind(this));
+  }
+
+  gracefulShutdown() {
+    this.logger.debug('Closing cloud auth listener');
+    if (this.authListener?.server) {
+      this.authListener.server.close(() => {
+        this.logger.debug('Cloud auth listener closed');
+      });
+    }
+  }
 
   getCloudDomain(): string {
     return this.config.cloudDomain;
@@ -90,30 +203,33 @@ export class CloudMain {
     return this.config.cloudHubName;
   }
 
-  static isLoggedIn(): boolean {
-    return Boolean(CloudMain.getAuthToken());
+  getLoginPort(): number {
+    return this.config.loginPort || CloudMain.DEFAULT_PORT;
   }
 
-  static getAuthToken() {
+  isLoggedIn(): boolean {
+    return Boolean(this.getAuthToken());
+  }
+
+  getAuthToken() {
     const processToken = globalFlags.token;
-    const token = processToken || getSync(CFG_USER_TOKEN_KEY);
+    const token = processToken || this.globalConfig.getSync(CFG_USER_TOKEN_KEY);
     if (!token) return null;
 
     return token;
   }
 
-  static getAuthHeader() {
+  getAuthHeader() {
     return {
-      Authorization: `Bearer ${CloudMain.getAuthToken()}`,
+      Authorization: `Bearer ${this.getAuthToken()}`,
     };
   }
 
   async getCurrentUser(): Promise<CloudUser | null> {
-    const isLoggedIn = CloudMain.isLoggedIn();
+    const isLoggedIn = this.isLoggedIn();
     if (!isLoggedIn) {
       return null;
     }
-
     const route = 'user/user';
     this.logger.debug(`getCurrentUser, url: ${this.getCloudApi()}/${route}`);
     const url = `https://${this.getCloudApi()}/${route}`;
@@ -121,7 +237,7 @@ export class CloudMain {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...CloudMain.getAuthHeader(),
+        ...this.getAuthHeader(),
       },
     };
 
@@ -139,59 +255,62 @@ export class CloudMain {
       });
   }
 
-  getLoginUrl(redirectUrl?: string): string {
-    const loginUrl = this.getLoginDomain();
+  getUsername(): string | undefined {
+    return this.globalConfig.getSync(CFG_USER_NAME_KEY);
+  }
+
+  getLoginUrl({
+    redirectUrl,
+    machineName,
+    cloudDomain,
+  }: { redirectUrl?: string; machineName?: string; cloudDomain?: string } = {}): string {
+    const loginUrl = cloudDomain || this.getLoginDomain();
     if (redirectUrl) {
       CloudMain.REDIRECT_URL = redirectUrl;
     }
     return encodeURI(
-      `${loginUrl}?port=${CloudMain.DEFAULT_PORT}&clientId=${
-        CloudMain.CLIENT_ID
-      }&responseType=token&deviceName=${os.hostname()}&os=${process.platform}`
+      `${loginUrl}?port=${CloudMain.DEFAULT_PORT}&clientId=${CloudMain.CLIENT_ID}&responseType=token&deviceName=${
+        machineName || os.hostname()
+      }&os=${process.platform}`
     );
   }
 
   logout() {
-    delSync(CFG_USER_TOKEN_KEY);
+    this.globalConfig.delSync(CFG_USER_TOKEN_KEY);
+    this.globalConfig.delSync(CFG_USER_NAME_KEY);
   }
 
-  setupAuthListener() {
-    if (this.workspace) {
-      const expectedClientId = CloudMain.CLIENT_ID;
-      const app = this.express.createApp();
-      app.listen(CloudMain.DEFAULT_PORT, () => {
-        this.logger.debug(`cloud express server started on port ${CloudMain.DEFAULT_PORT}`);
-      });
-      app.get('/', (req, res) => {
-        this.logger.debug('cloud.authListener', 'received request', req.query);
-        try {
-          const { clientId, redirectUri } = req.query;
-          let { token } = req.query;
-          if (Array.isArray(token)) {
-            token = token[0];
-          }
-          if (typeof token !== 'string') {
-            res.status(400).send('Invalid token format');
-            return res;
-          }
-          if (clientId !== expectedClientId) {
-            this.logger.error('cloud.authListener', 'clientId mismatch', { expectedClientId, clientId });
-            return res.status(CloudMain.ERROR_RESPONSE).send('Client ID mismatch');
-          }
-
-          setSync(CFG_USER_TOKEN_KEY, token);
-
-          if (CloudMain.REDIRECT_URL) res.redirect(CloudMain.REDIRECT_URL);
-          else if (typeof redirectUri === 'string') res.redirect(redirectUri);
-          else res.status(200).send('Login successful');
-          return res;
-        } catch (err) {
-          this.logger.error(`Error on login: ${err}`);
-          res.status(CloudMain.ERROR_RESPONSE).send('Login failed');
-          return res;
-        }
-      });
+  async login(
+    port?: string,
+    suppressBrowserLaunch?: boolean,
+    machineName?: string,
+    cloudDomain?: string,
+    onlyResolveOnSuccessfulLogin?: boolean,
+    onLoggedin?: (params: { username?: string | null; token?: string }) => void
+  ): Promise<{
+    isAlreadyLoggedIn?: boolean;
+    username?: string;
+  } | null> {
+    if (this.isLoggedIn()) {
+      return {
+        isAlreadyLoggedIn: true,
+        username: this.globalConfig.getSync(CFG_USER_NAME_KEY),
+      };
     }
+    if (!this.authListener?.server) {
+      await this.setupAuthListener({ port: Number(port), onLoggedin, onlyResolveOnSuccessfulLogin });
+    }
+    const loginUrl = this.getLoginUrl({
+      machineName,
+      cloudDomain,
+    });
+    if (!suppressBrowserLaunch) {
+      console.log(chalk.yellow(`Your browser has been opened to visit:\n${loginUrl}`)); // eslint-disable-line no-console
+      open(loginUrl);
+    } else {
+      console.log(chalk.yellow(`Go to the following link in your browser::\n${loginUrl}`)); // eslint-disable-line no-console
+    }
+    return null;
   }
 
   static GET_SCOPES = `
@@ -226,7 +345,7 @@ export class CloudMain {
   }
 
   async fetchFromSymphonyViaGQL<T>(query: string, variables?: Record<string, any>): Promise<T | null> {
-    if (!CloudMain.isLoggedIn()) return null;
+    if (!this.isLoggedIn()) return null;
     const graphqlUrl = `https://${this.getCloudApi()}${CloudMain.GRAPHQL_ENDPOINT}`;
     const body = JSON.stringify({
       query,
@@ -234,7 +353,7 @@ export class CloudMain {
     });
     const headers = {
       'Content-Type': 'application/json',
-      ...CloudMain.getAuthHeader(),
+      ...this.getAuthHeader(),
     };
     try {
       const response = await fetch(graphqlUrl, {
@@ -254,7 +373,15 @@ export class CloudMain {
   }
 
   static slots = [];
-  static dependencies = [LoggerAspect, GraphqlAspect, ExpressAspect, WorkspaceAspect, ScopeAspect];
+  static dependencies = [
+    LoggerAspect,
+    GraphqlAspect,
+    ExpressAspect,
+    WorkspaceAspect,
+    ScopeAspect,
+    GlobalConfigAspect,
+    CLIAspect,
+  ];
   static runtime = MainRuntime;
   static defaultConfig: CloudWorkspaceConfig = {
     cloudDomain: getCloudDomain(),
@@ -266,15 +393,25 @@ export class CloudMain {
     registryUrl: DEFAULT_REGISTRY_URL,
     cloudExporterUrl: CENTRAL_BIT_HUB_URL,
     cloudHubName: CENTRAL_BIT_HUB_NAME,
+    loginPort: CloudMain.DEFAULT_PORT,
   };
   static async provider(
-    [loggerMain, graphql, express, workspace, scope]: [LoggerMain, GraphqlMain, ExpressMain, Workspace, ScopeMain],
+    [loggerMain, graphql, express, workspace, scope, globalConfig, cli]: [
+      LoggerMain,
+      GraphqlMain,
+      ExpressMain,
+      Workspace,
+      ScopeMain,
+      GlobalConfigMain,
+      CLIMain
+    ],
     config: CloudWorkspaceConfig
   ) {
     const logger = loggerMain.createLogger(CloudAspect.id);
-    const cloudMain = new CloudMain(config, logger, express, workspace, scope);
+    const cloudMain = new CloudMain(config, logger, express, workspace, scope, globalConfig);
     graphql.register(cloudSchema(cloudMain));
     cloudMain.setupAuthListener();
+    cli.register(new LoginCmd(cloudMain), new LogoutCmd(cloudMain));
     return cloudMain;
   }
 }

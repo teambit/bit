@@ -61,8 +61,8 @@ export default function registerCommands(): CommandRegistry {
     new Delete(),
     new Latest(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    new Login(),
-    new Logout(),
+    // new Login(),
+    // new Logout(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Migrate(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

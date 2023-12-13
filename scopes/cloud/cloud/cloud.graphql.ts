@@ -36,10 +36,10 @@ export function cloudSchema(cloud: CloudMain): Schema {
       },
       Query: {
         isLoggedIn: () => {
-          return CloudMain.isLoggedIn();
+          return cloud.isLoggedIn();
         },
-        loginUrl: (_, { redirectUrl }) => {
-          return cloud.getLoginUrl(redirectUrl);
+        loginUrl: (_, { redirectUrl }: { redirectUrl?: string }) => {
+          return cloud.getLoginUrl({ redirectUrl });
         },
         getCurrentUser: async () => {
           const user = await cloud.getCurrentUser();
