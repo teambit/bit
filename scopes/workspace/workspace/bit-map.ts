@@ -9,6 +9,7 @@ import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import EnvsAspect from '@teambit/envs';
 import { getPathStatIfExist } from '@teambit/legacy/dist/utils/fs/last-modified';
+import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 
 export type MergeOptions = {
   mergeStrategy?: 'theirs' | 'ours' | 'manual';
@@ -22,6 +23,10 @@ export class BitMap {
 
   mergeBitmaps(bitmapContent: string, otherBitmapContent: string, opts: MergeOptions = {}): string {
     return LegacyBitMap.mergeContent(bitmapContent, otherBitmapContent, opts);
+  }
+
+  getPath(): PathOsBasedAbsolute {
+    return this.legacyBitMap.mapPath;
   }
 
   /**

@@ -19,7 +19,7 @@ import {
 import { BitError } from '@teambit/bit-error';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
-import { DependencyResolverMain, DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { DependencyResolverMain, DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
@@ -381,6 +381,10 @@ export class Workspace implements ComponentFactory {
       this._cachedListIds = await this.resolveMultipleComponentIds(this.consumer.bitmapIdsFromCurrentLane);
     }
     return this._cachedListIds;
+  }
+
+  listIdsIncludeRemoved(): ComponentIdList {
+    return this.consumer.bitmapIdsFromCurrentLaneIncludeRemoved;
   }
 
   /**
@@ -808,6 +812,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.config = configOfWorkspaceAspect.config as WorkspaceExtConfig;
     const configOfDepResolverAspect = workspaceConfig.extensions.findExtension(DependencyResolverAspect.id);
     if (configOfDepResolverAspect) this.dependencyResolver.setConfig(configOfDepResolverAspect.config as any);
+    this.dependencyResolver.clearCache();
   }
 
   getState(id: ComponentID, hash: string) {
@@ -935,21 +940,33 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     return components;
   }
 
+  hasPattern(strArr: string[]) {
+    return strArr.some((str) => this.isPattern(str));
+  }
+
+  isPattern(str: string) {
+    const specialSyntax = ['*', ',', '!', '$', ':'];
+    return specialSyntax.some((char) => str.includes(char));
+  }
+
   /**
    * get component-ids matching the given pattern. a pattern can have multiple patterns separated by a comma.
    * it supports negate (!) character to exclude ids.
    */
-  async idsByPattern(pattern: string, throwForNoMatch = true): Promise<ComponentID[]> {
-    const specialSyntax = ['*', ',', '!', '$', ':'];
-    const isId = !specialSyntax.some((char) => pattern.includes(char));
+  async idsByPattern(
+    pattern: string,
+    throwForNoMatch = true,
+    opts: { includeDeleted?: boolean } = {}
+  ): Promise<ComponentID[]> {
+    const isId = !this.isPattern(pattern);
     if (isId) {
       // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
       const id = await this.resolveComponentId(pattern);
-      if (this.exists(id)) return [id];
+      if (this.exists(id, { includeDeleted: opts.includeDeleted })) return [id];
       if (throwForNoMatch) throw new MissingBitMapComponent(pattern);
       return [];
     }
-    const ids = await this.listIds();
+    const ids = opts.includeDeleted ? this.listIdsIncludeRemoved() : await this.listIds();
     return this.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch);
   }
 
@@ -1021,8 +1038,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   /**
    * whether a component exists in the workspace
    */
-  exists(componentId: ComponentID): boolean {
-    return Boolean(this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId)));
+  exists(componentId: ComponentID, opts: { includeDeleted?: boolean } = {}): boolean {
+    const allIds = opts.includeDeleted ? this.listIdsIncludeRemoved() : this.consumer.bitmapIdsFromCurrentLane;
+    return allIds.hasWithoutVersion(componentId);
   }
 
   getIdIfExist(componentId: ComponentID): ComponentID | undefined {
@@ -1913,6 +1931,26 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       relativeCompDir,
       this.dependencyResolver.getPackageName(component)
     );
+  }
+
+  async getAutoDetectOverrides(configuredExtensions: ExtensionDataList, id: ComponentID, legacyFiles: SourceFile[]) {
+    let policy = await this.dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
+    // this is needed for "bit install" to install the dependencies from the merge config (see https://github.com/teambit/bit/pull/6849)
+    const depsDataOfMergeConfig = this.getDepsDataOfMergeConfig(id);
+    if (depsDataOfMergeConfig) {
+      const policiesFromMergeConfig = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, { source: 'auto' });
+      policy = VariantPolicy.mergePolices([policy, policiesFromMergeConfig]);
+    }
+    return policy.toLegacyAutoDetectOverrides();
+  }
+
+  getAutoDetectConfigMerge(id: ComponentID) {
+    const depsDataOfMergeConfig = this.getDepsDataOfMergeConfig(id);
+    if (depsDataOfMergeConfig) {
+      const policy = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, { source: 'auto' });
+      return policy.toLegacyAutoDetectOverrides();
+    }
+    return undefined;
   }
 }
 

@@ -1,7 +1,7 @@
 import { IssuesList } from '@teambit/component-issues';
-import Dependency from '../dependency';
-import { AllDependencies, AllPackagesDependencies } from './dependencies-resolver';
-import { ManuallyChangedDependencies } from './overrides-dependencies';
+import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
+import { ManuallyChangedDependencies } from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { AllDependencies, AllPackagesDependencies } from './apply-overrides';
 
 export type OverridesDependenciesData = {
   manuallyRemovedDependencies: ManuallyChangedDependencies;
@@ -14,8 +14,7 @@ export class DependenciesData {
     public allDependencies: AllDependencies,
     public allPackagesDependencies: AllPackagesDependencies,
     public issues: IssuesList,
-    public coreAspects: string[],
-    public overridesDependencies: OverridesDependenciesData
+    public coreAspects: string[]
   ) {}
 
   serialize(): string {
@@ -27,6 +26,12 @@ export class DependenciesData {
         dependencies: allDependencies.dependencies.map((dep) => dep.serialize()),
         devDependencies: allDependencies.devDependencies.map((dep) => dep.serialize()),
       },
+      // for backward compatibility. version < 1.5.1 expected this to be saved in the fs cache.
+      overridesDependencies: {
+        manuallyRemovedDependencies: {},
+        manuallyAddedDependencies: {},
+        missingPackageDependencies: [],
+      },
     });
   }
 
@@ -36,12 +41,7 @@ export class DependenciesData {
     const devDependencies = dataParsed.allDependencies.devDependencies.map((dep) => Dependency.deserialize(dep));
     const issuesList = IssuesList.deserialize(dataParsed.issues);
     const allDependencies = { dependencies, devDependencies };
-    return new DependenciesData(
-      allDependencies,
-      dataParsed.allPackagesDependencies,
-      issuesList,
-      dataParsed.coreAspects,
-      dataParsed.overridesDependencies
-    );
+    const coreAspects = dataParsed.coreAspects;
+    return new DependenciesData(allDependencies, dataParsed.allPackagesDependencies, issuesList, coreAspects);
   }
 }

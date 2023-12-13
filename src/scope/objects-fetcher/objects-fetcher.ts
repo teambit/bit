@@ -99,6 +99,8 @@ ${failedScopesErr.join('\n')}`);
     if (totalComponents) {
       await this.mergeAndPersistComponents(multipleComponentsMerger);
     }
+    // even when no component has updated, we need to write the refs we got from the remote lanes
+    await this.repo.writeRemoteLanes();
     logger.debug(`[-] fetchFromRemoteAndWrite, completed writing ${totalComponents} components`);
 
     return objectsQueue.addedHashes;
@@ -128,7 +130,6 @@ ${failedScopesErr.join('\n')}`);
         );
       })
     );
-    await this.repo.writeRemoteLanes();
   }
 
   private async fetchFromSingleRemote(scopeName: string, ids: string[]): Promise<ObjectItemsStream | null> {

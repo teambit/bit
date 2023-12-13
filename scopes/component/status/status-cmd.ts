@@ -3,7 +3,6 @@ import R from 'ramda';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
-import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { IssuesList } from '@teambit/component-issues';
 import { formatBitString } from '@teambit/legacy/dist/cli/chalk-box';
 import { getInvalidComponentLabel } from '@teambit/legacy/dist/cli/templates/component-issues-template';
@@ -187,9 +186,18 @@ export class StatusCmd implements Command {
         }
       }
       bitFormatted += ' ... ';
-      if (!idWithIssues) return `${bitFormatted}${messageStatus}`;
-      showTroubleshootingLink = true;
-      return `${bitFormatted} ${chalk.red(statusFailureMsg)}${formatIssues(idWithIssues.issues)}`;
+      if (showIssues && idWithIssues) {
+        showTroubleshootingLink = true;
+        return `${bitFormatted} ${chalk.red(statusFailureMsg)}${formatIssues(idWithIssues.issues)}`;
+      }
+      return `${bitFormatted}${messageStatus}`;
+    }
+
+    function formatCategory(title: string, description: string, compsOutput: string[]) {
+      if (!compsOutput.length) return '';
+      const titleOutput = chalk.underline.white(`${title} (${compsOutput.length})`);
+      const descOutput = description ? `${description}\n` : '';
+      return [titleOutput, descOutput, ...compsOutput].join('\n');
     }
 
     const importPendingWarning = importPendingComponents.length ? chalk.yellow(`${IMPORT_PENDING_MSG}.\n`) : '';
@@ -199,47 +207,38 @@ export class StatusCmd implements Command {
     });
     const { missing, nonMissing } = splitByMissing(newComponents.map((c) => format(c)));
 
-    const outdatedTitle = chalk.underline.white('pending updates');
+    const outdatedTitle = 'pending updates';
     const outdatedDesc =
-      '(use "bit checkout head" to merge changes)\n(use "bit diff [component_id] [new_version]" to compare changes)\n(use "bit log [component_id]" to list all available versions)\n';
-    const outdatedComps = outdatedComponents
-      .map((component) => {
-        const latest =
-          component.latestVersion && component.latestVersion !== component.headVersion
-            ? ` latest: ${component.latestVersion}`
-            : '';
-        return `    > ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} head: ${
-          component.headVersion
-        }${latest}\n`;
-      })
-      .join('');
+      '(use "bit checkout head" to merge changes)\n(use "bit diff [component_id] [new_version]" to compare changes)\n(use "bit log [component_id]" to list all available versions)';
+    const outdatedComps = outdatedComponents.map((component) => {
+      const latest =
+        component.latestVersion && component.latestVersion !== component.headVersion
+          ? ` latest: ${component.latestVersion}`
+          : '';
+      return `    > ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} head: ${
+        component.headVersion
+      }${latest}`;
+    });
+    const outdatedStr = formatCategory(outdatedTitle, outdatedDesc, outdatedComps);
 
-    const outdatedStr = outdatedComponents.length ? [outdatedTitle, outdatedDesc, outdatedComps].join('\n') : '';
-
-    const pendingMergeTitle = chalk.underline.white('pending merge');
+    const pendingMergeTitle = 'pending merge';
     const pendingMergeDesc = `(use "bit reset" to discard local tags/snaps, and bit checkout head to re-merge with the remote.
-alternatively, to keep local tags/snaps history, use "bit merge [component-id]")\n`;
-    const pendingMergeComps = mergePendingComponents
-      .map((component) => {
-        return `    > ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
-          component.divergeData.snapsOnSourceOnly.length
-        } (source) and ${component.divergeData.snapsOnTargetOnly.length} (target) uncommon snaps respectively\n`;
-      })
-      .join('');
+alternatively, to keep local tags/snaps history, use "bit merge [component-id]")`;
+    const pendingMergeComps = mergePendingComponents.map((component) => {
+      return `    > ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
+        component.divergeData.snapsOnSourceOnly.length
+      } (source) and ${component.divergeData.snapsOnTargetOnly.length} (target) uncommon snaps respectively`;
+    });
 
-    const pendingMergeStr = pendingMergeComps.length
-      ? [pendingMergeTitle, pendingMergeDesc, pendingMergeComps].join('\n')
-      : '';
+    const pendingMergeStr = formatCategory(pendingMergeTitle, pendingMergeDesc, pendingMergeComps);
 
-    const compDuringMergeTitle = chalk.underline.white('components in merge state');
+    const compDuringMergeTitle = 'components in merge state';
     const compDuringMergeDesc = `(use "bit snap/tag [--unmerged]" to complete the merge process.
 to cancel the merge operation, use either "bit lane merge-abort" (for prior "bit lane merge" command)
-or use "bit merge [component-id] --abort" (for prior "bit merge" command)\n`;
-    const compDuringMergeComps = componentsDuringMergeState.map((c) => format(c)).join('\n');
+or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
+    const compDuringMergeComps = componentsDuringMergeState.map((c) => format(c));
 
-    const compDuringMergeStr = compDuringMergeComps.length
-      ? [compDuringMergeTitle, compDuringMergeDesc, compDuringMergeComps].join('\n')
-      : '';
+    const compDuringMergeStr = formatCategory(compDuringMergeTitle, compDuringMergeDesc, compDuringMergeComps);
 
     const newComponentDescription = '\n(use "bit snap/tag" to lock a version with all your changes)\n';
     const newComponentsTitle = newComponents.length
@@ -248,66 +247,64 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)\n`;
 
     const newComponentsOutput = [newComponentsTitle, ...(nonMissing || []), ...(missing || [])].join('\n');
 
-    const modifiedDesc = '(use "bit diff" to compare changes)\n';
-    const modifiedComponentOutput = immutableUnshift(
-      modifiedComponents.map((c) => format(c)),
-      modifiedComponents.length
-        ? chalk.underline.white('modified components') + newComponentDescription + modifiedDesc
-        : ''
-    ).join('\n');
+    const modifiedDesc = '(use "bit diff" to compare changes)';
+    const modifiedComponentOutput = formatCategory(
+      'modified components',
+      modifiedDesc,
+      modifiedComponents.map((c) => format(c))
+    );
 
-    const autoTagPendingOutput = immutableUnshift(
-      autoTagPendingComponents.map((c) => format(c)),
-      autoTagPendingComponents.length
-        ? chalk.underline.white('components pending auto-tag (when their modified dependencies are tagged)')
-        : ''
-    ).join('\n');
+    const autoTagPendingTitle = 'components pending auto-tag (when their modified dependencies are tagged)';
+    const autoTagPendingOutput = formatCategory(
+      autoTagPendingTitle,
+      '',
+      autoTagPendingComponents.map((c) => format(c))
+    );
 
-    const compWithIssuesDesc = '\n(fix the issues according to the suggested solution)\n';
-    const compWithIssuesOutput = immutableUnshift(
-      componentsWithIssues.map((c) => format(c.id, true)).sort(),
-      componentsWithIssues.length ? chalk.underline.white('components with issues') + compWithIssuesDesc : ''
-    ).join('\n');
+    const compWithIssuesDesc = '(fix the issues according to the suggested solution)';
+    const compWithIssuesOutput = formatCategory(
+      'components with issues',
+      compWithIssuesDesc,
+      componentsWithIssues.map((c) => format(c.id, true)).sort()
+    );
 
-    const invalidDesc = '\nthese components failed to load.\n';
-    const invalidComponentOutput = immutableUnshift(
-      invalidComponents.map((c) => format(c.id, false, getInvalidComponentLabel(c.error))).sort(),
-      invalidComponents.length ? chalk.underline.white(statusInvalidComponentsMsg) + invalidDesc : ''
-    ).join('\n');
+    const invalidDesc = 'these components failed to load';
+    const invalidComps = invalidComponents.map((c) => format(c.id, false, getInvalidComponentLabel(c.error))).sort();
+    const invalidComponentOutput = formatCategory(statusInvalidComponentsMsg, invalidDesc, invalidComps);
 
     const locallySoftRemovedDesc =
-      '\n(tag/snap and export the components to update the deletion to the remote. to undo deletion, run "bit recover")\n';
-    const locallySoftRemovedOutput = immutableUnshift(
-      locallySoftRemoved.map((c) => format(c)).sort(),
-      locallySoftRemoved.length ? chalk.underline.white('soft-removed components locally') + locallySoftRemovedDesc : ''
-    ).join('\n');
+      '(tag/snap and export the components to update the deletion to the remote. to undo deletion, run "bit recover")';
+    const locallySoftRemovedOutput = formatCategory(
+      'soft-removed components locally',
+      locallySoftRemovedDesc,
+      locallySoftRemoved.map((c) => format(c)).sort()
+    );
 
     const remotelySoftRemovedDesc =
-      '\n(use "bit remove" to remove them from the workspace. use "bit recover" to undo the soft-remove)\n';
-    const remotelySoftRemovedOutput = immutableUnshift(
-      remotelySoftRemoved.map((c) => format(c)).sort(),
-      remotelySoftRemoved.length
-        ? chalk.underline.white('components deleted on the remote') + remotelySoftRemovedDesc
-        : ''
-    ).join('\n');
+      '(use "bit remove" to remove them from the workspace. use "bit recover" to undo the soft-remove)';
+    const remotelySoftRemovedOutput = formatCategory(
+      'components deleted on the remote',
+      remotelySoftRemovedDesc,
+      remotelySoftRemoved.map((c) => format(c)).sort()
+    );
 
-    const stagedDesc = '\n(use "bit export" to push these component versions to the remote scope)\n';
-    const stagedComponentsOutput = immutableUnshift(
-      stagedComponents.map((c) => format(c.id, false, undefined, c.versions)),
-      stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
-    ).join('\n');
+    const stagedDesc = '(use "bit export" to push these component versions to the remote scope)';
+    const stagedComps = stagedComponents.map((c) => format(c.id, false, undefined, c.versions));
+    const stagedComponentsOutput = formatCategory('staged components', stagedDesc, stagedComps);
 
-    const snappedDesc = '\n(use "bit tag" or "bit tag --snapped" to lock a semver version)\n';
-    const snappedComponentsOutput = immutableUnshift(
-      snappedComponents.map((c) => format(c)),
-      snappedComponents.length ? chalk.underline.white('snapped components (tag pending)') + snappedDesc : ''
-    ).join('\n');
+    const snappedDesc = '(use "bit tag" or "bit tag --snapped" to lock a semver version)';
+    const snappedComponentsOutput = formatCategory(
+      'snapped components (tag pending)',
+      snappedDesc,
+      snappedComponents.map((c) => format(c))
+    );
 
-    const unavailableOnMainDesc = '\n(use "bit checkout head" to make them available)\n';
-    const unavailableOnMainOutput = immutableUnshift(
-      unavailableOnMain.map((c) => format(c)),
-      unavailableOnMain.length ? chalk.underline.white('components unavailable on main') + unavailableOnMainDesc : ''
-    ).join('\n');
+    const unavailableOnMainDesc = '(use "bit checkout head" to make them available)';
+    const unavailableOnMainOutput = formatCategory(
+      'components unavailable on main',
+      unavailableOnMainDesc,
+      unavailableOnMain.map((c) => format(c))
+    );
 
     const getUpdateFromMsg = (divergeData: SnapsDistance, from = 'main'): string => {
       if (divergeData.err) return divergeData.err.message;
@@ -318,30 +315,28 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)\n`;
       return msg;
     };
 
-    let updatesFromMainOutput = '';
-
-    const updatesFromMainDesc = '\n(use "bit lane merge main" to merge the changes)\n';
+    const updatesFromMainDesc = '(use "bit lane merge main" to merge the changes)';
     const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) =>
       format(c.id, false, getUpdateFromMsg(c.divergeData))
     );
-    updatesFromMainOutput = [
-      pendingUpdatesFromMain.length ? chalk.underline.white('pending updates from main') + updatesFromMainDesc : '',
-      ...pendingUpdatesFromMainIds,
-    ].join('\n');
+    const updatesFromMainOutput = formatCategory(
+      'pending updates from main',
+      updatesFromMainDesc,
+      pendingUpdatesFromMainIds
+    );
 
     let updatesFromForkedOutput = '';
     if (forkedLaneId) {
-      const updatesFromForkedDesc = `\n(use "bit lane merge ${forkedLaneId.toString()}" to merge the changes
-use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name} locally)\n`;
+      const updatesFromForkedDesc = `(use "bit lane merge ${forkedLaneId.toString()}" to merge the changes
+use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name} locally)`;
       const pendingUpdatesFromForkedIds = updatesFromForked.map((c) =>
         format(c.id, false, getUpdateFromMsg(c.divergeData, forkedLaneId.name))
       );
-      updatesFromForkedOutput = [
-        updatesFromForked.length
-          ? chalk.underline.white(`updates from ${forkedLaneId.name}`) + updatesFromForkedDesc
-          : '',
-        ...pendingUpdatesFromForkedIds,
-      ].join('\n');
+      updatesFromForkedOutput = formatCategory(
+        `updates from ${forkedLaneId.name}`,
+        updatesFromForkedDesc,
+        pendingUpdatesFromForkedIds
+      );
     }
 
     const getLaneStr = () => {

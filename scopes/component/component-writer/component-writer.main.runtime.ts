@@ -30,6 +30,7 @@ export interface ManyComponentsWriterParams {
   skipWritingToFs?: boolean;
   skipUpdatingBitMap?: boolean;
   skipWriteConfigFiles?: boolean;
+  reasonForBitmapChange?: string; // optional. will be written in the bitmap-history-metadata
 }
 
 export type ComponentWriterResults = { installationError?: Error; compilationError?: Error };
@@ -53,7 +54,7 @@ export class ComponentWriterMain {
     await this.populateComponentsFilesToWrite(opts);
     this.moveComponentsIfNeeded(opts);
     await this.persistComponentsData(opts);
-    if (!opts.skipUpdatingBitMap) await this.consumer.writeBitMap();
+    if (!opts.skipUpdatingBitMap) await this.consumer.writeBitMap(opts.reasonForBitmapChange);
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
     if (!opts.skipDependencyInstallation) {

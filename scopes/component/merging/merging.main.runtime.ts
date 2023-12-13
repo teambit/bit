@@ -538,6 +538,7 @@ export class MergingMain {
       components: compsToWrite,
       skipDependencyInstallation: true,
       writeConfig: false, // @todo: should write if config exists before, needs to figure out how to do it.
+      reasonForBitmapChange: 'merge',
     };
     await this.componentWriter.writeMany(manyComponentsWriterOpts);
 
