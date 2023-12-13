@@ -76,81 +76,71 @@ export class CloudMain {
 
   setupAuthListener({
     port: portFromParams,
-    onLoggedin,
-    onlyResolveOnSuccessfulLogin,
+    onLoggedIn,
   }: {
     port?: number;
-    onLoggedin?: (params: { username?: string | null; token?: string }) => void;
-    onlyResolveOnSuccessfulLogin?: boolean;
+    onLoggedIn?: ({ username, token }: { username?: string; token?: string }) => void;
   } = {}): Promise<CloudAuthListener | null> {
     return new Promise((resolve, reject) => {
-      if (this.workspace) {
-        const expectedClientId = CloudMain.CLIENT_ID;
-        this.expressApp = this.express.createApp();
-        const port = portFromParams || this.getLoginPort();
-        const authServer = this.expressApp
-          .listen(port, () => {
-            this.logger.debug(`cloud express server started on port ${port}`);
-            this.authListener = {
-              port,
-              server: authServer,
-            };
-            if (!onlyResolveOnSuccessfulLogin) {
-              resolve(this.authListener);
-            }
-          })
-          .on('error', (err) => {
-            // @ts-ignore
-            const { code, port } = err;
-            if (code === 'EADDRINUSE') {
-              this.logger.error(`port: ${port} already in use, please run bit login --port <port>`);
-              reject(new Error(`port: ${port} already in use, please run bit login --port <port>`));
-            }
-            this.logger.error(`cloud express server failed to start on port ${port}`, err);
-            reject(err);
-          });
-        this.expressApp.get('/', (req, res) => {
-          this.logger.debug('cloud.authListener', 'received request', req.query);
-          try {
-            const { clientId, redirectUri, username: usernameFromReq } = req.query;
-            const username = typeof usernameFromReq === 'string' ? usernameFromReq : null;
-            let { token } = req.query;
-            if (Array.isArray(token)) {
-              token = token[0];
-            }
-            if (typeof token !== 'string') {
-              res.status(400).send('Invalid token format');
-              return res;
-            }
-            if (clientId !== expectedClientId) {
-              this.logger.error('cloud.authListener', 'clientId mismatch', { expectedClientId, clientId });
-              return res.status(CloudMain.ERROR_RESPONSE).send('Client ID mismatch');
-            }
-
-            this.globalConfig.setSync(CFG_USER_TOKEN_KEY, token);
-            if (typeof username === 'string' && username) this.globalConfig.setSync(CFG_USER_NAME_KEY, username);
-            if (CloudMain.REDIRECT_URL) res.redirect(CloudMain.REDIRECT_URL);
-            else if (typeof redirectUri === 'string') res.redirect(redirectUri);
-            else res.status(200).send('Login successful');
-            onLoggedin?.({ username, token });
-            if (onlyResolveOnSuccessfulLogin) {
-              this.authListener = {
-                port,
-                server: authServer,
-                username,
-              };
-              resolve(this.authListener);
-            }
-            return res;
-          } catch (err) {
-            this.logger.error(`Error on login: ${err}`);
-            res.status(CloudMain.ERROR_RESPONSE).send('Login failed');
-            reject(err);
+      const expectedClientId = CloudMain.CLIENT_ID;
+      this.expressApp = this.express.createApp();
+      const port = portFromParams || this.getLoginPort();
+      const authServer = this.expressApp
+        .listen(port, () => {
+          this.logger.debug(`cloud express server started on port ${port}`);
+          this.authListener = {
+            port,
+            server: authServer,
+          };
+          resolve(this.authListener);
+        })
+        .on('error', (err) => {
+          // @ts-ignore
+          const { code, port } = err;
+          if (code === 'EADDRINUSE') {
+            this.logger.error(`port: ${port} already in use, please run bit login --port <port>`);
+            reject(new Error(`port: ${port} already in use, please run bit login --port <port>`));
+          }
+          this.logger.error(`cloud express server failed to start on port ${port}`, err);
+          reject(err);
+        });
+      this.expressApp.get('/', (req, res) => {
+        this.logger.debug('cloud.authListener', 'received request', req.query);
+        try {
+          const { clientId, redirectUri, username: usernameFromReq } = req.query;
+          const username = typeof usernameFromReq === 'string' ? usernameFromReq : undefined;
+          let { token } = req.query;
+          if (Array.isArray(token)) {
+            token = token[0];
+          }
+          if (typeof token !== 'string') {
+            res.status(400).send('Invalid token format');
             return res;
           }
-        });
-      }
-      reject(new Error('workspace not found'));
+          if (clientId !== expectedClientId) {
+            this.logger.error('cloud.authListener', 'clientId mismatch', { expectedClientId, clientId });
+            return res.status(CloudMain.ERROR_RESPONSE).send('Client ID mismatch');
+          }
+
+          this.globalConfig.setSync(CFG_USER_TOKEN_KEY, token);
+          if (username) this.globalConfig.setSync(CFG_USER_NAME_KEY, username);
+          if (CloudMain.REDIRECT_URL) res.redirect(CloudMain.REDIRECT_URL);
+          else if (typeof redirectUri === 'string') res.redirect(redirectUri);
+          else res.status(200).send('Login successful');
+          this.authListener = {
+            port,
+            server: authServer,
+            username,
+          };
+          onLoggedIn?.({ username, token });
+          return res;
+        } catch (err) {
+          this.logger.error(`Error on login: ${err}`);
+          res.status(CloudMain.ERROR_RESPONSE).send('Login failed');
+          reject(err);
+          return res;
+        }
+      });
     });
   }
 
@@ -284,33 +274,46 @@ export class CloudMain {
     port?: string,
     suppressBrowserLaunch?: boolean,
     machineName?: string,
-    cloudDomain?: string,
-    onlyResolveOnSuccessfulLogin?: boolean,
-    onLoggedin?: (params: { username?: string | null; token?: string }) => void
+    cloudDomain?: string
   ): Promise<{
     isAlreadyLoggedIn?: boolean;
     username?: string;
+    token?: string;
   } | null> {
-    if (this.isLoggedIn()) {
-      return {
-        isAlreadyLoggedIn: true,
-        username: this.globalConfig.getSync(CFG_USER_NAME_KEY),
-      };
-    }
-    if (!this.authListener?.server) {
-      await this.setupAuthListener({ port: Number(port), onLoggedin, onlyResolveOnSuccessfulLogin });
-    }
-    const loginUrl = this.getLoginUrl({
-      machineName,
-      cloudDomain,
+    return new Promise(async (resolve, reject) => {
+      if (this.isLoggedIn()) {
+        resolve({
+          isAlreadyLoggedIn: true,
+          username: this.globalConfig.getSync(CFG_USER_NAME_KEY),
+          token: this.globalConfig.getSync(CFG_USER_TOKEN_KEY),
+        });
+      }
+      if (!this.authListener?.server) {
+        try {
+          await this.setupAuthListener({
+            port: Number(port),
+            onLoggedIn: (loggedInParams) => {
+              resolve({
+                username: loggedInParams.username,
+                token: loggedInParams.token,
+              });
+            },
+          });
+        } catch (err) {
+          reject(err);
+        }
+      }
+      const loginUrl = this.getLoginUrl({
+        machineName,
+        cloudDomain,
+      });
+      if (!suppressBrowserLaunch) {
+        console.log(chalk.yellow(`Your browser has been opened to visit:\n${loginUrl}`)); // eslint-disable-line no-console
+        open(loginUrl);
+      } else {
+        console.log(chalk.yellow(`Go to the following link in your browser::\n${loginUrl}`)); // eslint-disable-line no-console
+      }
     });
-    if (!suppressBrowserLaunch) {
-      console.log(chalk.yellow(`Your browser has been opened to visit:\n${loginUrl}`)); // eslint-disable-line no-console
-      open(loginUrl);
-    } else {
-      console.log(chalk.yellow(`Go to the following link in your browser::\n${loginUrl}`)); // eslint-disable-line no-console
-    }
-    return null;
   }
 
   static GET_SCOPES = `
@@ -409,9 +412,14 @@ export class CloudMain {
   ) {
     const logger = loggerMain.createLogger(CloudAspect.id);
     const cloudMain = new CloudMain(config, logger, express, workspace, scope, globalConfig);
+    const loginCmd = new LoginCmd(cloudMain);
+    console.log('🚀 ~ file: cloud.main.runtime.ts:422 ~ CloudMain ~ loginCmd:', loginCmd);
+    const logoutCmd = new LogoutCmd(cloudMain);
+    console.log('🚀 ~ file: cloud.main.runtime.ts:424 ~ CloudMain ~ logoutCmd:', logoutCmd);
+    cli.register(loginCmd, logoutCmd);
+    console.log('🚀 ~ file: cloud.main.runtime.ts:419 ~ CloudMain ~ cli:', cli);
     graphql.register(cloudSchema(cloudMain));
-    cloudMain.setupAuthListener();
-    cli.register(new LoginCmd(cloudMain), new LogoutCmd(cloudMain));
+    if (workspace) cloudMain.setupAuthListener();
     return cloudMain;
   }
 }

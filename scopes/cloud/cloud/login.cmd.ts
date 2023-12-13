@@ -4,10 +4,9 @@ import { CloudMain } from './cloud.main.runtime';
 
 export class LoginCmd implements Command {
   name = 'login';
-  description = 'log in to Bit cloud';
+  description = 'log in to Bit cloud 😔';
   group = 'general';
   alias = '';
-  skipWorkspace = true;
   options = [
     ['d', 'cloud-domain <domain>', 'login cloud domain (default bit.cloud)'],
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
@@ -19,6 +18,9 @@ export class LoginCmd implements Command {
     ],
     ['', 'suppress-browser-launch', 'DEPRECATE. use --no-browser instead'],
   ] as CommandOptions;
+  loader = true;
+  remoteOp = true;
+  skipWorkspace = true;
 
   constructor(private cloud: CloudMain) {}
 
@@ -41,10 +43,33 @@ export class LoginCmd implements Command {
     if (suppressBrowserLaunch) {
       noBrowser = true;
     }
-    const result = await this.cloud.login(port, noBrowser, machineName, cloudDomain, true);
+    const result = await this.cloud.login(port, noBrowser, machineName, cloudDomain);
     if (result?.isAlreadyLoggedIn) {
       return chalk.yellow(`already logged in as ${result?.username}`);
     }
     return chalk.green(`success! logged in as ${result?.username}`);
+  }
+
+  async json(
+    [],
+    {
+      cloudDomain,
+      port,
+      suppressBrowserLaunch,
+      noBrowser,
+      machineName,
+    }: {
+      cloudDomain?: string;
+      port: string;
+      suppressBrowserLaunch?: boolean;
+      noBrowser?: boolean;
+      machineName?: string;
+    }
+  ): Promise<{ username?: string; token?: string }> {
+    if (suppressBrowserLaunch) {
+      noBrowser = true;
+    }
+    const result = await this.cloud.login(port, noBrowser, machineName, cloudDomain);
+    return { username: result?.username, token: result?.token };
   }
 }

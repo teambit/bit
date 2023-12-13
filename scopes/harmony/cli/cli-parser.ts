@@ -23,6 +23,7 @@ export class CLIParser {
     yargs(args);
     yargs.help(false);
     this.configureParser();
+    console.log('🚀 ~ file: cli-parser.ts:34 ~ CLIParser ~ this.commands.forEach ~ this.commands:', this.commands);
     this.commands.forEach((command: Command) => {
       if (command.commands && command.commands.length) {
         this.parseCommandWithSubCommands(command);
@@ -161,10 +162,13 @@ export class CLIParser {
   }
 
   private throwForNonExistsCommand(commandName: string) {
+    console.log('🚀 ~ file: cli-parser.ts:165 ~ CLIParser ~ throwForNonExistsCommand ~ commandName:', commandName);
     if (!commandName || commandName.startsWith('-')) {
       return;
     }
     const commandsNames = this.commands.map((c) => getCommandId(c.name));
+    console.log('🚀 ~ file: cli-parser.ts:170 ~ CLIParser ~ throwForNonExistsCommand ~ this.commands:', this.commands);
+    console.log('🚀 ~ file: cli-parser.ts:170 ~ CLIParser ~ throwForNonExistsCommand ~ commandsNames:', commandsNames);
     const aliases = this.commands.map((c) => c.alias).filter((a) => a);
     const existingGlobalFlags = ['-V', '--version'];
     const validCommands = [...commandsNames, ...aliases, ...existingGlobalFlags];
