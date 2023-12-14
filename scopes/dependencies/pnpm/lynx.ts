@@ -186,6 +186,7 @@ export async function install(
     reportOptions?: ReportOptions;
     hidePackageManagerOutput?: boolean;
     dryRun?: boolean;
+    dedupeInjectedDeps?: boolean;
   } & Pick<
     InstallOptions,
     | 'publicHoistPattern'
@@ -246,7 +247,7 @@ export async function install(
     confirmModulesPurge: false,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
-    dedupeInjectedDeps: true,
+    dedupeInjectedDeps: options.dedupeInjectedDeps,
     dir: rootDir,
     storeController: storeController.ctrl,
     workspacePackages,
