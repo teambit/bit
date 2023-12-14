@@ -5,6 +5,8 @@ import {
   ExpressAppTemplate,
   NodeEnvTemplate,
   BitAppTemplate,
+  PlatformTemplate,
+  NodeAppTemplate,
 } from '@bitdev/node.generators.node-templates';
 
 import { EnvContext } from '@teambit/envs';
@@ -16,6 +18,8 @@ const templateListHandler = TemplateList.from([
   EntityTemplate.from({ env: 'bitdev.node/node-env' }),
   ExpressAppTemplate.from({ env: 'bitdev.node/node-env' }),
   BitAppTemplate.from({ env: 'bitdev.node/node-env' }),
+  PlatformTemplate.from({ env: 'bitdev.node/node-env' }),
+  NodeAppTemplate.from({ env: 'bitdev.node/node-env' }),
   NodeEnvTemplate.from({}),
 ]);
 
