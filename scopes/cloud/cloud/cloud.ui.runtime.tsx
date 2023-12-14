@@ -13,8 +13,6 @@ export class CloudUI {
     workspace.registerMenuWidget([CurrentUser]);
     return cloudUI;
   }
-
-  //   constructor() {}
 }
 
 export default CloudUI;

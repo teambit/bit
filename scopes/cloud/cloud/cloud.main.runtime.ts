@@ -34,6 +34,7 @@ import { cloudSchema } from './cloud.graphql';
 import { CloudAspect } from './cloud.aspect';
 import { LoginCmd } from './login.cmd';
 import { LogoutCmd } from './logout.cmd';
+import { WhoamiCmd } from './whoami.cmd';
 
 export interface CloudWorkspaceConfig {
   cloudDomain: string;
@@ -74,9 +75,7 @@ export class CloudMain {
     public scope: ScopeMain,
     public globalConfig: GlobalConfigMain,
     public onSuccessLoginSlot: OnSuccessLoginSlot
-  ) {
-    this.setupGracefulShutdown();
-  }
+  ) {}
 
   setupAuthListener({
     port: portFromParams,
@@ -84,9 +83,14 @@ export class CloudMain {
     port?: number;
   } = {}): Promise<CloudAuthListener | null> {
     return new Promise((resolve, reject) => {
+      const port = portFromParams || this.getLoginPort();
+      if (this.authListener && (!port || this.authListener.port === port)) {
+        this.logger.debug(`Auth server is already running on port ${port}`);
+        resolve(this.authListener);
+        return;
+      }
       const expectedClientId = CloudMain.CLIENT_ID;
       this.expressApp = this.express.createApp();
-      const port = portFromParams || this.getLoginPort();
       const authServer = this.expressApp
         .listen(port, () => {
           this.logger.debug(`cloud express server started on port ${port}`);
@@ -147,23 +151,9 @@ export class CloudMain {
     });
   }
 
-  setupGracefulShutdown() {
-    // process.on('SIGINT', this.gracefulShutdown.bind(this));
-    // process.on('SIGTERM', this.gracefulShutdown.bind(this));
-  }
-
   registerOnSuccessLogin(onSuccessLoginFn: OnSuccessLogin) {
     this.onSuccessLoginSlot.register(onSuccessLoginFn);
     return this;
-  }
-
-  gracefulShutdown() {
-    this.logger.debug('Closing cloud auth listener');
-    if (this.authListener?.server) {
-      this.authListener.server.close(() => {
-        this.logger.debug('Cloud auth listener closed');
-      });
-    }
   }
 
   getCloudDomain(): string {
@@ -261,13 +251,14 @@ export class CloudMain {
     redirectUrl,
     machineName,
     cloudDomain,
-  }: { redirectUrl?: string; machineName?: string; cloudDomain?: string } = {}): string {
+    port,
+  }: { redirectUrl?: string; machineName?: string; cloudDomain?: string; port?: string } = {}): string {
     const loginUrl = cloudDomain || this.getLoginDomain();
     if (redirectUrl) {
       CloudMain.REDIRECT_URL = redirectUrl;
     }
     return encodeURI(
-      `${loginUrl}?port=${CloudMain.DEFAULT_PORT}&clientId=${CloudMain.CLIENT_ID}&responseType=token&deviceName=${
+      `${loginUrl}?port=${port || this.getLoginPort()}&clientId=${CloudMain.CLIENT_ID}&responseType=token&deviceName=${
         machineName || os.hostname()
       }&os=${process.platform}`
     );
@@ -276,6 +267,14 @@ export class CloudMain {
   logout() {
     this.globalConfig.delSync(CFG_USER_TOKEN_KEY);
     this.globalConfig.delSync(CFG_USER_NAME_KEY);
+  }
+
+  async whoami(): Promise<string | undefined> {
+    const currentUser = await this.getCurrentUser();
+    if (!currentUser?.username) {
+      return undefined;
+    }
+    return currentUser.username;
   }
 
   async login(
@@ -306,6 +305,7 @@ export class CloudMain {
         const loginUrl = this.getLoginUrl({
           machineName,
           cloudDomain,
+          port,
         });
         if (!suppressBrowserLaunch) {
           console.log(chalk.yellow(`Your browser has been opened to visit:\n${loginUrl}`)); // eslint-disable-line no-console
@@ -317,19 +317,15 @@ export class CloudMain {
           console.log(chalk.yellow(`Go to the following link in your browser::\n${loginUrl}`)); // eslint-disable-line no-console
         }
       };
-
-      if (!this.authListener?.server) {
-        try {
-          this.setupAuthListener({
-            port: Number(port),
-          })
-            .then(promptLogin)
-            .catch((e) => reject(e));
-        } catch (err) {
-          reject(err);
-        }
+      try {
+        this.setupAuthListener({
+          port: Number(port),
+        })
+          .then(promptLogin)
+          .catch((e) => reject(e));
+      } catch (err) {
+        reject(err);
       }
-      promptLogin();
     });
   }
 
@@ -432,7 +428,8 @@ export class CloudMain {
     const cloudMain = new CloudMain(config, logger, express, workspace, scope, globalConfig, onSuccessLoginSlot);
     const loginCmd = new LoginCmd(cloudMain);
     const logoutCmd = new LogoutCmd(cloudMain);
-    cli.register(loginCmd, logoutCmd);
+    const whoamiCmd = new WhoamiCmd(cloudMain);
+    cli.register(loginCmd, logoutCmd, whoamiCmd);
     graphql.register(cloudSchema(cloudMain));
     if (workspace) await cloudMain.setupAuthListener();
     return cloudMain;

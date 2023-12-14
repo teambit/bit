@@ -4,7 +4,7 @@ import { CloudMain } from './cloud.main.runtime';
 
 export class LoginCmd implements Command {
   name = 'login';
-  description = 'log in to Bit cloud 😔';
+  description = 'log in to Bit cloud';
   group = 'general';
   alias = '';
   options = [
@@ -25,7 +25,7 @@ export class LoginCmd implements Command {
   constructor(private cloud: CloudMain) {}
 
   async report(
-    [],
+    [], // eslint-disable-line no-empty-pattern
     {
       cloudDomain,
       port,
@@ -51,7 +51,7 @@ export class LoginCmd implements Command {
   }
 
   async json(
-    [],
+    [], // eslint-disable-line no-empty-pattern,
     {
       cloudDomain,
       port,
