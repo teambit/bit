@@ -11,11 +11,11 @@ import { EnvContext } from '@teambit/envs';
 import { ComponentTemplate, TemplateList } from '@teambit/generator';
 
 const templateListHandler = TemplateList.from([
-  NodeModuleTemplate.from({ env: 'teambit.node/node' }),
-  GraphQLServerTemplate.from({ env: 'teambit.node/node' }),
-  EntityTemplate.from({ env: 'teambit.node/node' }),
-  ExpressAppTemplate.from({ env: 'teambit.node/node' }),
-  BitAppTemplate.from({ env: 'teambit.node/node' }),
+  NodeModuleTemplate.from({ env: 'bitdev.node/node-env' }),
+  GraphQLServerTemplate.from({ env: 'bitdev.node/node-env' }),
+  EntityTemplate.from({ env: 'bitdev.node/node-env' }),
+  ExpressAppTemplate.from({ env: 'bitdev.node/node-env' }),
+  BitAppTemplate.from({ env: 'bitdev.node/node-env' }),
   NodeEnvTemplate.from({}),
 ]);
 
