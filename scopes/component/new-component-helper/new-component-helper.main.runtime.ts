@@ -54,7 +54,7 @@ export class NewComponentHelperMain {
       return pathFromUser;
     }
 
-    return composeComponentPath(componentId.changeScope(componentId.scope), this.workspace.defaultDirectory);
+    return this.workspace.consumer.composeRelativeComponentPath(componentId.changeScope(componentId.scope));
   }
   async writeAndAddNewComp(
     comp: Component,
