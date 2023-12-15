@@ -3,7 +3,6 @@ import path from 'path';
 import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { MainRuntime } from '@teambit/cli';
-import { composeComponentPath } from '@teambit/legacy/dist/utils/bit/compose-component-path';
 import { Component } from '@teambit/component';
 import TrackerAspect, { TrackerMain } from '@teambit/tracker';
 import { isDirEmpty } from '@teambit/legacy/dist/utils';
@@ -54,7 +53,7 @@ export class NewComponentHelperMain {
       return pathFromUser;
     }
 
-    return composeComponentPath(componentId.changeScope(componentId.scope), this.workspace.defaultDirectory);
+    return this.workspace.consumer.composeRelativeComponentPath(componentId.changeScope(componentId.scope));
   }
   async writeAndAddNewComp(
     comp: Component,

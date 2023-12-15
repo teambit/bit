@@ -147,11 +147,12 @@ export class MergeLanesMain {
     const bitIds = await getBitIds();
     this.logger.debug(`merging the following bitIds: ${bitIds.toString()}`);
 
+    const shouldSquash = squash || (currentLaneId.isDefault() && !noSquash);
     let allComponentsStatus = await this.merging.getMergeStatus(bitIds, currentLane, otherLane, {
       resolveUnrelated,
       ignoreConfigChanges,
+      shouldSquash,
     });
-    const shouldSquash = squash || (currentLaneId.isDefault() && !noSquash);
 
     if (pattern) {
       const componentIds = await this.workspace.resolveMultipleComponentIds(bitIds);

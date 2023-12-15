@@ -44,6 +44,20 @@ export class ArtifactList<T extends Artifact> extends Array<T> {
     return ArtifactList.fromArray(filtered);
   }
 
+  /**
+   * find by the artifact name. it's possible to have multiple artifacts with the same name, in which case it returns the first.
+   */
+  findByName(name: string): Artifact | undefined {
+    return this.find((artifact) => artifact.name === name);
+  }
+
+  /**
+   * find by the task name. it's possible to have multiple tasks with the same name (different aspects), in which case it returns the first.
+   */
+  findByTaskName(name: string): Artifact | undefined {
+    return this.find((artifact) => artifact.task.name === name);
+  }
+
   isEmpty(): boolean {
     return this.every((artifact) => artifact.files.isEmpty());
   }
