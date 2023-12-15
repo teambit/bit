@@ -4,7 +4,7 @@
     "name": "bit",
     "icon": "https://static.bit.dev/bit-logo.svg",
     "defaultScope": "teambit.bit",
-    "defaultDirectory": "{scope}/{name}"
+    "defaultDirectory": "components"
   },
   "teambit.dependencies/dependency-resolver": {
     "packageManager": "teambit.dependencies/pnpm",
