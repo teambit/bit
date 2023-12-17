@@ -49,7 +49,7 @@ import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
 import { ConfigMergeResult } from './config-merge-result';
-import { MergeStatusProvider } from './merge-status-provider';
+import { MergeStatusProvider, MergeStatusProviderOptions } from './merge-status-provider';
 
 type ResolveUnrelatedData = {
   strategy: MergeStrategy;
@@ -493,7 +493,7 @@ export class MergingMain {
     bitIds: ComponentID[], // the id.version is the version we want to merge to the current component
     currentLane: Lane | null, // currently checked out lane. if on main, then it's null.
     otherLane?: Lane | null, // the lane we want to merged to our lane. (null if it's "main").
-    options?: { resolveUnrelated?: MergeStrategy; ignoreConfigChanges?: boolean }
+    options?: MergeStatusProviderOptions
   ): Promise<ComponentMergeStatus[]> {
     const mergeStatusProvider = new MergeStatusProvider(
       this.workspace,
@@ -702,7 +702,7 @@ export class MergingMain {
       })
     );
 
-    return this.getMergeStatus(ids, localLaneObject, localLaneObject);
+    return this.getMergeStatus(ids, localLaneObject, localLaneObject, { shouldSquash: false });
   }
 
   private async snapResolvedComponents(

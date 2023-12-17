@@ -200,10 +200,7 @@ export class ForkingMain {
   }
 
   private async forkExistingInWorkspace(existing: Component, targetId?: string, options?: ForkOptions) {
-    if (!targetId) {
-      throw new Error(`error: unable to create "${existing.id.toStringWithoutVersion()}" component, a component with the same name already exists.
-please specify the target-id arg`);
-    }
+    targetId = targetId || existing.id.fullName;
     const targetCompId = this.newComponentHelper.getNewComponentId(targetId, undefined, options?.scope);
 
     const config = await this.getConfig(existing, options);
