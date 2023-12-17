@@ -141,8 +141,13 @@ export default class ScopeComponentsImporter {
       return false;
     });
 
-    const incompleteVersionHistory = await this.getIncompleteVersionHistory(checkForIncompleteHistory);
-    externalsToFetch.push(...incompleteVersionHistory);
+    const shouldRefetchIncompleteHistory = process.env.BIT_FETCH_INCOMPLETE_VERSION_HISTORY;
+
+    let incompleteVersionHistory: ComponentID[] = [];
+    if (shouldRefetchIncompleteHistory) {
+      incompleteVersionHistory = await this.getIncompleteVersionHistory(checkForIncompleteHistory);
+      externalsToFetch.push(...incompleteVersionHistory);
+    }
 
     await this.findMissingExternalsRecursively(
       existingDefs,
@@ -166,7 +171,9 @@ export default class ScopeComponentsImporter {
       reason
     );
 
-    await this.warnForIncompleteVersionHistory(incompleteVersionHistory);
+    if (shouldRefetchIncompleteHistory) {
+      await this.warnForIncompleteVersionHistory(incompleteVersionHistory);
+    }
 
     const versionDeps = await this.bitIdsToVersionDeps(idsToImport, throwForSeederNotFound, preferDependencyGraph);
     logger.debug('importMany, completed!');

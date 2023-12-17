@@ -185,7 +185,7 @@ export function checkoutOutput(checkoutResults: ApplyVersionResults, checkoutPro
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
     const title = `\n\nfiles with conflicts summary\n`;
-    const suggestion = `\n\nfix the conflicts above manually and then run "bit install" and "bit compile".
+    const suggestion = `\n\nfix the conflicts above manually and then run "bit install".
 once ready, snap/tag the components to persist the changes`;
     return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
   };

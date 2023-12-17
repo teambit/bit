@@ -14,7 +14,7 @@
         "@babel/preset-react": "7.22.15",
         "@babel/preset-typescript": "7.22.15",
         "@babel/types": "7.22.3",
-        "@bitdev/node.generators.node-templates": "^0.0.1",
+        "@bitdev/node.generators.node-templates": "^1.0.2",
         "@bitdev/react.generators.react-templates": "^1.1.3",
         "@graphql-modules/core": "0.7.17",
         "@graphql-tools/schema": "^10.0.0",
@@ -554,7 +554,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.617",
+        "@teambit/legacy": "1.0.618",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
@@ -648,7 +648,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.617"
+            "@teambit/legacy": "1.0.618"
           }
         }
       },
@@ -911,7 +911,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.617"
+            "@teambit/legacy": "1.0.618"
           }
         }
       }
@@ -1001,7 +1001,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.617",
+            "@teambit/legacy": "1.0.618",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
@@ -1147,7 +1147,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.617"
+            "@teambit/legacy": "1.0.618"
           }
         }
       }

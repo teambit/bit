@@ -196,7 +196,7 @@ export class InstallMain {
         packages = packages.concat(generateResult.dependencies);
         runInstall = true;
       }
-      if (generateResult.dependencies) {
+      if (generateResult.installMissingDependencies) {
         installMissing = true;
         runInstall = true;
       }
