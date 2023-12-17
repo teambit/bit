@@ -282,9 +282,7 @@ export function applyVersionReport(components: ApplyVersionResult[], addName = t
           if (component.filesStatus[file] === FileStatus.unchanged) return null;
           const note =
             component.filesStatus[file] === FileStatus.manual
-              ? chalk.white(
-                  'automatic merge failed. please fix conflicts manually and then run "bit install" and "bit compile"'
-                )
+              ? chalk.white('automatic merge failed. please fix conflicts manually and then run "bit install"')
               : '';
           return `${tab}${component.filesStatus[file]} ${chalk.bold(file)} ${note}`;
         })

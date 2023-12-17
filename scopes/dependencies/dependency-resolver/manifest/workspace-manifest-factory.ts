@@ -2,7 +2,6 @@ import { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-load
 import { IssuesClasses } from '@teambit/component-issues';
 import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { fromPairs, pickBy, mapValues, uniq, difference } from 'lodash';
 import { SemVer } from 'semver';
 import pMapSeries from 'p-map-series';
@@ -356,19 +355,21 @@ function excludeWorkspaceDependencies(deps: DepObjectValue): DepObjectValue {
 
 async function getMissingPackages(component: Component): Promise<{ devMissings: string[]; runtimeMissings: string[] }> {
   const missingPackagesData = component.state.issues.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data;
-  if (!missingPackagesData) return { devMissings: [], runtimeMissings: [] };
-  // TODO: this is a hack to get it from the legacy, we should take it from the dev files aspect
-  // TODO: the reason we don't is that it will make circular dependency between the dep resolver and the dev files aspect
-  const devFiles = await DependencyResolver.getDevFiles(component.state._consumer);
+  if (!missingPackagesData?.length) return { devMissings: [], runtimeMissings: [] };
+
   let devMissings: string[] = [];
   let runtimeMissings: string[] = [];
-  Object.entries(missingPackagesData).forEach(([fileName, packages]) => {
-    if (devFiles.includes(fileName)) {
-      devMissings = uniq([...devMissings, ...packages]);
+
+  missingPackagesData.forEach((data) => {
+    if (data.isDevFile) {
+      devMissings.push(...data.missingPackages);
     } else {
-      runtimeMissings = uniq([...runtimeMissings, ...packages]);
+      runtimeMissings.push(...data.missingPackages);
     }
   });
+  devMissings = uniq(devMissings);
+  runtimeMissings = uniq(runtimeMissings);
+
   // Remove dev missing which are also runtime missing
   devMissings = difference(devMissings, runtimeMissings);
   return {

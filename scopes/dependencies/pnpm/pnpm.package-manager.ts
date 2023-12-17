@@ -87,6 +87,7 @@ export class PnpmPackageManager implements PackageManager {
         nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
         includeOptionalDeps: installOptions.includeOptionalDeps,
         ignorePackageManifest: installOptions.ignorePackageManifest,
+        dedupeInjectedDeps: installOptions.dedupeInjectedDeps,
         dryRun: installOptions.dryRun,
         overrides: installOptions.overrides,
         hoistPattern: config.hoistPattern,

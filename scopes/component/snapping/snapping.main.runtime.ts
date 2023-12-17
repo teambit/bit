@@ -13,7 +13,6 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import HooksManager from '@teambit/legacy/dist/hooks';
 import pMapSeries from 'p-map-series';
-import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { validateVersion } from '@teambit/legacy/dist/utils/semver-helper';
 import loader from '@teambit/legacy/dist/cli/loader';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
@@ -161,8 +160,8 @@ export class SnappingMain {
 
     const exactVersion = version;
     if (!this.workspace) throw new OutsideWorkspaceError();
-    const idsHasWildcard = hasWildcard(ids);
-    const isAll = Boolean(!ids.length || idsHasWildcard);
+    const idsHasPattern = this.workspace.hasPattern(ids);
+    const isAll = Boolean(!ids.length || idsHasPattern);
     const validExactVersion = validateVersion(exactVersion);
     const consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
@@ -555,11 +554,7 @@ if you're willing to lose the history from the head to the specified version, us
           const compId = await workspace.resolveComponentId(pattern);
           return [compId];
         }
-        return workspace.scope.filterIdsFromPoolIdsByPattern(
-          pattern,
-          tagPendingComponentsIds,
-          shouldThrowForNoMatching
-        );
+        return workspace.filterIdsFromPoolIdsByPattern(pattern, tagPendingComponentsIds, shouldThrowForNoMatching);
       };
       const componentIds = await getCompIds();
       if (!componentIds.length && pattern) {
@@ -594,18 +589,17 @@ there are matching among unmodified components thought. consider using --unmodif
         return removeLocalVersionsForAllComponents(consumer, currentLane, head);
       }
       const candidateComponents = await getComponentsWithOptionToUntag(consumer);
-      const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern);
-      const idsMatchingPatternBitIds = ComponentIdList.fromArray(idsMatchingPattern.map((id) => id));
+      const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern, true, { includeDeleted: true });
+      const idsMatchingPatternBitIds = ComponentIdList.fromArray(idsMatchingPattern);
       const componentsToUntag = candidateComponents.filter((modelComponent) =>
         idsMatchingPatternBitIds.hasWithoutVersion(modelComponent.toComponentId())
       );
       return removeLocalVersionsForMultipleComponents(componentsToUntag, currentLane, head, force, consumer.scope);
     };
     const softUntag = async () => {
-      const componentsList = new ComponentsList(consumer);
-      const softTaggedComponentsIds = componentsList.listSoftTaggedComponents();
+      const softTaggedComponentsIds = this.workspace.filter.bySoftTagged();
       const idsToRemoveSoftTags = componentPattern
-        ? this.workspace.scope.filterIdsFromPoolIdsByPattern(componentPattern, softTaggedComponentsIds)
+        ? await this.workspace.filterIdsFromPoolIdsByPattern(componentPattern, softTaggedComponentsIds)
         : softTaggedComponentsIds;
       return compact(
         idsToRemoveSoftTags.map((componentId) => {
@@ -1061,13 +1055,14 @@ another option, in case this dependency is not in main yet is to remove all refe
       }
     });
     legacyComponent.extensions.forEach((ext) => {
-      if (!ext.newExtensionId) return;
-      const updatedBitId = updatedIds.searchWithoutVersion(ext.newExtensionId);
+      if (!ext.extensionId) return;
+      const updatedBitId = updatedIds.searchWithoutVersion(ext.extensionId);
       if (updatedBitId) {
         this.logger.debug(
-          `updating "${componentIdStr}", extension ${ext.newExtensionId.toString()} to version ${updatedBitId.version}}`
+          `updating "${componentIdStr}", extension ${ext.extensionId.toString()} to version ${updatedBitId.version}}`
         );
         ext.extensionId = updatedBitId;
+        if (ext.newExtensionId) ext.newExtensionId = updatedBitId;
       }
     });
 
@@ -1097,7 +1092,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     const warnings: string[] = [];
     const componentsList = new ComponentsList(this.workspace.consumer);
     if (persist) {
-      const softTaggedComponents = componentsList.listSoftTaggedComponents();
+      const softTaggedComponents = this.workspace.filter.bySoftTagged();
       return { bitIds: softTaggedComponents, warnings: [] };
     }
 
@@ -1105,15 +1100,16 @@ another option, in case this dependency is not in main yet is to remove all refe
       ? await this.workspace.listPotentialTagIds()
       : await this.workspace.listTagPendingIds();
 
-    const snappedComponents = await componentsList.listSnappedComponentsOnMain();
-    const snappedComponentsIds = snappedComponents.map((c) => c.toComponentId());
+    const snappedComponentsIds = (await this.workspace.filter.bySnappedOnMain()).map((id) =>
+      id.changeVersion(undefined)
+    );
 
     if (ids.length) {
       const componentIds = await pMapSeries(ids, async (id) => {
         const [idWithoutVer, version] = id.split('@');
-        const idHasWildcard = hasWildcard(id);
-        if (idHasWildcard) {
-          const allIds = this.workspace.scope.filterIdsFromPoolIdsByPattern(idWithoutVer, tagPendingComponentsIds);
+        const idIsPattern = this.workspace.isPattern(id);
+        if (idIsPattern) {
+          const allIds = await this.workspace.filterIdsFromPoolIdsByPattern(idWithoutVer, tagPendingComponentsIds);
           return allIds.map((componentId) => componentId.changeVersion(version));
         }
         const componentId = await this.workspace.resolveComponentId(idWithoutVer);

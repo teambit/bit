@@ -189,7 +189,7 @@ export const CFG_SYMPHONY_URL_KEY = 'symphony_url';
 let resolvedSymphonyUrl;
 export const getSymphonyUrl = (): string => {
   if (resolvedSymphonyUrl) return resolvedSymphonyUrl;
-  resolvedSymphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || `symphony.${getCloudDomain()}`;
+  resolvedSymphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || `api.v2.${getCloudDomain()}`;
   return resolvedSymphonyUrl;
 };
 
@@ -249,6 +249,9 @@ export const MergeConfigFilename = 'merge-conflict';
  * if you want to ignore only from component's root-dir, use `IGNORE_ROOT_ONLY_LIST` constant.
  */
 export const IGNORE_LIST = [
+  '**/.env',
+  '**/.env.local',
+  '**/.env.**.local',
   '**/.bit.map.json',
   '**/.bitmap',
   '**/.gitignore',

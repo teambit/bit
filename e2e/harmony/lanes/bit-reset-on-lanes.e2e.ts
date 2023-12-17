@@ -27,7 +27,7 @@ describe('bit reset when on lane', function () {
       headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
       helper.command.switchLocalLane('main');
       helper.command.mergeLane('dev');
-      helper.command.untagAll();
+      helper.command.resetAll();
     });
     it('should not delete the head of the lane', () => {
       expect(() => helper.command.catObject(headOnLane)).to.not.throw();
@@ -47,7 +47,7 @@ describe('bit reset when on lane', function () {
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
     });
     it('bit reset should not throw', () => {
-      expect(() => helper.command.untagAll()).to.not.throw();
+      expect(() => helper.command.resetAll()).to.not.throw();
     });
   });
   // this state is now impossible because we blocked the option to create a lane when there are
@@ -66,7 +66,7 @@ describe('bit reset when on lane', function () {
       expect(status.stagedComponents[0].versions).to.have.lengthOf(2);
     });
     it('bit reset should reset the component to new', () => {
-      expect(() => helper.command.untagAll()).to.not.throw();
+      expect(() => helper.command.resetAll()).to.not.throw();
       const status = helper.command.statusJson();
       expect(status.newComponents).to.have.lengthOf(1);
     });
@@ -86,7 +86,7 @@ describe('bit reset when on lane', function () {
       expect(status.stagedComponents[0].versions).to.have.lengthOf(1);
     });
     it('bit reset should not throw', () => {
-      expect(() => helper.command.untagAll()).to.not.throw();
+      expect(() => helper.command.resetAll()).to.not.throw();
     });
   });
   describe('reset on a new lane after merging from another lane', () => {
@@ -110,7 +110,7 @@ describe('bit reset when on lane', function () {
     // it is similar to running git-reset without specifying any origin and expecting all the local commits to be removed.
     // there is no way to know what should be the new head)
     it('bit reset should throw a descriptive error suggesting either removing the component or the lane', () => {
-      expect(() => helper.command.untagAll()).to.throw();
+      expect(() => helper.command.resetAll()).to.throw();
     });
   });
   describe('reset after merge where it snapped multiple snaps on the other lane', () => {
@@ -136,7 +136,7 @@ describe('bit reset when on lane', function () {
     });
     // previously, it was throwing VersionNotFound error as it doesn't have the version objects snapped on the other lane
     it('bit reset should not throw', () => {
-      expect(() => helper.command.untagAll()).not.to.throw();
+      expect(() => helper.command.resetAll()).not.to.throw();
     });
   });
 });

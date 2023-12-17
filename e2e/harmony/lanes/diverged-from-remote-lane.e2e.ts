@@ -32,7 +32,7 @@ describe('local is diverged from the remote', function () {
       expect(status.mergePendingComponents).to.have.lengthOf(1);
     });
     it('bit reset should not throw', () => {
-      expect(() => helper.command.untagAll()).to.not.throw();
+      expect(() => helper.command.resetAll()).to.not.throw();
     });
   });
   describe('import first then snap', () => {
