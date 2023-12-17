@@ -6,7 +6,7 @@ export function serializeByLifecycle(deps: DependencyList, lifecycle: Dependency
   const longestLength = getLongestDepName(filteredByLifecycle);
   const paddedNames = filteredByLifecycle.dependencies.map((dep) => {
     const paddedName = getNameWithVersion(dep).padEnd(longestLength + 1, '-');
-    return `${paddedName} (${dep.type})`;
+    return `${paddedName} (${dep.type})${dep.optional ? '(optional)' : ''}`;
   });
   return paddedNames.join('\n');
 }

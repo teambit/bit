@@ -67,6 +67,11 @@ describe('optional dependencies', function () {
         },
       });
     });
+    it('should mark optional dependencies in the show command', () => {
+      const showOutput = helper.command.showComponent('button');
+      expect(showOutput).to.contain('is-odd@3.0.1- (package)(optional)');
+      expect(showOutput).to.contain('react@^17.0.0 || ^18.0.0- (package)(optional)');
+    });
   });
   describe('affect capsule', () => {
     let workspaceCapsulesRootDir: string;
