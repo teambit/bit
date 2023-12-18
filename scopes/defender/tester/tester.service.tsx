@@ -132,7 +132,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       const componentDir = this.workspace.componentDir(component.id);
       const componentPatterns = this.devFiles.getDevPatterns(component, TesterAspect.id);
       const packageRootDir = await this.workspace.getComponentPackagePath(component);
-      
+
       return {
         componentDir,
         packageRootDir,

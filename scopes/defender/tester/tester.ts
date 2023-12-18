@@ -32,16 +32,16 @@ export type ComponentsResults = {
 
 export type SpecFiles = ComponentMap<AbstractVinyl[]>;
 
-export type ComponentPatternsEntry = { 
+export type ComponentPatternsEntry = {
   /**
    * component directory in the workspace.
    */
-  componentDir: string; 
+  componentDir: string;
 
   /**
    * paths to test files.
    */
-  paths: { path: string; relative: string }[],
+  paths: { path: string; relative: string }[];
 
   /**
    * root dir of the package in bit_roots.
