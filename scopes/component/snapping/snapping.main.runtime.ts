@@ -59,6 +59,7 @@ import ResetCmd from './reset-cmd';
 import { tagModelComponent, updateComponentsVersions, BasicTagParams } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
+import { FlattenedEdgesGetter } from './flattened-edges';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -648,6 +649,9 @@ there are matching among unmodified components thought. consider using --unmodif
     };
     const lane = await getLane();
 
+    const flattenedEdgesGetter = new FlattenedEdgesGetter(this.scope, components, this.logger, lane || undefined);
+    const graphIds = await flattenedEdgesGetter.buildGraph();
+
     const flattenedDependenciesGetter = new FlattenedDependenciesGetter(
       this.scope.legacyScope,
       components,
@@ -656,6 +660,40 @@ there are matching among unmodified components thought. consider using --unmodif
     await flattenedDependenciesGetter.populateFlattenedDependencies();
     loader.stop();
     await this._addFlattenedDepsGraphToComponents(components);
+
+    const buildGraphFromHistoricFlattenedEdges = Boolean(process.env.BIT_BUILD_GRAPH_FROM_HISTORIC_FLATTENED_EDGES);
+    if (!buildGraphFromHistoricFlattenedEdges) return;
+
+    components.forEach((component) => {
+      const graphFromIds = graphIds.successorsSubgraph(component.id.toString());
+      const edgesFromGraph = graphFromIds.edges.map((edge) => {
+        return {
+          source: edge.sourceId,
+          target: edge.targetId,
+          type: edge.attr as DepEdgeType,
+        };
+      });
+      const edgesFromGraphStr = edgesFromGraph.map((e) => `${e.source} -> ${e.target} (${e.type})`).sort();
+      const edgesFromFetchedDeps = component.flattenedEdges;
+      const edgesFromFetchedDepsStr = edgesFromFetchedDeps
+        .map((e) => `${e.source.toString()} -> ${e.target.toString()} (${e.type})`)
+        .sort();
+
+      const edgesOnlyInGraph = difference(edgesFromGraphStr, edgesFromFetchedDepsStr);
+      const edgesOnlyInFetchedDeps = difference(edgesFromFetchedDepsStr, edgesFromGraphStr);
+      let msg = '';
+      if (edgesOnlyInGraph.length) {
+        msg += `the following edges exist in the graph but not in the fetched deps:\n${edgesOnlyInGraph.join(', ')}\n`;
+      }
+      if (edgesOnlyInFetchedDeps.length) {
+        msg += `the following edges exist in the fetched deps but not in the graph:\n${edgesOnlyInFetchedDeps.join(
+          ', '
+        )}\n`;
+      }
+      if (msg) {
+        throw new Error(`edges mismatch for ${component.id.toString()}:\n${msg}`);
+      }
+    });
   }
 
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
