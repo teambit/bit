@@ -195,11 +195,16 @@ describe('merge lanes', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.createLane('dev');
-      helper.command.mergeLane('main', '-x');
     });
-    it('should not bring non-lane components from main', () => {
+    it('when using --exclude-non-lane-comps flag, it should not bring non-lane components from main', () => {
+      helper.command.mergeLane('main', '-x --exclude-non-lane-comps');
       const lane = helper.command.showOneLaneParsed('dev');
       expect(lane.components).to.have.lengthOf(0);
+    });
+    it('by default, it should bring non-lane components from main', () => {
+      helper.command.mergeLane('main', '-x');
+      const lane = helper.command.showOneLaneParsed('dev');
+      expect(lane.components).to.have.lengthOf(1);
     });
   });
   describe('merging main lane with no snapped components', () => {
