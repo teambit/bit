@@ -7,7 +7,7 @@ const ENV_POLICY = {
   peers: [
     {
       name: 'react',
-      version: '^18.0.0',
+      version: '^17.0.0',
       supportedRange: '^17.0.0 || ^18.0.0',
       optional: true,
     },
@@ -35,6 +35,7 @@ describe('optional dependencies', function () {
     helper.fs.appendFile('button/button.tsx', 'isOdd(1);');
     helper.env.setCustomNewEnv(undefined, undefined, { policy: ENV_POLICY });
     helper.command.setEnv('button', envId);
+    helper.command.install('@testing-library/react@12');
     helper.command.install('--add-missing-deps');
   });
   after(() => {
