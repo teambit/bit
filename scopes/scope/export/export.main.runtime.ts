@@ -528,6 +528,12 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       });
     };
 
+    const warnCancelExport = () => {
+      this.logger.consoleWarning(
+        `unable to cancel the export process at this point because the communication with the remote already started`
+      );
+    };
+    process.on('SIGINT', warnCancelExport);
     let centralHubResults;
     if (resumeExportId) {
       const remotes = manyObjectsPerRemote.map((o) => o.remote);
@@ -542,6 +548,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
 
     loader.start('updating data locally...');
     const results = await updateLocalObjects(laneObject);
+    process.removeListener('SIGINT', warnCancelExport);
     return {
       newIdsOnRemote: R.flatten(results.map((r) => r.newIdsOnRemote)),
       exported: ComponentIdList.uniqFromArray(R.flatten(results.map((r) => r.exported))),

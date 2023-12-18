@@ -7,19 +7,14 @@ import {
 } from '../../../../utils/packages';
 import { processPath, Missing } from './generate-tree-madge';
 
-export type MissingGroupItem = { originFile: string; packages?: string[]; components?: string[]; files?: string[] };
+export type MissingGroupItem = { originFile: string; packages?: string[]; files?: string[] };
 export type FoundPackages = {
   packages: { [packageName: string]: string };
   components: ResolvedPackageData[];
 };
 
 export class MissingHandler {
-  constructor(
-    private missing: Missing,
-    private componentDir: string,
-    private workspacePath: string,
-    private bindingPrefix: string
-  ) {}
+  constructor(private missing: Missing, private componentDir: string, private workspacePath: string) {}
 
   /**
    * Run over each entry in the missing array and transform the missing from list of paths
@@ -29,7 +24,6 @@ export class MissingHandler {
     const missingGroups: MissingGroupItem[] = this.groupMissingByType();
     missingGroups.forEach((group: MissingGroupItem) => {
       if (group.packages) group.packages = group.packages.map(resolvePackageNameByPath);
-      if (group.components) group.components = group.components.map(resolvePackageNameByPath);
     });
     // This is a hack to solve problems that madge has with packages for type script files
     // It see them as missing even if they are exists
@@ -73,7 +67,7 @@ export class MissingHandler {
   }
 
   /**
-   * Group missing dependencies by types (files, components, packages)
+   * Group missing dependencies by types (files, packages)
    * @param {Array} missing list of missing paths to group
    * @returns {Function} function which group the dependencies
    */

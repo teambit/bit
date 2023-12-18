@@ -33,7 +33,6 @@ import ComponentOutOfSync from '../exceptions/component-out-of-sync';
 import { ComponentFsCache } from './component-fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';
-import { ManuallyChangedDependencies } from './dependencies/dependency-resolver/overrides-dependencies';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import MainFileRemoved from './exceptions/main-file-removed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
@@ -45,6 +44,12 @@ import { ModelComponent } from '../../scope/models';
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
 export type InvalidComponent = { id: ComponentID; error: Error; component: Component | undefined };
+
+export type ManuallyChangedDependencies = {
+  dependencies?: string[];
+  devDependencies?: string[];
+  peerDependencies?: string[];
+};
 
 export type ComponentProps = {
   name: string;

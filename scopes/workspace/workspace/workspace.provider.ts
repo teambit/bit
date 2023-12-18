@@ -2,7 +2,7 @@ import { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain, CommandList } from '@teambit/cli';
-import { DependencyResolverAspect, DependencyResolverMain, VariantPolicy } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { ComponentMain, Component } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
@@ -18,8 +18,6 @@ import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extensio
 import LegacyComponentLoader, { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ComponentID } from '@teambit/component-id';
 import { GlobalConfigMain } from '@teambit/global-config';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
-import { DependencyResolver as LegacyDependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
 import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
@@ -181,28 +179,6 @@ export default async function provideWorkspace(
       return newComponent.state._consumer;
     }
   );
-
-  LegacyDependencyResolver.registerOnComponentAutoDetectOverridesGetter(
-    async (configuredExtensions: ExtensionDataList, id: ComponentID, legacyFiles: SourceFile[]) => {
-      let policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
-      // this is needed for "bit install" to install the dependencies from the merge config (see https://github.com/teambit/bit/pull/6849)
-      const depsDataOfMergeConfig = workspace.getDepsDataOfMergeConfig(id);
-      if (depsDataOfMergeConfig) {
-        const policiesFromMergeConfig = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, { source: 'auto' });
-        policy = VariantPolicy.mergePolices([policy, policiesFromMergeConfig]);
-      }
-      return policy.toLegacyAutoDetectOverrides();
-    }
-  );
-
-  LegacyDependencyResolver.registerOnComponentAutoDetectConfigMergeGetter((id: ComponentID) => {
-    const depsDataOfMergeConfig = workspace.getDepsDataOfMergeConfig(id);
-    if (depsDataOfMergeConfig) {
-      const policy = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, { source: 'auto' });
-      return policy.toLegacyAutoDetectOverrides();
-    }
-    return undefined;
-  });
 
   ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id) => {
     const componentId = await workspace.resolveComponentId(id);

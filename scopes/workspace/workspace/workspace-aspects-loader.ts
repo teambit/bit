@@ -472,12 +472,21 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
           return plugins.load(MainRuntime.name);
         }
 
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        const aspect = require(localPath);
+        const isModule = await this.aspectLoader.isEsmModule(localPath);
+
+        const aspect = !isModule
+          ? // eslint-disable-next-line global-require, import/no-dynamic-require
+            require(localPath)
+          : // : await this.aspectLoader.loadEsm(join(localPath, 'dist', 'index.js'));
+            await this.aspectLoader.loadEsm(localPath);
+
         // require aspect runtimes
         const runtimePath = await this.aspectLoader.getRuntimePath(component, localPath, MainRuntime.name);
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        if (runtimePath) require(runtimePath);
+        if (runtimePath) {
+          if (isModule) await this.aspectLoader.loadEsm(runtimePath);
+          // eslint-disable-next-line global-require, import/no-dynamic-require
+          require(runtimePath);
+        }
         return aspect;
       };
       return new RequireableComponent(component, requireFunc);

@@ -1,6 +1,5 @@
 import { ComponentIssue, IssueObject } from './component-issue';
 import { ImportNonMainFiles } from './import-non-main-files';
-import { MissingComponents } from './missing-components';
 import { MissingDependenciesOnFs } from './missing-dependencies-on-fs';
 import { MissingDists } from './missing-dists';
 import { MissingPackagesDependenciesOnFs } from './missing-packages-dependencies-on-fs';
@@ -23,7 +22,6 @@ import { RemovedDependencies } from './removed-dependencies';
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
   MissingManuallyConfiguredPackages,
-  MissingComponents,
   UntrackedDependencies,
   ResolveErrors,
   RelativeComponents,
@@ -45,22 +43,29 @@ export const IssuesClasses = {
 export type IssuesNames = keyof typeof IssuesClasses;
 
 export class IssuesList {
-  constructor(private issues: ComponentIssue[] = []) {}
+  constructor(
+    /**
+     * only reason to have "issues" as public is to avoid the error "Types have separate declarations of a private property"
+     * because it is used in the legacy as well. it's possible to remove it from bit-repo and install as a package, but it's not
+     * convenient for now.
+     */
+    public _issues: ComponentIssue[] = []
+  ) {}
 
   get count() {
-    return this.issues.length;
+    return this._issues.length;
   }
 
   isEmpty() {
-    return this.issues.length === 0;
+    return this._issues.length === 0;
   }
 
   outputForCLI() {
-    return this.issues.map((issue) => issue.outputForCLI()).join('');
+    return this._issues.map((issue) => issue.outputForCLI()).join('');
   }
 
   toObject(): { type: string; description: string; data: any }[] {
-    return this.issues.map((issue) => issue.toObject());
+    return this._issues.map((issue) => issue.toObject());
   }
 
   /**
@@ -69,18 +74,18 @@ export class IssuesList {
    * if you change to use `toObjectIncludeDataAsString`, make sure to call "dataAsString" instead of "data" when needed.
    */
   toObjectWithDataAsString(): { type: string; description: string; data: string }[] {
-    return this.issues.map((issue) => ({
+    return this._issues.map((issue) => ({
       ...issue.toObject(),
       data: issue.dataToString().trim(),
     }));
   }
 
   add(issue: ComponentIssue) {
-    this.issues.push(issue);
+    this._issues.push(issue);
   }
 
   delete(IssueClass: typeof ComponentIssue) {
-    this.issues = this.issues.filter((issue) => issue.constructor.name !== IssueClass.name);
+    this._issues = this._issues.filter((issue) => issue.constructor.name !== IssueClass.name);
   }
 
   /**
@@ -89,19 +94,19 @@ export class IssuesList {
    * @returns
    */
   getIssue<T extends ComponentIssue>(IssueClass: { new (): T }): T | undefined {
-    return this.issues.find((issue) => issue instanceof IssueClass) as T | undefined;
+    return this._issues.find((issue) => issue instanceof IssueClass) as T | undefined;
   }
 
   getIssueByName<T extends ComponentIssue>(issueType: IssuesNames): T | undefined {
-    return this.issues.find((issue) => issue.constructor.name === issueType) as T | undefined;
+    return this._issues.find((issue) => issue.constructor.name === issueType) as T | undefined;
   }
 
   getAllIssues(): ComponentIssue[] {
-    return this.issues;
+    return this._issues;
   }
 
   getAllIssueNames(): string[] {
-    return this.issues.map((issue) => issue.constructor.name);
+    return this._issues.map((issue) => issue.constructor.name);
   }
 
   createIssue<T extends ComponentIssue>(IssueClass: { new (): T }): T {
@@ -115,26 +120,26 @@ export class IssuesList {
   }
 
   shouldBlockSavingInCache(): boolean {
-    return this.issues.some((issue) => issue.isCacheBlocker);
+    return this._issues.some((issue) => issue.isCacheBlocker);
   }
 
   shouldBlockTagging(): boolean {
-    return this.issues.some((issue) => issue.isTagBlocker);
+    return this._issues.some((issue) => issue.isTagBlocker);
   }
 
   filterNonTagBlocking(): IssuesList {
-    return new IssuesList(this.issues.filter((issue) => issue.isTagBlocker));
+    return new IssuesList(this._issues.filter((issue) => issue.isTagBlocker));
   }
 
   toObjectIncludeDataAsString(): Array<IssueObject & { dataAsString: string }> {
-    return this.issues.map((issue) => ({
+    return this._issues.map((issue) => ({
       ...issue.toObject(),
       dataAsString: issue.dataToString(),
     }));
   }
 
   serialize() {
-    return this.issues.map((issue) => ({ type: issue.constructor.name, data: issue.serialize() }));
+    return this._issues.map((issue) => ({ type: issue.constructor.name, data: issue.serialize() }));
   }
 
   static deserialize(data: Record<string, any>) {

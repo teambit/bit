@@ -1,12 +1,7 @@
 import R from 'ramda';
 import { pickBy } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
-import {
-  MANUALLY_ADD_DEPENDENCY,
-  MANUALLY_REMOVE_DEPENDENCY,
-  OVERRIDE_COMPONENT_PREFIX,
-  OVERRIDE_FILE_PREFIX,
-} from '../../constants';
+import { MANUALLY_ADD_DEPENDENCY, MANUALLY_REMOVE_DEPENDENCY, OVERRIDE_COMPONENT_PREFIX } from '../../constants';
 import { SourceFile } from '../component/sources';
 import ComponentConfig from './component-config';
 import {
@@ -34,7 +29,7 @@ export type ComponentOverridesData = DependenciesOverridesData & {
 type OverridesLoadRegistry = { [extId: string]: Function };
 
 export default class ComponentOverrides {
-  overrides: ConsumerOverridesOfComponent;
+  private overrides: ConsumerOverridesOfComponent;
   constructor(overrides: ConsumerOverridesOfComponent | null | undefined) {
     this.overrides = overrides || {};
   }
@@ -156,23 +151,9 @@ export default class ComponentOverrides {
   getIgnored(field: string): string[] {
     return R.keys(R.filter((dep) => dep === MANUALLY_REMOVE_DEPENDENCY, this.overrides[field] || {}));
   }
-  getIgnoredFiles(field: string): string[] {
-    const ignoredRules = this.getIgnored(field);
-    return ignoredRules
-      .filter((rule) => rule.startsWith(OVERRIDE_FILE_PREFIX))
-      .map((rule) => rule.replace(OVERRIDE_FILE_PREFIX, ''));
-  }
-
   getIgnoredPackages(field: string): string[] {
     const ignoredRules = this.getIgnored(field);
-    return ignoredRules.filter((rule) => !rule.startsWith(OVERRIDE_FILE_PREFIX));
-  }
-  static getAllFilesPaths(overrides: Record<string, any>): string[] {
-    if (!overrides) return [];
-    const allDeps = Object.assign({}, overrides.dependencies, overrides.devDependencies, overrides.peerDependencies);
-    return Object.keys(allDeps)
-      .filter((rule) => rule.startsWith(OVERRIDE_FILE_PREFIX))
-      .map((rule) => rule.replace(OVERRIDE_FILE_PREFIX, ''));
+    return ignoredRules;
   }
   clone(): ComponentOverrides {
     return new ComponentOverrides(R.clone(this.overrides));
