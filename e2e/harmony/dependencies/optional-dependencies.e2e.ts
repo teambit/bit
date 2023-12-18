@@ -99,14 +99,14 @@ describe('optional dependencies', function () {
   describe('deps set --optional', () => {
     let showOutput;
     before(() => {
-      showOutput = helper.command.showComponent('button');
       helper.command.dependenciesSet('button', 'is-even@1.0.0', '--optional');
+      showOutput = helper.command.showComponent('button');
     });
     it('should add new dependency to optional dependencies', () => {
       expect(showOutput).to.contain('is-even@1.0.0- (package)(optional)');
     });
     it('should keep existing optional dependency in optional dependencies', () => {
-      expect(showOutput).to.contain('is-odd@1.0.0-- (package)(optional)');
+      expect(showOutput).to.contain('is-odd@3.0.1-- (package)(optional)');
     });
   });
 });
