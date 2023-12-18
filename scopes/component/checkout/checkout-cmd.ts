@@ -32,10 +32,11 @@ export class CheckoutCmd implements Command {
   helpUrl = 'reference/components/merging-changes#checkout-snaps-to-the-working-directory';
   group = 'development';
   extendedDescription = `
-  \`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version
-  \`bit checkout head [component-pattern]\` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all
-  \`bit checkout latest [component-pattern]\` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all
-  \`bit checkout reset [component-pattern]\` => remove local modifications from the specified ids (or all components when --all is used)`;
+\`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version
+\`bit checkout head [component-pattern]\` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all
+\`bit checkout latest [component-pattern]\` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all
+\`bit checkout reset [component-pattern]\` => remove local modifications from the specified ids (or all components when --all is used)
+when on a lane, "checkout head" only checks out components on this lane. to update main components, run "bit lane merge main"`;
   alias = 'U';
   options = [
     [
