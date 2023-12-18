@@ -7,7 +7,7 @@ export function isEsmModule(path: string) {
     const root = findRoot(path);
     const packageJsonString = readFileSync(join(root, 'package.json')).toString('utf-8');
     const packageJson = JSON.parse(packageJsonString);
-    return packageJson.type === 'module';  
+    return packageJson.type === 'module';
   } catch (err) {
     return false;
   }
