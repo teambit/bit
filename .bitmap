@@ -287,9 +287,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/pipelines/modules/builder-data",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.6": {},
+            "teambit.harmony/node": {},
             "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
+                "env": "teambit.harmony/node"
             }
         }
     },
@@ -378,9 +378,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/tables/cli-table",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.6": {},
+            "teambit.harmony/node": {},
             "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
+                "env": "teambit.harmony/node"
             }
         }
     },
@@ -528,7 +528,13 @@
         "scope": "teambit.component",
         "version": "0.0.131",
         "mainFile": "index.ts",
-        "rootDir": "components/component-issues"
+        "rootDir": "components/component-issues",
+        "config": {
+            "teambit.harmony/node": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/node"
+            }
+        }
     },
     "component-log": {
         "name": "component-log",
@@ -550,9 +556,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-package-version",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.6": {},
+            "teambit.harmony/node": {},
             "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
+                "env": "teambit.harmony/node"
             }
         }
     },
@@ -602,9 +608,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/composition-card",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.6": {},
+            "teambit.react/react": {},
             "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
+                "env": "teambit.react/react"
             }
         }
     },
@@ -1880,9 +1886,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/typescript/ts-server",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.6": {},
+            "teambit.harmony/node": {},
             "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
+                "env": "teambit.harmony/node"
             }
         }
     },

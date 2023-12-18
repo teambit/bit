@@ -747,12 +747,9 @@
           "ImportNonMainFiles"
         ]
       },
+      // TODO: remove after next tag
       "teambit.dependencies/dependency-resolver": {
-        "policy": {
-          "dependencies": {
-            "jest-environment-node": "27.5.1"
-          }
-        }
+        "policy": {}
       }
     }
   }
