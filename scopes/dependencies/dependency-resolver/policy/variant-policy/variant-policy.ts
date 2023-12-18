@@ -35,6 +35,7 @@ export type VariantPolicyEntryVersion = SemverVersion;
 export type VariantPolicyEntryValue = {
   version: VariantPolicyEntryVersion;
   resolveFromEnv?: boolean;
+  optional?: boolean;
 };
 
 export type DependencySource = 'auto' | 'env' | 'env-own' | 'slots' | 'config';
@@ -331,6 +332,7 @@ export function createVariantPolicyEntry(
 ): VariantPolicyEntry {
   const version = typeof value === 'string' ? value : value.version;
   const resolveFromEnv = typeof value === 'string' ? false : value.resolveFromEnv;
+  const optional = typeof value === 'string' ? undefined : value.optional;
 
   const entryValue: VariantPolicyEntryValue = {
     version,
@@ -341,6 +343,7 @@ export function createVariantPolicyEntry(
     dependencyId: depId,
     value: entryValue,
     lifecycleType,
+    optional: optional ?? opts.optional,
   };
   return entry;
 }
