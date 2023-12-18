@@ -971,9 +971,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/html/html",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.7": {},
+            "teambit.envs/env": {},
             "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
+                "env": "teambit.envs/env"
             }
         }
     },
@@ -1127,9 +1127,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/mdx",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.7": {},
+            "teambit.envs/env": {},
             "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
+                "env": "teambit.envs/env"
             }
         }
     },
@@ -1392,9 +1392,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/node",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.7": {},
+            "teambit.envs/env": {},
             "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
+                "env": "teambit.envs/env"
             }
         }
     },
@@ -1585,9 +1585,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/readme",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.7": {},
+            "teambit.envs/env": {},
             "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
+                "env": "teambit.envs/env"
             }
         }
     },
