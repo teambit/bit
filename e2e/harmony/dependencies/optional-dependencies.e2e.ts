@@ -108,5 +108,19 @@ describe('optional dependencies', function () {
     it('should keep existing optional dependency in optional dependencies', () => {
       expect(showOutput).to.contain('is-odd@3.0.1-- (package)(optional)');
     });
+    describe('deps set --optional after snap', () => {
+      before(() => {
+        helper.command.snapAllComponents('-m wip');
+        helper.command.dependenciesSet('button', 'is-positive@1.0.0', '--optional');
+        showOutput = helper.command.showComponent('button');
+      });
+      it('should keep existing optional dependency in optional dependencies', () => {
+        expect(showOutput).to.contain('is-odd@3.0.1------ (package)(optional)');
+        expect(showOutput).to.contain('is-even@1.0.0----- (package)(optional)');
+      });
+      it('should add new dependency to optional dependencies', () => {
+        expect(showOutput).to.contain('is-positive@1.0.0- (package)(optional)');
+      });
+    });
   });
 });
