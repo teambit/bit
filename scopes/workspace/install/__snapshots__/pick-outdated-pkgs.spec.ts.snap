@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`makeOutdatedPkgChoices should render choices in correct order 1`] = `
-Array [
-  Object {
-    "choices": Array [
-      Object {
+[
+  {
+    "choices": [
+      {
         "message": "foo [90m(runtime)[39m 1.0.0 ❯ [91m[1m2.0.0[22m[39m   ",
         "name": "foo",
-        "value": Object {
+        "value": {
           "currentRange": "1.0.0",
           "latestRange": "2.0.0",
           "name": "foo",
@@ -15,10 +15,10 @@ Array [
           "targetField": "dependencies",
         },
       },
-      Object {
+      {
         "message": "qar [90m(runtime)[39m 1.0.0 ❯ 1.[92m[1m1.0[22m[39m   ",
         "name": "qar",
-        "value": Object {
+        "value": {
           "currentRange": "1.0.0",
           "latestRange": "1.1.0",
           "name": "qar",
@@ -26,10 +26,10 @@ Array [
           "targetField": "dependencies",
         },
       },
-      Object {
+      {
         "message": "zoo [90m(dev)[39m     1.0.0 ❯ 1.[92m[1m1.0[22m[39m   ",
         "name": "zoo",
-        "value": Object {
+        "value": {
           "currentRange": "1.0.0",
           "latestRange": "1.1.0",
           "name": "zoo",
@@ -37,10 +37,10 @@ Array [
           "targetField": "devDependencies",
         },
       },
-      Object {
+      {
         "message": "bar [90m(peer)[39m    1.0.0 ❯ 1.[92m[1m1.0[22m[39m   ",
         "name": "bar",
-        "value": Object {
+        "value": {
           "currentRange": "1.0.0",
           "latestRange": "1.1.0",
           "name": "bar",
@@ -55,13 +55,13 @@ Array [
 `;
 
 exports[`makeOutdatedPkgChoices should render choices with context information 1`] = `
-Array [
-  Object {
-    "choices": Array [
-      Object {
+[
+  {
+    "choices": [
+      {
         "message": "foo [90m(runtime)[39m 1.0.0 ❯ [91m[1m2.0.0[22m[39m   ",
         "name": "foo",
-        "value": Object {
+        "value": {
           "componentId": ComponentID {
             "_legacy": BitId {
               "box": undefined,
@@ -81,12 +81,12 @@ Array [
     ],
     "message": "[36mscope/comp1 (component)[39m",
   },
-  Object {
-    "choices": Array [
-      Object {
+  {
+    "choices": [
+      {
         "message": "bar [90m(peer)[39m    1.0.0 ❯ 1.[92m[1m1.0[22m[39m   ",
         "name": "bar",
-        "value": Object {
+        "value": {
           "currentRange": "1.0.0",
           "latestRange": "1.1.0",
           "name": "bar",
