@@ -5,9 +5,9 @@ import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { merge } from 'webpack-merge';
 import { fallbacksProvidePluginConfig } from '@teambit/webpack';
+import { configBaseFactory } from '@teambit/react.webpack.react-webpack';
 
 import { html } from './html';
-import createBaseConfig from './webpack.base.config';
 
 export default function createWebpackConfig(
   outputDir: string,
@@ -15,20 +15,25 @@ export default function createWebpackConfig(
   title: string,
   publicDir: string
 ): Configuration {
-  const baseConfig = createBaseConfig(outputDir, entryFiles);
-  const browserConfig = createBrowserConfig(outputDir, title, publicDir);
-
+  const baseConfig = configBaseFactory(true);
+  const browserConfig = createBrowserConfig(outputDir, title, publicDir, entryFiles);
+  // @ts-ignore that's an issue because of different types/webpack version
   const combined = merge(baseConfig, browserConfig);
-
+  // @ts-ignore that's an issue because of different types/webpack version
   return combined;
 }
 
-function createBrowserConfig(outputDir: string, title: string, publicDir: string) {
+function createBrowserConfig(outputDir: string, title: string, publicDir: string, entryFiles: string[]) {
   const browserConfig: Configuration = {
     // target: 'web', // already default
-
+    mode: 'production',
+    entry: {
+      main: entryFiles,
+    },
     output: {
       path: path.resolve(outputDir, publicDir),
+      filename: 'static/js/[name].[contenthash:8].js',
+      chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
       // webpack uses `publicPath` to determine where the app is being served from.
       // It requires a trailing slash, or the file assets will get an incorrect path.
       // We inferred the "public path" (such as / or /my-project) from homepage.

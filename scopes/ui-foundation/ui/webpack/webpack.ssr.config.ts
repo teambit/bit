@@ -1,24 +1,26 @@
 import { Configuration } from 'webpack';
 import path from 'path';
 import { merge } from 'webpack-merge';
-
-import createBaseConfig from './webpack.base.config';
+import { configBaseFactory } from '@teambit/react.webpack.react-webpack';
 
 export default function createWebpackConfig(
   workspaceDir: string,
   entryFiles: string[],
   publicDir: string
 ): Configuration {
-  const baseConfig = createBaseConfig(workspaceDir, entryFiles);
-  const ssrConfig = createSsrConfig(workspaceDir, publicDir);
-
+  const baseConfig = configBaseFactory(true);
+  const ssrConfig = createSsrConfig(workspaceDir, publicDir, entryFiles);
+  // @ts-ignore that's an issue because of different types/webpack version
   const combined = merge(baseConfig, ssrConfig);
-
+  // @ts-ignore that's an issue because of different types/webpack version
   return combined;
 }
 
-function createSsrConfig(workspaceDir: string, publicDir: string) {
+function createSsrConfig(workspaceDir: string, publicDir: string, entryFiles: string[]) {
   const ssrConfig: Configuration = {
+    entry: {
+      main: entryFiles,
+    },
     target: 'node',
     devtool: 'eval-cheap-module-source-map',
 
@@ -27,6 +29,7 @@ function createSsrConfig(workspaceDir: string, publicDir: string) {
       publicPath: '/public/ssr/',
       libraryTarget: 'commonjs',
       filename: 'index.js',
+      chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
     },
 
     // // no optimizations for ssr at this point,

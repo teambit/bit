@@ -4,7 +4,8 @@
 
 import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs-extra';
-import { UIRoot, createBaseConfig } from '@teambit/ui';
+import { UIRoot } from '@teambit/ui';
+import { configBaseFactory } from '@teambit/react.webpack.react-webpack';
 import { getAspectDirFromBvm } from '@teambit/aspect-loader';
 import { SlotRegistry } from '@teambit/harmony';
 import { ArtifactDefinition } from '@teambit/builder';
@@ -17,18 +18,30 @@ import { fallbacksProvidePluginConfig } from '@teambit/webpack';
 /// webpack config
 
 export function createWebpackConfig(outputDir: string, entryFile: string): Configuration {
-  const baseConfig = createBaseConfig(outputDir, entryFile);
-  const preBundleConfig = createPreBundleConfig(outputDir);
+  const baseConfig = configBaseFactory(true);
+  const preBundleConfig = createPreBundleConfig(outputDir, entryFile);
 
+  // @ts-ignore that's an issue because of different types/webpack version
   const combined = merge(baseConfig, preBundleConfig);
 
+  // @ts-ignore that's an issue because of different types/webpack version
   return combined;
 }
 
-function createPreBundleConfig(outputDir: string) {
+function createPreBundleConfig(outputDir: string, entryFile: string) {
   const preBundleConfig: Configuration = {
+    stats: {
+      children: true,
+      errorDetails: true,
+    },
+    mode: 'production',
+    entry: {
+      main: entryFile,
+    },
     output: {
       path: outputDir,
+      chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
+      filename: 'static/js/[name].[contenthash:8].js',
       library: {
         type: 'commonjs2',
       },
