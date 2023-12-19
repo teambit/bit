@@ -13,7 +13,6 @@ import { Component, ComponentMap } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 // import { Environment } from '@teambit/envs';
 // import { EnvPolicyConfigObject, PeersAutoDetectPolicy } from '@teambit/dependency-resolver';
-import type jest from 'jest';
 import { JestError } from './error';
 import type { JestWorker } from './jest.worker';
 
@@ -37,7 +36,7 @@ export type JestTesterOptions = {
 };
 
 export class JestTester implements Tester {
-  private readonly jestModule: typeof jest;
+  private readonly jestModule: any;
 
   constructor(
     readonly id: string,
