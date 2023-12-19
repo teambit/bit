@@ -690,6 +690,25 @@ there are matching among unmodified components thought. consider using --unmodif
           ', '
         )}\n`;
       }
+
+      const flattenedFromFetched = component.flattenedDependencies;
+      const flattenedFromFetchedStr = flattenedFromFetched.map((id) => id.toString()).sort();
+      const flattenedFromGraphIncludeItself = graphFromIds.nodes.map((node) => node.attr);
+      const flattenedFromGraph = flattenedFromGraphIncludeItself.filter((id) => !id.isEqual(component.id));
+      const flattenedFromGraphStr = flattenedFromGraph.map((id) => id.toString()).sort();
+      const flattenedOnlyInGraph = difference(flattenedFromGraphStr, flattenedFromFetchedStr);
+      const flattenedOnlyInFetched = difference(flattenedFromFetchedStr, flattenedFromGraphStr);
+      if (flattenedOnlyInGraph.length) {
+        msg += `the following flattened deps exist in the graph but not in the fetched deps:\n${flattenedOnlyInGraph.join(
+          ', '
+        )}\n`;
+      }
+      if (flattenedOnlyInFetched.length) {
+        msg += `the following flattened deps exist in the fetched deps but not in the graph:\n${flattenedOnlyInFetched.join(
+          ', '
+        )}\n`;
+      }
+
       if (msg) {
         throw new Error(`edges mismatch for ${component.id.toString()}:\n${msg}`);
       }
