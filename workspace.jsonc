@@ -635,16 +635,6 @@
         }
       }
     },
-    // Special rules for all core envs
-    // TODO: check if we can add scopes/harmony/aspect and scopes/envs/env here
-    "scopes/react/react, scopes/react/react-native, scopes/harmony/node, scopes/html/html, scopes/mdx/mdx, scopes/mdx/readme": {
-      "teambit.harmony/aspect": "-",
-      // Set the env env for all core envs
-      "teambit.envs/env": {},
-      "teambit.envs/envs": {
-        "env": "teambit.envs/env"
-      }
-    },
     // overrides for "@teambit/bit", the root package: (aka "teambit.harmony/bit")
     "scopes/harmony/bit": {
       "teambit.component/issues": {
@@ -659,34 +649,7 @@
           "packageManagerPublishArgs": [
             "--access public"
           ],
-          "license": "Apache-2.0",
-          "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
-          "private": false,
-          // Change back to "bin": "bin/bit" once released to prod
-          "bvm": {
-            "node": "20.10.0"
-          },
-          "bin": {
-            "bbit": "bin/bit"
-          },
-          "engines": {
-            "node": ">=12.22.0"
-          },
-          "repository": {
-            "type": "git",
-            "url": "https://github.com/teambit/bit"
-          },
-          "keywords": [
-            "bit",
-            "bit-aspect",
-            "components",
-            "collaboration",
-            "web",
-            "react",
-            "react-components",
-            "angular",
-            "angular-components"
-          ]
+          "name": "@teambit/{name}" // @teambit/discovery.ui.sidebar
         }
       },
       "teambit.dependencies/dependency-resolver": {
