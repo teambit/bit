@@ -473,13 +473,13 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
         }
 
         const isModule = await this.aspectLoader.isEsmModule(localPath);
-        
-        const aspect = !isModule 
-          // eslint-disable-next-line global-require, import/no-dynamic-require
-          ? require(localPath)  
-          // : await this.aspectLoader.loadEsm(join(localPath, 'dist', 'index.js'));
-          : await this.aspectLoader.loadEsm(localPath);
-          
+
+        const aspect = !isModule
+          ? // eslint-disable-next-line global-require, import/no-dynamic-require
+            require(localPath)
+          : // : await this.aspectLoader.loadEsm(join(localPath, 'dist', 'index.js'));
+            await this.aspectLoader.loadEsm(localPath);
+
         // require aspect runtimes
         const runtimePath = await this.aspectLoader.getRuntimePath(component, localPath, MainRuntime.name);
         if (runtimePath) {

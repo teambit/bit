@@ -43,7 +43,7 @@
   **/
   // "teambit.generator/generator": {
   //   "envs": [
-  //     "teambit.node/node",
+  //     "bitdev.node/node-env",
   //     "bitdev.react/react-env",
   //     "bitdev.vue/vue-env",
   //     "bitdev.angular/angular-env"

@@ -80,7 +80,12 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     [
       '',
       'include-non-lane-comps',
-      'when merging main, include workspace components that are not on the lane (by default only lane components are merged)',
+      'DEPRECATED (this is now the default). when merging main, include workspace components that are not on the lane (by default only lane components are merged)',
+    ],
+    [
+      '',
+      'exclude-non-lane-comps',
+      'when merging main into a lane, exclude workspace components that are not on the lane (by default all workspace components are merged)',
     ],
   ] as CommandOptions;
   loader = true;
@@ -111,7 +116,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       resolveUnrelated,
       ignoreConfigChanges,
       verbose = false,
-      includeNonLaneComps = false,
+      excludeNonLaneComps = false,
     }: {
       ours?: boolean;
       theirs?: boolean;
@@ -131,7 +136,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       resolveUnrelated?: string | boolean;
       ignoreConfigChanges?: boolean;
       verbose?: boolean;
-      includeNonLaneComps?: boolean;
+      excludeNonLaneComps?: boolean;
     }
   ): Promise<string> {
     build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
@@ -183,7 +188,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       resolveUnrelated: getResolveUnrelated(),
       ignoreConfigChanges,
       includeDeps,
-      includeNonLaneComps,
+      excludeNonLaneComps,
     });
 
     const mergeResult = mergeReport({ ...mergeResults, configMergeResults, verbose });

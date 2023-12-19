@@ -53,7 +53,7 @@ export class ReactApp implements Application {
 
       return {
         appName: context.appName,
-        port
+        port,
       };
     }
 
@@ -66,10 +66,10 @@ export class ReactApp implements Application {
     );
     await devServer.listen(port);
     this.logger.console(`${context.appName} is listening on http://localhost:${port}`);
-    
+
     return {
       appName: context.appName,
-      port
+      port,
     };
   }
 

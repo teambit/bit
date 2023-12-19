@@ -99,21 +99,10 @@ export class APIForIDE {
     return path.join(this.workspace.componentDir(compId), comp.state._consumer.mainFile);
   }
 
-  private async getSortedBitmapHistoryFiles(): Promise<string[]> {
-    const bitmapHistoryDir = this.workspace.consumer.getBitmapHistoryDir();
-    const historyPaths = await fs.readdir(bitmapHistoryDir);
-    const historyPathsSortedByDate = historyPaths.sort((a, b) => {
-      const aDate = fs.statSync(path.join(bitmapHistoryDir, a)).mtimeMs;
-      const bDate = fs.statSync(path.join(bitmapHistoryDir, b)).mtimeMs;
-      return aDate - bDate;
-    });
-    return historyPathsSortedByDate.reverse();
-  }
-
   async getWorkspaceHistory(): Promise<WorkspaceHistory> {
     const current = this.workspace.bitMap.getPath();
     const bitmapHistoryDir = this.workspace.consumer.getBitmapHistoryDir();
-    const historyPaths = await this.getSortedBitmapHistoryFiles();
+    const historyPaths = await fs.readdir(bitmapHistoryDir);
     const historyMetadata = await this.workspace.consumer.getParsedBitmapHistoryMetadata();
     const history = historyPaths.map((historyPath) => {
       const fileName = path.basename(historyPath);
@@ -122,7 +111,22 @@ export class APIForIDE {
       return { path: path.join(bitmapHistoryDir, fileName), fileId, reason };
     });
 
-    return { current, history };
+    const fileIdToTimestamp = (dateStr: string): number => {
+      const [year, month, day, hours, minutes, seconds] = dateStr.split('-');
+      const date = new Date(
+        Number(year),
+        Number(month) - 1,
+        Number(day),
+        Number(hours),
+        Number(minutes),
+        Number(seconds)
+      );
+      return date.getTime();
+    };
+
+    const historySorted = history.sort((a, b) => fileIdToTimestamp(b.fileId) - fileIdToTimestamp(a.fileId));
+
+    return { current, history: historySorted };
   }
 
   async importLane(
