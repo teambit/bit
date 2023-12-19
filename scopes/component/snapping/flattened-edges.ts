@@ -115,7 +115,8 @@ export class FlattenedEdgesGetter {
       async (comp) => {
         const previousVersion = comp.previouslyUsedVersion;
         if (!previousVersion) return;
-        const modelComponent = comp.modelComponent || (await this.scope.legacyScope.getModelComponent(comp.id));
+        const modelComponent =
+          comp.modelComponent || (await this.scope.legacyScope.getModelComponent(comp.id.changeVersion(undefined)));
         const version = await modelComponent.loadVersion(previousVersion, this.scope.legacyScope.objects, true);
         const flattenedEdges = await version.getFlattenedEdges(this.scope.legacyScope.objects);
         if (flattenedEdges.length) flattenedDeps.push(version.flattenedDependencies);
