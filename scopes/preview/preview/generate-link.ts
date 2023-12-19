@@ -35,7 +35,7 @@ export function generateLink(
   }
 
   return `
-import { linkModules } from '@teambit/preview.modules.preview-modules';
+import { linkModules } from '@teambit/preview/preview.preview.runtime';
 
 ${links
   .map((link) => link.modules.map((module) => `import * as ${module.varName} from "${module.resolveFrom}";`).join('\n'))

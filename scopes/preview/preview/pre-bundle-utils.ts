@@ -74,7 +74,7 @@ function createPreBundleConfig(outputDir: string, entryFile: string) {
       'react-dom',
       '@mdx-js/react',
       '@teambit/mdx.ui.mdx-scope-context',
-      '@teambit/preview.modules.preview-modules',
+      // '@teambit/preview.modules.preview-modules',
     ],
     plugins: [
       // Generate an asset manifest file with the following content:
