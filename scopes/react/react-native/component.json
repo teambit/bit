@@ -28,7 +28,7 @@
         }
       }
     },
-    "teambit.harmony/envs/core-aspect-env@0.0.8": {},
+    "teambit.harmony/envs/core-aspect-env@0.0.11": {},
     "teambit.envs/envs": {
       "env": "teambit.harmony/envs/core-aspect-env"
     }
