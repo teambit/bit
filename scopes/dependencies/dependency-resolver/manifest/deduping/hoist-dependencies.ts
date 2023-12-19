@@ -413,6 +413,7 @@ function addToComponentDependenciesMapInDeduped(
     if (!compEntry) {
       compEntry = {
         dependencies: {},
+        optionalDependencies: {},
         devDependencies: {},
         peerDependencies: {},
       };
@@ -503,6 +504,7 @@ export function getEmptyDedupedDependencies(): DedupedDependencies {
   const result: DedupedDependencies = {
     rootDependencies: {
       dependencies: {},
+      optionalDependencies: {},
       devDependencies: {},
       peerDependencies: {},
     },
