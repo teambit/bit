@@ -80,7 +80,7 @@ export class TestCmd implements Command {
         data: (
           <Box>
             <Text bold>
-              no components found to test. use "--all" flag to test all components or specify the ids to test,
+              no components found to test. use "--unmodified" flag to test all components or specify the ids to test,
               otherwise, only new and modified components will be tested{' '}
             </Text>
           </Box>

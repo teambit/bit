@@ -68,7 +68,7 @@ export class RemoveMain {
       track,
       deleteFiles,
     });
-    if (consumer) await consumer.onDestroy();
+    if (consumer) await consumer.onDestroy('remove');
     return removeResults;
   }
 
@@ -85,7 +85,7 @@ export class RemoveMain {
       track: false,
       deleteFiles: true,
     });
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write('remove');
 
     return results;
   }
@@ -101,7 +101,7 @@ export class RemoveMain {
     const config: RemoveInfo = { removed: true };
     if (shouldUpdateMain) config.removeOnMain = true;
     componentIds.map((compId) => this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, config));
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write('delete');
     const bitIds = ComponentIdList.fromArray(componentIds.map((id) => id));
     await deleteComponentsFiles(this.workspace.consumer, bitIds);
 
@@ -134,6 +134,8 @@ export class RemoveMain {
    * recover a soft-removed component.
    * there are 4 different scenarios.
    * 1. a component was just soft-removed, it wasn't snapped yet.  so it's now in .bitmap with the "removed" aspect entry.
+   * 1.a. the component still exists in the local scope. no need to import. write it from there.
+   * 1.b. the component doesn't exist in the local scope. import it.
    * 2. soft-removed and then snapped. It's not in .bitmap now.
    * 3. soft-removed, snapped, exported. it's not in .bitmap now.
    * 4. a soft-removed components was imported, so it's now in .bitmap without the "removed" aspect entry.
@@ -155,13 +157,22 @@ export class RemoveMain {
     };
     const setAsRemovedFalse = async (compId: ComponentID) => {
       await this.workspace.addSpecificComponentConfig(compId, RemoveAspect.id, { removed: false });
-      await this.workspace.bitMap.write();
+      await this.workspace.bitMap.write('recover');
     };
     if (bitMapEntry) {
       if (bitMapEntry.config?.[RemoveAspect.id]) {
         // case #1
-        delete bitMapEntry.config?.[RemoveAspect.id];
-        await importComp(bitMapEntry.id.toString());
+        const compFromScope = await this.workspace.scope.get(bitMapEntry.id);
+        if (compFromScope) {
+          // in the case the component is in the scope, we prefer to write it from the scope rather than import it.
+          // because in some cases the "import" throws an error, e.g. when the component is diverged.
+          await this.workspace.write(compFromScope, bitMapEntry.rootDir);
+          this.workspace.bitMap.removeComponentConfig(bitMapEntry.id, RemoveAspect.id, false);
+          await this.workspace.bitMap.write('recover');
+        } else {
+          delete bitMapEntry.config?.[RemoveAspect.id];
+          await importComp(bitMapEntry.id.toString());
+        }
         return true;
       }
       // case #4

@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: cimg/node:18.18.2
+    - image: cimg/node:20.10.0
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -87,7 +87,7 @@ commands: # reusable commands
         default: 'BASE_IMAGE'
         type: string
       docker_build_arg_value:
-        default: 'node:18.18.2'
+        default: 'node:20.10.0'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -116,7 +116,7 @@ commands: # reusable commands
         default: 'BASE_IMAGE'
         type: string
       docker_build_arg_value:
-        default: 'node:18.18.2'
+        default: 'node:20.10.0'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -198,13 +198,13 @@ commands: # reusable commands
   windows_set_node_version:
     parameters:
       version:
-        default: 18.18.2
+        default: 20.10.0
         type: string
     steps:
       - run: choco upgrade nvm -y
       - run: nvm -v
-      - run: nvm install 18.18.2
-      - run: nvm use 18.18.2
+      - run: nvm install 20.10.0
+      - run: nvm use 20.10.0
       - run: node -v
   windows_add_bvm_to_path:
     steps:
@@ -253,16 +253,6 @@ jobs:
   #         at: ./
   #     - docker_build_and_push
 
-  docker_build_node_18:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - attach_workspace:
-          at: ./
-      - docker_build_and_push:
-          docker_build_arg_value: "node:18.18.2"
-          docker_tag_suffix: "-node-18.18.2"
-
   docker_build_node_20:
     machine:
       image: ubuntu-2004:202111-02
@@ -270,8 +260,8 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:20.3.1"
-          docker_tag_suffix: "-node-20.3.1"
+          docker_build_arg_value: "node:20.10.0"
+          docker_tag_suffix: "-node-20.10.0"
 
   # docker_non_root_build:
   #   machine:
@@ -283,19 +273,6 @@ jobs:
   #         image_name: "bitcli/bit-non-root"
   #         docker_file_name: "Dockerfile-bit-non-root"
 
-  docker_non_root_build_node_18:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - attach_workspace:
-          at: ./
-      - docker_build_and_push:
-          docker_build_arg_value: "node:18.18.2"
-          image_name: "bitcli/bit-non-root"
-          docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-18.18.2"
-
-
   docker_non_root_build_node_20:
     machine:
       image: ubuntu-2004:202111-02
@@ -303,23 +280,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:20.3.1"
+          docker_build_arg_value: "node:20.10.0"
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-20.3.1"
-
-  server_docker_build_node_18:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - attach_workspace:
-          at: ./
-      - docker_build_and_push:
-          docker_build_arg_name: "BIT_IMAGE"
-          docker_build_arg_value: "`npm show @teambit/bit version`-node-18.18.2"
-          image_name: "bitcli/bit-server"
-          docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-18.18.2"
+          docker_tag_suffix: "-node-20.10.0"
 
   server_docker_build_node_20:
     machine:
@@ -329,10 +293,10 @@ jobs:
           at: ./
       - docker_build_and_push:
           docker_build_arg_name: "BIT_IMAGE"
-          docker_build_arg_value: "`npm show @teambit/bit version`-node-20.3.1"
+          docker_build_arg_value: "`npm show @teambit/bit version`-node-20.10.0"
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-20.3.1"
+          docker_tag_suffix: "-node-20.10.0"
 
   set_ssh_key:
     <<: *defaults
@@ -486,8 +450,8 @@ jobs:
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
       # - run: bvm install 0.0.910
-      # - run: bvm upgrade
-      - run: bvm install 1.3.10
+      - run: bvm upgrade
+      # - run: bvm install 1.3.10
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
@@ -550,6 +514,9 @@ jobs:
           name: 'bit status'
           command: 'cd bit && ./scripts/bit-status.sh'
       - run:
+          name: 'bit diff'
+          command: cd bit && bit diff
+      - run:
           name: 'bit build'
           command: 'cd bit && bit build'
           environment:
@@ -562,6 +529,7 @@ jobs:
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
+      BIT_BUILD_GRAPH_FROM_HISTORIC_FLATTENED_EDGES: true
     steps:
       - attach_workspace:
           at: ./
@@ -587,6 +555,7 @@ jobs:
       # temporary, check if we can remove it
       - run: cd bit && bit cc
       - run: cd bit && bit status
+      - run: cd bit && bit diff
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
@@ -603,6 +572,7 @@ jobs:
       - run: cd bit && npm run link-bit-legacy
       # temporary, check if we can remove it
       - run: cd bit && bit cc
+
       # - run: cd bit && bit config set cache.max.objects 100000
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
@@ -640,7 +610,7 @@ jobs:
     steps:
       - run: sleep 300;
 
-  bundle_version_posix:
+  bundle_version:
     <<: *defaults
     environment:
       # do not download chromium when installing puppeteer
@@ -662,15 +632,21 @@ jobs:
           name: create empty folder
           command: mkdir bit-${BIT_VERSION} bit-${BIT_VERSION}-install
       - run:
+          name: install pnpm
+          command: >
+            npm config set prefix '~/.npm-global' &&
+            npm install --global pnpm@8.10.4 &&
+            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+      - run:
           name: install bit for Linux x64
           command: >
             cd bit-${BIT_VERSION}-install &&
-            npm init -y &&
-            yarn set version 4.0.1 &&
-            yarn config set nodeLinker node-modules &&
-            yarn config set npmRegistryServer https://node-registry.bit.cloud &&
-            yarn config set supportedArchitectures --json '{"os":["linux"],"cpu":["x64"]}' &&
-            yarn add @teambit/bit
+            pnpm init &&
+            echo "node-linker=hoisted" >> .npmrc &&
+            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values linux --values linux &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
+            pnpm add @teambit/bit
       - run:
           name: copy node_modules
           command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
@@ -687,8 +663,8 @@ jobs:
           name: install bit for Linux arm64
           command: >
             cd bit-${BIT_VERSION}-install &&
-            yarn config set supportedArchitectures --json '{"os":["linux"],"cpu":["arm64"]}' &&
-            yarn
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values arm64 --values arm64 &&
+            pnpm install
       - run:
           name: copy node_modules
           command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
@@ -708,8 +684,9 @@ jobs:
           name: install bit for macOS x64
           command: >
             cd bit-${BIT_VERSION}-install &&
-            yarn config set supportedArchitectures --json '{"os":["darwin"],"cpu":["x64"]}' &&
-            yarn
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values darwin --values darwin &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
+            pnpm install
       - run:
           name: copy node_modules
           command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
@@ -729,8 +706,8 @@ jobs:
           name: install bit for macOS arm64
           command: >
             cd bit-${BIT_VERSION}-install &&
-            yarn config set supportedArchitectures --json '{"os":["darwin"],"cpu":["arm64"]}' &&
-            yarn
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values arm64 --values arm64 &&
+            pnpm install
       - run:
           name: copy node_modules
           command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
@@ -746,6 +723,29 @@ jobs:
       - run:
           name: move to macos-arm64 folder
           command: mv bit-${BIT_VERSION}.tar.gz macos-arm64/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: install bit for Windows x64
+          command: >
+            cd bit-${BIT_VERSION}-install &&
+            echo "prefer-symlinked-executables=false" >> .npmrc &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values win32 --values win32 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
+            pnpm install
+      - run:
+          name: copy node_modules
+          command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
+      - run:
+          name: create windows
+          command: mkdir windows
+      - run:
+          name: compress bit for Windows x64
+          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run:
+          name: remove leftovers
+          command: rm -rf bit-${BIT_VERSION}/node_modules
+      - run:
+          name: move to windows folder
+          command: mv bit-${BIT_VERSION}.tar.gz windows/bit-${BIT_VERSION}.tar.gz
 
       - persist_to_workspace:
           root: .
@@ -754,6 +754,7 @@ jobs:
             - linux-arm64
             - macos
             - macos-arm64
+            - windows
       - store_artifacts:
           path: linux
       - store_artifacts:
@@ -762,50 +763,6 @@ jobs:
           path: macos
       - store_artifacts:
           path: macos-arm64
-
-  bundle_version_windows:
-    <<: *windows_defaults
-    environment:
-      # do not download chromium when installing puppeteer
-      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
-    steps:
-      # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
-      - windows_set_node_version
-      - run: corepack enable; corepack prepare yarn@4.0.1 --activate
-      - run: 'yarn -v'
-      - set_bit_cloud_registry
-      - run:
-          name: print bit version
-          command: npm view @teambit/bit version
-      - run:
-          name: create version file
-          command: npm view @teambit/bit version | Out-File -FilePath .\version.txt
-      - run:
-          name: create folder
-          command: New-Item -ItemType "directory" -Path ".\bundle"
-      - run: 'node -v'
-      - run:
-          name: install bit
-          command: cd bundle; npm init -y; corepack enable; corepack prepare yarn@4.0.1 --activate; yarn config set nodeLinker node-modules; yarn config set npmRegistryServer https://node-registry.bit.cloud; yarn add @teambit/bit
-      - run:
-          name: remove leftovers
-          command: Remove-Item .\bundle\package.json; Remove-Item .\bundle\yarn.lock
-      - run:
-          name: rename folder
-          command: $BIT_VERSION = Get-Content -Path .\version.txt; Rename-Item .\bundle ".\bit-$BIT_VERSION"
-      - run:
-          name: compress bit
-          command: $BIT_VERSION = Get-Content -Path .\version.txt; tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
-      - run:
-          name: create folder
-          command: New-Item -ItemType "directory" -Path ".\windows"
-      - run:
-          name: move to windows folder
-          command: $BIT_VERSION = Get-Content -Path .\version.txt;Move-Item -Path .\bit-${BIT_VERSION}.tar.gz -Destination .\windows\bit-${BIT_VERSION}.tar.gz
-      - persist_to_workspace:
-          root: .
-          paths:
-            - windows
       - store_artifacts:
           path: windows
 
@@ -906,6 +863,7 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
+      BIT_BUILD_GRAPH_FROM_HISTORIC_FLATTENED_EDGES: true
     parallelism: 25
     steps:
       - attach_workspace:
@@ -956,9 +914,9 @@ jobs:
       # - run: node -v
       # - run: npm -v
       # - run: yarn -v
-      # # - run: choco install nodejs --version 18.18.2
+      # # - run: choco install nodejs --version 20.10.0
       # # - run: node -v
-      # - run: cinst nodejs --version 18.18.2
+      # - run: cinst nodejs --version 20.10.0
       # - run: node -v
 
   windows_checkout_code:
@@ -1350,13 +1308,7 @@ workflows:
           requires:
             - bit_tag
             - bit_export
-      - bundle_version_posix:
-          <<: *master_only_filter
-          requires:
-            - bit_tag
-            - bit_export
-            - sleep_5_minutes
-      - bundle_version_windows:
+      - bundle_version:
           <<: *master_only_filter
           requires:
             - bit_tag
@@ -1365,8 +1317,7 @@ workflows:
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
-            - bundle_version_posix
-            - bundle_version_windows
+            - bundle_version
             - checkout_code # This is needed to generate index.json
       - bit_export:
           <<: *master_only_filter
@@ -1386,15 +1337,15 @@ workflows:
       # - server_docker_build:
       #     requires:
       #       - docker_build
-      - docker_build_node_18:
-          requires:
-            - harmony_publish_to_gcloud
-      - docker_non_root_build_node_18:
-          requires:
-            - harmony_publish_to_gcloud
-      - server_docker_build_node_18:
-          requires:
-            - docker_build_node_18
+      # - docker_build_node_18:
+      #     requires:
+      #       - harmony_publish_to_gcloud
+      # - docker_non_root_build_node_18:
+      #     requires:
+      #       - harmony_publish_to_gcloud
+      # - server_docker_build_node_18:
+      #     requires:
+      #       - docker_build_node_18
       - docker_build_node_20:
           requires:
             - harmony_publish_to_gcloud
@@ -1486,14 +1437,7 @@ workflows:
             - harmony_deploy_approval_job
             - bit_tag
             - bit_export
-      - bundle_version_posix:
-          <<: *master_only_filter
-          requires:
-            - harmony_deploy_approval_job
-            - bit_tag
-            - bit_export
-            - sleep_5_minutes
-      - bundle_version_windows:
+      - bundle_version:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
@@ -1504,8 +1448,7 @@ workflows:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
-            - bundle_version_posix
-            - bundle_version_windows
+            - bundle_version
             - checkout_code # This is needed to generate index.json
       - bit_export:
           <<: *master_only_filter
@@ -1530,18 +1473,18 @@ workflows:
       #     requires:
       #       - harmony_deploy_approval_job
       #       - docker_build
-      - docker_build_node_18:
-          requires:
-            - harmony_deploy_approval_job
-            - harmony_publish_to_gcloud
-      - docker_non_root_build_node_18:
-          requires:
-            - harmony_deploy_approval_job
-            - harmony_publish_to_gcloud
-      - server_docker_build_node_18:
-          requires:
-            - harmony_deploy_approval_job
-            - docker_build_node_18
+      # - docker_build_node_18:
+      #     requires:
+      #       - harmony_deploy_approval_job
+      #       - harmony_publish_to_gcloud
+      # - docker_non_root_build_node_18:
+      #     requires:
+      #       - harmony_deploy_approval_job
+      #       - harmony_publish_to_gcloud
+      # - server_docker_build_node_18:
+      #     requires:
+      #       - harmony_deploy_approval_job
+      #       - docker_build_node_18
       - docker_build_node_20:
           requires:
             - harmony_deploy_approval_job
@@ -1581,31 +1524,26 @@ workflows:
   #     - checkout_code:
   #         filters:
   #           branches:
-  #             only: ci-upgrade-yarn
-  #     - bundle_version_posix:
+  #             only: release-with-pnpm
+  #     - bundle_version:
   #         filters:
   #           branches:
-  #             only: ci-upgrade-yarn
-  #     - bundle_version_windows:
-  #         filters:
-  #           branches:
-  #             only: ci-upgrade-yarn
+  #             only: release-with-pnpm
   #     - harmony_publish_to_gcloud:
   #         filters:
   #           branches:
-  #             only: ci-upgrade-yarn
+  #             only: release-with-pnpm
   #         requires:
-  #           - bundle_version_posix
-  #           - bundle_version_windows
+  #           - bundle_version
   #           - checkout_code # This is needed to generate index.json
   #     # - docker_build:
   #     #     requires:
   #     #       - checkout_code
   #     #       - harmony_publish_to_gcloud
-  #     - docker_build_node_18:
-  #         requires:
-  #           - checkout_code
-  #           - harmony_publish_to_gcloud
+  # #     - docker_build_node_18:
+  # #         requires:
+  # #           - checkout_code
+  # #           - harmony_publish_to_gcloud
   #     - docker_build_node_20:
   #         requires:
   #           - checkout_code
@@ -1614,10 +1552,10 @@ workflows:
   #     #     requires:
   #     #       - checkout_code
   #     #       - harmony_publish_to_gcloud
-  #     - docker_non_root_build_node_18:
-  #         requires:
-  #           - checkout_code
-  #           - harmony_publish_to_gcloud
+  # #     - docker_non_root_build_node_18:
+  # #         requires:
+  # #           - checkout_code
+  # #           - harmony_publish_to_gcloud
   #     - docker_non_root_build_node_20:
   #         requires:
   #           - checkout_code
@@ -1625,9 +1563,9 @@ workflows:
   #     # - server_docker_build:
   #     #     requires:
   #     #       - docker_build
-  #     - server_docker_build_node_18:
-  #         requires:
-  #           - docker_build_node_18
+  # #     - server_docker_build_node_18:
+  # #         requires:
+  # #           - docker_build_node_18
   #     - server_docker_build_node_20:
   #         requires:
   #           - docker_build_node_20

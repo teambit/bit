@@ -19,7 +19,7 @@ import {
 import { BitError } from '@teambit/bit-error';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
-import { DependencyResolverMain, DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { DependencyResolverMain, DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
@@ -101,6 +101,7 @@ import {
 import { MergeConflictFile } from './merge-conflict-file';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { CompFiles } from './workspace-component/comp-files';
+import { Filter } from './filter';
 
 export type EjectConfResult = {
   configPath: string;
@@ -155,6 +156,7 @@ export class Workspace implements ComponentFactory {
    */
   private componentPathsRegExps: RegExp[] = [];
   localAspects: string[] = [];
+  filter: Filter;
   constructor(
     /**
      * private pubsub.
@@ -222,9 +224,6 @@ export class Workspace implements ComponentFactory {
     private onBitmapChangeSlot: OnBitmapChangeSlot
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-
-    // TODO: refactor - prefer to avoid code inside the constructor.
-    this.owner = this.config?.defaultOwner;
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs);
     this.validateConfig();
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
@@ -238,6 +237,7 @@ export class Workspace implements ComponentFactory {
       }
     );
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
+    this.filter = new Filter(this);
   }
 
   private validateConfig() {
@@ -378,6 +378,10 @@ export class Workspace implements ComponentFactory {
       this._cachedListIds = await this.resolveMultipleComponentIds(this.consumer.bitmapIdsFromCurrentLane);
     }
     return this._cachedListIds;
+  }
+
+  listIdsIncludeRemoved(): ComponentIdList {
+    return this.consumer.bitmapIdsFromCurrentLaneIncludeRemoved;
   }
 
   /**
@@ -805,6 +809,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.config = configOfWorkspaceAspect.config as WorkspaceExtConfig;
     const configOfDepResolverAspect = workspaceConfig.extensions.findExtension(DependencyResolverAspect.id);
     if (configOfDepResolverAspect) this.dependencyResolver.setConfig(configOfDepResolverAspect.config as any);
+    this.dependencyResolver.clearCache();
   }
 
   getState(id: ComponentID, hash: string) {
@@ -885,7 +890,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     await componentConfigFile.write({ override: options.override });
     // remove config from the .bitmap as it's not needed anymore. it is replaced by the component.json
     this.bitMap.removeEntireConfig(id);
-    await this.bitMap.write();
+    await this.bitMap.write(`eject-conf (${id.toString()})`);
     return {
       configPath: ComponentConfigFile.composePath(componentDir),
     };
@@ -932,20 +937,38 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     return components;
   }
 
+  hasPattern(strArr: string[]) {
+    return strArr.some((str) => this.isPattern(str));
+  }
+
+  isPattern(str: string) {
+    const specialSyntax = ['*', ',', '!', '$', ':'];
+    return specialSyntax.some((char) => str.includes(char));
+  }
+
   /**
    * get component-ids matching the given pattern. a pattern can have multiple patterns separated by a comma.
    * it supports negate (!) character to exclude ids.
    */
-  async idsByPattern(pattern: string, throwForNoMatch = true): Promise<ComponentID[]> {
-    if (!pattern.includes('*') && !pattern.includes(',')) {
+  async idsByPattern(
+    pattern: string,
+    throwForNoMatch = true,
+    opts: { includeDeleted?: boolean } = {}
+  ): Promise<ComponentID[]> {
+    const isId = !this.isPattern(pattern);
+    if (isId) {
       // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
       const id = await this.resolveComponentId(pattern);
-      if (this.exists(id)) return [id];
+      if (this.exists(id, { includeDeleted: opts.includeDeleted })) return [id];
       if (throwForNoMatch) throw new MissingBitMapComponent(pattern);
       return [];
     }
-    const ids = await this.listIds();
-    return this.scope.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch);
+    const ids = opts.includeDeleted ? this.listIdsIncludeRemoved() : await this.listIds();
+    return this.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch);
+  }
+
+  async filterIdsFromPoolIdsByPattern(pattern: string, ids: ComponentID[], throwForNoMatch = true) {
+    return this.scope.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch, this.filter.by.bind(this.filter));
   }
 
   /**
@@ -1012,8 +1035,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   /**
    * whether a component exists in the workspace
    */
-  exists(componentId: ComponentID): boolean {
-    return Boolean(this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId)));
+  exists(componentId: ComponentID, opts: { includeDeleted?: boolean } = {}): boolean {
+    const allIds = opts.includeDeleted ? this.listIdsIncludeRemoved() : this.consumer.bitmapIdsFromCurrentLane;
+    return allIds.hasWithoutVersion(componentId);
   }
 
   getIdIfExist(componentId: ComponentID): ComponentID | undefined {
@@ -1296,7 +1320,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       );
     }
     newComponentIds.map((comp) => this.bitMap.setDefaultScope(comp, scopeName));
-    await this.bitMap.write();
+    await this.bitMap.write('scope-set');
     return newComponentIds;
   }
 
@@ -1318,7 +1342,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
     this.config.defaultScope = scopeName;
     await config.workspaceConfig?.write({ dir: path.dirname(config.workspaceConfig.path) });
-    await this.bitMap.write();
+    await this.bitMap.write('scope-set');
   }
 
   async addSpecificComponentConfig(
@@ -1743,7 +1767,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         await this.addSpecificComponentConfig(componentId, EnvsAspect.id, { env: envIdStrNoVersion });
       })
     );
-    await this.bitMap.write();
+    await this.bitMap.write(`env-set (${envId.toString()})`);
   }
 
   /**
@@ -1799,7 +1823,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         changed.push(id);
       })
     );
-    await this.bitMap.write();
+    await this.bitMap.write(`env-unset`);
     return { changed, unchanged };
   }
 
@@ -1872,7 +1896,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         (updated[envToUpdate.toString()] ||= []).push(comp.id);
       })
     );
-    await this.bitMap.write();
+    await this.bitMap.write('env-update');
     return { updated, alreadyUpToDate };
   }
 
@@ -1904,6 +1928,26 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       relativeCompDir,
       this.dependencyResolver.getPackageName(component)
     );
+  }
+
+  async getAutoDetectOverrides(configuredExtensions: ExtensionDataList, id: ComponentID, legacyFiles: SourceFile[]) {
+    let policy = await this.dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
+    // this is needed for "bit install" to install the dependencies from the merge config (see https://github.com/teambit/bit/pull/6849)
+    const depsDataOfMergeConfig = this.getDepsDataOfMergeConfig(id);
+    if (depsDataOfMergeConfig) {
+      const policiesFromMergeConfig = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, { source: 'auto' });
+      policy = VariantPolicy.mergePolices([policy, policiesFromMergeConfig]);
+    }
+    return policy.toLegacyAutoDetectOverrides();
+  }
+
+  getAutoDetectConfigMerge(id: ComponentID) {
+    const depsDataOfMergeConfig = this.getDepsDataOfMergeConfig(id);
+    if (depsDataOfMergeConfig) {
+      const policy = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, { source: 'auto' });
+      return policy.toLegacyAutoDetectOverrides();
+    }
+    return undefined;
   }
 }
 

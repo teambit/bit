@@ -1,9 +1,7 @@
-import chalk from 'chalk';
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
-import { DEPENDENCIES_FIELDS, OVERRIDE_FILE_PREFIX } from '../../constants';
+import { DEPENDENCIES_FIELDS } from '../../constants';
 import GeneralError from '../../error/general-error';
-import logger from '../../logger/logger';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
 import hasWildcard from '../../utils/string/has-wildcard';
 import { validateUserInputType } from '../../utils/validate-type';
@@ -14,7 +12,6 @@ export type ConsumerOverridesOfComponent = ComponentOverridesData & {
   env?: Record<string, any>;
   propagate?: boolean; // whether propagate to a more general rule,
   defaultScope?: string; // default scope to export to
-  defaultOwner?: string; // default scope to export to
 };
 
 export type ConsumerOverridesConfig = { [key: string]: ConsumerOverridesOfComponent };
@@ -178,14 +175,6 @@ the following fields are not allowed: ${overridesForbiddenFields.join(', ')}.`);
       validateUserInputType(message, override[field], `overrides.${id}.${field}`, 'object');
       Object.keys(override[field]).forEach((rule) => {
         validateUserInputType(message, override[field][rule], `overrides.${id}.${field}.${rule}`, 'string');
-        if (rule.startsWith(OVERRIDE_FILE_PREFIX)) {
-          // @todo: once v15 is out, this warning should be replaced by an error
-          logger.console(
-            chalk.yellow(
-              `warning: file overrides (using "${OVERRIDE_FILE_PREFIX}") is deprecated and will be removed on the next major version`
-            )
-          );
-        }
       });
     }
     function validateEnv(override: Record<string, any>, id: string) {

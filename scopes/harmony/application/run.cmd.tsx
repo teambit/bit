@@ -10,6 +10,7 @@ type RunOptions = {
   dev: boolean;
   verbose: boolean;
   skipWatch: boolean;
+  watch: boolean;
   ssr: boolean;
   port: string;
 };
@@ -31,8 +32,8 @@ export class RunCmd implements Command {
     ['d', 'dev', 'start the application in dev mode.'],
     ['p', 'port [port-number]', 'port to run the app on'],
     ['v', 'verbose', 'show verbose output for inspection and print stack trace'],
-    ['', 'skip-watch', 'avoid running the watch process that compiles components in the background'],
-    ['', 'ssr', 'run app in server side rendering mode.'],
+    // ['', 'skip-watch', 'avoid running the watch process that compiles components in the background'],
+    ['w', 'watch', 'watch and compile your components upon changes'],
   ] as CommandOptions;
 
   constructor(
@@ -46,12 +47,13 @@ export class RunCmd implements Command {
 
   async render(
     [appName]: [string],
-    { dev, skipWatch, ssr, port: exactPort }: RunOptions
+    { dev, watch, ssr, port: exactPort }: RunOptions
   ): Promise<React.ReactElement | RenderResult> {
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
-    const { port, errors } = await this.application.runApp(appName, {
+    this.logger.off();
+    const { port, errors, isOldApi } = await this.application.runApp(appName, {
       dev,
-      watch: !skipWatch,
+      watch,
       ssr,
       port: +exactPort,
     });
@@ -63,14 +65,15 @@ export class RunCmd implements Command {
       };
     }
 
-    if (port) {
+    if (isOldApi) {
       return (
         <Text>
           {appName} app is running on http://localhost:{port}
         </Text>
       );
     }
-    return <Text>{appName} app is running</Text>;
+
+    return <></>;
   }
 }
 

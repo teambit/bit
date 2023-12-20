@@ -1,13 +1,26 @@
-import { differenceBy } from 'lodash';
-import { ParentNotFound, VersionNotFoundOnFS } from '../exceptions';
+import { difference } from 'lodash';
+import { Graph } from '@teambit/graph.cleargraph';
+import { VersionNotFoundOnFS } from '../exceptions';
 import { NoCommonSnap } from '../exceptions/no-common-snap';
 import { ModelComponent } from '../models';
-import { VersionParents } from '../models/version-history';
+import { VersionParents, versionParentsToGraph } from '../models/version-history';
 import { Ref, Repository } from '../objects';
 import { SnapsDistance } from './snaps-distance';
 import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
 
 /**
+ * *** NEW WAY ***
+ * 1. build a graph with everything.
+ * 2. get the subgraph of the source and subgraph of the target - filter edges by parents only.
+ * this subgraphs will be used to diff the snaps and find which are only in the source and which are only in the target.
+ * 3. if there are common snaps, no need for the squashed and unrelated.
+ * 4. if there are no common snaps, get the subgraphs of both with the squashed and unrelated.
+ * 5. get the array of the common snaps. (either by #3 or #4).
+ * 6. traverse via BFS of either the source or the target (doesn't matter which one) and find the first node
+ * which is also in the common snaps array. this is the common snap before the diverge.
+ * BFS is more efficient than DFS for this usage because normally the common snap is not far from the source.
+ *
+ * *** OLD WAY - NOT USED ANYMORE ***
  * traversing the snaps history is not cheap, so we first try to avoid it and if not possible,
  * traverse by the local head, if it finds the remote head, no need to traverse by the remote
  * head. (it also means that we can do fast-forward and no need for snap-merge).
@@ -74,88 +87,39 @@ export async function getDivergeData({
 
   const getVersionData = (ref: Ref): VersionParents | undefined => versionParents.find((v) => v.hash.isEqual(ref));
 
-  const snapsOnSource: Ref[] = [];
-  const snapsOnTarget: Ref[] = [];
-  let targetHeadExistsInSource = false;
-  let sourceHeadExistsInTarget = false;
-  let commonSnapBeforeDiverge: Ref | undefined;
-  let hasMultipleParents = false;
   let error: Error | undefined;
 
-  const commonSnapsWithDepths = {};
+  const graph = versionParentsToGraph(versionParents);
+  let sourceSubgraph = graph.successorsSubgraph(localHead.toString(), { edgeFilter: (e) => e.attr === 'parent' });
+  let targetSubgraph = graph.successorsSubgraph(targetHead.toString(), { edgeFilter: (e) => e.attr === 'parent' });
+  let sourceArr = sourceSubgraph.nodes.map((n) => n.id);
+  let targetArr = targetSubgraph.nodes.map((n) => n.id);
+  let commonSnaps = sourceArr.filter((snap) => targetArr.includes(snap));
 
-  const addParentsRecursively = (version: VersionParents, snaps: Ref[], isSource: boolean, depth = 0) => {
-    if (snaps.find((snap) => snap.isEqual(version.hash))) return; // already processed
-
-    if (isSource) {
-      if (targetHead.isEqual(version.hash)) {
-        targetHeadExistsInSource = true;
-        return;
-      }
-      if (version.unrelated?.isEqual(targetHead)) {
-        targetHeadExistsInSource = true;
-        snaps.push(version.hash);
-        return;
-      }
-      const foundInSquashed = version.squashed?.find((s) => s.isEqual(targetHead));
-      if (foundInSquashed) {
-        targetHeadExistsInSource = true;
-        snaps.push(version.hash);
-        return;
-      }
-    } else {
-      if (version.hash.isEqual(localHead)) {
-        sourceHeadExistsInTarget = true;
-        return;
-      }
-      if (version.unrelated?.isEqual(localHead)) {
-        sourceHeadExistsInTarget = true;
-        snaps.push(version.hash);
-        return;
-      }
-      const foundInSquashed = version.squashed?.find((s) => s.isEqual(localHead));
-      if (foundInSquashed) {
-        sourceHeadExistsInTarget = true;
-        snaps.push(version.hash);
-        return;
-      }
-      const snapExistsInSource = snapsOnSource.find((snap) => snap.isEqual(version.hash));
-      if (snapExistsInSource) {
-        if (!commonSnapBeforeDiverge) commonSnapBeforeDiverge = snapExistsInSource;
-        else {
-          const depthOfCommonSnap = commonSnapsWithDepths[commonSnapBeforeDiverge.toString()];
-          if (depthOfCommonSnap > depth) commonSnapBeforeDiverge = snapExistsInSource;
-        }
-        commonSnapsWithDepths[version.hash.toString()] = depth;
-      }
+  if (!commonSnaps.length) {
+    sourceSubgraph = graph.successorsSubgraph(localHead.toString());
+    targetSubgraph = graph.successorsSubgraph(targetHead.toString());
+    const sourceFullArr = sourceSubgraph.nodes.map((n) => n.id);
+    const targetFullArr = targetSubgraph.nodes.map((n) => n.id);
+    commonSnaps = sourceFullArr.filter((snap) => targetFullArr.includes(snap));
+    if (commonSnaps.length) {
+      // these commonSnaps are not from "parents", they're either squashed or unrelated. remove them from the arrays.
+      sourceArr = sourceArr.filter((snap) => !commonSnaps.includes(snap));
+      targetArr = targetArr.filter((snap) => !commonSnaps.includes(snap));
     }
+  }
 
-    snaps.push(version.hash);
+  let closestCommonSnap: string | undefined;
+  if (commonSnaps.length) {
+    // find the closest common snap by traversing the source subgraph BFS
+    const stopFn = (n: string) => commonSnaps.includes(n);
+    closestCommonSnap = traverseBFS(sourceSubgraph, localHead.toString(), stopFn);
+    if (!closestCommonSnap) throw new Error('getDivergeData, traverseBFS was unable to find the closest common snap');
+  }
 
-    if (version.parents.length > 1) hasMultipleParents = true;
-    version.parents.forEach((parent) => {
-      const parentVersion = getVersionData(parent);
-      if (parentVersion) {
-        addParentsRecursively(parentVersion, snaps, isSource, depth + 1);
-      } else {
-        const err = new ParentNotFound(modelComponent.id(), version.hash.toString(), parent.toString());
-        if (throws) throw err;
-        error = err;
-      }
-    });
-    if (version.unrelated) {
-      const unrelatedData = getVersionData(version.unrelated);
-      if (unrelatedData) {
-        addParentsRecursively(unrelatedData, snaps, isSource, depth + 1);
-      }
-    }
-    version.squashed?.forEach((squashed) => {
-      const squashedVersion = getVersionData(squashed);
-      if (squashedVersion) {
-        addParentsRecursively(squashedVersion, snaps, isSource, depth + 1);
-      }
-    });
-  };
+  const snapsOnSourceOnly = difference(sourceArr, targetArr).map((snap) => Ref.from(snap));
+  const snapsOnTargetOnly = difference(targetArr, sourceArr).map((snap) => Ref.from(snap));
+
   const localVersion = getVersionData(localHead);
   if (!localVersion) {
     const err =
@@ -163,43 +127,49 @@ export async function getDivergeData({
 run the following command to fix it:
 bit import ${modelComponent.id()} --objects`);
     if (throws) throw err;
-    return new SnapsDistance(snapsOnSource, [], targetHead, err);
+    return new SnapsDistance(snapsOnSourceOnly, [], targetHead, err);
   }
-  addParentsRecursively(localVersion, snapsOnSource, true);
-  if (targetHeadExistsInSource && !hasMultipleParents) {
-    return new SnapsDistance(snapsOnSource, [], targetHead, error);
-  }
+
   const targetVersion = getVersionData(targetHead);
   if (!targetVersion) {
     const err = new VersionNotFoundOnFS(targetHead.toString(), modelComponent.id());
     if (throws) throw err;
     return new SnapsDistance([], [], undefined, err);
   }
-  addParentsRecursively(targetVersion, snapsOnTarget, false);
 
-  const sourceOnlySnaps = differenceBy(snapsOnSource, snapsOnTarget, 'hash');
-  const targetOnlySnaps = differenceBy(snapsOnTarget, snapsOnSource, 'hash');
-
-  if (sourceHeadExistsInTarget) {
-    return new SnapsDistance([], targetOnlySnaps, localHead, error);
-  }
-
-  if (targetHeadExistsInSource) {
-    // happens when `hasMultipleParents` is true. now that remote was traversed as well, it's possible to find the diff
-    return new SnapsDistance(sourceOnlySnaps, [], targetHead, error);
-  }
-
+  const commonSnapBeforeDiverge = closestCommonSnap ? Ref.from(closestCommonSnap) : undefined;
   if (!commonSnapBeforeDiverge) {
     const unmergedData = repo.unmergedComponents.getEntry(modelComponent.name);
     const isUnrelatedFromUnmerged = unmergedData?.unrelated && unmergedData.head.isEqual(localHead);
     const isUnrelatedFromVersionObj = localVersion.unrelated?.isEqual(targetHead);
     if (isUnrelatedFromUnmerged || isUnrelatedFromVersionObj) {
-      return new SnapsDistance(snapsOnSource, snapsOnTarget, undefined);
+      return new SnapsDistance(snapsOnSourceOnly, snapsOnTargetOnly, undefined);
     }
     const err = new NoCommonSnap(modelComponent.id());
     if (throwForNoCommonSnap) throw err;
-    return new SnapsDistance(snapsOnSource, snapsOnTarget, undefined, err);
+    return new SnapsDistance(snapsOnSourceOnly, snapsOnTargetOnly, undefined, err);
   }
 
-  return new SnapsDistance(sourceOnlySnaps, targetOnlySnaps, commonSnapBeforeDiverge, error);
+  return new SnapsDistance(snapsOnSourceOnly, snapsOnTargetOnly, commonSnapBeforeDiverge, error);
+}
+
+/**
+ * traverse the graph via BFS to find the first node which is also in the common snaps array.
+ */
+function traverseBFS(graph: Graph<string, string>, start: string, stopFn: (n: string) => boolean): string | undefined {
+  const queue = [start];
+  const visited = {};
+  while (queue.length) {
+    const current = queue.shift();
+    if (!current) throw new Error('traverseBFS, queue is empty');
+    // eslint-disable-next-line no-continue
+    if (visited[current]) continue;
+    visited[current] = true;
+    if (stopFn(current)) {
+      return current;
+    }
+    const successors = graph.outEdges(current).map((e) => e.targetId);
+    queue.push(...successors);
+  }
+  return undefined;
 }

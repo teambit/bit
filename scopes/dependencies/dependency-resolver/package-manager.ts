@@ -94,6 +94,8 @@ export type PackageManagerInstallOptions = {
    * We use this option for a performance optimization in Ripple CI.
    */
   dryRun?: boolean;
+
+  dedupeInjectedDeps?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -168,5 +170,5 @@ export interface PackageManager {
    */
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string>;
 
-  findUsages?(depName: string, opts: { lockfileDir: string }): Promise<string>;
+  findUsages?(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string>;
 }

@@ -66,8 +66,4 @@ export default class ComponentJsonHelper {
     const file = path.join(componentRelativeDir, COMPONENT_CONFIG_FILE_NAME);
     return absolutePath ? path.join(this.scopes.localPath, file) : file;
   }
-
-  // addDefaultOwner(owner: string) {
-  //   this.addKeyValToWorkspace('defaultOwner', owner);
-  // }
 }

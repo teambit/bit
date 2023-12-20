@@ -154,11 +154,25 @@ export class ForkingMain {
   /**
    * fork all components of the given scope
    */
-  async forkScope(originalScope: string, newScope: string, options?: ScopeForkOptions): Promise<ComponentID[]> {
-    const idsFromOriginalScope = await this.workspace.scope.listRemoteScope(originalScope);
-    if (!idsFromOriginalScope.length) {
+  async forkScope(
+    originalScope: string,
+    newScope: string,
+    pattern?: string,
+    options?: ScopeForkOptions
+  ): Promise<ComponentID[]> {
+    const allIdsFromOriginalScope = await this.workspace.scope.listRemoteScope(originalScope);
+    if (!allIdsFromOriginalScope.length) {
       throw new Error(`unable to find components to fork from ${originalScope}`);
     }
+    const getPatternWithScopeName = () => {
+      if (!pattern) return undefined;
+      if (pattern.startsWith(`${originalScope}/`)) return pattern;
+      return `${originalScope}/${pattern}`;
+    };
+    const patternWithScopeName = getPatternWithScopeName();
+    const idsFromOriginalScope = patternWithScopeName
+      ? await this.workspace.scope.filterIdsFromPoolIdsByPattern(patternWithScopeName, allIdsFromOriginalScope)
+      : allIdsFromOriginalScope;
     const workspaceIds = await this.workspace.listIds();
     const workspaceBitIds = ComponentIdList.fromArray(workspaceIds.map((id) => id));
     idsFromOriginalScope.forEach((id) => {
@@ -177,15 +191,16 @@ export class ForkingMain {
       await this.newComponentHelper.writeAndAddNewComp(component, targetCompId, { scope: newScope }, config);
       multipleForkInfo.push({ targetCompId, sourceId: component.id.toStringWithoutVersion(), component });
     });
-    await this.refactorMultipleAndInstall(multipleForkInfo, { refactor: true, install: true, ast: options?.ast });
+    await this.refactorMultipleAndInstall(multipleForkInfo, {
+      refactor: true,
+      install: !options?.skipDependencyInstallation,
+      ast: options?.ast,
+    });
     return multipleForkInfo.map((info) => info.targetCompId);
   }
 
   private async forkExistingInWorkspace(existing: Component, targetId?: string, options?: ForkOptions) {
-    if (!targetId) {
-      throw new Error(`error: unable to create "${existing.id.toStringWithoutVersion()}" component, a component with the same name already exists.
-please specify the target-id arg`);
-    }
+    targetId = targetId || existing.id.fullName;
     const targetCompId = this.newComponentHelper.getNewComponentId(targetId, undefined, options?.scope);
 
     const config = await this.getConfig(existing, options);

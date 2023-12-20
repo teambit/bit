@@ -15,6 +15,7 @@ type GetDependenciesFlags = {
 
 export type SetDependenciesFlags = {
   dev?: boolean;
+  optional?: boolean;
   peer?: boolean;
 };
 
@@ -108,6 +109,7 @@ export class DependenciesSetCmd implements Command {
   alias = '';
   options = [
     ['d', 'dev', 'add to the devDependencies'],
+    ['o', 'optional', 'add to the optionalDependencies'],
     ['p', 'peer', 'add to the peerDependencies'],
   ] as CommandOptions;
 
@@ -279,6 +281,10 @@ export class DependenciesBlameCmd implements Command {
   }
 }
 
+type DependenciesUsageCmdOptions = {
+  depth?: number;
+};
+
 export class DependenciesUsageCmd implements Command {
   name = 'usage <dependency-name>';
   arguments = [
@@ -291,12 +297,12 @@ export class DependenciesUsageCmd implements Command {
   group = 'info';
   description = 'EXPERIMENTAL. find components that use the specified dependency';
   alias = '';
-  options = [] as CommandOptions;
+  options = [['', 'depth <number>', 'max display depth of the dependency graph']] as CommandOptions;
 
   constructor(private deps: DependenciesMain) {}
 
-  async report([depName]: [string]) {
-    const deepUsageResult = await this.deps.usageDeep(depName);
+  async report([depName]: [string], options: DependenciesUsageCmdOptions) {
+    const deepUsageResult = await this.deps.usageDeep(depName, options);
     if (deepUsageResult != null) return deepUsageResult;
     const results = await this.deps.usage(depName);
     if (!Object.keys(results).length) {

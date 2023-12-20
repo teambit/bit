@@ -52,7 +52,7 @@ describe('all custom envs are compiled during installation', function () {
       'custom-env2'
     );
 
-    helper.command.create('node', 'comp', `--env ${helper.scopes.remoteWithoutOwner}/custom-env2`);
+    helper.command.create('module', 'comp', `--env ${helper.scopes.remoteWithoutOwner}/custom-env2`);
     helper.fs.outputFile(
       `${helper.scopes.remoteWithoutOwner}/comp/comp.ts`,
       `
@@ -64,7 +64,7 @@ export function comp() {
 `
     );
     helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/comp/comp.mdx`, '');
-    helper.command.create('node', 'comp1', `--env ${helper.scopes.remoteWithoutOwner}/custom-env1`);
+    helper.command.create('module', 'comp1', `--env ${helper.scopes.remoteWithoutOwner}/custom-env1`);
 
     helper.command.install('is-positive'); // installing the dependency of custom-env1
   }

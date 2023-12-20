@@ -7,7 +7,6 @@ import { SlotRegistry, Slot } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
-import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { Component, ComponentMain, ComponentAspect } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { DevFilesAspect } from './dev-files.aspect';
@@ -191,6 +190,15 @@ export class DevFilesMain {
     return new DevFiles(rawDevFiles);
   }
 
+  async getDevFilesForConsumerComp(consumerComponent: LegacyComponent): Promise<string[]> {
+    const componentId = await this.workspace.resolveComponentId(consumerComponent.id);
+    // Do not change the storeInCache=false arg. if you think you need to change it, please talk to Gilad first
+    const component = await this.workspace.get(componentId, consumerComponent, true, false);
+    if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
+    const computedDevFiles = await this.computeDevFiles(component);
+    return computedDevFiles.list();
+  }
+
   /**
    * compute all dev files of a component.
    */
@@ -233,15 +241,6 @@ export class DevFilesMain {
 
     if (workspace) {
       workspace.registerOnComponentLoad(calcDevOnLoad);
-
-      DependencyResolver.getDevFiles = async (consumerComponent: LegacyComponent): Promise<string[]> => {
-        const componentId = await workspace.resolveComponentId(consumerComponent.id);
-        // Do not change the storeInCache=false arg. if you think you need to change it, please talk to Gilad first
-        const component = await workspace.get(componentId, consumerComponent, true, false);
-        if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
-        const computedDevFiles = await devFiles.computeDevFiles(component);
-        return computedDevFiles.list();
-      };
     }
     if (scope) {
       scope.registerOnCompAspectReCalc(calcDevOnLoad);

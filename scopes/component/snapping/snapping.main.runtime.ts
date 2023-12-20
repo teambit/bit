@@ -13,7 +13,6 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import HooksManager from '@teambit/legacy/dist/hooks';
 import pMapSeries from 'p-map-series';
-import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { validateVersion } from '@teambit/legacy/dist/utils/semver-helper';
 import loader from '@teambit/legacy/dist/cli/loader';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
@@ -61,6 +60,7 @@ import { tagModelComponent, updateComponentsVersions, BasicTagParams } from './t
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
 import { generateCompFromScope } from './generate-comp-from-scope';
+import { FlattenedEdgesGetter } from './flattened-edges';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -163,8 +163,8 @@ export class SnappingMain {
 
     const exactVersion = version;
     if (!this.workspace) throw new OutsideWorkspaceError();
-    const idsHasWildcard = hasWildcard(ids);
-    const isAll = Boolean(!ids.length || idsHasWildcard);
+    const idsHasPattern = this.workspace.hasPattern(ids);
+    const isAll = Boolean(!ids.length || idsHasPattern);
     const validExactVersion = validateVersion(exactVersion);
     const consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
@@ -231,7 +231,7 @@ export class SnappingMain {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       R.concat(tagResults.taggedComponents, tagResults.autoTaggedResults, tagResults.newComponents).length
     );
-    await consumer.onDestroy();
+    await consumer.onDestroy(`tag (message: ${message || 'N/A'})`);
     await stagedConfig?.write();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return tagResults;
@@ -542,7 +542,7 @@ if you're willing to lose the history from the head to the specified version, us
 
     const currentLane = consumer.getCurrentLaneId();
     snapResults.laneName = currentLane.isDefault() ? null : currentLane.toString();
-    await consumer.onDestroy();
+    await consumer.onDestroy(`snap (message: ${message || 'N/A'})`);
     await stagedConfig?.write();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return snapResults;
@@ -564,11 +564,7 @@ if you're willing to lose the history from the head to the specified version, us
           const compId = await workspace.resolveComponentId(pattern);
           return [compId];
         }
-        return workspace.scope.filterIdsFromPoolIdsByPattern(
-          pattern,
-          tagPendingComponentsIds,
-          shouldThrowForNoMatching
-        );
+        return workspace.filterIdsFromPoolIdsByPattern(pattern, tagPendingComponentsIds, shouldThrowForNoMatching);
       };
       const componentIds = await getCompIds();
       if (!componentIds.length && pattern) {
@@ -603,18 +599,17 @@ there are matching among unmodified components thought. consider using --unmodif
         return removeLocalVersionsForAllComponents(consumer, currentLane, head);
       }
       const candidateComponents = await getComponentsWithOptionToUntag(consumer);
-      const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern);
-      const idsMatchingPatternBitIds = ComponentIdList.fromArray(idsMatchingPattern.map((id) => id));
+      const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern, true, { includeDeleted: true });
+      const idsMatchingPatternBitIds = ComponentIdList.fromArray(idsMatchingPattern);
       const componentsToUntag = candidateComponents.filter((modelComponent) =>
         idsMatchingPatternBitIds.hasWithoutVersion(modelComponent.toComponentId())
       );
       return removeLocalVersionsForMultipleComponents(componentsToUntag, currentLane, head, force, consumer.scope);
     };
     const softUntag = async () => {
-      const componentsList = new ComponentsList(consumer);
-      const softTaggedComponentsIds = componentsList.listSoftTaggedComponents();
+      const softTaggedComponentsIds = this.workspace.filter.bySoftTagged();
       const idsToRemoveSoftTags = componentPattern
-        ? this.workspace.scope.filterIdsFromPoolIdsByPattern(componentPattern, softTaggedComponentsIds)
+        ? await this.workspace.filterIdsFromPoolIdsByPattern(componentPattern, softTaggedComponentsIds)
         : softTaggedComponentsIds;
       return compact(
         idsToRemoveSoftTags.map((componentId) => {
@@ -638,7 +633,7 @@ there are matching among unmodified components thought. consider using --unmodif
       consumer.bitMap.markAsChanged();
     }
 
-    await consumer.onDestroy();
+    await consumer.onDestroy('reset');
     return { results, isSoftUntag: !isRealUntag };
   }
 
@@ -647,7 +642,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const hashes = notExported.map((id) => BitObject.makeHash(id.fullName));
     await this.scope.legacyScope.objects.deleteObjectsFromFS(hashes.map((h) => Ref.from(h)));
     notExported.map((id) => this.workspace.consumer.bitMap.updateComponentId(id.changeVersion(undefined)));
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`reset (never-exported)`);
     return notExported;
   }
 
@@ -663,6 +658,9 @@ there are matching among unmodified components thought. consider using --unmodif
     };
     const lane = await getLane();
 
+    const flattenedEdgesGetter = new FlattenedEdgesGetter(this.scope, components, this.logger, lane || undefined);
+    const graphIds = await flattenedEdgesGetter.buildGraph();
+
     const flattenedDependenciesGetter = new FlattenedDependenciesGetter(
       this.scope.legacyScope,
       components,
@@ -671,6 +669,59 @@ there are matching among unmodified components thought. consider using --unmodif
     await flattenedDependenciesGetter.populateFlattenedDependencies();
     loader.stop();
     await this._addFlattenedDepsGraphToComponents(components);
+
+    const buildGraphFromHistoricFlattenedEdges = Boolean(process.env.BIT_BUILD_GRAPH_FROM_HISTORIC_FLATTENED_EDGES);
+    if (!buildGraphFromHistoricFlattenedEdges) return;
+
+    components.forEach((component) => {
+      const graphFromIds = graphIds.successorsSubgraph(component.id.toString());
+      const edgesFromGraph = graphFromIds.edges.map((edge) => {
+        return {
+          source: edge.sourceId,
+          target: edge.targetId,
+          type: edge.attr as DepEdgeType,
+        };
+      });
+      const edgesFromGraphStr = edgesFromGraph.map((e) => `${e.source} -> ${e.target} (${e.type})`).sort();
+      const edgesFromFetchedDeps = component.flattenedEdges;
+      const edgesFromFetchedDepsStr = edgesFromFetchedDeps
+        .map((e) => `${e.source.toString()} -> ${e.target.toString()} (${e.type})`)
+        .sort();
+
+      const edgesOnlyInGraph = difference(edgesFromGraphStr, edgesFromFetchedDepsStr);
+      const edgesOnlyInFetchedDeps = difference(edgesFromFetchedDepsStr, edgesFromGraphStr);
+      let msg = '';
+      if (edgesOnlyInGraph.length) {
+        msg += `the following edges exist in the graph but not in the fetched deps:\n${edgesOnlyInGraph.join(', ')}\n`;
+      }
+      if (edgesOnlyInFetchedDeps.length) {
+        msg += `the following edges exist in the fetched deps but not in the graph:\n${edgesOnlyInFetchedDeps.join(
+          ', '
+        )}\n`;
+      }
+
+      const flattenedFromFetched = component.flattenedDependencies;
+      const flattenedFromFetchedStr = flattenedFromFetched.map((id) => id.toString()).sort();
+      const flattenedFromGraphIncludeItself = graphFromIds.nodes.map((node) => node.attr);
+      const flattenedFromGraph = flattenedFromGraphIncludeItself.filter((id) => !id.isEqual(component.id));
+      const flattenedFromGraphStr = flattenedFromGraph.map((id) => id.toString()).sort();
+      const flattenedOnlyInGraph = difference(flattenedFromGraphStr, flattenedFromFetchedStr);
+      const flattenedOnlyInFetched = difference(flattenedFromFetchedStr, flattenedFromGraphStr);
+      if (flattenedOnlyInGraph.length) {
+        msg += `the following flattened deps exist in the graph but not in the fetched deps:\n${flattenedOnlyInGraph.join(
+          ', '
+        )}\n`;
+      }
+      if (flattenedOnlyInFetched.length) {
+        msg += `the following flattened deps exist in the fetched deps but not in the graph:\n${flattenedOnlyInFetched.join(
+          ', '
+        )}\n`;
+      }
+
+      if (msg) {
+        throw new Error(`edges mismatch for ${component.id.toString()}:\n${msg}`);
+      }
+    });
   }
 
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
@@ -1070,13 +1121,14 @@ another option, in case this dependency is not in main yet is to remove all refe
       }
     });
     legacyComponent.extensions.forEach((ext) => {
-      if (!ext.newExtensionId) return;
-      const updatedBitId = updatedIds.searchWithoutVersion(ext.newExtensionId);
+      if (!ext.extensionId) return;
+      const updatedBitId = updatedIds.searchWithoutVersion(ext.extensionId);
       if (updatedBitId) {
         this.logger.debug(
-          `updating "${componentIdStr}", extension ${ext.newExtensionId.toString()} to version ${updatedBitId.version}}`
+          `updating "${componentIdStr}", extension ${ext.extensionId.toString()} to version ${updatedBitId.version}}`
         );
         ext.extensionId = updatedBitId;
+        if (ext.newExtensionId) ext.newExtensionId = updatedBitId;
       }
     });
 
@@ -1106,7 +1158,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     const warnings: string[] = [];
     const componentsList = new ComponentsList(this.workspace.consumer);
     if (persist) {
-      const softTaggedComponents = componentsList.listSoftTaggedComponents();
+      const softTaggedComponents = this.workspace.filter.bySoftTagged();
       return { bitIds: softTaggedComponents, warnings: [] };
     }
 
@@ -1114,15 +1166,16 @@ another option, in case this dependency is not in main yet is to remove all refe
       ? await this.workspace.listPotentialTagIds()
       : await this.workspace.listTagPendingIds();
 
-    const snappedComponents = await componentsList.listSnappedComponentsOnMain();
-    const snappedComponentsIds = snappedComponents.map((c) => c.toComponentId());
+    const snappedComponentsIds = (await this.workspace.filter.bySnappedOnMain()).map((id) =>
+      id.changeVersion(undefined)
+    );
 
     if (ids.length) {
       const componentIds = await pMapSeries(ids, async (id) => {
         const [idWithoutVer, version] = id.split('@');
-        const idHasWildcard = hasWildcard(id);
-        if (idHasWildcard) {
-          const allIds = this.workspace.scope.filterIdsFromPoolIdsByPattern(idWithoutVer, tagPendingComponentsIds);
+        const idIsPattern = this.workspace.isPattern(id);
+        if (idIsPattern) {
+          const allIds = await this.workspace.filterIdsFromPoolIdsByPattern(idWithoutVer, tagPendingComponentsIds);
           return allIds.map((componentId) => componentId.changeVersion(version));
         }
         const componentId = await this.workspace.resolveComponentId(idWithoutVer);
