@@ -12,7 +12,6 @@ export type ConsumerOverridesOfComponent = ComponentOverridesData & {
   env?: Record<string, any>;
   propagate?: boolean; // whether propagate to a more general rule,
   defaultScope?: string; // default scope to export to
-  defaultOwner?: string; // default scope to export to
 };
 
 export type ConsumerOverridesConfig = { [key: string]: ConsumerOverridesOfComponent };
