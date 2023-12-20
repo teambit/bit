@@ -15,6 +15,7 @@ type GetDependenciesFlags = {
 
 export type SetDependenciesFlags = {
   dev?: boolean;
+  optional?: boolean;
   peer?: boolean;
 };
 
@@ -108,6 +109,7 @@ export class DependenciesSetCmd implements Command {
   alias = '';
   options = [
     ['d', 'dev', 'add to the devDependencies'],
+    ['o', 'optional', 'add to the optionalDependencies'],
     ['p', 'peer', 'add to the peerDependencies'],
   ] as CommandOptions;
 

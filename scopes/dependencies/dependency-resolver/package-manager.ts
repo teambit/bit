@@ -94,6 +94,8 @@ export type PackageManagerInstallOptions = {
    * We use this option for a performance optimization in Ripple CI.
    */
   dryRun?: boolean;
+
+  dedupeInjectedDeps?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

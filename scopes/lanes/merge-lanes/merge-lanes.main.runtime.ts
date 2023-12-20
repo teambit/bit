@@ -55,7 +55,7 @@ export type MergeLaneOptions = {
   resolveUnrelated?: MergeStrategy;
   ignoreConfigChanges?: boolean;
   skipFetch?: boolean;
-  includeNonLaneComps?: boolean;
+  excludeNonLaneComps?: boolean;
 };
 
 export class MergeLanesMain {
@@ -97,7 +97,7 @@ export class MergeLanesMain {
       resolveUnrelated,
       ignoreConfigChanges,
       skipFetch,
-      includeNonLaneComps,
+      excludeNonLaneComps,
     } = options;
 
     const currentLaneId = consumer.getCurrentLaneId();
@@ -139,7 +139,7 @@ export class MergeLanesMain {
     const getBitIds = async () => {
       if (isDefaultLane) {
         if (!currentLane) throw new Error(`unable to merge ${DEFAULT_LANE}, the current lane was not found`);
-        return this.getMainIdsToMerge(currentLane, includeNonLaneComps);
+        return this.getMainIdsToMerge(currentLane, !excludeNonLaneComps);
       }
       if (!otherLane) throw new Error(`lane must be defined for non-default`);
       return otherLane.toBitIds();
@@ -284,7 +284,7 @@ export class MergeLanesMain {
     return { checkoutResults, restoredItems, checkoutError };
   }
 
-  private async getMainIdsToMerge(lane: Lane, includeNonLaneComps = false) {
+  private async getMainIdsToMerge(lane: Lane, includeNonLaneComps: boolean) {
     const laneIds = lane.toBitIds();
     const ids = laneIds.filter((id) => this.scope.isExported(id));
     if (includeNonLaneComps) {

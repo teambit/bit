@@ -37,7 +37,7 @@ export class NodeApp implements Application {
     this.logger.console(`${context.appName} is listening on http://localhost:${port}`);
     return {
       appName: context.appName,
-      port
+      port,
     };
   }
 

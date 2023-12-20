@@ -529,6 +529,7 @@ jobs:
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
+      BIT_BUILD_GRAPH_FROM_HISTORIC_FLATTENED_EDGES: true
     steps:
       - attach_workspace:
           at: ./
@@ -862,6 +863,7 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
+      BIT_BUILD_GRAPH_FROM_HISTORIC_FLATTENED_EDGES: true
     parallelism: 25
     steps:
       - attach_workspace:

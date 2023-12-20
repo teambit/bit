@@ -27,16 +27,16 @@ this command marks the components as deleted, and after snap/tag and export they
   options = [
     ['', 'lane', 'when on a lane, delete the component from this lane only. avoid merging it to main or other lanes'],
     ['', 'update-main', 'EXPERIMENTAL. delete component/s on the main lane after merging this lane into main'],
-    [
-      'f',
-      'force',
-      'removes the component from the scope, even if used as a dependency. WARNING: components that depend on this component will corrupt',
-    ],
     ['s', 'silent', 'skip confirmation'],
     [
       '',
       'hard',
       'NOT-RECOMMENDED. delete a component completely from a remote scope. careful! this is a permanent change that could corrupt dependents.',
+    ],
+    [
+      'f',
+      'force',
+      'relevant for --hard. allow the deletion even if used as a dependency. WARNING: components that depend on this component will corrupt',
     ],
   ] as CommandOptions;
   loader = true;

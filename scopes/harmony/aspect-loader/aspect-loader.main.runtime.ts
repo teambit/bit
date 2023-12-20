@@ -500,9 +500,8 @@ export class AspectLoaderMain {
 
   async loadEsm(path: string) {
     NativeCompileCache.uninstall();
-    return esmLoader(path); 
+    return esmLoader(path);
   }
-
 
   getPluginsFromDefs(component: Component, componentPath: string, defs: PluginDefinition[]): Plugins {
     return Plugins.from(

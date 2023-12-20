@@ -39,7 +39,6 @@ export type ComponentScopeDirMapEntry = {
 export type ComponentScopeDirMap = Array<ComponentScopeDirMapEntry>;
 
 export type WorkspaceExtensionProps = {
-  defaultOwner?: string;
   defaultScope?: string;
   defaultDirectory?: string;
   components?: ComponentScopeDirMap;
@@ -339,12 +338,10 @@ export class WorkspaceConfig implements HostConfig {
       _useWorkspaces: this.extension('teambit.dependencies/dependency-resolver', true)?.useWorkspaces,
       dependencyResolver: this.extension('teambit.dependencies/dependency-resolver', true),
       packageManager: this.extension('teambit.dependencies/dependency-resolver', true)?.packageManager,
-      _bindingPrefix: this.extension('teambit.workspace/workspace', true)?.defaultOwner,
       _saveDependenciesAsComponents: this._legacyProps?.saveDependenciesAsComponents,
       _dependenciesDirectory: this._legacyProps?.dependenciesDirectory,
       componentsDefaultDirectory,
       _manageWorkspaces: this.extension('teambit.dependencies/dependency-resolver', true)?.manageWorkspaces,
-      defaultOwner: this.extension('teambit.workspace/workspace', true)?.defaultOwner,
       extensions: this.extensions.toConfigObject(),
       // @ts-ignore
       path: this.path,
@@ -378,7 +375,6 @@ export function transformLegacyPropsToExtensions(
   const workspace = removeUndefined({
     defaultScope: legacyConfig.defaultScope,
     defaultDirectory: legacyConfig.componentsDefaultDirectory,
-    defaultOwner: legacyConfig.bindingPrefix,
   });
   const dependencyResolver = removeUndefined({
     packageManager: legacyConfig.packageManager,

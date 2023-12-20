@@ -14,6 +14,7 @@ describe('dependencies', function () {
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('importing component without dependencies', () => {
     let npmCiRegistry: NpmCiRegistry;
+    let afterExport: string;
     let beforeImport: string;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
@@ -25,7 +26,7 @@ describe('dependencies', function () {
       helper.fixtures.populateComponents(3);
       helper.command.tagAllComponents();
       helper.command.export();
-
+      afterExport = helper.scopeHelper.cloneLocalScope();
       helper.scopeHelper.reInitLocalScope();
       npmCiRegistry.setResolver();
       beforeImport = helper.scopeHelper.cloneLocalScope();
@@ -56,6 +57,29 @@ describe('dependencies', function () {
       it('should bring not only the imported component, but also its dependencies', () => {
         const scope = helper.command.catScope();
         expect(scope).to.have.lengthOf(3);
+      });
+    });
+    describe('a dependency is both in the workspace and set with deps-set', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterExport);
+        helper.fixtures.populateComponents(3, undefined, 'v2');
+        helper.command.tagAllComponents();
+        helper.command.export();
+
+        helper.scopeHelper.reInitLocalScope();
+        npmCiRegistry.setResolver();
+
+        helper.command.importComponent('comp1', '-x');
+        helper.command.importComponent('comp2', '-x');
+        helper.command.install();
+
+        const pkg = helper.general.getPackageNameByCompName('comp2');
+        helper.command.dependenciesSet('comp1', `${pkg}@0.0.1`);
+      });
+      it('should show the dependency according to the deps-set and not the .bitmap', () => {
+        const depsData = helper.command.showDependenciesData('comp1');
+        const dep = depsData.find((d) => d.id === `${helper.scopes.remote}/comp2@0.0.1`);
+        expect(dep?.version).to.equal('0.0.1');
       });
     });
   });
