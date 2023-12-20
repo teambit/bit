@@ -33,15 +33,18 @@ export async function generateCompFromScope(scope: ScopeMain, compData: CompData
   });
   const id = compData.componentId;
   const bindingPrefix = getBindingPrefixByDefaultScope(id.scope);
+
+  const extensions = ExtensionDataList.fromConfigObject(compData.aspects || {});
+
   const consumerComponent = new ConsumerComponent({
     mainFile: 'index.ts',
     name: compData.componentId.fullName,
     scope: compData.componentId.scope,
     files,
     bindingPrefix,
-    overrides: ComponentOverrides.loadFromScope({}),
+    overrides: await ComponentOverrides.loadNewFromScope(id, files, extensions),
     defaultScope: compData.componentId.scope,
-    extensions: new ExtensionDataList(),
+    extensions,
     // the dummy data here are not important. this Version object will be discarded later.
     log: {
       message: compData.message || '',

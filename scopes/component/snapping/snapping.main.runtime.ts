@@ -49,6 +49,7 @@ import {
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { VersionNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
+import DependenciesAspect, { DependenciesMain } from '@teambit/dependencies';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';
 import { SnapCmd } from './snap-cmd';
@@ -108,7 +109,8 @@ export class SnappingMain {
     private scope: ScopeMain,
     private exporter: ExportMain,
     private builder: BuilderMain,
-    private importer: ImporterMain
+    private importer: ImporterMain,
+    private deps: DependenciesMain
   ) {
     this.objectsRepo = this.scope?.legacyScope?.objects;
   }
@@ -425,6 +427,20 @@ if you're willing to lose the history from the head to the specified version, us
     await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
 
     const consumerComponents = components.map((c) => c.state._consumer);
+
+    await pMapSeries(newComponents, async (component) => {
+      const consumerComponent = component.state._consumer as ConsumerComponent;
+      await this.deps.loadDependenciesFromScope(consumerComponent);
+
+      const dependenciesListSerialized = (await this.dependencyResolver.extractDepsFromLegacy(component)).serialize();
+      const extId = DependencyResolverAspect.id;
+      const data = { dependencies: dependenciesListSerialized };
+      const existingExtension = component.config.extensions.findExtension(extId);
+      if (!existingExtension) throw new Error('unable to find DependencyResolver extension');
+      // Only merge top level of extension data
+      Object.assign(existingExtension.data, data);
+    });
+
     const ids = ComponentIdList.fromArray(allCompIds);
     const results = await tagModelComponent({
       ...params,
@@ -1225,6 +1241,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     BuilderAspect,
     ImporterAspect,
     GlobalConfigAspect,
+    DependenciesAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1239,6 +1256,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     builder,
     importer,
     globalConfig,
+    deps,
   ]: [
     Workspace,
     CLIMain,
@@ -1250,7 +1268,8 @@ another option, in case this dependency is not in main yet is to remove all refe
     ExportMain,
     BuilderMain,
     ImporterMain,
-    GlobalConfigMain
+    GlobalConfigMain,
+    DependenciesMain
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(
@@ -1262,7 +1281,8 @@ another option, in case this dependency is not in main yet is to remove all refe
       scope,
       exporter,
       builder,
-      importer
+      importer,
+      deps
     );
     const snapCmd = new SnapCmd(snapping, logger, globalConfig);
     const tagCmd = new TagCmd(snapping, logger, globalConfig);

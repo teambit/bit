@@ -203,13 +203,21 @@ export class DependenciesMain {
   async loadDependencies(component: ConsumerComponent, opts: DependencyLoaderOpts) {
     const dependenciesLoader = new DependenciesLoader(
       component,
-      this.workspace,
       this.dependencyResolver,
       this.devFiles,
-      this.aspectLoader,
-      opts
+      this.aspectLoader
     );
-    return dependenciesLoader.load();
+    return dependenciesLoader.load(this.workspace, opts);
+  }
+
+  async loadDependenciesFromScope(component: ConsumerComponent) {
+    const dependenciesLoader = new DependenciesLoader(
+      component,
+      this.dependencyResolver,
+      this.devFiles,
+      this.aspectLoader
+    );
+    return dependenciesLoader.loadFromScope();
   }
 
   async debugDependencies(id: string): Promise<DependenciesResultsDebug> {
