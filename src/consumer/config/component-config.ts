@@ -7,7 +7,6 @@ import logger from '../../logger/logger';
 import Component from '../component/consumer-component';
 import PackageJsonFile from '../component/package-json-file';
 import AbstractConfig from './abstract-config';
-import { ComponentOverridesData } from './component-overrides';
 import { ExtensionDataList } from './extension-data';
 
 type ConfigProps = {
@@ -15,18 +14,15 @@ type ConfigProps = {
   bindingPrefix: string;
   extensions?: ExtensionDataList;
   defaultScope?: string;
-  overrides?: ComponentOverridesData;
 };
 
 type ConfigLoadRegistry = { [extId: string]: Function };
-type ConfigLegacyLoadRegistry = { [extId: string]: Function };
 
 // TODO: take for some other place like config
 // TODO: unify this and the same in src/components/utils/load-extensions/load-resolved-extensions.ts
 const ignoreLoadingExtensionsErrors = false;
 
 export default class ComponentConfig extends AbstractConfig {
-  overrides: ComponentOverridesData | null | undefined;
   defaultScope: string | undefined;
   componentHasWrittenConfig = false; // whether a component has component.json written to FS or package.json written with 'bit' property
   packageJsonFile: PackageJsonFile | null | undefined;
@@ -35,39 +31,23 @@ export default class ComponentConfig extends AbstractConfig {
   static registerOnComponentConfigLoading(extId, func: (id) => any) {
     this.componentConfigLoadingRegistry[extId] = func;
   }
-  static componentConfigLegacyLoadingRegistry: ConfigLegacyLoadRegistry = {};
-  static registerOnComponentConfigLegacyLoading(extId, func: (id, config) => any) {
-    this.componentConfigLegacyLoadingRegistry[extId] = func;
-  }
 
-  constructor({ lang, bindingPrefix, extensions, defaultScope, overrides }: ConfigProps) {
+  constructor({ bindingPrefix, extensions, defaultScope }: ConfigProps) {
     super({
-      lang,
       bindingPrefix,
       extensions,
     });
     this.defaultScope = defaultScope;
-    this.overrides = overrides;
   }
 
   toPlainObject() {
     const superObject = super.toPlainObject();
-    const componentObject = { ...superObject, overrides: this.overrides };
+    const componentObject = superObject;
     const isPropDefaultOrEmpty = (val, key) => {
       if (key === 'overrides') return !R.isEmpty(val);
       return true;
     };
     return pickBy(componentObject, isPropDefaultOrEmpty);
-  }
-
-  /**
-   * Return the extensions as ExtensionDataList
-   *
-   * @returns {ExtensionDataList}
-   * @memberof ComponentConfig
-   */
-  parseExtensions(): ExtensionDataList {
-    return ExtensionDataList.fromArray(this.extensions);
   }
 
   mergeWithComponentData(component: Component) {
