@@ -98,7 +98,6 @@ describe('auto tagging functionality', function () {
     let scopeBeforeTag;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJson.addKeyVal('packageManager', 'yarn');
       helper.fs.createFile('bar/a', 'a.js', 'require("../b/b")');
       helper.fs.createFile('bar/b', 'b.js', 'require("../c/c")');
       helper.fs.createFile('bar/c', 'c.js', 'require("../a/a"); console.log("I am C v1")');
