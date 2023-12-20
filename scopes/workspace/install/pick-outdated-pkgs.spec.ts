@@ -37,7 +37,8 @@ describe('makeOutdatedPkgChoices', () => {
     // Removing the ansi chars for better work on bit build on ci
     const stripped = stripAnsiFromChoices(choices);
     // @ts-ignore
-    expect(stripped).toMatchSnapshot();
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    expect(stripped).toMatchObject(orderedChoices);
   });
   it('should render choices with context information', () => {
     const choices = makeOutdatedPkgChoices([
@@ -74,3 +75,55 @@ function stripAnsiFromChoices(choices) {
   });
   return choices;
 }
+
+const orderedChoices = [
+  {
+    choices: [
+      {
+        message: 'foo (runtime) 1.0.0 ❯ 2.0.0   ',
+        name: 'foo',
+        value: {
+          currentRange: '1.0.0',
+          latestRange: '2.0.0',
+          name: 'foo',
+          source: 'rootPolicy',
+          targetField: 'dependencies',
+        },
+      },
+      {
+        message: 'qar (runtime) 1.0.0 ❯ 1.1.0   ',
+        name: 'qar',
+        value: {
+          currentRange: '1.0.0',
+          latestRange: '1.1.0',
+          name: 'qar',
+          source: 'rootPolicy',
+          targetField: 'dependencies',
+        },
+      },
+      {
+        message: 'zoo (dev)     1.0.0 ❯ 1.1.0   ',
+        name: 'zoo',
+        value: {
+          currentRange: '1.0.0',
+          latestRange: '1.1.0',
+          name: 'zoo',
+          source: 'rootPolicy',
+          targetField: 'devDependencies',
+        },
+      },
+      {
+        message: 'bar (peer)    1.0.0 ❯ 1.1.0   ',
+        name: 'bar',
+        value: {
+          currentRange: '1.0.0',
+          latestRange: '1.1.0',
+          name: 'bar',
+          source: 'rootPolicy',
+          targetField: 'peerDependencies',
+        },
+      },
+    ],
+    message: 'Root policies',
+  },
+];
