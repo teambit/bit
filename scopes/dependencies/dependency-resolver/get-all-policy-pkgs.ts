@@ -1,6 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import { ManifestDependenciesKeysNames } from './manifest';
-import { VariantPolicyConfigObject, WorkspacePolicy } from './policy';
+import { VariantPolicyConfigObject, VariantPolicyEntryValue, WorkspacePolicy } from './policy';
 import { DependencyLifecycleType } from './dependencies/dependency';
 import { KEY_NAME_BY_LIFECYCLE_TYPE } from './dependencies';
 
@@ -115,7 +115,8 @@ function readAllDependenciesFromPolicyObject(
         pkgs.push({
           ...context,
           name,
-          currentRange: typeof currentRange === 'string' ? currentRange : currentRange.version,
+          currentRange:
+            typeof currentRange === 'string' ? currentRange : (currentRange as VariantPolicyEntryValue).version,
           targetField,
         });
       }

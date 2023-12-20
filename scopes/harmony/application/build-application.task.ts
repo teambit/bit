@@ -94,7 +94,7 @@ export class AppsBuildTask implements BuildTask {
       component.id,
       app.name,
       capsuleRootDir,
-      capsule.path,
+      capsule.path
     );
     const appBuildContext = AppBuildContext.create({
       appContext,

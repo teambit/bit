@@ -4,7 +4,7 @@ import { AppBuildContext } from './app-build-context';
 import { AppBuildResult } from './app-build-result';
 import { ApplicationDeployment, ApplicationInstance } from './app-instance';
 
-export type DeployFn = (context: AppDeployContext) => Promise<ApplicationDeployment|void|undefined>;
+export type DeployFn = (context: AppDeployContext) => Promise<ApplicationDeployment | void | undefined>;
 
 export type BuildFn = (context: AppBuildContext) => Promise<AppBuildResult>;
 
@@ -22,7 +22,7 @@ export interface Application {
   /**
    * run the application.
    */
-  run(context: AppContext): Promise<ApplicationInstance|number>;
+  run(context: AppContext): Promise<ApplicationInstance | number>;
 
   /**
    * build the application.

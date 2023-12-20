@@ -323,10 +323,8 @@ export class ApplicationMain {
         });
     }
 
-    const isOldApi = typeof instance === 'number'
-    const port = isOldApi
-      ? instance
-      : instance?.port;
+    const isOldApi = typeof instance === 'number';
+    const port = isOldApi ? instance : instance?.port;
 
     return { app, port, errors: undefined, isOldApi };
   }
@@ -398,7 +396,6 @@ export class ApplicationMain {
       undefined
     );
     return appContext;
-
   }
 
   static runtime = MainRuntime;

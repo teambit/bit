@@ -23,33 +23,33 @@
         "@mdx-js/react": "1.6.22",
         "@monaco-editor/react": "4.4.6",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
-        "@pnpm/client": "10.0.39",
+        "@pnpm/client": "10.0.41",
         "@pnpm/colorize-semver-diff": "1.0.1",
-        "@pnpm/config": "20.1.2",
-        "@pnpm/core": "13.1.11",
-        "@pnpm/default-reporter": "12.4.8",
-        "@pnpm/dependency-path": "2.1.5",
+        "@pnpm/config": "20.2.0",
+        "@pnpm/core": "13.2.0",
+        "@pnpm/default-reporter": "12.4.9",
+        "@pnpm/dependency-path": "2.1.6",
         "@pnpm/error": "5.0.2",
-        "@pnpm/fetch": "7.0.5",
-        "@pnpm/list": "^9.1.5",
-        "@pnpm/lockfile-file": "8.1.4",
+        "@pnpm/fetch": "7.0.6",
+        "@pnpm/list": "^9.1.7",
+        "@pnpm/lockfile-file": "8.1.5",
         "@pnpm/logger": "5.0.0",
-        "@pnpm/modules-yaml": "12.1.4",
+        "@pnpm/modules-yaml": "12.1.5",
         "@pnpm/network.agent": "0.1.0",
         "@pnpm/network.ca-file": "1.0.2",
-        "@pnpm/package-store": "19.0.10",
+        "@pnpm/package-store": "19.0.12",
         "@pnpm/parse-overrides": "4.0.2",
-        "@pnpm/pick-registry-for-package": "5.0.4",
-        "@pnpm/plugin-commands-publishing": "7.4.8",
-        "@pnpm/plugin-commands-rebuild": "10.0.9",
+        "@pnpm/pick-registry-for-package": "5.0.5",
+        "@pnpm/plugin-commands-publishing": "7.4.10",
+        "@pnpm/plugin-commands-rebuild": "10.0.11",
         "@pnpm/registry-mock": "3.4.0",
-        "@pnpm/reviewing.dependencies-hierarchy": "^2.1.4",
+        "@pnpm/reviewing.dependencies-hierarchy": "^2.1.6",
         "@pnpm/semver-diff": "1.1.0",
-        "@pnpm/sort-packages": "5.0.7",
-        "@pnpm/store-connection-manager": "7.0.18",
-        "@pnpm/types": "9.4.0",
-        "@pnpm/worker": "0.3.9",
-        "@pnpm/workspace.pkgs-graph": "2.0.11",
+        "@pnpm/sort-packages": "5.0.8",
+        "@pnpm/store-connection-manager": "7.0.20",
+        "@pnpm/types": "9.4.1",
+        "@pnpm/worker": "0.3.11",
+        "@pnpm/workspace.pkgs-graph": "2.0.12",
         "@prerenderer/prerenderer": "^1.2.0",
         "@prerenderer/renderer-jsdom": "^1.1.2",
         "@prerenderer/webpack-plugin": "^5.2.0",
@@ -94,9 +94,9 @@
         "@teambit/capsule": "0.0.12",
         "@teambit/code.ui.code-compare-section": "0.0.5",
         "@teambit/code.ui.code-editor": "^0.0.8",
-        "@teambit/code.ui.code-tab-page": "^0.0.632",
+        "@teambit/code.ui.code-tab-page": "^0.0.633",
         "@teambit/code.ui.code-tab-tree": "^0.0.613",
-        "@teambit/code.ui.code-view": "^0.0.518",
+        "@teambit/code.ui.code-view": "^0.0.519",
         "@teambit/code.ui.dependency-tree": "0.0.546",
         "@teambit/code.ui.hooks.use-code-params": "0.0.496",
         "@teambit/code.ui.object-formatter": "0.0.1",
@@ -533,7 +533,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.618",
+        "@teambit/legacy": "1.0.619",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
@@ -627,7 +627,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.618"
+            "@teambit/legacy": "1.0.619"
           }
         }
       },
@@ -890,7 +890,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.618"
+            "@teambit/legacy": "1.0.619"
           }
         }
       }
@@ -980,7 +980,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.618",
+            "@teambit/legacy": "1.0.619",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
@@ -1126,7 +1126,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.618"
+            "@teambit/legacy": "1.0.619"
           }
         }
       }
