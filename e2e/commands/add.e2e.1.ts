@@ -43,7 +43,6 @@ describe('bit add command', function () {
       helper.git.initNewGitRepo();
       helper.bitMap.delete();
       helper.fs.deletePath('.bit');
-      helper.fs.deletePath('bit.json');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.scopeHelper.initWorkspace();
       helper.fixtures.createComponentBarFoo();
