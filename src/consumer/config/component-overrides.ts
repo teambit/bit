@@ -75,17 +75,9 @@ export default class ComponentOverrides {
       legacyOverridesFromConsumer = legacyOverridesFromConsumer || {};
     }
 
-    const getFromComponent = (): ComponentOverridesData | null | undefined => {
-      if (componentConfig && componentConfig.componentHasWrittenConfig) {
-        return componentConfig.overrides;
-      }
-      // @todo: we might consider using overridesFromModel here.
-      // return isAuthor ? null : overridesFromModel;
-      return null;
-    };
     const extensionsAddedOverrides = await runOnLoadOverridesEvent(
       this.componentOverridesLoadingRegistry,
-      componentConfig.parseExtensions(),
+      componentConfig.extensions,
       componentId,
       files
     );
@@ -93,15 +85,7 @@ export default class ComponentOverrides {
       legacyOverridesFromConsumer || {},
       extensionsAddedOverrides
     );
-    const fromComponent = getFromComponent();
-    if (!fromComponent) {
-      return new ComponentOverrides(mergedLegacyConsumerOverridesWithExtensions);
-    }
-
-    const mergedOverrides = mergedLegacyConsumerOverridesWithExtensions
-      ? mergeOverrides(fromComponent, mergedLegacyConsumerOverridesWithExtensions)
-      : fromComponent;
-    return new ComponentOverrides(mergedOverrides);
+    return new ComponentOverrides(mergedLegacyConsumerOverridesWithExtensions);
   }
 
   /**
