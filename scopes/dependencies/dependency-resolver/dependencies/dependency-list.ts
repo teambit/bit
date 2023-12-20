@@ -8,8 +8,18 @@ export type LifecycleDependenciesManifest = Record<PackageName, SemverVersion>;
 
 export interface DependenciesManifest {
   dependencies?: LifecycleDependenciesManifest;
+  optionalDependencies?: LifecycleDependenciesManifest;
   devDependencies?: LifecycleDependenciesManifest;
   peerDependencies?: LifecycleDependenciesManifest;
+  peerDependenciesMeta?: PeerDependenciesMeta;
+}
+
+export interface PeerDependenciesMeta {
+  [peerName: string]: PeerDependencyMeta;
+}
+
+export interface PeerDependencyMeta {
+  optional: true;
 }
 
 export type FindDependencyOptions = {
@@ -126,14 +136,22 @@ export class DependencyList {
   toDependenciesManifest(): Required<DependenciesManifest> {
     const manifest: Required<DependenciesManifest> = {
       dependencies: {},
+      optionalDependencies: {},
       devDependencies: {},
       peerDependencies: {},
+      peerDependenciesMeta: {},
     };
     this.forEach((dep) => {
-      const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
+      const keyName =
+        dep.optional && dep.lifecycle === 'runtime'
+          ? 'optionalDependencies'
+          : KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
       const entry = dep.toManifest();
       if (entry) {
         manifest[keyName][entry.packageName] = entry.version;
+        if (dep.optional && dep.lifecycle === 'peer') {
+          manifest.peerDependenciesMeta[entry.packageName] = { optional: true };
+        }
       }
     });
     return manifest;
