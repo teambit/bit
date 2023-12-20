@@ -77,7 +77,11 @@ export class DependenciesMain {
     await Promise.all(
       packages.map(async (pkg) => {
         const [name, version] = await this.getPackageNameAndVerResolved(pkg);
-        packagesObj[name] = version;
+        if (options.optional) {
+          packagesObj[name] = { optional: true, version };
+        } else {
+          packagesObj[name] = version;
+        }
       })
     );
     const config = {

@@ -1,5 +1,3 @@
-
-
 export type ApplicationInstance = {
   /**
    * port in which app is running.
@@ -16,7 +14,6 @@ export type ApplicationInstance = {
    */
   url?: string;
 };
-
 
 /**
  * an instance of an application deployment.
@@ -35,5 +32,5 @@ export type ApplicationDeployment = {
   /**
    * url the deployed app.
    */
-  url?: string;  
+  url?: string;
 };

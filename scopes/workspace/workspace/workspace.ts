@@ -224,9 +224,6 @@ export class Workspace implements ComponentFactory {
     private onBitmapChangeSlot: OnBitmapChangeSlot
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-
-    // TODO: refactor - prefer to avoid code inside the constructor.
-    this.owner = this.config?.defaultOwner;
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs);
     this.validateConfig();
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);

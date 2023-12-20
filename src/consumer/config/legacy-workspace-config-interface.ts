@@ -29,7 +29,6 @@ export interface ILegacyWorkspaceConfig {
   _dependenciesDirectory?: string;
   componentsDefaultDirectory?: string;
   _manageWorkspaces?: boolean;
-  defaultOwner?: string;
   path: string;
   isLegacy: boolean;
   extensions: { [extensionId: string]: any };
