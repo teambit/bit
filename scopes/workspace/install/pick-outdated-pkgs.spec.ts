@@ -62,7 +62,8 @@ describe('makeOutdatedPkgChoices', () => {
     // Removing the ansi chars for better work on bit build on ci
     const stripped = stripAnsiFromChoices(choices);
     // @ts-ignore
-    expect(stripped).toMatchSnapshot();
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    expect(stripped).toMatchObject(contextOrders);
   });
 });
 
@@ -125,5 +126,42 @@ const orderedChoices = [
       },
     ],
     message: 'Root policies',
+  },
+];
+
+const contextOrders = [
+  {
+    choices: [
+      {
+        message: 'foo (runtime) 1.0.0 ❯ 2.0.0   ',
+        name: 'foo',
+        value: {
+          componentId: ComponentID.fromString('scope/comp1'),
+          currentRange: '1.0.0',
+          latestRange: '2.0.0',
+          name: 'foo',
+          source: 'component',
+          targetField: 'dependencies',
+        },
+      },
+    ],
+    message: 'scope/comp1 (component)',
+  },
+  {
+    choices: [
+      {
+        message: 'bar (peer)    1.0.0 ❯ 1.1.0   ',
+        name: 'bar',
+        value: {
+          currentRange: '1.0.0',
+          latestRange: '1.1.0',
+          name: 'bar',
+          source: 'variants',
+          targetField: 'peerDependencies',
+          variantPattern: '{comp2}',
+        },
+      },
+    ],
+    message: '{comp2} (variant)',
   },
 ];
