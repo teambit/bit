@@ -1,7 +1,6 @@
 import mapSeries from 'p-map-series';
 import { pickBy } from 'lodash';
 import R from 'ramda';
-import { BitError } from '@teambit/bit-error';
 import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
 import logger from '../../logger/logger';
@@ -29,7 +28,7 @@ const ignoreLoadingExtensionsErrors = false;
 export default class ComponentConfig extends AbstractConfig {
   overrides: ComponentOverridesData | null | undefined;
   defaultScope: string | undefined;
-  componentHasWrittenConfig = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
+  componentHasWrittenConfig = false; // whether a component has component.json written to FS or package.json written with 'bit' property
   packageJsonFile: PackageJsonFile | null | undefined;
 
   static componentConfigLoadingRegistry: ConfigLoadRegistry = {};
@@ -49,7 +48,6 @@ export default class ComponentConfig extends AbstractConfig {
     });
     this.defaultScope = defaultScope;
     this.overrides = overrides;
-    this.writeToBitJson = true; // will be changed later to work similar to workspace-config
   }
 
   toPlainObject() {
@@ -60,14 +58,6 @@ export default class ComponentConfig extends AbstractConfig {
       return true;
     };
     return pickBy(componentObject, isPropDefaultOrEmpty);
-  }
-
-  validate(bitJsonPath: string) {
-    if (this.extensions && typeof this.extensions !== 'object') {
-      throw new BitError(
-        `bit.json at "${bitJsonPath}" is invalid, re-import the component with "--conf" flag to recreate it`
-      );
-    }
   }
 
   /**
