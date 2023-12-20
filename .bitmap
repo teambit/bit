@@ -1066,13 +1066,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/react"
     },
-    "react-elements": {
-        "name": "react-elements",
-        "scope": "teambit.react",
-        "version": "1.0.100",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/react-elements"
-    },
     "react-native": {
         "name": "react-native",
         "scope": "teambit.react",
