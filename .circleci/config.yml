@@ -479,6 +479,12 @@ jobs:
       - run:
           name: 'Build bit-legacy types'
           command: 'cd bit && npm run build:types'
+      - run:
+          name: 'temp - test install'
+          command: 'cd bit && bit test install'
+      - run:
+          name: 'temp - build install'
+          command: 'cd bit && bit build install'
       - persist_to_workspace:
           root: .
           paths:
