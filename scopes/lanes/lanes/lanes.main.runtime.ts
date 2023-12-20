@@ -426,18 +426,8 @@ please create a new lane instead, which will include all components of this lane
     // rename the ref file
     await this.scope.legacyScope.objects.remoteLanes.renameRefByNewLaneName(laneNameWithoutScope, newName, lane.scope);
 
-    // change tracking data
-    const afterTrackData = {
-      localLane: newName,
-      remoteLane: newName,
-      remoteScope: lane.scope,
-    };
-    this.scope.legacyScope.lanes.trackLane(afterTrackData);
-    this.scope.legacyScope.lanes.removeTrackLane(laneNameWithoutScope);
-
-    // change the lane object
-    lane.name = newName;
-    await this.scope.legacyScope.lanes.saveLane(lane);
+    // change scope.json related data and change the lane object
+    await this.scope.legacyScope.lanes.renameLane(lane, newName);
 
     // change current-lane if needed
     const currentLaneId = this.getCurrentLaneId();
@@ -447,6 +437,7 @@ please create a new lane instead, which will include all components of this lane
       this.setCurrentLane(newLaneId, undefined, isExported);
     }
 
+    // this writes the changes done on scope.json file (along with .bitmap)
     await this.workspace.consumer.onDestroy('lane-rename');
 
     return { currentName };
