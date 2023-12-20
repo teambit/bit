@@ -146,7 +146,6 @@ describe('run bit init', function () {
   describe('an existing environment with model and with modified bitMap', () => {
     let localScope;
     let bitMap;
-    let bitJson;
     let localConsumerFiles;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
