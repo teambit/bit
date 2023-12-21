@@ -1,5 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { ScopeMain } from '@teambit/scope';
@@ -7,7 +8,10 @@ import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/co
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { Component } from '@teambit/component';
+import { DependenciesMain } from '@teambit/dependencies';
+import DependencyResolverAspect, { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { FileData } from './snap-from-scope.cmd';
+import { SnapDataParsed } from './snapping.main.runtime';
 
 export type CompData = {
   componentId: ComponentID;
@@ -63,4 +67,59 @@ export async function generateCompFromScope(scope: ScopeMain, compData: CompData
   const component = await scope.getManyByLegacy([consumerComponent]);
 
   return component[0];
+}
+
+export async function addDeps(
+  component: Component,
+  snapData: SnapDataParsed,
+  scope: ScopeMain,
+  deps: DependenciesMain,
+  depsResolver: DependencyResolverMain
+) {
+  const newDeps = snapData.newDependencies || [];
+  const compIdsData = newDeps.filter((dep) => dep.isComponent);
+  const compIdsDataParsed = compIdsData.map((data) => ({
+    ...data,
+    id: ComponentID.fromString(data.id),
+  }));
+  const compIds = compIdsDataParsed.map((dep) => (dep.version ? dep.id.changeVersion(dep.version) : dep.id));
+  const comps = await scope.getMany(compIds);
+  const toDependency = (depId: ComponentID) => {
+    const comp = comps.find((c) => c.id.isEqualWithoutVersion(depId));
+    if (!comp) throw new Error(`unable to find the specified dependency ${depId.toString()} in the scope`);
+    const pkgName = depsResolver.getPackageName(comp);
+    return new Dependency(comp.id, [], pkgName);
+  };
+  const compDeps = compIdsDataParsed.filter((c) => c.type === 'runtime').map((dep) => toDependency(dep.id));
+  const compDevDeps = compIdsDataParsed.filter((c) => c.type === 'dev').map((dep) => toDependency(dep.id));
+  const packageDeps = newDeps.filter((dep) => !dep.isComponent);
+  const toPackageObj = (pkgs: Array<{ id: string; version?: string }>) => {
+    return pkgs.reduce((acc, curr) => {
+      if (!curr.version) throw new Error(`please specify a version for the package dependency: "${curr.id}"`);
+      acc[curr.id] = curr.version;
+      return acc;
+    }, {});
+  };
+  const dependenciesData = {
+    allDependencies: {
+      dependencies: compDeps,
+      devDependencies: compDevDeps,
+    },
+    allPackagesDependencies: {
+      packageDependencies: toPackageObj(packageDeps.filter((dep) => dep.type === 'runtime')),
+      devPackageDependencies: toPackageObj(packageDeps.filter((dep) => dep.type === 'dev')),
+      peerPackageDependencies: toPackageObj(packageDeps.filter((dep) => dep.type === 'peer')),
+    },
+  };
+
+  const consumerComponent = component.state._consumer as ConsumerComponent;
+  await deps.loadDependenciesFromScope(consumerComponent, dependenciesData);
+
+  const dependenciesListSerialized = (await depsResolver.extractDepsFromLegacy(component)).serialize();
+  const extId = DependencyResolverAspect.id;
+  const data = { dependencies: dependenciesListSerialized };
+  const existingExtension = component.config.extensions.findExtension(extId);
+  if (!existingExtension) throw new Error('unable to find DependencyResolver extension');
+  // Only merge top level of extension data
+  Object.assign(existingExtension.data, data);
 }

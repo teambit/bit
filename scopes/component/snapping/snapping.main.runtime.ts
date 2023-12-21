@@ -60,7 +60,7 @@ import ResetCmd from './reset-cmd';
 import { tagModelComponent, updateComponentsVersions, BasicTagParams } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
-import { generateCompFromScope } from './generate-comp-from-scope';
+import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
 import { FlattenedEdgesGetter } from './flattened-edges';
 
 const HooksManagerInstance = HooksManager.getInstance();
@@ -72,6 +72,21 @@ export type TagDataPerComp = {
   prereleaseId?: string;
   message?: string;
   isNew?: boolean;
+};
+
+export type SnapDataParsed = {
+  componentId: ComponentID;
+  dependencies: ComponentID[];
+  aspects?: Record<string, any>;
+  message?: string;
+  files?: FileData[];
+  isNew?: boolean;
+  newDependencies?: {
+    id: string; // component-id or package-name.
+    version?: string; // for packages, it is mandatory.
+    isComponent: boolean;
+    type: 'runtime' | 'dev' | 'peer';
+  }[];
 };
 
 export type SnapResults = BasicTagResults & {
@@ -382,6 +397,12 @@ if you're willing to lose the history from the head to the specified version, us
           message: snapData.message,
           files: snapData.files,
           isNew: snapData.isNew,
+          newDependencies: (snapData.newDependencies || []).map((dep) => ({
+            id: dep.id,
+            version: dep.version,
+            isComponent: dep.isComponent ?? true,
+            type: dep.type ?? 'runtime',
+          })),
         };
       })
     );
@@ -407,14 +428,18 @@ if you're willing to lose the history from the head to the specified version, us
       lane,
       reason: `seeders to snap`,
     });
+    const getSnapData = (id: ComponentID): SnapDataParsed => {
+      const snapData = snapDataPerComp.find((t) => {
+        return t.componentId.isEqual(id, { ignoreVersion: true });
+      });
+      if (!snapData) throw new Error(`unable to find ${id.toString()} in snapDataPerComp`);
+      return snapData;
+    };
     const existingComponents = await this.scope.getMany(componentIdsLatest);
     const components = [...existingComponents, ...newComponents];
     await Promise.all(
-      components.map(async (comp) => {
-        const snapData = snapDataPerComp.find((t) => {
-          return t.componentId.isEqual(comp.id, { ignoreVersion: true });
-        });
-        if (!snapData) throw new Error(`unable to find ${comp.id.toString()} in snapDataPerComp`);
+      existingComponents.map(async (comp) => {
+        const snapData = getSnapData(comp.id);
         if (snapData.aspects) await this.scope.addAspectsFromConfigObject(comp, snapData.aspects);
         if (snapData.dependencies.length) {
           await this.updateDependenciesVersionsOfComponent(comp, snapData.dependencies, componentIds);
@@ -426,21 +451,12 @@ if you're willing to lose the history from the head to the specified version, us
     );
     await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
 
-    const consumerComponents = components.map((c) => c.state._consumer);
-
     await pMapSeries(newComponents, async (component) => {
-      const consumerComponent = component.state._consumer as ConsumerComponent;
-      await this.deps.loadDependenciesFromScope(consumerComponent);
-
-      const dependenciesListSerialized = (await this.dependencyResolver.extractDepsFromLegacy(component)).serialize();
-      const extId = DependencyResolverAspect.id;
-      const data = { dependencies: dependenciesListSerialized };
-      const existingExtension = component.config.extensions.findExtension(extId);
-      if (!existingExtension) throw new Error('unable to find DependencyResolver extension');
-      // Only merge top level of extension data
-      Object.assign(existingExtension.data, data);
+      const snapData = getSnapData(component.id);
+      await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver);
     });
 
+    const consumerComponents = components.map((c) => c.state._consumer);
     const ids = ComponentIdList.fromArray(allCompIds);
     const results = await tagModelComponent({
       ...params,

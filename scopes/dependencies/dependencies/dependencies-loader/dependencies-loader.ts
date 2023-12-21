@@ -56,8 +56,12 @@ export class DependenciesLoader {
     };
   }
 
-  async loadFromScope() {
+  async loadFromScope(dependenciesData: Partial<DependenciesData>) {
     const applyOverrides = new ApplyOverrides(this.component, this.depsResolver);
+    const { allDependencies, allPackagesDependencies, issues } = dependenciesData;
+    if (allDependencies) applyOverrides.allDependencies = allDependencies;
+    if (allPackagesDependencies) applyOverrides.allPackagesDependencies = allPackagesDependencies;
+    if (issues) applyOverrides.issues = issues;
     const results = await applyOverrides.getDependenciesData();
     this.setDependenciesDataOnComponent(results.dependenciesData, results.overridesDependencies);
   }

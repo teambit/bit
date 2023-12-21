@@ -15,11 +15,13 @@ export type SnapDataPerCompRaw = {
   message?: string;
   files?: FileData[];
   isNew?: boolean;
-  newDependencies?: {
-    // relevant only for new components (isNew=true)
-    components?: { dependencies: string[]; devDependencies: string[] };
-    packages?: { dependencies: string[]; devDependencies: string[] };
-  };
+  // relevant only for new components (isNew=true)
+  newDependencies?: Array<{
+    id: string; // component-id or package-name. e.g. "teambit.react/react" or "lodash".
+    version?: string; // version of the package. e.g. "2.0.3". for packages, it is mandatory.
+    isComponent?: boolean; // default true. if false, it's a package dependency
+    type?: 'runtime' | 'dev' | 'peer'; // default "runtime".
+  }>;
 };
 
 type SnapFromScopeOptions = {

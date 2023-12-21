@@ -15,7 +15,7 @@ import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependenciesLoader } from './dependencies-loader/dependencies-loader';
-import { OverridesDependenciesData } from './dependencies-loader/dependencies-data';
+import { DependenciesData, OverridesDependenciesData } from './dependencies-loader/dependencies-data';
 import {
   DependenciesBlameCmd,
   DependenciesCmd,
@@ -210,14 +210,14 @@ export class DependenciesMain {
     return dependenciesLoader.load(this.workspace, opts);
   }
 
-  async loadDependenciesFromScope(component: ConsumerComponent) {
+  async loadDependenciesFromScope(component: ConsumerComponent, dependenciesData: Partial<DependenciesData>) {
     const dependenciesLoader = new DependenciesLoader(
       component,
       this.dependencyResolver,
       this.devFiles,
       this.aspectLoader
     );
-    return dependenciesLoader.loadFromScope();
+    return dependenciesLoader.loadFromScope(dependenciesData);
   }
 
   async debugDependencies(id: string): Promise<DependenciesResultsDebug> {
