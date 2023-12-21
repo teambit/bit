@@ -34,8 +34,6 @@ import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejecte
 import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
 import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
 import { NoComponentDir } from '../consumer/component/exceptions/no-component-dir';
-import InvalidBitJson from '../consumer/config/exceptions/invalid-bit-json';
-import InvalidConfigPropPath from '../consumer/config/exceptions/invalid-config-prop-path';
 import InvalidPackageJson from '../consumer/config/exceptions/invalid-package-json';
 import InvalidPackageManager from '../consumer/config/exceptions/invalid-package-manager';
 import {
@@ -225,11 +223,6 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
   ],
   [NothingToImport, () => chalk.yellow('nothing to import. please use `bit import [component_id]`')],
   [
-    InvalidBitJson,
-    (err) => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.
-consider running ${chalk.bold('bit init --reset')} to recreate the file`,
-  ],
-  [
     InvalidPackageManager,
     (err) => `error: the package manager provided ${chalk.bold(err.packageManager)} is not a valid package manager.
 please specify 'npm' or 'yarn'`,
@@ -238,13 +231,6 @@ please specify 'npm' or 'yarn'`,
     InvalidPackageJson,
     (err) => `error: package.json at ${chalk.bold(err.path)} is not a valid JSON file.
 please fix the file in order to run bit commands`,
-  ],
-  [
-    InvalidConfigPropPath,
-    (err) => `error: the path "${chalk.bold(err.fieldValue)}" of "${chalk.bold(
-      err.fieldName
-    )}" in your bit.json or package.json file is invalid.
-please make sure it's not absolute and doesn't contain invalid characters`,
   ],
   [
     MissingMainFile,
@@ -381,7 +367,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
       err.scopePath
     )}.
 1. use the ${chalk.bold('--reset-hard')} flag to clear all data and initialize an empty workspace.
-2. if deleted by mistake, please restore .bitmap and bit.json.
+2. if deleted by mistake, please restore .bitmap and workspace.jsonc.
 3. force workspace initialization without clearing data use the ${chalk.bold('--force')} flag.`,
   ],
 ];

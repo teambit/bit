@@ -42,6 +42,27 @@ export default class Lanes {
     await this.objects.writeObjectsToTheFS([laneObject]);
   }
 
+  async renameLane(lane: Lane, newName: string) {
+    // change tracking data
+    const oldName = lane.name;
+    const afterTrackData = {
+      localLane: newName,
+      remoteLane: newName,
+      remoteScope: lane.scope,
+    };
+    this.trackLane(afterTrackData);
+    this.removeTrackLane(oldName);
+
+    // rename the lane in the "new" prop
+    if (lane.isNew) {
+      this.scopeJson.lanes.new = this.scopeJson.lanes.new.map((l) => (l === oldName ? newName : l));
+    }
+
+    // change the lane object
+    lane.name = newName;
+    await this.saveLane(lane);
+  }
+
   getAliasByLaneId(laneId: LaneId): string | null {
     return this.getLocalTrackedLaneByRemoteName(laneId.name, laneId.scope);
   }
