@@ -15,6 +15,11 @@ export type SnapDataPerCompRaw = {
   message?: string;
   files?: FileData[];
   isNew?: boolean;
+  newDependencies?: {
+    // relevant only for new components (isNew=true)
+    components?: { dependencies: string[]; devDependencies: string[] };
+    packages?: { dependencies: string[]; devDependencies: string[] };
+  };
 };
 
 type SnapFromScopeOptions = {
