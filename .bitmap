@@ -492,13 +492,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/eject"
     },
-    "elements": {
-        "name": "elements",
-        "scope": "teambit.web-components",
-        "version": "1.0.101",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/web-components/elements"
-    },
     "entities/lane-diff": {
         "name": "entities/lane-diff",
         "scope": "teambit.lanes",
