@@ -15,7 +15,6 @@ export type SnapDataPerCompRaw = {
   message?: string;
   files?: FileData[];
   isNew?: boolean;
-  // relevant only for new components (isNew=true)
   newDependencies?: Array<{
     id: string; // component-id or package-name. e.g. "teambit.react/react" or "lodash".
     version?: string; // version of the package. e.g. "2.0.3". for packages, it is mandatory.
@@ -38,12 +37,18 @@ export class SnapFromScopeCmd implements Command {
   extendedDescription = `this command should be running from a new bare scope, it first imports the components it needs and then processes the snap.
 the input data is a stringified JSON of an array of the following object.
 {
-  componentId: string;    // ids always have scope, so it's safe to parse them from string
-  dependencies?: string[]; // e.g. [teambit/compiler@1.0.0, teambit/tester@1.0.0]
+  componentId: string;     // ids always have scope, so it's safe to parse them from string
+  dependencies?: string[]; // dependencies to update their versions, e.g. [teambit/compiler@1.0.0, teambit/tester@1.0.0]
   aspects?: Record<string,any> // e.g. { "teambit.react/react": {}, "teambit.envs/envs": { "env": "teambit.react/react" } }
   message?: string;       // tag-message.
   files?: Array<{path: string, content: string}>; // replace content of specified source-files. the content is base64 encoded.
   isNew?: boolean;        // if it's new, it'll be generated from the given files. otherwise, it'll be fetched from the scope and updated.
+  newDependencies?: Array<{  // new dependencies (components and packages) to add.
+    id: string;              // component-id or package-name. e.g. "teambit.react/react" or "lodash".
+    version?: string;        // version of the package. e.g. "2.0.3". for packages, it is mandatory.
+    isComponent?: boolean;   // default true. if false, it's a package dependency
+    type?: 'runtime' | 'dev' | 'peer'; // default "runtime".
+  }>;
 }
 an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "first snap"}]'
 `;

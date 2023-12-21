@@ -437,6 +437,8 @@ if you're willing to lose the history from the head to the specified version, us
     };
     const existingComponents = await this.scope.getMany(componentIdsLatest);
     const components = [...existingComponents, ...newComponents];
+    // for new components these are not needed. coz when generating them we already add the aspects and the files.
+    // the dependencies are calculated later and they're provided by "newDependencies" prop (not "dependencies").
     await Promise.all(
       existingComponents.map(async (comp) => {
         const snapData = getSnapData(comp.id);
@@ -451,8 +453,9 @@ if you're willing to lose the history from the head to the specified version, us
     );
     await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
 
-    await pMapSeries(newComponents, async (component) => {
+    await pMapSeries(components, async (component) => {
       const snapData = getSnapData(component.id);
+      if (!snapData.newDependencies) return;
       await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver);
     });
 
