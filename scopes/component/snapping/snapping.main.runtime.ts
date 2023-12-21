@@ -397,6 +397,7 @@ if you're willing to lose the history from the head to the specified version, us
           message: snapData.message,
           files: snapData.files,
           isNew: snapData.isNew,
+          mainFile: snapData.mainFile,
           newDependencies: (snapData.newDependencies || []).map((dep) => ({
             id: dep.id,
             version: dep.version,

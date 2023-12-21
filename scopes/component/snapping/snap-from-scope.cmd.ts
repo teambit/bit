@@ -15,6 +15,7 @@ export type SnapDataPerCompRaw = {
   message?: string;
   files?: FileData[];
   isNew?: boolean;
+  mainFile?: string; // relevant when isNew is true. default to "index.ts".
   newDependencies?: Array<{
     id: string; // component-id or package-name. e.g. "teambit.react/react" or "lodash".
     version?: string; // version of the package. e.g. "2.0.3". for packages, it is mandatory.
@@ -43,6 +44,7 @@ the input data is a stringified JSON of an array of the following object.
   message?: string;       // tag-message.
   files?: Array<{path: string, content: string}>; // replace content of specified source-files. the content is base64 encoded.
   isNew?: boolean;        // if it's new, it'll be generated from the given files. otherwise, it'll be fetched from the scope and updated.
+  mainFile?: string;      // relevant when isNew is true. default to "index.ts".
   newDependencies?: Array<{  // new dependencies (components and packages) to add.
     id: string;              // component-id or package-name. e.g. "teambit.react/react" or "lodash".
     version?: string;        // version of the package. e.g. "2.0.3". for packages, it is mandatory.

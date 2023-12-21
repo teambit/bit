@@ -210,6 +210,12 @@ export class DependenciesMain {
     return dependenciesLoader.load(this.workspace, opts);
   }
 
+  /**
+   * load dependencies without the need for the workspace.
+   * the "auto-detect" are passed here as "dependenciesData". the "overrides", such as dependencies from the env,
+   * are calculated here.
+   * eventually all these dependencies are added to the ConsumerComponent object.
+   */
   async loadDependenciesFromScope(component: ConsumerComponent, dependenciesData: Partial<DependenciesData>) {
     const dependenciesLoader = new DependenciesLoader(
       component,

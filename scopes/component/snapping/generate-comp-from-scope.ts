@@ -2,12 +2,12 @@ import { ComponentID } from '@teambit/component-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
-import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { ScopeMain } from '@teambit/scope';
 import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { Component } from '@teambit/component';
+import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/component-schema';
 import { DependenciesMain } from '@teambit/dependencies';
 import DependencyResolverAspect, { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { FileData } from './snap-from-scope.cmd';
@@ -19,6 +19,7 @@ export type CompData = {
   aspects: Record<string, any> | undefined;
   message: string | undefined;
   files: FileData[] | undefined;
+  mainFile?: string;
 };
 
 /**
@@ -41,11 +42,12 @@ export async function generateCompFromScope(scope: ScopeMain, compData: CompData
   const extensions = ExtensionDataList.fromConfigObject(compData.aspects || {});
 
   const consumerComponent = new ConsumerComponent({
-    mainFile: 'index.ts',
+    mainFile: compData.mainFile || 'index.ts',
     name: compData.componentId.fullName,
     scope: compData.componentId.scope,
     files,
     bindingPrefix,
+    schema: CURRENT_SCHEMA,
     overrides: await ComponentOverrides.loadNewFromScope(id, files, extensions),
     defaultScope: compData.componentId.scope,
     extensions,
@@ -60,8 +62,7 @@ export async function generateCompFromScope(scope: ScopeMain, compData: CompData
   const { version, files: filesBitObject } = await scope.legacyScope.sources.consumerComponentToVersion(
     consumerComponent
   );
-  const modelComponent = ModelComponent.fromBitId(compData.componentId);
-  modelComponent.bindingPrefix = bindingPrefix;
+  const modelComponent = scope.legacyScope.sources.findOrAddComponent(consumerComponent);
   consumerComponent.version = version.hash().toString();
   await scope.legacyScope.objects.writeObjectsToTheFS([version, modelComponent, ...filesBitObject.map((f) => f.file)]);
   const component = await scope.getManyByLegacy([consumerComponent]);
@@ -113,13 +114,15 @@ export async function addDeps(
   };
 
   const consumerComponent = component.state._consumer as ConsumerComponent;
+  // add the dependencies to the legacy ConsumerComponent object
+  // it takes care of both: given dependencies (from the cli) and the overrides, which are coming from the env.
   await deps.loadDependenciesFromScope(consumerComponent, dependenciesData);
 
+  // add the dependencies data to the dependency-resolver aspect
   const dependenciesListSerialized = (await depsResolver.extractDepsFromLegacy(component)).serialize();
   const extId = DependencyResolverAspect.id;
   const data = { dependencies: dependenciesListSerialized };
   const existingExtension = component.config.extensions.findExtension(extId);
   if (!existingExtension) throw new Error('unable to find DependencyResolver extension');
-  // Only merge top level of extension data
   Object.assign(existingExtension.data, data);
 }
