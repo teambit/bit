@@ -10,7 +10,6 @@ import { ExtensionDataList } from './extension-data';
 
 type ConfigProps = {
   lang?: string;
-  bindingPrefix: string;
   extensions?: ExtensionDataList;
   defaultScope?: string;
 };
@@ -31,9 +30,8 @@ export default class ComponentConfig extends AbstractConfig {
     this.componentConfigLoadingRegistry[extId] = func;
   }
 
-  constructor({ bindingPrefix, extensions, defaultScope }: ConfigProps) {
+  constructor({ extensions, defaultScope }: ConfigProps) {
     super({
-      bindingPrefix,
       extensions,
     });
     this.defaultScope = defaultScope;
@@ -50,7 +48,6 @@ export default class ComponentConfig extends AbstractConfig {
   }
 
   mergeWithComponentData(component: Component) {
-    this.bindingPrefix = this.bindingPrefix || component.bindingPrefix;
     this.lang = this.lang || component.lang;
   }
 
@@ -58,11 +55,9 @@ export default class ComponentConfig extends AbstractConfig {
     const onLoadResults = await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentId);
     const wsComponentConfig = onLoadResults[0];
     const defaultScope = wsComponentConfig.defaultScope;
-    const bindingPrefix = getBindingPrefixByDefaultScope(defaultScope);
     const componentConfig = new ComponentConfig({
       extensions: wsComponentConfig.extensions,
       defaultScope,
-      bindingPrefix,
     });
 
     return componentConfig;
