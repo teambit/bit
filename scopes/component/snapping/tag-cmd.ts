@@ -61,6 +61,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
     ['', 'disable-tag-pipeline', 'skip the tag pipeline to avoid publishing the components'],
     ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
     ['', 'ignore-build-errors', 'proceed to tag pipeline even when build pipeline fails'],
+    ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
     [
       '',
       'increment-by <number>',
@@ -134,6 +135,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       disableTagPipeline = false,
       forceDeploy = false,
       ignoreBuildErrors = false,
+      rebuildDepsGraph,
       failFast = false,
       incrementBy = 1,
     }: {
@@ -268,6 +270,7 @@ To undo local tag use the "bit reset" command.`
       unmodified,
       disableTagAndSnapPipelines,
       ignoreBuildErrors,
+      rebuildDepsGraph,
       incrementBy,
       version: ver,
       failFast,
