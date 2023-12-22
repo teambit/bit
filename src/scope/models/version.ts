@@ -724,6 +724,10 @@ export default class Version extends BitObject {
     this.parents = this.parents.filter((p) => p.toString() !== ref.toString());
   }
 
+  removeAllParents() {
+    this.parents = [];
+  }
+
   modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {
     return Promise.all(this.files.map((file) => SourceFile.loadFromSourceFileModel(file, repository)));
   }
