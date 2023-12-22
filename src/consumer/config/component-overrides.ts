@@ -88,6 +88,23 @@ export default class ComponentOverrides {
     return new ComponentOverrides(mergedLegacyConsumerOverridesWithExtensions);
   }
 
+  /**
+   * used when creating new components directly from the scope. (snap from scope command)
+   */
+  static async loadNewFromScope(
+    componentId: ComponentID,
+    files: SourceFile[],
+    extensions: ExtensionDataList
+  ): Promise<ComponentOverrides> {
+    const extensionsAddedOverrides = await runOnLoadOverridesEvent(
+      this.componentOverridesLoadingRegistry,
+      extensions,
+      componentId,
+      files
+    );
+    return new ComponentOverrides(extensionsAddedOverrides);
+  }
+
   static loadFromScope(overridesFromModel: ComponentOverridesData | null | undefined = {}) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new ComponentOverrides(R.clone(overridesFromModel), {});

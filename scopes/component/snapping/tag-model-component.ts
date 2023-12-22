@@ -318,7 +318,7 @@ export async function tagModelComponent({
     await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
     if (!build) emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
-    await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer);
+    await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer, tagDataPerComp);
 
     if (workspace) {
       const modelComponents = await Promise.all(
@@ -427,7 +427,8 @@ async function addComponentsToScope(
   snapping: SnappingMain,
   components: ConsumerComponent[],
   shouldValidateVersion: boolean,
-  consumer?: Consumer
+  consumer?: Consumer,
+  tagDataPerComp?: TagDataPerComp[]
 ) {
   const lane = await scope.getCurrentLaneObject();
   if (consumer) {
@@ -441,7 +442,12 @@ async function addComponentsToScope(
     });
   } else {
     await mapSeries(components, async (component) => {
-      await snapping._addCompFromScopeToObjects(component, lane);
+      const results = await snapping._addCompFromScopeToObjects(component, lane);
+
+      // in case "tagData.isNew", the version object has "parents" that should not be there.
+      // they got created as a workaround to generate a new component from the scope without having a workspace.
+      const tagData = tagDataPerComp?.find((t) => t.componentId.isEqualWithoutVersion(component.id));
+      if (tagData?.isNew) results.version.removeAllParents();
     });
   }
 }
