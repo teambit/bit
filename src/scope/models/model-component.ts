@@ -943,10 +943,6 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   }
   /**
    * convert a ModelComponent of a specific version to ConsumerComponent
-   * when it's being called from the Consumer, some manipulation are done on the component, such
-   * as stripping the originallySharedDir and adding wrapDir.
-   * when it's being called from the Scope, no manipulations are done.
-   *
    * @see sources.consumerComponentToVersion() for the opposite action.
    */
   async toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
@@ -968,22 +964,19 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     const [files, scopeMeta] = await Promise.all([filesP, scopeMetaP]);
 
     const extensions = version.extensions.clone();
-    const bindingPrefix = this.bindingPrefix === 'bit' ? '@bit' : this.bindingPrefix;
     // when generating a new ConsumerComponent out of Version, it is critical to make sure that
     // all objects are cloned and not copied by reference. Otherwise, every time the
     // ConsumerComponent instance is changed, the Version will be changed as well, and since
     // the Version instance is saved in the Repository._cache, the next time a Version instance
     // is retrieved, it'll be different than the first time.
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const consumerComponent = new ConsumerComponent({
       name: this.name,
       version: componentVersion.version,
       scope: this.toComponentId()._legacy.scope,
       defaultScope: this.scope,
       lang: this.lang,
-      bindingPrefix,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      mainFile: version.mainFile || null,
+      bindingPrefix: this.bindingPrefix,
+      mainFile: version.mainFile,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
       flattenedDependencies: version.flattenedDependencies.clone(),

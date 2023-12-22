@@ -525,8 +525,6 @@ export default class Component {
 
     const extensions: ExtensionDataList = componentConfig.extensions;
 
-    // TODO: change this once we want to support change export by changing the default scope
-    // TODO: when we do this, we need to think how we distinct if this is the purpose of the user, or he just didn't changed it
     const bindingPrefix =
       componentFromModel?.bindingPrefix || componentConfig.bindingPrefix || getBindingPrefixByDefaultScope(id.scope);
 
