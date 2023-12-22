@@ -292,6 +292,16 @@ describe('snap components from scope', function () {
               path: 'bar.ts',
               content: 'bar-has-created',
             },
+            {
+              path: 'id-input.compositions.tsx',
+              content: `import React, { useState } from 'react';
+import { IdInput } from './id-input';
+
+export const BasicIdInput = () => {
+  const [id, setId] = useState('');
+  return <IdInput id={id} onChange={e => setId(e.target.value)} />;
+};`,
+            },
           ],
           isNew: true,
           aspects: {
@@ -331,6 +341,16 @@ describe('snap components from scope', function () {
       const react = depResolver.dependencies.find((d) => d.id === 'react');
       expect(react).to.not.be.undefined;
       expect(react.source).to.equal('env');
+    });
+    it('should generate composition aspect data', () => {
+      const composition = catComp.extensions.find((e) => e.name === 'teambit.compositions/compositions');
+      expect(composition).to.not.be.undefined;
+      expect(composition.data.compositions).to.have.lengthOf(1);
+    });
+    it('should generate dev-files aspect data', () => {
+      const devFiles = catComp.extensions.find((e) => e.name === 'teambit.component/dev-files');
+      expect(devFiles).to.not.be.undefined;
+      expect(devFiles.data.devPatterns).to.not.be.undefined;
     });
   });
 });

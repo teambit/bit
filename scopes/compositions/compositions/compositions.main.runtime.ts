@@ -139,15 +139,12 @@ export class CompositionsMain {
   }
 
   private computeCompositions(component: Component, file: AbstractVinyl): Composition[] {
-    if (!this.workspace) {
-      // @todo: figure out how to calculate it from the scope.
-      return [];
-    }
     // :TODO hacked for a specific file extension now until david will take care in the compiler.
     const pathArray = file.path.split('.');
     pathArray[pathArray.length - 1] = 'js';
 
-    const exports = this.schema.parseModule(join(this.workspace.componentDir(component.id), file.relative));
+    const modulePath = this.workspace ? join(this.workspace.componentDir(component.id), file.relative) : file.relative;
+    const exports = this.schema.parseModule(modulePath, file.contents.toString());
     return exports.map((exportModel) => {
       const displayName = exportModel.staticProperties?.get('compositionName');
 
