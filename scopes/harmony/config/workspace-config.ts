@@ -290,11 +290,27 @@ export class WorkspaceConfig implements HostConfig {
     if (!this.scopePath) throw new Error('unable to get backup dir without scope path');
     return path.join(this.scopePath, 'workspace-config-history');
   }
-  private getBackupHistoryDir() {
+  getBackupHistoryDir() {
     return path.join(this.getBackupDir(), 'files');
   }
-  private getBackupMetadataFilePath() {
+  getBackupMetadataFilePath() {
     return path.join(this.getBackupDir(), 'metadata.txt');
+  }
+  private async getParsedHistoryMetadata(): Promise<{ [fileId: string]: string }> {
+    let fileContent: string | undefined;
+    try {
+      fileContent = await fs.readFile(this.getBackupMetadataFilePath(), 'utf-8');
+    } catch (err: any) {
+      if (err.code === 'ENOENT') return {}; // no such file or directory, meaning the history-metadata file doesn't exist (yet)
+    }
+    const lines = fileContent?.split('\n') || [];
+    const metadata = {};
+    lines.forEach((line) => {
+      const [fileId, ...reason] = line.split(' ');
+      if (!fileId) return;
+      metadata[fileId] = reason.join(' ');
+    });
+    return metadata;
   }
 
   async toVinyl(workspaceDir: PathOsBasedAbsolute): Promise<AbstractVinyl[] | undefined> {

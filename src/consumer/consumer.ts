@@ -674,20 +674,7 @@ export default class Consumer {
   }
 
   async getParsedBitmapHistoryMetadata(): Promise<{ [fileId: string]: string }> {
-    let fileContent: string | undefined;
-    try {
-      fileContent = await fs.readFile(this.getBitmapHistoryMetadataPath(), 'utf-8');
-    } catch (err: any) {
-      if (err.code === 'ENOENT') return {}; // no such file or directory, meaning the history-metadata file doesn't exist (yet)
-    }
-    const lines = fileContent?.split('\n') || [];
-    const metadata = {};
-    lines.forEach((line) => {
-      const [fileId, ...reason] = line.split(' ');
-      if (!fileId) return;
-      metadata[fileId] = reason.join(' ');
-    });
-    return metadata;
+    return getParsedHistoryMetadata(this.getBitmapHistoryMetadataPath());
   }
 
   private async backupBitMap(reasonForBitmapChange?: string) {
@@ -723,4 +710,21 @@ export function currentDateAndTimeToFileName() {
   const minutes = date.getMinutes();
   const seconds = date.getSeconds();
   return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`;
+}
+
+export async function getParsedHistoryMetadata(metadataPath: string): Promise<{ [fileId: string]: string }> {
+  let fileContent: string | undefined;
+  try {
+    fileContent = await fs.readFile(metadataPath, 'utf-8');
+  } catch (err: any) {
+    if (err.code === 'ENOENT') return {}; // no such file or directory, meaning the history-metadata file doesn't exist (yet)
+  }
+  const lines = fileContent?.split('\n') || [];
+  const metadata = {};
+  lines.forEach((line) => {
+    const [fileId, ...reason] = line.split(' ');
+    if (!fileId) return;
+    metadata[fileId] = reason.join(' ');
+  });
+  return metadata;
 }

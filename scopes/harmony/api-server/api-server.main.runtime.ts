@@ -20,6 +20,7 @@ import { ServerCmd } from './server.cmd';
 import { IDERoute } from './ide.route';
 import { APIForIDE } from './api-for-ide';
 import { SSEEventsRoute, sendEventsToClients } from './sse-events.route';
+import { ConfigAspect, ConfigMain } from '@teambit/config';
 
 export class ApiServerMain {
   constructor(
@@ -107,6 +108,7 @@ export class ApiServerMain {
     ComponentCompareAspect,
     GeneratorAspect,
     RemoveAspect,
+    ConfigAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -125,6 +127,7 @@ export class ApiServerMain {
     componentCompare,
     generator,
     remove,
+    config,
   ]: [
     CLIMain,
     Workspace,
@@ -140,7 +143,8 @@ export class ApiServerMain {
     ImporterMain,
     ComponentCompareMain,
     GeneratorMain,
-    RemoveMain
+    RemoveMain,
+    ConfigMain
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
     const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer, importer);
@@ -156,7 +160,8 @@ export class ApiServerMain {
       componentLog,
       componentCompare,
       generator,
-      remove
+      remove,
+      config
     );
     const cliRoute = new CLIRoute(logger, cli, apiForIDE);
     const vscodeRoute = new IDERoute(logger, apiForIDE);
