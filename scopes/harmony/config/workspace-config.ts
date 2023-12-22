@@ -287,8 +287,6 @@ export class WorkspaceConfig implements HostConfig {
       isLegacy: false,
       write: ({ workspaceDir }) => this.write.call(this, { dir: workspaceDir }),
       toVinyl: this.toVinyl.bind(this),
-      componentsConfig: undefined,
-      getComponentConfig: () => undefined,
       _legacyPlainObject: () => undefined,
     };
   }
@@ -319,19 +317,12 @@ export function transformLegacyPropsToExtensions(
     manageWorkspaces: legacyConfig.manageWorkspaces,
     useWorkspaces: legacyConfig.useWorkspaces,
   });
-  const variants = legacyConfig.overrides?.overrides;
   const data = {};
   if (workspace && !isEmpty(workspace)) {
     data['teambit.workspace/workspace'] = workspace;
   }
   if (dependencyResolver && !isEmpty(dependencyResolver)) {
     data['teambit.dependencies/dependency-resolver'] = dependencyResolver;
-  }
-  // TODO: add variants here once we have a way to pass the deps overrides and general key vals for package.json to
-  // TODO: new extensions (via dependency-resolver extension and pkg extensions)
-  // TODO: transform legacy props to new one once dependency-resolver extension and pkg extensions are ready
-  if (variants && !isEmpty(variants)) {
-    data['teambit.workspace/variants'] = variants;
   }
   // @ts-ignore
   return data;
