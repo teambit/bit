@@ -14,7 +14,6 @@ import { isEmpty, omit } from 'lodash';
 import WorkspaceAspect from '@teambit/workspace';
 import { SetExtensionOptions } from './config.main.runtime';
 import { ExtensionAlreadyConfigured } from './exceptions';
-import { ConfigDirNotDefined } from './exceptions/config-dir-not-defined';
 import InvalidConfigFile from './exceptions/invalid-config-file';
 import { HostConfig } from './types';
 
@@ -69,22 +68,17 @@ export type ExtensionsDefs = WorkspaceSettingsNewProps;
 
 export class WorkspaceConfig implements HostConfig {
   raw?: any;
-  _path?: string;
   _extensions: ExtensionDataList;
   _legacyProps?: WorkspaceLegacyProps;
   isLegacy: boolean;
 
-  constructor(private data: WorkspaceConfigFileProps) {
+  constructor(private data: WorkspaceConfigFileProps, private _path: string) {
     this.raw = data;
     this.loadExtensions();
   }
 
   get path(): PathOsBased {
-    return this._path || '';
-  }
-
-  set path(configPath: PathOsBased) {
-    this._path = configPath;
+    return this._path;
   }
 
   get extensions(): ExtensionDataList {
@@ -132,8 +126,8 @@ export class WorkspaceConfig implements HostConfig {
    * @returns
    * @memberof WorkspaceConfig
    */
-  static fromObject(data: WorkspaceConfigFileProps) {
-    return new WorkspaceConfig(data);
+  static fromObject(data: WorkspaceConfigFileProps, workspaceJsoncPath: PathOsBased) {
+    return new WorkspaceConfig(data, workspaceJsoncPath);
   }
 
   /**
@@ -144,17 +138,13 @@ export class WorkspaceConfig implements HostConfig {
    * @returns
    * @memberof WorkspaceConfig
    */
-  static async create(props: WorkspaceConfigFileProps, dirPath?: PathOsBasedAbsolute) {
+  static async create(props: WorkspaceConfigFileProps, dirPath: PathOsBasedAbsolute) {
     const template = await getWorkspaceConfigTemplateParsed();
     // previously, we just did `assign(template, props)`, but it was replacing the entire workspace config with the "props".
     // so for example, if the props only had defaultScope, it was removing the defaultDirectory.
     const workspaceAspectConf = assign(template[WorkspaceAspect.id], props[WorkspaceAspect.id]);
     const merged = assign(template, { [WorkspaceAspect.id]: workspaceAspectConf });
-    const instance = new WorkspaceConfig(merged);
-    if (dirPath) {
-      instance.path = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
-    }
-    return instance;
+    return new WorkspaceConfig(merged, WorkspaceConfig.composeWorkspaceJsoncPath(dirPath));
   }
 
   /**
@@ -237,7 +227,6 @@ export class WorkspaceConfig implements HostConfig {
     if (jsoncExist) {
       const jsoncPath = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
       const instance = await WorkspaceConfig._loadFromWorkspaceJsonc(jsoncPath);
-      instance.path = jsoncPath;
       return instance;
     }
     return undefined;
@@ -251,23 +240,21 @@ export class WorkspaceConfig implements HostConfig {
     } catch (e: any) {
       throw new InvalidConfigFile(workspaceJsoncPath);
     }
-    return WorkspaceConfig.fromObject(parsed);
+    return WorkspaceConfig.fromObject(parsed, workspaceJsoncPath);
   }
 
   async write({ dir }: { dir?: PathOsBasedAbsolute } = {}): Promise<void> {
     const getCalculatedDir = () => {
       if (dir) return dir;
-      if (this._path) return path.dirname(this._path);
-      throw new ConfigDirNotDefined();
+      return path.dirname(this._path);
     };
     const calculatedDir = getCalculatedDir();
     const files = await this.toVinyl(calculatedDir);
     const dataToPersist = new DataToPersist();
     if (files) {
       dataToPersist.addManyFiles(files);
-      return dataToPersist.persistAllToFS();
+      await dataToPersist.persistAllToFS();
     }
-    return undefined;
   }
 
   async toVinyl(workspaceDir: PathOsBasedAbsolute): Promise<AbstractVinyl[] | undefined> {
