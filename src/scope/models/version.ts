@@ -69,7 +69,7 @@ export type VersionProps = {
   devPackageDependencies?: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   peerPackageDependencies?: { [key: string]: string };
-  bindingPrefix?: string;
+  bindingPrefix: string;
   schema?: string;
   overrides: ComponentOverridesData;
   packageJsonChangedProps?: Record<string, any>;
@@ -116,7 +116,7 @@ export default class Version extends BitObject {
   packageDependencies: { [key: string]: string };
   devPackageDependencies: { [key: string]: string };
   peerPackageDependencies: { [key: string]: string };
-  bindingPrefix: string | undefined;
+  bindingPrefix: string;
   schema: string | undefined;
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Record<string, any>;
@@ -241,24 +241,16 @@ export default class Version extends BitObject {
     return JSON.stringify(
       pickBy(
         {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           mainFile: obj.mainFile,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           files: obj.files,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           log: obj.log,
           dependencies: getDependencies(this.dependencies),
           devDependencies: getDependencies(this.devDependencies),
           extensionDependencies: getDependencies(this.extensionDependencies),
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           packageDependencies: obj.packageDependencies,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           devPackageDependencies: obj.devPackageDependencies,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           peerPackageDependencies: obj.peerPackageDependencies,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           bindingPrefix: obj.bindingPrefix,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           overrides: obj.overrides,
           extensions: getExtensions(this.extensions),
         },
@@ -408,7 +400,7 @@ export default class Version extends BitObject {
       {
         files: this.files ? this.files.map(_convertFileToObject) : null,
         mainFile: this.mainFile,
-        bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
+        bindingPrefix: this.bindingPrefix,
         schema: this.schema,
         log: {
           message: this.log.message,
@@ -565,8 +557,8 @@ export default class Version extends BitObject {
 
     return new Version({
       mainFile,
-      files: files ? files.map(parseFile) : null,
-      bindingPrefix: bindingPrefix || null,
+      files: files.map(parseFile),
+      bindingPrefix,
       schema: schema || undefined,
       log: {
         // workaround for a bug where the log.message was saved as boolean when running `bit tag -m ""`

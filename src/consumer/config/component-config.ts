@@ -2,7 +2,6 @@ import mapSeries from 'p-map-series';
 import { pickBy } from 'lodash';
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
-import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
 import logger from '../../logger/logger';
 import Component from '../component/consumer-component';
 import PackageJsonFile from '../component/package-json-file';
@@ -103,10 +102,5 @@ export default class ComponentConfig extends AbstractConfig {
 export function getBindingPrefixByDefaultScope(defaultScope: string): string {
   const splittedScope = defaultScope.split('.');
   const defaultOwner = splittedScope.length === 1 ? defaultScope : splittedScope[0];
-  let bindingPrefix = DEFAULT_REGISTRY_DOMAIN_PREFIX;
-  if (defaultOwner && defaultOwner !== DEFAULT_REGISTRY_DOMAIN_PREFIX) {
-    bindingPrefix = defaultOwner.startsWith('@') ? defaultOwner : `@${defaultOwner}`;
-  }
-
-  return bindingPrefix;
+  return `@${defaultOwner}`;
 }

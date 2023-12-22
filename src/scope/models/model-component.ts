@@ -9,13 +9,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { BitId } from '../../bit-id';
-import {
-  DEFAULT_BINDINGS_PREFIX,
-  DEFAULT_BIT_RELEASE_TYPE,
-  DEFAULT_BIT_VERSION,
-  DEFAULT_LANGUAGE,
-  Extensions,
-} from '../../constants';
+import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { License, SourceFile } from '../../consumer/component/sources';
 import ComponentOverrides from '../../consumer/config/component-overrides';
@@ -55,6 +49,7 @@ import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { errorIsTypeOfMissingObject } from '../component-ops/scope-components-importer';
 import type Scope from '../scope';
 import { BitIdCompIdError } from '../exceptions/bit-id-comp-id-err';
+import { getBindingPrefixByDefaultScope } from '../../consumer/config/component-config';
 
 type State = {
   versions?: {
@@ -146,7 +141,7 @@ export default class Component extends BitObject {
     this.orphanedVersions = props.orphanedVersions || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.deprecated = props.deprecated || false;
-    this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
+    this.bindingPrefix = props.bindingPrefix || getBindingPrefixByDefaultScope(props.scope);
     this.state = props.state || {};
     this.scopesList = props.scopesList || [];
     this.head = props.head;
