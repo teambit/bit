@@ -145,7 +145,7 @@ export class ForkingMain {
     const policyFlatAndUnique = uniqBy(policy.flat(), 'dependencyId');
     const policyWithoutWorkspaceComps = policyFlatAndUnique.filter((dep) => !oldPackages.includes(dep.dependencyId));
     this.dependencyResolver.addToRootPolicy(policyWithoutWorkspaceComps, { updateExisting: true });
-    await this.dependencyResolver.persistConfig(this.workspace.path);
+    await this.dependencyResolver.persistConfig('fork');
     if (options.install) {
       await this.installDeps();
     }
@@ -251,7 +251,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
   private async saveDeps(component: Component) {
     const workspacePolicyEntries = await this.extractDeps(component);
     this.dependencyResolver.addToRootPolicy(workspacePolicyEntries, { updateExisting: true });
-    await this.dependencyResolver.persistConfig(this.workspace.path);
+    await this.dependencyResolver.persistConfig('fork (save deps)');
   }
 
   private async installDeps() {

@@ -432,7 +432,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
         ignoreVersion: false,
       }
     );
-    await config.write();
+    await config.write({ reasonForChange: `use (${aspectIdStr})` });
     this.aspectLoader.addInMemoryConfiguredAspect(aspectIdToAdd);
     await this.runOnRootAspectAddedFunctions(aspectId, inWs);
     return aspectIdToAdd;

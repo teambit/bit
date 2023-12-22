@@ -7,6 +7,7 @@ import LegacyWorkspaceConfig, {
 } from '@teambit/legacy/dist/consumer/config/workspace-config';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { currentDateAndTimeToFileName } from '@teambit/legacy/dist/consumer/consumer';
 import { assign, parse, stringify, CommentJSONValue } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -72,7 +73,11 @@ export class WorkspaceConfig implements HostConfig {
   _legacyProps?: WorkspaceLegacyProps;
   isLegacy: boolean;
 
-  constructor(private data: WorkspaceConfigFileProps, private _path: string) {
+  constructor(
+    private data: WorkspaceConfigFileProps,
+    private _path: PathOsBasedAbsolute,
+    private scopePath?: PathOsBasedAbsolute
+  ) {
     this.raw = data;
     this.loadExtensions();
   }
@@ -126,8 +131,8 @@ export class WorkspaceConfig implements HostConfig {
    * @returns
    * @memberof WorkspaceConfig
    */
-  static fromObject(data: WorkspaceConfigFileProps, workspaceJsoncPath: PathOsBased) {
-    return new WorkspaceConfig(data, workspaceJsoncPath);
+  static fromObject(data: WorkspaceConfigFileProps, workspaceJsoncPath: PathOsBased, scopePath?: PathOsBasedAbsolute) {
+    return new WorkspaceConfig(data, workspaceJsoncPath, scopePath);
   }
 
   /**
@@ -138,13 +143,13 @@ export class WorkspaceConfig implements HostConfig {
    * @returns
    * @memberof WorkspaceConfig
    */
-  static async create(props: WorkspaceConfigFileProps, dirPath: PathOsBasedAbsolute) {
+  static async create(props: WorkspaceConfigFileProps, dirPath: PathOsBasedAbsolute, scopePath: PathOsBasedAbsolute) {
     const template = await getWorkspaceConfigTemplateParsed();
     // previously, we just did `assign(template, props)`, but it was replacing the entire workspace config with the "props".
     // so for example, if the props only had defaultScope, it was removing the defaultDirectory.
     const workspaceAspectConf = assign(template[WorkspaceAspect.id], props[WorkspaceAspect.id]);
     const merged = assign(template, { [WorkspaceAspect.id]: workspaceAspectConf });
-    return new WorkspaceConfig(merged, WorkspaceConfig.composeWorkspaceJsoncPath(dirPath));
+    return new WorkspaceConfig(merged, WorkspaceConfig.composeWorkspaceJsoncPath(dirPath), scopePath);
   }
 
   /**
@@ -159,18 +164,19 @@ export class WorkspaceConfig implements HostConfig {
    */
   static async ensure(
     dirPath: PathOsBasedAbsolute,
+    scopePath: PathOsBasedAbsolute,
     workspaceConfigProps: WorkspaceConfigFileProps = {} as any
   ): Promise<WorkspaceConfig> {
     try {
-      let workspaceConfig = await this.loadIfExist(dirPath);
+      let workspaceConfig = await this.loadIfExist(dirPath, scopePath);
       if (workspaceConfig) {
         return workspaceConfig;
       }
-      workspaceConfig = await this.create(workspaceConfigProps, dirPath);
+      workspaceConfig = await this.create(workspaceConfigProps, dirPath, scopePath);
       return workspaceConfig;
     } catch (err: any) {
       if (err instanceof InvalidConfigFile) {
-        const workspaceConfig = this.create(workspaceConfigProps, dirPath);
+        const workspaceConfig = this.create(workspaceConfigProps, dirPath, scopePath);
         return workspaceConfig;
       }
       throw err;
@@ -222,17 +228,20 @@ export class WorkspaceConfig implements HostConfig {
    * @returns {(Promise<WorkspaceConfig | undefined>)}
    * @memberof WorkspaceConfig
    */
-  static async loadIfExist(dirPath: PathOsBased): Promise<WorkspaceConfig | undefined> {
+  static async loadIfExist(
+    dirPath: PathOsBased,
+    scopePath?: PathOsBasedAbsolute
+  ): Promise<WorkspaceConfig | undefined> {
     const jsoncExist = await WorkspaceConfig.pathHasWorkspaceJsonc(dirPath);
     if (jsoncExist) {
       const jsoncPath = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
-      const instance = await WorkspaceConfig._loadFromWorkspaceJsonc(jsoncPath);
+      const instance = await WorkspaceConfig._loadFromWorkspaceJsonc(jsoncPath, scopePath);
       return instance;
     }
     return undefined;
   }
 
-  static async _loadFromWorkspaceJsonc(workspaceJsoncPath: PathOsBased): Promise<WorkspaceConfig> {
+  static async _loadFromWorkspaceJsonc(workspaceJsoncPath: PathOsBased, scopePath?: string): Promise<WorkspaceConfig> {
     const contentBuffer = await fs.readFile(workspaceJsoncPath);
     let parsed;
     try {
@@ -240,10 +249,10 @@ export class WorkspaceConfig implements HostConfig {
     } catch (e: any) {
       throw new InvalidConfigFile(workspaceJsoncPath);
     }
-    return WorkspaceConfig.fromObject(parsed, workspaceJsoncPath);
+    return WorkspaceConfig.fromObject(parsed, workspaceJsoncPath, scopePath);
   }
 
-  async write({ dir }: { dir?: PathOsBasedAbsolute } = {}): Promise<void> {
+  async write({ dir, reasonForChange }: { dir?: PathOsBasedAbsolute; reasonForChange?: string } = {}): Promise<void> {
     const getCalculatedDir = () => {
       if (dir) return dir;
       return path.dirname(this._path);
@@ -253,8 +262,39 @@ export class WorkspaceConfig implements HostConfig {
     const dataToPersist = new DataToPersist();
     if (files) {
       dataToPersist.addManyFiles(files);
+      await this.backupConfigFile(reasonForChange);
       await dataToPersist.persistAllToFS();
     }
+  }
+
+  private async backupConfigFile(reasonForChange?: string) {
+    if (!this.scopePath) {
+      logger.error(`unable to backup workspace.jsonc file without scope path`);
+      return;
+    }
+    try {
+      const baseDir = this.getBackupHistoryDir();
+      await fs.ensureDir(baseDir);
+      const fileId = currentDateAndTimeToFileName();
+      const backupPath = path.join(baseDir, fileId);
+      await fs.copyFile(this._path, backupPath);
+      const metadataFile = this.getBackupMetadataFilePath();
+      await fs.appendFile(metadataFile, `${fileId} ${reasonForChange || ''}\n`);
+    } catch (err: any) {
+      if (err.code === 'ENOENT') return; // no such file or directory, meaning the .bitmap file doesn't exist (yet)
+      // it's a nice to have feature. don't kill the process if something goes wrong.
+      logger.error(`failed to backup workspace.jsonc`, err);
+    }
+  }
+  private getBackupDir() {
+    if (!this.scopePath) throw new Error('unable to get backup dir without scope path');
+    return path.join(this.scopePath, 'workspace-config-history');
+  }
+  private getBackupHistoryDir() {
+    return path.join(this.getBackupDir(), 'files');
+  }
+  private getBackupMetadataFilePath() {
+    return path.join(this.getBackupDir(), 'metadata.txt');
   }
 
   async toVinyl(workspaceDir: PathOsBasedAbsolute): Promise<AbstractVinyl[] | undefined> {

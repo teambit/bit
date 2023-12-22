@@ -14,7 +14,7 @@ import Diagnosis, { ExamineResult } from '../../../doctor/diagnosis';
 import DoctorRegistrar from '../../../doctor/doctor-registrar';
 import registerCoreAndExtensionsDiagnoses from '../../../doctor/doctor-registrar-builder';
 import logger from '../../../logger/logger';
-import { getExt, getWithoutExt, removeChalkCharacters } from '../../../utils';
+import { findScopePath, getExt, getWithoutExt, removeChalkCharacters } from '../../../utils';
 import DiagnosisNotFound from './exceptions/diagnosis-not-found';
 import MissingDiagnosisName from './exceptions/missing-diagnosis-name';
 import * as globalConfig from './global-config';
@@ -168,7 +168,8 @@ async function _generateExamineResultsTarFile(
     }
     if (consumerInfo && consumerInfo.hasConsumerConfig) {
       // TODO: support new config as well
-      const config = await WorkspaceConfig.loadIfExist(consumerInfo.path);
+      const scopePath = findScopePath(consumerInfo.path);
+      const config = scopePath ? await WorkspaceConfig.loadIfExist(consumerInfo.path, scopePath) : undefined;
       const legacyPlainConfig = config?._legacyPlainObject();
       if (legacyPlainConfig) {
         pack.entry({ name: 'config.json' }, JSON.stringify(legacyPlainConfig, null, 4));

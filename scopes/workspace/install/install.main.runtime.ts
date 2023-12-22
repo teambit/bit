@@ -264,7 +264,7 @@ export class InstallMain {
       updateExisting: options?.updateExisting ?? false,
       skipIfExisting: options?.skipIfExisting ?? false,
     });
-    await this.dependencyResolver.persistConfig(this.workspace.path);
+    await this.dependencyResolver.persistConfig('install');
   }
 
   private async _installModules(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
@@ -834,7 +834,7 @@ export class InstallMain {
         { overrideExisting: true }
       );
     }
-    await this.dependencyResolver.persistConfig(this.workspace.path);
+    await this.dependencyResolver.persistConfig('update dependencies');
   }
 
   /**
@@ -844,7 +844,7 @@ export class InstallMain {
    */
   async uninstallDependencies(packages: string[]) {
     this.dependencyResolver.removeFromRootPolicy(packages);
-    await this.dependencyResolver.persistConfig(this.workspace.path);
+    await this.dependencyResolver.persistConfig('uninstall dependencies');
     return this._installModules({ dedupe: true });
   }
 

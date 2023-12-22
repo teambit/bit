@@ -1341,7 +1341,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     this.bitMap.updateDefaultScope(this.config.defaultScope, scopeName);
 
     this.config.defaultScope = scopeName;
-    await config.workspaceConfig?.write({ dir: path.dirname(config.workspaceConfig.path) });
+    await config.workspaceConfig?.write({ reasonForChange: `default-scope (${scopeName})` });
     await this.bitMap.write('scope-set');
   }
 
