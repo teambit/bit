@@ -98,13 +98,6 @@ export class ComponentWriterMain {
     if (opts.skipWritingToFs) return;
     const dataToPersist = new DataToPersist();
     opts.components.forEach((component) => dataToPersist.merge(component.dataToPersist));
-    const componentsConfig = this.consumer?.config?.componentsConfig;
-    if (componentsConfig?.hasChanged) {
-      const jsonFiles = await this.consumer?.config.toVinyl(this.consumer.getPath());
-      if (jsonFiles) {
-        dataToPersist.addManyFiles(jsonFiles);
-      }
-    }
     dataToPersist.addBasePath(this.consumer.getPath());
     await dataToPersist.persistAllToFS();
   }
