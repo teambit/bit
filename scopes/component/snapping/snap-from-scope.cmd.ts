@@ -64,6 +64,7 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "f
     ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
     ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
     ['', 'ignore-build-errors', 'run the snap pipeline although the build pipeline failed'],
+    ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
     [
       'i',
       'ignore-issues [issues]',
@@ -101,6 +102,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       skipTests = false,
       disableSnapPipeline = false,
       ignoreBuildErrors = false,
+      rebuildDepsGraph,
       forceDeploy = false,
     }: SnapFromScopeOptions
   ) {
@@ -123,6 +125,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       skipTests,
       disableTagAndSnapPipelines,
       ignoreBuildErrors,
+      rebuildDepsGraph,
     });
 
     return results;

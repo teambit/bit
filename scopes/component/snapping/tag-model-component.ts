@@ -46,6 +46,7 @@ export type BasicTagSnapParams = {
   skipTests?: boolean;
   build?: boolean;
   ignoreBuildErrors?: boolean;
+  rebuildDepsGraph?: boolean;
 };
 
 export type BasicTagParams = BasicTagSnapParams & {
@@ -196,6 +197,7 @@ export async function tagModelComponent({
   isSnap = false,
   disableTagAndSnapPipelines,
   ignoreBuildErrors,
+  rebuildDepsGraph,
   incrementBy,
   packageManagerConfigRootDir,
   dependencyResolver,
@@ -312,7 +314,7 @@ export async function tagModelComponent({
     if (!consumer) throw new Error(`unable to soft-tag without consumer`);
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
-    await snapping._addFlattenedDependenciesToComponents(allComponentsToTag);
+    await snapping._addFlattenedDependenciesToComponents(allComponentsToTag, rebuildDepsGraph);
     await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
     if (!build) emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);

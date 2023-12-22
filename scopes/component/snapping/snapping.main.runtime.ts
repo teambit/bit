@@ -155,6 +155,7 @@ export class SnappingMain {
     soft = false,
     persist = false,
     ignoreBuildErrors = false,
+    rebuildDepsGraph,
     incrementBy = 1,
     disableTagAndSnapPipelines = false,
     failFast = false,
@@ -225,6 +226,7 @@ export class SnappingMain {
         persist,
         disableTagAndSnapPipelines,
         ignoreBuildErrors,
+        rebuildDepsGraph,
         incrementBy,
         packageManagerConfigRootDir: this.workspace.path,
         dependencyResolver: this.dependencyResolver,
@@ -520,6 +522,7 @@ if you're willing to lose the history from the head to the specified version, us
     build,
     disableTagAndSnapPipelines = false,
     ignoreBuildErrors = false,
+    rebuildDepsGraph,
     unmodified = false,
     exitOnFirstFailedTask = false,
   }: {
@@ -534,6 +537,7 @@ if you're willing to lose the history from the head to the specified version, us
     skipAutoSnap?: boolean;
     disableTagAndSnapPipelines?: boolean;
     ignoreBuildErrors?: boolean;
+    rebuildDepsGraph?: boolean;
     unmodified?: boolean;
     exitOnFirstFailedTask?: boolean;
   }): Promise<SnapResults | null> {
@@ -567,6 +571,7 @@ if you're willing to lose the history from the head to the specified version, us
       isSnap: true,
       disableTagAndSnapPipelines,
       ignoreBuildErrors,
+      rebuildDepsGraph,
       packageManagerConfigRootDir: this.workspace.path,
       dependencyResolver: this.dependencyResolver,
       exitOnFirstFailedTask,
@@ -685,7 +690,7 @@ there are matching among unmodified components thought. consider using --unmodif
     return notExported;
   }
 
-  async _addFlattenedDependenciesToComponents(components: ConsumerComponent[]) {
+  async _addFlattenedDependenciesToComponents(components: ConsumerComponent[], rebuildDepsGraph = false) {
     loader.start('importing missing dependencies...');
     const getLane = async () => {
       const lane = await this.scope.legacyScope.getCurrentLaneObject();
@@ -709,8 +714,7 @@ there are matching among unmodified components thought. consider using --unmodif
     loader.stop();
     await this._addFlattenedDepsGraphToComponents(components);
 
-    const buildGraphFromHistoricFlattenedEdges = Boolean(process.env.BIT_BUILD_GRAPH_FROM_HISTORIC_FLATTENED_EDGES);
-    if (!buildGraphFromHistoricFlattenedEdges) return;
+    if (rebuildDepsGraph) return;
 
     components.forEach((component) => {
       const graphFromIds = graphIds.successorsSubgraph(component.id.toString());
@@ -758,7 +762,10 @@ there are matching among unmodified components thought. consider using --unmodif
       }
 
       if (msg) {
-        throw new Error(`edges mismatch for ${component.id.toString()}:\n${msg}`);
+        throw new Error(`edges mismatch for ${component.id.toString()}:
+${msg}
+please report this error to the support team.
+to be able to continue without this error, re-run the command with "--rebuild-deps-graph" flag.`);
       }
     });
   }
