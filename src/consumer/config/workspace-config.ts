@@ -36,7 +36,6 @@ export type WorkspaceConfigProps = {
   lang?: string;
   componentsDefaultDirectory?: string;
   dependenciesDirectory?: string;
-  bindingPrefix?: string;
   extensions?: ExtensionDataList;
   packageManager?: PackageManagerClients;
   packageManagerArgs?: string[];
@@ -83,7 +82,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     lang,
     componentsDefaultDirectory = DEFAULT_COMPONENTS_DIR_PATH,
     dependenciesDirectory = DEFAULT_DEPENDENCIES_DIR_PATH,
-    bindingPrefix,
     extensions,
     packageManager = DEFAULT_PACKAGE_MANAGER,
     packageManagerArgs,
@@ -93,7 +91,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     defaultScope,
     overrides = ConsumerOverrides.load(),
   }: WorkspaceConfigProps) {
-    super({ lang, bindingPrefix, extensions });
+    super({ lang, extensions });
     if (packageManager !== 'npm' && packageManager !== 'yarn') {
       throw new InvalidPackageManager(packageManager);
     }

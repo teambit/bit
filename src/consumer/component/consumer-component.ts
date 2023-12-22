@@ -5,14 +5,7 @@ import * as path from 'path';
 import R from 'ramda';
 import { IssuesList } from '@teambit/component-issues';
 import BitId from '../../bit-id/bit-id';
-import {
-  getCloudDomain,
-  BIT_WORKSPACE_TMP_DIRNAME,
-  BuildStatus,
-  DEFAULT_BINDINGS_PREFIX,
-  DEFAULT_LANGUAGE,
-  Extensions,
-} from '../../constants';
+import { getCloudDomain, BIT_WORKSPACE_TMP_DIRNAME, BuildStatus, DEFAULT_LANGUAGE, Extensions } from '../../constants';
 import GeneralError from '../../error/general-error';
 import docsParser from '../../jsdoc/parser';
 import { Doclet } from '../../jsdoc/types';
@@ -57,7 +50,7 @@ export type ComponentProps = {
   version?: string;
   scope?: string | null;
   lang?: string;
-  bindingPrefix?: string;
+  bindingPrefix?: string; // if not specified, it'll calculated based on getBindingPrefixByDefaultScope()
   mainFile: PathOsBased;
   bitJson?: ComponentConfig;
   dependencies?: Dependency[];
@@ -429,8 +422,7 @@ export default class Component {
     this.setDevDependencies(componentFromModel.devDependencies.get());
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async fromObject(object: Record<string, any>): Component {
+  static async fromObject(object: Record<string, any>): Promise<Component> {
     const {
       name,
       box,
@@ -525,8 +517,7 @@ export default class Component {
 
     const extensions: ExtensionDataList = componentConfig.extensions;
 
-    const bindingPrefix =
-      componentFromModel?.bindingPrefix || componentConfig.bindingPrefix || getBindingPrefixByDefaultScope(id.scope);
+    const bindingPrefix = componentFromModel?.bindingPrefix;
 
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : undefined;
     const files = await getLoadedFiles(consumer, componentMap, id, compDirAbs);
