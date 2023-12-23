@@ -61,7 +61,6 @@ export type WorkspaceSettingsNewProps = {
 
 export type WorkspaceLegacyProps = {
   dependenciesDirectory?: string;
-  bindingPrefix?: string;
   saveDependenciesAsComponents?: boolean;
 };
 

@@ -3,7 +3,6 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { ScopeMain } from '@teambit/scope';
-import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { Component } from '@teambit/component';
@@ -37,8 +36,6 @@ export async function generateCompFromScope(scope: ScopeMain, compData: CompData
     return new SourceFile({ base: '.', path: file.path, contents: Buffer.from(file.content), test: false });
   });
   const id = compData.componentId;
-  const bindingPrefix = getBindingPrefixByDefaultScope(id.scope);
-
   const extensions = ExtensionDataList.fromConfigObject(compData.aspects || {});
 
   const consumerComponent = new ConsumerComponent({
@@ -46,7 +43,6 @@ export async function generateCompFromScope(scope: ScopeMain, compData: CompData
     name: compData.componentId.fullName,
     scope: compData.componentId.scope,
     files,
-    bindingPrefix,
     schema: CURRENT_SCHEMA,
     overrides: await ComponentOverrides.loadNewFromScope(id, files, extensions),
     defaultScope: compData.componentId.scope,
