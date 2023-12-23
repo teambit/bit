@@ -8,6 +8,7 @@ import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import ComponentCompareAspect, { ComponentCompareMain } from '@teambit/component-compare';
 import ComponentLogAspect, { ComponentLogMain } from '@teambit/component-log';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
+import { ConfigAspect, ConfigMain } from '@teambit/config';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import CheckoutAspect, { CheckoutMain } from '@teambit/checkout';
 import InstallAspect, { InstallMain } from '@teambit/install';
@@ -20,7 +21,6 @@ import { ServerCmd } from './server.cmd';
 import { IDERoute } from './ide.route';
 import { APIForIDE } from './api-for-ide';
 import { SSEEventsRoute, sendEventsToClients } from './sse-events.route';
-import { ConfigAspect, ConfigMain } from '@teambit/config';
 
 export class ApiServerMain {
   constructor(
