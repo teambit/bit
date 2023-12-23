@@ -1498,6 +1498,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/loader-fallback"
     },
+    "ui/login": {
+        "name": "ui/login",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.cloud",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/cloud/ui/login"
+    },
     "ui/preview-placeholder": {
         "name": "ui/preview-placeholder",
         "scope": "teambit.preview",
@@ -1511,6 +1519,20 @@
         "version": "0.0.506",
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs"
+    },
+    "ui/user-bar": {
+        "name": "ui/user-bar",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.cloud",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/cloud/ui/user-bar",
+        "config": {
+            "teambit.react/react-env@1.0.32": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "update-dependencies": {
         "name": "update-dependencies",

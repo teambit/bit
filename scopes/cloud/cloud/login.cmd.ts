@@ -28,7 +28,7 @@ export class LoginCmd implements Command {
     [], // eslint-disable-line no-empty-pattern
     {
       cloudDomain,
-      port,
+      port = '8889',
       suppressBrowserLaunch,
       noBrowser,
       machineName,
@@ -43,7 +43,7 @@ export class LoginCmd implements Command {
     if (suppressBrowserLaunch) {
       noBrowser = true;
     }
-    const result = await this.cloud.login(port, noBrowser, machineName, cloudDomain);
+    const result = await this.cloud.login(port, noBrowser, machineName, cloudDomain, undefined);
     if (result?.isAlreadyLoggedIn) {
       return chalk.yellow(`already logged in as ${result?.username}`);
     }

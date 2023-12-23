@@ -14,8 +14,11 @@ export class WhoamiCmd implements Command {
   constructor(private cloud: CloudMain) {}
 
   async report(): Promise<string> {
+    // const currentUsername = await this.cloud.getUsername();
+    // eslint-disable-next-line no-console
+    // if(currentUsername) console.log(chalk.grey(`\nlocally logged in as ${currentUsername}, checking username in cloud ...`));
     const cloudUsername = await this.cloud.whoami();
-    if (!cloudUsername) return chalk.yellow('not logged in');
+    if (!cloudUsername) return chalk.yellow('not logged in. please run `bit login` to log in to bit cloud');
     return chalk.green(`logged in as ${cloudUsername}`);
   }
 
