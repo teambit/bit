@@ -295,7 +295,17 @@ export class WorkspaceComponentLoader {
     // otherwise the envs from the workspace won't be loaded at time
     // so we will get wrong dependencies from component who uses envs from the workspace
     if (loadOpts.loadSeedersAsAspects) {
-      await this.workspace.scope.loadManyCompsAspects(scopeComponents);
+      try {
+        await this.workspace.scope.loadManyCompsAspects(scopeComponents);
+        // This might be fine to have an error at this phase so we only log it
+      } catch (err) {
+        this.logger.warn(
+          `failed loading components as aspects for components ${scopeComponents
+            .map((c) => c.id.toString())
+            .join(', ')}`,
+          err
+        );
+      }
       await this.loadCompsAsAspects(workspaceComponents, {
         loadApps: true,
         loadEnvs: true,
