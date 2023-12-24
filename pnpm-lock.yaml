@@ -60,8 +60,8 @@ importers:
         specifier: 7.22.3
         version: 7.22.3
       '@bitdev/harmony.generators.harmony-templates':
-        specifier: ^0.0.8
-        version: 0.0.8
+        specifier: ^0.0.10
+        version: 0.0.10
       '@bitdev/node.generators.node-templates':
         specifier: ^1.0.4
         version: 1.0.4
@@ -14671,8 +14671,8 @@ importers:
         specifier: 7.20.0
         version: 7.20.0
       '@bitdev/harmony.generators.harmony-templates':
-        specifier: ^0.0.8
-        version: 0.0.8
+        specifier: ^0.0.10
+        version: 0.0.10
       '@teambit/bit-error':
         specifier: ^0.0.404
         version: 0.0.404
@@ -22826,8 +22826,8 @@ packages:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
     dev: false
 
-  /@bitdev/harmony.generators.harmony-templates@0.0.8:
-    resolution: {integrity: sha512-s5GP1/0ja0JpPX46ztCPWNwp651mbwtoR18nPB+oGIVCxcjwgggSqPqpCf7T39YFMfkkniufxrETRIsfcbgb5g==}
+  /@bitdev/harmony.generators.harmony-templates@0.0.10:
+    resolution: {integrity: sha512-MZFE+Pelqj+BvD67F+QONF2wy2R4f5VPX5bbjnv6Sg06vINcHUjqJwEmLMGKGmXPwZbru/bOf5Ou/tNZIktTKQ==}
     dependencies:
       lodash: 4.17.21
       prompts: 2.4.2
@@ -58880,7 +58880,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.20.0
-      '@bitdev/harmony.generators.harmony-templates': 0.0.8
+      '@bitdev/harmony.generators.harmony-templates': 0.0.10
       '@bitdev/react.generators.react-templates': 1.1.11
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
