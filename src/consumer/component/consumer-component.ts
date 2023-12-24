@@ -5,14 +5,7 @@ import * as path from 'path';
 import R from 'ramda';
 import { IssuesList } from '@teambit/component-issues';
 import BitId from '../../bit-id/bit-id';
-import {
-  getCloudDomain,
-  BIT_WORKSPACE_TMP_DIRNAME,
-  BuildStatus,
-  DEFAULT_BINDINGS_PREFIX,
-  DEFAULT_LANGUAGE,
-  Extensions,
-} from '../../constants';
+import { getCloudDomain, BIT_WORKSPACE_TMP_DIRNAME, BuildStatus, DEFAULT_LANGUAGE, Extensions } from '../../constants';
 import GeneralError from '../../error/general-error';
 import docsParser from '../../jsdoc/parser';
 import { Doclet } from '../../jsdoc/types';
@@ -40,6 +33,7 @@ import { NoComponentDir } from './exceptions/no-component-dir';
 import PackageJsonFile from './package-json-file';
 import DataToPersist from './sources/data-to-persist';
 import { ModelComponent } from '../../scope/models';
+import { getBindingPrefixByDefaultScope } from '../config/component-config';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -56,7 +50,7 @@ export type ComponentProps = {
   version?: string;
   scope?: string | null;
   lang?: string;
-  bindingPrefix?: string;
+  bindingPrefix?: string; // if not specified, it'll calculated based on getBindingPrefixByDefaultScope()
   mainFile: PathOsBased;
   bitJson?: ComponentConfig;
   dependencies?: Dependency[];
@@ -89,10 +83,6 @@ export type ComponentProps = {
 export default class Component {
   static registerOnComponentConfigLoading(extId, func: (id) => any) {
     ComponentConfig.registerOnComponentConfigLoading(extId, func);
-  }
-
-  static registerOnComponentConfigLegacyLoading(extId, func: (id, config) => any) {
-    ComponentConfig.registerOnComponentConfigLegacyLoading(extId, func);
   }
 
   static registerOnComponentOverridesLoading(extId, func: (id, config, legacyFiles) => any) {
@@ -200,7 +190,7 @@ export default class Component {
     this.scope = scope;
     this.files = files;
     this.lang = lang || DEFAULT_LANGUAGE;
-    this.bindingPrefix = bindingPrefix || DEFAULT_BINDINGS_PREFIX;
+    this.bindingPrefix = bindingPrefix || getBindingPrefixByDefaultScope(scope || (defaultScope as string));
     this.mainFile = path.normalize(mainFile);
     this.bitJson = bitJson;
     this.setDependencies(dependencies);
@@ -432,42 +422,24 @@ export default class Component {
     this.setDevDependencies(componentFromModel.devDependencies.get());
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async fromObject(object: Record<string, any>): Component {
+  static async fromObject(object: Record<string, any>): Promise<Component> {
     const {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       name,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       box,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       scope,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       lang,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       bindingPrefix,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       devDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       devPackageDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       peerPackageDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       docs,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       mainFile,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       files,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       license,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       overrides,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       deprecated,
       schema,
     } = object;
@@ -545,9 +517,7 @@ export default class Component {
 
     const extensions: ExtensionDataList = componentConfig.extensions;
 
-    // TODO: change this once we want to support change export by changing the default scope
-    // TODO: when we do this, we need to think how we distinct if this is the purpose of the user, or he just didn't changed it
-    const bindingPrefix = componentFromModel?.bindingPrefix || componentConfig.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
+    const bindingPrefix = componentFromModel?.bindingPrefix;
 
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : undefined;
     const files = await getLoadedFiles(consumer, componentMap, id, compDirAbs);

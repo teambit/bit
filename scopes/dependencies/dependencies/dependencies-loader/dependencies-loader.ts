@@ -2,7 +2,6 @@ import R from 'ramda';
 import path from 'path';
 import { uniq } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
-import { Consumer } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { getLastModifiedComponentTimestampMs } from '@teambit/legacy/dist/utils/fs/last-modified';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
@@ -21,21 +20,17 @@ import { ApplyOverrides } from './apply-overrides';
 
 export class DependenciesLoader {
   private idStr: string;
-  private consumer: Consumer;
   constructor(
     private component: Component,
-    private workspace: Workspace,
     private depsResolver: DependencyResolverMain,
     private devFiles: DevFilesMain,
-    private aspectLoader: AspectLoaderMain,
-    private opts: DependencyLoaderOpts
+    private aspectLoader: AspectLoaderMain
   ) {
-    this.consumer = this.workspace.consumer;
     this.idStr = this.component.id.toString();
   }
-  async load() {
-    const { dependenciesData, debugDependenciesData } = await this.getDependenciesData();
-    const applyOverrides = new ApplyOverrides(this.component, this.depsResolver, this.workspace);
+  async load(workspace: Workspace, opts: DependencyLoaderOpts) {
+    const { dependenciesData, debugDependenciesData } = await this.getDependenciesData(workspace, opts);
+    const applyOverrides = new ApplyOverrides(this.component, this.depsResolver, workspace);
     applyOverrides.allDependencies = dependenciesData.allDependencies;
     applyOverrides.allPackagesDependencies = dependenciesData.allPackagesDependencies;
     if (debugDependenciesData) {
@@ -47,7 +42,7 @@ export class DependenciesLoader {
     this.setDependenciesDataOnComponent(results.dependenciesData, results.overridesDependencies);
     updateDependenciesVersions(
       this.depsResolver,
-      this.workspace,
+      workspace,
       this.component,
       results.overridesDependencies,
       results.autoDetectOverrides,
@@ -61,28 +56,38 @@ export class DependenciesLoader {
     };
   }
 
-  private async getDependenciesData(): Promise<{
+  async loadFromScope(dependenciesData: Partial<DependenciesData>) {
+    const applyOverrides = new ApplyOverrides(this.component, this.depsResolver);
+    const { allDependencies, allPackagesDependencies, issues } = dependenciesData;
+    if (allDependencies) applyOverrides.allDependencies = allDependencies;
+    if (allPackagesDependencies) applyOverrides.allPackagesDependencies = allPackagesDependencies;
+    if (issues) applyOverrides.issues = issues;
+    const results = await applyOverrides.getDependenciesData();
+    this.setDependenciesDataOnComponent(results.dependenciesData, results.overridesDependencies);
+  }
+
+  private async getDependenciesData(
+    workspace: Workspace,
+    opts: DependencyLoaderOpts
+  ): Promise<{
     dependenciesData: DependenciesData;
     debugDependenciesData?: DebugDependencies;
   }> {
-    const depsDataFromCache = await this.getDependenciesDataFromCacheIfPossible();
+    const depsDataFromCache = await this.getDependenciesDataFromCacheIfPossible(workspace, opts);
     if (depsDataFromCache) {
       return { dependenciesData: depsDataFromCache };
     }
 
     const autoDetectDeps = new AutoDetectDeps(
       this.component,
-      this.workspace,
+      workspace,
       this.devFiles,
       this.depsResolver,
       this.aspectLoader
     );
-    const results = await autoDetectDeps.getDependenciesData(
-      this.opts.cacheResolvedDependencies,
-      this.opts.cacheProjectAst
-    );
+    const results = await autoDetectDeps.getDependenciesData(opts.cacheResolvedDependencies, opts.cacheProjectAst);
     if (this.shouldSaveInCache(results.dependenciesData)) {
-      await this.consumer.componentFsCache.saveDependenciesDataInCache(
+      await workspace.consumer.componentFsCache.saveDependenciesDataInCache(
         this.idStr,
         results.dependenciesData.serialize()
       );
@@ -91,11 +96,14 @@ export class DependenciesLoader {
     return results;
   }
 
-  private async getDependenciesDataFromCacheIfPossible(): Promise<DependenciesData | null> {
-    if (!this.opts.useDependenciesCache) {
+  private async getDependenciesDataFromCacheIfPossible(
+    workspace: Workspace,
+    opts: DependencyLoaderOpts
+  ): Promise<DependenciesData | null> {
+    if (!opts.useDependenciesCache) {
       return null;
     }
-    const cacheData = await this.consumer.componentFsCache.getDependenciesDataFromCache(this.idStr);
+    const cacheData = await workspace.consumer.componentFsCache.getDependenciesDataFromCache(this.idStr);
     if (!cacheData) {
       return null; // probably the first time, so it wasn't entered to the cache yet.
     }
@@ -107,7 +115,7 @@ export class DependenciesLoader {
       return null;
     }
     const filesPaths = this.component.files.map((f) => f.path);
-    const componentConfigPath = path.join(this.consumer.getPath(), rootDir, COMPONENT_CONFIG_FILE_NAME);
+    const componentConfigPath = path.join(workspace.path, rootDir, COMPONENT_CONFIG_FILE_NAME);
     filesPaths.push(componentConfigPath);
     const lastModifiedComponent = await getLastModifiedComponentTimestampMs(rootDir, filesPaths);
     const wasModifiedAfterCache = lastModifiedComponent > cacheData.timestamp;

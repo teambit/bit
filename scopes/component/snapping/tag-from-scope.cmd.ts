@@ -53,6 +53,7 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
     ['', 'disable-tag-pipeline', 'skip the tag pipeline to avoid publishing the components'],
     ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
     ['', 'ignore-build-errors', 'run the tag pipeline although the build pipeline failed'],
+    ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
     [
       '',
       'increment-by <number>',
@@ -90,6 +91,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       disableTagPipeline = false,
       forceDeploy = false,
       ignoreBuildErrors = false,
+      rebuildDepsGraph,
       incrementBy = 1,
     }: {
       push?: boolean;
@@ -160,6 +162,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       persist: true,
       disableTagAndSnapPipelines: disableTagPipeline,
       ignoreBuildErrors,
+      rebuildDepsGraph,
       forceDeploy,
       incrementBy,
       version: ver,

@@ -15,7 +15,6 @@ describe('buildTree', () => {
       componentDir: '.',
       workspacePath: __dirname,
       filePaths,
-      bindingPrefix: '@bit',
       visited,
     };
     it('when no files are passed should return an empty tree', async () => {

@@ -49,6 +49,7 @@ import {
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { VersionNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
+import DependenciesAspect, { DependenciesMain } from '@teambit/dependencies';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';
 import { SnapCmd } from './snap-cmd';
@@ -59,6 +60,8 @@ import ResetCmd from './reset-cmd';
 import { tagModelComponent, updateComponentsVersions, BasicTagParams } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
+import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
+import { FlattenedEdgesGetter } from './flattened-edges';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -68,6 +71,22 @@ export type TagDataPerComp = {
   versionToTag?: string; // must be set for tag. undefined for snap.
   prereleaseId?: string;
   message?: string;
+  isNew?: boolean;
+};
+
+export type SnapDataParsed = {
+  componentId: ComponentID;
+  dependencies: ComponentID[];
+  aspects?: Record<string, any>;
+  message?: string;
+  files?: FileData[];
+  isNew?: boolean;
+  newDependencies?: {
+    id: string; // component-id or package-name.
+    version?: string; // for packages, it is mandatory.
+    isComponent: boolean;
+    type: 'runtime' | 'dev' | 'peer';
+  }[];
 };
 
 export type SnapResults = BasicTagResults & {
@@ -105,7 +124,8 @@ export class SnappingMain {
     private scope: ScopeMain,
     private exporter: ExportMain,
     private builder: BuilderMain,
-    private importer: ImporterMain
+    private importer: ImporterMain,
+    private deps: DependenciesMain
   ) {
     this.objectsRepo = this.scope?.legacyScope?.objects;
   }
@@ -135,6 +155,7 @@ export class SnappingMain {
     soft = false,
     persist = false,
     ignoreBuildErrors = false,
+    rebuildDepsGraph,
     incrementBy = 1,
     disableTagAndSnapPipelines = false,
     failFast = false,
@@ -205,6 +226,7 @@ export class SnappingMain {
         persist,
         disableTagAndSnapPipelines,
         ignoreBuildErrors,
+        rebuildDepsGraph,
         incrementBy,
         packageManagerConfigRootDir: this.workspace.path,
         dependencyResolver: this.dependencyResolver,
@@ -376,11 +398,22 @@ if you're willing to lose the history from the head to the specified version, us
           aspects: snapData.aspects,
           message: snapData.message,
           files: snapData.files,
+          isNew: snapData.isNew,
+          mainFile: snapData.mainFile,
+          newDependencies: (snapData.newDependencies || []).map((dep) => ({
+            id: dep.id,
+            version: dep.version,
+            isComponent: dep.isComponent ?? true,
+            type: dep.type ?? 'runtime',
+          })),
         };
       })
     );
-    const componentIds = snapDataPerComp.map((t) => t.componentId);
+    const componentIds = compact(snapDataPerComp.map((t) => (t.isNew ? null : t.componentId)));
+    const allCompIds = snapDataPerComp.map((s) => s.componentId);
     const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
+    const newCompsData = compact(snapDataPerComp.map((t) => (t.isNew ? t : null)));
+    const newComponents = await Promise.all(newCompsData.map((newComp) => generateCompFromScope(this.scope, newComp)));
 
     let lane: Lane | undefined;
     const laneIdStr = params.lane;
@@ -398,13 +431,20 @@ if you're willing to lose the history from the head to the specified version, us
       lane,
       reason: `seeders to snap`,
     });
-    const components = await this.scope.getMany(componentIdsLatest);
+    const getSnapData = (id: ComponentID): SnapDataParsed => {
+      const snapData = snapDataPerComp.find((t) => {
+        return t.componentId.isEqual(id, { ignoreVersion: true });
+      });
+      if (!snapData) throw new Error(`unable to find ${id.toString()} in snapDataPerComp`);
+      return snapData;
+    };
+    const existingComponents = await this.scope.getMany(componentIdsLatest);
+    const components = [...existingComponents, ...newComponents];
+    // for new components these are not needed. coz when generating them we already add the aspects and the files.
+    // the dependencies are calculated later and they're provided by "newDependencies" prop (not "dependencies").
     await Promise.all(
-      components.map(async (comp) => {
-        const snapData = snapDataPerComp.find((t) => {
-          return t.componentId.isEqual(comp.id, { ignoreVersion: true });
-        });
-        if (!snapData) throw new Error(`unable to find ${comp.id.toString()} in snapDataPerComp`);
+      existingComponents.map(async (comp) => {
+        const snapData = getSnapData(comp.id);
         if (snapData.aspects) await this.scope.addAspectsFromConfigObject(comp, snapData.aspects);
         if (snapData.dependencies.length) {
           await this.updateDependenciesVersionsOfComponent(comp, snapData.dependencies, componentIds);
@@ -414,8 +454,19 @@ if you're willing to lose the history from the head to the specified version, us
         }
       })
     );
+    await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
+
+    // run this for new components only.
+    // otherwise, running this for existing components, will override the existing dependencies unexpectedly.
+    // if this is needed for existing components, see how to merge the model data.
+    await pMapSeries(newComponents, async (component) => {
+      const snapData = getSnapData(component.id);
+      // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
+      await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver);
+    });
+
     const consumerComponents = components.map((c) => c.state._consumer);
-    const legacyIds = ComponentIdList.fromArray(componentIds.map((id) => id));
+    const ids = ComponentIdList.fromArray(allCompIds);
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
@@ -427,7 +478,7 @@ if you're willing to lose the history from the head to the specified version, us
       skipAutoTag: true,
       persist: true,
       isSnap: true,
-      ids: legacyIds,
+      ids,
       message: params.message as string,
     });
 
@@ -437,8 +488,8 @@ if you're willing to lose the history from the head to the specified version, us
       const updatedLane = lane ? await this.scope.legacyScope.loadLane(lane.toLaneId()) : undefined;
       const { exported } = await this.exporter.exportMany({
         scope: this.scope.legacyScope,
-        ids: legacyIds,
-        idsWithFutureScope: legacyIds,
+        ids,
+        idsWithFutureScope: ids,
         allVersions: false,
         laneObject: updatedLane || undefined,
         // no need other snaps. only the latest one. without this option, when snapping on lane from another-scope, it
@@ -471,6 +522,7 @@ if you're willing to lose the history from the head to the specified version, us
     build,
     disableTagAndSnapPipelines = false,
     ignoreBuildErrors = false,
+    rebuildDepsGraph,
     unmodified = false,
     exitOnFirstFailedTask = false,
   }: {
@@ -485,6 +537,7 @@ if you're willing to lose the history from the head to the specified version, us
     skipAutoSnap?: boolean;
     disableTagAndSnapPipelines?: boolean;
     ignoreBuildErrors?: boolean;
+    rebuildDepsGraph?: boolean;
     unmodified?: boolean;
     exitOnFirstFailedTask?: boolean;
   }): Promise<SnapResults | null> {
@@ -518,6 +571,7 @@ if you're willing to lose the history from the head to the specified version, us
       isSnap: true,
       disableTagAndSnapPipelines,
       ignoreBuildErrors,
+      rebuildDepsGraph,
       packageManagerConfigRootDir: this.workspace.path,
       dependencyResolver: this.dependencyResolver,
       exitOnFirstFailedTask,
@@ -636,7 +690,7 @@ there are matching among unmodified components thought. consider using --unmodif
     return notExported;
   }
 
-  async _addFlattenedDependenciesToComponents(components: ConsumerComponent[]) {
+  async _addFlattenedDependenciesToComponents(components: ConsumerComponent[], rebuildDepsGraph = false) {
     loader.start('importing missing dependencies...');
     const getLane = async () => {
       const lane = await this.scope.legacyScope.getCurrentLaneObject();
@@ -648,6 +702,9 @@ there are matching among unmodified components thought. consider using --unmodif
     };
     const lane = await getLane();
 
+    const flattenedEdgesGetter = new FlattenedEdgesGetter(this.scope, components, this.logger, lane || undefined);
+    const graphIds = await flattenedEdgesGetter.buildGraph();
+
     const flattenedDependenciesGetter = new FlattenedDependenciesGetter(
       this.scope.legacyScope,
       components,
@@ -656,6 +713,61 @@ there are matching among unmodified components thought. consider using --unmodif
     await flattenedDependenciesGetter.populateFlattenedDependencies();
     loader.stop();
     await this._addFlattenedDepsGraphToComponents(components);
+
+    if (rebuildDepsGraph) return;
+
+    components.forEach((component) => {
+      const graphFromIds = graphIds.successorsSubgraph(component.id.toString());
+      const edgesFromGraph = graphFromIds.edges.map((edge) => {
+        return {
+          source: edge.sourceId,
+          target: edge.targetId,
+          type: edge.attr as DepEdgeType,
+        };
+      });
+      const edgesFromGraphStr = edgesFromGraph.map((e) => `${e.source} -> ${e.target} (${e.type})`).sort();
+      const edgesFromFetchedDeps = component.flattenedEdges;
+      const edgesFromFetchedDepsStr = edgesFromFetchedDeps
+        .map((e) => `${e.source.toString()} -> ${e.target.toString()} (${e.type})`)
+        .sort();
+
+      const edgesOnlyInGraph = difference(edgesFromGraphStr, edgesFromFetchedDepsStr);
+      const edgesOnlyInFetchedDeps = difference(edgesFromFetchedDepsStr, edgesFromGraphStr);
+      let msg = '';
+      if (edgesOnlyInGraph.length) {
+        msg += `the following edges exist in the graph but not in the fetched deps:\n${edgesOnlyInGraph.join(', ')}\n`;
+      }
+      if (edgesOnlyInFetchedDeps.length) {
+        msg += `the following edges exist in the fetched deps but not in the graph:\n${edgesOnlyInFetchedDeps.join(
+          ', '
+        )}\n`;
+      }
+
+      const flattenedFromFetched = component.flattenedDependencies;
+      const flattenedFromFetchedStr = flattenedFromFetched.map((id) => id.toString()).sort();
+      const flattenedFromGraphIncludeItself = graphFromIds.nodes.map((node) => node.attr);
+      const flattenedFromGraph = flattenedFromGraphIncludeItself.filter((id) => !id.isEqual(component.id));
+      const flattenedFromGraphStr = flattenedFromGraph.map((id) => id.toString()).sort();
+      const flattenedOnlyInGraph = difference(flattenedFromGraphStr, flattenedFromFetchedStr);
+      const flattenedOnlyInFetched = difference(flattenedFromFetchedStr, flattenedFromGraphStr);
+      if (flattenedOnlyInGraph.length) {
+        msg += `the following flattened deps exist in the graph but not in the fetched deps:\n${flattenedOnlyInGraph.join(
+          ', '
+        )}\n`;
+      }
+      if (flattenedOnlyInFetched.length) {
+        msg += `the following flattened deps exist in the fetched deps but not in the graph:\n${flattenedOnlyInFetched.join(
+          ', '
+        )}\n`;
+      }
+
+      if (msg) {
+        throw new Error(`edges mismatch for ${component.id.toString()}:
+${msg}
+please report this error to the support team.
+to be able to continue without this error, re-run the command with "--rebuild-deps-graph" flag.`);
+      }
+    });
   }
 
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
@@ -1071,14 +1183,14 @@ another option, in case this dependency is not in main yet is to remove all refe
     const dependenciesListSerialized = (await this.dependencyResolver.extractDepsFromLegacy(component)).serialize();
     const extId = DependencyResolverAspect.id;
     const data = { dependencies: dependenciesListSerialized };
-    const existingExtension = component.state._consumer.extensions.findExtension(extId);
+    const existingExtension = component.config.extensions.findExtension(extId);
     if (existingExtension) {
       // Only merge top level of extension data
       Object.assign(existingExtension.data, data);
       return;
     }
     const extension = new ExtensionDataEntry(undefined, undefined, extId, undefined, data);
-    component.state._consumer.extensions.push(extension);
+    component.config.extensions.push(extension);
   }
 
   private async getComponentsToTag(
@@ -1159,6 +1271,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     BuilderAspect,
     ImporterAspect,
     GlobalConfigAspect,
+    DependenciesAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1173,6 +1286,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     builder,
     importer,
     globalConfig,
+    deps,
   ]: [
     Workspace,
     CLIMain,
@@ -1184,7 +1298,8 @@ another option, in case this dependency is not in main yet is to remove all refe
     ExportMain,
     BuilderMain,
     ImporterMain,
-    GlobalConfigMain
+    GlobalConfigMain,
+    DependenciesMain
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(
@@ -1196,7 +1311,8 @@ another option, in case this dependency is not in main yet is to remove all refe
       scope,
       exporter,
       builder,
-      importer
+      importer,
+      deps
     );
     const snapCmd = new SnapCmd(snapping, logger, globalConfig);
     const tagCmd = new TagCmd(snapping, logger, globalConfig);

@@ -531,7 +531,7 @@ export default class Consumer {
   }
 
   /**
-   * if resetHard, delete consumer-files: bitMap and bit.json and also the local scope (.bit dir).
+   * if resetHard, delete consumer-files: bitMap and workspace.jsonc and also the local scope (.bit dir).
    * otherwise, delete the consumer-files only when they are corrupted
    */
   static async reset(projectPath: PathOsBasedAbsolute, resetHard: boolean, noGit = false): Promise<void> {
