@@ -11,7 +11,7 @@ import { assign, parse, stringify, CommentJSONValue } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { isEmpty, omit } from 'lodash';
-
+import WorkspaceAspect from '@teambit/workspace';
 import { SetExtensionOptions } from './config.main.runtime';
 import { ExtensionAlreadyConfigured } from './exceptions';
 import { ConfigDirNotDefined } from './exceptions/config-dir-not-defined';
@@ -61,7 +61,6 @@ export type WorkspaceSettingsNewProps = {
 
 export type WorkspaceLegacyProps = {
   dependenciesDirectory?: string;
-  bindingPrefix?: string;
   saveDependenciesAsComponents?: boolean;
 };
 
@@ -146,9 +145,10 @@ export class WorkspaceConfig implements HostConfig {
    */
   static async create(props: WorkspaceConfigFileProps, dirPath?: PathOsBasedAbsolute) {
     const template = await getWorkspaceConfigTemplateParsed();
-    // TODO: replace this assign with some kind of deepAssign that keeps the comments
-    // right now the comments above the internal props are overrides after the assign
-    const merged = assign(template, props);
+    // previously, we just did `assign(template, props)`, but it was replacing the entire workspace config with the "props".
+    // so for example, if the props only had defaultScope, it was removing the defaultDirectory.
+    const workspaceAspectConf = assign(template[WorkspaceAspect.id], props[WorkspaceAspect.id]);
+    const merged = assign(template, { [WorkspaceAspect.id]: workspaceAspectConf });
     const instance = new WorkspaceConfig(merged);
     if (dirPath) {
       instance.path = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
@@ -299,8 +299,6 @@ export class WorkspaceConfig implements HostConfig {
       isLegacy: false,
       write: ({ workspaceDir }) => this.write.call(this, { dir: workspaceDir }),
       toVinyl: this.toVinyl.bind(this),
-      componentsConfig: undefined,
-      getComponentConfig: () => undefined,
       _legacyPlainObject: () => undefined,
     };
   }
@@ -331,19 +329,12 @@ export function transformLegacyPropsToExtensions(
     manageWorkspaces: legacyConfig.manageWorkspaces,
     useWorkspaces: legacyConfig.useWorkspaces,
   });
-  const variants = legacyConfig.overrides?.overrides;
   const data = {};
   if (workspace && !isEmpty(workspace)) {
     data['teambit.workspace/workspace'] = workspace;
   }
   if (dependencyResolver && !isEmpty(dependencyResolver)) {
     data['teambit.dependencies/dependency-resolver'] = dependencyResolver;
-  }
-  // TODO: add variants here once we have a way to pass the deps overrides and general key vals for package.json to
-  // TODO: new extensions (via dependency-resolver extension and pkg extensions)
-  // TODO: transform legacy props to new one once dependency-resolver extension and pkg extensions are ready
-  if (variants && !isEmpty(variants)) {
-    data['teambit.workspace/variants'] = variants;
   }
   // @ts-ignore
   return data;

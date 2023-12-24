@@ -133,7 +133,6 @@ export class AutoDetectDeps {
       componentDir,
       workspacePath: this.consumerPath,
       filePaths: allFiles,
-      bindingPrefix: this.component.bindingPrefix,
       visited: cacheResolvedDependencies,
       cacheProjectAst,
       envDetectors,

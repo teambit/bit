@@ -1,6 +1,7 @@
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { MainRuntime } from '@teambit/cli';
 import { parse } from 'comment-json';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { flatten, isFunction } from 'lodash';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
@@ -114,7 +115,7 @@ export class DevFilesMain {
     const fromEnvJsonFile = await this.computeDevPatternsFromEnvJsoncFile(envId);
     let fromEnvFunc;
     if (!fromEnvJsonFile) {
-      const envDef = await this.envs.calculateEnv(component, { skipWarnings: !!this.workspace.inInstallContext });
+      const envDef = await this.envs.calculateEnv(component, { skipWarnings: !!this.workspace?.inInstallContext });
       fromEnvFunc = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns(component) : [];
     }
     const envPatterns = fromEnvJsonFile || fromEnvFunc || {};
@@ -221,23 +222,28 @@ export class DevFilesMain {
 
   static runtime = MainRuntime;
 
-  static dependencies = [EnvsAspect, WorkspaceAspect, ComponentAspect, GraphqlAspect];
+  static dependencies = [EnvsAspect, WorkspaceAspect, ComponentAspect, GraphqlAspect, ScopeAspect];
 
   static async provider(
-    [envs, workspace, componentAspect, graphql]: [EnvsMain, Workspace, ComponentMain, GraphqlMain],
+    [envs, workspace, componentAspect, graphql, scope]: [EnvsMain, Workspace, ComponentMain, GraphqlMain, ScopeMain],
     config: DevFilesConfig,
     [devPatternSlot]: [DevPatternSlot]
   ) {
     const devFiles = new DevFilesMain(envs, workspace, devPatternSlot, config);
     componentAspect.registerShowFragments([new DevFilesFragment(devFiles)]);
 
+    const calcDevOnLoad = async (component: Component) => {
+      return {
+        devPatterns: await devFiles.computeDevPatterns(component),
+        devFiles: (await devFiles.computeDevFiles(component)).toObject(),
+      };
+    };
+
     if (workspace) {
-      workspace.onComponentLoad(async (component) => {
-        return {
-          devPatterns: await devFiles.computeDevPatterns(component),
-          devFiles: (await devFiles.computeDevFiles(component)).toObject(),
-        };
-      });
+      workspace.registerOnComponentLoad(calcDevOnLoad);
+    }
+    if (scope) {
+      scope.registerOnCompAspectReCalc(calcDevOnLoad);
     }
 
     graphql.register(devFilesSchema(devFiles));

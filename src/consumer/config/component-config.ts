@@ -2,7 +2,6 @@ import mapSeries from 'p-map-series';
 import { pickBy } from 'lodash';
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
-import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
 import logger from '../../logger/logger';
 import Component from '../component/consumer-component';
 import PackageJsonFile from '../component/package-json-file';
@@ -14,7 +13,6 @@ export type ComponentConfigLoadOptions = Pick<ComponentLoadOptions, 'loadExtensi
 
 type ConfigProps = {
   lang?: string;
-  bindingPrefix: string;
   extensions?: ExtensionDataList;
   defaultScope?: string;
 };
@@ -35,9 +33,8 @@ export default class ComponentConfig extends AbstractConfig {
     this.componentConfigLoadingRegistry[extId] = func;
   }
 
-  constructor({ bindingPrefix, extensions, defaultScope }: ConfigProps) {
+  constructor({ extensions, defaultScope }: ConfigProps) {
     super({
-      bindingPrefix,
       extensions,
     });
     this.defaultScope = defaultScope;
@@ -54,7 +51,6 @@ export default class ComponentConfig extends AbstractConfig {
   }
 
   mergeWithComponentData(component: Component) {
-    this.bindingPrefix = this.bindingPrefix || component.bindingPrefix;
     this.lang = this.lang || component.lang;
   }
 
@@ -68,11 +64,9 @@ export default class ComponentConfig extends AbstractConfig {
     const onLoadResults = await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentId, loadOpts);
     const wsComponentConfig = onLoadResults[0];
     const defaultScope = wsComponentConfig.defaultScope;
-    const bindingPrefix = getBindingPrefixByDefaultScope(defaultScope);
     const componentConfig = new ComponentConfig({
       extensions: wsComponentConfig.extensions,
       defaultScope,
-      bindingPrefix,
     });
 
     return componentConfig;
@@ -116,10 +110,5 @@ export default class ComponentConfig extends AbstractConfig {
 export function getBindingPrefixByDefaultScope(defaultScope: string): string {
   const splittedScope = defaultScope.split('.');
   const defaultOwner = splittedScope.length === 1 ? defaultScope : splittedScope[0];
-  let bindingPrefix = DEFAULT_REGISTRY_DOMAIN_PREFIX;
-  if (defaultOwner && defaultOwner !== DEFAULT_REGISTRY_DOMAIN_PREFIX) {
-    bindingPrefix = defaultOwner.startsWith('@') ? defaultOwner : `@${defaultOwner}`;
-  }
-
-  return bindingPrefix;
+  return `@${defaultOwner}`;
 }

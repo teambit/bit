@@ -271,7 +271,7 @@ export class Workspace implements ComponentFactory {
     return this.consumer.isLegacy;
   }
 
-  onComponentLoad(loadFn: OnComponentLoad) {
+  registerOnComponentLoad(loadFn: OnComponentLoad) {
     this.onComponentLoadSlot.register(loadFn);
     return this;
   }

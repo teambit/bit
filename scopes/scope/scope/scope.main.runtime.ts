@@ -9,7 +9,7 @@ import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { RawBuilderData, BuilderAspect } from '@teambit/builder';
 import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import type { ComponentMain, ComponentMap, ResolveAspectsOptions } from '@teambit/component';
+import type { AspectData, ComponentMain, ComponentMap, ResolveAspectsOptions } from '@teambit/component';
 import { Component, ComponentAspect, ComponentFactory, Snap, State, AspectEntry } from '@teambit/component';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
@@ -72,12 +72,14 @@ type OnPostExport = RemoteEvent<OnPostPutData>;
 type OnPostDelete = RemoteEvent<OnPostDeleteData>;
 type OnPostObjectsPersist = RemoteEvent<undefined>;
 type OnPreFetchObjects = RemoteEvent<OnPreFetchObjectData>;
+type OnCompAspectReCalc = (component: Component) => Promise<AspectData | undefined>;
 
 export type OnPostPutSlot = SlotRegistry<OnPostPut>;
 export type OnPostDeleteSlot = SlotRegistry<OnPostDelete>;
 export type OnPostExportSlot = SlotRegistry<OnPostExport>;
 export type OnPostObjectsPersistSlot = SlotRegistry<OnPostObjectsPersist>;
 export type OnPreFetchObjectsSlot = SlotRegistry<OnPreFetchObjects>;
+export type OnCompAspectReCalcSlot = SlotRegistry<OnCompAspectReCalc>;
 export type LoadOptions = {
   /**
    * In case the component we are loading is app, whether to load it as app (in a scope aspects capsule)
@@ -136,6 +138,8 @@ export class ScopeMain implements ComponentFactory {
     private postObjectsPersist: OnPostObjectsPersistSlot,
 
     public preFetchObjects: OnPreFetchObjectsSlot,
+
+    private OnCompAspectReCalcSlot: OnCompAspectReCalcSlot,
 
     private isolator: IsolatorMain,
 
@@ -265,6 +269,60 @@ export class ScopeMain implements ComponentFactory {
     return scopeAspectsLoader.getResolvedAspects(components, opts);
   }
 
+  async executeOnCompAspectReCalcSlot(component: Component) {
+    const envsData = await this.envs.calcDescriptor(component, { skipWarnings: false });
+    const policy = await this.dependencyResolver.mergeVariantPolicies(
+      component.config.extensions,
+      component.id,
+      component.state._consumer.files
+    );
+    const dependenciesList = await this.dependencyResolver.extractDepsFromLegacy(component, policy);
+
+    const depResolverData = {
+      packageName: this.dependencyResolver.calcPackageName(component),
+      dependencies: dependenciesList.serialize(),
+      policy: policy.serialize(),
+    };
+    // Make sure we are adding the envs / deps data first because other on load events might depend on it
+    await Promise.all([
+      this.upsertExtensionData(component, EnvsAspect.id, envsData),
+      this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData),
+    ]);
+
+    // We are updating the component state with the envs and deps data here, so in case we have other slots that depend on this data
+    // they will be able to get it, as it's very common use case that during on load someone want to access to the component env for example
+    const aspectListWithEnvsAndDeps = await this.createAspectListFromExtensionDataList(
+      component.state._consumer.extensions
+    );
+    component.state.aspects = aspectListWithEnvsAndDeps;
+
+    const entries = this.OnCompAspectReCalcSlot.toArray();
+    await mapSeries(entries, async ([extension, onLoad]) => {
+      const data = await onLoad(component);
+      await this.upsertExtensionData(component, extension, data);
+      // Update the aspect list to have changes happened during the on load slot (new data added above)
+      component.state.aspects.upsertEntry(await this.resolveComponentId(extension), data);
+    });
+
+    return component;
+  }
+
+  private async upsertExtensionData(component: Component, extension: string, data: any) {
+    if (!data) return;
+    const existingExtension = component.state._consumer.extensions.findExtension(extension);
+    if (existingExtension) {
+      // Only merge top level of extension data
+      Object.assign(existingExtension.data, data);
+      return;
+    }
+    component.state._consumer.extensions.push(await this.getDataEntry(extension, data));
+  }
+
+  private async getDataEntry(extension: string, data: { [key: string]: any }): Promise<ExtensionDataEntry> {
+    // TODO: @gilad we need to refactor the extension data entry api.
+    return new ExtensionDataEntry(undefined, undefined, extension, undefined, data);
+  }
+
   getIsolateAspectsOpts(opts?: {
     skipIfExists?: boolean;
     packageManagerConfigRootDir?: string;
@@ -346,6 +404,10 @@ export class ScopeMain implements ComponentFactory {
   registerOnPreFetchObjects(preFetchObjectsFn: OnPreFetchObjects) {
     this.preFetchObjects.register(preFetchObjectsFn);
     return this;
+  }
+
+  registerOnCompAspectReCalc(compAspectReCalcSlotFn: OnCompAspectReCalc) {
+    this.OnCompAspectReCalcSlot.register(compAspectReCalcSlotFn);
   }
 
   registerOnPostObjectsPersist(postObjectsPersistFn: OnPostObjectsPersist) {
@@ -1026,6 +1088,7 @@ export class ScopeMain implements ComponentFactory {
     Slot.withType<OnPostExport>(),
     Slot.withType<OnPostObjectsPersist>(),
     Slot.withType<OnPreFetchObjects>(),
+    Slot.withType<OnCompAspectReCalc>(),
   ];
   static runtime = MainRuntime;
 
@@ -1062,12 +1125,20 @@ export class ScopeMain implements ComponentFactory {
       GlobalConfigMain
     ],
     config: ScopeConfig,
-    [postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
+    [
+      postPutSlot,
+      postDeleteSlot,
+      postExportSlot,
+      postObjectsPersistSlot,
+      preFetchObjectsSlot,
+      OnCompAspectReCalcSlot,
+    ]: [
       OnPostPutSlot,
       OnPostDeleteSlot,
       OnPostExportSlot,
       OnPostObjectsPersistSlot,
-      OnPreFetchObjectsSlot
+      OnPreFetchObjectsSlot,
+      OnCompAspectReCalcSlot
     ],
     harmony: Harmony
   ) {
@@ -1088,6 +1159,7 @@ export class ScopeMain implements ComponentFactory {
       postExportSlot,
       postObjectsPersistSlot,
       preFetchObjectsSlot,
+      OnCompAspectReCalcSlot,
       isolator,
       aspectLoader,
       logger,
