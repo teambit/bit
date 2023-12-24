@@ -9,9 +9,7 @@
     "teambit.dependencies/dependency-resolver": {
       "policy": {
         "dependencies": {
-          "@teambit/legacy": "-",
-          "@babel/preset-env": "7.23.2",
-          "@babel/preset-react": "7.22.15"
+          "@teambit/legacy": "-"
         },
         "devDependencies": {
           "@teambit/legacy": "-",
