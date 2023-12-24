@@ -492,13 +492,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/eject"
     },
-    "elements": {
-        "name": "elements",
-        "scope": "teambit.web-components",
-        "version": "1.0.104",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/web-components/elements"
-    },
     "entities/lane-diff": {
         "name": "entities/lane-diff",
         "scope": "teambit.lanes",
@@ -1065,13 +1058,6 @@
         "version": "1.0.104",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/react"
-    },
-    "react-elements": {
-        "name": "react-elements",
-        "scope": "teambit.react",
-        "version": "1.0.104",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/react-elements"
     },
     "react-native": {
         "name": "react-native",
