@@ -295,6 +295,7 @@ export class WorkspaceComponentLoader {
     // otherwise the envs from the workspace won't be loaded at time
     // so we will get wrong dependencies from component who uses envs from the workspace
     if (loadOpts.loadSeedersAsAspects) {
+      await this.workspace.scope.loadManyCompsAspects(scopeComponents);
       await this.loadCompsAsAspects(workspaceComponents, {
         loadApps: true,
         loadEnvs: true,
