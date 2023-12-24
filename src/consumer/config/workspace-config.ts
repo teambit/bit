@@ -8,7 +8,6 @@ import {
 } from '../../constants';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import AbstractConfig from './abstract-config';
-import ConsumerOverrides from './consumer-overrides';
 import { InvalidPackageJson } from './exceptions';
 import InvalidPackageManager from './exceptions/invalid-package-manager';
 import { ExtensionDataList } from './extension-data';
@@ -36,7 +35,6 @@ export type WorkspaceConfigProps = {
   lang?: string;
   componentsDefaultDirectory?: string;
   dependenciesDirectory?: string;
-  bindingPrefix?: string;
   extensions?: ExtensionDataList;
   packageManager?: PackageManagerClients;
   packageManagerArgs?: string[];
@@ -44,7 +42,6 @@ export type WorkspaceConfigProps = {
   useWorkspaces?: boolean;
   manageWorkspaces?: boolean;
   defaultScope?: string;
-  overrides?: ConsumerOverrides;
 };
 
 export default class WorkspaceConfig extends AbstractConfig {
@@ -56,7 +53,6 @@ export default class WorkspaceConfig extends AbstractConfig {
   packageManagerProcessOptions: Record<string, any> | undefined; // package manager process options
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
   manageWorkspaces: boolean; // manage workspaces with yarn
-  overrides: ConsumerOverrides;
   packageJsonObject: Record<string, any> | null | undefined; // workspace package.json if exists (parsed)
   defaultScope: string | undefined; // default remote scope to export to
 
@@ -83,7 +79,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     lang,
     componentsDefaultDirectory = DEFAULT_COMPONENTS_DIR_PATH,
     dependenciesDirectory = DEFAULT_DEPENDENCIES_DIR_PATH,
-    bindingPrefix,
     extensions,
     packageManager = DEFAULT_PACKAGE_MANAGER,
     packageManagerArgs,
@@ -91,9 +86,8 @@ export default class WorkspaceConfig extends AbstractConfig {
     useWorkspaces = DEFAULT_USE_WORKSPACES,
     manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
     defaultScope,
-    overrides = ConsumerOverrides.load(),
   }: WorkspaceConfigProps) {
-    super({ lang, bindingPrefix, extensions });
+    super({ lang, extensions });
     if (packageManager !== 'npm' && packageManager !== 'yarn') {
       throw new InvalidPackageManager(packageManager);
     }
@@ -110,7 +104,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     this.useWorkspaces = useWorkspaces;
     this.manageWorkspaces = manageWorkspaces;
     this.defaultScope = defaultScope;
-    this.overrides = overrides;
   }
 
   toPlainObject() {
@@ -126,7 +119,6 @@ export default class WorkspaceConfig extends AbstractConfig {
       useWorkspaces: this.useWorkspaces,
       manageWorkspaces: this.manageWorkspaces,
       defaultScope: this.defaultScope,
-      overrides: this.overrides.overrides,
     };
 
     const isPropDefault = (val, key) => {
@@ -136,7 +128,6 @@ export default class WorkspaceConfig extends AbstractConfig {
       if (key === 'saveDependenciesAsComponents') return val !== DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS;
       if (key === 'resolveModules') return !R.isEmpty(val);
       if (key === 'defaultScope') return Boolean(val);
-      if (key === 'overrides') return !R.isEmpty(val);
       return true;
     };
 

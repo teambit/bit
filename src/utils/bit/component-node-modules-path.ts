@@ -7,13 +7,13 @@ import componentIdToPackageName from './component-id-to-package-name';
 export default function getNodeModulesPathOfComponent({
   bindingPrefix,
   id,
-  defaultScope, // if an id doesn't have a scope, use defaultScope if exists. applies only when allowNonScope is true
+  defaultScope,
   extensions,
   isDependency = false,
 }: {
   bindingPrefix?: string;
   id: ComponentID;
-  defaultScope?: string | null; // if an id doesn't have a scope, use defaultScope if exists. applies only when allowNonScope is true
+  defaultScope?: string | null;
   extensions: ExtensionDataList;
   isDependency?: boolean;
 }): PathOsBasedRelative {
@@ -21,7 +21,6 @@ export default function getNodeModulesPathOfComponent({
     id,
     bindingPrefix,
     defaultScope,
-    withPrefix: undefined,
     extensions,
     isDependency,
   });
