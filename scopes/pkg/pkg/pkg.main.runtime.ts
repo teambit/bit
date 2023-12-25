@@ -170,15 +170,23 @@ export class PkgMain {
     builder.registerBuildTasks([preparePackagesTask]);
     builder.registerTagTasks([packTask, publishTask]);
     builder.registerSnapTasks([packTask]);
+
+    const calcPkgOnLoad = async (component: Component) => {
+      const data = await pkg.mergePackageJsonProps(component);
+      return {
+        packageJsonModification: data,
+      };
+    };
+
     if (workspace) {
       // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
-      workspace.onComponentLoad(async (component) => {
+      workspace.registerOnComponentLoad(async (component) => {
         await pkg.addMissingLinksFromNodeModulesIssue(component);
-        const data = await pkg.mergePackageJsonProps(component);
-        return {
-          packageJsonModification: data,
-        };
+        return calcPkgOnLoad(component);
       });
+    }
+    if (scope) {
+      scope.registerOnCompAspectReCalc(calcPkgOnLoad);
     }
 
     PackageJsonTransformer.registerPackageJsonTransformer(pkg.transformPackageJson.bind(pkg));
@@ -317,7 +325,7 @@ export class PkgMain {
       if (files.length) merged.files = files;
       return merged;
     };
-    const env = this.envs.calculateEnv(component, { skipWarnings: !!this.workspace.inInstallContext })?.env;
+    const env = this.envs.calculateEnv(component, { skipWarnings: !!this.workspace?.inInstallContext })?.env;
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
       const propsFromEnv = env.getPackageJsonProps();
       newProps = mergeToNewProps(propsFromEnv);

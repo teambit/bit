@@ -158,7 +158,7 @@ describe('bit lane command', function () {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.command.createLane();
-        helper.command.create('aspect', 'my-aspect');
+        helper.command.create('bit-aspect', 'my-aspect');
         helper.fixtures.populateComponents();
         helper.fs.outputFile(
           `${helper.scopes.remote}/my-aspect/foo.ts`,

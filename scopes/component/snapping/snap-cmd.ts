@@ -47,6 +47,7 @@ export class SnapCmd implements Command {
     ],
     ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
     ['', 'ignore-build-errors', 'proceed to snap pipeline even when build pipeline fails'],
+    ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
     [
       'i',
       'ignore-issues [issues]',
@@ -86,6 +87,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       disableSnapPipeline = false,
       forceDeploy = false,
       ignoreBuildErrors = false,
+      rebuildDepsGraph,
       unmodified = false,
       failFast = false,
     }: {
@@ -135,6 +137,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       skipAutoSnap,
       disableTagAndSnapPipelines,
       ignoreBuildErrors,
+      rebuildDepsGraph,
       unmodified,
       exitOnFirstFailedTask: failFast,
     });

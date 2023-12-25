@@ -29,9 +29,9 @@ describe('custom aspects', function () {
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
-      helper.command.create('aspect', 'dep-dep-aspect');
-      helper.command.create('aspect', 'dep-aspect');
-      helper.command.create('aspect', 'main-aspect');
+      helper.command.create('bit-aspect', 'dep-dep-aspect');
+      helper.command.create('bit-aspect', 'dep-aspect');
+      helper.command.create('bit-aspect', 'main-aspect');
       helper.fs.outputFile(
         `${helper.scopes.remoteWithoutOwner}/dep-aspect/dep-aspect.main.runtime.ts`,
         getDepAspect(helper.scopes.remoteWithoutOwner)
@@ -89,7 +89,7 @@ describe('custom aspects', function () {
       helper.bitJsonc.setPackageManager();
       helper.fixtures.populateExtensions(2, true);
       helper.extensions.addExtensionToVariant('extensions', 'teambit.harmony/aspect');
-      helper.command.create('aspect', 'main-aspect');
+      helper.command.create('bit-aspect', 'main-aspect');
       helper.fs.outputFile(
         `${helper.scopes.remoteWithoutOwner}/main-aspect/main-aspect.main.runtime.ts`,
         getMainAspectWithRegularDep(helper.scopes.remoteWithoutOwner)
@@ -153,7 +153,7 @@ describe('custom aspects', function () {
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
-      helper.command.create('aspect', 'my-aspect');
+      helper.command.create('bit-aspect', 'my-aspect');
       helper.command.compile();
       helper.command.install();
       helper.command.tagAllComponents();

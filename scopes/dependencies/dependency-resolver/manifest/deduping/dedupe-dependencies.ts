@@ -24,7 +24,7 @@ export type DedupedDependenciesIssues = {
 };
 
 export type DedupedDependencies = {
-  rootDependencies: ManifestDependenciesObject;
+  rootDependencies: Omit<ManifestDependenciesObject, 'peerDependenciesMeta'>;
   componentDependenciesMap: ComponentDependenciesMap;
   issus?: DedupedDependenciesIssues;
 };
