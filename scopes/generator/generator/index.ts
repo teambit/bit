@@ -14,6 +14,7 @@ export type {
   WorkspaceFile,
   ForkComponentInfo,
   ImportComponentInfo,
+  CreateComponentInfo,
 } from './workspace-template';
 export type { GeneratorEnv } from './generator-env-type';
 export { GeneratorAspect } from './generator.aspect';
