@@ -257,6 +257,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       useScopeAspectsCapsule: false,
       workspaceName: this.workspace.name,
       resolveEnvsFromRoots: this.resolveEnvsFromRoots,
+      packageManagerConfigRootDir: this.workspace.path,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
