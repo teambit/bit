@@ -160,9 +160,10 @@ export class WorkspaceGenerator {
     const componentsToFork =
       this.template?.importComponents?.(workspaceContext) || this.template?.fork?.(workspaceContext) || [];
     if (!componentsToFork.length) return;
-    const componentsToForkRestructured = componentsToFork.map(({ id, targetName, path, env, config }) => ({
+    const componentsToForkRestructured = componentsToFork.map(({ id, targetName, path, env, config, targetScope }) => ({
       sourceId: id,
       targetId: targetName,
+      targetScope,
       path,
       env,
       config,

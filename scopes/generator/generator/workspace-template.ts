@@ -67,6 +67,12 @@ export interface ForkComponentInfo extends ImportComponentInfo {
    * a new component name. if not specified, use the original id (without the scope)
    */
   targetName?: string;
+
+  /**
+   * a new scope for the component. if not specified, use the original scope
+   */
+  targetScope?: string;
+
   /**
    * env to use for the component.
    */
