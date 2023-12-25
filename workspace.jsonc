@@ -1007,7 +1007,7 @@
       "teambit.dependencies/dependency-resolver": {}
     },
     "scopes/webpack/webpack": {
-      "teambit.dependencies/dependency-resolver": {},
+      "teambit.dependencies/dependency-resolver": {}
     },
     "scopes/harmony/node": {
       "teambit.component/issues": {
