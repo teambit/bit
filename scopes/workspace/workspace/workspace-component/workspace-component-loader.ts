@@ -281,16 +281,16 @@ export class WorkspaceComponentLoader {
     // We don't want to ignore version here, as we do want to load different extensions with same id but different versions here
     const mergedExtensions = ExtensionDataList.mergeConfigs(allExtensions, false);
     await this.workspace.loadComponentsExtensions(mergedExtensions);
-    const withAspects = await pMap(components, (component) => this.executeLoadSlot(component), {
-      concurrency: concurrentComponentsLimit(),
-    });
+    let wsComponentsWithAspects = workspaceComponents;
+    if (loadOpts.seeders) {
+      wsComponentsWithAspects = await pMap(workspaceComponents, (component) => this.executeLoadSlot(component), {
+        concurrency: concurrentComponentsLimit(),
+      });
+      await this.warnAboutMisconfiguredEnvs(wsComponentsWithAspects);
+    }
 
-    // const withAspects = await Promise.all(
-    //   components.map((component) => {
-    //     return this.executeLoadSlot(component);
-    //   })
-    // );
-    await this.warnAboutMisconfiguredEnvs(withAspects);
+    const withAspects = wsComponentsWithAspects.concat(scopeComponents);
+
     // It's important to load the workspace components as aspects here
     // otherwise the envs from the workspace won't be loaded at time
     // so we will get wrong dependencies from component who uses envs from the workspace
@@ -625,11 +625,19 @@ export class WorkspaceComponentLoader {
 
   clearComponentCache(id: ComponentID) {
     const idStr = id.toString();
-    for (const cacheKey of this.componentsCache.keys()) {
-      if (cacheKey === idStr || cacheKey.startsWith(`${idStr}:`)) {
-        this.componentsCache.delete(cacheKey);
+    const cachesToClear = [
+      this.componentsCache,
+      this.scopeComponentsCache,
+      this.componentsExtensionsCache,
+      this.componentLoadedSelfAsAspects,
+    ];
+    cachesToClear.forEach((cache) => {
+      for (const cacheKey of cache.keys()) {
+        if (cacheKey === idStr || cacheKey.startsWith(`${idStr}:`)) {
+          cache.delete(cacheKey);
+        }
       }
-    }
+    });
   }
 
   private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent, loadOpts?: ComponentLoadOptions) {
