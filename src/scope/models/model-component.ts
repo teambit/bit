@@ -48,7 +48,9 @@ import { SchemaName } from '../../consumer/component/component-schema';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { errorIsTypeOfMissingObject } from '../component-ops/scope-components-importer';
 import type Scope from '../scope';
+import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import { BitIdCompIdError } from '../exceptions/bit-id-comp-id-err';
+import { ExtensionDataList } from '../../consumer/config';
 import { getBindingPrefixByDefaultScope } from '../../consumer/config/component-config';
 
 type State = {
@@ -977,8 +979,8 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       lang: this.lang,
       bindingPrefix: this.bindingPrefix,
       mainFile: version.mainFile,
-      dependencies: version.dependencies.getClone(),
-      devDependencies: version.devDependencies.getClone(),
+      dependencies: this.addDepsInfoFromDepsResolver(version.dependencies, extensions),
+      devDependencies: this.addDepsInfoFromDepsResolver(version.devDependencies, extensions),
       flattenedDependencies: version.flattenedDependencies.clone(),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
@@ -1000,6 +1002,22 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     });
 
     return consumerComponent;
+  }
+
+  private addDepsInfoFromDepsResolver(dependencies: Dependencies, extensions: ExtensionDataList): Dependency[] {
+    const cloned = dependencies.getClone();
+    const depsResolverData = extensions.find((ext) => ext.name === 'teambit.dependencies/dependency-resolver');
+    if (!depsResolverData) return cloned;
+    cloned.forEach((dependency) => {
+      if (dependency.packageName) return;
+      const matchedEntry = depsResolverData.data?.dependencies?.find((entry) => {
+        return dependency.id.toString() === entry.id;
+      });
+      if (matchedEntry) {
+        dependency.packageName = matchedEntry.packageName;
+      }
+    });
+    return cloned;
   }
 
   // @todo: make sure it doesn't have the same ref twice, once as a version and once as a head

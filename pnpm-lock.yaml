@@ -60,8 +60,8 @@ importers:
         specifier: 7.22.3
         version: 7.22.3
       '@bitdev/harmony.generators.harmony-templates':
-        specifier: ^0.0.10
-        version: 0.0.10
+        specifier: ^0.0.11
+        version: 0.0.11
       '@bitdev/node.generators.node-templates':
         specifier: ^1.0.4
         version: 1.0.4
@@ -14590,8 +14590,8 @@ importers:
         specifier: 7.20.0
         version: 7.20.0
       '@bitdev/harmony.generators.harmony-templates':
-        specifier: ^0.0.10
-        version: 0.0.10
+        specifier: ^0.0.11
+        version: 0.0.11
       '@teambit/bit-error':
         specifier: ^0.0.404
         version: 0.0.404
@@ -19713,7 +19713,7 @@ importers:
   scopes/webpack/plugins/inject-head-webpack-plugin:
     dependencies:
       html-webpack-plugin:
-        specifier: ^5.3.1
+        specifier: 5.3.2
         version: 5.3.2(webpack@5.84.1)
       insert-string-after:
         specifier: 1.0.0
@@ -20461,6 +20461,9 @@ importers:
       memoizee:
         specifier: 0.4.15
         version: 0.4.15
+      p-map:
+        specifier: 4.0.0
+        version: 4.0.0
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -20479,9 +20482,6 @@ importers:
       reset-css:
         specifier: 5.0.1
         version: 5.0.1
-      semver:
-        specifier: 7.5.2
-        version: 7.5.2
       stringify-package:
         specifier: 1.0.1
         version: 1.0.1
@@ -20525,9 +20525,6 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
-      '@types/semver':
-        specifier: 7.3.4
-        version: 7.3.4
       '@types/testing-library__jest-dom':
         specifier: 5.9.5
         version: 5.9.5
@@ -22513,8 +22510,8 @@ packages:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
     dev: false
 
-  /@bitdev/harmony.generators.harmony-templates@0.0.10:
-    resolution: {integrity: sha512-MZFE+Pelqj+BvD67F+QONF2wy2R4f5VPX5bbjnv6Sg06vINcHUjqJwEmLMGKGmXPwZbru/bOf5Ou/tNZIktTKQ==}
+  /@bitdev/harmony.generators.harmony-templates@0.0.11:
+    resolution: {integrity: sha512-QFgl6mezQh6Q0S8S9y48th31CCeAyR4vUuKPyfgUjOsPwkQcxWam0H7WrpzIVkuA5Pcll0MrbZ+EvGtOqa/4QQ==}
     dependencies:
       lodash: 4.17.21
       prompts: 2.4.2
@@ -38870,7 +38867,7 @@ packages:
     resolution: {integrity: sha512-xq+q3SRMOxGivLhBNaUdC64hDTQwejJ+H0T/NB1XMtTVEwNTrfFF3gAxiyW0Bu/xWEGhjVKgUcMhCrUy2+uCWg==}
     dependencies:
       base64-js: 1.5.1
-      ieee754: 1.1.13
+      ieee754: 1.2.1
       isarray: 1.0.0
     dev: false
 
@@ -58780,7 +58777,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.20.0
-      '@bitdev/harmony.generators.harmony-templates': 0.0.10
+      '@bitdev/harmony.generators.harmony-templates': 0.0.11
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
       '@teambit/defender.eslint-linter': 1.0.1(@teambit/legacy@node_modules+@teambit+legacy)
@@ -60720,7 +60717,7 @@ packages:
     id: file:scopes/webpack/plugins/inject-head-webpack-plugin
     name: '@teambit/webpack.plugins.inject-head-webpack-plugin'
     peerDependencies:
-      html-webpack-plugin: ^5.3.1
+      html-webpack-plugin: 5.3.2
     dependencies:
       html-webpack-plugin: 5.3.2(webpack@5.84.1)
       insert-string-after: 1.0.0
@@ -61004,6 +61001,7 @@ packages:
       lodash: 4.17.21
       lodash.compact: 3.0.1
       memoizee: 0.4.15
+      p-map: 4.0.0
       p-map-series: 2.1.0
       pluralize: 8.0.0
       react: 17.0.2

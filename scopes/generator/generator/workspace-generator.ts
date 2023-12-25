@@ -39,15 +39,15 @@ export class WorkspaceGenerator {
 
   constructor(
     private workspaceName: string,
-    private options: NewOptions,
+    private options: NewOptions & { currentDir?: boolean },
     private template: WorkspaceTemplate,
     private aspectComponent?: Component
   ) {
-    this.workspacePath = resolve(this.workspaceName);
+    this.workspacePath = options.currentDir ? process.cwd() : resolve(this.workspaceName);
   }
 
   async generate(): Promise<string> {
-    if (fs.existsSync(this.workspacePath)) {
+    if (!this.options.currentDir && fs.existsSync(this.workspacePath)) {
       throw new Error(`unable to create a workspace at "${this.workspaceName}", this path already exist`);
     }
     await fs.ensureDir(this.workspacePath);
@@ -160,9 +160,10 @@ export class WorkspaceGenerator {
     const componentsToFork =
       this.template?.importComponents?.(workspaceContext) || this.template?.fork?.(workspaceContext) || [];
     if (!componentsToFork.length) return;
-    const componentsToForkRestructured = componentsToFork.map(({ id, targetName, path, env, config }) => ({
+    const componentsToForkRestructured = componentsToFork.map(({ id, targetName, path, env, config, targetScope }) => ({
       sourceId: id,
       targetId: targetName,
+      targetScope,
       path,
       env,
       config,

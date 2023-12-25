@@ -18,7 +18,7 @@ import ComponentMap from '../bit-map/component-map';
 import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import { Dist, License, SourceFile } from '../component/sources';
-import ComponentConfig, { ILegacyWorkspaceConfig } from '../config';
+import ComponentConfig, { ComponentConfigLoadOptions, ILegacyWorkspaceConfig } from '../config';
 import ComponentOverrides from '../config/component-overrides';
 import { ExtensionDataList } from '../config/extension-data';
 import Consumer from '../consumer';
@@ -33,6 +33,7 @@ import { NoComponentDir } from './exceptions/no-component-dir';
 import PackageJsonFile from './package-json-file';
 import DataToPersist from './sources/data-to-persist';
 import { ModelComponent } from '../../scope/models';
+import { ComponentLoadOptions } from './component-loader';
 import { getBindingPrefixByDefaultScope } from '../config/component-config';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
@@ -81,7 +82,7 @@ export type ComponentProps = {
 };
 
 export default class Component {
-  static registerOnComponentConfigLoading(extId, func: (id) => any) {
+  static registerOnComponentConfigLoading(extId, func: (id, loadOpts: ComponentConfigLoadOptions) => any) {
     ComponentConfig.registerOnComponentConfigLoading(extId, func);
   }
 
@@ -483,10 +484,12 @@ export default class Component {
     componentMap,
     id,
     consumer,
+    loadOpts,
   }: {
     componentMap: ComponentMap;
     id: ComponentID;
     consumer: Consumer;
+    loadOpts?: ComponentLoadOptions;
   }): Promise<Component> {
     const workspaceConfig: ILegacyWorkspaceConfig = consumer.config;
     const modelComponent = await consumer.scope.getModelComponentIfExist(id);
@@ -507,6 +510,7 @@ export default class Component {
     logger.trace(`consumer-component.loadFromFileSystem, start loading config ${id.toString()}`);
     const componentConfig = await ComponentConfig.load({
       componentId: id,
+      loadOpts,
     });
     logger.trace(`consumer-component.loadFromFileSystem, finish loading config ${id.toString()}`);
     // by default, imported components are not written with bit.json file.
