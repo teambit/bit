@@ -283,12 +283,12 @@ export class WorkspaceComponentLoader {
     const mergedExtensions = ExtensionDataList.mergeConfigs(allExtensions, false);
     await this.workspace.loadComponentsExtensions(mergedExtensions);
     let wsComponentsWithAspects = workspaceComponents;
-    if (loadOpts.seeders) {
-      wsComponentsWithAspects = await pMap(workspaceComponents, (component) => this.executeLoadSlot(component), {
-        concurrency: concurrentComponentsLimit(),
-      });
-      await this.warnAboutMisconfiguredEnvs(wsComponentsWithAspects);
-    }
+    // if (loadOpts.seeders) {
+    wsComponentsWithAspects = await pMap(workspaceComponents, (component) => this.executeLoadSlot(component), {
+      concurrency: concurrentComponentsLimit(),
+    });
+    await this.warnAboutMisconfiguredEnvs(wsComponentsWithAspects);
+    // }
 
     const withAspects = wsComponentsWithAspects.concat(scopeComponents);
 
