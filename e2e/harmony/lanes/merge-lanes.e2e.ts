@@ -1627,4 +1627,33 @@ describe('merge lanes', function () {
       });
     });
   });
+  describe('when a file exists in local and others but not in base', () => {
+    let mainWs: string;
+    let mergeOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      mainWs = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.createLane();
+      helper.fs.outputFile('comp1/foo.js', 'on-lane');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(mainWs);
+      helper.fs.outputFile('comp1/foo.js', 'on-main');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      mergeOutput = helper.command.mergeLane('dev', '-x --no-squash --auto-merge-resolve=manual');
+    });
+    // previously in this case, it was marking it as "overridden" and was leaving the content as it was in the filesystem.
+    it('should write the file with the conflicts', () => {
+      expect(mergeOutput).to.include('CONFLICT');
+      const foo = helper.fs.readFile('comp1/foo.js');
+      expect(foo).to.include('<<<<<<<');
+    });
+  });
 });
