@@ -74,13 +74,23 @@ if (isBrowser || '${runtime}' === 'main' || ${shouldRun}) render();
 `;
 }
 
+function getRuntimeId(aspectDef: AspectDefinition) {
+  const runtimeId = getIdentifier(aspectDef, 'Runtime', 'runtimePath');
+  const AS_STR = ' as ';
+  const runtimeName = runtimeId.includes(AS_STR)
+    ? runtimeId.substring(runtimeId.lastIndexOf(AS_STR) + AS_STR.length, runtimeId.length - 1)
+    : runtimeId;
+
+  return runtimeName;
+}
+
 function createAddRuntime(aspectDefs: AspectDefinition[], runtime: string) {
   return aspectDefs
     .map((aspectDef) => {
       const aspectId = getIdentifier(aspectDef, 'Aspect', 'aspectFilePath');
-      const runtimeId = getIdentifier(aspectDef, 'Runtime', 'runtimePath');
-      const setRuntime = `${runtimeId}.runtime = "${runtime}";\n`;
-      return `${setRuntime}${aspectId}.addRuntime(${runtimeId});`;
+      const runtimeName = getRuntimeId(aspectDef);
+      const setRuntime = `${runtimeName}.runtime = "${runtime}";\n`;
+      return `${setRuntime}${aspectId}.addRuntime(${runtimeName});`;
     })
     .join('\n');
 }
