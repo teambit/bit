@@ -2,10 +2,9 @@ import { BitError } from '@teambit/bit-error';
 import { ScopeMain } from '@teambit/scope';
 import { Command, CommandOptions } from '@teambit/cli';
 
-export default class SnapDistanceCmd implements Command {
+export class SnapDistanceCmd implements Command {
   name = 'snap-distance <component-id> [source-snap] [target-snap]';
   description = 'show common-snap and distance between two given snaps or between local and remote snaps';
-  group = 'development';
   extendedDescription = `in case source and target snaps are not provided, the command will use the local and remote heads.
 by "head" we mean component-head if on main, or lane-head if on lane.
 if source and target snaps are provided, the command will use them to calculate the distance.`;
@@ -13,6 +12,7 @@ if source and target snaps are provided, the command will use them to calculate 
   options = [] as CommandOptions;
   loader = true;
   migration = true;
+  private = true;
 
   constructor(private scope: ScopeMain) {}
 

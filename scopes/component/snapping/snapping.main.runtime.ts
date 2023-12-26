@@ -62,7 +62,7 @@ import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
 import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
 import { FlattenedEdgesGetter } from './flattened-edges';
-import SnapDistanceCmd from './snap-distance-cmd';
+import { SnapDistanceCmd } from './snap-distance-cmd';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
