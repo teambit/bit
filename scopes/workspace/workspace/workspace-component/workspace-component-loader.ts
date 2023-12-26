@@ -185,9 +185,10 @@ export class WorkspaceComponentLoader {
     const groupedByIsCoreEnvs = groupBy(allIds, (id) => {
       return this.envs.isCoreEnv(id.toStringWithoutVersion());
     });
-    await this.populateScopeAndExtensionsCache(groupedByIsCoreEnvs.false || [], workspaceScopeIdsMap);
+    const nonCoreEnvs = groupedByIsCoreEnvs.false || [];
+    await this.populateScopeAndExtensionsCache(nonCoreEnvs, workspaceScopeIdsMap);
     const allExtIds: Map<string, ComponentID> = new Map();
-    groupedByIsCoreEnvs.false.forEach((id) => {
+    nonCoreEnvs.forEach((id) => {
       const idStr = id.toString();
       const fromCache = this.componentsExtensionsCache.get(idStr);
       if (!fromCache || !fromCache.extensions) {
@@ -203,7 +204,7 @@ export class WorkspaceComponentLoader {
     await this.populateScopeAndExtensionsCache(allExtCompIds || [], workspaceScopeIdsMap);
 
     const allExtIdsStr = allExtCompIds.map((id) => id.toString());
-    const groupedByIsExtOfAnother = groupBy(groupedByIsCoreEnvs.false, (id) => {
+    const groupedByIsExtOfAnother = groupBy(nonCoreEnvs, (id) => {
       return allExtIdsStr.includes(id.toString());
     });
     const extIdsFromTheList = (groupedByIsExtOfAnother.true || []).map((id) => id.toString());
