@@ -229,7 +229,7 @@ export class WorkspaceComponentLoader {
 
     const groupsToHandle = [
       // Always load first core envs
-      { ids: groupedByIsCoreEnvs.true || [], core: true, aspects: true, seeders: false },
+      { ids: groupedByIsCoreEnvs.true || [], core: true, aspects: true, seeders: true },
       { ids: extsNotFromTheList || [], core: false, aspects: true, seeders: false },
       ...layerdExtGroups,
       { ids: groupedByIsExtOfAnother.false || [], core: false, aspects: false, seeders: true },
@@ -295,7 +295,7 @@ export class WorkspaceComponentLoader {
     // It's important to load the workspace components as aspects here
     // otherwise the envs from the workspace won't be loaded at time
     // so we will get wrong dependencies from component who uses envs from the workspace
-    if (loadOpts.loadSeedersAsAspects) {
+    if (loadOpts.loadSeedersAsAspects || (loadOpts.core && loadOpts.aspects)) {
       await this.loadCompsAsAspects(workspaceComponents.concat(scopeComponents), {
         loadApps: true,
         loadEnvs: true,
