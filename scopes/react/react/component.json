@@ -1,8 +1,8 @@
 {
   "componentId": {
+    "scope": "teambit.react",
     "name": "react",
-    "version": "0.0.10",
-    "scope": "teambit.react"
+    "version": "0.0.10"
   },
   "propagate": true,
   "extensions": {
@@ -46,6 +46,10 @@
           "@teambit/legacy": "1.0.624"
         }
       }
+    },
+    "teambit.envs/env": {},
+    "teambit.envs/envs": {
+      "env": "teambit.envs/env"
     }
   }
 }
