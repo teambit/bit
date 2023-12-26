@@ -758,6 +758,13 @@
             }
         }
     },
+    "envs/core-aspect-env": {
+        "name": "envs/core-aspect-env",
+        "scope": "teambit.harmony",
+        "version": "0.0.13",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/envs/core-aspect-env"
+    },
     "eslint": {
         "name": "eslint",
         "scope": "teambit.defender",

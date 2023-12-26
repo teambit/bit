@@ -1,0 +1,16 @@
+/**
+ * @see https://bit.dev/reference/typescript/typescript-config
+ */
+{
+  "extends": "@teambit/react/typescript/tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "target": "es2020",
+    "lib": ["esnext", "dom", "dom.Iterable"],
+    "experimentalDecorators": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./dist"
+  },
+  "exclude": ["artifacts", "public", "dist", "node_modules", "package.json", "esm.mjs", "**/*.cjs"],
+  "include": ["**/*", "**/*.json"]
+}

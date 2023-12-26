@@ -1,0 +1,89 @@
+---
+description: An env for Bit core aspects
+labels: ['core-aspect', 'aspect', 'environment', 'env', 'mocha', 'cjs', 'esm']
+---
+
+import { EnvOverview } from '@teambit/envs.docs.env-overview-template';
+
+An env for Bit core aspects.
+This env will:
+
+- use babel to compile the code to both cjs
+- use TS for d.ts generation
+- use Mocha for testing
+
+<EnvOverview
+  description="This env provides a development environment for core aspect components."
+  logo={{
+    name: 'Core Aspect Env',
+    icon: 'https://static.bit.dev/extensions-icons/default.svg',
+    background: '#144750',
+  }}
+  tools={{
+    developmentTools: [
+      {
+        name: 'Babel CJS',
+        logo: 'https://static.bit.dev/extensions-icons/babel.svg',
+        configFiles: ['https://bit.cloud/teambit/harmony/envs/core-aspect-env/~code/config/cjs.babel.config'],
+      },
+      {
+        name: 'TypeScript',
+        configFiles: ['https://bit.cloud/teambit/harmony/envs/core-aspect-env/~code/config/tsconfig.json'],
+      },
+      {
+        name: 'Jest',
+        configFiles: ['https://bit.cloud/teambit/harmony/envs/core-aspect-env/~code/config/jest.config.js'],
+      },
+      {
+        name: 'ESLint',
+        configFiles: ['https://bit.cloud/teambit/harmony/envs/core-aspect-env/~code/config/eslintrc.js'],
+      },
+      {
+        name: 'Prettier',
+        configFiles: ['https://bit.cloud/teambit/harmony/envs/core-aspect-env/~code/config/prettier.config.js'],
+      },
+    ],
+    buildPipeline: [
+      {
+        name: 'TypeScript',
+        configFiles: ['https://bit.cloud/teambit/harmony/envs/core-aspect-env/~code/config/tsconfig.json'],
+      },
+      {
+        name: 'Babel CJS',
+        configFiles: ['https://bit.cloud/teambit/harmony/envs/core-aspect-env/~code/config/cjs.babel.config'],
+      },
+      {
+        name: 'Babel ESM',
+        configFiles: ['https://bit.cloud/teambit/harmony/envs/core-aspect-env/~code/config/esm.babel.config'],
+      },
+      {
+        name: 'ESLint',
+        configFiles: ['https://bit.cloud/teambit/harmony/envs/core-aspect-env/~code/config/eslintrc.js'],
+      },
+      {
+        name: 'Jest',
+        configFiles: ['https://bit.cloud/teambit/harmony/envs/core-aspect-env/~code/config/jest.config.js'],
+      },
+    ],
+    previewsAndDocs: [
+      {
+        name: 'Component Preview',
+        configFiles: ['https://bit.cloud/teambit/harmony/envs/core-aspect-env/~code/preview/mounter.tsx'],
+      },
+      {
+        name: 'Component Docs',
+        configFiles: ['https://bit.cloud/teambit/harmony/envs/core-aspect-env/~code/preview/docs.tsx'],
+      },
+      {
+        name: 'Webpack',
+        configFiles: ['https://bit.cloud/teambit/harmony/envs/core-aspect-env/~code/config/webpack.config.ts'],
+      },
+      {
+        name: 'Webpack Dev Server',
+        configFiles: ['https://bit.cloud/teambit/harmony/envs/core-aspect-env/~code/config/webpack.config.ts'],
+      },
+    ],
+  }}
+  envId="teambit.harmony/envs/core-aspect-env"
+  isExtension
+/>
