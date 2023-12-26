@@ -458,31 +458,6 @@ please create a new lane instead, which will include all components of this lane
   }
 
   /**
-   * get the distance for a component between two lanes. for example, lane-b forked from lane-a and lane-b added some new snaps
-   * @param componentId
-   * @param sourceHead head on the source lane. leave empty if the source is main
-   * @param targetHead head on the target lane. leave empty if the target is main
-   * @returns
-   */
-  async getSnapsDistance(
-    componentId: ComponentID,
-    sourceHead?: string,
-    targetHead?: string,
-    throws?: boolean
-  ): Promise<SnapsDistance> {
-    if (!sourceHead && !targetHead)
-      throw new Error(`getDivergeData got sourceHead and targetHead empty. at least one of them should be populated`);
-    const modelComponent = await this.scope.legacyScope.getModelComponent(componentId);
-    return getDivergeData({
-      modelComponent,
-      repo: this.scope.legacyScope.objects,
-      sourceHead: sourceHead ? Ref.from(sourceHead) : modelComponent.head || null,
-      targetHead: targetHead ? Ref.from(targetHead) : modelComponent.head || null,
-      throws,
-    });
-  }
-
-  /**
    * get the head hash (snap) of main. return undefined if the component exists only on a lane and was never merged to main
    */
   async getHeadOnMain(componentId: ComponentID): Promise<string | undefined> {
@@ -765,7 +740,12 @@ please create a new lane instead, which will include all components of this lane
     await pMap(
       diffProps,
       async ({ componentId, sourceHead, targetHead }) => {
-        const snapsDistance = await this.getSnapsDistance(componentId, sourceHead, targetHead, false);
+        const snapsDistance = await this.scope.getSnapsDistanceBetweenTwoSnaps(
+          componentId,
+          sourceHead,
+          targetHead,
+          false
+        );
         if (snapsDistance) {
           snapDistancesByComponentId.set(componentId.toString(), {
             snapsDistance,
@@ -900,7 +880,7 @@ please create a new lane instead, which will include all components of this lane
     targetHead?: string,
     options?: LaneDiffStatusOptions
   ): Promise<LaneComponentDiffStatus> {
-    const snapsDistance = await this.getSnapsDistance(componentId, sourceHead, targetHead, false);
+    const snapsDistance = await this.scope.getSnapsDistanceBetweenTwoSnaps(componentId, sourceHead, targetHead, false);
 
     if (snapsDistance?.err) {
       const noCommonSnap = snapsDistance.err instanceof NoCommonSnap;

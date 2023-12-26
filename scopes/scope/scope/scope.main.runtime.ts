@@ -21,10 +21,11 @@ import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { ModelComponent, Lane, Version } from '@teambit/legacy/dist/scope/models';
-import { Repository } from '@teambit/legacy/dist/scope/objects';
+import { Ref, Repository } from '@teambit/legacy/dist/scope/objects';
 import LegacyScope, { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
+import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import { PersistOptions } from '@teambit/legacy/dist/scope/types';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { DependencyResolverAspect, DependencyResolverMain, NodeLinker } from '@teambit/dependency-resolver';
@@ -941,6 +942,31 @@ export class ScopeMain implements ComponentFactory {
     const modelComp = await this.legacyScope.getModelComponent(id);
     await modelComp.setDivergeData(this.legacyScope.objects, throws);
     return modelComp.getDivergeData();
+  }
+  /**
+   * get the distance for a component between two lanes. for example, lane-b forked from lane-a and lane-b added some new snaps
+   * @param componentId
+   * @param sourceHead head on the source lane. leave empty if the source is main
+   * @param targetHead head on the target lane. leave empty if the target is main
+   * @returns
+   */
+  async getSnapsDistanceBetweenTwoSnaps(
+    componentId: ComponentID,
+    sourceHead?: string,
+    targetHead?: string,
+    throws?: boolean
+  ): Promise<SnapsDistance> {
+    if (!sourceHead && !targetHead) {
+      throw new Error(`getDivergeData got sourceHead and targetHead empty. at least one of them should be populated`);
+    }
+    const modelComponent = await this.legacyScope.getModelComponent(componentId);
+    return getDivergeData({
+      modelComponent,
+      repo: this.legacyScope.objects,
+      sourceHead: sourceHead ? Ref.from(sourceHead) : modelComponent.head || null,
+      targetHead: targetHead ? Ref.from(targetHead) : modelComponent.head || null,
+      throws,
+    });
   }
 
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
