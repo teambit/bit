@@ -14,6 +14,7 @@ export type ResolveAspectsOptions = FilterAspectsOptions & {
   workspaceName?: string;
   skipDeps?: boolean;
   resolveEnvsFromRoots?: boolean;
+  packageManagerConfigRootDir?: string;
 };
 
 export type LoadAspectsOptions = {

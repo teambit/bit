@@ -31,6 +31,7 @@ import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ShouldLoadFunc } from './build-graph-from-fs';
 import type { Workspace } from './workspace';
 import { OnAspectsResolve, OnAspectsResolveSlot, OnRootAspectAdded, OnRootAspectAddedSlot } from './workspace.provider';
+import { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
 
 export type GetConfiguredUserAspectsPackagesOptions = {
   externalsOnly?: boolean;
@@ -188,17 +189,21 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       );
       return scopeAspectIds;
     } catch (err: any) {
-      if (err instanceof ComponentNotFound) {
-        const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
-        const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
-        if (configStr.includes(err.id)) {
-          throw new BitError(`error: a component "${err.id}" was not found
-  your workspace.jsonc has this component-id set. you might want to remove/change it.`);
-        }
-        return scopeAspectIds;
-      }
+      this.throwWsJsoncAspectNotFoundError(err);
+      return scopeAspectIds;
 
       throw err;
+    }
+  }
+
+  throwWsJsoncAspectNotFoundError(err: any) {
+    if (err instanceof ComponentNotFound) {
+      const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
+      const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
+      if (configStr.includes(err.id)) {
+        throw new BitError(`error: a component "${err.id}" was not found
+your workspace.jsonc has this component-id set. you might want to remove/change it.`);
+      }
     }
   }
 
@@ -252,6 +257,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       useScopeAspectsCapsule: false,
       workspaceName: this.workspace.name,
       resolveEnvsFromRoots: this.resolveEnvsFromRoots,
+      packageManagerConfigRootDir: this.workspace.path,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
@@ -630,6 +636,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       return localPath;
     }
     const parent = graph.predecessors(aspectStringId)[0];
+    if (!parent) return undefined;
     const parentPath = await this.resolveInstalledAspectRecursively(parent.attr, rootIds, graph);
     if (!parentPath) {
       this.resolvedInstalledAspects.set(aspectStringId, null);
@@ -692,7 +699,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
    * Only use it for component extensions
    * for workspace/scope root aspect use the load aspects directly
    *
-   * The reason we are loading component extensions with "scope aspects capsules" is becasuse for component extensions
+   * The reason we are loading component extensions with "scope aspects capsules" is because for component extensions
    * we might have the same extension in multiple versions
    * (for example I might have 2 components using different versions of the same env)
    * in such case, I can't install both version into the root of the node_modules so I need to place it somewhere else (capsules)
@@ -743,16 +750,15 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
    */
   private async importAndGetAspects(componentIds: ComponentID[]): Promise<Component[]> {
     try {
-      return await this.workspace.importAndGetMany(componentIds, 'to load aspects from the workspace');
+      // We don't want to load the seeders as aspects as it will cause an infinite loop
+      // once you try to load the seeder it will try to load the workspace component
+      // that will arrive here again and again
+      const loadOpts: ComponentLoadOptions = {
+        idsToNotLoadAsAspects: componentIds.map((id) => id.toString()),
+      };
+      return await this.workspace.importAndGetMany(componentIds, 'to load aspects from the workspace', loadOpts);
     } catch (err: any) {
-      if (err instanceof ComponentNotFound) {
-        const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
-        const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
-        if (configStr.includes(err.id)) {
-          throw new BitError(`error: a component "${err.id}" was not found
-your workspace.jsonc has this component-id set. you might want to remove/change it.`);
-        }
-      }
+      this.throwWsJsoncAspectNotFoundError(err);
 
       throw err;
     }

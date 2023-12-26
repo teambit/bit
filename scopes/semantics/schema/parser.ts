@@ -9,5 +9,5 @@ export interface Parser {
   /**
    * parse a module.
    */
-  parseModule(modulePath: string): Export[];
+  parseModule(modulePath: string, content?: string): Export[];
 }

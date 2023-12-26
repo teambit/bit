@@ -319,7 +319,10 @@ export class WorkspaceCompiler {
   ): Promise<BuildResult[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const componentIds = await this.getIdsToCompile(componentsIds, options.changed);
-    const components = await this.workspace.getMany(componentIds);
+    // In case the aspect failed to load, we want to compile it without try to re-load it again
+    const getManyOpts =
+      options.initiator === CompilationInitiator.AspectLoadFail ? { loadSeedersAsAspects: false } : undefined;
+    const components = await this.workspace.getMany(componentIds, getManyOpts);
 
     const grouped = this.groupByIsEnv(components);
     const envsResults = grouped.envs ? await this.runCompileComponents(grouped.envs, options, noThrow) : [];
