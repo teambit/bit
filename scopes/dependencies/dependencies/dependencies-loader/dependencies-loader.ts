@@ -46,7 +46,8 @@ export class DependenciesLoader {
       this.component,
       results.overridesDependencies,
       results.autoDetectOverrides,
-      applyOverrides.debugDependenciesData.components
+      applyOverrides.debugDependenciesData.components,
+      opts.resolveExtensionsVersions
     );
 
     return {
@@ -86,7 +87,7 @@ export class DependenciesLoader {
       this.aspectLoader
     );
     const results = await autoDetectDeps.getDependenciesData(opts.cacheResolvedDependencies, opts.cacheProjectAst);
-    if (this.shouldSaveInCache(results.dependenciesData)) {
+    if (this.shouldSaveInCache(results.dependenciesData, opts.storeInFsCache)) {
       await workspace.consumer.componentFsCache.saveDependenciesDataInCache(
         this.idStr,
         results.dependenciesData.serialize()
@@ -126,7 +127,8 @@ export class DependenciesLoader {
     return DependenciesData.deserialize(cacheData.data);
   }
 
-  private shouldSaveInCache(dependenciesData: DependenciesData) {
+  private shouldSaveInCache(dependenciesData: DependenciesData, storeInFsCache = true) {
+    if (!storeInFsCache) return false;
     if (!dependenciesData.issues) return true;
     return !dependenciesData.issues.shouldBlockSavingInCache();
   }

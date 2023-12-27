@@ -62,6 +62,7 @@ import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
 import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
 import { FlattenedEdgesGetter } from './flattened-edges';
+import { SnapDistanceCmd } from './snap-distance-cmd';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -1319,7 +1320,8 @@ another option, in case this dependency is not in main yet is to remove all refe
     const tagFromScopeCmd = new TagFromScopeCmd(snapping, logger);
     const snapFromScopeCmd = new SnapFromScopeCmd(snapping, logger);
     const resetCmd = new ResetCmd(snapping);
-    cli.register(tagCmd, snapCmd, resetCmd, tagFromScopeCmd, snapFromScopeCmd);
+    const snapDistanceCmd = new SnapDistanceCmd(scope);
+    cli.register(tagCmd, snapCmd, resetCmd, tagFromScopeCmd, snapFromScopeCmd, snapDistanceCmd);
     return snapping;
   }
 }

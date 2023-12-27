@@ -9,13 +9,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { BitId } from '../../bit-id';
-import {
-  DEFAULT_BINDINGS_PREFIX,
-  DEFAULT_BIT_RELEASE_TYPE,
-  DEFAULT_BIT_VERSION,
-  DEFAULT_LANGUAGE,
-  Extensions,
-} from '../../constants';
+import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { License, SourceFile } from '../../consumer/component/sources';
 import ComponentOverrides from '../../consumer/config/component-overrides';
@@ -54,7 +48,10 @@ import { SchemaName } from '../../consumer/component/component-schema';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { errorIsTypeOfMissingObject } from '../component-ops/scope-components-importer';
 import type Scope from '../scope';
+import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import { BitIdCompIdError } from '../exceptions/bit-id-comp-id-err';
+import { ExtensionDataList } from '../../consumer/config';
+import { getBindingPrefixByDefaultScope } from '../../consumer/config/component-config';
 
 type State = {
   versions?: {
@@ -146,7 +143,7 @@ export default class Component extends BitObject {
     this.orphanedVersions = props.orphanedVersions || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.deprecated = props.deprecated || false;
-    this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
+    this.bindingPrefix = props.bindingPrefix || getBindingPrefixByDefaultScope(props.scope);
     this.state = props.state || {};
     this.scopesList = props.scopesList || [];
     this.head = props.head;
@@ -948,10 +945,6 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   }
   /**
    * convert a ModelComponent of a specific version to ConsumerComponent
-   * when it's being called from the Consumer, some manipulation are done on the component, such
-   * as stripping the originallySharedDir and adding wrapDir.
-   * when it's being called from the Scope, no manipulations are done.
-   *
    * @see sources.consumerComponentToVersion() for the opposite action.
    */
   async toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
@@ -973,24 +966,21 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     const [files, scopeMeta] = await Promise.all([filesP, scopeMetaP]);
 
     const extensions = version.extensions.clone();
-    const bindingPrefix = this.bindingPrefix === 'bit' ? '@bit' : this.bindingPrefix;
     // when generating a new ConsumerComponent out of Version, it is critical to make sure that
     // all objects are cloned and not copied by reference. Otherwise, every time the
     // ConsumerComponent instance is changed, the Version will be changed as well, and since
     // the Version instance is saved in the Repository._cache, the next time a Version instance
     // is retrieved, it'll be different than the first time.
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const consumerComponent = new ConsumerComponent({
       name: this.name,
       version: componentVersion.version,
       scope: this.toComponentId()._legacy.scope,
       defaultScope: this.scope,
       lang: this.lang,
-      bindingPrefix,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      mainFile: version.mainFile || null,
-      dependencies: version.dependencies.getClone(),
-      devDependencies: version.devDependencies.getClone(),
+      bindingPrefix: this.bindingPrefix,
+      mainFile: version.mainFile,
+      dependencies: this.addDepsInfoFromDepsResolver(version.dependencies, extensions),
+      devDependencies: this.addDepsInfoFromDepsResolver(version.devDependencies, extensions),
       flattenedDependencies: version.flattenedDependencies.clone(),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
@@ -1012,6 +1002,22 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     });
 
     return consumerComponent;
+  }
+
+  private addDepsInfoFromDepsResolver(dependencies: Dependencies, extensions: ExtensionDataList): Dependency[] {
+    const cloned = dependencies.getClone();
+    const depsResolverData = extensions.find((ext) => ext.name === 'teambit.dependencies/dependency-resolver');
+    if (!depsResolverData) return cloned;
+    cloned.forEach((dependency) => {
+      if (dependency.packageName) return;
+      const matchedEntry = depsResolverData.data?.dependencies?.find((entry) => {
+        return dependency.id.toString() === entry.id;
+      });
+      if (matchedEntry) {
+        dependency.packageName = matchedEntry.packageName;
+      }
+    });
+    return cloned;
   }
 
   // @todo: make sure it doesn't have the same ref twice, once as a version and once as a head

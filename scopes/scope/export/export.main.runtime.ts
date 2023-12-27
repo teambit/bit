@@ -805,7 +805,8 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     loader.start(BEFORE_EXPORT); // show single export
     const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
     // load the components for fixing any out-of-sync issues.
-    await consumer.loadComponents(ComponentIdList.fromArray(parsedIds));
+    // TODO: check if we really need the load extensions here
+    await consumer.loadComponents(ComponentIdList.fromArray(parsedIds), undefined, { loadExtensions: true });
 
     return filterNonScopeIfNeeded(ComponentIdList.fromArray(parsedIds));
   }

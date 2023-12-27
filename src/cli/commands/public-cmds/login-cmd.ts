@@ -44,14 +44,7 @@ export default class Login implements LegacyCommand {
       ...results,
     }));
   }
-  report({
-    isAlreadyLoggedIn = false,
-    username,
-  }: {
-    isAlreadyLoggedIn: boolean;
-    username: string;
-    writeToNpmrcError: boolean;
-  }): string {
+  report({ isAlreadyLoggedIn = false, username }: { isAlreadyLoggedIn: boolean; username: string }): string {
     if (isAlreadyLoggedIn) return chalk.yellow('already logged in');
     const successLoginMessage = chalk.green(`success! logged in as ${username}`);
     const finalMessage = successLoginMessage;
