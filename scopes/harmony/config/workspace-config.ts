@@ -2,7 +2,6 @@ import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constant
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
-import { InvalidBitJson } from '@teambit/legacy/dist/consumer/config/exceptions';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigProps as LegacyWorkspaceConfigProps,
 } from '@teambit/legacy/dist/consumer/config/workspace-config';
@@ -12,7 +11,7 @@ import { assign, parse, stringify, CommentJSONValue } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { isEmpty, omit } from 'lodash';
-
+import WorkspaceAspect from '@teambit/workspace';
 import { SetExtensionOptions } from './config.main.runtime';
 import { ExtensionAlreadyConfigured } from './exceptions';
 import { ConfigDirNotDefined } from './exceptions/config-dir-not-defined';
@@ -62,7 +61,6 @@ export type WorkspaceSettingsNewProps = {
 
 export type WorkspaceLegacyProps = {
   dependenciesDirectory?: string;
-  bindingPrefix?: string;
   saveDependenciesAsComponents?: boolean;
 };
 
@@ -75,14 +73,13 @@ export class WorkspaceConfig implements HostConfig {
   _legacyProps?: WorkspaceLegacyProps;
   isLegacy: boolean;
 
-  constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {
-    this.isLegacy = Boolean(legacyConfig);
+  constructor(private data: WorkspaceConfigFileProps) {
     this.raw = data;
     this.loadExtensions();
   }
 
   get path(): PathOsBased {
-    return this._path || this.legacyConfig?.path || '';
+    return this._path || '';
   }
 
   set path(configPath: PathOsBased) {
@@ -127,18 +124,6 @@ export class WorkspaceConfig implements HostConfig {
   }
 
   /**
-   * Create an instance of the WorkspaceConfig by an instance of the legacy config
-   *
-   * @static
-   * @param {*} legacyConfig
-   * @returns
-   * @memberof WorkspaceConfig
-   */
-  static fromLegacyConfig(legacyConfig) {
-    return new WorkspaceConfig(undefined, legacyConfig);
-  }
-
-  /**
    * Create an instance of the WorkspaceConfig by data
    *
    * @static
@@ -147,7 +132,7 @@ export class WorkspaceConfig implements HostConfig {
    * @memberof WorkspaceConfig
    */
   static fromObject(data: WorkspaceConfigFileProps) {
-    return new WorkspaceConfig(data, undefined);
+    return new WorkspaceConfig(data);
   }
 
   /**
@@ -160,10 +145,11 @@ export class WorkspaceConfig implements HostConfig {
    */
   static async create(props: WorkspaceConfigFileProps, dirPath?: PathOsBasedAbsolute) {
     const template = await getWorkspaceConfigTemplateParsed();
-    // TODO: replace this assign with some kind of deepAssign that keeps the comments
-    // right now the comments above the internal props are overrides after the assign
-    const merged = assign(template, props);
-    const instance = new WorkspaceConfig(merged, undefined);
+    // previously, we just did `assign(template, props)`, but it was replacing the entire workspace config with the "props".
+    // so for example, if the props only had defaultScope, it was removing the defaultDirectory.
+    const workspaceAspectConf = assign(template[WorkspaceAspect.id], props[WorkspaceAspect.id]);
+    const merged = assign(template, { [WorkspaceAspect.id]: workspaceAspectConf });
+    const instance = new WorkspaceConfig(merged);
     if (dirPath) {
       instance.path = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
     }
@@ -192,30 +178,12 @@ export class WorkspaceConfig implements HostConfig {
       workspaceConfig = await this.create(workspaceConfigProps, dirPath);
       return workspaceConfig;
     } catch (err: any) {
-      if (err instanceof InvalidBitJson || err instanceof InvalidConfigFile) {
+      if (err instanceof InvalidConfigFile) {
         const workspaceConfig = this.create(workspaceConfigProps, dirPath);
         return workspaceConfig;
       }
       throw err;
     }
-  }
-
-  /**
-   * A function that register to the legacy ensure function in order to transform old props structure
-   * to the new one
-   * @param dirPath
-   * @param standAlone
-   * @param legacyWorkspaceConfigProps
-   */
-  static async onLegacyEnsure(
-    dirPath: PathOsBasedAbsolute,
-    standAlone: boolean,
-    legacyWorkspaceConfigProps: LegacyWorkspaceConfigProps = {} as any
-  ): Promise<WorkspaceConfig> {
-    const newProps: WorkspaceConfigFileProps = transformLegacyPropsToExtensions(legacyWorkspaceConfigProps);
-    // TODO: gilad move to constants file
-    newProps.$schemaVersion = '1.0.0';
-    return WorkspaceConfig.ensure(dirPath, newProps);
   }
 
   static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
@@ -227,10 +195,10 @@ export class WorkspaceConfig implements HostConfig {
   }
 
   /**
-   * Get the path of the bit.jsonc file by a containing folder
+   * Get the path of the workspace.jsonc file by a containing folder
    *
    * @static
-   * @param {PathOsBased} dirPath containing dir of the bit.jsonc file
+   * @param {PathOsBased} dirPath containing dir of the workspace.jsonc file
    * @returns {PathOsBased}
    * @memberof WorkspaceConfig
    */
@@ -271,10 +239,6 @@ export class WorkspaceConfig implements HostConfig {
       instance.path = jsoncPath;
       return instance;
     }
-    const legacyConfig = await LegacyWorkspaceConfig._loadIfExist(dirPath);
-    if (legacyConfig) {
-      return WorkspaceConfig.fromLegacyConfig(legacyConfig);
-    }
     return undefined;
   }
 
@@ -296,34 +260,21 @@ export class WorkspaceConfig implements HostConfig {
       throw new ConfigDirNotDefined();
     };
     const calculatedDir = getCalculatedDir();
-    if (this.data) {
-      const files = await this.toVinyl(calculatedDir);
-      const dataToPersist = new DataToPersist();
-      if (files) {
-        dataToPersist.addManyFiles(files);
-        return dataToPersist.persistAllToFS();
-      }
+    const files = await this.toVinyl(calculatedDir);
+    const dataToPersist = new DataToPersist();
+    if (files) {
+      dataToPersist.addManyFiles(files);
+      return dataToPersist.persistAllToFS();
     }
-    await this.legacyConfig?.write({ workspaceDir: calculatedDir });
     return undefined;
   }
 
   async toVinyl(workspaceDir: PathOsBasedAbsolute): Promise<AbstractVinyl[] | undefined> {
-    if (this.data) {
-      const jsonStr = `${stringify(this.data, undefined, 2)}\n`;
-      const base = workspaceDir;
-      const fullPath = workspaceDir ? WorkspaceConfig.composeWorkspaceJsoncPath(workspaceDir) : this.path;
-      const jsonFile = new AbstractVinyl({ base, path: fullPath, contents: Buffer.from(jsonStr) });
-      return [jsonFile];
-    }
-    return this.legacyConfig?.toVinyl({ workspaceDir });
-  }
-
-  _legacyPlainObject(): { [prop: string]: any } | undefined {
-    if (this.legacyConfig) {
-      return this.legacyConfig.toPlainObject();
-    }
-    return undefined;
+    const jsonStr = `${stringify(this.data, undefined, 2)}\n`;
+    const base = workspaceDir;
+    const fullPath = workspaceDir ? WorkspaceConfig.composeWorkspaceJsoncPath(workspaceDir) : this.path;
+    const jsonFile = new AbstractVinyl({ base, path: fullPath, contents: Buffer.from(jsonStr) });
+    return [jsonFile];
   }
 
   toLegacy(): ILegacyWorkspaceConfig {
@@ -333,7 +284,7 @@ export class WorkspaceConfig implements HostConfig {
     }
 
     return {
-      lang: this.legacyConfig?.lang || DEFAULT_LANGUAGE,
+      lang: DEFAULT_LANGUAGE,
       defaultScope: this.extension('teambit.workspace/workspace', true)?.defaultScope,
       _useWorkspaces: this.extension('teambit.dependencies/dependency-resolver', true)?.useWorkspaces,
       dependencyResolver: this.extension('teambit.dependencies/dependency-resolver', true),
@@ -345,16 +296,10 @@ export class WorkspaceConfig implements HostConfig {
       extensions: this.extensions.toConfigObject(),
       // @ts-ignore
       path: this.path,
-      isLegacy: this.isLegacy,
+      isLegacy: false,
       write: ({ workspaceDir }) => this.write.call(this, { dir: workspaceDir }),
       toVinyl: this.toVinyl.bind(this),
-      componentsConfig: this.legacyConfig ? this.legacyConfig?.overrides : undefined,
-      getComponentConfig: this.legacyConfig
-        ? this.legacyConfig?.overrides.getOverrideComponentData.bind(this.legacyConfig?.overrides)
-        : () => undefined,
-      _legacyPlainObject: this.legacyConfig
-        ? this.legacyConfig?.toPlainObject.bind(this.legacyConfig)
-        : () => undefined,
+      _legacyPlainObject: () => undefined,
     };
   }
 }
@@ -384,19 +329,12 @@ export function transformLegacyPropsToExtensions(
     manageWorkspaces: legacyConfig.manageWorkspaces,
     useWorkspaces: legacyConfig.useWorkspaces,
   });
-  const variants = legacyConfig.overrides?.overrides;
   const data = {};
   if (workspace && !isEmpty(workspace)) {
     data['teambit.workspace/workspace'] = workspace;
   }
   if (dependencyResolver && !isEmpty(dependencyResolver)) {
     data['teambit.dependencies/dependency-resolver'] = dependencyResolver;
-  }
-  // TODO: add variants here once we have a way to pass the deps overrides and general key vals for package.json to
-  // TODO: new extensions (via dependency-resolver extension and pkg extensions)
-  // TODO: transform legacy props to new one once dependency-resolver extension and pkg extensions are ready
-  if (variants && !isEmpty(variants)) {
-    data['teambit.workspace/variants'] = variants;
   }
   // @ts-ignore
   return data;

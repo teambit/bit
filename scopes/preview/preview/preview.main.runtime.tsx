@@ -31,6 +31,7 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { BundlingStrategyNotFound } from './exceptions';
 import { generateLink, MainModulesMap } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
@@ -884,6 +885,7 @@ export class PreviewMain {
     DependencyResolverAspect,
     GraphqlAspect,
     WatcherAspect,
+    ScopeAspect,
   ];
 
   static defaultConfig = {
@@ -907,6 +909,7 @@ export class PreviewMain {
       dependencyResolver,
       graphql,
       watcher,
+      scope,
     ]: [
       BundlerMain,
       BuilderMain,
@@ -920,7 +923,8 @@ export class PreviewMain {
       LoggerMain,
       DependencyResolverMain,
       GraphqlMain,
-      WatcherMain
+      WatcherMain,
+      ScopeMain
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
@@ -971,13 +975,16 @@ export class PreviewMain {
       workspace.registerOnComponentAdd((c) =>
         preview.handleComponentChange(c, (currentComponents) => currentComponents.add(c))
       );
-      workspace.onComponentLoad(async (component) => {
+      workspace.registerOnComponentLoad(async (component) => {
         return preview.calcPreviewData(component);
       });
       workspace.registerOnComponentChange((c) =>
         preview.handleComponentChange(c, (currentComponents) => currentComponents.update(c))
       );
       workspace.registerOnComponentRemove((cId) => preview.handleComponentRemoval(cId));
+    }
+    if (scope) {
+      scope.registerOnCompAspectReCalc((c) => preview.calcPreviewData(c));
     }
 
     envs.registerService(new PreviewService());

@@ -9,21 +9,10 @@
     "teambit.dependencies/dependency-resolver": {
       "policy": {
         "dependencies": {
-          "source-map-loader": "3.0.0",
-          "babel-loader": "9.1.2",
-          "resolve-url-loader": "5.0.0",
-          "babel-plugin-named-asset-import": "0.3.7",
-          "style-loader": "^2.0.0",
-          "css-loader": "5.2.0",
           "postcss": "8.4.18",
-          "postcss-loader": "7.0.1",
-          "postcss-normalize": "10.0.0",
-          "postcss-flexbugs-fixes": "5.0.2",
           "sanitize.css": "12.0.1",
           "sass": "1.63.6",
-          "sass-loader": "13.3.2",
           "less": "^4.1.1",
-          "less-loader": "8.0.0",
           "@teambit/legacy": "-",
           "@babel/runtime": "7.23.2"
         },
@@ -35,9 +24,13 @@
           "@types/webpack-dev-server": "-"
         },
         "peerDependencies": {
-          "@teambit/legacy": "1.0.619"
+          "@teambit/legacy": "1.0.625"
         }
       }
-    }
+    },
+    "teambit.envs/envs": {
+      "env": "teambit.harmony/envs/core-aspect-env"
+    },
+    "teambit.harmony/envs/core-aspect-env@0.0.14": {}
   }
 }

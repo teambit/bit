@@ -10,7 +10,7 @@ To improve component-loading performance, the dependencies data is cached in the
 
 ### The entire cache of all component dependencies is invalidated if one of the following happened:
 
-1. workspace-config file (bit.json/workspace.jsonc) has changed.
+1. workspace-config file (workspace.jsonc) has changed.
 2. package.json file has changed.
 3. node_modules-dir (only root dir, not sub-dirs) has changed. - not sure if needed.
 4. On completion of "bit link".

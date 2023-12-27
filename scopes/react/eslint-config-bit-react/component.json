@@ -1,7 +1,8 @@
 {
   "componentId": {
-    "name": "react",
-    "version": "0.0.10"
+    "scope": "teambit.react",
+    "name": "eslint-config-bit-react",
+    "version": "1.0.64"
   },
   "propagate": true,
   "extensions": {
@@ -44,9 +45,13 @@
         },
         "peerDependencies": {
           "eslint": "> 7.0.0",
-          "@teambit/legacy": "1.0.619"
+          "@teambit/legacy": "1.0.625"
         }
       }
+    },
+    "teambit.harmony/node": {},
+    "teambit.envs/envs": {
+      "env": "teambit.harmony/node"
     }
   }
 }

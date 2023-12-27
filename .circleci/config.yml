@@ -451,7 +451,7 @@ jobs:
       - run: bvm config set RELEASE_TYPE nightly
       # - run: bvm install 0.0.910
       - run: bvm upgrade
-      # - run: bvm install 1.3.10
+      # - run: bvm install 1.5.36
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
@@ -529,7 +529,6 @@ jobs:
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
-      BIT_BUILD_GRAPH_FROM_HISTORIC_FLATTENED_EDGES: true
     steps:
       - attach_workspace:
           at: ./
@@ -863,7 +862,6 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
-      BIT_BUILD_GRAPH_FROM_HISTORIC_FLATTENED_EDGES: true
     parallelism: 25
     steps:
       - attach_workspace:

@@ -2,20 +2,15 @@ import { Harmony } from '@teambit/harmony';
 import { Component } from '@teambit/component';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { ComponentID } from '@teambit/component-id';
-import { lt } from 'semver';
-import { InvalidScopeNameFromRemote, InvalidScopeName } from '@teambit/legacy-bit-id';
 import { EnvsAspect } from '@teambit/envs';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
-import { VERSION_CHANGED_BIT_ID_TO_COMP_ID } from '@teambit/legacy/dist/constants';
-import { ExtensionDataList, ignoreVersionPredicate } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList, getCompareExtPredicate } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { partition, mergeWith, merge, uniq, uniqWith } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { AspectSpecificField, ExtensionsOrigin, Workspace } from './workspace';
 import { MergeConflictFile } from './merge-conflict-file';
-import { WorkspaceLoadAspectsOptions } from './workspace-aspects-loader';
 
 export class AspectsMerger {
-  private warnedAboutMisconfiguredEnvs: string[] = []; // cache env-ids that have been errored about not having "env" type
   readonly mergeConflictFile: MergeConflictFile;
   private mergeConfigDepsResolverDataCache: { [compIdStr: string]: Record<string, any> } = {};
   constructor(private workspace: Workspace, private harmony: Harmony) {
@@ -143,7 +138,6 @@ export class AspectsMerger {
         origin
       );
       if (envIsCurrentlySet) {
-        await this.warnAboutMisconfiguredEnv(componentId, extensions);
         envWasFoundPreviously = true;
       }
 
@@ -179,9 +173,9 @@ export class AspectsMerger {
     if (mergeFromScope && continuePropagating && !excludeOrigins.includes('ModelNonSpecific')) {
       await addExtensionsToMerge(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
+
     const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
-    const afterLoaded = await this.loadExtensions(afterMerge, componentId);
-    const withoutRemoved = afterLoaded.filter((extData) => !removedExtensionIds.includes(extData.stringId));
+    const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
     const extensions = ExtensionDataList.fromArray(withoutRemoved);
     return {
       extensions,
@@ -203,7 +197,7 @@ export class AspectsMerger {
     }
     // let's remove this duplicated extension blindly without trying to merge. (no need to merge coz it's old data from scope
     // which will be overridden anyway by the workspace or other config strategies).
-    const arr = uniqWith(scopeExtensions, ignoreVersionPredicate);
+    const arr = uniqWith(scopeExtensions, getCompareExtPredicate(true));
     return ExtensionDataList.fromArray(arr);
   }
 
@@ -253,31 +247,6 @@ export class AspectsMerger {
     return this.workspace.scope.legacyScope.objects.unmergedComponents.getEntry(componentId.fullName);
   }
 
-  private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {
-    if (!(await this.workspace.hasId(componentId))) {
-      // if this is a dependency and not belong to the workspace, don't show the warning
-      return;
-    }
-    const envAspect = extensionDataList.findExtension(EnvsAspect.id);
-    const envFromEnvsAspect = envAspect?.config.env;
-    if (!envFromEnvsAspect) return;
-    if (this.workspace.envs.getCoreEnvsIds().includes(envFromEnvsAspect)) return;
-    if (this.warnedAboutMisconfiguredEnvs.includes(envFromEnvsAspect)) return;
-    let env: Component;
-    try {
-      const envId = await this.workspace.resolveComponentId(envFromEnvsAspect);
-      env = await this.workspace.get(envId);
-    } catch (err) {
-      return; // unable to get the component for some reason. don't sweat it. forget about the warning
-    }
-    if (!this.workspace.envs.isUsingEnvEnv(env)) {
-      this.warnedAboutMisconfiguredEnvs.push(envFromEnvsAspect);
-      this.workspace.logger.consoleWarning(
-        `env "${envFromEnvsAspect}" is not of type env. (correct the env's type, or component config with "bit env set ${envFromEnvsAspect} teambit.envs/env")`
-      );
-    }
-  }
-
   private async filterEnvsFromExtensionsIfNeeded(
     extensionDataList: ExtensionDataList,
     envWasFoundPreviously: boolean,
@@ -318,53 +287,6 @@ export class AspectsMerger {
       }
     }
     return { extensionDataListFiltered: extensionDataList, envIsCurrentlySet: Boolean(envFromEnvsAspect) };
-  }
-
-  /**
-   * Load all unloaded extensions from a list
-   * @param extensions list of extensions with config to load
-   */
-  private async loadExtensions(
-    extensions: ExtensionDataList,
-    originatedFrom: ComponentID,
-    opts: WorkspaceLoadAspectsOptions = {}
-  ): Promise<ExtensionDataList> {
-    const workspaceAspectsLoader = this.workspace.getWorkspaceAspectsLoader();
-    try {
-      await workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, opts);
-      return extensions;
-    } catch (err) {
-      if (err instanceof InvalidScopeNameFromRemote || err instanceof InvalidScopeName) {
-        const scopeName = err.scopeName;
-        const shouldStrip = await this.shouldStripInvalidExtIds(originatedFrom);
-        if (shouldStrip) {
-          const newExtensions = extensions.filter((ext) => {
-            if (ext.extensionId) return ext.extensionId.scope !== scopeName;
-            const scope = ext.stringId.split('/')[0];
-            return scope !== scopeName;
-          });
-          const newExtDataList = ExtensionDataList.fromArray(newExtensions);
-          await workspaceAspectsLoader.loadComponentsExtensions(newExtDataList, originatedFrom, opts);
-          return newExtDataList;
-        }
-      }
-      throw err;
-    }
-  }
-
-  /**
-   * we saw occurrences of ExtensionDataEntry with invalid `name` prop, e.g. "blogging/teambit".
-   * these occurrences should not happen today, and if they do, it should throw.
-   * this is a workaround to be able to fix/tag those old occurrences.
-   */
-  async shouldStripInvalidExtIds(compId: ComponentID) {
-    if (!compId.hasVersion()) return false;
-    const modelComp = await this.workspace.scope.getBitObjectModelComponent(compId);
-    if (!modelComp) return false; // probably new comp
-    const verObj = await this.workspace.scope.getBitObjectVersion(modelComp, compId.version as string);
-    if (!verObj) return false; // probably new comp
-    if (!verObj.bitVersion) return true; // super old
-    return lt(verObj.bitVersion, VERSION_CHANGED_BIT_ID_TO_COMP_ID);
   }
 
   /**
