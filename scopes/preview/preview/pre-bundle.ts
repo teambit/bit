@@ -19,7 +19,7 @@ import { createWebpackConfig, clearConsole } from './pre-bundle-utils';
 export const PRE_BUNDLE_PREVIEW_RUNTIME_NAME = 'preview';
 export const PRE_BUNDLE_PREVIEW_TASK_NAME = 'PreBundlePreview';
 export const PRE_BUNDLE_PREVIEW_ID = PreviewAspect.id;
-export const PRE_BUNDLE_PREVIEW_DIR = 'pre-bundle-preview';
+export const PRE_BUNDLE_PREVIEW_DIR = 'ui-bundle';
 export const PRE_BUNDLE_PREVIEW_PUBLIC_DIR = 'public/bit-preview';
 
 const ENTRY_CONTENT_TEMPLATE = `__IMPORTS__
@@ -98,7 +98,7 @@ export const generatePreBundlePreviewEntry = (
     .replaceAll('__RUNTIME_NAME__', JSON.stringify(runtimeName))
     .replaceAll('__ROOT_ASPECT__', JSON.stringify(rootAspectId))
     .replaceAll('__ROOT_EXTENSION_NAME__', JSON.stringify(rootExtensionName));
-  const entryPath = resolve(join(dir, `pre-bundle-preview-entry.${sha1(contents)}.js`));
+  const entryPath = resolve(join(dir, `ui-bundle-entry.${sha1(contents)}.js`));
   console.log('\n[generatePreBundlePreviewEntry]', {
     rootExtensionName,
     runtimeName,

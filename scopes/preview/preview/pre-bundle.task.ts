@@ -10,7 +10,7 @@ import { buildPreBundlePreview } from './pre-bundle';
 
 export const UIROOT_ASPECT_ID = 'teambit.workspace/workspace';
 export const PRE_BUNDLE_PREVIEW_TASK_NAME = 'PreBundlePreview';
-export const PRE_BUNDLE_PREVIEW_DIR = 'pre-bundle-preview';
+export const PRE_BUNDLE_PREVIEW_DIR = 'ui-bundle';
 export const PRE_BUNDLE_PREVIEW_HASH_FILENAME = '.hash';
 
 export class PreBundlePreviewTask implements BuildTask {

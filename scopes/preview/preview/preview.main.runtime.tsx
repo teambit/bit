@@ -619,7 +619,7 @@ export class PreviewMain {
 
     const [name, uiRoot] = this.getUi();
     const currentBundleHash = await createBundleHash(uiRoot, 'preview');
-    const preBundleHash = readBundleHash(PreviewAspect.id, 'pre-bundle-preview', '');
+    const preBundleHash = readBundleHash(PreviewAspect.id, 'ui-bundle', '');
     const workspaceBundleDir = join(uiRoot.path, 'public/bit-preview');
     const lastBundleHash = await this.cache.get(`${uiRoot.path}|preview`);
     // eslint-disable-next-line no-console
@@ -638,7 +638,7 @@ export class PreviewMain {
       // use pre-bundle
       // eslint-disable-next-line no-console
       console.log('\n[use pre bundle]');
-      bundlePath = getBundlePath(PreviewAspect.id, 'pre-bundle-preview', '') as string;
+      bundlePath = getBundlePath(PreviewAspect.id, 'ui-bundle', '') as string;
     } else if (!rebuild && existsSync(workspaceBundleDir) && (currentBundleHash === lastBundleHash || skipUiBuild)) {
       // use workspace bundle
       // eslint-disable-next-line no-console
@@ -975,7 +975,7 @@ export class PreviewMain {
     ]);
 
     // // eslint-disable-next-line no-console
-    // console.log('\n[[registering pre-bundle-preview task]]');
+    // console.log('\n[[registering ui-bundle task (preview)]]');
     // builder.registerBuildTasks([new PreBundlePreviewTask(uiMain, logger)]);
 
     if (!config.disabled)
