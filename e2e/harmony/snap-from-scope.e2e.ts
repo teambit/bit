@@ -269,4 +269,88 @@ describe('snap components from scope', function () {
       expect(barFileContent).to.include('bar-has-created');
     });
   });
+  describe('snap a new component', () => {
+    let catComp;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      const bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+
+      const data = [
+        {
+          componentId: `${helper.scopes.remote}/foo`,
+          files: [
+            {
+              path: 'index.ts',
+              content: 'index-has-changed',
+            },
+            {
+              path: 'bar.ts',
+              content: 'bar-has-created',
+            },
+            {
+              path: 'id-input.compositions.tsx',
+              content: `import React, { useState } from 'react';
+import { IdInput } from './id-input';
+
+export const BasicIdInput = () => {
+  const [id, setId] = useState('');
+  return <IdInput id={id} onChange={e => setId(e.target.value)} />;
+};`,
+            },
+          ],
+          isNew: true,
+          aspects: {
+            'teambit.react/react': {},
+            'teambit.envs/envs': {
+              env: 'teambit.react/react',
+            },
+          },
+          newDependencies: [
+            {
+              id: `${helper.scopes.remote}/comp1`,
+            },
+            {
+              id: `${helper.scopes.remote}/comp2`,
+              type: 'dev',
+            },
+            {
+              id: 'lodash',
+              version: '4.17.21',
+              isComponent: false,
+              type: 'peer',
+            },
+          ],
+        },
+      ];
+      // console.log('data', JSON.stringify(data));
+      helper.command.snapFromScope(bareTag.scopePath, data);
+      catComp = helper.command.catComponent(`${helper.scopes.remote}/foo@latest`, bareTag.scopePath);
+    });
+    it('should add the specified component and package dependencies', () => {
+      expect(catComp.peerPackageDependencies).to.have.property('lodash');
+      expect(catComp.dependencies[0].id.name).to.equal('comp1');
+      expect(catComp.devDependencies[0].id.name).to.equal('comp2');
+    });
+    it('should add dependencies from the env', () => {
+      const depResolver = catComp.extensions.find((e) => e.name === Extensions.dependencyResolver).data;
+      const react = depResolver.dependencies.find((d) => d.id === 'react');
+      expect(react).to.not.be.undefined;
+      expect(react.source).to.equal('env');
+    });
+    it('should generate composition aspect data', () => {
+      const composition = catComp.extensions.find((e) => e.name === 'teambit.compositions/compositions');
+      expect(composition).to.not.be.undefined;
+      expect(composition.data.compositions).to.have.lengthOf(1);
+    });
+    it('should generate dev-files aspect data', () => {
+      const devFiles = catComp.extensions.find((e) => e.name === 'teambit.component/dev-files');
+      expect(devFiles).to.not.be.undefined;
+      expect(devFiles.data.devPatterns).to.not.be.undefined;
+    });
+  });
 });

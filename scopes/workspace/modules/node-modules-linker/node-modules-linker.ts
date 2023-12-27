@@ -103,13 +103,7 @@ export default class NodeModuleLinker {
    */
   async _populateComponentsLinks(component: Component): Promise<void> {
     const legacyComponent = component.state._consumer as ConsumerComponent;
-    const componentId = component.id;
-    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
-      bindingPrefix: legacyComponent.bindingPrefix,
-      id: componentId,
-      defaultScope: component.id.scope,
-      extensions: legacyComponent.extensions,
-    });
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(legacyComponent);
 
     this.symlinkComponentDir(component, linkPath);
     this._deleteExistingLinksRootIfSymlink(linkPath);
@@ -257,7 +251,7 @@ export async function linkToNodeModulesByIds(
     if (loadFromScope) {
       return workspace.scope.getMany(componentsIds);
     }
-    return workspace.getMany(componentsIds);
+    return workspace.getMany(componentsIds, { idsToNotLoadAsAspects: bitIds.map((id) => id.toString()) });
   };
   const components = await getComponents();
   const nodeModuleLinker = new NodeModuleLinker(components, workspace);

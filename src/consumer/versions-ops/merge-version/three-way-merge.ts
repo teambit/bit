@@ -29,7 +29,7 @@ export type MergeResultsThreeWay = {
   modifiedFiles: Array<{
     filePath: PathLinux;
     fsFile: SourceFile;
-    baseFile: SourceFileModel;
+    baseFile?: SourceFileModel;
     otherFile: SourceFileModel;
     output: string | null | undefined;
     conflict: string | null | undefined;
@@ -126,20 +126,13 @@ export default async function threeWayMergeVersions({
       results.deletedConflictFiles.push({ filePath });
       return;
     }
-    if (!baseFile) {
-      // if otherFile && !baseFile, the file was deleted as part of the last tag
-      results.overrideFiles.push({ filePath, fsFile });
-      return;
-    }
-
-    const baseFileHash = baseFile.file.hash;
     const otherFileHash = otherFile.file.hash;
     if (fsFileHash === otherFileHash) {
       // if fs === other, no need to take any action (regardless the base)
       results.unModifiedFiles.push({ filePath, fsFile });
       return;
     }
-    if (fsFileHash === baseFileHash) {
+    if (baseFile && fsFileHash === baseFile.file.hash) {
       // the file has no local modification.
       // the file currently in the fs, is not the same as the file we want to write (other).
       // but no need to check whether it has conflicts because we always want to write the other.
@@ -147,7 +140,7 @@ export default async function threeWayMergeVersions({
       results.updatedFiles.push({ filePath, otherFile, content: content.contents });
       return;
     }
-    // it was changed in both, there is a chance for conflict
+    // it was changed in both, there is a chance for conflict. (regardless the base)
     fsFile.label = currentLabel;
     // @ts-ignore it's a hack to pass the data, version is not a valid attribute.
     otherFile.label = otherLabel;
@@ -227,7 +220,7 @@ async function getMergeResults(
       // @ts-ignore
       return tmp.save(content.contents.toString());
     };
-    const baseFilePathP = writeFile(modifiedFile.baseFile);
+    const baseFilePathP = modifiedFile.baseFile ? writeFile(modifiedFile.baseFile) : tmp.save('');
     const otherFilePathP = writeFile(modifiedFile.otherFile);
     const [fsFilePath, baseFilePath, otherFilePath] = await Promise.all([fsFilePathP, baseFilePathP, otherFilePathP]);
     const mergeFilesParams: MergeFileParams = {

@@ -1,12 +1,12 @@
 import {
   NodeModuleTemplate,
+  NodeAppTemplate,
+  PlatformTemplate,
   GraphQLServerTemplate,
   EntityTemplate,
   ExpressAppTemplate,
   NodeEnvTemplate,
   BitAppTemplate,
-  PlatformTemplate,
-  NodeAppTemplate,
 } from '@bitdev/node.generators.node-templates';
 
 import { EnvContext } from '@teambit/envs';

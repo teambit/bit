@@ -60,7 +60,6 @@ import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { isHash } from '@teambit/component-version';
-import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { ComponentConfigFile } from './component-config-file';
 import {
@@ -85,7 +84,7 @@ import {
   OnRootAspectAdded,
   OnRootAspectAddedSlot,
 } from './workspace.provider';
-import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
+import { ComponentLoadOptions, WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
 import type { MergeOptions as BitmapMergeOptions } from './bit-map';
@@ -121,6 +120,10 @@ export interface EjectConfOptions {
   override?: boolean;
 }
 
+export type ComponentExtensionsOpts = {
+  loadExtensions?: boolean;
+};
+
 export type ExtensionsOrigin =
   | 'BitmapFile'
   | 'ModelSpecific'
@@ -136,6 +139,7 @@ const DEFAULT_VENDOR_DIR = 'vendor';
  * API of the Bit Workspace
  */
 export class Workspace implements ComponentFactory {
+  private warnedAboutMisconfiguredEnvs: string[] = []; // cache env-ids that have been errored about not having "env" type
   priority = true;
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
@@ -224,10 +228,7 @@ export class Workspace implements ComponentFactory {
     private onBitmapChangeSlot: OnBitmapChangeSlot
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-
-    // TODO: refactor - prefer to avoid code inside the constructor.
-    this.owner = this.config?.defaultOwner;
-    this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs);
+    this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
     this.validateConfig();
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     // memoize this method to improve performance.
@@ -270,7 +271,7 @@ export class Workspace implements ComponentFactory {
     return this.consumer.isLegacy;
   }
 
-  onComponentLoad(loadFn: OnComponentLoad) {
+  registerOnComponentLoad(loadFn: OnComponentLoad) {
     this.onComponentLoadSlot.register(loadFn);
     return this;
   }
@@ -349,10 +350,11 @@ export class Workspace implements ComponentFactory {
    * list all workspace components.
    */
   async list(filter?: { offset: number; limit: number }, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
+    const loadOptsWithDefaults: ComponentLoadOptions = Object.assign({ loadSeedersAsAspects: false }, loadOpts || {});
     const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
     const ids = await this.resolveMultipleComponentIds(legacyIds);
     const idsToGet = filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids;
-    return this.getMany(idsToGet, loadOpts);
+    return this.getMany(idsToGet, loadOptsWithDefaults);
   }
 
   async listWithInvalid(loadOpts?: ComponentLoadOptions) {
@@ -1060,7 +1062,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * currently it used only for get many of aspects
    * @param ids
    */
-  async importAndGetMany(ids: Array<ComponentID>, reason?: string): Promise<Component[]> {
+  async importAndGetMany(
+    ids: Array<ComponentID>,
+    reason?: string,
+    loadOpts?: ComponentLoadOptions
+  ): Promise<Component[]> {
     if (!ids.length) return [];
     const lane = await this.importCurrentLaneIfMissing();
     await this.scope.import(ids, {
@@ -1071,7 +1077,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       lane,
       reason,
     });
-    return this.getMany(ids);
+    return this.getMany(ids, loadOpts);
   }
 
   async importCurrentLaneIfMissing(): Promise<Lane | undefined> {
@@ -1216,13 +1222,42 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async componentExtensions(
     componentId: ComponentID,
     componentFromScope?: Component,
-    excludeOrigins: ExtensionsOrigin[] = []
+    excludeOrigins: ExtensionsOrigin[] = [],
+    opts: ComponentExtensionsOpts = {}
   ): Promise<{
     extensions: ExtensionDataList;
     beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>; // useful for debugging
     errors?: Error[];
   }> {
-    return this.aspectsMerger.merge(componentId, componentFromScope, excludeOrigins);
+    const optsWithDefaults: ComponentExtensionsOpts = Object.assign({ loadExtensions: true }, opts);
+    const mergeRes = await this.aspectsMerger.merge(componentId, componentFromScope, excludeOrigins);
+    if (optsWithDefaults.loadExtensions) {
+      await this.loadComponentsExtensions(mergeRes.extensions, componentId);
+      const envId = await this.envs.getEnvIdFromEnvsLegacyExtensions(mergeRes.extensions);
+      if (envId) {
+        await this.warnAboutMisconfiguredEnv(envId);
+      }
+    }
+    return mergeRes;
+  }
+
+  async warnAboutMisconfiguredEnv(envId: string) {
+    if (!envId) return;
+    if (this.envs.getCoreEnvsIds().includes(envId)) return;
+    if (this.warnedAboutMisconfiguredEnvs.includes(envId)) return;
+    let env: Component;
+    try {
+      const parsedEnvId = await this.resolveComponentId(envId);
+      env = await this.get(parsedEnvId);
+    } catch (err) {
+      return; // unable to get the component for some reason. don't sweat it. forget about the warning
+    }
+    if (!this.envs.isUsingEnvEnv(env)) {
+      this.warnedAboutMisconfiguredEnvs.push(envId);
+      this.logger.consoleWarning(
+        `env "${envId}" is not of type env. (correct the env's type, or component config with "bit env set ${envId} teambit.envs/env")`
+      );
+    }
   }
 
   getConfigMergeFilePath(): string {
@@ -1473,6 +1508,15 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   ): Promise<string[]> {
     const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
     return workspaceAspectsLoader.loadAspects(ids, throwOnError, neededFor, opts);
+  }
+
+  async loadComponentsExtensions(
+    extensions: ExtensionDataList,
+    originatedFrom?: ComponentID,
+    opts: WorkspaceLoadAspectsOptions = {}
+  ): Promise<void> {
+    const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
+    return workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, opts);
   }
 
   /**
