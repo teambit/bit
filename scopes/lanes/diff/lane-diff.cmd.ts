@@ -1,6 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
+import { ComponentCompareMain } from '@teambit/component-compare';
 import chalk from 'chalk';
 import { outputDiffResults } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
@@ -37,10 +38,10 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
   remoteOp = true;
   skipWorkspace = true;
 
-  constructor(private workspace: Workspace, private scope: ScopeMain) {}
+  constructor(private workspace: Workspace, private scope: ScopeMain, private componentCompare: ComponentCompareMain) {}
 
   async report([values = []]: [string[]], { pattern }: { pattern?: string }) {
-    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope);
+    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
     const { compsWithDiff, newCompsFrom, newCompsTo, toLaneName, fromLaneName, failures } =
       await laneDiffGenerator.generate(values, undefined, pattern);
 
