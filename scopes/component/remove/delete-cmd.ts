@@ -101,12 +101,12 @@ ${chalk.bold('to update the remote, please tag/snap and then export. to revert, 
   private async removePrompt(hard?: boolean, lane?: boolean) {
     this.remove.logger.clearStatusLine();
     const laneOrMainWarning = lane
-      ? `this command will mark the component as removed from this lane, and as a result any changes made to the component on this lane will be reverted (after you snap+export)`
-      : `this command will mark the component as deleted, and it won’t be shown on the remote scope after tag/snap and export.`;
+      ? `this command will mark the component as removed from this lane, resetting the component to its pre-lane state and content (after tag/snap and export)`
+      : `this command will mark the component as deleted, and it won’t be visible on the remote scope (after tag/snap and export).`;
     const remoteOrLocalOutput = hard
-      ? `WARNING: the component(s) will be permanently deleted from the remote with no option to recover. prefer omitting --hard to only mark the component as deleted`
+      ? `WARNING: the component(s) will be permanently deleted from the remote with no option to recover. prefer omitting --hard to only mark the component as soft deleted`
       : `${laneOrMainWarning}
-if your intent is to remove the component only from your local workspace, refer to bit remove.`;
+if your intent is to remove the component only from your local workspace, refer to bit remove or bit eject.`;
 
     const ok = await yesno({
       question: `${remoteOrLocalOutput}
