@@ -27,6 +27,10 @@
           "@teambit/legacy": "1.0.624"
         }
       }
+    },
+    "teambit.harmony/envs/core-aspect-env@0.0.13": {},
+    "teambit.envs/envs": {
+      "env": "teambit.harmony/envs/core-aspect-env"
     }
   }
 }
