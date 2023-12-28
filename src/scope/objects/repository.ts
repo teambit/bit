@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import { Mutex } from 'async-mutex';
 import { compact, uniqBy, differenceWith, isEqual } from 'lodash';
 import { BitError } from '@teambit/bit-error';
+import { ComponentID } from '@teambit/component-id';
 import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
 import pMap from 'p-map';
@@ -596,8 +597,8 @@ export default class Repository {
     this.removeFromCache(ref);
   }
 
-  async deleteRecordsFromUnmergedComponents(componentNames: string[]) {
-    this.unmergedComponents.removeMultipleComponents(componentNames);
+  async deleteRecordsFromUnmergedComponents(compIds: ComponentID[]) {
+    this.unmergedComponents.removeMultipleComponents(compIds);
     await this.unmergedComponents.write();
   }
 

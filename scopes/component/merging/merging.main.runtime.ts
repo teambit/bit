@@ -668,7 +668,7 @@ export class MergingMain {
     const consumer = this.workspace.consumer;
     const ids = await this.getIdsForUnmerged(values);
     const results = await this.checkout.checkout({ ids, reset: true });
-    ids.forEach((id) => consumer.scope.objects.unmergedComponents.removeComponent(id.fullName));
+    ids.forEach((id) => consumer.scope.objects.unmergedComponents.removeComponent(id));
     await consumer.scope.objects.unmergedComponents.write();
     return { abortedComponents: results.components };
   }
@@ -742,7 +742,7 @@ export class MergingMain {
     if (idsStr && idsStr.length) {
       const componentIds = await this.workspace.resolveMultipleComponentIds(idsStr);
       componentIds.forEach((id) => {
-        const entry = this.workspace.consumer.scope.objects.unmergedComponents.getEntry(id.fullName);
+        const entry = this.workspace.consumer.scope.objects.unmergedComponents.getEntry(id);
         if (!entry) {
           throw new GeneralError(`unable to merge-resolve ${id.toString()}, it is not marked as unresolved`);
         }

@@ -63,7 +63,7 @@ export default class RemoveModelComponents {
       await this.scope.objects.writeObjectsToTheFS([this.currentLane as Lane]);
     }
     await this.scope.objects.deleteObjectsFromFS(refsToRemoveAll);
-    await this.scope.objects.deleteRecordsFromUnmergedComponents(compIds.map((id) => id.fullName));
+    await this.scope.objects.deleteRecordsFromUnmergedComponents(compIds);
 
     return new RemovedObjects({
       removedComponentIds: compIds,
