@@ -3,7 +3,7 @@ import * as path from 'path';
 import { pickBy } from 'lodash';
 import R from 'ramda';
 import { BitIds } from '../../bit-id';
-import { DEFAULT_BINDINGS_PREFIX, DEFAULT_EXTENSIONS, DEFAULT_LANGUAGE, PACKAGE_JSON } from '../../constants';
+import { DEFAULT_EXTENSIONS, DEFAULT_LANGUAGE, PACKAGE_JSON } from '../../constants';
 import { PathLinux, PathOsBased } from '../../utils/path';
 import { ExtensionDataList } from './extension-data';
 
@@ -15,7 +15,6 @@ export type AbstractConfigProps = {
   dependencies?: Record<string, any>;
   devDependencies?: Record<string, any>;
   lang?: string;
-  bindingPrefix?: string;
   extensions?: ExtensionDataList;
 };
 
@@ -26,19 +25,14 @@ export type AbstractConfigProps = {
  * bit.json wins.
  */
 export default class AbstractConfig {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   path: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dependencies: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: { [key: string]: string };
   lang: string;
-  bindingPrefix: string;
   extensions: ExtensionDataList;
 
   constructor(props: AbstractConfigProps) {
     this.lang = props.lang || DEFAULT_LANGUAGE;
-    this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     this.extensions = props.extensions || new ExtensionDataList();
   }
 
@@ -50,7 +44,6 @@ export default class AbstractConfig {
     const isPropDefaultOrNull = (val, key) => {
       if (!val) return false;
       if (key === 'lang') return val !== DEFAULT_LANGUAGE;
-      if (key === 'bindingPrefix') return val !== DEFAULT_BINDINGS_PREFIX;
       if (key === 'extensions') return !R.equals(val, DEFAULT_EXTENSIONS);
       return true;
     };
@@ -58,7 +51,6 @@ export default class AbstractConfig {
     return pickBy(
       {
         lang: this.lang,
-        bindingPrefix: this.bindingPrefix,
         dependencies: this.dependencies,
         extensions: this.extensions?.toConfigObject(),
       },

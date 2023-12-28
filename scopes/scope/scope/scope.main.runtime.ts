@@ -21,10 +21,11 @@ import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { ModelComponent, Lane, Version } from '@teambit/legacy/dist/scope/models';
-import { Repository } from '@teambit/legacy/dist/scope/objects';
+import { Ref, Repository } from '@teambit/legacy/dist/scope/objects';
 import LegacyScope, { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
+import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import { PersistOptions } from '@teambit/legacy/dist/scope/types';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { DependencyResolverAspect, DependencyResolverMain, NodeLinker } from '@teambit/dependency-resolver';
@@ -652,8 +653,8 @@ export class ScopeMain implements ComponentFactory {
     });
   }
 
-  async get(id: ComponentID, useCache = true): Promise<Component | undefined> {
-    return this.componentLoader.get(id, undefined, useCache);
+  async get(id: ComponentID, useCache = true, importIfMissing = true): Promise<Component | undefined> {
+    return this.componentLoader.get(id, importIfMissing, useCache);
   }
 
   async getFromConsumerComponent(consumerComponent: ConsumerComponent): Promise<Component> {
@@ -774,9 +775,9 @@ export class ScopeMain implements ComponentFactory {
     return compact(components);
   }
 
-  async loadManyCompsAspects(Components: Component[], lane?: Lane): Promise<Component[]> {
-    const components = await mapSeries(Components, (id) => this.loadCompAspects(id, lane));
-    return compact(components);
+  async loadManyCompsAspects(components: Component[], lane?: Lane): Promise<Component[]> {
+    const loadedComponents = await mapSeries(components, (id) => this.loadCompAspects(id, lane));
+    return compact(loadedComponents);
   }
 
   /**
@@ -942,6 +943,31 @@ export class ScopeMain implements ComponentFactory {
     await modelComp.setDivergeData(this.legacyScope.objects, throws);
     return modelComp.getDivergeData();
   }
+  /**
+   * get the distance for a component between two lanes. for example, lane-b forked from lane-a and lane-b added some new snaps
+   * @param componentId
+   * @param sourceHead head on the source lane. leave empty if the source is main
+   * @param targetHead head on the target lane. leave empty if the target is main
+   * @returns
+   */
+  async getSnapsDistanceBetweenTwoSnaps(
+    componentId: ComponentID,
+    sourceHead?: string,
+    targetHead?: string,
+    throws?: boolean
+  ): Promise<SnapsDistance> {
+    if (!sourceHead && !targetHead) {
+      throw new Error(`getDivergeData got sourceHead and targetHead empty. at least one of them should be populated`);
+    }
+    const modelComponent = await this.legacyScope.getModelComponent(componentId);
+    return getDivergeData({
+      modelComponent,
+      repo: this.legacyScope.objects,
+      sourceHead: sourceHead ? Ref.from(sourceHead) : modelComponent.head || null,
+      targetHead: targetHead ? Ref.from(targetHead) : modelComponent.head || null,
+      throws,
+    });
+  }
 
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id);
@@ -1025,15 +1051,21 @@ export class ScopeMain implements ComponentFactory {
     // load components from type aspects as aspects.
     // important! previously, this was running for any aspect, not only apps. (the if statement was `this.aspectLoader.isAspectComponent(component)`)
     // Ran suggests changing it and if it breaks something, we'll document is and fix it.
-    const appData = component.state.aspects.get('teambit.harmony/application');
-    if (opts.loadApps && appData?.data?.appName) {
-      aspectIds.push(component.id.toString());
+    if (opts.loadApps) {
+      const appData = component.state.aspects.get('teambit.harmony/application');
+      if (appData?.data?.appName) {
+        aspectIds.push(component.id.toString());
+      }
     }
-    const envsData = component.state.aspects.get(EnvsAspect.id);
-    if ((opts.loadEnvs && envsData?.data?.services) || envsData?.data?.self) {
-      aspectIds.push(component.id.toString());
+    if (opts.loadEnvs) {
+      const envsData = component.state.aspects.get(EnvsAspect.id);
+      if (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env') {
+        aspectIds.push(component.id.toString());
+      }
     }
-    await this.loadAspects(aspectIds, true, component.id.toString(), lane);
+    if (aspectIds && aspectIds.length) {
+      await this.loadAspects(aspectIds, true, component.id.toString(), lane);
+    }
 
     return component;
   }

@@ -63,8 +63,8 @@ export function componentToPrintableForDiff(component: Component): Record<string
   const overrides = component.overrides.componentOverridesData;
 
   obj.id = component.id._legacy.toStringWithoutScope();
-  obj.language = lang || null;
-  obj.bindingPrefix = bindingPrefix || null;
+  obj.language = lang;
+  obj.bindingPrefix = bindingPrefix;
   obj.mainFile = mainFile ? normalize(mainFile) : null;
   obj.dependencies = dependencies
     .toStringOfIds()

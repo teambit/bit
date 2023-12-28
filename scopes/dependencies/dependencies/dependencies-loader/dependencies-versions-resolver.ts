@@ -20,14 +20,17 @@ export function updateDependenciesVersions(
   component: Component,
   overridesDependencies: OverridesDependencies,
   autoDetectOverrides?: Record<string, any>,
-  debugDependencies?: DebugComponentsDependency[]
+  debugDependencies?: DebugComponentsDependency[],
+  updateExtensionsVersions = true
 ) {
   const consumer: Consumer = workspace.consumer;
   const autoDetectConfigMerge = workspace.getAutoDetectConfigMerge(component.id) || {};
 
   updateDependencies(component.dependencies, 'dependencies');
   updateDependencies(component.devDependencies, 'devDependencies');
-  updateExtensions(component.extensions);
+  if (updateExtensionsVersions) {
+    updateExtensions(component.extensions);
+  }
 
   /**
    * the `pkg` can be missing only in two scenarios:

@@ -103,13 +103,7 @@ export default class NodeModuleLinker {
    */
   async _populateComponentsLinks(component: Component): Promise<void> {
     const legacyComponent = component.state._consumer as ConsumerComponent;
-    const componentId = component.id;
-    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
-      bindingPrefix: legacyComponent.bindingPrefix,
-      id: componentId,
-      defaultScope: component.id.scope,
-      extensions: legacyComponent.extensions,
-    });
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(legacyComponent);
 
     this.symlinkComponentDir(component, linkPath);
     this._deleteExistingLinksRootIfSymlink(linkPath);
@@ -199,16 +193,16 @@ export default class NodeModuleLinker {
     // this will be applied only to aspects to minimize how it affects users
     const envsData = component.state.aspects.get('teambit.envs/envs');
     const isAspect = envsData?.data.type === 'aspect';
-    if (
-      isAspect &&
-      packageJson.packageJsonObject.types &&
-      packageJson.packageJsonObject.exports &&
-      !packageJson.packageJsonObject.exports.types
-    ) {
-      const defaultModule = packageJson.packageJsonObject.exports.default;
-      if (defaultModule) delete packageJson.packageJsonObject.exports.default;
-      packageJson.packageJsonObject.exports.types = `./${packageJson.packageJsonObject.types}`;
-      packageJson.packageJsonObject.exports.default = defaultModule;
+    if (isAspect && packageJson.packageJsonObject.types && packageJson.packageJsonObject.exports) {
+      const exports = packageJson.packageJsonObject.exports['.']
+        ? packageJson.packageJsonObject.exports['.']
+        : packageJson.packageJsonObject.exports;
+      if (!exports.types) {
+        const defaultModule = exports.default;
+        if (defaultModule) delete exports.default;
+        exports.types = `./${packageJson.packageJsonObject.types}`;
+        exports.default = defaultModule;
+      }
     }
 
     // packageJson.mergePropsFromExtensions(component);
@@ -257,7 +251,7 @@ export async function linkToNodeModulesByIds(
     if (loadFromScope) {
       return workspace.scope.getMany(componentsIds);
     }
-    return workspace.getMany(componentsIds);
+    return workspace.getMany(componentsIds, { idsToNotLoadAsAspects: bitIds.map((id) => id.toString()) });
   };
   const components = await getComponents();
   const nodeModuleLinker = new NodeModuleLinker(components, workspace);

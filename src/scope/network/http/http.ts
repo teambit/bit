@@ -164,10 +164,14 @@ export class Http implements Network {
       key: obj[CFG_NETWORK_KEY] ?? obj[CFG_PROXY_KEY],
     };
     logger.debug(
-      `the next network configuration is used in network.http: ${{
-        ...networkConfig,
-        key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
-      }}`
+      `the next network configuration is used in network.http: ${JSON.stringify(
+        {
+          ...networkConfig,
+          key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
+        },
+        null,
+        2
+      )}`
     );
     return networkConfig;
   }
