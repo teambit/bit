@@ -167,7 +167,9 @@ describe('run bit init', function () {
         expect(currentBitMap).to.have.property('bar/foo');
       });
       it('should not change .bit directory', () => {
-        const currentFiles = helper.fs.getConsumerFiles('*', true).filter((file) => !file.includes('bitmap-history'));
+        const currentFiles = helper.fs
+          .getConsumerFiles('*', true)
+          .filter((file) => !file.includes('bitmap-history') && !file.includes('workspace-config-history'));
         expect(currentFiles).to.be.deep.equal(localConsumerFiles);
       });
     });
@@ -182,7 +184,9 @@ describe('run bit init', function () {
         expect(currentBitMap).to.have.property('bar/foo');
       });
       it('should not change .bit directory', () => {
-        const currentFiles = helper.fs.getConsumerFiles('*', true).filter((file) => !file.includes('bitmap-history'));
+        const currentFiles = helper.fs
+          .getConsumerFiles('*', true)
+          .filter((file) => !file.includes('bitmap-history') && !file.includes('workspace-config-history'));
         expect(currentFiles).to.be.deep.equal(localConsumerFiles);
       });
     });
