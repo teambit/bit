@@ -4,7 +4,7 @@ import { aspectFile } from './files/aspect-file';
 import { mainRuntime } from './files/main-runtime';
 
 export const aspectTemplate: ComponentTemplate = {
-  name: 'aspect',
+  name: 'bit-aspect',
   description: 'extend Bit capabilities',
   generateFiles: (context: ComponentContext) => {
     return [

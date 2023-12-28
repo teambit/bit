@@ -64,13 +64,13 @@ export class Plugins {
 
   async registerPluginWithTryCatch(plugin: Plugin, aspect: Aspect) {
     const isModule = isEsmModule(plugin.path);
-    const module = isModule 
-      ? await this.loadModule(plugin.path)
-      : undefined;
-      
+    const module = isModule ? await this.loadModule(plugin.path) : undefined;
+
     try {
       if (isModule && !module) {
-        this.logger.consoleFailure(`failed to load plugin ${plugin.path}, make sure to use 'export default' to expose your plugin`);
+        this.logger.consoleFailure(
+          `failed to load plugin ${plugin.path}, make sure to use 'export default' to expose your plugin`
+        );
         return undefined;
       }
       return plugin.register(aspect, module);

@@ -34,12 +34,15 @@ const random = Math.floor(Math.random() * 100000);
         } else {
           index = JSON.parse(body);
         }
-        index = index.filter((release) => release.version !== BIT_VERSION);
-        index.push({
-          version: BIT_VERSION,
-          date: new Date().toISOString(),
-          nightly: true,
-        });
+        const found = index.find((release) => release.version === BIT_VERSION);
+        if (!found) {
+          index = index.filter((release) => release.version !== BIT_VERSION);
+          index.push({
+            version: BIT_VERSION,
+            date: new Date().toISOString(),
+            nightly: true,
+          });
+        }
         fs.writeFileSync('index.json', JSON.stringify(index), 'utf8');
       });
     }

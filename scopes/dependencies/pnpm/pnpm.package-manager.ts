@@ -34,7 +34,18 @@ import type { RebuildFn } from './lynx';
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
 
-  public readConfig = memoize(readConfig);
+  private _readConfig = async (dir?: string) => {
+    const { config, warnings } = await readConfig(dir);
+    if (config?.fetchRetries && config?.fetchRetries < 5) {
+      config.fetchRetries = 5;
+      return { config, warnings };
+    }
+
+    return { config, warnings };
+  };
+
+  public readConfig = memoize(this._readConfig);
+
   constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
 
   async install(
@@ -87,6 +98,7 @@ export class PnpmPackageManager implements PackageManager {
         nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
         includeOptionalDeps: installOptions.includeOptionalDeps,
         ignorePackageManifest: installOptions.ignorePackageManifest,
+        dedupeInjectedDeps: installOptions.dedupeInjectedDeps,
         dryRun: installOptions.dryRun,
         overrides: installOptions.overrides,
         hoistPattern: config.hoistPattern,

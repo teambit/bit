@@ -20,7 +20,6 @@ export const componentOverviewFields = gql`
       id
       data
     }
-    elementsUrl
     description
     deprecation {
       isDeprecate

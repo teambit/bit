@@ -79,7 +79,7 @@ export class NewComponentHelperMain {
         rootDir: targetPath,
         componentName: targetId.fullName,
         mainFile: comp.state._consumer.mainFile,
-        defaultScope: options?.scope,
+        defaultScope: options?.scope || this.workspace.defaultScope,
         config,
       });
     } catch (err) {

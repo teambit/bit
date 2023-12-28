@@ -32,6 +32,7 @@ type MultipleForkInfo = {
 type MultipleComponentsToFork = Array<{
   sourceId: string;
   targetId?: string; // if not specified, it'll be the same as the source
+  targetScope?: string; // if not specified, it'll be taken from the options or from the default scope
   path?: string; // if not specified, use the default component path
   env?: string; // if not specified, use the default env
   config?: ComponentConfig; // if specified, adds to/overrides the existing config
@@ -88,17 +89,20 @@ export class ForkingMain {
   async forkMultipleFromRemote(componentsToFork: MultipleComponentsToFork, options: MultipleForkOptions = {}) {
     const componentsToForkSorted = this.sortComponentsToFork(componentsToFork);
     const { scope } = options;
-    const results = await pMapSeries(componentsToForkSorted, async ({ sourceId, targetId, path, env, config }) => {
-      const sourceCompId = await this.workspace.resolveComponentId(sourceId);
-      const sourceIdWithScope = sourceCompId._legacy.scope ? sourceCompId : ComponentID.fromString(sourceId);
-      const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, {
-        scope,
-        path,
-        env,
-        config,
-      });
-      return { targetCompId, sourceId, component };
-    });
+    const results = await pMapSeries(
+      componentsToForkSorted,
+      async ({ sourceId, targetId, path, env, config, targetScope }) => {
+        const sourceCompId = await this.workspace.resolveComponentId(sourceId);
+        const sourceIdWithScope = sourceCompId._legacy.scope ? sourceCompId : ComponentID.fromString(sourceId);
+        const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, {
+          scope: targetScope || scope,
+          path,
+          env,
+          config,
+        });
+        return { targetCompId, sourceId, component };
+      }
+    );
     await this.refactorMultipleAndInstall(results, options);
   }
 
@@ -200,10 +204,7 @@ export class ForkingMain {
   }
 
   private async forkExistingInWorkspace(existing: Component, targetId?: string, options?: ForkOptions) {
-    if (!targetId) {
-      throw new Error(`error: unable to create "${existing.id.toStringWithoutVersion()}" component, a component with the same name already exists.
-please specify the target-id arg`);
-    }
+    targetId = targetId || existing.id.fullName;
     const targetCompId = this.newComponentHelper.getNewComponentId(targetId, undefined, options?.scope);
 
     const config = await this.getConfig(existing, options);

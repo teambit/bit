@@ -67,7 +67,7 @@ export class SchemaMain {
   /**
    * parse a module into a component schema.
    */
-  parseModule(path: string): Export[] {
+  parseModule(path: string, content?: string): Export[] {
     const parsers = this.parserSlot.toArray();
     let maybeParser = parsers.find(([, parser]) => {
       const match = path.match(parser.extension);
@@ -79,7 +79,7 @@ export class SchemaMain {
     }
 
     const [, parser] = maybeParser;
-    return parser.parseModule(path);
+    return parser.parseModule(path, content);
   }
 
   getSchemaExtractor(component: Component, tsserverPath?: string, contextPath?: string): SchemaExtractor {

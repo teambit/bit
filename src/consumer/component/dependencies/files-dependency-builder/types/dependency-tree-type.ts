@@ -58,7 +58,6 @@ export type DependencyTreeParams = {
   componentDir: string;
   workspacePath: string;
   filePaths: string[];
-  bindingPrefix: string;
   visited?: Record<string, any>;
   cacheResolvedDependencies?: Record<string, any>;
   cacheProjectAst?: Record<string, any>;

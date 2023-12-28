@@ -124,7 +124,7 @@ export default class PackageJsonFile {
     addExportProperty = false
   ): PackageJsonFile {
     const filePath = composePath(componentDir);
-    const name = componentIdToPackageName({ withPrefix: true, ...component, id: component.id });
+    const name = componentIdToPackageName(component);
     const packageJsonObject = {
       name,
       version: component.version,

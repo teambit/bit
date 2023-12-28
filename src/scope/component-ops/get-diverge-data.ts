@@ -7,6 +7,7 @@ import { VersionParents, versionParentsToGraph } from '../models/version-history
 import { Ref, Repository } from '../objects';
 import { SnapsDistance } from './snaps-distance';
 import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
+import { UnmergedComponent } from '../lanes/unmerged-components';
 
 /**
  * *** NEW WAY ***
@@ -84,7 +85,28 @@ export async function getDivergeData({
     throws: false,
     versionParentsFromObjects,
   });
+  const unmergedData = repo.unmergedComponents.getEntry(modelComponent.name);
 
+  return getDivergeDataBetweenTwoSnaps(
+    modelComponent.id(),
+    versionParents,
+    localHead,
+    targetHead,
+    unmergedData,
+    throws,
+    throwForNoCommonSnap
+  );
+}
+
+export function getDivergeDataBetweenTwoSnaps(
+  id: string,
+  versionParents: VersionParents[],
+  localHead: Ref,
+  targetHead: Ref,
+  unmergedData?: UnmergedComponent,
+  throws = true,
+  throwForNoCommonSnap = false
+): SnapsDistance {
   const getVersionData = (ref: Ref): VersionParents | undefined => versionParents.find((v) => v.hash.isEqual(ref));
 
   let error: Error | undefined;
@@ -109,43 +131,61 @@ export async function getDivergeData({
     }
   }
 
-  let closestCommonSnap: string | undefined;
-  if (commonSnaps.length) {
+  const getClosestCommonSnap = (): string | undefined => {
+    if (!commonSnaps.length) return undefined;
+    if (commonSnaps.length === 1) return commonSnaps[0];
     // find the closest common snap by traversing the source subgraph BFS
     const stopFn = (n: string) => commonSnaps.includes(n);
-    closestCommonSnap = traverseBFS(sourceSubgraph, localHead.toString(), stopFn);
-    if (!closestCommonSnap) throw new Error('getDivergeData, traverseBFS was unable to find the closest common snap');
-  }
+    const closestCommonSnapSource = traverseBFS(sourceSubgraph, localHead.toString(), stopFn);
+    if (!closestCommonSnapSource)
+      throw new Error('getDivergeData, traverseBFS was unable to find the closest common snap from source');
+    const closestCommonSnapTarget = traverseBFS(targetSubgraph, targetHead.toString(), stopFn);
+    if (!closestCommonSnapTarget)
+      throw new Error('getDivergeData, traverseBFS was unable to find the closest common snap from target');
+    if (closestCommonSnapSource === closestCommonSnapTarget) {
+      return closestCommonSnapSource;
+    }
+    // an interesting situation. there are multiple common-snaps. one is closer to the source and another is closer to the target.
+    // we should check who is a successor of the other.
+    // if the target is a successor of the source, it means that the source is a parent (or grandparent) of the target.
+    // so the closest common snap is the source. otherwise, the closest common snap is the target.
+    // a real example of such a case can be found in the spec file of this function,
+    const sourceSuccessors = sourceSubgraph.successorsSubgraph(closestCommonSnapSource).nodes.map((n) => n.id);
+    if (sourceSuccessors.includes(closestCommonSnapTarget)) {
+      return closestCommonSnapSource;
+    }
+    return closestCommonSnapTarget;
+  };
+
+  const closestCommonSnap = getClosestCommonSnap();
 
   const snapsOnSourceOnly = difference(sourceArr, targetArr).map((snap) => Ref.from(snap));
   const snapsOnTargetOnly = difference(targetArr, sourceArr).map((snap) => Ref.from(snap));
 
   const localVersion = getVersionData(localHead);
   if (!localVersion) {
-    const err =
-      new Error(`fatal: a component "${modelComponent.id()}" is missing the local head object (${localHead}) in the filesystem.
+    const err = new Error(`fatal: a component "${id}" is missing the local head object (${localHead}) in the filesystem.
 run the following command to fix it:
-bit import ${modelComponent.id()} --objects`);
+bit import ${id} --objects`);
     if (throws) throw err;
     return new SnapsDistance(snapsOnSourceOnly, [], targetHead, err);
   }
 
   const targetVersion = getVersionData(targetHead);
   if (!targetVersion) {
-    const err = new VersionNotFoundOnFS(targetHead.toString(), modelComponent.id());
+    const err = new VersionNotFoundOnFS(targetHead.toString(), id);
     if (throws) throw err;
     return new SnapsDistance([], [], undefined, err);
   }
 
   const commonSnapBeforeDiverge = closestCommonSnap ? Ref.from(closestCommonSnap) : undefined;
   if (!commonSnapBeforeDiverge) {
-    const unmergedData = repo.unmergedComponents.getEntry(modelComponent.name);
     const isUnrelatedFromUnmerged = unmergedData?.unrelated && unmergedData.head.isEqual(localHead);
     const isUnrelatedFromVersionObj = localVersion.unrelated?.isEqual(targetHead);
     if (isUnrelatedFromUnmerged || isUnrelatedFromVersionObj) {
       return new SnapsDistance(snapsOnSourceOnly, snapsOnTargetOnly, undefined);
     }
-    const err = new NoCommonSnap(modelComponent.id());
+    const err = new NoCommonSnap(id);
     if (throwForNoCommonSnap) throw err;
     return new SnapsDistance(snapsOnSourceOnly, snapsOnTargetOnly, undefined, err);
   }

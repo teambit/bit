@@ -12,20 +12,25 @@ import Dependency from '@teambit/legacy/dist/consumer/component/dependencies/dep
 import OverridesDependencies from './overrides-dependencies';
 import { DebugComponentsDependency, getValidVersion } from './auto-detect-deps';
 
+type DepType = 'dependencies' | 'devDependencies';
+
 export function updateDependenciesVersions(
   depsResolver: DependencyResolverMain,
   workspace: Workspace,
   component: Component,
   overridesDependencies: OverridesDependencies,
   autoDetectOverrides?: Record<string, any>,
-  debugDependencies?: DebugComponentsDependency[]
+  debugDependencies?: DebugComponentsDependency[],
+  updateExtensionsVersions = true
 ) {
   const consumer: Consumer = workspace.consumer;
   const autoDetectConfigMerge = workspace.getAutoDetectConfigMerge(component.id) || {};
 
-  updateDependencies(component.dependencies);
-  updateDependencies(component.devDependencies);
-  updateExtensions(component.extensions);
+  updateDependencies(component.dependencies, 'dependencies');
+  updateDependencies(component.devDependencies, 'devDependencies');
+  if (updateExtensionsVersions) {
+    updateExtensions(component.extensions);
+  }
 
   /**
    * the `pkg` can be missing only in two scenarios:
@@ -33,13 +38,13 @@ export function updateDependenciesVersions(
    * running bit link --rewire).
    * 2: this gets called for extension-id.
    */
-  function resolveVersion(id: ComponentID, pkg?: string): string | undefined {
+  function resolveVersion(id: ComponentID, depType: DepType, pkg?: string): string | undefined {
     const idFromBitMap = getIdFromBitMap(id);
     const idFromComponentConfig = getIdFromComponentConfig(id);
     const getFromComponentConfig = () => idFromComponentConfig;
     const getFromBitMap = () => idFromBitMap || null;
     // later, change this to return the version from the overrides.
-    const getFromOverrides = () => (pkg && isPkgInOverrides(pkg) ? id : null);
+    const getFromOverrides = () => resolveFromOverrides(id, depType, pkg);
     const debugDep = debugDependencies?.find((dep) => dep.id.isEqualWithoutVersion(id));
     // the id we get from the auto-detect is coming from the package.json of the dependency.
     const getFromDepPackageJson = () => (id.hasVersion() ? id : null);
@@ -85,20 +90,20 @@ export function updateDependenciesVersions(
     return undefined;
   }
 
-  function updateDependency(dependency: Dependency) {
+  function updateDependency(dependency: Dependency, depType: DepType) {
     const { id, packageName } = dependency;
-    const resolvedVersion = resolveVersion(id, packageName);
+    const resolvedVersion = resolveVersion(id, depType, packageName);
     if (resolvedVersion) {
       dependency.id = dependency.id.changeVersion(resolvedVersion);
     }
   }
-  function updateDependencies(dependencies: Dependencies) {
-    dependencies.get().forEach(updateDependency);
+  function updateDependencies(dependencies: Dependencies, depType: DepType) {
+    dependencies.get().forEach((dep) => updateDependency(dep, depType));
   }
 
   function updateExtension(extension: ExtensionDataEntry) {
     if (extension.extensionId) {
-      const resolvedVersion = resolveVersion(extension.extensionId);
+      const resolvedVersion = resolveVersion(extension.extensionId, 'devDependencies');
       if (resolvedVersion) {
         extension.extensionId = extension.extensionId.changeVersion(resolvedVersion);
       }
@@ -128,13 +133,13 @@ export function updateDependenciesVersions(
     return componentId.changeVersion(dependencies[dependency]);
   }
 
-  function isPkgInOverrides(pkgName: string): boolean {
+  function resolveFromOverrides(id: ComponentID, depType: DepType, pkgName?: string): ComponentID | undefined {
+    if (!pkgName) return undefined;
     const dependencies = overridesDependencies.getDependenciesToAddManually();
-    if (!dependencies) return false;
-    const allDeps = Object.values(dependencies)
-      .map((obj) => Object.keys(obj))
-      .flat();
-    return allDeps.includes(pkgName);
+    const found = dependencies?.[depType]?.[pkgName];
+    if (!found) return undefined;
+    const validVersion = getValidVersion(found);
+    return validVersion ? id.changeVersion(validVersion) : undefined;
   }
 
   function isPkgInAutoDetectOverrides(pkgName: string): boolean {

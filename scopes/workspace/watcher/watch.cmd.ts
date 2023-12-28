@@ -139,7 +139,10 @@ function printOnFileEvent(
 ) {
   const files = filePaths.join(', ');
   if (!buildResults.length) {
-    failureMsg = failureMsg || `The files ${files} have been ${eventMsgPlaceholder}, but nothing to compile`;
+    if (!failureMsg) {
+      if (verbose) logger.console(`The files ${files} have been ${eventMsgPlaceholder}, but nothing to compile\n\n`);
+      return;
+    }
     logger.console(`${failureMsg}\n\n`);
     return;
   }

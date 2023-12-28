@@ -195,11 +195,16 @@ describe('merge lanes', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.createLane('dev');
-      helper.command.mergeLane('main', '-x');
     });
-    it('should not bring non-lane components from main', () => {
+    it('when using --exclude-non-lane-comps flag, it should not bring non-lane components from main', () => {
+      helper.command.mergeLane('main', '-x --exclude-non-lane-comps');
       const lane = helper.command.showOneLaneParsed('dev');
       expect(lane.components).to.have.lengthOf(0);
+    });
+    it('by default, it should bring non-lane components from main', () => {
+      helper.command.mergeLane('main', '-x');
+      const lane = helper.command.showOneLaneParsed('dev');
+      expect(lane.components).to.have.lengthOf(1);
     });
   });
   describe('merging main lane with no snapped components', () => {
@@ -1620,6 +1625,35 @@ describe('merge lanes', function () {
         const dep = depResolver.data.dependencies.find((d) => d.id.includes('comp2'));
         expect(dep.version).to.equal('0.0.2');
       });
+    });
+  });
+  describe('when a file exists in local and others but not in base', () => {
+    let mainWs: string;
+    let mergeOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      mainWs = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.createLane();
+      helper.fs.outputFile('comp1/foo.js', 'on-lane');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(mainWs);
+      helper.fs.outputFile('comp1/foo.js', 'on-main');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      mergeOutput = helper.command.mergeLane('dev', '-x --no-squash --auto-merge-resolve=manual');
+    });
+    // previously in this case, it was marking it as "overridden" and was leaving the content as it was in the filesystem.
+    it('should write the file with the conflicts', () => {
+      expect(mergeOutput).to.include('CONFLICT');
+      const foo = helper.fs.readFile('comp1/foo.js');
+      expect(foo).to.include('<<<<<<<');
     });
   });
 });

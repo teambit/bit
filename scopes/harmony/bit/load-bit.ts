@@ -287,7 +287,6 @@ function clearGlobalsIfNeeded() {
   delete loadConsumer.cache;
   ComponentLoader.onComponentLoadSubscribers = [];
   ComponentOverrides.componentOverridesLoadingRegistry = {};
-  ComponentConfig.componentConfigLegacyLoadingRegistry = {};
   ComponentConfig.componentConfigLoadingRegistry = {};
   PackageJsonTransformer.packageJsonTransformersRegistry = [];
   globalsState.loadDeps = ComponentLoader.loadDeps;

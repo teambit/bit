@@ -15,7 +15,7 @@ import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependenciesLoader } from './dependencies-loader/dependencies-loader';
-import { OverridesDependenciesData } from './dependencies-loader/dependencies-data';
+import { DependenciesData, OverridesDependenciesData } from './dependencies-loader/dependencies-data';
 import {
   DependenciesBlameCmd,
   DependenciesCmd,
@@ -77,7 +77,11 @@ export class DependenciesMain {
     await Promise.all(
       packages.map(async (pkg) => {
         const [name, version] = await this.getPackageNameAndVerResolved(pkg);
-        packagesObj[name] = version;
+        if (options.optional) {
+          packagesObj[name] = { optional: true, version };
+        } else {
+          packagesObj[name] = version;
+        }
       })
     );
     const config = {
@@ -199,13 +203,27 @@ export class DependenciesMain {
   async loadDependencies(component: ConsumerComponent, opts: DependencyLoaderOpts) {
     const dependenciesLoader = new DependenciesLoader(
       component,
-      this.workspace,
       this.dependencyResolver,
       this.devFiles,
-      this.aspectLoader,
-      opts
+      this.aspectLoader
     );
-    return dependenciesLoader.load();
+    return dependenciesLoader.load(this.workspace, opts);
+  }
+
+  /**
+   * load dependencies without the need for the workspace.
+   * the "auto-detect" are passed here as "dependenciesData". the "overrides", such as dependencies from the env,
+   * are calculated here.
+   * eventually all these dependencies are added to the ConsumerComponent object.
+   */
+  async loadDependenciesFromScope(component: ConsumerComponent, dependenciesData: Partial<DependenciesData>) {
+    const dependenciesLoader = new DependenciesLoader(
+      component,
+      this.dependencyResolver,
+      this.devFiles,
+      this.aspectLoader
+    );
+    return dependenciesLoader.loadFromScope(dependenciesData);
   }
 
   async debugDependencies(id: string): Promise<DependenciesResultsDebug> {

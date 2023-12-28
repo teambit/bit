@@ -1,8 +1,6 @@
 import { set } from 'lodash';
 import path from 'path';
 import R from 'ramda';
-import fs from 'fs-extra';
-import { DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
 import { resolvePackageData } from '../../../../utils/packages';
 import generateTree, { MadgeTree } from './generate-tree-madge';
 import { FoundPackages, MissingGroupItem, MissingHandler } from './missing-handler';
@@ -16,15 +14,9 @@ import { DependencyTreeParams, FileObject, DependenciesTree, DependenciesTreeIte
  *
  * componentDir is the root of working directory (used for node packages version calculation)
  */
-function groupDependencyList(
-  dependenciesPaths: string[],
-  componentDir: string,
-  bindingPrefix: string
-): DependenciesTreeItem {
+function groupDependencyList(dependenciesPaths: string[], componentDir: string): DependenciesTreeItem {
   const resultGroups = new DependenciesTreeItem();
   const isPackage = (str: string) => str.includes('node_modules/');
-  const isBitLegacyInsideHarmony = (str: string) =>
-    str.includes(`node_modules/${bindingPrefix}`) || str.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`);
   dependenciesPaths.forEach((dependencyPath) => {
     if (!isPackage(dependencyPath)) {
       resultGroups.files.push({ file: dependencyPath });
@@ -42,15 +34,6 @@ function groupDependencyList(
       resultGroups.components.push(resolvedPackage);
       return;
     }
-    if (isBitLegacyInsideHarmony(dependencyPath)) {
-      const pkgRootDir = resolvedPackage.packageJsonContent?.componentRootFolder;
-      const hasLegacyBitFiles = pkgRootDir && fs.existsSync(path.join(pkgRootDir, '.bit_env_has_installed'));
-      if (hasLegacyBitFiles) {
-        throw new Error(`error: legacy dependency "${resolvedPackage.name}" was imported to one of the files in "${componentDir}".
-this workspace is Harmony and therefore legacy components/packages are unsupported.
-remove the import statement to fix this error`);
-      }
-    }
     const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
     const packageWithVersion = {
       [resolvedPackage.name]: version,
@@ -67,11 +50,11 @@ remove the import statement to fix this error`);
  *
  * @returns new tree with grouped dependencies
  */
-function MadgeTreeToDependenciesTree(tree: MadgeTree, componentDir: string, bindingPrefix: string): DependenciesTree {
+function MadgeTreeToDependenciesTree(tree: MadgeTree, componentDir: string): DependenciesTree {
   const result: DependenciesTree = {};
   Object.keys(tree).forEach((filePath) => {
     if (tree[filePath] && !R.isEmpty(tree[filePath])) {
-      result[filePath] = groupDependencyList(tree[filePath], componentDir, bindingPrefix);
+      result[filePath] = groupDependencyList(tree[filePath], componentDir);
     } else {
       result[filePath] = new DependenciesTreeItem();
     }
@@ -159,13 +142,11 @@ function mergeErrorsToTree(errors, tree: DependenciesTree) {
  * @param baseDir working directory
  * @param workspacePath
  * @param filePaths path of the file to calculate the dependencies
- * @param bindingPrefix
  */
 export async function getDependencyTree({
-  componentDir, // component rootDir, for legacy-authored it's the same as workspacePath
+  componentDir, // component rootDir
   workspacePath,
   filePaths,
-  bindingPrefix,
   visited = {},
   cacheProjectAst,
   envDetectors,
@@ -189,7 +170,7 @@ export async function getDependencyTree({
     return path.resolve(componentDir, filePath);
   });
   const { madgeTree, skipped, pathMap, errors } = generateTree(fullPaths, config);
-  const tree: DependenciesTree = MadgeTreeToDependenciesTree(madgeTree, componentDir, bindingPrefix);
+  const tree: DependenciesTree = MadgeTreeToDependenciesTree(madgeTree, componentDir);
   const { missingGroups, foundPackages } = new MissingHandler(
     skipped,
     componentDir,

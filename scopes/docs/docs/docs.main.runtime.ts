@@ -3,11 +3,13 @@ import { MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { Component, ComponentMap, IComponent } from '@teambit/component';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import type { Environment } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
+import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Doc, DocPropList } from '@teambit/docs.entities.doc';
@@ -136,7 +138,7 @@ export class DocsMain {
   }
 
   getComponentDevPatterns(component: Component) {
-    const env = this.envs.calculateEnv(component, { skipWarnings: !!this.workspace.inInstallContext }).env;
+    const env = this.envs.calculateEnv(component, { skipWarnings: !!this.workspace?.inInstallContext }).env;
     const componentEnvDocsDevPatterns: string[] = env.getDocsDevPatterns ? env.getDocsDevPatterns(component) : [];
     const componentPatterns = componentEnvDocsDevPatterns.concat(this.getPatterns());
     return { name: 'docs', pattern: componentPatterns };
@@ -166,6 +168,7 @@ export class DocsMain {
     LoggerAspect,
     DevFilesAspect,
     EnvsAspect,
+    ScopeAspect,
   ];
 
   static defaultConfig = {
@@ -173,7 +176,7 @@ export class DocsMain {
   };
 
   static async provider(
-    [preview, graphql, workspace, pkg, compiler, loggerAspect, devFiles, envs]: [
+    [preview, graphql, workspace, pkg, compiler, loggerAspect, devFiles, envs, scope]: [
       PreviewMain,
       GraphqlMain,
       Workspace,
@@ -181,7 +184,8 @@ export class DocsMain {
       CompilerMain,
       LoggerMain,
       DevFilesMain,
-      EnvsMain
+      EnvsMain,
+      ScopeMain
     ],
     config: DocsConfig,
     [docPropSlot, docReaderSlot]: [DocPropSlot, DocReaderSlot]
@@ -189,39 +193,35 @@ export class DocsMain {
     const logger = loggerAspect.createLogger(DocsAspect.id);
     const docs = new DocsMain(
       config.patterns,
-
       preview,
-
       pkg,
-
       compiler,
-
       workspace,
-
       logger,
-
       devFiles,
-
       envs,
-
       docPropSlot,
-
       docReaderSlot
     );
     docs.registerDocReader(new DefaultDocReader(pkg, compiler, workspace));
     devFiles.registerDevPattern(docs.getDevPatternToRegister());
 
-    if (workspace) {
-      workspace.onComponentLoad(async (component, opts) => {
-        if (opts?.loadDocs === false) return undefined;
-        // const docFiles = await docs.computeDocs(component);
-        const doc = await docs.computeDoc(component);
+    const computeDocsOnLoad = async (component: Component, opts?: ComponentLoadOptions) => {
+      if (opts?.loadDocs === false) return undefined;
+      // const docFiles = await docs.computeDocs(component);
+      const doc = await docs.computeDoc(component);
 
-        return {
-          doc: doc?.toObject(),
-          // docFiles
-        };
-      });
+      return {
+        doc: doc?.toObject(),
+        // docFiles
+      };
+    };
+
+    if (workspace) {
+      workspace.registerOnComponentLoad(computeDocsOnLoad);
+    }
+    if (scope) {
+      scope.registerOnCompAspectReCalc(computeDocsOnLoad);
     }
 
     graphql.register(docsSchema(docs));

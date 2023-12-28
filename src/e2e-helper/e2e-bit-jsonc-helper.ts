@@ -115,9 +115,6 @@ export default class BitJsoncHelper {
     this.addKeyValToDependencyResolver('packageManager', packageManager);
   }
 
-  addDefaultOwner(owner: string) {
-    this.addKeyValToWorkspace('defaultOwner', owner);
-  }
   corrupt() {
     const bitJsoncPath = composePath(this.scopes.localPath);
     fs.writeFileSync(bitJsoncPath, '"corrupted');
