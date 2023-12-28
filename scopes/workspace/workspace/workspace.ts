@@ -1306,7 +1306,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   async getUnmergedComponent(componentId: ComponentID): Promise<Component | undefined> {
-    const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId.fullName);
+    const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId);
     if (unmerged?.head) {
       return this.scope.get(componentId.changeVersion(unmerged?.head.toString()));
     }

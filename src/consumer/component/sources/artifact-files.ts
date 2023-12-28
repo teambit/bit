@@ -111,7 +111,7 @@ export class ArtifactFiles {
     const allHashes = this.refs.map((artifact) => artifact.ref.hash);
     const scopeComponentsImporter = scope.scopeImporter;
     const lane = await scope.getCurrentLaneObject();
-    const unmergedEntry = scope.objects.unmergedComponents.getEntry(id.fullName);
+    const unmergedEntry = scope.objects.unmergedComponents.getEntry(id);
     let errorFromUnmergedLaneScope: Error | undefined;
     if (unmergedEntry?.laneId) {
       try {
