@@ -120,6 +120,12 @@ export function componentSchema(componentExtension: ComponentMain) {
         ): [LogEntry]!
 
         aspects(include: [String]): [Aspect]
+
+        """
+        element url of the component - this is deprecated, and will return empty string now.
+        it's here to not break old queries
+        """
+        elementsUrl: String @deprecated(reason: "Not in use anymore")
       }
 
       type Aspect {
@@ -194,6 +200,8 @@ export function componentSchema(componentExtension: ComponentMain) {
         aspects: (component: Component, { include }: { include?: string[] }) => {
           return component.state.aspects.filter(include).serialize();
         },
+        // Here only to not break old queries
+        elementsUrl: () => undefined,
         logs: async (
           component: Component,
           filter?: {
