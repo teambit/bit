@@ -186,6 +186,7 @@ export async function install(
     reportOptions?: ReportOptions;
     hidePackageManagerOutput?: boolean;
     dryRun?: boolean;
+    dedupeInjectedDeps?: boolean;
   } & Pick<
     InstallOptions,
     | 'publicHoistPattern'
@@ -246,6 +247,7 @@ export async function install(
     confirmModulesPurge: false,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
+    dedupeInjectedDeps: options.dedupeInjectedDeps,
     dir: rootDir,
     storeController: storeController.ctrl,
     workspacePackages,
@@ -363,9 +365,8 @@ function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string)
     return readDependencyPackageHook({
       ...pkg,
       dependencies: {
-        ...pkg.dependencies,
         ...pkg.peerDependencies,
-        ...pkg['defaultPeerDependencies'], // eslint-disable-line
+        ...pkg.dependencies,
       },
     });
   }
@@ -425,7 +426,6 @@ function readWorkspacePackageHook(pkg: PackageManifest): PackageManifest {
     ...pkg,
     dependencies: {
       ...pkg.peerDependencies,
-      ...pkg['defaultPeerDependencies'], // eslint-disable-line
       ...newDeps,
     },
   };

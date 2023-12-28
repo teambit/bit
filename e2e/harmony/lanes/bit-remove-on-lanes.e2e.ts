@@ -534,4 +534,31 @@ describe('bit lane command', function () {
       expect(removeData.config.removeOnMain).to.be.true;
     });
   });
+  describe('delete on a lane then merging the deleted component from main', () => {
+    let onMain: string;
+    let onLane: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      onMain = helper.scopeHelper.cloneLocalScope();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.softRemoveOnLane('comp1');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      onLane = helper.scopeHelper.cloneLocalScope();
+      helper.scopeHelper.getClonedLocalScope(onMain);
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(onLane);
+      helper.command.mergeLane('main', '-x');
+    });
+    it('should not merge the deleted component although main is ahead', () => {
+      const status = helper.command.statusJson();
+      expect(status.stagedComponents).to.have.lengthOf(1);
+    });
+  });
 });

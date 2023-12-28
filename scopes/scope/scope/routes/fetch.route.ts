@@ -23,7 +23,7 @@ export class FetchRoute implements Route {
         this.logger.error('fatal: onPreFetchObjects encountered an error (this error does not stop the process)', err);
       });
 
-      const readable = await fetch(this.scope.path, req.body.ids, req.body.fetchOptions);
+      const readable = await fetch(this.scope.path, req.body.ids, req.body.fetchOptions, req.headers);
       const pack = ObjectList.fromObjectStreamToTar(readable, this.scope.name);
       try {
         await pipeline(pack, res);
@@ -34,7 +34,8 @@ export class FetchRoute implements Route {
         } else {
           this.logger.error(
             `FetchRoute encountered an error during the pipeline streaming, this should never happen.
-  make sure the error is caught in fromObjectStreamToTar and it streamed using the name "ERROR"`,
+make sure the error is caught in fromObjectStreamToTar and it streamed using the name "ERROR".
+error: ${err.message}`,
             err
           );
         }

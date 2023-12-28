@@ -2,7 +2,7 @@ import { join } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Compiler, TranspileFileOutput, TranspileFileParams } from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext } from '@teambit/builder';
-import { compileSync as mdxCompileSync } from '@teambit/mdx.modules.mdx-compiler';
+import { compileSync as mdxCompileSync } from '@teambit/mdx.compilers.mdx-transpiler';
 import minimatch from 'minimatch';
 import { transpileFileContent as babelTranspileFileContent } from '@teambit/compilation.modules.babel-compiler';
 import type { TransformOptions } from '@babel/core';

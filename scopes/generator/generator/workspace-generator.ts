@@ -22,6 +22,7 @@ import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/w
 import { WorkspaceTemplate, WorkspaceContext } from './workspace-template';
 import { NewOptions } from './new.cmd';
 import { GeneratorAspect } from './generator.aspect';
+import { GeneratorMain } from './generator.main.runtime';
 
 export type GenerateResult = { id: ComponentID; dir: string; files: string[]; envId: string };
 
@@ -35,19 +36,21 @@ export class WorkspaceGenerator {
   private forking: ForkingMain;
   private git: GitMain;
   private wsConfigFiles: WorkspaceConfigFilesMain;
+  private generator: GeneratorMain;
+
   // private componentGenerator?: ComponentGenerator;
 
   constructor(
     private workspaceName: string,
-    private options: NewOptions,
+    private options: NewOptions & { currentDir?: boolean },
     private template: WorkspaceTemplate,
     private aspectComponent?: Component
   ) {
-    this.workspacePath = resolve(this.workspaceName);
+    this.workspacePath = options.currentDir ? process.cwd() : resolve(this.workspaceName);
   }
 
   async generate(): Promise<string> {
-    if (fs.existsSync(this.workspacePath)) {
+    if (!this.options.currentDir && fs.existsSync(this.workspacePath)) {
       throw new Error(`unable to create a workspace at "${this.workspaceName}", this path already exist`);
     }
     await fs.ensureDir(this.workspacePath);
@@ -61,6 +64,7 @@ export class WorkspaceGenerator {
       // the workspace will be in install context until the end of the generation install process
       this.workspace.inInstallContext = true;
       await this.setupGitBitmapMergeDriver();
+      await this.createComponentsFromRemote();
       await this.forkComponentsFromRemote();
       await this.importComponentsFromRemote();
       await this.workspace.clearCache();
@@ -142,17 +146,26 @@ export class WorkspaceGenerator {
     this.forking = this.harmony.get<ForkingMain>(ForkingAspect.id);
     this.git = this.harmony.get<GitMain>(GitAspect.id);
     this.wsConfigFiles = this.harmony.get<WorkspaceConfigFilesMain>(WorkspaceConfigFilesAspect.id);
+    this.generator = this.harmony.get<GeneratorMain>(GeneratorAspect.id);
   }
 
-  // WIP
-  // private async createComponentsFromRemote() {
-  //   if (this.options.empty || !this.template.create) return
-  //   const workspaceContext = this.getWorkspaceContext();
-  //   const componentsToCreate = this.template.create(workspaceContext)
-  //   await pMapSeries(componentsToCreate, async (componentToCreate) => {
-  //     await ComponentGenerator.generate(componentToCreate);
-  //   });
-  // }
+  private async createComponentsFromRemote() {
+    if (this.options.empty || !this.template.create) return;
+    const workspaceContext = this.getWorkspaceContext();
+    const componentsToCreate = this.template.create(workspaceContext);
+    await pMapSeries(componentsToCreate, async (componentToCreate) => {
+      return this.generator.generateComponentTemplate(
+        [componentToCreate.componentName],
+        componentToCreate.templateName,
+        {
+          aspect: componentToCreate.aspect,
+          env: componentToCreate.env,
+          path: componentToCreate.path,
+          scope: componentToCreate.scope,
+        }
+      );
+    });
+  }
 
   private async forkComponentsFromRemote() {
     if (this.options.empty) return;
@@ -160,9 +173,10 @@ export class WorkspaceGenerator {
     const componentsToFork =
       this.template?.importComponents?.(workspaceContext) || this.template?.fork?.(workspaceContext) || [];
     if (!componentsToFork.length) return;
-    const componentsToForkRestructured = componentsToFork.map(({ id, targetName, path, env, config }) => ({
+    const componentsToForkRestructured = componentsToFork.map(({ id, targetName, path, env, config, targetScope }) => ({
       sourceId: id,
       targetId: targetName,
+      targetScope,
       path,
       env,
       config,
@@ -193,7 +207,7 @@ export class WorkspaceGenerator {
       );
     });
 
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write('new');
   }
 
   private async compileComponents(clearCache = true) {

@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
 import { ExportAspect, ExportMain } from '@teambit/export';
@@ -9,25 +8,23 @@ import { LanesAspect } from './lanes.aspect';
 import { LanesMain } from './lanes.main.runtime';
 
 describe('LanesAspect', function () {
-  this.timeout(0);
-
   describe('getLanes()', () => {
     let lanes: LanesMain;
     let workspaceData: WorkspaceData;
-    before(async () => {
+    beforeAll(async () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
       lanes = await loadAspect(LanesAspect, workspacePath);
       await lanes.createLane('stage');
-    });
-    after(async () => {
+    }, 30000);
+    afterAll(async () => {
       await destroyWorkspace(workspaceData);
     });
     it('should list all lanes', async () => {
       const currentLanes = await lanes.getLanes({});
-      expect(currentLanes).to.have.lengthOf(1);
-      expect(currentLanes[0].name).to.equal('stage');
+      expect(currentLanes.length).toEqual(1);
+      expect(currentLanes[0].name).toEqual('stage');
     });
   });
 
@@ -35,7 +32,7 @@ describe('LanesAspect', function () {
     let lanes: LanesMain;
     let snapping: SnappingMain;
     let workspaceData: WorkspaceData;
-    before(async () => {
+    beforeAll(async () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
@@ -52,9 +49,9 @@ describe('LanesAspect', function () {
         ignoreIssues: 'MissingManuallyConfiguredPackages',
       });
       // intermediate step, make sure it is snapped
-      expect(result?.snappedComponents.length).to.equal(1);
-    });
-    after(async () => {
+      expect(result?.snappedComponents.length).toEqual(1);
+    }, 30000);
+    afterAll(async () => {
       await destroyWorkspace(workspaceData);
     });
     it('should return that the lane is up to date when the lane is ahead of main', async () => {
@@ -64,7 +61,7 @@ describe('LanesAspect', function () {
         await lanes.diffStatus(currentLane.toLaneId(), undefined, { skipChanges: true })
       ).componentsStatus.every((c) => c.upToDate);
 
-      expect(isUpToDate).to.be.true;
+      expect(isUpToDate).toEqual(true);
     });
     it('should return that the lane is not up to date when main is ahead', async () => {
       const currentLane = await lanes.getCurrentLane();
@@ -80,7 +77,7 @@ describe('LanesAspect', function () {
         await lanes.diffStatus(currentLane.toLaneId(), undefined, { skipChanges: true })
       ).componentsStatus.every((c) => c.upToDate);
 
-      expect(isUpToDate).to.be.false;
+      expect(isUpToDate).toEqual(false);
     });
   });
 
@@ -88,7 +85,7 @@ describe('LanesAspect', function () {
     let lanes: LanesMain;
     let snapping: SnappingMain;
     let workspaceData: WorkspaceData;
-    before(async () => {
+    beforeAll(async () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
@@ -100,17 +97,17 @@ describe('LanesAspect', function () {
       await lanes.createLane('stage');
       const result = await snapping.snap({ pattern: 'comp1', build: false, unmodified: true });
       // intermediate step, make sure it is snapped
-      expect(result?.snappedComponents.length).to.equal(1);
-    });
-    after(async () => {
+      expect(result?.snappedComponents.length).toEqual(1);
+    }, 30000);
+    afterAll(async () => {
       await destroyWorkspace(workspaceData);
     });
     it('should return that the lane is up to date when the lane is ahead of main', async () => {
       const currentLane = await lanes.getCurrentLane();
       if (!currentLane) throw new Error('unable to get the current lane');
       const laneDiffResults = await lanes.diffStatus(currentLane.toLaneId());
-      expect(laneDiffResults.componentsStatus[0].upToDate).to.be.true;
-      expect(laneDiffResults.componentsStatus[0].changeType).to.equal(ChangeType.NONE);
+      expect(laneDiffResults.componentsStatus[0].upToDate).toEqual;
+      expect(laneDiffResults.componentsStatus[0].changeType).toEqual(ChangeType.NONE);
     });
     it('should return that the lane is not up to date when main is ahead', async () => {
       const currentLane = await lanes.getCurrentLane();
@@ -119,15 +116,15 @@ describe('LanesAspect', function () {
       await snapping.snap({ pattern: 'comp1', build: false, unmodified: true });
 
       const laneDiffResults = await lanes.diffStatus(currentLane.toLaneId());
-      expect(laneDiffResults.componentsStatus[0].upToDate).to.be.false;
-      expect(laneDiffResults.componentsStatus[0].changeType).to.equal(ChangeType.NONE);
+      expect(laneDiffResults.componentsStatus[0].upToDate).toEqual(false);
+      expect(laneDiffResults.componentsStatus[0].changeType).toEqual(ChangeType.NONE);
     });
   });
 
   describe('restoreLane()', () => {
     let lanes: LanesMain;
     let workspaceData: WorkspaceData;
-    before(async () => {
+    beforeAll(async () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
@@ -136,32 +133,32 @@ describe('LanesAspect', function () {
 
       // as an intermediate step, make sure the lane was created
       const currentLanes = await lanes.getLanes({});
-      expect(currentLanes).to.have.lengthOf(1);
+      expect(currentLanes.length).toEqual(1);
 
       await lanes.switchLanes('main', { skipDependencyInstallation: true });
       await lanes.removeLanes(['stage']);
 
       // as an intermediate step, make sure the lane was removed
       const lanesAfterDelete = await lanes.getLanes({});
-      expect(lanesAfterDelete).to.have.lengthOf(0);
+      expect(lanesAfterDelete.length).toEqual(0);
 
       await lanes.restoreLane(currentLanes[0].hash);
-    });
-    after(async () => {
+    }, 30000);
+    afterAll(async () => {
       await destroyWorkspace(workspaceData);
     });
     it('should restore the deleted lane', async () => {
       const currentLanes = await lanes.getLanes({});
-      expect(currentLanes).to.have.lengthOf(1);
-      expect(currentLanes[0].id.name).to.equal('stage');
+      expect(currentLanes.length).toEqual(1);
+      expect(currentLanes[0].id.name).toEqual('stage');
     });
     describe('delete restored lane', () => {
       let output: string[];
-      before(async () => {
+      beforeAll(async () => {
         output = await lanes.removeLanes(['stage']);
       });
       it('should not throw', () => {
-        expect(output).to.have.lengthOf(1);
+        expect(output.length).toEqual(1);
       });
     });
   });
@@ -170,7 +167,7 @@ describe('LanesAspect', function () {
     let lanes: LanesMain;
     let workspaceData: WorkspaceData;
     let laneHash: string;
-    before(async () => {
+    beforeAll(async () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
@@ -179,15 +176,15 @@ describe('LanesAspect', function () {
 
       // as an intermediate step, make sure the lane was created
       const currentLanes = await lanes.getLanes({});
-      expect(currentLanes).to.have.lengthOf(1);
+      expect(currentLanes.length).toEqual(1);
 
       await lanes.switchLanes('main', { skipDependencyInstallation: true });
       await lanes.removeLanes(['stage']);
 
       await lanes.createLane('stage');
       laneHash = currentLanes[0].hash;
-    });
-    after(async () => {
+    }, 30000);
+    afterAll(async () => {
       await destroyWorkspace(workspaceData);
     });
     it('should throw when restoring the lane', async () => {
@@ -197,8 +194,8 @@ describe('LanesAspect', function () {
       } catch (err: any) {
         error = err;
       }
-      expect(error).to.be.instanceOf(Error);
-      expect(error?.message).to.include('unable to restore lane');
+      expect(error).toBeInstanceOf(Error);
+      expect(error?.message).toMatch(/unable to restore lane/);
     });
   });
 });

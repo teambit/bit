@@ -8,6 +8,7 @@ describe('ConsumerComponent', function () {
   describe('docs', () => {
     const componentProps = {
       name: 'is-string',
+      defaultScope: 'my-scope',
       mainFile: 'is-string.js',
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       files: [new SourceFile({ base: '.', path: 'is-string.js', contents: Buffer.from(''), test: false })],
@@ -16,6 +17,11 @@ describe('ConsumerComponent', function () {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const component = new Component(componentProps);
       expect(component.docs).to.deep.equal([]);
+    });
+    it('should generate bindingPrefix based on the defaultScope if not specified', () => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      const component = new Component(componentProps);
+      expect(component.bindingPrefix).to.equal('@my-scope');
     });
   });
 });

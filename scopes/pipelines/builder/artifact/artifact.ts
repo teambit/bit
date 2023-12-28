@@ -50,6 +50,27 @@ export class Artifact {
     return this.def.generatedBy || this.task.aspectId;
   }
 
+  /**
+   * calculate what could possibly be the root directory of the artifact.
+   * in case the deprecated rootDir is set, use it.
+   * otherwise, get the common first directory of all files.
+   * if there is no common directory, or there are multiple directories return undefined.
+   */
+  get artifactDir(): string | undefined {
+    if (this.def.rootDir) return this.def.rootDir;
+
+    // not sure if needed, it's unclear whether the paths are OS specific or not. (coming from globby).
+    const pathsLinux = this.files.paths.map((p) => p.replace(/\\/g, '/'));
+    // get the common dir of all paths.
+    const firstPath = pathsLinux[0];
+    // it's a file in the root, so there is no shared root directory.
+    if (!firstPath.includes('/')) return undefined;
+    const [potentialSharedDir] = firstPath.split('/');
+    const isSharedDir = pathsLinux.every((p) => p.startsWith(`${potentialSharedDir}/`));
+    if (!isSharedDir) return undefined;
+    return potentialSharedDir;
+  }
+
   isEmpty(): boolean {
     return this.files.isEmpty();
   }

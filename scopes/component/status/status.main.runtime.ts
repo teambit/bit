@@ -1,7 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import pMapSeries from 'p-map-series';
 import { LaneId } from '@teambit/lane-id';
-import { IssuesList } from '@teambit/component-issues';
+import { IssuesClasses, IssuesList } from '@teambit/component-issues';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
 import { ComponentID } from '@teambit/component-id';
@@ -61,7 +61,13 @@ export class StatusMain {
     private lanes: LanesMain
   ) {}
 
-  async status({ lanes }: { lanes?: boolean }): Promise<StatusResult> {
+  async status({
+    lanes,
+    ignoreCircularDependencies,
+  }: {
+    lanes?: boolean;
+    ignoreCircularDependencies?: boolean;
+  }): Promise<StatusResult> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     loader.start(BEFORE_STATUS);
     const loadOpts = {
@@ -105,13 +111,14 @@ export class StatusMain {
     const idsDuringMergeState = componentsList.listDuringMergeStateComponents();
     const mergePendingComponents = await componentsList.listMergePendingComponents();
     if (allComps.length) {
-      const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
+      const issuesFromFlag = ignoreCircularDependencies ? [IssuesClasses.CircularDependencies.name] : [];
+      const issuesToIgnore = [...this.issues.getIssuesToIgnoreGlobally(), ...issuesFromFlag];
       await this.issues.triggerAddComponentIssues(allComps, issuesToIgnore);
       this.issues.removeIgnoredIssuesFromComponents(allComps);
     }
     const componentsWithIssues = allComps.filter((component) => !component.state.issues.isEmpty());
-    const softTaggedComponents = componentsList.listSoftTaggedComponents();
-    const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toComponentId());
+    const softTaggedComponents = this.workspace.filter.bySoftTagged();
+    const snappedComponents = await this.workspace.filter.bySnappedOnMain();
     const pendingUpdatesFromMain = lanes ? await componentsList.listUpdatesFromMainPending() : [];
     const updatesFromForked = lanes ? await this.lanes.listUpdatesFromForked(componentsList) : [];
     const currentLaneId = consumer.getCurrentLaneId();
@@ -145,7 +152,7 @@ export class StatusMain {
       return objectsWithId.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
     };
 
-    await consumer.onDestroy();
+    await consumer.onDestroy('status');
     return {
       newComponents: await convertBitIdToComponentIdsAndSort(newComponents.map((c) => c.id)),
       modifiedComponents: await convertBitIdToComponentIdsAndSort(modifiedComponents.map((c) => c.id)),
@@ -193,7 +200,8 @@ export class StatusMain {
     };
     const comps = opts.showIssues ? await this.workspace.getMany(ids, loadOpts) : [];
     if (opts.showIssues) {
-      const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
+      const issuesFromFlag = opts.ignoreCircularDependencies ? [IssuesClasses.CircularDependencies.name] : [];
+      const issuesToIgnore = [...this.issues.getIssuesToIgnoreGlobally(), ...issuesFromFlag];
       await this.issues.triggerAddComponentIssues(comps, issuesToIgnore);
       this.issues.removeIgnoredIssuesFromComponents(comps);
     }

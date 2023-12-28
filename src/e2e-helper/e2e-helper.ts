@@ -4,7 +4,6 @@ import R from 'ramda';
 import { VERSION_DELIMITER } from '../constants';
 import { FileStatus } from '../consumer/versions-ops/merge-version';
 import { removeChalkCharacters } from '../utils';
-import BitJsonHelper from './e2e-bit-json-helper';
 import BitJsoncHelper from './e2e-bit-jsonc-helper';
 import BitMapHelper from './e2e-bitmap-helper';
 import CommandHelper from './e2e-command-helper';
@@ -29,7 +28,6 @@ export type HelperOptions = {
 export default class Helper {
   debugMode: boolean;
   scopes: ScopesData;
-  bitJson: BitJsonHelper;
   scopeJson: ScopeJsonHelper;
   bitJsonc: BitJsoncHelper;
   componentJson: ComponentJsonHelper;
@@ -49,7 +47,6 @@ export default class Helper {
   constructor(helperOptions?: HelperOptions) {
     this.debugMode = !!process.env.npm_config_debug; // default = false
     this.scopes = new ScopesData(helperOptions?.scopesOptions); // generates dirs and scope names
-    this.bitJson = new BitJsonHelper(this.scopes);
     this.scopeJson = new ScopeJsonHelper(this.scopes);
     this.bitJsonc = new BitJsoncHelper(this.scopes);
     this.componentJson = new ComponentJsonHelper(this.scopes);

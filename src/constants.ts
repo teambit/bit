@@ -189,7 +189,7 @@ export const CFG_SYMPHONY_URL_KEY = 'symphony_url';
 let resolvedSymphonyUrl;
 export const getSymphonyUrl = (): string => {
   if (resolvedSymphonyUrl) return resolvedSymphonyUrl;
-  resolvedSymphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || `symphony.${getCloudDomain()}`;
+  resolvedSymphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || `api.v2.${getCloudDomain()}`;
   return resolvedSymphonyUrl;
 };
 
@@ -249,6 +249,9 @@ export const MergeConfigFilename = 'merge-conflict';
  * if you want to ignore only from component's root-dir, use `IGNORE_ROOT_ONLY_LIST` constant.
  */
 export const IGNORE_LIST = [
+  '**/.env',
+  '**/.env.local',
+  '**/.env.**.local',
   '**/.bit.map.json',
   '**/.bitmap',
   '**/.gitignore',
@@ -545,8 +548,6 @@ export const MANUALLY_REMOVE_ENVIRONMENT = '-';
 
 export const MANUALLY_ADD_DEPENDENCY = '+';
 
-export const OVERRIDE_FILE_PREFIX = 'file://';
-
 export const OVERRIDE_COMPONENT_PREFIX = '@bit/';
 
 export const ACCEPTABLE_NPM_VERSIONS = '>=5.0.0';
@@ -568,8 +569,8 @@ use \`bit pattern --help\` to understand patterns better and \`bit pattern <patt
 `;
 
 export const COMPONENT_PATTERN_HELP = `component name, component id, or component pattern. use component pattern to select multiple components.
-use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
-wrap the pattern with quotes`;
+wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button".
+use \`bit pattern --help\` to understand patterns better and \`bit pattern <pattern>\` to validate the pattern.`;
 
 export const CURRENT_UPSTREAM = 'current';
 
@@ -616,3 +617,5 @@ export enum BuildStatus {
 export const SOURCE_DIR_SYMLINK_TO_NM = '_src'; // symlink from node_modules to the workspace sources files
 
 export const FILE_CHANGES_CHECKOUT_MSG = 'components with file changes';
+
+export const VERSION_CHANGED_BIT_ID_TO_COMP_ID = '1.2.10';

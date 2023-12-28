@@ -201,7 +201,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
     // export and eject operations to function independently. we don't want to lose the changes to
     // .bitmap file done by the export action in case the eject action has failed.
-    await consumer.onDestroy();
+    await consumer.onDestroy('export');
     return {
       updatedIds,
       nonExistOnBitMap: nonExistOnBitMap.filter((id) => !removedIds.hasWithoutVersion(id)),
@@ -528,6 +528,12 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       });
     };
 
+    const warnCancelExport = () => {
+      this.logger.consoleWarning(
+        `unable to cancel the export process at this point because the communication with the remote already started`
+      );
+    };
+    process.on('SIGINT', warnCancelExport);
     let centralHubResults;
     if (resumeExportId) {
       const remotes = manyObjectsPerRemote.map((o) => o.remote);
@@ -542,6 +548,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
 
     loader.start('updating data locally...');
     const results = await updateLocalObjects(laneObject);
+    process.removeListener('SIGINT', warnCancelExport);
     return {
       newIdsOnRemote: R.flatten(results.map((r) => r.newIdsOnRemote)),
       exported: ComponentIdList.uniqFromArray(R.flatten(results.map((r) => r.exported))),
@@ -572,7 +579,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       throw new Error(ejectErr);
     }
     // run the consumer.onDestroy() again, to write the changes done by the eject action to .bitmap
-    await consumer.onDestroy();
+    await consumer.onDestroy('export (eject)');
     return ejectResults;
   }
 
@@ -798,7 +805,8 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     loader.start(BEFORE_EXPORT); // show single export
     const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
     // load the components for fixing any out-of-sync issues.
-    await consumer.loadComponents(ComponentIdList.fromArray(parsedIds));
+    // TODO: check if we really need the load extensions here
+    await consumer.loadComponents(ComponentIdList.fromArray(parsedIds), undefined, { loadExtensions: true });
 
     return filterNonScopeIfNeeded(ComponentIdList.fromArray(parsedIds));
   }

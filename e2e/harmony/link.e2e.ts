@@ -28,7 +28,7 @@ describe('linking to a target including peers', function () {
   before(() => {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.command.create('react', 'button');
+    helper.command.create('react', 'button', '--env teambit.react/react');
     helper.command.install();
     targetDir = globalBitTempDir();
     helper.command.link(`--target=${targetDir} --peers`);

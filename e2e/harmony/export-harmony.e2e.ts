@@ -58,7 +58,7 @@ describe('export functionality on Harmony', function () {
       // before it used to throw VersionNotFound
       helper.fixtures.populateComponents(1, undefined, '-v3');
       helper.command.tagAllWithoutBuild();
-      expect(() => helper.command.untag('comp1')).not.to.throw();
+      expect(() => helper.command.reset('comp1')).not.to.throw();
     });
   });
   describe.skip('export to multiple scope with circular between the scopes', () => {

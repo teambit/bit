@@ -1,8 +1,8 @@
 {
   "componentId": {
+    "scope": "teambit.react",
     "name": "react",
-    "version": "0.0.10",
-    "scope": "teambit.react"
+    "version": "0.0.10"
   },
   "propagate": true,
   "extensions": {
@@ -11,10 +11,7 @@
         "dependencies": {
           "react": "-",
           "react-dom": "-",
-          "@svgr/webpack": "5.5.0",
           "@babel/helper-plugin-test-runner": "7.16.7",
-          "@babel/preset-env": "7.22.15",
-          "@babel/preset-react": "7.22.15",
           "@typescript-eslint/parser": "5.62.0",
           "@typescript-eslint/eslint-plugin": "5.62.0",
           "esbuild": "0.14.29",
@@ -24,31 +21,13 @@
           "eslint-plugin-react": "7.22.0",
           "eslint-plugin-jsx-a11y": "6.4.1",
           "eslint-plugin-mdx": "1.17.1",
-          "new-url-loader": "0.1.1",
-          "react-app-polyfill": "1.0.6",
-          "resolve-url-loader": "5.0.0",
           "@mdx-js/react": "1.6.22",
-          "jest": "27.5.1",
           "jest-environment-jsdom": "27.5.1",
-          "identity-obj-proxy": "3.0.0",
-          "jest-watch-typeahead": "1.0.0",
-          "babel-plugin-named-asset-import": "0.3.7",
-          "babel-loader": "9.1.2",
-          "babel-preset-react-app": "^10.0.0",
-          "style-loader": "^2.0.0",
-          "css-loader": "6.2.0",
-          "postcss": "8.4.18",
-          "postcss-loader": "7.0.1",
-          "postcss-normalize": "10.0.0",
-          "postcss-preset-env": "7.8.2",
-          "postcss-flexbugs-fixes": "5.0.2",
           "sanitize.css": "12.0.1",
           "sass": "1.63.6",
-          "sass-loader": "13.3.2",
           "less": "^4.1.1",
-          "less-loader": "10.0.0",
           "@teambit/legacy": "-",
-          "@babel/runtime": "7.20.0",
+          "@babel/runtime": "7.23.2",
           "react-refresh": "0.10.0"
         },
         "devDependencies": {
@@ -64,9 +43,13 @@
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.583"
+          "@teambit/legacy": "1.0.625"
         }
       }
+    },
+    "teambit.envs/env": {},
+    "teambit.envs/envs": {
+      "env": "teambit.envs/env"
     }
   }
 }

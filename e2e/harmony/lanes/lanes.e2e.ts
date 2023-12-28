@@ -618,7 +618,7 @@ describe('bit lane command', function () {
       helper.command.createLane();
       helper.fixtures.populateComponents(1);
       helper.command.snapAllComponentsWithoutBuild();
-      output = helper.command.untagAll();
+      output = helper.command.resetAll();
     });
     it('should untag successfully', () => {
       expect(output).to.have.string('1 component(s) were untagged');
@@ -1085,7 +1085,7 @@ describe('bit lane command', function () {
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
       afterFirstSnap = helper.scopeHelper.cloneLocalScope();
-      helper.command.untagAll();
+      helper.command.resetAll();
     });
     it('bit lane show should not show the component as belong to the lane anymore', () => {
       const lane = helper.command.showOneLaneParsed('dev');
@@ -1109,7 +1109,7 @@ describe('bit lane command', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(afterFirstSnap);
         helper.command.snapComponentWithoutBuild('comp1', '--force');
-        helper.command.untag('comp1', true);
+        helper.command.reset('comp1', true);
       });
       it('should not show the component as new', () => {
         const status = helper.command.statusJson();
@@ -1123,7 +1123,7 @@ describe('bit lane command', function () {
       });
       // a previous bug was showing "unable to untag comp1, the component is not staged" error.
       it('should not throw an error', () => {
-        expect(() => helper.command.untag('comp1')).to.not.throw();
+        expect(() => helper.command.reset('comp1')).to.not.throw();
       });
     });
   });
@@ -1709,6 +1709,39 @@ describe('bit lane command', function () {
     it('should add "onLanesOnly" prop', () => {
       const bitMap = helper.bitMap.read();
       expect(bitMap.comp1.onLanesOnly).to.be.true;
+    });
+  });
+  describe('export interrupted, reset, snap then import', () => {
+    let beforeExport: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+
+      beforeExport = helper.scopeHelper.cloneLocalScope();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(beforeExport);
+      helper.command.resetAll();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      // previously, this import wasn't writing the .bit/refs files and as a result, it wasn't shown as merge-pending
+      helper.command.import();
+    });
+    it('bit status should show the components as merge-pending', () => {
+      const status = helper.command.statusJson();
+      expect(status.mergePendingComponents).to.have.lengthOf(1);
+    });
+    it('bit export should fail', () => {
+      expect(() => helper.command.export()).to.throw();
+    });
+    it('reset, checkout-head and re-snap should fix it and make it possible to export', () => {
+      helper.command.resetAll();
+      helper.command.checkoutHead('-x');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      expect(() => helper.command.export()).to.not.throw();
     });
   });
 });

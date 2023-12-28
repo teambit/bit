@@ -67,7 +67,7 @@ export default class BitMap {
   private updatedIds: { [oldIdStr: string]: ComponentMap } = {}; // needed for out-of-sync where the id is changed during the process
   constructor(
     public projectRoot: string,
-    public mapPath: string,
+    public mapPath: PathOsBasedAbsolute,
     public schema: string,
     public laneId?: LaneId,
     public isLaneExported = false
@@ -273,18 +273,20 @@ export default class BitMap {
   }
 
   resetToNewComponents() {
-    this.components = this.components.map(
-      (component) =>
-        new ComponentMap({
-          id: component.id.changeVersion(undefined).changeScope(component.scope || (component.defaultScope as string)),
-          mainFile: component.mainFile,
-          rootDir: component.rootDir,
-          defaultScope: component.id.scope,
-          exported: false,
-          files: component.files,
-          onLanesOnly: false,
-        })
-    );
+    this.components = this.components.map((component) => {
+      const scope = component.id.scope;
+      const legacyId = component.id._legacy.changeVersion(undefined).changeScope(undefined);
+      const id = new ComponentID(legacyId, scope);
+      return new ComponentMap({
+        id,
+        mainFile: component.mainFile,
+        rootDir: component.rootDir,
+        defaultScope: scope,
+        exported: false,
+        files: component.files,
+        onLanesOnly: false,
+      });
+    });
   }
 
   resetLaneComponentsToNew() {

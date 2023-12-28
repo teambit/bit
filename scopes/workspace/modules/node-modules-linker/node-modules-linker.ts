@@ -103,13 +103,7 @@ export default class NodeModuleLinker {
    */
   async _populateComponentsLinks(component: Component): Promise<void> {
     const legacyComponent = component.state._consumer as ConsumerComponent;
-    const componentId = component.id;
-    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
-      bindingPrefix: legacyComponent.bindingPrefix,
-      id: componentId,
-      defaultScope: component.id.scope,
-      extensions: legacyComponent.extensions,
-    });
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(legacyComponent);
 
     this.symlinkComponentDir(component, linkPath);
     this._deleteExistingLinksRootIfSymlink(linkPath);
@@ -187,6 +181,30 @@ export default class NodeModuleLinker {
     } else {
       packageJson.packageJsonObject.version = snapToSemver(packageJson.packageJsonObject.version);
     }
+
+    // indicate that this component exists locally and it is symlinked into the workspace. not a normal package.
+    packageJson.packageJsonObject._bit_local = true;
+    packageJson.packageJsonObject.source = component.mainFile.relative;
+
+    // This is a hack because we have in the workspace package.json types:index.ts
+    // but also exports for core aspects
+    // TS can't find the types
+    // in order to solve it we copy the types to exports.types
+    // this will be applied only to aspects to minimize how it affects users
+    const envsData = component.state.aspects.get('teambit.envs/envs');
+    const isAspect = envsData?.data.type === 'aspect';
+    if (
+      isAspect &&
+      packageJson.packageJsonObject.types &&
+      packageJson.packageJsonObject.exports &&
+      !packageJson.packageJsonObject.exports.types
+    ) {
+      const defaultModule = packageJson.packageJsonObject.exports.default;
+      if (defaultModule) delete packageJson.packageJsonObject.exports.default;
+      packageJson.packageJsonObject.exports.types = `./${packageJson.packageJsonObject.types}`;
+      packageJson.packageJsonObject.exports.default = defaultModule;
+    }
+
     // packageJson.mergePropsFromExtensions(component);
     // TODO: we need to have an hook here to get the transformer from the pkg extension
 
@@ -233,7 +251,7 @@ export async function linkToNodeModulesByIds(
     if (loadFromScope) {
       return workspace.scope.getMany(componentsIds);
     }
-    return workspace.getMany(componentsIds);
+    return workspace.getMany(componentsIds, { idsToNotLoadAsAspects: bitIds.map((id) => id.toString()) });
   };
   const components = await getComponents();
   const nodeModuleLinker = new NodeModuleLinker(components, workspace);

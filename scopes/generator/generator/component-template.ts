@@ -85,11 +85,11 @@ export interface ConfigContext {
 
 export type ComponentConfig = { [aspectName: string]: any };
 
-export interface ComponentTemplate {
+export interface ComponentTemplateOptions {
   /**
    * name of the component template. for example: `hook`, `react-component` or `module`.
    */
-  name: string;
+  name?: string;
 
   /**
    * short description of the template. shown in the `bit templates` command.
@@ -102,9 +102,39 @@ export interface ComponentTemplate {
   hidden?: boolean;
 
   /**
-   * env to use for the component.
+   * env to use for the generated component.
    */
   env?: string;
+
+  /**
+   * adds a metadata that the component that this template creates is of type env.
+   * This will be used later to do further configuration for example:
+   * - ensure to create the .bit_root for it
+   */
+  isEnv?: boolean;
+
+  /**
+   * adds a metadata that the component that this template creates is of type app.
+   * This will be used later to do further configuration for example:
+   * - add it to the workspace.jsonc as app
+   * - ensure to create the .bit_root for it
+   */
+  isApp?: boolean;
+
+  /**
+   * list of dependencies to install when the component is created.
+   */
+  dependencies?: string[];
+
+  /**
+   * Perform installation of missing dependencies after component generation.
+   * This is the same as of running `bit install --add-missing-deps` after component generation.
+   */
+  installMissingDependencies?: boolean;
+}
+
+export interface ComponentTemplate extends ComponentTemplateOptions {
+  name: string;
 
   /**
    * template function for generating the file of a certain component.,

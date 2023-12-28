@@ -8,7 +8,7 @@ import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/w
 import ComponentAspect, { ComponentID } from '@teambit/component';
 import type { ComponentMain, Component } from '@teambit/component';
 
-import { isCoreAspect, loadBit } from '@teambit/bit';
+import { isCoreAspect, loadBit, restoreGlobals } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import GitAspect, { GitMain } from '@teambit/git';
 import { BitError } from '@teambit/bit-error';
@@ -200,6 +200,8 @@ export class GeneratorMain {
     const remoteEnvsAspect = globalScopeHarmony.get<EnvsMain>(EnvsAspect.id);
     const aspect = components[0];
     const fullAspectId = aspect.id.toString();
+    restoreGlobals();
+
     return { remoteGenerator, fullAspectId, remoteEnvsAspect, aspect };
   }
 
@@ -310,6 +312,8 @@ export class GeneratorMain {
       this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
     );
 
+    const envId = await this.getEnvIdFromTemplateWithId(templateWithId);
+
     const componentGenerator = new ComponentGenerator(
       this.workspace,
       componentIds,
@@ -322,15 +326,33 @@ export class GeneratorMain {
       this.logger,
       this.onComponentCreateSlot,
       templateWithId.id,
-      templateWithId.envName ? ComponentID.fromString(templateWithId.id) : undefined
+      envId
     );
     return componentGenerator.generate();
+  }
+
+  private async getEnvIdFromTemplateWithId(templateWithId: ComponentTemplateWithId): Promise<ComponentID | undefined> {
+    const envIdFromTemplate = templateWithId.template.env;
+    if (envIdFromTemplate) {
+      const parsedFromTemplate = ComponentID.tryFromString(envIdFromTemplate);
+      if (!parsedFromTemplate) {
+        throw new BitError(
+          `Error: unable to parse envId from template. template name: ${templateWithId.template.name}, envId: ${envIdFromTemplate}`
+        );
+      }
+      const resolvedId = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(parsedFromTemplate);
+      return ComponentID.fromString(resolvedId);
+    }
+    if (templateWithId.envName) {
+      return ComponentID.fromString(templateWithId.id);
+    }
+    return Promise.resolve(undefined);
   }
 
   async generateWorkspaceTemplate(
     workspaceName: string,
     templateName: string,
-    options: NewOptions & { aspect?: string }
+    options: NewOptions & { aspect?: string; currentDir?: boolean }
   ): Promise<GenerateWorkspaceTemplateResult> {
     if (this.workspace) {
       throw new BitError('Error: unable to generate a new workspace inside of an existing workspace');
@@ -426,6 +448,10 @@ export class GeneratorMain {
     });
 
     return templates;
+  }
+
+  getConfiguredEnvs(): string[] {
+    return this.config.envs ?? [];
   }
 
   async listEnvComponentTemplates(ids: string[] = [], aspectId?: string): Promise<Array<ComponentTemplateWithId>> {

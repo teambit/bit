@@ -195,11 +195,16 @@ describe('merge lanes', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.createLane('dev');
-      helper.command.mergeLane('main', '-x');
     });
-    it('should not bring non-lane components from main', () => {
+    it('when using --exclude-non-lane-comps flag, it should not bring non-lane components from main', () => {
+      helper.command.mergeLane('main', '-x --exclude-non-lane-comps');
       const lane = helper.command.showOneLaneParsed('dev');
       expect(lane.components).to.have.lengthOf(0);
+    });
+    it('by default, it should bring non-lane components from main', () => {
+      helper.command.mergeLane('main', '-x');
+      const lane = helper.command.showOneLaneParsed('dev');
+      expect(lane.components).to.have.lengthOf(1);
     });
   });
   describe('merging main lane with no snapped components', () => {
@@ -429,7 +434,7 @@ describe('merge lanes', function () {
         // previously it was throwing:
         // removeComponentVersions found multiple parents for a local (un-exported) version 368fb583865af40a8823d2ac1d556f4b65582ba2 of iw4j2eko-remote/comp1
         it('bit reset should not throw', () => {
-          expect(() => helper.command.untagAll()).to.not.throw();
+          expect(() => helper.command.resetAll()).to.not.throw();
         });
       });
       describe('switching to main and merging the lane to main (with squash)', () => {
@@ -740,6 +745,36 @@ describe('merge lanes', function () {
       });
     });
   });
+  describe('multiple scopes when a component in the origin is different than on the lane and the lane is forked', () => {
+    let originRemote: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      originRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.command.createLane('lane-a');
+      helper.bitJsonc.addDefaultScope(originRemote);
+      helper.fixtures.populateComponents(1, false, 'on-lane');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.command.createLane('lane-b');
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.mergeLane('lane-a', '-x');
+    });
+    it('should not throw during bit-import because it tries to import comp1 from the original scope instead of the lane scope', () => {
+      expect(() => helper.command.import()).to.not.throw();
+    });
+  });
   describe('merge unrelated between two lanes with --resolve-unrelated', () => {
     let headOnLaneA: string;
     let headOnLaneB: string;
@@ -922,10 +957,12 @@ describe('merge lanes', function () {
       bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
       beforeMerging = helper.scopeHelper.cloneScope(bareMerge.scopePath);
+      const title = 'this is the title of the CR';
+      const titleBase64 = Buffer.from(title).toString('base64');
       helper.command.mergeLaneFromScope(
         bareMerge.scopePath,
         `${helper.scopes.remote}/dev`,
-        '--title "this is the title of the CR"'
+        `--title-base64 ${titleBase64}`
       );
     });
     it('should merge to main', () => {
@@ -1588,6 +1625,35 @@ describe('merge lanes', function () {
         const dep = depResolver.data.dependencies.find((d) => d.id.includes('comp2'));
         expect(dep.version).to.equal('0.0.2');
       });
+    });
+  });
+  describe('when a file exists in local and others but not in base', () => {
+    let mainWs: string;
+    let mergeOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      mainWs = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.createLane();
+      helper.fs.outputFile('comp1/foo.js', 'on-lane');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(mainWs);
+      helper.fs.outputFile('comp1/foo.js', 'on-main');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      mergeOutput = helper.command.mergeLane('dev', '-x --no-squash --auto-merge-resolve=manual');
+    });
+    // previously in this case, it was marking it as "overridden" and was leaving the content as it was in the filesystem.
+    it('should write the file with the conflicts', () => {
+      expect(mergeOutput).to.include('CONFLICT');
+      const foo = helper.fs.readFile('comp1/foo.js');
+      expect(foo).to.include('<<<<<<<');
     });
   });
 });

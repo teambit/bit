@@ -70,7 +70,7 @@ export class ScopeComponentLoader {
       consumerComponent.pendingVersion ||
       (await modelComponent.loadVersion(legacyId.version as string, this.scope.legacyScope.objects));
     const snap = await this.getHeadSnap(modelComponent);
-    const state = await this.createStateFromVersion(id, version);
+    const state = await this.createStateFromVersion(id, version, consumerComponent);
     const tagMap = this.getTagMap(modelComponent);
 
     return new Component(id, snap, state, tagMap, this.scope);
@@ -186,12 +186,16 @@ export class ScopeComponentLoader {
     );
   }
 
-  private async createStateFromVersion(id: ComponentID, version: Version): Promise<State> {
-    const consumerComponent = await this.scope.legacyScope.getConsumerComponent(id);
+  private async createStateFromVersion(
+    id: ComponentID,
+    version: Version,
+    consumerComponent?: ConsumerComponent
+  ): Promise<State> {
+    consumerComponent = consumerComponent || (await this.scope.legacyScope.getConsumerComponent(id));
     const state = new State(
       // We use here the consumerComponent.extensions instead of version.extensions
       // because as part of the conversion to consumer component the artifacts are initialized as Artifact instances
-      new Config(version.mainFile, consumerComponent.extensions),
+      new Config(consumerComponent),
       // todo: see the comment of this "createAspectListFromLegacy" method. the aspect ids may be incorrect.
       // find a better way to get the ids correctly.
       this.scope.componentExtension.createAspectListFromLegacy(consumerComponent.extensions),

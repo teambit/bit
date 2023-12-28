@@ -1,7 +1,8 @@
 import { EnvsAspect } from './environments.aspect';
 
+export { ServiceHandlerContext as EnvContext } from './services';
+
 export type {
-  ServiceHandlerContext as EnvContext,
   ServiceHandlerFactory as EnvHandler,
   AsyncServiceHandlerFactory as AsyncEnvHandler,
   ServiceHandler,
@@ -10,7 +11,8 @@ export type {
 export { DEFAULT_ENV } from './environments.main.runtime';
 export * from './environment';
 export { ExecutionContext } from './context';
-export { EnvService, ConcreteService, reduceServiceHandlersFactories } from './services';
+export type { EnvService, ConcreteService } from './services';
+export { reduceServiceHandlersFactories } from './services';
 export { EnvRuntime } from './runtime/env-runtime';
 export type { Env } from './env-interface';
 export type {

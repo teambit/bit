@@ -32,7 +32,7 @@ export class DocsUI {
   private _emptyState?: ComponentType;
 
   registerEmptyState(emptyState: ComponentType) {
-    return this._emptyState = emptyState;
+    return (this._emptyState = emptyState);
   }
 
   getEmptyState() {

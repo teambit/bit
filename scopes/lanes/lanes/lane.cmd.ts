@@ -98,7 +98,8 @@ export class LaneListCmd implements Command {
         footer +=
           "to get more info on all lanes in local scope use 'bit lane list --details', or 'bit lane show <lane-name>' for a specific lane.";
       }
-      if (!remote && this.workspace) footer += `\nswitch lanes using 'bit lane switch <name>'.`;
+      if (!remote && this.workspace)
+        footer += `\nswitch lanes using 'bit lane switch <name>'. . create lanes using 'bit lane create <name>'.`;
 
       return footer;
     };

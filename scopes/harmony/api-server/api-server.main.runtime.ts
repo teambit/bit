@@ -31,7 +31,7 @@ export class ApiServerMain {
     private importer: ImporterMain
   ) {}
 
-  async runApiServer(options: { port: number }) {
+  async runApiServer(options: { port: number; compile: boolean }) {
     if (!this.workspace) {
       throw new Error(`unable to run bit-server, the current directory ${process.cwd()} is not a workspace`);
     }
@@ -70,6 +70,7 @@ export class ApiServerMain {
     this.watcher
       .watch({
         preCompile: false,
+        compile: options.compile,
       })
       .catch((err) => {
         // don't throw an error, we don't want to break the "run" process
@@ -145,7 +146,6 @@ export class ApiServerMain {
     const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer, importer);
     cli.register(new ServerCmd(apiServer));
 
-    const cliRoute = new CLIRoute(logger, cli);
     const apiForIDE = new APIForIDE(
       workspace,
       snapping,
@@ -158,6 +158,7 @@ export class ApiServerMain {
       generator,
       remove
     );
+    const cliRoute = new CLIRoute(logger, cli, apiForIDE);
     const vscodeRoute = new IDERoute(logger, apiForIDE);
     const sseEventsRoute = new SSEEventsRoute(logger, cli);
     // register only when the workspace is available. don't register this on a remote-scope, for security reasons.

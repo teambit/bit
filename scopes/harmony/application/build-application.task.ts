@@ -8,7 +8,7 @@ import {
   ArtifactDefinition,
   CAPSULE_ARTIFACTS_DIR,
 } from '@teambit/builder';
-import { compact, omit } from 'lodash';
+import { compact } from 'lodash';
 import { Capsule } from '@teambit/isolator';
 import { Component } from '@teambit/component';
 
@@ -88,22 +88,33 @@ export class AppsBuildTask implements BuildTask {
     context: BuildContext
   ): Promise<OneAppResult | undefined> {
     if (!app.build) return undefined;
-    // const { component } = capsule;
-    const appDeployContext: AppBuildContext = Object.assign(context, {
-      capsule,
+    const artifactsDir = this.getArtifactDirectory();
+    const capsuleRootDir = context.capsuleNetwork.capsulesRootDir;
+    const appContext = await this.application.createAppBuildContext(
+      component.id,
+      app.name,
+      capsuleRootDir,
+      capsule.path
+    );
+    const appBuildContext = AppBuildContext.create({
+      appContext,
+      buildContext: context,
       appComponent: component,
       name: app.name,
-      artifactsDir: this.getArtifactDirectory(),
+      capsule,
+      artifactsDir,
     });
-    const deployContext = await app.build(appDeployContext);
+    const deployContext = await app.build(appBuildContext);
     const defaultArtifacts: ArtifactDefinition[] = this.getDefaultArtifactDef(app.applicationType || app.name);
     const artifacts = defaultArtifacts.concat(deployContext.artifacts || []);
 
-    const getDeployContextFormMetadata = () => {
+    const getDeployContextFromMetadata = () => {
       if (deployContext.metadata) {
         return deployContext.metadata;
       }
-      return omit(deployContext, 'errors', 'warnings');
+      // if metadata is not defined, don't save deployContext blindly. in node-app for example it includes the entire
+      // Network object, with all capsules and components.
+      return {};
     };
 
     return {
@@ -112,12 +123,12 @@ export class AppsBuildTask implements BuildTask {
         component: capsule.component,
         errors: deployContext.errors,
         warnings: deployContext.warnings,
-        metadata: { deployContext: getDeployContextFormMetadata(), name: app.name, appType: app.applicationType },
+        metadata: { deployContext: getDeployContextFromMetadata(), name: app.name, appType: app.applicationType },
         /**
          * @deprecated - please use metadata instead
          *
          * @guysaar223
-         * @ram8
+         * @ranm8
          * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
          * or create new deploy context on builder
          */
