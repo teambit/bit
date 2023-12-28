@@ -471,7 +471,7 @@ export class MergingMain {
     }
 
     if (Object.keys(workspaceJsonUpdates).length) {
-      await workspaceConfig.write();
+      await workspaceConfig.write({ reasonForChange: 'merge (update dependencies)' });
     }
 
     this.logger.debug('final workspace.jsonc updates', workspaceJsonUpdates);
