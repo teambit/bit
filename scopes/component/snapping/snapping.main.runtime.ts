@@ -1039,7 +1039,8 @@ another option, in case this dependency is not in main yet is to remove all refe
     const compIds = await this.workspace.resolveMultipleComponentIds(ids);
     if (shouldClearCacheFirst) {
       await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
-      compIds.map((compId) => this.workspace.clearComponentCache(compId));
+      // don't clear only the cache of these ids. we need also the auto-tag. so it's safer to just clear all.
+      this.workspace.clearAllComponentsCache();
     }
 
     return this.workspace.getMany(compIds.map((id) => id.changeVersion(undefined)));

@@ -3,13 +3,10 @@ import { Workspace } from '@teambit/workspace';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
-import {
-  diffBetweenVersionsObjects,
-  DiffResults,
-  DiffOptions,
-} from '@teambit/legacy/dist/consumer/component-ops/components-diff';
+import { DiffResults, DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
+import { ComponentCompareMain } from '@teambit/component-compare';
 
 type LaneData = {
   name: string;
@@ -40,7 +37,11 @@ export class LaneDiffGenerator {
   private fromLaneData: LaneData;
   private toLaneData: LaneData;
   private failures: Failure[] = [];
-  constructor(private workspace: Workspace | undefined, private scope: ScopeMain) {}
+  constructor(
+    private workspace: Workspace | undefined,
+    private scope: ScopeMain,
+    private componentCompare: ComponentCompareMain
+  ) {}
 
   /**
    * the values array may include zero to two values and will be processed as following:
@@ -159,13 +160,12 @@ export class LaneDiffGenerator {
     const toVersion = await toLaneHead.load(this.scope.legacyScope.objects);
     const fromLaneStr = this.fromLaneData.name;
     diffOptions.formatDepsAsTable = false;
-    const diff = await diffBetweenVersionsObjects(
+    const diff = await this.componentCompare.diffBetweenVersionsObjects(
       modelComponent,
       fromVersion,
       toVersion as Version,
       fromLaneStr,
       this.toLaneData.name,
-      this.scope.legacyScope,
       diffOptions
     );
     this.compsWithDiff.push(diff);

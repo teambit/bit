@@ -569,7 +569,7 @@ please create a new lane instead, which will include all components of this lane
    * [from, to] => diff between "from" lane and "to" lane.
    */
   public async getDiff(values: string[], diffOptions: DiffOptions = {}, pattern?: string): Promise<LaneDiffResults> {
-    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope);
+    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
     return laneDiffGenerator.generate(values, diffOptions, pattern);
   }
 
@@ -1163,7 +1163,7 @@ please create a new lane instead, which will include all components of this lane
       new LaneChangeScopeCmd(lanesMain),
       new LaneAliasCmd(lanesMain),
       new LaneRenameCmd(lanesMain),
-      new LaneDiffCmd(workspace, scope),
+      new LaneDiffCmd(workspace, scope, componentCompare),
       new LaneAddReadmeCmd(lanesMain),
       new LaneRemoveReadmeCmd(lanesMain),
       new LaneImportCmd(switchCmd),
