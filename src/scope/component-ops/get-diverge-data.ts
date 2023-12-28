@@ -85,7 +85,7 @@ export async function getDivergeData({
     throws: false,
     versionParentsFromObjects,
   });
-  const unmergedData = repo.unmergedComponents.getEntry(modelComponent.name);
+  const unmergedData = repo.unmergedComponents.getEntry(modelComponent.toComponentId());
 
   return getDivergeDataBetweenTwoSnaps(
     modelComponent.id(),
