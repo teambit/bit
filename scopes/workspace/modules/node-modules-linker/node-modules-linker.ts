@@ -193,16 +193,16 @@ export default class NodeModuleLinker {
     // this will be applied only to aspects to minimize how it affects users
     const envsData = component.state.aspects.get('teambit.envs/envs');
     const isAspect = envsData?.data.type === 'aspect';
-    if (
-      isAspect &&
-      packageJson.packageJsonObject.types &&
-      packageJson.packageJsonObject.exports &&
-      !packageJson.packageJsonObject.exports.types
-    ) {
-      const defaultModule = packageJson.packageJsonObject.exports.default;
-      if (defaultModule) delete packageJson.packageJsonObject.exports.default;
-      packageJson.packageJsonObject.exports.types = `./${packageJson.packageJsonObject.types}`;
-      packageJson.packageJsonObject.exports.default = defaultModule;
+    if (isAspect && packageJson.packageJsonObject.types && packageJson.packageJsonObject.exports) {
+      const exports = packageJson.packageJsonObject.exports['.']
+        ? packageJson.packageJsonObject.exports['.']
+        : packageJson.packageJsonObject.exports;
+      if (!exports.types) {
+        const defaultModule = exports.default;
+        if (defaultModule) delete exports.default;
+        exports.types = `./${packageJson.packageJsonObject.types}`;
+        exports.default = defaultModule;
+      }
     }
 
     // packageJson.mergePropsFromExtensions(component);

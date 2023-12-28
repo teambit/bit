@@ -569,11 +569,9 @@ export class Workspace implements ComponentFactory {
     const currentVersion = getCurrentVersionAsTagIfPossible();
 
     flattenedBitIdCompIdMap[component.id.changeVersion(currentVersion).toString()] = component.id;
-    await Promise.all(
-      versionObj.flattenedDependencies.map(async (bitId) => {
-        flattenedBitIdCompIdMap[bitId.toString()] = await this.resolveComponentId(bitId);
-      })
-    );
+    versionObj.flattenedDependencies.forEach((bitId) => {
+      flattenedBitIdCompIdMap[bitId.toString()] = bitId;
+    });
     const getCompIdByIdStr = (idStr: string): ComponentID => {
       const compId = flattenedBitIdCompIdMap[idStr];
       if (!compId) {

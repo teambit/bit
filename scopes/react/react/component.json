@@ -1,8 +1,8 @@
 {
   "componentId": {
+    "scope": "teambit.react",
     "name": "react",
-    "version": "0.0.10",
-    "scope": "teambit.react"
+    "version": "0.0.10"
   },
   "propagate": true,
   "extensions": {
@@ -43,9 +43,13 @@
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.624"
+          "@teambit/legacy": "1.0.626"
         }
       }
+    },
+    "teambit.envs/env": {},
+    "teambit.envs/envs": {
+      "env": "teambit.envs/env"
     }
   }
 }

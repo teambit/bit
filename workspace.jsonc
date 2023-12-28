@@ -323,6 +323,7 @@
         "@teambit/scope.ui.scope-labels": "^0.0.505",
         "@teambit/scope.ui.scope-title": "^0.0.515",
         "@teambit/semantics.entities.semantic-schema": "^0.0.59",
+        "@teambit/tests-results": "^1.0.4",
         "@teambit/typescript.typescript-compiler": "2.0.1",
         "@teambit/ui-foundation.ui.buttons.collapser": "^0.0.215",
         "@teambit/ui-foundation.ui.constants.z-indexes": "^0.0.504",
@@ -555,7 +556,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.624",
+        "@teambit/legacy": "1.0.626",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
@@ -616,78 +617,12 @@
           "--access public"
         ],
         "packageJson": {
-          "name": "@teambit/{name}",
-          "private": false,
-          "license": "Apache-2.0",
-          "engines": {
-            "node": ">=12.22.0"
-          },
-          "repository": {
-            "type": "git",
-            "url": "https://github.com/teambit/bit"
-          },
-          "keywords": [
-            "bit",
-            "bit-aspect",
-            "components",
-            "collaboration",
-            "web",
-            "react",
-            "react-components",
-            "angular",
-            "angular-components"
-          ]
+          "name": "@teambit/{name}"
         }
-      },
-      "teambit.dependencies/dependency-resolver": {
-        "policy": {
-          "dependencies": {
-            "@teambit/legacy": "-"
-          },
-          "devDependencies": {
-            "@types/mocha": "9.1.0",
-            "@teambit/legacy": "-"
-          },
-          "peerDependencies": {
-            "@teambit/legacy": "1.0.624"
-          }
-        }
-      },
-      "teambit.envs/envs": {
-        "env": "teambit.harmony/aspect"
-      },
-      "teambit.harmony/aspect": {}
+      }
     },
     // Only component with at least one namespace
     "{*/**}": {
-      "teambit.harmony/aspect": "-",
-      "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": [
-          "--access public"
-        ],
-        "packageJson": {
-          "name": "@teambit/{scope}.{name}",
-          "private": false,
-          "license": "Apache-2.0",
-          "engines": {
-            "node": ">=12.22.0"
-          },
-          "repository": {
-            "type": "git",
-            "url": "https://github.com/teambit/bit"
-          },
-          "keywords": [
-            "bit",
-            "components",
-            "collaboration",
-            "web",
-            "react",
-            "react-components",
-            "angular",
-            "angular-components"
-          ]
-        }
-      },
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
@@ -699,212 +634,6 @@
           },
           "peerDependencies": {}
         }
-      },
-      "teambit.envs/envs": {
-        "env": "teambit.harmony/node"
-      },
-      "teambit.harmony/node": {}
-    },
-    // Special rules for all core envs
-    // TODO: check if we can add scopes/harmony/aspect and scopes/envs/env here
-    "scopes/react/react, scopes/react/react-native, scopes/harmony/node, scopes/html/html, scopes/mdx/mdx, scopes/mdx/readme": {
-      "teambit.harmony/aspect": "-",
-      // Set the env env for all core envs
-      "teambit.envs/env": {},
-      "teambit.envs/envs": {
-        "env": "teambit.envs/env"
-      }
-    },
-    "{modules/**}": {
-      "teambit.envs/envs": {
-        "env": "teambit.harmony/node"
-      },
-      "teambit.harmony/node": {}
-    },
-    "{cli/**}": {
-      "teambit.react/react": "-",
-      "teambit.envs/envs": {
-        "env": "teambit.harmony/node"
-      }
-    },
-    "{babel/**}": {
-      "teambit.envs/envs": {
-        "env": "teambit.harmony/node"
-      },
-      "teambit.harmony/node": {}
-    },
-    "{ui/**}": {
-      "teambit.envs/envs": {
-        "env": "teambit.react/react"
-      },
-      "teambit.react/react": {}
-    },
-    "scopes/toolbox": {
-      "teambit.envs/envs": {
-        "env": "teambit.harmony/node"
-      },
-      "teambit.harmony/aspect": "-",
-      "defaultScope": "teambit.toolbox"
-    },
-    "scopes/web-components": {
-      "defaultScope": "teambit.web-components"
-    },
-    "scopes/workspace": {
-      "defaultScope": "teambit.workspace"
-    },
-    "scopes/git": {
-      "defaultScope": "teambit.git"
-    },
-    "scopes/webpack": {
-      "defaultScope": "teambit.webpack"
-    },
-    "scopes/scope": {
-      "defaultScope": "teambit.scope"
-    },
-    "scopes/compositions": {
-      "defaultScope": "teambit.compositions"
-    },
-    "scopes/docs": {
-      "defaultScope": "teambit.docs"
-    },
-    "scopes/generator": {
-      "defaultScope": "teambit.generator"
-    },
-    "scopes/lanes": {
-      "defaultScope": "teambit.lanes"
-    },
-    "scopes/explorer": {
-      "defaultScope": "teambit.explorer"
-    },
-    "scopes/envs": {
-      "defaultScope": "teambit.envs"
-    },
-    "scopes/pkg": {
-      "defaultScope": "teambit.pkg"
-    },
-    "scopes/dependencies": {
-      "defaultScope": "teambit.dependencies"
-    },
-    "scopes/react": {
-      "defaultScope": "teambit.react"
-    },
-    "scopes/preview": {
-      "defaultScope": "teambit.preview"
-    },
-    "scopes/pipelines": {
-      "defaultScope": "teambit.pipelines"
-    },
-    "scopes/harmony": {
-      "defaultScope": "teambit.harmony"
-    },
-    "scopes/html": {
-      "defaultScope": "teambit.html"
-    },
-    "scopes/compilation": {
-      "defaultScope": "teambit.compilation"
-    },
-    "scopes/defender": {
-      "defaultScope": "teambit.defender"
-    },
-    "scopes/component": {
-      "defaultScope": "teambit.component"
-    },
-    "scopes/code": {
-      "defaultScope": "teambit.code"
-    },
-    "scopes/component/component-id": {
-      "teambit.envs/envs": {
-        "env": "teambit.harmony/node"
-      },
-      // Removing policies that should be defined only for aspects
-      "teambit.dependencies/dependency-resolver": {}
-    },
-    "scopes/component/component-version": {
-      "teambit.envs/envs": {
-        "env": "teambit.harmony/node"
-      },
-      // Removing policies that should be defined only for aspects
-      "teambit.dependencies/dependency-resolver": {}
-    },
-    "scopes/component/legacy-bit-id": {
-      "teambit.envs/envs": {
-        "env": "teambit.harmony/node"
-      },
-      // Removing policies that should be defined only for aspects
-      "teambit.dependencies/dependency-resolver": {}
-    },
-    "scopes/harmony/bit-error, scopes/defender/tests-results, scopes/typescript/ts-server, scopes/component/component-issues, scopes/component/component-package-version, scopes/react/eslint-config-bit-react, scopes/toolbox/tables/cli-table": {
-      "teambit.harmony/aspect": "-",
-      "teambit.envs/envs": {
-        "env": "teambit.harmony/node"
-      },
-      // Removing policies that should be defined only for aspects
-      "teambit.dependencies/dependency-resolver": {}
-    },
-    "scopes/component/legacy-component-log": {
-      "teambit.envs/envs": {
-        "env": "teambit.harmony/node"
-      },
-      "teambit.dependencies/dependency-resolver": {}
-    },
-    "scopes/ui-foundation": {
-      "defaultScope": "teambit.ui-foundation",
-      "teambit.community/envs/community-react": "-"
-    },
-    "scopes/mdx": {
-      "defaultScope": "teambit.mdx"
-    },
-    "scopes/community": {
-      "defaultScope": "teambit.community"
-    },
-    "scopes/cloud": {
-      "defaultScope": "teambit.cloud"
-    },
-    "scopes/base-react": {
-      "defaultScope": "teambit.base-react",
-      "teambit.envs/envs": {
-        "env": "teambit.react/react"
-      }
-    },
-    "scopes/design": {
-      "defaultScope": "teambit.design",
-      "teambit.envs/envs": {
-        "env": "teambit.react/react"
-      },
-      "teambit.dependencies/dependency-resolver": {
-        "policy": {
-          "devDependencies": {
-            // TODO - remove when @teambit/legacy is applied only to aspects
-            "@teambit/legacy": "-"
-          }
-        }
-      }
-    },
-    "scopes/mdx/modules/loader": {
-      "teambit.dependencies/dependency-resolver": {}
-    },
-    "scopes/typescript": {
-      "defaultScope": "teambit.typescript"
-    },
-    "{aspect-docs/**}": {
-      "teambit.envs/envs": {
-        "env": "teambit.mdx/mdx"
-      },
-      "teambit.mdx/mdx": {}
-    },
-    "scopes/semantics": {
-      "defaultScope": "teambit.semantics"
-    },
-    "scopes/api-reference": {
-      "defaultScope": "teambit.api-reference"
-    },
-    "scopes/harmony/testing/load-aspect": {
-      "teambit.component/issues": {
-        // This is here because in load-bit, we have to import harmony config from non main file
-        // we can't expose it from the main file, since it's not browser compatible
-        "ignoreIssues": [
-          "ImportNonMainFiles"
-        ]
       }
     },
     // overrides for "@teambit/bit", the root package: (aka "teambit.harmony/bit")
@@ -921,10 +650,7 @@
           "packageManagerPublishArgs": [
             "--access public"
           ],
-          "license": "Apache-2.0",
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
-          "private": false,
-          // Change back to "bin": "bin/bit" once released to prod
           "bvm": {
             "node": "20.10.0"
           },
@@ -932,23 +658,12 @@
             "bbit": "bin/bit"
           },
           "engines": {
-            "node": ">=12.22.0"
+            "node": ">=18.12.0"
           },
           "repository": {
             "type": "git",
             "url": "https://github.com/teambit/bit"
-          },
-          "keywords": [
-            "bit",
-            "bit-aspect",
-            "components",
-            "collaboration",
-            "web",
-            "react",
-            "react-components",
-            "angular",
-            "angular-components"
-          ]
+          }
         }
       },
       "teambit.dependencies/dependency-resolver": {
@@ -957,7 +672,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.624",
+            "@teambit/legacy": "1.0.626",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
@@ -1003,59 +718,16 @@
         }
       }
     },
-    "scopes/defender/jest": {
-      "teambit.dependencies/dependency-resolver": {}
-    },
-    "scopes/webpack/webpack": {
-      "teambit.dependencies/dependency-resolver": {}
-    },
     "scopes/harmony/node": {
       "teambit.component/issues": {
         "ignoreIssues": [
           "ImportNonMainFiles"
         ]
       },
-      "teambit.dependencies/dependency-resolver": {}
-    },
-    "scopes/mdx/mdx": {
+      // TODO: remove after next tag
       "teambit.dependencies/dependency-resolver": {
-        "policy": {
-          "dependencies": {
-            "@babel/helper-plugin-test-runner": "7.16.7"
-          }
-        }
+        "policy": {}
       }
-    },
-    "scopes/harmony/aspect": {
-      "teambit.dependencies/dependency-resolver": {}
-    },
-    "scopes/harmony/graphql": {
-      "teambit.dependencies/dependency-resolver": {
-        "policy": {
-          "dependencies": {
-            "@teambit/legacy": "-",
-            // subscriptions-transport-ws --> ws --> utf-8-validate, bufferutil see https://github.com/websockets/ws/issues/659
-            "bufferutil": "4.0.3",
-            // subscriptions-transport-ws --> ws --> utf-8-validate, bufferutil see https://github.com/websockets/ws/issues/659
-            "utf-8-validate": "5.0.5"
-          },
-          "devDependencies": {
-            "@types/mocha": "9.1.0",
-            "@teambit/legacy": "-"
-          },
-          "peerDependencies": {
-            "@teambit/legacy": "1.0.624"
-          }
-        }
-      }
-    },
-    "components/ui/component-compare/version-picker": {
-      "teambit.harmony/node": "-",
-      "teambit.react/react": "-"
-    },
-    "scopes/component/ui/version-dropdown": {
-      "teambit.harmony/node": "-",
-      "teambit.react/react": "-"
     }
   }
 }
