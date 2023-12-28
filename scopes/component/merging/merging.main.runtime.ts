@@ -6,7 +6,6 @@ import ComponentsList from '@teambit/legacy/dist/consumer/component/components-l
 import {
   MergeStrategy,
   FileStatus,
-  ApplyVersionResult,
   getMergeStrategyInteractive,
   MergeOptions,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
@@ -80,6 +79,11 @@ export type ComponentMergeStatusBeforeMergeAttempt = ComponentStatusBase & {
 };
 
 export type FailedComponents = { id: ComponentID; unchangedMessage: string; unchangedLegitimately?: boolean };
+
+// fileName is PathLinux. TS doesn't let anything else in the keys other than string and number
+export type FilesStatus = { [fileName: string]: keyof typeof FileStatus };
+
+export type ApplyVersionResult = { id: ComponentID; filesStatus: FilesStatus };
 
 export type ApplyVersionResults = {
   components?: ApplyVersionResult[];

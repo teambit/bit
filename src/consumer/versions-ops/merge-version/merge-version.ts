@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import { ComponentID } from '@teambit/component-id';
 import GeneralError from '../../../error/general-error';
 import { resolveConflictPrompt } from '../../../prompts';
 
@@ -19,10 +18,6 @@ export const FileStatus = {
   remainDeleted: chalk.green('remain-deleted'),
   deletedConflict: chalk.red('CONFLICT-deleted-and-modified'),
 };
-// fileName is PathLinux. TS doesn't let anything else in the keys other than string and number
-export type FilesStatus = { [fileName: string]: keyof typeof FileStatus };
-
-export type ApplyVersionResult = { id: ComponentID; filesStatus: FilesStatus };
 
 export async function getMergeStrategyInteractive(): Promise<MergeStrategy> {
   try {
