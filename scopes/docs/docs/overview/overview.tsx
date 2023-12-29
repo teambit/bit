@@ -1,5 +1,4 @@
 import React, { useContext, ComponentType, useState } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
 import classNames from 'classnames';
 import { flatten } from 'lodash';
 // import { Icon } from '@teambit/design.elements.icon';
