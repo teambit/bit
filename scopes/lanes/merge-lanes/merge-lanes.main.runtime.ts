@@ -139,7 +139,14 @@ export class MergeLanesMain {
     const otherLane = isDefaultLane ? undefined : await getOtherLane();
     const getBitIds = async () => {
       if (isDefaultLane) {
-        return this.getMainIdsToMerge(currentLane, !excludeNonLaneComps);
+        const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps);
+        const modelComponents = await Promise.all(ids.map((id) => this.scope.legacyScope.getModelComponent(id)));
+        return compact(
+          modelComponents.map((c) => {
+            if (!c.head) return null; // probably the component was never merged to main
+            return c.toComponentId().changeVersion(c.head.toString());
+          })
+        );
       }
       if (!otherLane) throw new Error(`lane must be defined for non-default`);
       return otherLane.toBitIds();
@@ -292,20 +299,13 @@ export class MergeLanesMain {
       if (!this.workspace) {
         throw new BitError(`getMainIdsToMerge needs workspace`);
       }
-      const workspaceIds = (await this.workspace.listIds()).map((id) => id);
+      const workspaceIds = await this.workspace.listIds();
       const mainNotOnLane = workspaceIds.filter(
         (id) => !laneIds.find((laneId) => laneId.isEqualWithoutVersion(id)) && this.scope.isExported(id)
       );
       ids.push(...mainNotOnLane);
     }
-
-    const modelComponents = await Promise.all(ids.map((id) => this.scope.legacyScope.getModelComponent(id)));
-    return compact(
-      modelComponents.map((c) => {
-        if (!c.head) return null; // probably the component was never merged to main
-        return c.toComponentId().changeVersion(c.head.toString());
-      })
-    );
+    return ids;
   }
 
   async mergeFromScope(
