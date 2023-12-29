@@ -34,11 +34,13 @@ ${generateSlotsFn()}
 
 ${addRuntimes ? addSlots(aspectDefs) : ''}
 ${addRuntimes ? createAddRuntime(aspectDefs, runtime) : ''}
-
+console.log(typeof Harmony)
+console.log(Harmony)
 const isBrowser = typeof window !== "undefined";
 const windowConfig = isBrowser ? window.harmonyAppConfig: undefined;
 const config = JSON.parse('${stringifiedConfig}');
 const mergedConfig = { ...config, ...windowConfig };
+console.log('mergedConfig', mergedConfig)
 ${idSetters.join('\n')}
 export default function render(...props){
   return Harmony.load([${identifiers.join(', ')}], '${runtime}', mergedConfig)
@@ -92,7 +94,7 @@ export function createImports(aspectDefs: AspectDefinition[]) {
 ${getImportStatements(defs, 'runtimePath', 'Runtime')}`;
 }
 
-function createHarmonyImports(harmonyPackage = '@teambit/harmony') {
+export function createHarmonyImports(harmonyPackage = '@teambit/harmony') {
   return `import { Harmony, Slot } from '${harmonyPackage}';`;
 }
 

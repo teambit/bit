@@ -79,7 +79,6 @@ export default function (isEnvProduction = false): Configuration {
           'react-dom$': 'react-dom/profiling',
           'scheduler/tracing': 'scheduler/tracing-profiling',
         }),
-        '@teambit/preview.modules.preview-modules': require.resolve('@teambit/preview.modules.preview-modules'),
       },
     },
     module: {

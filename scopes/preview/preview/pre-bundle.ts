@@ -6,7 +6,7 @@ import { AspectDefinition } from '@teambit/aspect-loader';
 // import { CacheMain } from '@teambit/cache';
 // import { Logger } from '@teambit/logger';
 // import { UIRoot, UiMain } from '@teambit/ui';
-import { createImports, getIdSetters, getIdentifiers } from '@teambit/ui';
+import { createHarmonyImports, createImports, getIdSetters, getIdentifiers } from '@teambit/ui';
 // import { UIRoot, UiMain, createImports, getIdSetters, getIdentifiers } from '@teambit/ui';
 // import { PreBundleContext, doBuild } from '@teambit/ui/pre-bundle/build';
 import { sha1 } from '@teambit/legacy/dist/utils';
@@ -23,8 +23,10 @@ export const PRE_BUNDLE_PREVIEW_DIR = 'ui-bundle';
 export const PRE_BUNDLE_PREVIEW_PUBLIC_DIR = 'public/bit-preview';
 
 const ENTRY_CONTENT_TEMPLATE = `__IMPORTS__
+console.log(typeof Harmony)
+console.log(Harmony)
 export const run = (config, customAspects = []) => {
-  // console.log('run', config, customAspects)
+  console.log('run', config, customAspects)
   const isBrowser = typeof window !== "undefined";
   const windowConfig = isBrowser ? window.harmonyAppConfig : undefined;
   const mergedConfig = { ...config, ...windowConfig };
@@ -89,10 +91,11 @@ export const generatePreBundlePreviewEntry = (
   rootAspectId: string,
   dir: string
 ) => {
+  const harmonyImport = createHarmonyImports();
   const imports = createImports(aspectDefs);
   const identifiers = getIdentifiers(aspectDefs, 'Aspect');
   const idSetters = getIdSetters(aspectDefs, 'Aspect');
-  const contents = ENTRY_CONTENT_TEMPLATE.replace('__IMPORTS__', imports)
+  const contents = ENTRY_CONTENT_TEMPLATE.replace('__IMPORTS__', [harmonyImport, imports].join('\n'))
     .replace('__IDENTIFIERS__', identifiers.join(', '))
     .replace('__ID_SETTERS__', idSetters.join('\n'))
     .replaceAll('__RUNTIME_NAME__', JSON.stringify(runtimeName))

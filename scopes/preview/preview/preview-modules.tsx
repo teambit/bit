@@ -1,4 +1,8 @@
-import { PreviewModules, PreviewModule, PREVIEW_MODULES } from '@teambit/preview.modules.preview-modules';
+import {
+  PreviewModules,
+  PreviewModule,
+  PREVIEW_MODULES as defaultPreviewModules,
+} from '@teambit/preview.modules.preview-modules';
 
 declare global {
   interface Window {
@@ -6,18 +10,30 @@ declare global {
   }
 }
 
-export function linkModules(previewName: string, previewModule: PreviewModule) {
-  // singleton for the browser
-  let modules = PREVIEW_MODULES;
+// singleton for the browser
+function getPreviewModules() {
+  let modules = defaultPreviewModules;
+  console.log('\n[PREVIEW_MODULES] default', modules);
   if (typeof window !== 'undefined') {
     if (!(window as any).__bit_preview_modules) {
-      window.__bit_preview_modules = PREVIEW_MODULES;
+      window.__bit_preview_modules = defaultPreviewModules;
+      console.log('\n[PREVIEW_MODULES] set to windows', modules);
     } else {
       modules = window.__bit_preview_modules;
+      console.log('\n[PREVIEW_MODULES] get from windows', modules);
     }
   }
+  return modules;
+}
 
-  modules.set(previewName, previewModule);
+const PREVIEW_MODULES = getPreviewModules();
+
+console.log('\n[PREVIEW_MODULES] finally', PREVIEW_MODULES);
+
+export function linkModules(previewName: string, previewModule: PreviewModule) {
+  console.log('\n[PREVIEW_MODULES] set before', { previewName, previewModule });
+  PREVIEW_MODULES.set(previewName, previewModule);
+  console.log('\n[PREVIEW_MODULES] set after', PREVIEW_MODULES);
 }
 
 export { PreviewModules, PREVIEW_MODULES };

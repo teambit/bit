@@ -16856,9 +16856,6 @@ importers:
       '@teambit/mdx.modules.mdx-loader':
         specifier: ^1.0.14
         version: 1.0.14(@babel/core@7.19.6)(esbuild@0.14.29)
-      '@teambit/preview.modules.preview-modules':
-        specifier: ^1.0.1
-        version: 1.0.1
       '@teambit/react.instructions.react.adding-compositions':
         specifier: 0.0.6
         version: 0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -49827,8 +49824,8 @@ packages:
     resolution: {integrity: sha512-z7Yylwzl3/E0zb71f94zQOpfARkVe04QkKg3J4ncKA+z6rES+xfHpeKqP19euW5ck2Gi/DAh57QxS4kahoghcg==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
