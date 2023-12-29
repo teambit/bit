@@ -1,6 +1,7 @@
 import React from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { flatten } from 'lodash';
+import { SubMenu } from '@teambit/design.controls.menu';
 import { Slot } from '@teambit/harmony';
 import { UserBar, UserBarItem, UserBarItemSlot, UserBarSection, UserBarSectionSlot } from '@teambit/cloud.ui.user-bar';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
@@ -50,6 +51,69 @@ export class CloudUI {
     [userBarItemSlot, userBarSectionSlot]: [UserBarItemSlot, UserBarSectionSlot]
   ) {
     const cloudUI = new CloudUI(userBarSectionSlot, userBarItemSlot);
+
+    cloudUI.registerUserBarSection([
+      {
+        displayName: 'Scopes & Components',
+        categoryName: 'ScopesAndComponents',
+      },
+      {
+        displayName: 'Docs, Support & Feedback',
+        categoryName: 'DocsSupportAndFeedback',
+      },
+    ]);
+    cloudUI.registerUserBarItem([
+      {
+        icon: 'settings',
+        label: 'Settings',
+        href: 'https://bit.cloud/settings',
+      },
+      {
+        category: 'ScopesAndComponents',
+        icon: 'components',
+        label: 'Your components',
+        href: 'https://bit.cloud/components',
+      },
+      {
+        category: 'ScopesAndComponents',
+        icon: 'collection',
+        label: 'Your scopes',
+        href: 'https://bit.cloud/scopes',
+      },
+      {
+        category: 'DocsSupportAndFeedback',
+        icon: 'book-glossary',
+        label: 'Bit Docs',
+        href: 'https://bit.dev/docs',
+      },
+      {
+        category: 'DocsSupportAndFeedback',
+        component: function Support() {
+          return (
+            <SubMenu
+              item={{
+                label: 'Support',
+                icon: 'users',
+                children: [
+                  {
+                    label: 'Bit Community on bit.cloud',
+                    link: 'https://bit.cloud/bitdev',
+                  },
+                  {
+                    label: 'Ticket Support',
+                    link: 'https://support.bit.cloud',
+                  },
+                  {
+                    label: 'Bit Community Slack',
+                    link: 'https://join.slack.com/t/bit-dev-community/shared_invite/zt-29pmawrp1-ehfEzYbQyuAC3CNA_jYPvA',
+                  },
+                ],
+              }}
+            />
+          );
+        },
+      },
+    ]);
     const userBarItems = cloudUI.listUserBarItems();
     const userBarSections = cloudUI.listUserBarSections();
     const CloudUserBar = () => <UserBar sections={userBarSections} items={userBarItems} />;

@@ -106,7 +106,9 @@ export function UserBar({ sections = [], items = [] }: UserBarProps) {
       position="anchor"
       align="end"
       onItemClick={(e) => {
-        e.value.link && navigate(e.value.link);
+        if (!e.value.link) return undefined;
+        if (e.value.link.startsWith('http')) return window.open(e.value.link, '_blank');
+        return navigate(e.value.link);
       }}
       menuButton={
         <div className={styles.currentUser}>
