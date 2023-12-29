@@ -184,8 +184,8 @@ export class MergingMain {
     return this.mergeSnaps({
       mergeStrategy,
       allComponentsStatus,
-      laneId: currentLaneId,
-      localLane: currentLaneObject,
+      otherLaneId: currentLaneId,
+      currentLane: currentLaneObject,
       noSnap,
       snapMessage,
       build,
@@ -199,8 +199,8 @@ export class MergingMain {
   async mergeSnaps({
     mergeStrategy,
     allComponentsStatus,
-    laneId,
-    localLane,
+    otherLaneId,
+    currentLane,
     noSnap,
     tag,
     snapMessage,
@@ -209,8 +209,8 @@ export class MergingMain {
   }: {
     mergeStrategy: MergeStrategy;
     allComponentsStatus: ComponentMergeStatus[];
-    laneId: LaneId;
-    localLane: Lane | null;
+    otherLaneId: LaneId;
+    currentLane: Lane | null;
     noSnap: boolean;
     tag?: boolean;
     snapMessage: string;
@@ -239,7 +239,12 @@ export class MergingMain {
 
     const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.unchangedMessage);
 
-    const componentsResults = await this.applyVersionMultiple(succeededComponents, laneId, mergeStrategy, localLane);
+    const componentsResults = await this.applyVersionMultiple(
+      succeededComponents,
+      otherLaneId,
+      mergeStrategy,
+      currentLane
+    );
 
     const allConfigMerge = compact(succeededComponents.map((c) => c.configMergeResult));
 
@@ -249,13 +254,13 @@ export class MergingMain {
 
     await this.generateConfigMergeConflictFileForAll(allConfigMerge, workspaceDepsConflicts);
 
-    if (localLane) consumer.scope.objects.add(localLane);
+    if (currentLane) consumer.scope.objects.add(currentLane);
 
-    await consumer.scope.objects.persist(); // persist anyway, if localLane is null it should save all main heads
+    await consumer.scope.objects.persist(); // persist anyway, if currentLane is null it should save all main heads
 
     await consumer.scope.objects.unmergedComponents.write();
 
-    await consumer.writeBitMap(`merge ${laneId.toString()}`);
+    await consumer.writeBitMap(`merge ${otherLaneId.toString()}`);
 
     if (componentIdsToRemove.length) {
       const compBitIdsToRemove = ComponentIdList.fromArray(componentIdsToRemove);
@@ -512,23 +517,23 @@ export class MergingMain {
 
   private async applyVersionMultiple(
     succeededComponents: ComponentMergeStatus[],
-    laneId: LaneId,
+    otherLaneId: LaneId,
     mergeStrategy: MergeStrategy,
-    localLane: Lane | null
+    currentLane: Lane | null
   ): Promise<ApplyVersionWithComps[]> {
     const componentsResults = await mapSeries(
       succeededComponents,
       async ({ currentComponent, id, mergeResults, resolvedUnrelated, configMergeResult }) => {
         const modelComponent = await this.workspace.consumer.scope.getModelComponent(id);
-        const updatedLaneId = laneId.isDefault() ? LaneId.from(laneId.name, id.scope as string) : laneId;
+        const updatedLaneId = otherLaneId.isDefault() ? LaneId.from(otherLaneId.name, id.scope as string) : otherLaneId;
         return this.applyVersion({
           currentComponent,
           id,
           mergeResults,
           mergeStrategy,
           remoteHead: modelComponent.getRef(id.version as string) as Ref,
-          laneId: updatedLaneId,
-          localLane,
+          otherLaneId: updatedLaneId,
+          currentLane,
           resolvedUnrelated,
           configMergeResult,
         });
@@ -555,8 +560,8 @@ export class MergingMain {
     mergeResults,
     mergeStrategy,
     remoteHead,
-    laneId,
-    localLane,
+    otherLaneId,
+    currentLane,
     resolvedUnrelated,
     configMergeResult,
   }: {
@@ -565,29 +570,38 @@ export class MergingMain {
     mergeResults: MergeResultsThreeWay | null | undefined;
     mergeStrategy: MergeStrategy;
     remoteHead: Ref;
-    laneId: LaneId;
-    localLane: Lane | null;
+    otherLaneId: LaneId;
+    currentLane: Lane | null;
     resolvedUnrelated?: ResolveUnrelatedData;
     configMergeResult?: ConfigMergeResult;
   }): Promise<ApplyVersionWithComps> {
     const consumer = this.workspace.consumer;
     let filesStatus = {};
     const unmergedComponent: UnmergedComponent = {
-      // @ts-ignore
       id: { name: id.fullName, scope: id.scope },
       head: remoteHead,
-      laneId,
+      laneId: otherLaneId,
     };
     id = currentComponent ? currentComponent.id : id;
 
     const modelComponent = await consumer.scope.getModelComponent(id);
+
+    const addToCurrentLane = (head: Ref) => {
+      if (!currentLane) throw new Error('currentLane must be defined when adding to the lane');
+      if (otherLaneId.isDefault()) {
+        const isPartOfLane = currentLane.components.find((c) => c.id.isEqualWithoutVersion(id));
+        if (!isPartOfLane) return;
+      }
+      currentLane.addComponent({ id, head });
+    };
+
     const handleResolveUnrelated = (legacyCompToWrite?: ConsumerComponent) => {
       if (!currentComponent) throw new Error('currentComponent must be defined when resolvedUnrelated');
       // because when on a main, we don't allow merging lanes with unrelated. we asks users to switch to the lane
       // first and then merge with --resolve-unrelated
-      if (!localLane) throw new Error('localLane must be defined when resolvedUnrelated');
+      if (!currentLane) throw new Error('currentLane must be defined when resolvedUnrelated');
       if (!resolvedUnrelated) throw new Error('resolvedUnrelated must be populated');
-      localLane.addComponent({ id, head: resolvedUnrelated.headOnCurrentLane });
+      addToCurrentLane(resolvedUnrelated.headOnCurrentLane);
       unmergedComponent.unrelated = {
         unrelatedHead: resolvedUnrelated.unrelatedHead,
         headOnCurrentLane: resolvedUnrelated.headOnCurrentLane,
@@ -647,12 +661,12 @@ export class MergingMain {
         unmergedComponent.unmergedPaths = mergeResults.modifiedFiles.filter((f) => f.conflict).map((f) => f.filePath);
       }
       consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
-    } else if (localLane) {
+    } else if (currentLane) {
       if (resolvedUnrelated) {
         // must be "theirs"
         return handleResolveUnrelated(legacyComponent);
       }
-      localLane.addComponent({ id, head: remoteHead });
+      addToCurrentLane(remoteHead);
     } else {
       // this is main
       modelComponent.setHead(remoteHead);
