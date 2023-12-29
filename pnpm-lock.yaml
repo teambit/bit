@@ -831,8 +831,8 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/graphql.hooks.use-query-light':
         specifier: 1.0.0
         version: 1.0.0(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
@@ -9677,8 +9677,8 @@ importers:
         specifier: ^2.0.14
         version: 2.0.14(@testing-library/react@12.1.5)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0)
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -9842,6 +9842,9 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
+      chalk:
+        specifier: 2.4.2
+        version: 2.4.2
       graphql:
         specifier: 15.8.0
         version: 15.8.0
@@ -9938,8 +9941,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -10475,8 +10478,8 @@ importers:
         specifier: 1.0.3
         version: 1.0.3(react-dom@18.2.0)(react@18.2.0)
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -10581,8 +10584,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -11217,8 +11220,8 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -14138,8 +14141,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -15912,8 +15915,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -17753,8 +17756,8 @@ importers:
         specifier: 0.0.496
         version: 0.0.496(react-dom@18.2.0)(react@18.2.0)
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -20005,8 +20008,8 @@ importers:
         specifier: 0.0.496
         version: 0.0.496(react-dom@18.2.0)(react@18.2.0)
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -43969,16 +43972,16 @@ packages:
     resolution: {integrity: sha512-0aLXxZQywXzuR2527KYd8JXRwIFFtRBqFtzhrpoxu2aWkadx5THYanG9wMXcDiXLtmuJCLW5h6WbrUmpPoWLvg==}
     dev: false
 
-  /@teambit/graph.algorithms.tarjan@0.0.1:
-    resolution: {integrity: sha1-qvdq0JPyzU8m1uCKClQ82GhPgH0=, tarball: https://node-registry.bit.cloud/tarballs/teambit.graph/algorithms/tarjan@0.0.1.tgz}
+  /@teambit/graph.algorithms.tarjan@0.0.2:
+    resolution: {integrity: sha1-20r+CcGlGDr+/r7+sKhGvOm0AyY=}
     dependencies:
       lodash: 4.17.20
     dev: false
 
-  /@teambit/graph.cleargraph@0.0.1:
-    resolution: {integrity: sha1-BzFkcDs2WlJjbMRpGohV0+mIBIQ=}
+  /@teambit/graph.cleargraph@0.0.8:
+    resolution: {integrity: sha512-TGO2YQbczDW4hQ68/wYFEke1qPrchsbh5K3XygLMp08ZBRvmr3AZ9QNqK0fHnumDFw/PBd3fM0KUqV0JJ108cQ==}
     dependencies:
-      '@teambit/graph.algorithms.tarjan': 0.0.1
+      '@teambit/graph.algorithms.tarjan': 0.0.2
       lodash: 4.17.20
     dev: false
 
@@ -76847,7 +76850,7 @@ packages:
       '@teambit/documenter.ui.heading': 4.1.1(react-dom@18.2.0)(react@17.0.2)
       '@teambit/documenter.ui.separator': 4.1.1(react-dom@18.2.0)(react@17.0.2)
       '@teambit/explorer.ui.command-bar': 2.0.14(@testing-library/react@12.1.5)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@17.0.2)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lanes.hooks.use-lanes': 0.0.254(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model': 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@17.0.2)
@@ -76909,7 +76912,7 @@ packages:
       '@teambit/documenter.ui.heading': 4.1.1(react-dom@18.2.0)(react@18.2.0)
       '@teambit/documenter.ui.separator': 4.1.1(react-dom@18.2.0)(react@18.2.0)
       '@teambit/explorer.ui.command-bar': 2.0.14(@testing-library/react@12.1.5)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lanes.hooks.use-lanes': 0.0.254(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/lanes.ui.models.lanes-model': 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
@@ -76967,6 +76970,7 @@ packages:
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@17.0.2)
       '@types/react': 17.0.73
       '@types/react-dom': 17.0.25
+      chalk: 2.4.2
       graphql: 15.8.0
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash.flatten: 4.4.0
@@ -77005,6 +77009,7 @@ packages:
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0)
       '@types/react': 17.0.73
       '@types/react-dom': 17.0.25
+      chalk: 2.4.2
       graphql: 15.8.0
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash.flatten: 4.4.0
@@ -77045,7 +77050,7 @@ packages:
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/legacy-component-log': 0.0.402
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@17.0.2)
@@ -77074,7 +77079,7 @@ packages:
     dependencies:
       '@mdx-js/react': 1.6.22(react@18.2.0)
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/legacy-component-log': 0.0.402
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@18.2.0)
@@ -77412,7 +77417,7 @@ packages:
       '@teambit/design.ui.styles.ellipsis': 0.0.357(react-dom@18.2.0)(react@17.0.2)
       '@teambit/documenter.ui.heading': 4.1.1(react-dom@18.2.0)(react@17.0.2)
       '@teambit/evangelist.input.checkbox.label': 1.0.3(react-dom@18.2.0)(react@17.0.2)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.full-loader': 0.0.500(react-dom@18.2.0)(react@17.0.2)
@@ -77464,7 +77469,7 @@ packages:
       '@teambit/design.ui.styles.ellipsis': 0.0.357(react-dom@18.2.0)(react@18.2.0)
       '@teambit/documenter.ui.heading': 4.1.1(react-dom@18.2.0)(react@18.2.0)
       '@teambit/evangelist.input.checkbox.label': 1.0.3(react-dom@18.2.0)(react@18.2.0)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@18.2.0)
       '@teambit/ui-foundation.ui.full-loader': 0.0.500(react-dom@18.2.0)(react@18.2.0)
@@ -77502,7 +77507,7 @@ packages:
       '@teambit/any-fs': 0.0.5
       '@teambit/capsule': 0.0.12
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@17.0.2)
       '@types/react': 17.0.73
@@ -77541,7 +77546,7 @@ packages:
       '@teambit/any-fs': 0.0.5
       '@teambit/capsule': 0.0.12
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@18.2.0)
       '@types/react': 17.0.73
@@ -77808,7 +77813,7 @@ packages:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
       '@teambit/component-version': 1.0.3
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@18.2.0)
@@ -79710,7 +79715,7 @@ packages:
       '@teambit/bvm.config': 0.2.3
       '@teambit/bvm.path': 0.1.2
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@17.0.2)
       '@teambit/node.utils.esm-loader': 0.0.6
@@ -79741,7 +79746,7 @@ packages:
       '@teambit/bvm.config': 0.2.3
       '@teambit/bvm.path': 0.1.2
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@18.2.0)
       '@teambit/node.utils.esm-loader': 0.0.6
@@ -80811,7 +80816,7 @@ packages:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@17.0.2)
@@ -80852,7 +80857,7 @@ packages:
       '@mdx-js/react': 1.6.22(react@18.2.0)
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@18.2.0)
@@ -82005,7 +82010,7 @@ packages:
       '@teambit/design.ui.tree': 0.0.15(react-dom@18.2.0)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-card': 0.0.513(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@18.2.0)(react@17.0.2)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.hooks.use-lane-components': 0.0.253(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@17.0.2)
@@ -82077,7 +82082,7 @@ packages:
       '@teambit/design.ui.tree': 0.0.15(react-dom@18.2.0)(react@18.2.0)
       '@teambit/explorer.ui.gallery.component-card': 0.0.513(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@18.2.0)(react@18.2.0)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.hooks.use-lane-components': 0.0.253(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
@@ -83507,7 +83512,7 @@ packages:
       '@teambit/design.ui.surfaces.menu.link-item': 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react@17.0.2)
       '@teambit/design.ui.tree': 0.0.15(react-dom@18.2.0)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@18.2.0)(react@17.0.2)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.hooks.use-lane-components': 0.0.253(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@17.0.2)
@@ -83582,7 +83587,7 @@ packages:
       '@teambit/design.ui.surfaces.menu.link-item': 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/design.ui.tree': 0.0.15(react-dom@18.2.0)(react@18.2.0)
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@18.2.0)(react@18.2.0)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.hooks.use-lane-components': 0.0.253(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
