@@ -19,6 +19,7 @@ export function CurrentUser({ currentUser, onClick, className, ...rest }: Curren
       tabIndex={0}
       onClick={onClick}
       onKeyDown={handleKeyDown}
+      role="button"
       className={classNames(styles.user, className)}
       {...rest}
     >
