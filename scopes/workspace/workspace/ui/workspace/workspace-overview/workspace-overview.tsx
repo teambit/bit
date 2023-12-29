@@ -6,8 +6,8 @@ import { Tooltip } from '@teambit/design.ui.tooltip';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentModel } from '@teambit/component';
 import { useCloudScopes } from '@teambit/cloud.hooks.use-cloud-scopes';
-import { ComponentCard, ComponentCardPluginType, PluginProps } from '@teambit/explorer.ui.component-card';
 import { ScopeID } from '@teambit/scopes.scope-id';
+import { ComponentCard, ComponentCardPluginType, PluginProps } from '@teambit/explorer.ui.component-card';
 import { WorkspaceContext } from '../workspace-context';
 import styles from './workspace-overview.module.scss';
 import { LinkPlugin } from './link-plugin';
@@ -30,17 +30,18 @@ export function WorkspaceOverview() {
           if (component.deprecation?.isDeprecate) return null;
           const compDescriptor = compDescriptorById.get(component.id.toString());
           if (!compDescriptor) return null;
+          const cloudScope = cloudScopesById.get(component.id.scope);
+          const scope =
+            cloudScope ||
+            (ScopeID.isValid(component.id.scope) && { id: ScopeID.fromString(component.id.scope) }) ||
+            undefined;
           return (
             <ComponentCard
               key={component.id.toString()}
               component={compDescriptor}
               plugins={plugins}
               displayOwnerDetails="all"
-              scope={
-                cloudScopesById.get(component.id.scope) ?? {
-                  id: ScopeID.fromString(component.id.scope),
-                }
-              }
+              scope={scope}
             />
           );
         })}

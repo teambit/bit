@@ -377,6 +377,7 @@ export class CloudMain {
   static GET_SCOPES = `
       query GET_SCOPES($ids: [String]!) {
         getScopes(ids: $ids) {
+          id
           scopeStyle {
             icon
             backgroundIconColor
@@ -389,17 +390,17 @@ export class CloudMain {
   async getCloudScopes(scopes: string[]): Promise<ScopeDescriptor[]> {
     const remotes = await this.scope._legacyRemotes();
     const filteredScopesToFetch = scopes.filter((scope) => {
-      return remotes.isHub(scope);
+      return ScopeID.isValid(scope) && remotes.isHub(scope);
     });
     const queryResponse = await this.fetchFromSymphonyViaGQL<GetScopesGQLResponse>(CloudMain.GET_SCOPES, {
       ids: filteredScopesToFetch,
     });
     const scopesFromQuery = queryResponse?.data?.getScopes;
     if (!scopesFromQuery) return [];
-    return scopesFromQuery.map((scope, index) => {
+    return scopesFromQuery.map((scope) => {
       const scopeDescriptorObj = {
         ...scope,
-        id: ScopeID.fromString(filteredScopesToFetch[index]),
+        id: ScopeID.fromString(scope.id),
       };
       return ScopeDescriptor.fromObject(scopeDescriptorObj);
     });
