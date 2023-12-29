@@ -6,12 +6,22 @@ import styles from './current-user.module.scss';
 
 export type CurrentUserProps = {
   currentUser: CloudUser;
-  onClick?: () => void;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function CurrentUser({ currentUser, onClick, className, ...rest }: CurrentUserProps) {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      onClick?.(event as unknown as React.MouseEvent<HTMLDivElement, MouseEvent>);
+    }
+  };
   return (
-    <div onClick={onClick} className={classNames(styles.user, className)} {...rest}>
+    <div
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      className={classNames(styles.user, className)}
+      {...rest}
+    >
       <UserAvatar account={currentUser} size={24} />
       <div className={styles.userDetails}>
         <div className={styles.displayName}>{currentUser.displayName || currentUser.username}</div>

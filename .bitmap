@@ -315,7 +315,13 @@
         "scope": "teambit.cloud",
         "version": "0.0.390",
         "mainFile": "index.ts",
-        "rootDir": "scopes/cloud/cloud"
+        "rootDir": "scopes/cloud/cloud",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@0.0.15": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "code": {
         "name": "code",
