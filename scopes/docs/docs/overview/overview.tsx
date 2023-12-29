@@ -75,13 +75,6 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
     if (isLoading && !defaultLoadingState) setLoading(false);
   }, [component.id.toString(), defaultLoadingState]);
 
-  React.useEffect(() => {
-    window.onerror = function (message, source, lineno, colno, error) {
-      console.log('Error caught in parent window:', { message, source, lineno, colno, error });
-      // Handle the error as needed
-    };
-  });
-
   return (
     <div className={styles.overviewWrapper} key={`${component.id.toString()}`}>
       {showHeader && (
@@ -104,31 +97,18 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
               <CompositionGallerySkeleton compositionsLength={Math.min(component.compositions.length, 3)} />
             </ReadmeSkeleton>
           )}
-          <ErrorBoundary
-            FallbackComponent={() => {
-              return (
-                <div>
-                  <h1>Something went wrong.</h1>
-                </div>
-              );
-            }}
-          >
-            <ComponentPreview
-              onLoad={onPreviewLoad}
-              previewName="overview"
-              pubsub={true}
-              queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
-              viewport={null}
-              fullContentHeight
-              disableScroll={true}
-              {...rest}
-              component={component}
-              onError={(e) => {
-                console.log('🚀 ~ file: overview.tsx:107 ~ Overview ~ e:', e);
-              }}
-              style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
-            />
-          </ErrorBoundary>
+          <ComponentPreview
+            onLoad={onPreviewLoad}
+            previewName="overview"
+            pubsub={true}
+            queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
+            viewport={null}
+            fullContentHeight
+            disableScroll={true}
+            {...rest}
+            component={component}
+            style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
+          />
           {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
           {component.preview?.skipIncludes && (
             <PropertiesTable className={styles.overviewPropsTable} componentId={component.id.toString()} />
