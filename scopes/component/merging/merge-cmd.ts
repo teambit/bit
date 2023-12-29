@@ -9,14 +9,10 @@ import {
   FILE_CHANGES_CHECKOUT_MSG,
   CFG_FORCE_LOCAL_BUILD,
 } from '@teambit/legacy/dist/constants';
-import {
-  FileStatus,
-  ApplyVersionResult,
-  MergeStrategy,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { FileStatus, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { BitError } from '@teambit/bit-error';
-import { ApplyVersionResults, MergingMain } from './merging.main.runtime';
+import { ApplyVersionResults, MergingMain, ApplyVersionResult } from './merging.main.runtime';
 import { ConfigMergeResult } from './config-merge-result';
 
 export class MergeCmd implements Command {
@@ -226,9 +222,9 @@ ${mergeSnapError.message}
     const title = '\nmerge skipped for the following component(s)';
     const body = compact(
       failedComponents.map((failedComponent) => {
-        if (!verbose && failedComponent.unchangedLegitimately) return null;
-        const color = failedComponent.unchangedLegitimately ? 'white' : 'red';
-        return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.unchangedMessage)}`;
+        // all failures here are "unchangedLegitimately". otherwise, it would have been thrown as an error
+        if (!verbose) return null;
+        return `${chalk.bold(failedComponent.id.toString())} - ${chalk.white(failedComponent.unchangedMessage)}`;
       })
     ).join('\n');
     if (!body) {
@@ -241,7 +237,6 @@ ${mergeSnapError.message}
   const getSummary = () => {
     const merged = components?.length || 0;
     const unchangedLegitimately = failedComponents?.filter((f) => f.unchangedLegitimately).length || 0;
-    const failedToMerge = failedComponents?.filter((f) => !f.unchangedLegitimately).length || 0;
     const autoSnapped =
       (mergeSnapResults?.snappedComponents.length || 0) + (mergeSnapResults?.autoSnappedResults.length || 0);
 
@@ -249,11 +244,10 @@ ${mergeSnapError.message}
     const title = chalk.bold.underline('Merge Summary');
     const mergedStr = `\nTotal Merged: ${chalk.bold(merged.toString())}`;
     const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(unchangedLegitimately.toString())}`;
-    const failedToMergeStr = `\nTotal Failed: ${chalk.bold(failedToMerge.toString())}`;
     const autoSnappedStr = `\nTotal Snapped: ${chalk.bold(autoSnapped.toString())}`;
     const removedStr = `\nTotal Removed: ${chalk.bold(removedComponents?.length.toString() || '0')}`;
 
-    return newLines + title + mergedStr + unchangedLegitimatelyStr + failedToMergeStr + autoSnappedStr + removedStr;
+    return newLines + title + mergedStr + unchangedLegitimatelyStr + autoSnappedStr + removedStr;
   };
 
   return (

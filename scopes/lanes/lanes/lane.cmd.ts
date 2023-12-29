@@ -8,7 +8,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { LaneData, serializeLaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { BitError } from '@teambit/bit-error';
 import { approveOperation } from '@teambit/legacy/dist/prompts';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP, DEFAULT_CLOUD_DOMAIN } from '@teambit/legacy/dist/constants';
 import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
 import { SwitchCmd } from './switch.cmd';
 
@@ -168,7 +168,8 @@ export class LaneShowCmd implements Command {
     const date = onlyLane.log?.date
       ? `created: ${new Date(parseInt(onlyLane.log.date)).toLocaleString()}\n`
       : undefined;
-    return title + author + date + outputComponents(onlyLane.components);
+    const link = `link: https://${DEFAULT_CLOUD_DOMAIN}/${laneId.scope.replace('.', '/')}/~lane/${laneId.name}\n`;
+    return title + author + date + link + outputComponents(onlyLane.components);
   }
 
   async json([name]: [string], laneOptions: LaneOptions) {

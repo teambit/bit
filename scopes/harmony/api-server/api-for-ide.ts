@@ -13,10 +13,12 @@ import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log
 import { Log } from '@teambit/legacy/dist/scope/models/lane';
 import { ComponentCompareMain } from '@teambit/component-compare';
 import { GeneratorMain } from '@teambit/generator';
+import { getParsedHistoryMetadata } from '@teambit/legacy/dist/consumer/consumer';
 import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 import { RemoveMain } from '@teambit/remove';
 import { compact } from 'lodash';
 import { getCloudDomain } from '@teambit/legacy/dist/constants';
+import { ConfigMain } from '@teambit/config';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -67,7 +69,8 @@ export class APIForIDE {
     private componentLog: ComponentLogMain,
     private componentCompare: ComponentCompareMain,
     private generator: GeneratorMain,
-    private remove: RemoveMain
+    private remove: RemoveMain,
+    private config: ConfigMain
   ) {}
 
   async logStartCmdHistory(op: string) {
@@ -110,20 +113,24 @@ export class APIForIDE {
       const reason = historyMetadata[fileId];
       return { path: path.join(bitmapHistoryDir, fileName), fileId, reason };
     });
+    const historySorted = history.sort((a, b) => fileIdToTimestamp(b.fileId) - fileIdToTimestamp(a.fileId));
 
-    const fileIdToTimestamp = (dateStr: string): number => {
-      const [year, month, day, hours, minutes, seconds] = dateStr.split('-');
-      const date = new Date(
-        Number(year),
-        Number(month) - 1,
-        Number(day),
-        Number(hours),
-        Number(minutes),
-        Number(seconds)
-      );
-      return date.getTime();
-    };
+    return { current, history: historySorted };
+  }
 
+  async getConfigHistory(): Promise<WorkspaceHistory> {
+    const workspaceConfig = this.config.workspaceConfig;
+    if (!workspaceConfig) throw new Error('getConfigHistory(), workspace config is missing');
+    const current = workspaceConfig.path;
+    const configHistoryDir = workspaceConfig.getBackupHistoryDir();
+    const historyPaths = await fs.readdir(configHistoryDir);
+    const historyMetadata = await getParsedHistoryMetadata(workspaceConfig.getBackupMetadataFilePath());
+    const history = historyPaths.map((historyPath) => {
+      const fileName = path.basename(historyPath);
+      const fileId = fileName;
+      const reason = historyMetadata[fileId];
+      return { path: path.join(configHistoryDir, fileName), fileId, reason };
+    });
     const historySorted = history.sort((a, b) => fileIdToTimestamp(b.fileId) - fileIdToTimestamp(a.fileId));
 
     return { current, history: historySorted };
@@ -414,4 +421,10 @@ export class APIForIDE {
     const results = await this.snapping.snap(params);
     return (results?.snappedComponents || []).map((c) => c.id.toString());
   }
+}
+
+function fileIdToTimestamp(dateStr: string): number {
+  const [year, month, day, hours, minutes, seconds] = dateStr.split('-');
+  const date = new Date(Number(year), Number(month) - 1, Number(day), Number(hours), Number(minutes), Number(seconds));
+  return date.getTime();
 }

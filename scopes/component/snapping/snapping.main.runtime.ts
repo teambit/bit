@@ -942,7 +942,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     shouldValidateVersion?: boolean;
   }): Promise<ModelComponent> {
     const { component, version } = await this._addCompFromScopeToObjects(source, lane);
-    const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
+    const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.toComponentId());
     if (unmergedComponent) {
       if (unmergedComponent.unrelated) {
         this.logger.debug(
@@ -971,7 +971,7 @@ another option, in case this dependency is not in main yet is to remove all refe
         );
         version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
       }
-      consumer.scope.objects.unmergedComponents.removeComponent(component.name);
+      consumer.scope.objects.unmergedComponents.removeComponent(component.toComponentId());
     }
     if (shouldValidateVersion) version.validate();
     return component;

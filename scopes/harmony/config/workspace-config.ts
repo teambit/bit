@@ -7,6 +7,7 @@ import LegacyWorkspaceConfig, {
 } from '@teambit/legacy/dist/consumer/config/workspace-config';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { currentDateAndTimeToFileName } from '@teambit/legacy/dist/consumer/consumer';
 import { assign, parse, stringify, CommentJSONValue } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -14,7 +15,6 @@ import { isEmpty, omit } from 'lodash';
 import WorkspaceAspect from '@teambit/workspace';
 import { SetExtensionOptions } from './config.main.runtime';
 import { ExtensionAlreadyConfigured } from './exceptions';
-import { ConfigDirNotDefined } from './exceptions/config-dir-not-defined';
 import InvalidConfigFile from './exceptions/invalid-config-file';
 import { HostConfig } from './types';
 
@@ -68,22 +68,21 @@ export type ExtensionsDefs = WorkspaceSettingsNewProps;
 
 export class WorkspaceConfig implements HostConfig {
   raw?: any;
-  _path?: string;
   _extensions: ExtensionDataList;
   _legacyProps?: WorkspaceLegacyProps;
   isLegacy: boolean;
 
-  constructor(private data: WorkspaceConfigFileProps) {
+  constructor(
+    private data: WorkspaceConfigFileProps,
+    private _path: PathOsBasedAbsolute,
+    private scopePath?: PathOsBasedAbsolute
+  ) {
     this.raw = data;
     this.loadExtensions();
   }
 
   get path(): PathOsBased {
-    return this._path || '';
-  }
-
-  set path(configPath: PathOsBased) {
-    this._path = configPath;
+    return this._path;
   }
 
   get extensions(): ExtensionDataList {
@@ -131,8 +130,8 @@ export class WorkspaceConfig implements HostConfig {
    * @returns
    * @memberof WorkspaceConfig
    */
-  static fromObject(data: WorkspaceConfigFileProps) {
-    return new WorkspaceConfig(data);
+  static fromObject(data: WorkspaceConfigFileProps, workspaceJsoncPath: PathOsBased, scopePath?: PathOsBasedAbsolute) {
+    return new WorkspaceConfig(data, workspaceJsoncPath, scopePath);
   }
 
   /**
@@ -143,17 +142,13 @@ export class WorkspaceConfig implements HostConfig {
    * @returns
    * @memberof WorkspaceConfig
    */
-  static async create(props: WorkspaceConfigFileProps, dirPath?: PathOsBasedAbsolute) {
+  static async create(props: WorkspaceConfigFileProps, dirPath: PathOsBasedAbsolute, scopePath: PathOsBasedAbsolute) {
     const template = await getWorkspaceConfigTemplateParsed();
     // previously, we just did `assign(template, props)`, but it was replacing the entire workspace config with the "props".
     // so for example, if the props only had defaultScope, it was removing the defaultDirectory.
     const workspaceAspectConf = assign(template[WorkspaceAspect.id], props[WorkspaceAspect.id]);
     const merged = assign(template, { [WorkspaceAspect.id]: workspaceAspectConf });
-    const instance = new WorkspaceConfig(merged);
-    if (dirPath) {
-      instance.path = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
-    }
-    return instance;
+    return new WorkspaceConfig(merged, WorkspaceConfig.composeWorkspaceJsoncPath(dirPath), scopePath);
   }
 
   /**
@@ -168,18 +163,19 @@ export class WorkspaceConfig implements HostConfig {
    */
   static async ensure(
     dirPath: PathOsBasedAbsolute,
+    scopePath: PathOsBasedAbsolute,
     workspaceConfigProps: WorkspaceConfigFileProps = {} as any
   ): Promise<WorkspaceConfig> {
     try {
-      let workspaceConfig = await this.loadIfExist(dirPath);
+      let workspaceConfig = await this.loadIfExist(dirPath, scopePath);
       if (workspaceConfig) {
         return workspaceConfig;
       }
-      workspaceConfig = await this.create(workspaceConfigProps, dirPath);
+      workspaceConfig = await this.create(workspaceConfigProps, dirPath, scopePath);
       return workspaceConfig;
     } catch (err: any) {
       if (err instanceof InvalidConfigFile) {
-        const workspaceConfig = this.create(workspaceConfigProps, dirPath);
+        const workspaceConfig = this.create(workspaceConfigProps, dirPath, scopePath);
         return workspaceConfig;
       }
       throw err;
@@ -231,18 +227,20 @@ export class WorkspaceConfig implements HostConfig {
    * @returns {(Promise<WorkspaceConfig | undefined>)}
    * @memberof WorkspaceConfig
    */
-  static async loadIfExist(dirPath: PathOsBased): Promise<WorkspaceConfig | undefined> {
+  static async loadIfExist(
+    dirPath: PathOsBased,
+    scopePath?: PathOsBasedAbsolute
+  ): Promise<WorkspaceConfig | undefined> {
     const jsoncExist = await WorkspaceConfig.pathHasWorkspaceJsonc(dirPath);
     if (jsoncExist) {
       const jsoncPath = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
-      const instance = await WorkspaceConfig._loadFromWorkspaceJsonc(jsoncPath);
-      instance.path = jsoncPath;
+      const instance = await WorkspaceConfig._loadFromWorkspaceJsonc(jsoncPath, scopePath);
       return instance;
     }
     return undefined;
   }
 
-  static async _loadFromWorkspaceJsonc(workspaceJsoncPath: PathOsBased): Promise<WorkspaceConfig> {
+  static async _loadFromWorkspaceJsonc(workspaceJsoncPath: PathOsBased, scopePath?: string): Promise<WorkspaceConfig> {
     const contentBuffer = await fs.readFile(workspaceJsoncPath);
     let parsed;
     try {
@@ -250,23 +248,68 @@ export class WorkspaceConfig implements HostConfig {
     } catch (e: any) {
       throw new InvalidConfigFile(workspaceJsoncPath);
     }
-    return WorkspaceConfig.fromObject(parsed);
+    return WorkspaceConfig.fromObject(parsed, workspaceJsoncPath, scopePath);
   }
 
-  async write({ dir }: { dir?: PathOsBasedAbsolute } = {}): Promise<void> {
+  async write({ dir, reasonForChange }: { dir?: PathOsBasedAbsolute; reasonForChange?: string } = {}): Promise<void> {
     const getCalculatedDir = () => {
       if (dir) return dir;
-      if (this._path) return path.dirname(this._path);
-      throw new ConfigDirNotDefined();
+      return path.dirname(this._path);
     };
     const calculatedDir = getCalculatedDir();
     const files = await this.toVinyl(calculatedDir);
     const dataToPersist = new DataToPersist();
     if (files) {
       dataToPersist.addManyFiles(files);
-      return dataToPersist.persistAllToFS();
+      await this.backupConfigFile(reasonForChange);
+      await dataToPersist.persistAllToFS();
     }
-    return undefined;
+  }
+
+  private async backupConfigFile(reasonForChange?: string) {
+    if (!this.scopePath) {
+      logger.error(`unable to backup workspace.jsonc file without scope path`);
+      return;
+    }
+    try {
+      const baseDir = this.getBackupHistoryDir();
+      await fs.ensureDir(baseDir);
+      const fileId = currentDateAndTimeToFileName();
+      const backupPath = path.join(baseDir, fileId);
+      await fs.copyFile(this._path, backupPath);
+      const metadataFile = this.getBackupMetadataFilePath();
+      await fs.appendFile(metadataFile, `${fileId} ${reasonForChange || ''}\n`);
+    } catch (err: any) {
+      if (err.code === 'ENOENT') return; // no such file or directory, meaning the .bitmap file doesn't exist (yet)
+      // it's a nice to have feature. don't kill the process if something goes wrong.
+      logger.error(`failed to backup workspace.jsonc`, err);
+    }
+  }
+  private getBackupDir() {
+    if (!this.scopePath) throw new Error('unable to get backup dir without scope path');
+    return path.join(this.scopePath, 'workspace-config-history');
+  }
+  getBackupHistoryDir() {
+    return path.join(this.getBackupDir(), 'files');
+  }
+  getBackupMetadataFilePath() {
+    return path.join(this.getBackupDir(), 'metadata.txt');
+  }
+  private async getParsedHistoryMetadata(): Promise<{ [fileId: string]: string }> {
+    let fileContent: string | undefined;
+    try {
+      fileContent = await fs.readFile(this.getBackupMetadataFilePath(), 'utf-8');
+    } catch (err: any) {
+      if (err.code === 'ENOENT') return {}; // no such file or directory, meaning the history-metadata file doesn't exist (yet)
+    }
+    const lines = fileContent?.split('\n') || [];
+    const metadata = {};
+    lines.forEach((line) => {
+      const [fileId, ...reason] = line.split(' ');
+      if (!fileId) return;
+      metadata[fileId] = reason.join(' ');
+    });
+    return metadata;
   }
 
   async toVinyl(workspaceDir: PathOsBasedAbsolute): Promise<AbstractVinyl[] | undefined> {
