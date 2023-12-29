@@ -165,7 +165,7 @@ other:   ${otherLaneHead.toString()}`);
         `component ${id.toString()} is on the lane/main but its objects were not found, please re-import the lane`
       );
     }
-    const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id.fullName);
+    const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id);
     if (unmerged) {
       return this.returnUnmerged(
         id,

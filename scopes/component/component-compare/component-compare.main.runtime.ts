@@ -107,7 +107,7 @@ export class ComponentCompareMain {
     const consumer = this.workspace.consumer;
     const { bitIds, version, toVersion } = await this.parseValues(values);
     if (!bitIds || !bitIds.length) {
-      throw new BitError('there are no modified components to diff');
+      return [];
     }
     const diffResults = await this.componentsDiff(bitIds, version, toVersion, {
       verbose,

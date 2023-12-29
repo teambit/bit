@@ -23,7 +23,7 @@ export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
     const consumer = await loadConsumer();
     const consumerPath = consumer.getPath();
     try {
-      await WorkspaceConfig.loadIfExist(consumerPath);
+      await WorkspaceConfig.loadIfExist(consumerPath, consumer.scope.path);
       return {
         valid: true,
       };

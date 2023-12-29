@@ -438,7 +438,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         ignoreVersion: false,
       }
     );
-    await config.write();
+    await config.write({ reasonForChange: `use (${aspectIdStr})` });
     this.aspectLoader.addInMemoryConfiguredAspect(aspectIdToAdd);
     await this.runOnRootAspectAddedFunctions(aspectId, inWs);
     return aspectIdToAdd;
