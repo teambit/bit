@@ -942,7 +942,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     shouldValidateVersion?: boolean;
   }): Promise<ModelComponent> {
     const { component, version } = await this._addCompFromScopeToObjects(source, lane);
-    const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
+    const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.toComponentId());
     if (unmergedComponent) {
       if (unmergedComponent.unrelated) {
         this.logger.debug(
@@ -971,7 +971,7 @@ another option, in case this dependency is not in main yet is to remove all refe
         );
         version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
       }
-      consumer.scope.objects.unmergedComponents.removeComponent(component.name);
+      consumer.scope.objects.unmergedComponents.removeComponent(component.toComponentId());
     }
     if (shouldValidateVersion) version.validate();
     return component;
@@ -1039,7 +1039,8 @@ another option, in case this dependency is not in main yet is to remove all refe
     const compIds = await this.workspace.resolveMultipleComponentIds(ids);
     if (shouldClearCacheFirst) {
       await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
-      compIds.map((compId) => this.workspace.clearComponentCache(compId));
+      // don't clear only the cache of these ids. we need also the auto-tag. so it's safer to just clear all.
+      this.workspace.clearAllComponentsCache();
     }
 
     return this.workspace.getMany(compIds.map((id) => id.changeVersion(undefined)));

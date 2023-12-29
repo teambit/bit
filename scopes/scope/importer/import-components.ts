@@ -22,7 +22,7 @@ import {
   MergeOptions,
   threeWayMerge,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { FilesStatus, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
+import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ComponentsPendingMerge from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-merge';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
@@ -35,6 +35,7 @@ import { ComponentWriterMain, ComponentWriterResults, ManyComponentsWriterParams
 import { LATEST_VERSION } from '@teambit/component-version';
 import { EnvsMain } from '@teambit/envs';
 import { compact } from 'lodash';
+import { FilesStatus } from '@teambit/merging';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty

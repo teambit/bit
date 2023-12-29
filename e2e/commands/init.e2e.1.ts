@@ -147,6 +147,7 @@ describe('run bit init', function () {
     let localScope;
     let bitMap;
     let localConsumerFiles;
+    const filter = (file: string) => !file.includes('bitmap-history') && !file.includes('workspace-config-history');
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
@@ -154,7 +155,7 @@ describe('run bit init', function () {
       helper.command.tagAllWithoutBuild(); // this creates objects in .bit dir
 
       bitMap = helper.bitMap.read();
-      localConsumerFiles = helper.fs.getConsumerFiles('*', true).filter((file) => !file.includes('bitmap-history'));
+      localConsumerFiles = helper.fs.getConsumerFiles('*', true).filter(filter);
       localScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('bit init', () => {
@@ -167,7 +168,7 @@ describe('run bit init', function () {
         expect(currentBitMap).to.have.property('bar/foo');
       });
       it('should not change .bit directory', () => {
-        const currentFiles = helper.fs.getConsumerFiles('*', true).filter((file) => !file.includes('bitmap-history'));
+        const currentFiles = helper.fs.getConsumerFiles('*', true).filter(filter);
         expect(currentFiles).to.be.deep.equal(localConsumerFiles);
       });
     });
@@ -182,7 +183,7 @@ describe('run bit init', function () {
         expect(currentBitMap).to.have.property('bar/foo');
       });
       it('should not change .bit directory', () => {
-        const currentFiles = helper.fs.getConsumerFiles('*', true).filter((file) => !file.includes('bitmap-history'));
+        const currentFiles = helper.fs.getConsumerFiles('*', true).filter(filter);
         expect(currentFiles).to.be.deep.equal(localConsumerFiles);
       });
     });

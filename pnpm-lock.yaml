@@ -831,8 +831,8 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/graphql.hooks.use-query-light':
         specifier: 1.0.0
         version: 1.0.0(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
@@ -2224,8 +2224,8 @@ importers:
         specifier: 4.1.1
         version: 4.1.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/mdx.ui.mdx-layout':
         specifier: ^1.0.6
         version: 1.0.6(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
@@ -3782,7 +3782,7 @@ importers:
       '@teambit/yarn':
         injected: true
 
-  node_modules/.bit_roots/teambit.harmony_envs_core-aspect-env@0.0.14:
+  node_modules/.bit_roots/teambit.harmony_envs_core-aspect-env@0.0.15:
     dependencies:
       '@mdx-js/react':
         specifier: 1.6.22
@@ -4070,8 +4070,8 @@ importers:
         specifier: workspace:*
         version: file:scopes/harmony/cli-reference(react-dom@18.2.0)(react@18.2.0)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/harmony.modules.requireable-component':
         specifier: workspace:*
         version: file:scopes/harmony/modules/requireable-component
@@ -8213,8 +8213,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -8868,8 +8868,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -8914,8 +8914,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -9113,8 +9113,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -9177,8 +9177,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -9284,8 +9284,8 @@ importers:
         specifier: 1.95.0
         version: 1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -9364,8 +9364,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -9480,8 +9480,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -9544,8 +9544,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -9611,8 +9611,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -9677,8 +9677,8 @@ importers:
         specifier: ^2.0.14
         version: 2.0.14(@testing-library/react@12.1.5)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0)
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -9771,8 +9771,8 @@ importers:
         specifier: 1.95.0
         version: 1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -9842,6 +9842,9 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
+      chalk:
+        specifier: 2.4.2
+        version: 2.4.2
       graphql:
         specifier: 15.8.0
         version: 15.8.0
@@ -9865,8 +9868,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -9917,8 +9920,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -9938,8 +9941,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -9990,8 +9993,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/cli-table':
         specifier: ^0.3.0
         version: 0.3.4
@@ -10064,8 +10067,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -10110,8 +10113,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -10211,8 +10214,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -10275,8 +10278,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -10333,8 +10336,8 @@ importers:
         specifier: 1.95.9
         version: 1.95.9(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -10406,8 +10409,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -10475,8 +10478,8 @@ importers:
         specifier: 1.0.3
         version: 1.0.3(react-dom@18.2.0)(react@18.2.0)
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -10539,8 +10542,8 @@ importers:
         version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -10581,8 +10584,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -10651,8 +10654,8 @@ importers:
         version: 8.3.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -10721,8 +10724,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -10782,8 +10785,8 @@ importers:
         version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/cli-table':
         specifier: ^0.3.0
         version: 0.3.4
@@ -10858,8 +10861,8 @@ importers:
         version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -10922,8 +10925,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -10983,8 +10986,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -11047,8 +11050,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -11123,8 +11126,8 @@ importers:
         version: 0.4.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -11187,8 +11190,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -11217,8 +11220,8 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -11275,8 +11278,8 @@ importers:
         version: 8.3.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -11357,8 +11360,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -11430,8 +11433,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -11534,8 +11537,8 @@ importers:
         version: 0.5.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -11759,8 +11762,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -11919,8 +11922,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/eslint':
         specifier: 7.28.0
         version: 7.28.0
@@ -12020,8 +12023,8 @@ importers:
         specifier: 1.96.1
         version: 1.96.1(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@15.8.0)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -12099,8 +12102,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -12169,8 +12172,8 @@ importers:
         specifier: 1.95.0
         version: 1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -12233,8 +12236,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -12294,8 +12297,8 @@ importers:
         specifier: 1.95.0
         version: 1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -12349,8 +12352,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -12477,8 +12480,8 @@ importers:
         specifier: 1.95.0
         version: 1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -12703,8 +12706,8 @@ importers:
         version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -12839,8 +12842,8 @@ importers:
         version: 0.3.1
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -12996,8 +12999,8 @@ importers:
         version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -13096,8 +13099,8 @@ importers:
         version: 1.10.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -13178,8 +13181,8 @@ importers:
         specifier: 1.95.9
         version: 1.95.9(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -13313,8 +13316,8 @@ importers:
         version: 6.8.1(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -13386,8 +13389,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -13499,8 +13502,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -13572,8 +13575,8 @@ importers:
         version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -13703,8 +13706,8 @@ importers:
         version: 2.2.1
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -13767,8 +13770,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -13828,8 +13831,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -13901,8 +13904,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -14013,8 +14016,8 @@ importers:
         version: 4.7.4
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -14138,8 +14141,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -14187,8 +14190,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/find-root':
         specifier: 1.1.2
         version: 1.1.2
@@ -14311,8 +14314,8 @@ importers:
         specifier: 1.96.2
         version: 1.96.2(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -14363,8 +14366,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/cacache':
         specifier: 12.0.1
         version: 12.0.1
@@ -14448,8 +14451,8 @@ importers:
         version: 17.0.1
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/didyoumean':
         specifier: 1.2.0
         version: 1.2.0
@@ -14558,8 +14561,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -14613,8 +14616,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -14668,8 +14671,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/express':
         specifier: 4.17.13
         version: 4.17.13
@@ -14729,8 +14732,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -14847,8 +14850,8 @@ importers:
         version: 7.4.2(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/cors':
         specifier: 2.8.10
         version: 2.8.10
@@ -14911,8 +14914,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -14966,8 +14969,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -15100,8 +15103,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/ui-foundation.ui.is-browser':
         specifier: ^0.0.500
         version: 0.0.500(react-dom@18.2.0)(react@18.2.0)
@@ -15229,8 +15232,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -15531,8 +15534,8 @@ importers:
         version: 2.0.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -15607,8 +15610,8 @@ importers:
         version: 0.4.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -15912,8 +15915,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -15985,8 +15988,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/archiver':
         specifier: 5.3.1
         version: 5.3.1
@@ -16186,8 +16189,8 @@ importers:
         version: 10.0.1
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/pkg.content.packages-overview':
         specifier: 1.95.9
         version: 1.95.9(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@15.8.0)(react-dom@18.2.0)(react@18.2.0)
@@ -16378,8 +16381,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -17120,8 +17123,8 @@ importers:
         version: 4.7.4
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -17592,8 +17595,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -17671,8 +17674,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -17753,8 +17756,8 @@ importers:
         specifier: 0.0.496
         version: 0.0.496(react-dom@18.2.0)(react@18.2.0)
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -17877,8 +17880,8 @@ importers:
         version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/scope.content.scope-overview':
         specifier: 1.95.0
         version: 1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
@@ -17953,8 +17956,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -18014,8 +18017,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -18084,8 +18087,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -18561,8 +18564,8 @@ importers:
         version: 0.4.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -18672,8 +18675,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -18730,8 +18733,8 @@ importers:
         version: 8.3.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -18785,8 +18788,8 @@ importers:
         version: 3.2.0(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -18846,8 +18849,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -18904,8 +18907,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -19103,8 +19106,8 @@ importers:
         version: 6.2.4(@types/babel__core@7.20.0)(webpack@5.84.1)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/express':
         specifier: 4.17.13
         version: 4.17.13
@@ -19179,8 +19182,8 @@ importers:
         version: 0.7.24
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -19450,8 +19453,8 @@ importers:
         version: 5.8.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/find-root':
         specifier: 1.1.2
         version: 1.1.2
@@ -19554,8 +19557,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -19606,8 +19609,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
@@ -19688,8 +19691,8 @@ importers:
         version: 5.4.6
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -19857,8 +19860,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/workspace.content.variants':
         specifier: 1.95.9
         version: 1.95.9(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
@@ -19933,8 +19936,8 @@ importers:
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -20005,8 +20008,8 @@ importers:
         specifier: 0.0.496
         version: 0.0.496(react-dom@18.2.0)(react@18.2.0)
       '@teambit/graph.cleargraph':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.0.8
+        version: 0.0.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -20135,8 +20138,8 @@ importers:
         version: 1.0.1
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/workspace.content.workspace-overview':
         specifier: 1.95.0
         version: 1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
@@ -20232,8 +20235,8 @@ importers:
         version: 0.4.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.15
+        version: 0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -43969,16 +43972,16 @@ packages:
     resolution: {integrity: sha512-0aLXxZQywXzuR2527KYd8JXRwIFFtRBqFtzhrpoxu2aWkadx5THYanG9wMXcDiXLtmuJCLW5h6WbrUmpPoWLvg==}
     dev: false
 
-  /@teambit/graph.algorithms.tarjan@0.0.1:
-    resolution: {integrity: sha1-qvdq0JPyzU8m1uCKClQ82GhPgH0=, tarball: https://node-registry.bit.cloud/tarballs/teambit.graph/algorithms/tarjan@0.0.1.tgz}
+  /@teambit/graph.algorithms.tarjan@0.0.2:
+    resolution: {integrity: sha1-20r+CcGlGDr+/r7+sKhGvOm0AyY=}
     dependencies:
       lodash: 4.17.20
     dev: false
 
-  /@teambit/graph.cleargraph@0.0.1:
-    resolution: {integrity: sha1-BzFkcDs2WlJjbMRpGohV0+mIBIQ=}
+  /@teambit/graph.cleargraph@0.0.8:
+    resolution: {integrity: sha512-TGO2YQbczDW4hQ68/wYFEke1qPrchsbh5K3XygLMp08ZBRvmr3AZ9QNqK0fHnumDFw/PBd3fM0KUqV0JJ108cQ==}
     dependencies:
-      '@teambit/graph.algorithms.tarjan': 0.0.1
+      '@teambit/graph.algorithms.tarjan': 0.0.2
       lodash: 4.17.20
     dev: false
 
@@ -44095,8 +44098,8 @@ packages:
       - '@teambit/legacy'
     dev: true
 
-  /@teambit/harmony.envs.core-aspect-env@0.0.14(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
-    resolution: {integrity: sha512-W40YKxZBVK0WYCp9kLu1+Ub9T+58N4go2LVNkzEW3etzLyO8Ix9iCHKidCBH49RurRBOFowloN7nWoeAnhm45w==}
+  /@teambit/harmony.envs.core-aspect-env@0.0.15(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
+    resolution: {integrity: sha512-vZxSG+v5hH7smist3UnUS/rnAk+V3inW2fY+q9yyY2BYaPPYIwZVkf2Kzpssto4U9Kon2Aqq0mo9iusIX1BKxw==}
     dependencies:
       '@babel/plugin-proposal-decorators': 7.23.6(@babel/core@7.19.6)
       '@babel/plugin-transform-class-properties': 7.23.3(@babel/core@7.19.6)
@@ -72968,7 +72971,7 @@ packages:
     engines: {node: '>=6'}
     dependencies:
       psl: 1.9.0
-      punycode: 2.1.1
+      punycode: 2.3.1
       universalify: 0.2.0
       url-parse: 1.5.10
 
@@ -75335,7 +75338,6 @@ packages:
   /yargs-parser@20.2.9:
     resolution: {integrity: sha512-y11nGElTIV+CT3Zv9t7VKl+Q3hTQoT9a1Qzezhhl6Rp21gJ/IVTW7Z3y9EWXhuUBC2Shnf+DX0antecpAwSP8w==}
     engines: {node: '>=10'}
-    dev: false
 
   /yargs-parser@21.1.1:
     resolution: {integrity: sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw==}
@@ -75377,7 +75379,7 @@ packages:
       require-directory: 2.1.1
       string-width: 4.2.3
       y18n: 5.0.8
-      yargs-parser: 20.2.4
+      yargs-parser: 20.2.9
 
   /yargs@17.0.1:
     resolution: {integrity: sha512-xBBulfCc8Y6gLFcrPvtqKz9hz8SO0l1Ni8GgDekvBX2ro0HRQImDGnikfc33cgzcYUSncapnNcZDjVFIH3f6KQ==}
@@ -76848,7 +76850,7 @@ packages:
       '@teambit/documenter.ui.heading': 4.1.1(react-dom@18.2.0)(react@17.0.2)
       '@teambit/documenter.ui.separator': 4.1.1(react-dom@18.2.0)(react@17.0.2)
       '@teambit/explorer.ui.command-bar': 2.0.14(@testing-library/react@12.1.5)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@17.0.2)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lanes.hooks.use-lanes': 0.0.254(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model': 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@17.0.2)
@@ -76910,7 +76912,7 @@ packages:
       '@teambit/documenter.ui.heading': 4.1.1(react-dom@18.2.0)(react@18.2.0)
       '@teambit/documenter.ui.separator': 4.1.1(react-dom@18.2.0)(react@18.2.0)
       '@teambit/explorer.ui.command-bar': 2.0.14(@testing-library/react@12.1.5)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lanes.hooks.use-lanes': 0.0.254(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/lanes.ui.models.lanes-model': 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
@@ -76968,6 +76970,7 @@ packages:
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@17.0.2)
       '@types/react': 17.0.73
       '@types/react-dom': 17.0.25
+      chalk: 2.4.2
       graphql: 15.8.0
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash.flatten: 4.4.0
@@ -77006,6 +77009,7 @@ packages:
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0)
       '@types/react': 17.0.73
       '@types/react-dom': 17.0.25
+      chalk: 2.4.2
       graphql: 15.8.0
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash.flatten: 4.4.0
@@ -77046,7 +77050,7 @@ packages:
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/legacy-component-log': 0.0.402
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@17.0.2)
@@ -77075,7 +77079,7 @@ packages:
     dependencies:
       '@mdx-js/react': 1.6.22(react@18.2.0)
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/legacy-component-log': 0.0.402
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@18.2.0)
@@ -77413,7 +77417,7 @@ packages:
       '@teambit/design.ui.styles.ellipsis': 0.0.357(react-dom@18.2.0)(react@17.0.2)
       '@teambit/documenter.ui.heading': 4.1.1(react-dom@18.2.0)(react@17.0.2)
       '@teambit/evangelist.input.checkbox.label': 1.0.3(react-dom@18.2.0)(react@17.0.2)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.full-loader': 0.0.500(react-dom@18.2.0)(react@17.0.2)
@@ -77465,7 +77469,7 @@ packages:
       '@teambit/design.ui.styles.ellipsis': 0.0.357(react-dom@18.2.0)(react@18.2.0)
       '@teambit/documenter.ui.heading': 4.1.1(react-dom@18.2.0)(react@18.2.0)
       '@teambit/evangelist.input.checkbox.label': 1.0.3(react-dom@18.2.0)(react@18.2.0)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@18.2.0)
       '@teambit/ui-foundation.ui.full-loader': 0.0.500(react-dom@18.2.0)(react@18.2.0)
@@ -77503,7 +77507,7 @@ packages:
       '@teambit/any-fs': 0.0.5
       '@teambit/capsule': 0.0.12
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@17.0.2)
       '@types/react': 17.0.73
@@ -77542,7 +77546,7 @@ packages:
       '@teambit/any-fs': 0.0.5
       '@teambit/capsule': 0.0.12
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@18.2.0)
       '@types/react': 17.0.73
@@ -77809,7 +77813,7 @@ packages:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
       '@teambit/component-version': 1.0.3
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@18.2.0)
@@ -79711,7 +79715,7 @@ packages:
       '@teambit/bvm.config': 0.2.3
       '@teambit/bvm.path': 0.1.2
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@17.0.2)
       '@teambit/node.utils.esm-loader': 0.0.6
@@ -79742,7 +79746,7 @@ packages:
       '@teambit/bvm.config': 0.2.3
       '@teambit/bvm.path': 0.1.2
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@18.2.0)
       '@teambit/node.utils.esm-loader': 0.0.6
@@ -80812,7 +80816,7 @@ packages:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@17.0.2)
@@ -80853,7 +80857,7 @@ packages:
       '@mdx-js/react': 1.6.22(react@18.2.0)
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@18.2.0)
@@ -82006,7 +82010,7 @@ packages:
       '@teambit/design.ui.tree': 0.0.15(react-dom@18.2.0)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-card': 0.0.513(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@18.2.0)(react@17.0.2)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.hooks.use-lane-components': 0.0.253(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@17.0.2)
@@ -82078,7 +82082,7 @@ packages:
       '@teambit/design.ui.tree': 0.0.15(react-dom@18.2.0)(react@18.2.0)
       '@teambit/explorer.ui.gallery.component-card': 0.0.513(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@18.2.0)(react@18.2.0)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.hooks.use-lane-components': 0.0.253(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
@@ -83508,7 +83512,7 @@ packages:
       '@teambit/design.ui.surfaces.menu.link-item': 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react@17.0.2)
       '@teambit/design.ui.tree': 0.0.15(react-dom@18.2.0)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@18.2.0)(react@17.0.2)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.hooks.use-lane-components': 0.0.253(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@17.0.2)
@@ -83583,7 +83587,7 @@ packages:
       '@teambit/design.ui.surfaces.menu.link-item': 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.73)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/design.ui.tree': 0.0.15(react-dom@18.2.0)(react@18.2.0)
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@18.2.0)(react@18.2.0)
-      '@teambit/graph.cleargraph': 0.0.1
+      '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/lane-id': 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.hooks.use-lane-components': 0.0.253(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)

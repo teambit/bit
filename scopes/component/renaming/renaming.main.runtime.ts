@@ -299,7 +299,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       sourceId.toStringWithoutVersion(),
       targetId.toStringWithoutVersion()
     );
-    if (hasChanged) await config.write();
+    if (hasChanged) await config.write({ reasonForChange: 'rename' });
   }
 
   private async renameScopeOfAspectIdsInWorkspaceConfig(ids: ComponentID[], newScope: string) {
@@ -313,7 +313,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       );
       if (changed) hasChanged = true;
     });
-    if (hasChanged) await config.write();
+    if (hasChanged) await config.write({ reasonForChange: 'rename' });
   }
 
   private async renameOwnerOfAspectIdsInWorkspaceConfig(ids: ComponentID[], oldOwner: string, newOwner: string) {
@@ -328,7 +328,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       );
       if (changed) hasChanged = true;
     });
-    if (hasChanged) await config.write();
+    if (hasChanged) await config.write({ reasonForChange: 'rename' });
   }
 
   private async deleteLinkFromNodeModules(packageName: string) {

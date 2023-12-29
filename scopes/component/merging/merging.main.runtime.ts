@@ -6,7 +6,6 @@ import ComponentsList from '@teambit/legacy/dist/consumer/component/components-l
 import {
   MergeStrategy,
   FileStatus,
-  ApplyVersionResult,
   getMergeStrategyInteractive,
   MergeOptions,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
@@ -80,6 +79,11 @@ export type ComponentMergeStatusBeforeMergeAttempt = ComponentStatusBase & {
 };
 
 export type FailedComponents = { id: ComponentID; unchangedMessage: string; unchangedLegitimately?: boolean };
+
+// fileName is PathLinux. TS doesn't let anything else in the keys other than string and number
+export type FilesStatus = { [fileName: string]: keyof typeof FileStatus };
+
+export type ApplyVersionResult = { id: ComponentID; filesStatus: FilesStatus };
 
 export type ApplyVersionResults = {
   components?: ApplyVersionResult[];
@@ -471,7 +475,7 @@ export class MergingMain {
     }
 
     if (Object.keys(workspaceJsonUpdates).length) {
-      await workspaceConfig.write();
+      await workspaceConfig.write({ reasonForChange: 'merge (update dependencies)' });
     }
 
     this.logger.debug('final workspace.jsonc updates', workspaceJsonUpdates);
@@ -668,7 +672,7 @@ export class MergingMain {
     const consumer = this.workspace.consumer;
     const ids = await this.getIdsForUnmerged(values);
     const results = await this.checkout.checkout({ ids, reset: true });
-    ids.forEach((id) => consumer.scope.objects.unmergedComponents.removeComponent(id.fullName));
+    ids.forEach((id) => consumer.scope.objects.unmergedComponents.removeComponent(id));
     await consumer.scope.objects.unmergedComponents.write();
     return { abortedComponents: results.components };
   }
@@ -742,7 +746,7 @@ export class MergingMain {
     if (idsStr && idsStr.length) {
       const componentIds = await this.workspace.resolveMultipleComponentIds(idsStr);
       componentIds.forEach((id) => {
-        const entry = this.workspace.consumer.scope.objects.unmergedComponents.getEntry(id.fullName);
+        const entry = this.workspace.consumer.scope.objects.unmergedComponents.getEntry(id);
         if (!entry) {
           throw new GeneralError(`unable to merge-resolve ${id.toString()}, it is not marked as unresolved`);
         }

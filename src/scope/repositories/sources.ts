@@ -404,7 +404,7 @@ please either remove the component (bit remove) or remove the lane.`);
     } else {
       objectRepo.removeObject(component.hash());
     }
-    objectRepo.unmergedComponents.removeComponent(component.name);
+    objectRepo.unmergedComponents.removeComponent(component.toComponentId());
   }
 
   /**
