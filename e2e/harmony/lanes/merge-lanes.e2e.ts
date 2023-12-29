@@ -188,23 +188,72 @@ describe('merge lanes', function () {
       expect(mergeOutput).to.not.have.string('getDivergeData: unable to find Version 0.0.1 of comp1');
     });
   });
-  describe('merging main into local lane when the lane does not have the main components', () => {
+  describe('merging main when on lane and some workspace components belong to the lane, some belong to main', () => {
+    let laneWs: string;
+    let headComp1OnLane: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateComponents(1, false);
+      helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.createLane('dev');
+      // add only comp1 to the lane
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+      headComp1OnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      laneWs = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('main', '-x');
+      helper.fixtures.populateComponents(2, undefined, 'v2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
     });
-    it('when using --exclude-non-lane-comps flag, it should not bring non-lane components from main', () => {
-      helper.command.mergeLane('main', '-x --exclude-non-lane-comps');
-      const lane = helper.command.showOneLaneParsed('dev');
-      expect(lane.components).to.have.lengthOf(0);
+    describe('without --exclude-non-lane-comps flag', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(laneWs);
+        helper.command.mergeLane('main', '-x');
+      });
+      it('should not add non-lane components into the lane', () => {
+        const lane = helper.command.showOneLaneParsed('dev');
+        expect(lane.components).to.have.lengthOf(1);
+      });
+      it('should update comp1 on the lane because it is part of the lane', () => {
+        const head = helper.command.getHeadOfLane('dev', 'comp1');
+        expect(head).to.not.equal(headComp1OnLane);
+      });
+      it('should update non-lane components in the .bitmap', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp2.version).to.equal('0.0.2');
+      });
+      it('should update the component files in the filesystem for all of them', () => {
+        const comp1 = helper.fs.readFile('comp1/index.js');
+        expect(comp1).to.have.string('v2');
+        const comp2 = helper.fs.readFile('comp2/index.js');
+        expect(comp2).to.have.string('v2');
+      });
     });
-    it('by default, it should bring non-lane components from main', () => {
-      helper.command.mergeLane('main', '-x');
-      const lane = helper.command.showOneLaneParsed('dev');
-      expect(lane.components).to.have.lengthOf(1);
+    describe('with --exclude-non-lane-comps flag', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(laneWs);
+        helper.command.mergeLane('main', '--exclude-non-lane-comps -x');
+      });
+      it('should not add non-lane components into the lane', () => {
+        const lane = helper.command.showOneLaneParsed('dev');
+        expect(lane.components).to.have.lengthOf(1);
+      });
+      it('should update comp1 on the lane because it is part of the lane', () => {
+        const head = helper.command.getHeadOfLane('dev', 'comp1');
+        expect(head).to.not.equal(headComp1OnLane);
+      });
+      it('should not update non-lane components in the .bitmap', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp2.version).to.equal('0.0.1');
+      });
+      it('should update the component files only for lane components', () => {
+        const comp1 = helper.fs.readFile('comp1/index.js');
+        expect(comp1).to.have.string('v2');
+        const comp2 = helper.fs.readFile('comp2/index.js');
+        expect(comp2).to.not.have.string('v2');
+      });
     });
   });
   describe('merging main lane with no snapped components', () => {
