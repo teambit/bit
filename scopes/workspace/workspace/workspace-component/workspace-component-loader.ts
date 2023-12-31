@@ -840,7 +840,7 @@ function printGroupsToHandle(groupsToHandle: Array<LoadGroup>, logger: Logger): 
   groupsToHandle.forEach((group) => {
     const { scopeIds, workspaceIds, aspects, core, seeders } = group;
     logger.console(
-      `🚀 ~ file: workspace-component-loader.ts:512 ~ printGroupsToHandle ~ group ${JSON.stringify(
+      `workspace-component-loader ~ groupsToHandle ${JSON.stringify(
         {
           scopeIds: scopeIds.map((id) => id.toString()),
           workspaceIds: workspaceIds.map((id) => id.toString()),
