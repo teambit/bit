@@ -965,6 +965,9 @@ importers:
       '@teambit/node.utils.esm-loader':
         specifier: ^0.0.6
         version: 0.0.6
+      '@teambit/preview.modules.preview-modules':
+        specifier: ^1.0.2
+        version: 1.0.2
       '@teambit/react.generator.react-native-templates':
         specifier: ^1.0.7
         version: 1.0.9
@@ -16820,6 +16823,9 @@ importers:
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
         version: 1.0.0(react-dom@18.2.0)(react@18.2.0)
+      '@teambit/preview.modules.preview-modules':
+        specifier: ^1.0.2
+        version: 1.0.2
       '@teambit/ui-foundation.ui.pages.static-error':
         specifier: ^0.0.92
         version: 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)
@@ -28837,13 +28843,8 @@ packages:
   /@szhsin/react-menu@3.3.1(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-e8vK+N1YWwTdYXElvRRf5GIImtcDecqTCzpAa0DkGAknKwfQwtQtUnBn+DECodwsWi5H5ONKTU+kn0qJ70hEYQ==}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: '>=16.14.0'
+      react-dom: '>=16.14.0'
     dependencies:
       prop-types: 15.8.1
       react: 17.0.2
@@ -28854,13 +28855,8 @@ packages:
   /@szhsin/react-menu@3.3.1(react-dom@18.2.0)(react@17.0.2):
     resolution: {integrity: sha512-e8vK+N1YWwTdYXElvRRf5GIImtcDecqTCzpAa0DkGAknKwfQwtQtUnBn+DECodwsWi5H5ONKTU+kn0qJ70hEYQ==}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: '>=16.14.0'
+      react-dom: '>=16.14.0'
     dependencies:
       prop-types: 15.8.1
       react: 17.0.2
@@ -28871,13 +28867,8 @@ packages:
   /@szhsin/react-menu@3.3.1(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-e8vK+N1YWwTdYXElvRRf5GIImtcDecqTCzpAa0DkGAknKwfQwtQtUnBn+DECodwsWi5H5ONKTU+kn0qJ70hEYQ==}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: '>=16.14.0'
+      react-dom: '>=16.14.0'
     dependencies:
       prop-types: 15.8.1
       react: 18.2.0
@@ -30273,10 +30264,10 @@ packages:
   /@teambit/base-react.navigation.link@2.0.30(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-Q5WGeEdXLYZWU/JU6L1qLoy+oNw=}
     peerDependencies:
-      '@testing-library/react': '*'
+      '@testing-library/react': ^12.1.5
       '@types/react': ^17.0.67
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.routing.compare-url': 1.0.1(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
@@ -30290,10 +30281,10 @@ packages:
   /@teambit/base-react.navigation.link@2.0.30(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@17.0.2):
     resolution: {integrity: sha1-Q5WGeEdXLYZWU/JU6L1qLoy+oNw=}
     peerDependencies:
-      '@testing-library/react': '*'
+      '@testing-library/react': ^12.1.5
       '@types/react': ^17.0.67
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.routing.compare-url': 1.0.1(react-dom@18.2.0)(react@17.0.2)
       '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
@@ -30307,10 +30298,10 @@ packages:
   /@teambit/base-react.navigation.link@2.0.30(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha1-Q5WGeEdXLYZWU/JU6L1qLoy+oNw=}
     peerDependencies:
-      '@testing-library/react': '*'
+      '@testing-library/react': ^12.1.5
       '@types/react': ^17.0.67
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.routing.compare-url': 1.0.1(react-dom@18.2.0)(react@18.2.0)
       '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
@@ -30641,13 +30632,8 @@ packages:
   /@teambit/base-ui.elements.image@1.0.0(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-33kB66RvIaSRipV7mwL/IMwwOEThFRF4myHPFBSaF8rXmmJLKInm6bN1dWZ77gKcRlOtwJWq/UJMStC/EWtksA==, tarball: https://registry.npmjs.org/@teambit/base-ui.elements.image/-/base-ui.elements.image-1.0.0.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
@@ -30657,13 +30643,8 @@ packages:
   /@teambit/base-ui.elements.image@1.0.0(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-33kB66RvIaSRipV7mwL/IMwwOEThFRF4myHPFBSaF8rXmmJLKInm6bN1dWZ77gKcRlOtwJWq/UJMStC/EWtksA==, tarball: https://registry.npmjs.org/@teambit/base-ui.elements.image/-/base-ui.elements.image-1.0.0.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
@@ -31288,8 +31269,8 @@ packages:
   /@teambit/base-ui.layout.grid-component@1.0.2(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-/G/WOO98NHdLuEBAlctrgIWQuBMi96zLSyd55waivNFHm1RKgTzfLup/gdsnGbqhG1mYTfqboPUQI7OF1XmUQg==}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.layout.breakpoints': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
@@ -31301,8 +31282,8 @@ packages:
   /@teambit/base-ui.layout.grid-component@1.0.2(react-dom@18.2.0)(react@17.0.2):
     resolution: {integrity: sha512-/G/WOO98NHdLuEBAlctrgIWQuBMi96zLSyd55waivNFHm1RKgTzfLup/gdsnGbqhG1mYTfqboPUQI7OF1XmUQg==}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.layout.breakpoints': 1.0.0(react-dom@18.2.0)(react@17.0.2)
       classnames: 2.2.6
@@ -31314,8 +31295,8 @@ packages:
   /@teambit/base-ui.layout.grid-component@1.0.2(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-/G/WOO98NHdLuEBAlctrgIWQuBMi96zLSyd55waivNFHm1RKgTzfLup/gdsnGbqhG1mYTfqboPUQI7OF1XmUQg==}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.layout.breakpoints': 1.0.0(react-dom@18.2.0)(react@18.2.0)
       classnames: 2.2.6
@@ -31535,13 +31516,8 @@ packages:
   /@teambit/base-ui.routing.native-nav-link@1.0.0(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-elXAzsYT7e7Y6/2n5Xv0iYS48ITG2KDBcrtUifxSlVob3zyRbaX18M6wPrHyD9z9XXwqyxEJreTKL1Gt9IdEaA==, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.native-nav-link/-/base-ui.routing.native-nav-link-1.0.0.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.routing.compare-url': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.routing.native-link': 1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -31554,13 +31530,8 @@ packages:
   /@teambit/base-ui.routing.native-nav-link@1.0.0(react-dom@18.2.0)(react@17.0.2):
     resolution: {integrity: sha512-elXAzsYT7e7Y6/2n5Xv0iYS48ITG2KDBcrtUifxSlVob3zyRbaX18M6wPrHyD9z9XXwqyxEJreTKL1Gt9IdEaA==, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.native-nav-link/-/base-ui.routing.native-nav-link-1.0.0.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.routing.compare-url': 1.0.0(react-dom@18.2.0)(react@17.0.2)
       '@teambit/base-ui.routing.native-link': 1.0.0(react-dom@18.2.0)(react@17.0.2)
@@ -31574,13 +31545,8 @@ packages:
   /@teambit/base-ui.routing.native-nav-link@1.0.0(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-elXAzsYT7e7Y6/2n5Xv0iYS48ITG2KDBcrtUifxSlVob3zyRbaX18M6wPrHyD9z9XXwqyxEJreTKL1Gt9IdEaA==, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.native-nav-link/-/base-ui.routing.native-nav-link-1.0.0.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.routing.compare-url': 1.0.0(react-dom@18.2.0)(react@18.2.0)
       '@teambit/base-ui.routing.native-link': 1.0.0(react-dom@18.2.0)(react@18.2.0)
@@ -31734,13 +31700,8 @@ packages:
   /@teambit/base-ui.surfaces.abs-container@1.0.1(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-51b87xnd65dXa3utstNjz7HXmtM=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/surfaces/abs-container@1.0.1.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
@@ -31752,13 +31713,8 @@ packages:
   /@teambit/base-ui.surfaces.abs-container@1.0.1(react-dom@18.2.0)(react@17.0.2):
     resolution: {integrity: sha1-51b87xnd65dXa3utstNjz7HXmtM=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/surfaces/abs-container@1.0.1.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
@@ -31770,13 +31726,8 @@ packages:
   /@teambit/base-ui.surfaces.abs-container@1.0.1(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha1-51b87xnd65dXa3utstNjz7HXmtM=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/surfaces/abs-container@1.0.1.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
@@ -31987,13 +31938,8 @@ packages:
   /@teambit/base-ui.surfaces.drawer@1.1.3(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-EmfvFFxPhsVm6B9oBq1W7S4wzLA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/surfaces/drawer@1.1.3.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.hook.use-click-outside': 1.0.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.abs-container': 1.0.1(react-dom@17.0.2)(react@17.0.2)
@@ -32007,13 +31953,8 @@ packages:
   /@teambit/base-ui.surfaces.drawer@1.1.3(react-dom@18.2.0)(react@17.0.2):
     resolution: {integrity: sha1-EmfvFFxPhsVm6B9oBq1W7S4wzLA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/surfaces/drawer@1.1.3.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.hook.use-click-outside': 1.0.1(react-dom@18.2.0)(react@17.0.2)
       '@teambit/base-ui.surfaces.abs-container': 1.0.1(react-dom@18.2.0)(react@17.0.2)
@@ -32027,13 +31968,8 @@ packages:
   /@teambit/base-ui.surfaces.drawer@1.1.3(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha1-EmfvFFxPhsVm6B9oBq1W7S4wzLA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/surfaces/drawer@1.1.3.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.hook.use-click-outside': 1.0.1(react-dom@18.2.0)(react@18.2.0)
       '@teambit/base-ui.surfaces.abs-container': 1.0.1(react-dom@18.2.0)(react@18.2.0)
@@ -32195,13 +32131,8 @@ packages:
   /@teambit/base-ui.surfaces.split-pane.splitter@1.0.0(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-5/oGHEUOQQnQUi2911fLb/rdFLLDoMy1G4fQ4DNkqoHcahi1a26tCtKlV+7FAI1LsFdk0V+wRp6WY+kX+Qbsxw==, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.splitter/-/base-ui.surfaces.split-pane.splitter-1.0.0.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
@@ -32211,13 +32142,8 @@ packages:
   /@teambit/base-ui.surfaces.split-pane.splitter@1.0.0(react-dom@18.2.0)(react@17.0.2):
     resolution: {integrity: sha512-5/oGHEUOQQnQUi2911fLb/rdFLLDoMy1G4fQ4DNkqoHcahi1a26tCtKlV+7FAI1LsFdk0V+wRp6WY+kX+Qbsxw==, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.splitter/-/base-ui.surfaces.split-pane.splitter-1.0.0.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
@@ -32228,13 +32154,8 @@ packages:
   /@teambit/base-ui.surfaces.split-pane.splitter@1.0.0(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-5/oGHEUOQQnQUi2911fLb/rdFLLDoMy1G4fQ4DNkqoHcahi1a26tCtKlV+7FAI1LsFdk0V+wRp6WY+kX+Qbsxw==, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.splitter/-/base-ui.surfaces.split-pane.splitter-1.0.0.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
@@ -47659,6 +47580,10 @@ packages:
       - react-dom
     dev: true
 
+  /@teambit/preview.modules.preview-modules@1.0.2:
+    resolution: {integrity: sha512-1H0a5Ivsz8JAPmmgrHHUDjMQoiVGS/dzPt45O73EOD+ZPCKo75K1kbSbLt3uCBcTv+5lVkasaSjpGZnoAbSq7A==}
+    dev: false
+
   /@teambit/preview.react-preview@1.0.20(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(graphql@15.8.0)(less@4.2.0)(react-dom@18.2.0)(react@18.2.0)(typescript@4.7.4)(utf-8-validate@5.0.5):
     resolution: {integrity: sha512-WE/rd1qvjfoHCFLwKkbad24yqTlnJGtaGpFPE4hzkGkKHYCXB2V3MzlVFjHpnVpDtv+wCln8kSqal9WIfN18iA==}
     peerDependencies:
@@ -52357,8 +52282,8 @@ packages:
   /@teambit/webpack.webpack-dev-server@1.0.7(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack@5.89.0):
     resolution: {integrity: sha512-r4BYCTDX9Z/BWKm+FMyO2CYTeq599ZzxkOY9qeh6R0N+6X33MXw6nPjFxSEQ0DlgkJz/dAOq852ACqyPgp6p8w==}
     peerDependencies:
-      '@teambit/legacy': '*'
-      webpack: '*'
+      '@teambit/legacy': ^1.0.380
+      webpack: ^5.88.2
     dependencies:
       '@teambit/legacy': link:node_modules/@teambit/legacy
       '@teambit/webpack.webpack-bundler': 1.0.7(esbuild@0.14.29)
@@ -52389,8 +52314,8 @@ packages:
   /@teambit/webpack.webpack-dev-server@1.0.7(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(typescript@5.1.3)(utf-8-validate@5.0.5)(webpack@5.89.0):
     resolution: {integrity: sha512-r4BYCTDX9Z/BWKm+FMyO2CYTeq599ZzxkOY9qeh6R0N+6X33MXw6nPjFxSEQ0DlgkJz/dAOq852ACqyPgp6p8w==}
     peerDependencies:
-      '@teambit/legacy': '*'
-      webpack: '*'
+      '@teambit/legacy': ^1.0.380
+      webpack: ^5.88.2
     dependencies:
       '@teambit/legacy': link:node_modules/@teambit/legacy
       '@teambit/webpack.webpack-bundler': 1.0.7(esbuild@0.14.29)
@@ -53733,11 +53658,9 @@ packages:
     resolution: {integrity: sha512-VlJEV0fOQ7BExOsHYAGrgbEiZoi8D+Bl2+f6V2RrXerRSylnp+ZBHmPvaIa8cz0Ajx7WO7Z5RqfgYg7ED1nRhA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
-      eslint: '*'
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
       typescript: '*'
     peerDependenciesMeta:
-      eslint:
-        optional: true
       typescript:
         optional: true
     dependencies:
@@ -53754,11 +53677,9 @@ packages:
     resolution: {integrity: sha512-VlJEV0fOQ7BExOsHYAGrgbEiZoi8D+Bl2+f6V2RrXerRSylnp+ZBHmPvaIa8cz0Ajx7WO7Z5RqfgYg7ED1nRhA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
-      eslint: '*'
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
       typescript: '*'
     peerDependenciesMeta:
-      eslint:
-        optional: true
       typescript:
         optional: true
     dependencies:
@@ -60387,7 +60308,7 @@ packages:
     resolution: {integrity: sha512-yOI2FmHCh+cgkMEkznxvWxfLC8AqZgco7509DjwMoCzXaxslv7YmGBKkvZyHxcbLmswnaMRBlYcd2BT7KPEnKw==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
-      eslint: '*'
+      eslint: '>=5.0.0'
     dependencies:
       eslint: 7.32.0
       eslint-mdx: 1.17.1(eslint@7.32.0)
@@ -82675,6 +82596,7 @@ packages:
       '@teambit/component-id': 1.2.0
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@17.0.2)
+      '@teambit/preview.modules.preview-modules': 1.0.2
       '@teambit/ui-foundation.ui.pages.static-error': 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@17.0.2)
       '@types/react': 17.0.74
       '@types/react-dom': 17.0.25
@@ -82710,6 +82632,7 @@ packages:
       '@teambit/component-id': 1.2.0
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@18.2.0)
+      '@teambit/preview.modules.preview-modules': 1.0.2
       '@teambit/ui-foundation.ui.pages.static-error': 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)
       '@types/react': 17.0.74
       '@types/react-dom': 17.0.25
