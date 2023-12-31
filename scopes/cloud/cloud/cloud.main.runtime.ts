@@ -30,6 +30,7 @@ import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
+import UIAspect, { UiMain } from '@teambit/ui';
 import { cloudSchema } from './cloud.graphql';
 import { CloudAspect } from './cloud.aspect';
 import { LoginCmd } from './login.cmd';
@@ -443,6 +444,7 @@ export class CloudMain {
     ScopeAspect,
     GlobalConfigAspect,
     CLIAspect,
+    UIAspect,
   ];
   static runtime = MainRuntime;
   static defaultConfig: CloudWorkspaceConfig = {
@@ -458,14 +460,15 @@ export class CloudMain {
     loginPort: CloudMain.DEFAULT_PORT,
   };
   static async provider(
-    [loggerMain, graphql, express, workspace, scope, globalConfig, cli]: [
+    [loggerMain, graphql, express, workspace, scope, globalConfig, cli, ui]: [
       LoggerMain,
       GraphqlMain,
       ExpressMain,
       Workspace,
       ScopeMain,
       GlobalConfigMain,
-      CLIMain
+      CLIMain,
+      UiMain
     ],
     config: CloudWorkspaceConfig,
     [onSuccessLoginSlot]: [OnSuccessLoginSlot]
@@ -477,7 +480,12 @@ export class CloudMain {
     const whoamiCmd = new WhoamiCmd(cloudMain);
     cli.register(loginCmd, logoutCmd, whoamiCmd);
     graphql.register(cloudSchema(cloudMain));
-    if (workspace) await cloudMain.setupAuthListener();
+    if (workspace) {
+      ui.registerOnStart(async () => {
+        await cloudMain.setupAuthListener();
+        return undefined;
+      });
+    }
     return cloudMain;
   }
 }
