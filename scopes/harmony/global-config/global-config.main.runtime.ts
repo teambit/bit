@@ -16,6 +16,7 @@ import {
   listSync,
   set,
   setSync,
+  invalidateCache,
 } from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import { GlobalConfig } from '@teambit/legacy/dist/global-config';
 import { GlobalConfigAspect } from './global-config.aspect';
@@ -68,6 +69,10 @@ export class GlobalConfigMain {
 
   getGlobalCapsulesBaseDir() {
     return this.getSync(CFG_CAPSULES_ROOT_BASE_DIR) || GLOBALS_DEFAULT_CAPSULES;
+  }
+
+  invalidateCache() {
+    invalidateCache();
   }
 
   getKnownGlobalDirs() {
