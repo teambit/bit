@@ -153,6 +153,10 @@ export class WorkspaceComponentLoader {
     const workspaceScopeIdsMap: WorkspaceScopeIdsMap = await this.groupAndUpdateIds(ids);
 
     const groupsToHandle = await this.buildLoadGroups(workspaceScopeIdsMap);
+    // prefix your command with "BIT_LOG=*" to see the detailed groups
+    if (process.env.BIT_LOG) {
+      printGroupsToHandle(groupsToHandle, this.logger);
+    }
     const groupsRes = compact(
       await mapSeries(groupsToHandle, async (group) => {
         const { scopeIds, workspaceIds, aspects, core, seeders } = group;
@@ -344,7 +348,7 @@ export class WorkspaceComponentLoader {
     if (!aspectIds.length) return;
 
     try {
-      await this.workspace.loadAspects(aspectIds, true, 'self loading aspects', {});
+      await this.workspace.loadAspects(aspectIds, true, 'self loading aspects', { useScopeAspectsCapsule: true });
     } catch (err: any) {
       this.logger.warn(`failed loading components as aspects for components ${aspectIds.join(', ')}`, err);
       // we ignore that errors at the moment
@@ -830,4 +834,23 @@ function createComponentCacheKey(id: ComponentID, loadOpts?: ComponentLoadOption
 
 function sortKeys(obj: Object) {
   return fromPairs(Object.entries(obj).sort(([k1], [k2]) => k1.localeCompare(k2)));
+}
+
+function printGroupsToHandle(groupsToHandle: Array<LoadGroup>, logger: Logger): void {
+  groupsToHandle.forEach((group) => {
+    const { scopeIds, workspaceIds, aspects, core, seeders } = group;
+    logger.console(
+      `🚀 ~ file: workspace-component-loader.ts:512 ~ printGroupsToHandle ~ group ${JSON.stringify(
+        {
+          scopeIds: scopeIds.map((id) => id.toString()),
+          workspaceIds: workspaceIds.map((id) => id.toString()),
+          aspects,
+          core,
+          seeders,
+        },
+        null,
+        2
+      )}`
+    );
+  });
 }
