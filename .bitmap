@@ -315,13 +315,7 @@
         "scope": "teambit.cloud",
         "version": "0.0.390",
         "mainFile": "index.ts",
-        "rootDir": "scopes/cloud/cloud",
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.15": {},
-            "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
-            }
-        }
+        "rootDir": "scopes/cloud/cloud"
     },
     "code": {
         "name": "code",
@@ -1393,9 +1387,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/ui/current-user",
         "config": {
-            "teambit.react/react-env@1.0.32": {},
+            "teambit.react/react": {},
             "teambit.envs/envs": {
-                "env": "teambit.react/react-env"
+                "env": "teambit.react/react"
             }
         }
     },
@@ -1506,9 +1500,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/ui/user-bar",
         "config": {
-            "teambit.react/react-env@1.0.32": {},
+            "teambit.react/react": {},
             "teambit.envs/envs": {
-                "env": "teambit.react/react-env"
+                "env": "teambit.react/react"
             }
         }
     },
