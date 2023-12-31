@@ -208,10 +208,14 @@ export async function generateBundlePreviewEntry(rootAspectId: string, previewPr
   const manifestPath = join(previewPreBundlePath, 'asset-manifest.json');
   const manifest = readJsonSync(manifestPath);
   const imports = manifest.entrypoints
-    .map((entry: string) =>
-      entry.endsWith('.js')
-        ? `import { run } from '${previewPreBundlePath}/${entry}';`
-        : `import '${previewPreBundlePath}/${entry}';`
+    .map(
+      (entry: string) =>
+        entry.endsWith('.js')
+          ? `import { run } from '${previewPreBundlePath}/${entry}';`
+          : `import '${previewPreBundlePath}/${entry}';`
+      // entry.endsWith('.js')
+      //   ? `import { run } from '@teambit/preview/artifacts/ui-bundle/${entry}';`
+      //   : `import '@teambit/preview/artifacts/ui-bundle/${entry}';`
     )
     .join('\n');
   config['teambit.harmony/bit'] = rootAspectId;
