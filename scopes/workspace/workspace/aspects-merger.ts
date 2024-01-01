@@ -244,7 +244,7 @@ export class AspectsMerger {
   }
 
   private getUnmergedData(componentId: ComponentID): UnmergedComponent | undefined {
-    return this.workspace.scope.legacyScope.objects.unmergedComponents.getEntry(componentId.fullName);
+    return this.workspace.scope.legacyScope.objects.unmergedComponents.getEntry(componentId);
   }
 
   private async filterEnvsFromExtensionsIfNeeded(

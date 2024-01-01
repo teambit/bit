@@ -350,7 +350,7 @@ export class Workspace implements ComponentFactory {
    * list all workspace components.
    */
   async list(filter?: { offset: number; limit: number }, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
-    const loadOptsWithDefaults: ComponentLoadOptions = Object.assign({ loadSeedersAsAspects: false }, loadOpts || {});
+    const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(loadOpts || {});
     const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
     const ids = await this.resolveMultipleComponentIds(legacyIds);
     const idsToGet = filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids;
@@ -569,11 +569,9 @@ export class Workspace implements ComponentFactory {
     const currentVersion = getCurrentVersionAsTagIfPossible();
 
     flattenedBitIdCompIdMap[component.id.changeVersion(currentVersion).toString()] = component.id;
-    await Promise.all(
-      versionObj.flattenedDependencies.map(async (bitId) => {
-        flattenedBitIdCompIdMap[bitId.toString()] = await this.resolveComponentId(bitId);
-      })
-    );
+    versionObj.flattenedDependencies.forEach((bitId) => {
+      flattenedBitIdCompIdMap[bitId.toString()] = bitId;
+    });
     const getCompIdByIdStr = (idStr: string): ComponentID => {
       const compId = flattenedBitIdCompIdMap[idStr];
       if (!compId) {
@@ -1308,7 +1306,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   async getUnmergedComponent(componentId: ComponentID): Promise<Component | undefined> {
-    const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId.fullName);
+    const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId);
     if (unmerged?.head) {
       return this.scope.get(componentId.changeVersion(unmerged?.head.toString()));
     }
@@ -1379,7 +1377,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     this.bitMap.updateDefaultScope(this.config.defaultScope, scopeName);
 
     this.config.defaultScope = scopeName;
-    await config.workspaceConfig?.write({ dir: path.dirname(config.workspaceConfig.path) });
+    await config.workspaceConfig?.write({ reasonForChange: `default-scope (${scopeName})` });
     await this.bitMap.write('scope-set');
   }
 

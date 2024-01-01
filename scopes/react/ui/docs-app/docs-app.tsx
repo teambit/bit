@@ -19,19 +19,21 @@ export function DocsApp({ componentId, docs = defaultDocs, compositions, context
   const withoutHash = window.location.hash.substring(1);
   const [, after] = withoutHash.split('?');
   const params = new URLSearchParams(after);
-  const isSkipInclude = params.get('skipIncludes');
+  const renderOnlyOverview = params.get('onlyOverview');
 
   return (
     <DocsTheme>
       <>
         <DocsContent docs={docs} className={styles.mdx} />
-        <CompositionsCarousel
-          renderingContext={context}
-          compositions={compositions}
-          className={styles.compositionSection}
-          compositionCardClass={styles.compositionCard}
-        />
-        {(!isSkipInclude || isSkipInclude === 'false') && <PropertiesTable componentId={componentId} />}
+        {(!renderOnlyOverview || renderOnlyOverview === 'false') && (
+          <CompositionsCarousel
+            renderingContext={context}
+            compositions={compositions}
+            className={styles.compositionSection}
+            compositionCardClass={styles.compositionCard}
+          />
+        )}
+        {(!renderOnlyOverview || renderOnlyOverview === 'false') && <PropertiesTable componentId={componentId} />}
       </>
     </DocsTheme>
   );

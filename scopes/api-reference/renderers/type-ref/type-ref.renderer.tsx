@@ -183,7 +183,7 @@ function getExportedTypeUrlFromAnotherComp({
   componentId: ComponentID;
   selectedAPI: string;
 }) {
-  const componentUrl = ComponentUrl.toUrl(componentId, { useLocationOrigin: true, includeVersion: true });
+  const componentUrl = ComponentUrl.toUrl(componentId, { useLocationOrigin: false, includeVersion: true });
   const [componentIdUrl, versionQuery] = componentUrl.split('?');
 
   const exportedTypeUrl = `${componentIdUrl}/~api-reference?selectedAPI=${encodeURIComponent(selectedAPI)}${
