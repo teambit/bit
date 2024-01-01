@@ -1,5 +1,6 @@
 import React from 'react';
 import { Section } from '@teambit/component';
+import { APIReferenceUI } from '@teambit/api-reference';
 import { Overview, TitleBadgeSlot, OverviewOptionsSlot } from './overview';
 import { DocsUI } from './docs.ui.runtime';
 
@@ -10,7 +11,8 @@ export class OverviewSection implements Section {
      */
     private titleBadgeSlot: TitleBadgeSlot,
     private overviewOptionsSlot: OverviewOptionsSlot,
-    private docs: DocsUI
+    private docs: DocsUI,
+    private apiRef: APIReferenceUI
   ) {}
 
   navigationLink = {
@@ -26,6 +28,7 @@ export class OverviewSection implements Section {
         titleBadges={this.titleBadgeSlot}
         overviewOptions={this.overviewOptionsSlot}
         getEmptyState={this.docs.getEmptyState.bind(this.docs)}
+        TaggedAPI={this.apiRef.TaggedAPIPage}
       />
     ),
   };

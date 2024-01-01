@@ -879,37 +879,33 @@
           },
           "members": [
             {
-              "__schema": "FunctionLikeSchema",
+              "__schema": "IndexSignatureSchema",
               "location": {
                 "filePath": "index.ts",
                 "line": 52,
                 "character": 26
               },
-              "signature": "(key: string): boolean",
-              "name": "",
-              "params": [
-                {
-                  "__schema": "ParameterSchema",
+              "keyType": {
+                "__schema": "ParameterSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 52,
+                  "character": 27
+                },
+                "name": "key",
+                "type": {
+                  "__schema": "KeywordTypeSchema",
                   "location": {
                     "filePath": "index.ts",
                     "line": 52,
-                    "character": 27
+                    "character": 32
                   },
-                  "name": "key",
-                  "type": {
-                    "__schema": "KeywordTypeSchema",
-                    "location": {
-                      "filePath": "index.ts",
-                      "line": 52,
-                      "character": 32
-                    },
-                    "name": "string"
-                  },
-                  "isOptional": false,
-                  "isSpread": false
-                }
-              ],
-              "returnType": {
+                  "name": "string"
+                },
+                "isOptional": false,
+                "isSpread": false
+              },
+              "valueType": {
                 "__schema": "KeywordTypeSchema",
                 "location": {
                   "filePath": "index.ts",
@@ -917,8 +913,7 @@
                   "character": 41
                 },
                 "name": "boolean"
-              },
-              "modifiers": []
+              }
             }
           ]
         }

@@ -20,4 +20,5 @@ export type SchemaExtractorOptions = {
   formatter?: Formatter;
   tsserverPath?: string;
   contextPath?: string;
+  skipInternals?: boolean;
 };

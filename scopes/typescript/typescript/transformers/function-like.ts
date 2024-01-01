@@ -14,7 +14,6 @@ export class FunctionLikeTransformer implements SchemaTransformer {
       node.kind === ts.SyntaxKind.MethodDeclaration ||
       node.kind === ts.SyntaxKind.CallSignature ||
       node.kind === ts.SyntaxKind.ConstructSignature ||
-      node.kind === ts.SyntaxKind.IndexSignature ||
       node.kind === ts.SyntaxKind.FunctionType ||
       node.kind === ts.SyntaxKind.MethodSignature
     );

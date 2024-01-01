@@ -19,5 +19,7 @@ export function useUpdatedUrlFromQuery(queryParams: APIRefQueryParams): string {
 
   const updatedObj = { ...queryObj, ...queryParams };
   const queryString = new URLSearchParams(updatedObj).toString();
-  return `${location.pathname}?${queryString}`;
+  const isOnAPIRefSubroute = location.pathname.includes('~api-reference');
+  const apiRefSubRoute = isOnAPIRefSubroute ? '' : '/~api-reference';
+  return `${location.pathname}${apiRefSubRoute}?${queryString}`;
 }
