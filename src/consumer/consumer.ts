@@ -518,7 +518,7 @@ export default class Consumer {
     // otherwise, components with the same scope-name will get ComponentNotFound on import
     const scopeName = `${path.basename(process.cwd())}-local-${generateRandomStr()}`;
     const scope = await Scope.ensure(resolvedScopePath, scopeName);
-    const config = await WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
+    const config = await WorkspaceConfig.ensure(projectPath, scope.path, standAlone, workspaceConfigProps);
     const consumer = new Consumer({
       projectPath,
       created: true,
@@ -538,7 +538,7 @@ export default class Consumer {
     const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
     BitMap.reset(projectPath, resetHard);
     const scopeP = Scope.reset(resolvedScopePath, resetHard);
-    const configP = WorkspaceConfig.reset(projectPath, resetHard);
+    const configP = WorkspaceConfig.reset(projectPath, resolvedScopePath, resetHard);
     const packageJsonP = PackageJsonFile.reset(projectPath);
     await Promise.all([scopeP, configP, packageJsonP]);
   }
@@ -570,8 +570,9 @@ export default class Consumer {
       consumer = await Consumer.create(consumerInfo.path);
       await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
     }
-    const config = consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path);
     const scope = consumer?.scope || (await Scope.load(consumerInfo.path));
+    const config =
+      consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path, scope.path);
     consumer = new Consumer({
       projectPath: consumerInfo.path,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -673,20 +674,7 @@ export default class Consumer {
   }
 
   async getParsedBitmapHistoryMetadata(): Promise<{ [fileId: string]: string }> {
-    let fileContent: string | undefined;
-    try {
-      fileContent = await fs.readFile(this.getBitmapHistoryMetadataPath(), 'utf-8');
-    } catch (err: any) {
-      if (err.code === 'ENOENT') return {}; // no such file or directory, meaning the history-metadata file doesn't exist (yet)
-    }
-    const lines = fileContent?.split('\n') || [];
-    const metadata = {};
-    lines.forEach((line) => {
-      const [fileId, ...reason] = line.split(' ');
-      if (!fileId) return;
-      metadata[fileId] = reason.join(' ');
-    });
-    return metadata;
+    return getParsedHistoryMetadata(this.getBitmapHistoryMetadataPath());
   }
 
   private async backupBitMap(reasonForBitmapChange?: string) {
@@ -694,7 +682,7 @@ export default class Consumer {
     try {
       const baseDir = this.getBitmapHistoryDir();
       await fs.ensureDir(baseDir);
-      const fileId = this.currentDateAndTimeToFileName();
+      const fileId = currentDateAndTimeToFileName();
       const backupPath = path.join(baseDir, `.bitmap-${fileId}`);
       await fs.copyFile(this.bitMap.mapPath, backupPath);
       const metadataFile = this.getBitmapHistoryMetadataPath();
@@ -706,20 +694,37 @@ export default class Consumer {
     }
   }
 
-  private currentDateAndTimeToFileName() {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const seconds = date.getSeconds();
-    return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`;
-  }
-
   async onDestroy(reasonForBitmapChange?: string) {
     await this.cleanTmpFolder();
     await this.scope.scopeJson.writeIfChanged(this.scope.path);
     await this.writeBitMap(reasonForBitmapChange);
   }
+}
+
+export function currentDateAndTimeToFileName() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const seconds = date.getSeconds();
+  return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`;
+}
+
+export async function getParsedHistoryMetadata(metadataPath: string): Promise<{ [fileId: string]: string }> {
+  let fileContent: string | undefined;
+  try {
+    fileContent = await fs.readFile(metadataPath, 'utf-8');
+  } catch (err: any) {
+    if (err.code === 'ENOENT') return {}; // no such file or directory, meaning the history-metadata file doesn't exist (yet)
+  }
+  const lines = fileContent?.split('\n') || [];
+  const metadata = {};
+  lines.forEach((line) => {
+    const [fileId, ...reason] = line.split(' ');
+    if (!fileId) return;
+    metadata[fileId] = reason.join(' ');
+  });
+  return metadata;
 }

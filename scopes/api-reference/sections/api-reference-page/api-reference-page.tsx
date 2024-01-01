@@ -26,10 +26,10 @@ export type APIRefPageProps = {
   rendererSlot: APINodeRendererSlot;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
+export function APIRefPage({ rendererSlot, className }: APIRefPageProps) {
   const component = useContext(ComponentContext);
   const renderers = flatten(rendererSlot.values());
-  const { apiModel, loading } = useAPI(host, component.id.toString(), renderers);
+  const { apiModel, loading } = useAPI(component.id.toString(), renderers);
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;

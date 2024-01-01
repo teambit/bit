@@ -1095,8 +1095,8 @@ export class DependencyResolverMain {
     });
   }
 
-  async persistConfig(workspaceDir?: string) {
-    await this.configAspect.workspaceConfig?.write({ dir: workspaceDir });
+  async persistConfig(reasonForChange?: string) {
+    await this.configAspect.workspaceConfig?.write({ reasonForChange });
     this.clearCache();
   }
 

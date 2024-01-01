@@ -2,7 +2,6 @@ import React, { useContext, ComponentType, useState } from 'react';
 import classNames from 'classnames';
 import { flatten } from 'lodash';
 // import { Icon } from '@teambit/design.elements.icon';
-import { PropertiesTable } from '@teambit/react.ui.docs.properties-table';
 // import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
@@ -37,9 +36,10 @@ export type OverviewProps = {
   overviewOptions: OverviewOptionsSlot;
   previewProps?: Partial<ComponentPreviewProps>;
   getEmptyState?: () => ComponentType | undefined;
+  TaggedAPI?: React.ComponentType<{ componentId: string }>;
 };
 
-export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyState }: OverviewProps) {
+export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyState, TaggedAPI }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
   const overviewProps = flatten(overviewOptions.values())[0];
@@ -54,7 +54,9 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
 
   const [isLoading, setLoading] = useState(defaultLoadingState);
 
-  const iframeQueryParams = `skipIncludes=${component.preview?.skipIncludes || 'false'}`;
+  const iframeQueryParams = `onlyOverview=${component.preview?.onlyOverview || 'false'}&skipIncludes=${
+    component.preview?.skipIncludes || component.preview?.onlyOverview
+  }`;
 
   const overviewPropsValues = overviewProps && overviewProps();
 
@@ -108,9 +110,9 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
             component={component}
             style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
           />
-          {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
-          {component.preview?.skipIncludes && (
-            <PropertiesTable className={styles.overviewPropsTable} componentId={component.id.toString()} />
+          {component.preview?.onlyOverview && !isLoading && <CompositionGallery component={component} />}
+          {component.preview?.onlyOverview && !isLoading && TaggedAPI && (
+            <TaggedAPI componentId={component.id.toString()} />
           )}
         </div>
       )}

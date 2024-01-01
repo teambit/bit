@@ -104,7 +104,8 @@ export class SchemaMain {
     shouldDisposeResourcesOnceDone = false,
     alwaysRunExtractor = false,
     tsserverPath?: string,
-    contextPath?: string
+    contextPath?: string,
+    skipInternals?: boolean
   ): Promise<APISchema> {
     if (alwaysRunExtractor || this.workspace) {
       const env = this.envs.getEnv(component).env;
@@ -120,7 +121,7 @@ export class SchemaMain {
       }
       const schemaExtractor: SchemaExtractor = env.getSchemaExtractor(undefined, tsserverPath, contextPath);
 
-      const result = await schemaExtractor.extract(component, { formatter, tsserverPath, contextPath });
+      const result = await schemaExtractor.extract(component, { formatter, tsserverPath, contextPath, skipInternals });
       if (shouldDisposeResourcesOnceDone) schemaExtractor.dispose();
 
       return result;

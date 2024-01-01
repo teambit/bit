@@ -6,6 +6,7 @@ import { UIRuntime } from '@teambit/ui';
 import ComponentCompareAspect, { ComponentCompareUI } from '@teambit/component-compare';
 import { OverviewCompare } from '@teambit/docs.ui.overview-compare';
 import { OverviewCompareSection } from '@teambit/docs.ui.overview-compare-section';
+import APIReferenceAspect, { APIReferenceUI } from '@teambit/api-reference';
 import { DocsAspect } from './docs.aspect';
 import { OverviewSection } from './overview.section';
 import type { TitleBadgeSlot, TitleBadge, OverviewOptionsSlot, OverviewOptions } from './overview';
@@ -47,19 +48,19 @@ export class DocsUI {
     this.overviewOptionsSlot.register(options);
   }
 
-  static dependencies = [ComponentAspect, ComponentCompareAspect];
+  static dependencies = [ComponentAspect, ComponentCompareAspect, APIReferenceAspect];
 
   static runtime = UIRuntime;
 
   static slots = [Slot.withType<TitleBadge>(), Slot.withType<OverviewOptions>()];
 
   static async provider(
-    [component, componentCompare]: [ComponentUI, ComponentCompareUI],
+    [component, componentCompare, apiRef]: [ComponentUI, ComponentCompareUI, APIReferenceUI],
     config,
     [titleBadgeSlot, overviewOptionsSlot]: [TitleBadgeSlot, OverviewOptionsSlot]
   ) {
     const docs = new DocsUI(titleBadgeSlot, overviewOptionsSlot);
-    const section = new OverviewSection(titleBadgeSlot, overviewOptionsSlot, docs);
+    const section = new OverviewSection(titleBadgeSlot, overviewOptionsSlot, docs, apiRef);
     const compareSection = new OverviewCompareSection(docs);
 
     component.registerRoute(section.route);

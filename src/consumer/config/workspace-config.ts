@@ -19,11 +19,13 @@ const DEFAULT_MANAGE_WORKSPACES = true;
 export type WorkspaceConfigIsExistFunction = (dirPath: string | PathOsBased) => Promise<boolean | undefined>;
 
 export type WorkspaceConfigLoadFunction = (
-  dirPath: string | PathOsBased
+  workspacePath: string | PathOsBased,
+  scopePath: PathOsBasedAbsolute
 ) => Promise<ILegacyWorkspaceConfig | undefined>;
 
 export type WorkspaceConfigEnsureFunction = (
-  dirPath: PathOsBasedAbsolute,
+  workspacePath: PathOsBasedAbsolute,
+  scopePath: PathOsBasedAbsolute,
   standAlone: boolean,
   workspaceConfigProps: WorkspaceConfigProps
 ) => Promise<ILegacyWorkspaceConfig>;
@@ -139,24 +141,32 @@ export default class WorkspaceConfig extends AbstractConfig {
   }
 
   static async ensure(
-    dirPath: PathOsBasedAbsolute,
+    workspacePath: PathOsBasedAbsolute,
+    scopePath: PathOsBasedAbsolute,
     standAlone = false,
     workspaceConfigProps: WorkspaceConfigProps = {} as any
   ): Promise<ILegacyWorkspaceConfig> {
     const ensureFunc = this.workspaceConfigEnsuringRegistry;
-    return ensureFunc(dirPath, standAlone, workspaceConfigProps);
+    return ensureFunc(workspacePath, scopePath, standAlone, workspaceConfigProps);
   }
 
-  static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
+  static async reset(
+    workspacePath: PathOsBasedAbsolute,
+    scopePath: PathOsBasedAbsolute,
+    resetHard: boolean
+  ): Promise<void> {
     const resetFunc = this.workspaceConfigResetRegistry;
-    await resetFunc(dirPath, resetHard);
-    await WorkspaceConfig.ensure(dirPath);
+    await resetFunc(workspacePath, resetHard);
+    await WorkspaceConfig.ensure(workspacePath, scopePath);
   }
 
-  static async loadIfExist(dirPath: string | PathOsBased): Promise<ILegacyWorkspaceConfig | undefined> {
+  static async loadIfExist(
+    dirPath: string | PathOsBased,
+    scopePath: PathOsBasedAbsolute
+  ): Promise<ILegacyWorkspaceConfig | undefined> {
     const loadFunc = this.workspaceConfigLoadingRegistry;
     if (loadFunc && typeof loadFunc === 'function') {
-      return loadFunc(dirPath);
+      return loadFunc(dirPath, scopePath);
     }
     return undefined;
   }
