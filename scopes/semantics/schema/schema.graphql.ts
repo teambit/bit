@@ -10,13 +10,13 @@ export function schemaSchema(schema: SchemaMain): Schema {
     typeDefs: gql`
       scalar JSONObject
       extend type ComponentHost {
-        getSchema(id: String!): JSONObject
+        getSchema(id: String!, skipInternals: Boolean): JSONObject
       }
     `,
     resolvers: {
       JSONObject: GraphQLJSONObject,
       ComponentHost: {
-        getSchema: async (host: ComponentFactory, { id }: { id: string }) => {
+        getSchema: async (host: ComponentFactory, { id, skipInternals }: { id: string; skipInternals?: boolean }) => {
           const componentId = await host.resolveComponentId(id);
           const component = await host.get(componentId);
           const empty = {
@@ -24,17 +24,17 @@ export function schemaSchema(schema: SchemaMain): Schema {
           };
 
           if (!component) return empty;
-          const api = await schema.getSchema(component);
+          const api = await schema.getSchema(component, undefined, undefined, undefined, undefined, skipInternals);
           if (!api) return empty;
 
-          return filterUnimplementedSchemaNodes(api);
+          return filterUnimplementedAndAddDefaults(api);
         },
       },
     },
   };
 }
 
-function filterUnimplementedSchemaNodes(api: APISchema) {
+function filterUnimplementedAndAddDefaults(api: APISchema) {
   const apiObject = api.toObject();
   const filteredExports = apiObject.module.exports.filter((exp) => exp.__schema !== UnImplementedSchema.name);
   const filteredInternals = apiObject.internals.map((internalObject) => {
@@ -46,13 +46,17 @@ function filterUnimplementedSchemaNodes(api: APISchema) {
       internals: filteredInternalNodes,
     };
   });
+
   const filteredTaggedExports = apiObject.taggedModuleExports.filter(
     (exp) => exp.__schema !== UnImplementedSchema.name
   );
+
+  const defaultTaggedExports = filteredExports.filter((exportedModule) => exportedModule.__schema === 'ReactSchema');
+
   return {
     ...apiObject,
     exports: filteredExports,
     internals: filteredInternals,
-    taggedModuleExports: filteredTaggedExports,
+    taggedModuleExports: filteredTaggedExports.length > 0 ? filteredTaggedExports : defaultTaggedExports,
   };
 }
