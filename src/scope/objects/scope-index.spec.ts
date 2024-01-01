@@ -69,9 +69,9 @@ describe('ComponentsIndex', () => {
     beforeEach(() => {
       scopeIndex = new ScopeIndex('scope-path');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      isStringComponent = new ModelComponent({ name: 'is-string' });
+      isStringComponent = new ModelComponent({ scope: 'my-scope', name: 'is-string' });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      isTypeComponent = new ModelComponent({ name: 'is-type' });
+      isTypeComponent = new ModelComponent({ scope: 'my-scope', name: 'is-type' });
       scopeIndex.addMany([isStringComponent, isTypeComponent]);
       expect(scopeIndex.getAll()).to.have.lengthOf(2);
     });

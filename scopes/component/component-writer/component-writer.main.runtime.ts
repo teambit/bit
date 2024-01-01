@@ -29,6 +29,8 @@ export interface ManyComponentsWriterParams {
   resetConfig?: boolean;
   skipWritingToFs?: boolean;
   skipUpdatingBitMap?: boolean;
+  skipWriteConfigFiles?: boolean;
+  reasonForBitmapChange?: string; // optional. will be written in the bitmap-history-metadata
 }
 
 export type ComponentWriterResults = { installationError?: Error; compilationError?: Error };
@@ -47,15 +49,16 @@ export class ComponentWriterMain {
   }
 
   async writeMany(opts: ManyComponentsWriterParams): Promise<ComponentWriterResults> {
+    if (!opts.components.length) return {};
     this.logger.debug('writeMany, started');
     await this.populateComponentsFilesToWrite(opts);
     this.moveComponentsIfNeeded(opts);
     await this.persistComponentsData(opts);
-    if (!opts.skipUpdatingBitMap) await this.consumer.writeBitMap();
+    if (!opts.skipUpdatingBitMap) await this.consumer.writeBitMap(opts.reasonForBitmapChange);
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
     if (!opts.skipDependencyInstallation) {
-      installationError = await this.installPackagesGracefully();
+      installationError = await this.installPackagesGracefully(opts.skipWriteConfigFiles);
       // no point to compile if the installation is not running. the environment is not ready.
       compilationError = await this.compileGracefully();
     }
@@ -63,13 +66,14 @@ export class ComponentWriterMain {
     return { installationError, compilationError };
   }
 
-  private async installPackagesGracefully(): Promise<Error | undefined> {
+  private async installPackagesGracefully(skipWriteConfigFiles = false): Promise<Error | undefined> {
     this.logger.debug('installPackagesGracefully, start installing packages');
     try {
       const installOpts = {
         dedupe: true,
         updateExisting: false,
         import: false,
+        writeConfigFiles: !skipWriteConfigFiles,
       };
       await this.installer.install(undefined, installOpts);
       this.logger.debug('installPackagesGracefully, completed installing packages successfully');
@@ -94,13 +98,6 @@ export class ComponentWriterMain {
     if (opts.skipWritingToFs) return;
     const dataToPersist = new DataToPersist();
     opts.components.forEach((component) => dataToPersist.merge(component.dataToPersist));
-    const componentsConfig = this.consumer?.config?.componentsConfig;
-    if (componentsConfig?.hasChanged) {
-      const jsonFiles = await this.consumer?.config.toVinyl(this.consumer.getPath());
-      if (jsonFiles) {
-        dataToPersist.addManyFiles(jsonFiles);
-      }
-    }
     dataToPersist.addBasePath(this.consumer.getPath());
     await dataToPersist.persistAllToFS();
   }

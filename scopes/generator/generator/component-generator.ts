@@ -28,6 +28,10 @@ export type GenerateResult = {
   envId: string;
   envSetBy: string;
   packageName: string;
+  isApp?: boolean;
+  isEnv?: boolean;
+  dependencies?: string[];
+  installMissingDependencies?: boolean;
 };
 
 export type OnComponentCreateFn = (generateResults: GenerateResult[]) => Promise<void>;
@@ -73,7 +77,7 @@ export class ComponentGenerator {
       }
     });
 
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`create (${this.componentIds.length} components)`);
 
     const ids = generateResults.map((r) => r.id);
     await this.tryLinkToNodeModules(ids);
@@ -90,7 +94,7 @@ export class ComponentGenerator {
     try {
       await linkToNodeModulesByIds(
         this.workspace,
-        ids.map((id) => id._legacy)
+        ids.map((id) => id)
       );
     } catch (err: any) {
       this.logger.consoleFailure(
@@ -113,16 +117,16 @@ export class ComponentGenerator {
    * `writeConfigFiles`, an error message is being returned.
    */
   private async tryWriteConfigFiles(ids: ComponentID[]) {
-    try {
-      const shouldWrite = this.wsConfigFiles.isWorkspaceConfigWriteEnabled();
-      if (!shouldWrite) return;
-      ids.map((id) => this.workspace.clearComponentCache(id));
-      await this.wsConfigFiles.writeConfigFiles({
-        clean: true,
-        silent: true,
-        dedupe: true,
-      });
-    } catch (err: any) {
+    const shouldWrite = this.wsConfigFiles.isWorkspaceConfigWriteEnabled();
+    if (!shouldWrite) return;
+    ids.map((id) => this.workspace.clearComponentCache(id));
+    const { err } = await this.wsConfigFiles.writeConfigFiles({
+      clean: true,
+      silent: true,
+      dedupe: true,
+      throw: false,
+    });
+    if (err) {
       this.logger.consoleFailure(
         `failed generating workspace config files, please run "bit ws-config write" manually. error: ${err.message}`
       );
@@ -169,6 +173,9 @@ export class ComponentGenerator {
     });
     const component = await this.workspace.get(componentId);
     const hasEnvConfiguredOriginally = this.envs.hasEnvConfigured(component);
+    if (this.template.isApp) {
+      await this.workspace.use(componentId.toString());
+    }
     const envBeforeConfigChanges = this.envs.getEnv(component);
     let config = this.template.config;
     if (config && typeof config === 'function') {
@@ -176,7 +183,9 @@ export class ComponentGenerator {
       config = boundConfig({ aspectId: this.aspectId });
     }
 
-    if (!config && this.envId) {
+    const userEnv = this.options.env;
+
+    if (!config && this.envId && !userEnv) {
       const isInWorkspace = this.workspace.exists(this.envId);
       config = {
         [isInWorkspace ? this.envId.toStringWithoutVersion() : this.envId.toString()]: {},
@@ -227,6 +236,10 @@ export class ComponentGenerator {
       packageName: componentIdToPackageName(component.state._consumer),
       envId,
       envSetBy: setBy,
+      isApp: this.template.isApp,
+      isEnv: this.template.isEnv,
+      dependencies: this.template.dependencies,
+      installMissingDependencies: this.template.installMissingDependencies,
     };
   }
 

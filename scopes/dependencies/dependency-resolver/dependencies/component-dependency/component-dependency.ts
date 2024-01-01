@@ -23,9 +23,10 @@ export class ComponentDependency extends BaseDependency {
     version: string,
     lifecycle: DependencyLifecycleType,
     source?: DependencySource,
-    hidden?: boolean
+    hidden?: boolean,
+    optional?: boolean
   ) {
-    super(id, version, lifecycle, source, hidden);
+    super(id, version, lifecycle, source, hidden, optional);
     this._type = TYPE;
   }
 
@@ -59,7 +60,7 @@ export class ComponentDependency extends BaseDependency {
   // eslint-disable-next-line @typescript-eslint/no-shadow
   serialize<SerializedComponentDependency>(): SerializedComponentDependency {
     const serialized = Object.assign({}, super.serialize(), {
-      componentId: this.componentId._legacy.serialize(),
+      componentId: this.componentId.serialize(),
       isExtension: this.isExtension,
       packageName: this.packageName,
     }) as unknown as SerializedComponentDependency;

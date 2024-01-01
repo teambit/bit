@@ -1,8 +1,7 @@
 import R from 'ramda';
+import { ComponentID } from '@teambit/component-id';
 
-import BitId from '../../bit-id/bit-id';
-
-export default function isBitIdMatchByWildcards(bitId: BitId, idsWithWildcard: string[] | string): boolean {
+export default function isBitIdMatchByWildcards(bitId: ComponentID, idsWithWildcard: string[] | string): boolean {
   if (!Array.isArray(idsWithWildcard)) idsWithWildcard = [idsWithWildcard];
   const regexPatterns = idsWithWildcard.map((id) => getRegex(id));
   const isNameMatchByWildcard = (name: string): boolean => {
@@ -10,7 +9,7 @@ export default function isBitIdMatchByWildcards(bitId: BitId, idsWithWildcard: s
   };
   return bitId.hasScope()
     ? isNameMatchByWildcard(bitId.toStringWithoutVersion())
-    : isNameMatchByWildcard(bitId.toStringWithoutScopeAndVersion());
+    : isNameMatchByWildcard(bitId._legacy.toStringWithoutScopeAndVersion());
 }
 
 function getRegex(idWithWildcard) {

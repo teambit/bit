@@ -3,7 +3,7 @@ import filenamify from 'filenamify';
 import fs from 'fs-extra';
 import { ComponentMain } from '@teambit/component';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
 import minimatch from 'minimatch';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
@@ -45,6 +45,9 @@ export class ArtifactExtractor {
   async list(): Promise<ExtractorResult[]> {
     const host = this.componentMain.getHost();
     const ids = await host.idsByPattern(this.pattern);
+    const scope = this.componentMain.getHost(ScopeAspect.id) as ScopeMain;
+    // import in case the components are with build status "pending"
+    await scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(ids), { reason: 'artifact' });
     const components = await host.getMany(ids);
     const artifactListPerId: ArtifactListPerId[] = components.map((component) => {
       return {
@@ -76,7 +79,7 @@ export class ArtifactExtractor {
     const scope = this.componentMain.getHost(ScopeAspect.id) as ScopeMain;
     // @todo: optimize this to first import all missing hashes.
     await pMapSeries(artifactListPerId, async ({ id, artifacts }) => {
-      const vinyls = await artifacts.getVinylsAndImportIfMissing(id._legacy, scope.legacyScope);
+      const vinyls = await artifacts.getVinylsAndImportIfMissing(id, scope.legacyScope);
       // make sure the component-dir is just one dir. without this, every slash in the component-id will create a new dir.
       const idAsFilename = filenamify(id.toStringWithoutVersion(), { replacement: '_' });
       const compPath = path.join(outDir, idAsFilename);

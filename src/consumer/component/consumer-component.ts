@@ -1,23 +1,15 @@
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import fs from 'fs-extra';
 import { v4 } from 'uuid';
 import * as path from 'path';
 import R from 'ramda';
 import { IssuesList } from '@teambit/component-issues';
 import BitId from '../../bit-id/bit-id';
-import BitIds from '../../bit-id/bit-ids';
-import {
-  getCloudDomain,
-  BIT_WORKSPACE_TMP_DIRNAME,
-  BuildStatus,
-  DEFAULT_BINDINGS_PREFIX,
-  DEFAULT_LANGUAGE,
-  Extensions,
-} from '../../constants';
+import { getCloudDomain, BIT_WORKSPACE_TMP_DIRNAME, BuildStatus, DEFAULT_LANGUAGE, Extensions } from '../../constants';
 import GeneralError from '../../error/general-error';
 import docsParser from '../../jsdoc/parser';
 import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
-import ComponentWithDependencies from '../../scope/component-dependencies';
 import { ScopeListItem } from '../../scope/models/model-component';
 import Version, { DepEdge, Log } from '../../scope/models/version';
 import { pathNormalizeToLinux, sha1 } from '../../utils';
@@ -26,7 +18,7 @@ import ComponentMap from '../bit-map/component-map';
 import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import { Dist, License, SourceFile } from '../component/sources';
-import ComponentConfig, { ILegacyWorkspaceConfig } from '../config';
+import ComponentConfig, { ComponentConfigLoadOptions, ILegacyWorkspaceConfig } from '../config';
 import ComponentOverrides from '../config/component-overrides';
 import { ExtensionDataList } from '../config/extension-data';
 import Consumer from '../consumer';
@@ -34,7 +26,6 @@ import ComponentOutOfSync from '../exceptions/component-out-of-sync';
 import { ComponentFsCache } from './component-fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';
-import { ManuallyChangedDependencies } from './dependencies/dependency-resolver/overrides-dependencies';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import MainFileRemoved from './exceptions/main-file-removed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
@@ -42,22 +33,30 @@ import { NoComponentDir } from './exceptions/no-component-dir';
 import PackageJsonFile from './package-json-file';
 import DataToPersist from './sources/data-to-persist';
 import { ModelComponent } from '../../scope/models';
+import { ComponentLoadOptions } from './component-loader';
+import { getBindingPrefixByDefaultScope } from '../config/component-config';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
-export type InvalidComponent = { id: BitId; error: Error; component: Component | undefined };
+export type InvalidComponent = { id: ComponentID; error: Error; component: Component | undefined };
+
+export type ManuallyChangedDependencies = {
+  dependencies?: string[];
+  devDependencies?: string[];
+  peerDependencies?: string[];
+};
 
 export type ComponentProps = {
   name: string;
   version?: string;
   scope?: string | null;
   lang?: string;
-  bindingPrefix?: string;
+  bindingPrefix?: string; // if not specified, it'll calculated based on getBindingPrefixByDefaultScope()
   mainFile: PathOsBased;
   bitJson?: ComponentConfig;
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
-  flattenedDependencies?: BitIds;
+  flattenedDependencies?: ComponentIdList;
   flattenedEdges?: DepEdge[];
   packageDependencies?: Record<string, string>;
   devPackageDependencies?: Record<string, string>;
@@ -83,12 +82,8 @@ export type ComponentProps = {
 };
 
 export default class Component {
-  static registerOnComponentConfigLoading(extId, func: (id) => any) {
+  static registerOnComponentConfigLoading(extId, func: (id, loadOpts: ComponentConfigLoadOptions) => any) {
     ComponentConfig.registerOnComponentConfigLoading(extId, func);
-  }
-
-  static registerOnComponentConfigLegacyLoading(extId, func: (id, config) => any) {
-    ComponentConfig.registerOnComponentConfigLegacyLoading(extId, func);
   }
 
   static registerOnComponentOverridesLoading(extId, func: (id, config, legacyFiles) => any) {
@@ -107,7 +102,7 @@ export default class Component {
   dependencies: Dependencies;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
-  flattenedDependencies: BitIds;
+  flattenedDependencies: ComponentIdList;
   flattenedEdges: DepEdge[];
   packageDependencies: Record<string, string>;
   devPackageDependencies: Record<string, string>;
@@ -134,8 +129,6 @@ export default class Component {
   _isModified: boolean;
   packageJsonFile: PackageJsonFile | undefined; // populated when loadedFromFileSystem or when writing the components. for author it never exists
   packageJsonChangedProps: Record<string, any> | undefined; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  _currentlyUsedVersion: BitId; // used by listScope functionality
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist: DataToPersist;
@@ -143,13 +136,22 @@ export default class Component {
   extensions: ExtensionDataList = new ExtensionDataList();
   _capsuleDir?: string; // @todo: remove this. use CapsulePaths once it's public and available
   buildStatus?: BuildStatus;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get id(): BitId {
+
+  get id(): ComponentID {
+    return this.componentId;
+  }
+  get bitId(): BitId {
     return new BitId({
       scope: this.scope,
       name: this.name,
       version: this.version,
     });
+  }
+  get componentId(): ComponentID {
+    const bitId = this.bitId;
+    if (!bitId.scope && !this.defaultScope)
+      throw new Error(`Component ${bitId.toString()} does not have a scope, neither a defaultScope`);
+    return new ComponentID(bitId, this.defaultScope as string);
   }
 
   constructor({
@@ -189,12 +191,12 @@ export default class Component {
     this.scope = scope;
     this.files = files;
     this.lang = lang || DEFAULT_LANGUAGE;
-    this.bindingPrefix = bindingPrefix || DEFAULT_BINDINGS_PREFIX;
+    this.bindingPrefix = bindingPrefix || getBindingPrefixByDefaultScope(scope || (defaultScope as string));
     this.mainFile = path.normalize(mainFile);
     this.bitJson = bitJson;
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
-    this.flattenedDependencies = flattenedDependencies || new BitIds();
+    this.flattenedDependencies = flattenedDependencies || new ComponentIdList();
     this.flattenedEdges = flattenedEdges || [];
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
@@ -241,7 +243,7 @@ export default class Component {
   }
 
   getTmpFolder(workspacePrefix: PathOsBased = ''): PathOsBased {
-    let folder = path.join(workspacePrefix, BIT_WORKSPACE_TMP_DIRNAME, this.id.name);
+    let folder = path.join(workspacePrefix, BIT_WORKSPACE_TMP_DIRNAME, this.id.fullName);
     if (this.componentMap) {
       const componentDir = this.componentMap.getComponentDir();
       if (componentDir) {
@@ -320,12 +322,16 @@ export default class Component {
     return [...this.dependencies.dependencies, ...this.devDependencies.dependencies];
   }
 
-  getAllDependenciesIds(): BitIds {
+  getAllDependenciesIds(): ComponentIdList {
     const allDependencies = R.flatten(Object.values(this.depsIdsGroupedByType));
-    return BitIds.fromArray(allDependencies);
+    return ComponentIdList.fromArray(allDependencies);
   }
 
-  get depsIdsGroupedByType(): { dependencies: BitIds; devDependencies: BitIds; extensionDependencies: BitIds } {
+  get depsIdsGroupedByType(): {
+    dependencies: ComponentIdList;
+    devDependencies: ComponentIdList;
+    extensionDependencies: ComponentIdList;
+  } {
     return {
       dependencies: this.dependencies.getAllIds(),
       devDependencies: this.devDependencies.getAllIds(),
@@ -338,7 +344,7 @@ export default class Component {
     return Boolean(allDependencies.length);
   }
 
-  getAllFlattenedDependencies(): BitId[] {
+  getAllFlattenedDependencies(): ComponentID[] {
     return [...this.flattenedDependencies];
   }
 
@@ -410,34 +416,6 @@ export default class Component {
     return invalidComponentErrors.some((errorType) => err instanceof errorType);
   }
 
-  async toComponentWithDependencies(consumer: Consumer): Promise<ComponentWithDependencies> {
-    const getFlatten = (field: string): BitIds => {
-      // when loaded from filesystem, it doesn't have the flatten, fetch them from model.
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return this.loadedFromFileSystem ? this.componentFromModel[field] : this[field];
-    };
-    const getDependenciesComponents = (ids: BitIds): Promise<Component[]> => {
-      return Promise.all(
-        ids.map((dependencyId) => {
-          if (consumer.bitMap.isExistWithSameVersion(dependencyId)) {
-            return consumer.loadComponent(dependencyId);
-          }
-          // when dependencies are imported as npm packages, they are not in bit.map
-          this.dependenciesSavedAsComponents = false;
-          return consumer.loadComponentFromModel(dependencyId);
-        })
-      );
-    };
-
-    const dependencies = await getDependenciesComponents(getFlatten('flattenedDependencies'));
-    return new ComponentWithDependencies({
-      component: this,
-      dependencies,
-      devDependencies: [],
-      extensionDependencies: [],
-    });
-  }
-
   copyAllDependenciesFromModel() {
     const componentFromModel = this.componentFromModel;
     if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
@@ -445,42 +423,24 @@ export default class Component {
     this.setDevDependencies(componentFromModel.devDependencies.get());
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async fromObject(object: Record<string, any>): Component {
+  static async fromObject(object: Record<string, any>): Promise<Component> {
     const {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       name,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       box,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       scope,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       lang,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       bindingPrefix,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       devDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       devPackageDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       peerPackageDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       docs,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       mainFile,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       files,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       license,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       overrides,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       deprecated,
       schema,
     } = object;
@@ -524,15 +484,17 @@ export default class Component {
     componentMap,
     id,
     consumer,
+    loadOpts,
   }: {
     componentMap: ComponentMap;
-    id: BitId;
+    id: ComponentID;
     consumer: Consumer;
+    loadOpts?: ComponentLoadOptions;
   }): Promise<Component> {
     const workspaceConfig: ILegacyWorkspaceConfig = consumer.config;
     const modelComponent = await consumer.scope.getModelComponentIfExist(id);
     const componentFromModel = await consumer.loadComponentFromModelIfExist(id);
-    if (!componentFromModel && id.scope) {
+    if (!componentFromModel && id._legacy.hasScope()) {
       const inScopeWithAnyVersion = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
       // if it's in scope with another version, the component will be synced in _handleOutOfSyncScenarios()
       if (!inScopeWithAnyVersion) throw new ComponentsPendingImport([id.toString()]);
@@ -548,6 +510,7 @@ export default class Component {
     logger.trace(`consumer-component.loadFromFileSystem, start loading config ${id.toString()}`);
     const componentConfig = await ComponentConfig.load({
       componentId: id,
+      loadOpts,
     });
     logger.trace(`consumer-component.loadFromFileSystem, finish loading config ${id.toString()}`);
     // by default, imported components are not written with bit.json file.
@@ -558,9 +521,7 @@ export default class Component {
 
     const extensions: ExtensionDataList = componentConfig.extensions;
 
-    // TODO: change this once we want to support change export by changing the default scope
-    // TODO: when we do this, we need to think how we distinct if this is the purpose of the user, or he just didn't changed it
-    const bindingPrefix = componentFromModel?.bindingPrefix || componentConfig.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
+    const bindingPrefix = componentFromModel?.bindingPrefix;
 
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : undefined;
     const files = await getLoadedFiles(consumer, componentMap, id, compDirAbs);
@@ -577,15 +538,17 @@ export default class Component {
     const docsP = _getDocsForFiles(files, consumer.componentFsCache);
     const docs = await Promise.all(docsP);
     const flattenedDocs = docs ? R.flatten(docs) : [];
-    const defaultScope = componentConfig.defaultScope || null;
+    // probably componentConfig.defaultScope is not needed. try to remove it.
+    // once we changed BitId to ComponentId, the defaultScope is always part of the id.
+    const defaultScope = id.hasScope() ? componentConfig.defaultScope : id.scope;
     const getSchema = () => {
       if (componentFromModel) return componentFromModel.schema;
       return consumer.isLegacy ? undefined : CURRENT_SCHEMA;
     };
 
     return new Component({
-      name: id.name,
-      scope: id.scope,
+      name: id.fullName,
+      scope: id._legacy.scope,
       version: id.version,
       lang: componentConfig.lang,
       bindingPrefix,
@@ -601,7 +564,7 @@ export default class Component {
       deprecated,
       overrides,
       schema: getSchema(),
-      defaultScope,
+      defaultScope: defaultScope || null,
       packageJsonFile,
       packageJsonChangedProps,
       extensions,
@@ -613,7 +576,7 @@ export default class Component {
 async function getLoadedFiles(
   consumer: Consumer,
   componentMap: ComponentMap,
-  id: BitId,
+  id: ComponentID,
   bitDir: string
 ): Promise<SourceFile[]> {
   if (componentMap.noFilesError) {

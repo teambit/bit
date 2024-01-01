@@ -8,8 +8,8 @@ import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/con
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import EnvsAspect from '@teambit/envs';
-import { BitId } from '@teambit/legacy-bit-id';
 import { getPathStatIfExist } from '@teambit/legacy/dist/utils/fs/last-modified';
+import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 
 export type MergeOptions = {
   mergeStrategy?: 'theirs' | 'ours' | 'manual';
@@ -23,6 +23,10 @@ export class BitMap {
 
   mergeBitmaps(bitmapContent: string, otherBitmapContent: string, opts: MergeOptions = {}): string {
     return LegacyBitMap.mergeContent(bitmapContent, otherBitmapContent, opts);
+  }
+
+  getPath(): PathOsBasedAbsolute {
+    return this.legacyBitMap.mapPath;
   }
 
   /**
@@ -63,7 +67,7 @@ export class BitMap {
   }
 
   updateDefaultScope(oldScope: string, newScope: string) {
-    const changedId: BitId[] = [];
+    const changedId: ComponentID[] = [];
     this.legacyBitMap.components.forEach((componentMap) => {
       // only new components (not snapped/tagged) can be changed
       if (componentMap.defaultScope === oldScope && !componentMap.id.hasVersion()) {
@@ -124,27 +128,29 @@ export class BitMap {
   setDefaultScope(id: ComponentID, defaultScope: string) {
     const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     bitMapEntry.defaultScope = defaultScope;
+    bitMapEntry.id = bitMapEntry.id.changeDefaultScope(defaultScope);
     this.legacyBitMap.markAsChanged();
   }
 
   /**
    * write .bitmap object to the filesystem
+   * optionally pass a reason for the change to be saved in the local scope `bitmap-history-metadata.txt` file.
    */
-  async write() {
-    await this.consumer.writeBitMap();
+  async write(reasonForChange?: string) {
+    await this.consumer.writeBitMap(reasonForChange);
   }
 
   /**
    * get the data saved in the .bitmap file for this component-id.
    * throws if not found
-   * @see getBitmapEntryIfExist
+   * @see this.getBitmapEntryIfExist
    */
   getBitmapEntry(id: ComponentID, { ignoreVersion }: GetBitMapComponentOptions = {}): ComponentMap {
-    return this.legacyBitMap.getComponent(id._legacy, { ignoreVersion });
+    return this.legacyBitMap.getComponent(id, { ignoreVersion });
   }
 
   getBitmapEntryIfExist(id: ComponentID, { ignoreVersion }: GetBitMapComponentOptions = {}): ComponentMap | undefined {
-    return this.legacyBitMap.getComponentIfExist(id._legacy, { ignoreVersion });
+    return this.legacyBitMap.getComponentIfExist(id, { ignoreVersion });
   }
 
   getAspectIdFromConfig(
@@ -187,11 +193,11 @@ export class BitMap {
     }
     if (sourceId.fullName !== targetId.fullName) {
       this.legacyBitMap.removeComponent(bitMapEntry.id);
-      bitMapEntry.id = targetId._legacy;
+      bitMapEntry.id = targetId;
       this.legacyBitMap.setComponent(bitMapEntry.id, bitMapEntry);
     }
     if (sourceId.scope !== targetId.scope) {
-      this.setDefaultScope(targetId, targetId.scope);
+      this.setDefaultScope(sourceId, targetId.scope);
     }
   }
 
@@ -221,7 +227,7 @@ export class BitMap {
   }
 
   removeComponent(id: ComponentID) {
-    this.legacyBitMap.removeComponent(id._legacy);
+    this.legacyBitMap.removeComponent(id);
   }
 
   /**

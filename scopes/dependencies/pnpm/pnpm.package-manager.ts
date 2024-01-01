@@ -13,9 +13,18 @@ import {
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
+import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { readModulesManifest } from '@pnpm/modules-yaml';
+import {
+  buildDependenciesHierarchy,
+  DependenciesHierarchy,
+  createPackagesSearcher,
+  PackageNode,
+} from '@pnpm/reviewing.dependencies-hierarchy';
+import { renderTree } from '@pnpm/list';
+import { readWantedLockfile } from '@pnpm/lockfile-file';
 import { ProjectManifest } from '@pnpm/types';
 import { join } from 'path';
 import { readConfig } from './read-config';
@@ -25,7 +34,18 @@ import type { RebuildFn } from './lynx';
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
 
-  public readConfig = memoize(readConfig);
+  private _readConfig = async (dir?: string) => {
+    const { config, warnings } = await readConfig(dir);
+    if (config?.fetchRetries && config?.fetchRetries < 5) {
+      config.fetchRetries = 5;
+      return { config, warnings };
+    }
+
+    return { config, warnings };
+  };
+
+  public readConfig = memoize(this._readConfig);
+
   constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
 
   async install(
@@ -78,6 +98,8 @@ export class PnpmPackageManager implements PackageManager {
         nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
         includeOptionalDeps: installOptions.includeOptionalDeps,
         ignorePackageManifest: installOptions.ignorePackageManifest,
+        dedupeInjectedDeps: installOptions.dedupeInjectedDeps,
+        dryRun: installOptions.dryRun,
         overrides: installOptions.overrides,
         hoistPattern: config.hoistPattern,
         publicHoistPattern: config.shamefullyHoist
@@ -212,9 +234,13 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
-    const modulesState = await readModulesManifest(join(rootDir, 'node_modules'));
+    const modulesState = await this._readModulesManifest(rootDir);
     if (modulesState?.injectedDeps == null) return [];
     return modulesState.injectedDeps[`node_modules/${packageName}`] ?? modulesState.injectedDeps[componentDir] ?? [];
+  }
+
+  _readModulesManifest(lockfileDir: string) {
+    return readModulesManifest(join(lockfileDir, 'node_modules'));
   }
 
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
@@ -223,5 +249,78 @@ export class PnpmPackageManager implements PackageManager {
 
   async pruneModules(rootDir: string): Promise<void> {
     return pnpmPruneModules(rootDir);
+  }
+
+  async findUsages(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string> {
+    const search = createPackagesSearcher([depName]);
+    const lockfile = await readWantedLockfile(opts.lockfileDir, { ignoreIncompatible: false });
+    const projectPaths = Object.keys(lockfile?.importers ?? {})
+      .filter((id) => !id.startsWith('node_modules/.bit_roots'))
+      .map((id) => join(opts.lockfileDir, id));
+    const cache = new Map();
+    const modulesManifest = await this._readModulesManifest(opts.lockfileDir);
+    const isHoisted = modulesManifest?.nodeLinker === 'hoisted';
+    const getPkgLocation: GetPkgLocation = isHoisted
+      ? ({ name }) => join(opts.lockfileDir, 'node_modules', name)
+      : ({ path }) => path;
+    const results = Object.entries(
+      await buildDependenciesHierarchy(projectPaths, {
+        depth: opts.depth ?? Infinity,
+        include: {
+          dependencies: true,
+          devDependencies: true,
+          optionalDependencies: true,
+        },
+        lockfileDir: opts.lockfileDir,
+        registries: {
+          default: 'https://registry.npmjs.org',
+        },
+        search,
+      })
+    ).map(([projectPath, builtDependenciesHierarchy]) => {
+      pkgNamesToComponentIds(builtDependenciesHierarchy, { cache, getPkgLocation });
+      return {
+        path: projectPath,
+        ...builtDependenciesHierarchy,
+      };
+    });
+    return renderTree(results, {
+      alwaysPrintRootPackage: false,
+      depth: Infinity,
+      search: true,
+      long: false,
+      showExtraneous: false,
+    });
+  }
+}
+
+type GetPkgLocation = (pkgNode: PackageNode) => string;
+
+function pkgNamesToComponentIds(
+  deps: DependenciesHierarchy,
+  { cache, getPkgLocation }: { cache: Map<string, string>; getPkgLocation: GetPkgLocation }
+) {
+  for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
+    if (deps[depType]) {
+      for (const dep of deps[depType]) {
+        if (!cache.has(dep.name)) {
+          const pkgJson = tryReadPackageJson(getPkgLocation(dep));
+          cache.set(
+            dep.name,
+            pkgJson?.componentId ? `${pkgJson.componentId.scope}/${pkgJson.componentId.name}` : dep.name
+          );
+        }
+        dep.name = cache.get(dep.name);
+        pkgNamesToComponentIds(dep, { cache, getPkgLocation });
+      }
+    }
+  }
+}
+
+function tryReadPackageJson(pkgDir: string) {
+  try {
+    return JSON.parse(fs.readFileSync(join(pkgDir, 'package.json'), 'utf8'));
+  } catch (err) {
+    return undefined;
   }
 }

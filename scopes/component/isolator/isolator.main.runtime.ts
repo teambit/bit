@@ -5,7 +5,7 @@ import semver from 'semver';
 import chalk from 'chalk';
 import { compact, flatten, pick } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
-import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
+import { Component, ComponentMap, ComponentAspect } from '@teambit/component';
 import type { ComponentMain, ComponentFactory } from '@teambit/component';
 import { getComponentPackageVersion, snapToSemver } from '@teambit/component-package-version';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
@@ -25,7 +25,7 @@ import {
   NodeLinker,
 } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain, LongProcessLogger } from '@teambit/logger';
-import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import {
@@ -66,7 +66,7 @@ export type ListResults = {
   capsules: string[];
 };
 
-export type CapsuleTransferFn = (sourceDir: string, targetDir: string) => void;
+export type CapsuleTransferFn = (sourceDir: string, targetDir: string) => Promise<void>;
 
 export type CapsuleTransferSlot = SlotRegistry<CapsuleTransferFn>;
 
@@ -114,6 +114,7 @@ type CreateGraphOptions = {
 
 export type IsolateComponentsOptions = CreateGraphOptions & {
   name?: string;
+
   /**
    * absolute path to put all the capsules dirs inside.
    */
@@ -319,7 +320,7 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions,
     legacyScope?: LegacyScope
   ): Promise<Network> {
-    const host = this.componentAspect.getHost();
+    const host = opts.host || this.componentAspect.getHost();
     this.logger.debug(
       `isolateComponents, ${seeders.join(', ')}. opts: ${JSON.stringify(
         Object.assign({}, opts, { host: opts.host?.name })
@@ -361,7 +362,7 @@ export class IsolatorMain {
   }
 
   private async createGraph(seeders: ComponentID[], opts: CreateGraphOptions = {}): Promise<Component[]> {
-    const host = this.componentAspect.getHost();
+    const host = opts.host || this.componentAspect.getHost();
     const getGraphOpts = pick(opts, ['host']);
     const graph = await this.graph.getGraphIds(seeders, getGraphOpts);
     const successorsSubgraph = graph.successorsSubgraph(seeders.map((id) => id.toString()));
@@ -434,10 +435,14 @@ export class IsolatorMain {
         await fs.remove(targetLockFile);
         return;
       }
-      this.logger.console(`moving lock file from ${sourceLockFile} to ${targetDir}`);
+      this.logger.debug(`moving lock file from ${sourceLockFile} to ${targetDir}`);
       const mvFunc = this.getCapsuleTransferFn();
-      await mvFunc(sourceLockFile, path.join(targetDir, 'pnpm-lock.yaml'));
-      this._movedLockFiles.add(sourceLockFile);
+      try {
+        await mvFunc(sourceLockFile, path.join(targetDir, 'pnpm-lock.yaml'));
+        this._movedLockFiles.add(sourceLockFile);
+      } catch (err) {
+        this.logger.error(`failed moving lock file from ${sourceLockFile} to ${targetDir}`, err);
+      }
     });
     await Promise.all(promises);
   }
@@ -542,12 +547,12 @@ export class IsolatorMain {
       return fs.existsSync(capsuleDir) && fs.existsSync(readyFilePath);
     });
     if (allCapsulesExists) {
-      this.logger.console(
+      this.logger.debug(
         `All required capsules already exists and valid in the real (cached) location: ${realCapsulesDir}`
       );
       return false;
     }
-    this.logger.console(
+    this.logger.debug(
       `Missing required capsules in the real (cached) location: ${realCapsulesDir}, using dated (temp) dir`
     );
     return true;
@@ -639,25 +644,33 @@ export class IsolatorMain {
           `install packages in ${capsuleList.length} capsules`
         );
       }
+      const rootLinks = await this.linkInCapsulesRoot(capsulesDir, capsuleList, linkingOptions);
       if (installOptions.useNesting) {
         await Promise.all(
-          capsuleList.map(async (capsule) => {
+          capsuleList.map(async (capsule, index) => {
             const newCapsuleList = CapsuleList.fromArray([capsule]);
             if (opts.cacheCapsulesDir && capsulesDir !== opts.cacheCapsulesDir && opts.cacheLockFileOnly) {
               const cacheCapsuleDir = path.join(opts.cacheCapsulesDir, basename(capsule.path));
               const lockFilePath = path.join(cacheCapsuleDir, 'pnpm-lock.yaml');
               const lockExists = await fs.pathExists(lockFilePath);
               if (lockExists) {
-                // this.logger.console(`moving lock file from ${lockFilePath} to ${capsule.path}`);
-                await copyFile(lockFilePath, path.join(capsule.path, 'pnpm-lock.yaml'));
+                try {
+                  // this.logger.console(`moving lock file from ${lockFilePath} to ${capsule.path}`);
+                  await copyFile(lockFilePath, path.join(capsule.path, 'pnpm-lock.yaml'));
+                } catch (err) {
+                  // We can ignore the error, we don't want to break the flow. the file will be anyway re-generated
+                  // in the target capsule. it will only be a bit slower.
+                  this.logger.error(
+                    `failed moving lock file from cache folder path: ${lockFilePath} to local capsule at ${capsule.path} (even though the lock file seems to exist)`,
+                    err
+                  );
+                }
               }
             }
-            const linkedDependencies = await this.linkInCapsules(
-              capsulesDir,
-              newCapsuleList,
-              capsulesWithPackagesData,
-              linkingOptions
-            );
+            const linkedDependencies = await this.linkInCapsules(newCapsuleList, capsulesWithPackagesData);
+            if (index === 0) {
+              linkedDependencies[capsulesDir] = rootLinks;
+            }
             await this.installInCapsules(capsule.path, newCapsuleList, installOptions, {
               cachePackagesOnCapsulesRoot,
               linkedDependencies,
@@ -667,12 +680,8 @@ export class IsolatorMain {
           })
         );
       } else {
-        const linkedDependencies = await this.linkInCapsules(
-          capsulesDir,
-          capsuleList,
-          capsulesWithPackagesData,
-          linkingOptions
-        );
+        const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
+        linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
           cachePackagesOnCapsulesRoot,
           linkedDependencies,
@@ -767,6 +776,7 @@ export class IsolatorMain {
       linkedDependencies: opts.linkedDependencies,
       forceTeambitHarmonyLink: !this.dependencyResolver.hasHarmonyInRootPolicy(),
       excludeExtensionsDependencies: true,
+      dedupeInjectedDeps: true,
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {
@@ -791,11 +801,22 @@ export class IsolatorMain {
   }
 
   private async linkInCapsules(
+    capsuleList: CapsuleList,
+    capsulesWithPackagesData: CapsulePackageJsonData[]
+  ): Promise<Record<string, Record<string, string>>> {
+    let nestedLinks: Record<string, Record<string, string>> | undefined;
+    if (!this.dependencyResolver.isolatedCapsules()) {
+      const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
+      nestedLinks = await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
+    }
+    return nestedLinks ?? {};
+  }
+
+  private async linkInCapsulesRoot(
     capsulesDir: string,
     capsuleList: CapsuleList,
-    capsulesWithPackagesData: CapsulePackageJsonData[],
     linkingOptions: LinkingOptions
-  ): Promise<Record<string, Record<string, string>>> {
+  ): Promise<Record<string, string>> {
     const linker = this.dependencyResolver.getLinker({
       rootDir: capsulesDir,
       linkingOptions,
@@ -806,11 +827,8 @@ export class IsolatorMain {
       linkNestedDepsInNM: !this.dependencyResolver.isolatedCapsules() && linkingOptions.linkNestedDepsInNM,
     });
     let rootLinks: LinkDetail[] | undefined;
-    let nestedLinks: Record<string, Record<string, string>> | undefined;
     if (!this.dependencyResolver.isolatedCapsules()) {
       rootLinks = await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
-      const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
-      nestedLinks = await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
     } else {
       const coreAspectIds = this.aspectLoader.getCoreAspectIds();
       const coreAspectCapsules = CapsuleList.fromArray(
@@ -822,11 +840,8 @@ export class IsolatorMain {
       rootLinks = await symlinkOnCapsuleRoot(coreAspectCapsules, this.logger, capsulesDir);
     }
     return {
-      ...nestedLinks,
-      [capsulesDir]: {
-        ...linkedRootDeps,
-        ...this.toLocalLinks(rootLinks),
-      },
+      ...linkedRootDeps,
+      ...this.toLocalLinks(rootLinks),
     };
   }
 
@@ -877,7 +892,7 @@ export class IsolatorMain {
     const legacyModifiedComps = modifiedComps.map((component) => component.state._consumer.clone());
     const legacyComponents = [...legacyUnmodifiedComps, ...legacyModifiedComps];
     if (legacyScope && unmodifiedComps.length) await importMultipleDistsArtifacts(legacyScope, legacyUnmodifiedComps);
-    const allIds = BitIds.fromArray(legacyComponents.map((c) => c.id));
+    const allIds = ComponentIdList.fromArray(legacyComponents.map((c) => c.id));
     await Promise.all(
       components.map(async (component) => {
         const capsule = capsuleList.getCapsule(component.id);
@@ -927,7 +942,13 @@ export class IsolatorMain {
   }
 
   private getCapsuleTransferFn(): CapsuleTransferFn {
-    return this.capsuleTransferSlot.values()[0] || fs.move;
+    return this.capsuleTransferSlot.values()[0] || this.getDefaultCapsuleTransferFn();
+  }
+
+  private getDefaultCapsuleTransferFn(): CapsuleTransferFn {
+    return async (source, target) => {
+      return fs.move(source, target, { overwrite: true });
+    };
   }
 
   /** @deprecated use the new function signature with an object parameter instead */
@@ -1090,7 +1111,7 @@ export class IsolatorMain {
 
   async populateComponentsFilesToWriteForCapsule(
     component: Component,
-    ids: BitIds,
+    ids: ComponentIdList,
     legacyScope?: Scope,
     opts?: IsolateComponentsOptions
   ): Promise<DataToPersist> {
@@ -1122,13 +1143,13 @@ export class IsolatorMain {
   private preparePackageJsonToWrite(
     component: Component,
     bitDir: string,
-    ignoreBitDependencies: BitIds | boolean = true
+    ignoreBitDependencies: ComponentIdList | boolean = true
   ): PackageJsonFile {
     const legacyComp: ConsumerComponent = component.state._consumer;
     this.logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}.`);
-    const getBitDependencies = (dependencies: BitIds) => {
+    const getBitDependencies = (dependencies: ComponentIdList) => {
       if (ignoreBitDependencies === true) return {};
-      return dependencies.reduce((acc, depId: BitId) => {
+      return dependencies.reduce((acc, depId: ComponentID) => {
         if (Array.isArray(ignoreBitDependencies) && ignoreBitDependencies.searchWithoutVersion(depId)) return acc;
         const packageDependency = depId.version;
         const packageName = componentIdToPackageName({
@@ -1143,7 +1164,7 @@ export class IsolatorMain {
     const bitDependencies = getBitDependencies(legacyComp.dependencies.getAllIds());
     const bitDevDependencies = getBitDependencies(legacyComp.devDependencies.getAllIds());
     const bitExtensionDependencies = getBitDependencies(legacyComp.extensions.extensionsBitIds);
-    const packageJson = PackageJsonFile.createFromComponent(bitDir, legacyComp, true);
+    const packageJson = PackageJsonFile.createFromComponent(bitDir, legacyComp);
     const main = pathNormalizeToLinux(legacyComp.mainFile);
     packageJson.addOrUpdateProperty('main', main);
     const addDependencies = (packageJsonFile: PackageJsonFile) => {
@@ -1189,7 +1210,7 @@ export class IsolatorMain {
             `getArtifacts: unable to find where to populate the artifacts from for ${component.id.toString()}`
           );
         }
-        const compParent = await legacyScope.getConsumerComponent(found._legacy);
+        const compParent = await legacyScope.getConsumerComponent(found);
         return getArtifactFilesExcludeExtension(compParent.extensions, 'teambit.pkg/pkg');
       }
       const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];

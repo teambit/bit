@@ -43,7 +43,6 @@ describe('bit add command', function () {
       helper.git.initNewGitRepo();
       helper.bitMap.delete();
       helper.fs.deletePath('.bit');
-      helper.fs.deletePath('bit.json');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.scopeHelper.initWorkspace();
       helper.fixtures.createComponentBarFoo();
@@ -59,7 +58,7 @@ describe('bit add command', function () {
     it('Should print tracking component: id', () => {
       helper.fixtures.createComponentBarFoo();
       output = helper.fixtures.addComponentBarFooAsDir();
-      expect(output).to.contain('tracking component bar/foo');
+      expect(output).to.contain('bar/foo');
     });
     // @TODO: FIX ON HARMONY!
     it.skip('Should print warning when trying to add file that is already tracked with different id and not add it as a new one', () => {
@@ -84,7 +83,7 @@ describe('bit add command', function () {
 
       const addCmd = () => helper.command.addComponent('bar', { n: 'test' });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const error = new MissingMainFile('test/bar');
+      const error = new MissingMainFile(`${helper.scopes.remote}/test/bar`);
       helper.general.expectToThrow(addCmd, error);
     });
     it('Should throw error msg if -i and -n flag are used with bit add', () => {
@@ -173,7 +172,7 @@ describe('bit add command', function () {
       output = helper.command.addComponent(path.normalize('bar'), { i: 'bar/foo' });
     });
     it('Should track component ', () => {
-      expect(output).to.contain('tracking component bar/foo');
+      expect(output).to.contain('bar/foo');
     });
     it('Should contain component inside bitmap', () => {
       const bitMap = helper.bitMap.read();

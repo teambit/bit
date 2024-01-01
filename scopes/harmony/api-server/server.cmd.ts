@@ -8,11 +8,14 @@ export class ServerCmd implements Command {
   alias = '';
   commands: Command[] = [];
   group = 'general';
-  options = [['p', 'port [port]', 'port to run the server on']] as CommandOptions;
+  options = [
+    ['p', 'port [port]', 'port to run the server on'],
+    ['c', 'compile', 'compile components during the watch process'],
+  ] as CommandOptions;
 
   constructor(private apiServer: ApiServerMain) {}
 
-  async report(args, options: { port: number }): Promise<string> {
+  async report(args, options: { port: number; compile: boolean }): Promise<string> {
     await this.apiServer.runApiServer(options);
     return 'server is running successfully'; // should never get here, the previous line is blocking
   }

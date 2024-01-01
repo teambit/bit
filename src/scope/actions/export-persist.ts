@@ -1,5 +1,5 @@
+import { ComponentIdList } from '@teambit/component-id';
 import { Scope } from '..';
-import { BitIds } from '../../bit-id';
 import logger from '../../logger/logger';
 import { saveObjects } from '../component-ops/export-scope-components';
 import { Lane } from '../models';
@@ -17,7 +17,7 @@ export class ExportPersist implements Action<Options, string[]> {
     const objectList = await scope.readObjectsFromPendingDir(options.clientId);
 
     logger.debug(`ExportPersist, going to merge ${objectList.objects.length} objects`);
-    const bitIds: BitIds = await saveObjects(scope, objectList);
+    const bitIds: ComponentIdList = await saveObjects(scope, objectList);
 
     const componentsIds: string[] = bitIds.map((id) => id.toString());
     await scope.removePendingDir(options.clientId);

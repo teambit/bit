@@ -20,7 +20,6 @@ export const componentOverviewFields = gql`
       id
       data
     }
-    elementsUrl
     description
     deprecation {
       isDeprecate
@@ -51,6 +50,7 @@ export const componentOverviewFields = gql`
     compositions {
       identifier
       displayName
+      filepath
     }
   }
   ${componentIdFields}

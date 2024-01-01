@@ -16,12 +16,12 @@ import { MainRuntime } from '@teambit/cli';
 import fs from 'fs-extra';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import pMapSeries from 'p-map-series';
 import { difference, compact, groupBy, partition } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
+import { Component, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
 import { ScopeMain } from '@teambit/scope';
 import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
@@ -31,6 +31,7 @@ import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ShouldLoadFunc } from './build-graph-from-fs';
 import type { Workspace } from './workspace';
 import { OnAspectsResolve, OnAspectsResolveSlot, OnRootAspectAdded, OnRootAspectAddedSlot } from './workspace.provider';
+import { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
 
 export type GetConfiguredUserAspectsPackagesOptions = {
   externalsOnly?: boolean;
@@ -188,17 +189,21 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       );
       return scopeAspectIds;
     } catch (err: any) {
-      if (err instanceof ComponentNotFound) {
-        const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
-        const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
-        if (configStr.includes(err.id)) {
-          throw new BitError(`error: a component "${err.id}" was not found
-  your workspace.jsonc has this component-id set. you might want to remove/change it.`);
-        }
-        return scopeAspectIds;
-      }
+      this.throwWsJsoncAspectNotFoundError(err);
+      return scopeAspectIds;
 
       throw err;
+    }
+  }
+
+  throwWsJsoncAspectNotFoundError(err: any) {
+    if (err instanceof ComponentNotFound) {
+      const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
+      const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
+      if (configStr.includes(err.id)) {
+        throw new BitError(`error: a component "${err.id}" was not found
+your workspace.jsonc has this component-id set. you might want to remove/change it.`);
+      }
     }
   }
 
@@ -252,6 +257,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       useScopeAspectsCapsule: false,
       workspaceName: this.workspace.name,
       resolveEnvsFromRoots: this.resolveEnvsFromRoots,
+      packageManagerConfigRootDir: this.workspace.path,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
@@ -432,7 +438,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
         ignoreVersion: false,
       }
     );
-    await config.write();
+    await config.write({ reasonForChange: `use (${aspectIdStr})` });
     this.aspectLoader.addInMemoryConfiguredAspect(aspectIdToAdd);
     await this.runOnRootAspectAddedFunctions(aspectId, inWs);
     return aspectIdToAdd;
@@ -472,12 +478,21 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
           return plugins.load(MainRuntime.name);
         }
 
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        const aspect = require(localPath);
+        const isModule = await this.aspectLoader.isEsmModule(localPath);
+
+        const aspect = !isModule
+          ? // eslint-disable-next-line global-require, import/no-dynamic-require
+            require(localPath)
+          : // : await this.aspectLoader.loadEsm(join(localPath, 'dist', 'index.js'));
+            await this.aspectLoader.loadEsm(localPath);
+
         // require aspect runtimes
         const runtimePath = await this.aspectLoader.getRuntimePath(component, localPath, MainRuntime.name);
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        if (runtimePath) require(runtimePath);
+        if (runtimePath) {
+          if (isModule) await this.aspectLoader.loadEsm(runtimePath);
+          // eslint-disable-next-line global-require, import/no-dynamic-require
+          require(runtimePath);
+        }
         return aspect;
       };
       return new RequireableComponent(component, requireFunc);
@@ -496,7 +511,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     await Promise.all(existsP);
     // TODO: this should be done properly by the install aspect by slot
     if (missingPaths) {
-      const bitIds: BitId[] = ids.map((id) => id._legacy);
+      const bitIds: ComponentID[] = ids.map((id) => id);
       return linkToNodeModulesByIds(this.workspace, bitIds);
     }
     return Promise.resolve();
@@ -511,7 +526,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
    */
   private getWorkspaceAspectResolver(stringIds: string[], runtimeName?: string): AspectResolver {
     const workspaceAspectResolver = async (component: Component): Promise<ResolvedAspect> => {
-      const compStringId = component.id._legacy.toString();
+      const compStringId = component.id.toString();
       stringIds.push(compStringId);
       const localPath = await this.workspace.getComponentPackagePath(component);
 
@@ -581,7 +596,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     opts: { throwOnError: boolean } = { throwOnError: false }
   ): AspectResolver {
     const installedAspectsResolver = async (component: Component): Promise<ResolvedAspect | undefined> => {
-      const compStringId = component.id._legacy.toString();
+      const compStringId = component.id.toString();
       // stringIds.push(compStringId);
       const localPath = await this.resolveInstalledAspectRecursively(component, rootIds, graph, opts);
       if (!localPath) return undefined;
@@ -610,7 +625,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     graph: Graph<Component, string>,
     opts: { throwOnError: boolean } = { throwOnError: false }
   ): Promise<string | null | undefined> {
-    const aspectStringId = aspectComponent.id._legacy.toString();
+    const aspectStringId = aspectComponent.id.toString();
     if (this.resolvedInstalledAspects.has(aspectStringId)) {
       const resolvedPath = this.resolvedInstalledAspects.get(aspectStringId);
       return resolvedPath;
@@ -621,6 +636,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       return localPath;
     }
     const parent = graph.predecessors(aspectStringId)[0];
+    if (!parent) return undefined;
     const parentPath = await this.resolveInstalledAspectRecursively(parent.attr, rootIds, graph);
     if (!parentPath) {
       this.resolvedInstalledAspects.set(aspectStringId, null);
@@ -657,7 +673,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const ids = components.map((component) => component.id);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     // TODO: @gilad it causes many issues we need to find a better solution. removed for now.
-    // const coreAspectsComponentIds = coreAspectsStringIds.map((id) => BitId.parse(id, true));
+    // const coreAspectsComponentIds = coreAspectsStringIds.map((id) => ComponentID.fromString(id));
     // const aspectsIds = components.reduce((acc, curr) => {
     //   const currIds = curr.state.aspects.ids;
     //   acc = acc.concat(currIds);
@@ -683,7 +699,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
    * Only use it for component extensions
    * for workspace/scope root aspect use the load aspects directly
    *
-   * The reason we are loading component extensions with "scope aspects capsules" is becasuse for component extensions
+   * The reason we are loading component extensions with "scope aspects capsules" is because for component extensions
    * we might have the same extension in multiple versions
    * (for example I might have 2 components using different versions of the same env)
    * in such case, I can't install both version into the root of the node_modules so I need to place it somewhere else (capsules)
@@ -734,16 +750,15 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
    */
   private async importAndGetAspects(componentIds: ComponentID[]): Promise<Component[]> {
     try {
-      return await this.workspace.importAndGetMany(componentIds, 'to load aspects from the workspace');
+      // We don't want to load the seeders as aspects as it will cause an infinite loop
+      // once you try to load the seeder it will try to load the workspace component
+      // that will arrive here again and again
+      const loadOpts: ComponentLoadOptions = {
+        idsToNotLoadAsAspects: componentIds.map((id) => id.toString()),
+      };
+      return await this.workspace.importAndGetMany(componentIds, 'to load aspects from the workspace', loadOpts);
     } catch (err: any) {
-      if (err instanceof ComponentNotFound) {
-        const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
-        const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
-        if (configStr.includes(err.id)) {
-          throw new BitError(`error: a component "${err.id}" was not found
-your workspace.jsonc has this component-id set. you might want to remove/change it.`);
-        }
-      }
+      this.throwWsJsoncAspectNotFoundError(err);
 
       throw err;
     }

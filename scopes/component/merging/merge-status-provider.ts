@@ -1,7 +1,7 @@
 import { Workspace } from '@teambit/workspace';
 import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import mapSeries from 'p-map-series';
-import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
@@ -17,6 +17,12 @@ import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-sn
 import { ConfigMerger } from './config-merger';
 import { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } from './merging.main.runtime';
 
+export type MergeStatusProviderOptions = {
+  resolveUnrelated?: MergeStrategy;
+  ignoreConfigChanges?: boolean;
+  shouldSquash?: boolean;
+};
+
 export class MergeStatusProvider {
   constructor(
     private workspace: Workspace,
@@ -24,11 +30,11 @@ export class MergeStatusProvider {
     private importer: ImporterMain,
     private currentLane?: Lane, // currently checked out lane. if on main, then it's undefined.
     private otherLane?: Lane, // the lane we want to merged to our lane. (undefined if it's "main").
-    private options?: { resolveUnrelated?: MergeStrategy; ignoreConfigChanges?: boolean }
+    private options?: MergeStatusProviderOptions
   ) {}
 
   async getStatus(
-    bitIds: BitId[] // the id.version is the version we want to merge to the current component
+    bitIds: ComponentID[] // the id.version is the version we want to merge to the current component
   ): Promise<ComponentMergeStatus[]> {
     if (!this.currentLane && this.otherLane) {
       await this.importer.importObjectsFromMainIfExist(this.otherLane.toBitIds().toVersionLatest());
@@ -39,8 +45,9 @@ export class MergeStatusProvider {
     // whether or not we need to import the gap between the common-snap and the other lane.
     // the common-snap itself we need anyway in order to get the files hash/content for checking conflicts.
     const shouldImportHistoryOfOtherLane =
-      !this.currentLane || // on main. we need all history in order to push each component to its remote
-      this.currentLane.scope !== this.otherLane?.scope; // on lane, but the other lane is from a different scope. we need all history in order to push to the current lane's scope
+      !this.options?.shouldSquash && // when squashing, no need for all history, only the head is going to be pushed
+      (!this.currentLane || // on main. we need all history in order to push each component to its remote
+        this.currentLane.scope !== this.otherLane?.scope); // on lane, but the other lane is from a different scope. we need all history in order to push to the current lane's scope
     const toImport = componentStatusBeforeMergeAttempt
       .map((compStatus) => {
         if (!compStatus.divergeData) return [];
@@ -54,7 +61,7 @@ export class MergeStatusProvider {
     const reason = shouldImportHistoryOfOtherLane
       ? `for filling the gap between the common-snap and the head of ${this.otherLane?.id() || 'main'}`
       : `for getting the common-snap between ${this.currentLane?.id() || 'main'} and ${this.otherLane?.id() || 'main'}`;
-    await this.workspace.consumer.scope.scopeImporter.importWithoutDeps(BitIds.fromArray(toImport), {
+    await this.workspace.consumer.scope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(toImport), {
       lane: this.otherLane,
       cache: true,
       includeVersionHistory: false,
@@ -135,7 +142,11 @@ other:   ${otherLaneHead.toString()}`);
     return { currentComponent, id, mergeResults, divergeData, configMergeResult };
   }
 
-  private returnUnmerged(id: BitId, msg: string, unmergedLegitimately = false): ComponentMergeStatusBeforeMergeAttempt {
+  private returnUnmerged(
+    id: ComponentID,
+    msg: string,
+    unmergedLegitimately = false
+  ): ComponentMergeStatusBeforeMergeAttempt {
     const componentStatus: ComponentMergeStatusBeforeMergeAttempt = { id };
     componentStatus.unchangedMessage = msg;
     componentStatus.unchangedLegitimately = unmergedLegitimately;
@@ -143,7 +154,7 @@ other:   ${otherLaneHead.toString()}`);
   }
 
   private async getComponentStatusBeforeMergeAttempt(
-    id: BitId // the id.version is the version we want to merge to the current component
+    id: ComponentID // the id.version is the version we want to merge to the current component
   ): Promise<ComponentMergeStatusBeforeMergeAttempt> {
     const consumer = this.workspace.consumer;
     const componentStatus: ComponentMergeStatusBeforeMergeAttempt = { id };
@@ -154,7 +165,7 @@ other:   ${otherLaneHead.toString()}`);
         `component ${id.toString()} is on the lane/main but its objects were not found, please re-import the lane`
       );
     }
-    const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id.name);
+    const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id);
     if (unmerged) {
       return this.returnUnmerged(
         id,
@@ -164,7 +175,7 @@ other:   ${otherLaneHead.toString()}`);
     const repo = consumer.scope.objects;
     const version = id.version as string;
     const otherLaneHead = modelComponent.getRef(version);
-    const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
+    const existingBitMapId = consumer.bitMap.getComponentIdIfExist(id, { ignoreVersion: true });
     const componentOnOther: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
     const idOnCurrentLane = this.currentLane?.getComponent(id);
 
@@ -200,30 +211,23 @@ other:   ${otherLaneHead.toString()}`);
       return { ...componentStatus, componentFromModel: componentOnOther, divergeData };
     }
     const getCurrentComponent = () => {
-      if (existingBitMapId) return consumer.loadComponent(existingBitMapId);
+      if (existingBitMapId) return consumer.loadComponent(existingBitMapId, { loadExtensions: true });
       return consumer.scope.getConsumerComponent(currentId);
     };
     const currentComponent = await getCurrentComponent();
     if (currentComponent.isRemoved()) {
       // we have a few options:
-      // 1. other is ahead. in this case, other recovered the component. so we can continue with the merge.
+      // 1. "other" is main. in this case, we don't care what happens on main, we want the component to stay deleted on
+      // this lane. (even when main is ahead, we don't want to merge it).
+      // 2. other is ahead. in this case, other recovered the component. so we can continue with the merge.
       // it is possible that it is diverged, in which case, still continue with the merge, and later on, the
       // merge-config will show a config conflict of the remove aspect.
-      // 2. other is not ahead. in this case, just ignore this component, no point to merge it, we want it removed.
-      // 3. there are errors when calculating the divergeData, e.g. no snap in common.
-      // here we need to differentiate between two cases:
-      // 3.1. the "otherLane" is main. in this case, we probably noticed that our component by accident got created
-      // with the same name of an existing component on main and therefore we removed it. so we want to keep this
-      // component removed during merges and we don't care about merging it.
-      // 3.2. the "otherLane" is a lane. in this case, it's possible that although it was removed in this lane, it's
-      // needed and is used by other components of the other other lane, so in order for this merge to work
-      // (and not throw error about deps from other lane), it needs the option to merge (user can decide whether to
-      // exclude it or to use --resolve-unrelated)
+      // 3. other is not ahead. in this case, just ignore this component, no point to merge it, we want it removed.
       const divergeData = await getDivergeData({ repo, modelComponent, targetHead: otherLaneHead, throws: false });
       const isTargetNotAhead = !divergeData.err && !divergeData.isTargetAhead();
       const shouldIgnore = this.otherLane
-        ? isTargetNotAhead // options 3.2 above. if they're not related - don't ignore.
-        : isTargetNotAhead || divergeData.err; // it's main. options 3.1 above. even if they're not related - still ignore.
+        ? isTargetNotAhead // option #2 and #3 above
+        : true; // it's main. option #1 above.
       if (shouldIgnore) {
         return this.returnUnmerged(id, `component has been removed`, true);
       }
@@ -308,7 +312,7 @@ other:   ${otherLaneHead.toString()}`);
 
   private async handleNoCommonSnap(
     modelComponent: ModelComponent,
-    id: BitId,
+    id: ComponentID,
     otherLaneHead: Ref,
     currentComponent: ConsumerComponent,
     componentOnOther?: Version,

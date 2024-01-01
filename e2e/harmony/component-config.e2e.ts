@@ -222,14 +222,14 @@ describe('component config', function () {
   });
 });
 
-function getExtensionEntry(extensionId: string, config: any): any {
+function getExtensionEntry(extensionName: string, config: any): any {
   return {
-    extensionId,
+    extensionId: `my-scope/${extensionName}`,
     config,
     newExtensionId: {
-      legacyComponentId: {
+      _legacy: {
         scope: null,
-        name: extensionId,
+        name: extensionName,
         version: 'latest',
       },
       _scope: 'my-scope',

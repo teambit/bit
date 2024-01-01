@@ -9,8 +9,8 @@ import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview, ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
 // import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
-import { CompositionGallery } from '@teambit/compositions.panels.composition-gallery';
-// import { ReadmeSkeleton } from './readme-skeleton';
+import { CompositionGallery, CompositionGallerySkeleton } from '@teambit/compositions.panels.composition-gallery';
+import { ReadmeSkeleton } from './readme-skeleton';
 import styles from './overview.module.scss';
 
 export enum BadgePosition {
@@ -36,7 +36,7 @@ export type OverviewProps = {
   titleBadges: TitleBadgeSlot;
   overviewOptions: OverviewOptionsSlot;
   previewProps?: Partial<ComponentPreviewProps>;
-  getEmptyState?: () => ComponentType|undefined;
+  getEmptyState?: () => ComponentType | undefined;
 };
 
 export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyState }: OverviewProps) {
@@ -44,21 +44,15 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
   const componentDescriptor = useComponentDescriptor();
   const overviewProps = flatten(overviewOptions.values())[0];
   const showHeader = !component.preview?.legacyHeader;
-  const [isLoading, setLoading] = useState(true);
   const EmptyState = getEmptyState && getEmptyState();
+  const buildFailed = component.buildStatus?.toLowerCase() !== 'succeed' && component?.host === 'teambit.scope/scope';
+  const isScaling = Boolean(component.preview?.isScaling);
+  const includesEnvTemplate = Boolean(component.preview?.includesEnvTemplate);
+  const defaultLoadingState = React.useMemo(() => {
+    return isScaling && !includesEnvTemplate;
+  }, [isScaling, includesEnvTemplate]);
 
-  // if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
-  //   return (
-  //     <StatusMessageCard style={{ margin: 'auto' }} status="PROCESSING" title="component preview pending">
-  //       this might take some time
-  //     </StatusMessageCard>
-  //   );
-
-  // if (component?.buildStatus === 'failed' && component?.host === 'teambit.scope/scope')
-  //   return <StatusMessageCard style={{ margin: 'auto' }} status="FAILURE" title="failed to get component preview " />;
-  const buildFailed = component.buildStatus !== 'Succeed' && component?.host === 'teambit.scope/scope';
-
-  const isScaling = component.preview?.isScaling;
+  const [isLoading, setLoading] = useState(defaultLoadingState);
 
   const iframeQueryParams = `skipIncludes=${component.preview?.skipIncludes || 'false'}`;
 
@@ -75,6 +69,11 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
     [onLoad]
   );
 
+  React.useEffect(() => {
+    if (!isLoading && defaultLoadingState) setLoading(true);
+    if (isLoading && !defaultLoadingState) setLoading(false);
+  }, [component.id.toString(), defaultLoadingState]);
+
   return (
     <div className={styles.overviewWrapper} key={`${component.id.toString()}`}>
       {showHeader && (
@@ -90,32 +89,32 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
           component={component}
         />
       )}
-
-      {/* TODO - @oded replace with new panel card same for compositions. */}
-
-      {/* <LinkedHeading size="xs" className={styles.title}>
-        <Icon of="text" /> <span>README</span>
-      </LinkedHeading> */}
-      {!buildFailed && <div className={styles.readme}>
-        {/* {isLoading && <ReadmeSkeleton />} */}
-        <ComponentPreview
-          onLoad={onPreviewLoad}
-          previewName="overview"
-          pubsub={true}
-          queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
-          viewport={null}
-          fullContentHeight
-          disableScroll={true}
-          {...rest}
-          component={component}
-          style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
-        />
-        {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
-        {component.preview?.skipIncludes && (
-          <PropertiesTable className={styles.overviewPropsTable} componentId={component.id.toString()} />
-        )}
-      </div>}
-      {(buildFailed && EmptyState) && <EmptyState />}
+      {!buildFailed && (
+        <div className={styles.readme}>
+          {isLoading && (
+            <ReadmeSkeleton>
+              <CompositionGallerySkeleton compositionsLength={Math.min(component.compositions.length, 3)} />
+            </ReadmeSkeleton>
+          )}
+          <ComponentPreview
+            onLoad={onPreviewLoad}
+            previewName="overview"
+            pubsub={true}
+            queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
+            viewport={null}
+            fullContentHeight
+            disableScroll={true}
+            {...rest}
+            component={component}
+            style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
+          />
+          {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
+          {component.preview?.skipIncludes && (
+            <PropertiesTable className={styles.overviewPropsTable} componentId={component.id.toString()} />
+          )}
+        </div>
+      )}
+      {buildFailed && EmptyState && <EmptyState />}
     </div>
   );
 }

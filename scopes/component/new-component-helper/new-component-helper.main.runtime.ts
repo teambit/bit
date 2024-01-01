@@ -3,7 +3,6 @@ import path from 'path';
 import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { MainRuntime } from '@teambit/cli';
-import { composeComponentPath } from '@teambit/legacy/dist/utils/bit/compose-component-path';
 import { Component } from '@teambit/component';
 import TrackerAspect, { TrackerMain } from '@teambit/tracker';
 import { isDirEmpty } from '@teambit/legacy/dist/utils';
@@ -54,7 +53,7 @@ export class NewComponentHelperMain {
       return pathFromUser;
     }
 
-    return composeComponentPath(componentId._legacy.changeScope(componentId.scope), this.workspace.defaultDirectory);
+    return this.workspace.consumer.composeRelativeComponentPath(componentId.changeScope(componentId.scope));
   }
   async writeAndAddNewComp(
     comp: Component,
@@ -80,7 +79,7 @@ export class NewComponentHelperMain {
         rootDir: targetPath,
         componentName: targetId.fullName,
         mainFile: comp.state._consumer.mainFile,
-        defaultScope: options?.scope,
+        defaultScope: options?.scope || this.workspace.defaultScope,
         config,
       });
     } catch (err) {
@@ -88,10 +87,10 @@ export class NewComponentHelperMain {
       throw err;
     }
 
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`adding ${targetId.toString()}`);
     await this.workspace.clearCache();
     // this takes care of compiling the component as well
-    await this.workspace.triggerOnComponentAdd(targetId);
+    await this.workspace.triggerOnComponentAdd(targetId, { compile: true });
   }
 
   private async throwForExistingPath(targetPath: string) {

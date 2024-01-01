@@ -1,4 +1,3 @@
-import { BitId } from '../../../bit-id';
 import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../../../constants';
 import { loadScope, Scope } from '../../../scope';
 import Version from '../../../scope/models/version';
@@ -6,7 +5,7 @@ import Version from '../../../scope/models/version';
 export default (async function catComponent(id: string) {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const scope: Scope = await loadScope();
-  const bitId: BitId = await scope.getParsedId(id);
+  const bitId = await scope.getParsedId(id);
   // $FlowFixMe unclear what's the issue here
   const component = await scope.getModelComponent(bitId);
   if (bitId.hasVersion()) {

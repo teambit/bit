@@ -25,7 +25,7 @@ describe('update command', function () {
             },
           },
         });
-        helper.command.ejectConf('comp2/comp2');
+        helper.command.ejectConf('comp2');
         componentJson = helper.componentJson.read('comp2');
         delete componentJson.componentId.scope;
         componentJson.extensions = {
@@ -148,7 +148,7 @@ describe('update command', function () {
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
       helper.fixtures.populateComponents(1);
-      helper.command.create('aspect', 'my-aspect', '--path=my-aspect');
+      helper.command.create('bit-aspect', 'my-aspect', '--path=my-aspect');
       helper.fs.outputFile(
         `comp1/index.js`,
         `const isNegative = require("is-negative");
@@ -160,7 +160,7 @@ const isPositive = require("is-positive");`
           'is-positive': '1.0.0',
         },
       });
-      helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remoteWithoutOwner}/my-aspect`, {});
+      helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/my-aspect`, {});
       helper.extensions.addExtensionToVariant('comp1', 'teambit.dependencies/dependency-resolver', {
         policy: {
           devDependencies: {

@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { addDistTag } from '@pnpm/registry-mock';
 import { IssuesClasses } from '@teambit/component-issues';
-import { getAnotherInstallRequiredOutput } from '@teambit/install/install.cmd';
+import { getAnotherInstallRequiredOutput } from '@teambit/install';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { IS_WINDOWS } from '../../src/constants';
@@ -96,6 +96,27 @@ describe('install command', function () {
         expect(path.join(helper.fixtures.scopes.localPath, 'node_modules/lodash.get')).to.be.a.path();
       });
     });
+  });
+});
+
+describe('install generator configured envs', function () {
+  this.timeout(0);
+  let helper: Helper;
+  before(async () => {
+    helper = new Helper();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    const generatorConfig = {
+      envs: ['teambit.react/react-env', 'teambit.react/react'],
+    };
+    helper.extensions.bitJsonc.addKeyVal('teambit.generator/generator', generatorConfig);
+    await helper.command.install();
+  });
+  after(() => {
+    helper.scopeHelper.destroy();
+  });
+  it('should install custom envs configured for the generator aspect', async () => {
+    const reactEnvPath = path.join(helper.fixtures.scopes.localPath, 'node_modules/@teambit/react.react-env');
+    expect(reactEnvPath).to.be.a.path();
   });
 });
 

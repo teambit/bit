@@ -24,7 +24,7 @@ describe('bit reset command', function () {
     });
     describe('with one version', () => {
       before(() => {
-        helper.command.untag('bar/foo', true);
+        helper.command.reset('bar/foo', true);
       });
       it('should delete the entire component from the model', () => {
         const output = helper.command.listLocalScope();
@@ -39,7 +39,7 @@ describe('bit reset command', function () {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.2');
 
-        helper.command.untag('bar/foo', true);
+        helper.command.reset('bar/foo', true);
       });
       it('should delete only the specified tag', () => {
         const catComponent = helper.command.catComponent('bar/foo');
@@ -73,7 +73,7 @@ describe('bit reset command', function () {
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(catComponent.versions).to.have.property('0.0.2');
 
-          helper.command.untag('bar/foo');
+          helper.command.reset('bar/foo');
         });
         it('should delete the entire component from the model', () => {
           const output = helper.command.listLocalScope();
@@ -94,7 +94,7 @@ describe('bit reset command', function () {
       });
       describe('untagging without version', () => {
         before(() => {
-          helper.command.untag('bar/foo');
+          helper.command.reset('bar/foo');
         });
         it('should delete only the local tag and leave the exported tag', () => {
           const catComponent = helper.command.catComponent('bar/foo');
@@ -107,7 +107,7 @@ describe('bit reset command', function () {
     });
     describe('when tagging non-existing component', () => {
       it('should show an descriptive error', () => {
-        const resetFunc = () => helper.command.untag('non-exist-scope/non-exist-comp');
+        const resetFunc = () => helper.command.reset('non-exist-scope/non-exist-comp');
         const error = new MissingBitMapComponent('non-exist-scope/non-exist-comp');
         helper.general.expectToThrow(resetFunc, error);
       });
@@ -132,7 +132,7 @@ describe('bit reset command', function () {
     describe('without specifying a version', () => {
       let untagOutput;
       before(() => {
-        untagOutput = helper.command.untagAll();
+        untagOutput = helper.command.resetAll();
       });
       it('should display a descriptive successful message', () => {
         expect(untagOutput).to.have.string('2 component(s) were untagged');
@@ -148,7 +148,7 @@ describe('bit reset command', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.command.tagIncludeUnmodified('0.0.5');
-        untagOutput = helper.command.untagAll('--head');
+        untagOutput = helper.command.resetAll('--head');
       });
       it('should display a descriptive successful message', () => {
         expect(untagOutput).to.have.string('3 component(s) were untagged');
@@ -178,21 +178,21 @@ describe('bit reset command', function () {
         let untagOutput;
         before(() => {
           try {
-            helper.command.untag('utils/is-type');
+            helper.command.reset('utils/is-type');
           } catch (err: any) {
             untagOutput = err.message;
           }
         });
         it('should throw a descriptive error', () => {
           expect(untagOutput).to.have.string(
-            'unable to reset utils/is-type, the version 0.0.1 has the following dependent(s) utils/is-string@0.0.1'
+            `unable to reset ${helper.scopes.remote}/utils/is-type, the version 0.0.1 has the following dependent(s) ${helper.scopes.remote}/utils/is-string@0.0.1`
           );
         });
       });
       describe('with force flag', () => {
         let untagOutput;
         before(() => {
-          untagOutput = helper.command.untag('utils/is-type', undefined, '--force');
+          untagOutput = helper.command.reset('utils/is-type', undefined, '--force');
         });
         it('should untag successfully', () => {
           expect(untagOutput).to.have.string('1 component(s) were untagged');
@@ -207,7 +207,7 @@ describe('bit reset command', function () {
           helper.command.export();
           helper.command.tagIncludeUnmodified('1.0.5');
           try {
-            output = helper.command.untag('utils/is-type');
+            output = helper.command.reset('utils/is-type');
           } catch (err: any) {
             output = err.message;
           }
@@ -221,7 +221,7 @@ describe('bit reset command', function () {
       describe('when all components have only local versions', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
-          helper.command.untagAll();
+          helper.command.resetAll();
         });
         it('should remove all the components because it does not leave a damaged component without dependency', () => {
           const output = helper.command.listLocalScope();
@@ -233,7 +233,7 @@ describe('bit reset command', function () {
       let untagOutput;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
-        untagOutput = helper.command.untag('utils/is-string');
+        untagOutput = helper.command.reset('utils/is-string');
       });
       it('should untag successfully the dependent', () => {
         expect(untagOutput).to.have.string('1 component(s) were untagged');
@@ -260,7 +260,7 @@ describe('bit reset command', function () {
       describe('untag using the id without scope-name', () => {
         let output;
         before(() => {
-          output = helper.command.untag('utils/is-string');
+          output = helper.command.reset('utils/is-string');
         });
         it('should untag successfully', () => {
           expect(output).to.have.string('1 component(s) were untagged');
@@ -272,7 +272,7 @@ describe('bit reset command', function () {
           helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
           helper.fs.modifyFile('components/utils/is-string/is-string.js');
           helper.command.tagAllWithoutBuild('--ignore-issues "*"');
-          helper.command.untagAll();
+          helper.command.resetAll();
         });
         it('should show the component as modified', () => {
           const output = helper.command.runCmd('bit status');
@@ -292,7 +292,7 @@ describe('bit reset command', function () {
       helper.command.tagWithoutBuild();
       const isDeprecated = helper.command.isDeprecated('comp1');
       expect(isDeprecated).to.be.true; // intermediate step.
-      helper.command.untagAll();
+      helper.command.resetAll();
     });
     it('bit reset should leave the config as they were before the tag', () => {
       const isDeprecated = helper.command.isDeprecated('comp1');

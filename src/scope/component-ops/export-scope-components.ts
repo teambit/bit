@@ -1,7 +1,7 @@
 import mapSeries from 'p-map-series';
 import { compact, partition } from 'lodash';
 import R from 'ramda';
-import { BitId, BitIds } from '../../bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import logger from '../../logger/logger';
 import { Remote, Remotes } from '../../remotes';
 import { ComponentNotFound, MergeConflict, MergeConflictOnRemote } from '../exceptions';
@@ -27,9 +27,9 @@ import { concurrentComponentsLimit } from '../../utils/concurrency';
  * dependencies, saves them as well. Finally runs the build process if needed on an isolated
  * environment.
  */
-export async function exportManyBareScope(scope: Scope, objectList: ObjectList): Promise<BitIds> {
+export async function exportManyBareScope(scope: Scope, objectList: ObjectList): Promise<ComponentIdList> {
   logger.debugAndAddBreadCrumb('exportManyBareScope', `started with ${objectList.objects.length} objects`);
-  const mergedIds: BitIds = await saveObjects(scope, objectList);
+  const mergedIds = await saveObjects(scope, objectList);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
   const scopeComponentsImporter = scope.scopeImporter;
   await scopeComponentsImporter.importManyFromOriginalScopes(mergedIds); // resolve dependencies
@@ -46,7 +46,7 @@ type RemotesForPersist = {
 /**
  * save objects into the scope.
  */
-export async function saveObjects(scope: Scope, objectList: ObjectList): Promise<BitIds> {
+export async function saveObjects(scope: Scope, objectList: ObjectList): Promise<ComponentIdList> {
   const bitObjectList = await objectList.toBitObjects();
   const objectsNotRequireMerge = bitObjectList.getObjectsNotRequireMerge();
   // components and lanes can't be just added, they need to be carefully merged.
@@ -119,7 +119,7 @@ async function _updateVersionHistoryForVersionsWithoutOrigin(
   logger.debug(`_updateVersionHistoryForVersionsWithoutOrigin, found ${
     versionsHistoryNoNull.length
   } versionsHistory to update
-${versionsHistoryNoNull.map((v) => v.bitId.toString()).join(', ')}`);
+${versionsHistoryNoNull.map((v) => v.compId.toString()).join(', ')}`);
 
   return versionsHistoryNoNull;
 }
@@ -157,7 +157,7 @@ async function _updateVersionHistoryForVersionsWithOrigin(
   return compact(versionsHistory);
 }
 
-type MergeObjectsResult = { mergedIds: BitIds; mergedComponentsResults: MergeResult[]; mergedLanes: Lane[] };
+type MergeObjectsResult = { mergedIds: ComponentIdList; mergedComponentsResults: MergeResult[]; mergedLanes: Lane[] };
 
 /**
  * merge components into the scope.
@@ -208,9 +208,9 @@ export async function mergeObjects(
     .flat()
     .filter(({ mergedVersions }) => mergedVersions.length);
   const mergedComponentsResults = [...mergedComponents, ...mergedLanesComponents];
-  const getMergedIds = ({ mergedComponent, mergedVersions }): BitId[] =>
+  const getMergedIds = ({ mergedComponent, mergedVersions }): ComponentID[] =>
     mergedVersions.map((version) => mergedComponent.toBitId().changeVersion(version));
-  const mergedIds = BitIds.uniqFromArray(mergedComponentsResults.map(getMergedIds).flat());
+  const mergedIds = ComponentIdList.uniqFromArray(mergedComponentsResults.map(getMergedIds).flat());
   const mergedLanes = mergeAllLanesResults.map((r) => r.mergeLane);
 
   return { mergedIds, mergedComponentsResults, mergedLanes };
@@ -231,7 +231,7 @@ async function throwForMissingLocalDependencies(
 ) {
   const compsWithHeads = lanes.length
     ? lanes.map((lane) => lane.toBitIds()).flat()
-    : components.map((c) => c.toBitIdWithHead());
+    : components.map((c) => c.toComponentIdWithHead());
 
   await Promise.all(
     versions.map(async (version) => {
@@ -242,7 +242,7 @@ async function throwForMissingLocalDependencies(
         return;
       }
       const getOriginCompWithVer = () => {
-        const compObj = components.find((c) => c.toBitId().isEqualWithoutVersion(originComp));
+        const compObj = components.find((c) => c.toComponentId().isEqualWithoutVersion(originComp));
         if (!compObj) return originComp;
         const tag = compObj.getTagOfRefIfExists(Ref.from(originComp.version as string));
         if (tag) return originComp.changeVersion(tag);
@@ -254,7 +254,7 @@ async function throwForMissingLocalDependencies(
           if (depId.scope !== scope.name) return;
           const existingModelComponent =
             (await scope.getModelComponentIfExist(depId)) ||
-            components.find((c) => c.toBitId().isEqualWithoutVersion(depId));
+            components.find((c) => c.toComponentId().isEqualWithoutVersion(depId));
           if (!existingModelComponent) {
             scope.objects.clearObjectsFromCache(); // just in case this error is caught. we don't want to persist anything by mistake.
             throw new ComponentNotFound(depId.toString(), getOriginCompWithVer().toString());

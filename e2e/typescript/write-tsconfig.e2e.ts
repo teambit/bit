@@ -44,11 +44,9 @@ describe('write-tsconfig command', function () {
     });
     it('should group the envs with the same tsconfig', () => {
       expect(dryRunResults).to.have.lengthOf(2);
-      expect(dryRunResults[1].envIds).to.have.lengthOf(2);
-      expect(dryRunResults[1].envIds).to.deep.equal([
-        `${helper.scopes.remote}/node-env`,
-        `${helper.scopes.remote}/node-env2`,
-      ]);
+      const envIds = dryRunResults[1].envIds;
+      expect(envIds).to.have.lengthOf(2);
+      expect(envIds.sort()).to.deep.equal([`${helper.scopes.remote}/node-env`, `${helper.scopes.remote}/node-env2`]);
     });
   });
   describe('adding tsconfig.json manually in an inner directory', () => {

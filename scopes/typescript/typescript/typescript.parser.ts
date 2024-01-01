@@ -71,8 +71,8 @@ export class TypeScriptParser implements Parser {
     return withoutEmpty;
   }
 
-  parseModule(modulePath: string) {
-    const ast = ts.createSourceFile(modulePath, readFileSync(modulePath, 'utf8'), ts.ScriptTarget.Latest);
+  parseModule(modulePath: string, content?: string) {
+    const ast = ts.createSourceFile(modulePath, content || readFileSync(modulePath, 'utf8'), ts.ScriptTarget.Latest);
 
     const moduleExports = this.getExports(ast);
     return moduleExports;

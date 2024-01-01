@@ -9,6 +9,7 @@ import { componentTemplate } from './files/component-template';
 export const componentGeneratorTemplate: ComponentTemplate = {
   name: 'component-generator',
   description: 'create your own component generator \nDocs: https://bit.dev/reference/generator/create-generator',
+  hidden: true,
   generateFiles: (context: ComponentContext) => {
     return [
       {

@@ -1,8 +1,8 @@
 import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
+import { ComponentID } from '@teambit/component-id';
 import { Scope } from '..';
 import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
-import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
 import { Lane } from '../models';
 import { Repository } from '../objects';
@@ -40,6 +40,27 @@ export default class Lanes {
 
   async saveLane(laneObject: Lane) {
     await this.objects.writeObjectsToTheFS([laneObject]);
+  }
+
+  async renameLane(lane: Lane, newName: string) {
+    // change tracking data
+    const oldName = lane.name;
+    const afterTrackData = {
+      localLane: newName,
+      remoteLane: newName,
+      remoteScope: lane.scope,
+    };
+    this.trackLane(afterTrackData);
+    this.removeTrackLane(oldName);
+
+    // rename the lane in the "new" prop
+    if (lane.isNew) {
+      this.scopeJson.lanes.new = this.scopeJson.lanes.new.map((l) => (l === oldName ? newName : l));
+    }
+
+    // change the lane object
+    lane.name = newName;
+    await this.saveLane(lane);
   }
 
   getAliasByLaneId(laneId: LaneId): string | null {
@@ -101,9 +122,9 @@ export default class Lanes {
     }
     await this.objects.moveObjectsToTrash(lanesToRemove.map((l) => l.hash()));
 
-    // const compIdsFromDeletedLanes = BitIds.uniqFromArray(lanesToRemove.map((l) => l.toBitIds()).flat());
+    // const compIdsFromDeletedLanes = ComponentIdList.uniqFromArray(lanesToRemove.map((l) => l.toBitIds()).flat());
     // const notDeletedLanes = existingLanes.filter((l) => !lanes.includes(l.name));
-    // const compIdsFromNonDeletedLanes = BitIds.uniqFromArray(notDeletedLanes.map((l) => l.toBitIds()).flat());
+    // const compIdsFromNonDeletedLanes = ComponentIdList.uniqFromArray(notDeletedLanes.map((l) => l.toBitIds()).flat());
     // const pendingDeleteCompIds = compIdsFromDeletedLanes.filter(
     //   (id) => !compIdsFromNonDeletedLanes.hasWithoutVersion(id)
     // );
@@ -212,9 +233,20 @@ export type LaneData = {
   remote: string | null;
   id: LaneId;
   alias?: string | null;
-  components: Array<{ id: BitId; head: string }>;
+  components: Array<{ id: ComponentID; head: string }>;
   isMerged: boolean | null;
-  readmeComponent?: { id: BitId; head?: string };
+  readmeComponent?: { id: ComponentID; head?: string };
   log?: Log;
   hash: string;
 };
+
+export function serializeLaneData(laneData: LaneData) {
+  return {
+    ...laneData,
+    components: laneData.components.map((c) => ({ id: c.id.toString(), head: c.head })),
+    readmeComponent: laneData.readmeComponent && {
+      id: laneData.readmeComponent.id.toString(),
+      head: laneData.readmeComponent.head,
+    },
+  };
+}

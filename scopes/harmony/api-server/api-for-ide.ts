@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { CompFiles, Workspace, FilesStatus } from '@teambit/workspace';
-import { PathLinux, PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy/dist/utils/path';
 import pMap from 'p-map';
 import { SnappingMain } from '@teambit/snapping';
 import { LanesMain } from '@teambit/lanes';
@@ -13,11 +13,18 @@ import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log
 import { Log } from '@teambit/legacy/dist/scope/models/lane';
 import { ComponentCompareMain } from '@teambit/component-compare';
 import { GeneratorMain } from '@teambit/generator';
+import { getParsedHistoryMetadata } from '@teambit/legacy/dist/consumer/consumer';
+import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 import { RemoveMain } from '@teambit/remove';
 import { compact } from 'lodash';
+import { getCloudDomain } from '@teambit/legacy/dist/constants';
+import { ConfigMain } from '@teambit/config';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
+const CMD_HISTORY = 'command-history-ide';
+
+type PathLinux = string; // problematic to get it from @teambit/legacy/dist/utils/path.
 
 type PathFromLastSnap = { [relativeToWorkspace: PathLinux]: string };
 
@@ -46,6 +53,11 @@ type ModifiedByConfig = {
   aspects?: { workspace: Record<string, any>; scope: Record<string, any> };
 };
 
+type WorkspaceHistory = {
+  current: PathOsBasedAbsolute;
+  history: Array<{ path: PathOsBasedAbsolute; fileId: string; reason?: string }>;
+};
+
 export class APIForIDE {
   constructor(
     private workspace: Workspace,
@@ -57,8 +69,24 @@ export class APIForIDE {
     private componentLog: ComponentLogMain,
     private componentCompare: ComponentCompareMain,
     private generator: GeneratorMain,
-    private remove: RemoveMain
+    private remove: RemoveMain,
+    private config: ConfigMain
   ) {}
+
+  async logStartCmdHistory(op: string) {
+    const str = `${op}, started`;
+    await this.writeToCmdHistory(str);
+  }
+
+  async logFinishCmdHistory(op: string, code: number) {
+    const endStr = code === 0 ? 'succeeded' : 'failed';
+    const str = `${op}, ${endStr}`;
+    await this.writeToCmdHistory(str);
+  }
+
+  private async writeToCmdHistory(str: string) {
+    await fs.appendFile(path.join(this.workspace.scope.path, CMD_HISTORY), `${new Date().toISOString()} ${str}\n`);
+  }
 
   async listIdsWithPaths() {
     const ids = await this.workspace.listIds();
@@ -72,6 +100,40 @@ export class APIForIDE {
     const compId = await this.workspace.resolveComponentId(id);
     const comp = await this.workspace.get(compId);
     return path.join(this.workspace.componentDir(compId), comp.state._consumer.mainFile);
+  }
+
+  async getWorkspaceHistory(): Promise<WorkspaceHistory> {
+    const current = this.workspace.bitMap.getPath();
+    const bitmapHistoryDir = this.workspace.consumer.getBitmapHistoryDir();
+    const historyPaths = await fs.readdir(bitmapHistoryDir);
+    const historyMetadata = await this.workspace.consumer.getParsedBitmapHistoryMetadata();
+    const history = historyPaths.map((historyPath) => {
+      const fileName = path.basename(historyPath);
+      const fileId = fileName.replace('.bitmap-', '');
+      const reason = historyMetadata[fileId];
+      return { path: path.join(bitmapHistoryDir, fileName), fileId, reason };
+    });
+    const historySorted = history.sort((a, b) => fileIdToTimestamp(b.fileId) - fileIdToTimestamp(a.fileId));
+
+    return { current, history: historySorted };
+  }
+
+  async getConfigHistory(): Promise<WorkspaceHistory> {
+    const workspaceConfig = this.config.workspaceConfig;
+    if (!workspaceConfig) throw new Error('getConfigHistory(), workspace config is missing');
+    const current = workspaceConfig.path;
+    const configHistoryDir = workspaceConfig.getBackupHistoryDir();
+    const historyPaths = await fs.readdir(configHistoryDir);
+    const historyMetadata = await getParsedHistoryMetadata(workspaceConfig.getBackupMetadataFilePath());
+    const history = historyPaths.map((historyPath) => {
+      const fileName = path.basename(historyPath);
+      const fileId = fileName;
+      const reason = historyMetadata[fileId];
+      return { path: path.join(configHistoryDir, fileName), fileId, reason };
+    });
+    const historySorted = history.sort((a, b) => fileIdToTimestamp(b.fileId) - fileIdToTimestamp(a.fileId));
+
+    return { current, history: historySorted };
   }
 
   async importLane(
@@ -218,11 +280,13 @@ export class APIForIDE {
   }
 
   async export() {
-    const { componentsIds, removedIds, exportedLanes } = await this.exporter.export();
+    const { componentsIds, removedIds, exportedLanes, rippleJobs } = await this.exporter.export();
+    const rippleJobsFullUrls = rippleJobs.map((job) => `https://${getCloudDomain()}/ripple-ci/job/${job}`);
     return {
       componentsIds: componentsIds.map((c) => c.toString()),
       removedIds: removedIds.map((c) => c.toString()),
       exportedLanes: exportedLanes.map((l) => l.id()),
+      rippleJobs: rippleJobsFullUrls,
     };
   }
 
@@ -253,7 +317,7 @@ export class APIForIDE {
       componentsPattern: id,
       force: true,
     });
-    const serializedResults = results.localResult.serialize();
+    const serializedResults = (results.localResult as RemovedObjects).serialize();
     return serializedResults;
   }
 
@@ -357,4 +421,10 @@ export class APIForIDE {
     const results = await this.snapping.snap(params);
     return (results?.snappedComponents || []).map((c) => c.id.toString());
   }
+}
+
+function fileIdToTimestamp(dateStr: string): number {
+  const [year, month, day, hours, minutes, seconds] = dateStr.split('-');
+  const date = new Date(Number(year), Number(month) - 1, Number(day), Number(hours), Number(minutes), Number(seconds));
+  return date.getTime();
 }

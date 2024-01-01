@@ -3,12 +3,12 @@ import fs from 'fs-extra';
 import { compact } from 'lodash';
 import path from 'path';
 import R from 'ramda';
-
+import { ComponentID } from '@teambit/component-id';
 import { Ref } from '../objects';
 
 export type UnmergedComponent = {
   id: {
-    scope?: string;
+    scope: string;
     name: string;
   };
   /**
@@ -92,7 +92,9 @@ export default class UnmergedComponents {
     return new UnmergedComponents(filePath, unmerged);
   }
   addEntry(unmergedComponent: UnmergedComponent) {
-    const existingComponent = this.getEntry(unmergedComponent.id.name);
+    const existingComponent = this.getEntry(
+      ComponentID.fromObject({ name: unmergedComponent.id.name, scope: unmergedComponent.id.scope })
+    );
     if (existingComponent) {
       throw new Error(
         `unable to add an unmerged component, a component with the same name already exist. name ${existingComponent.id.name}, scope: ${existingComponent.id.scope}`
@@ -102,24 +104,24 @@ export default class UnmergedComponents {
     this.hasChanged = true;
   }
 
-  getEntry(componentName: string): UnmergedComponent | undefined {
-    return this.unmerged.find((u) => u.id.name === componentName);
+  getEntry(id: ComponentID): UnmergedComponent | undefined {
+    return this.unmerged.find((u) => u.id.name === id.fullName && u.id.scope === id.scope);
   }
 
   getComponents() {
     return this.unmerged;
   }
 
-  removeComponent(componentName: string): boolean {
-    const found = this.getEntry(componentName);
+  removeComponent(id: ComponentID): boolean {
+    const found = this.getEntry(id);
     if (!found) return false;
     this.unmerged = R.without([found], this.unmerged);
     this.hasChanged = true;
     return true;
   }
 
-  removeMultipleComponents(componentNames: string[]): boolean {
-    const found = compact(componentNames.map((comp) => this.getEntry(comp)));
+  removeMultipleComponents(ids: ComponentID[]): boolean {
+    const found = compact(ids.map((id) => this.getEntry(id)));
     if (!found.length) return false;
     this.unmerged = R.without(found, this.unmerged);
     this.hasChanged = true;

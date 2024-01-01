@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import * as path from 'path';
 import { linkPkgsToBitRoots } from '@teambit/bit-roots';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy/dist/constants';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
@@ -23,7 +23,7 @@ import { PackageJsonTransformer } from './package-json-transformer';
 
 type LinkDetail = { from: string; to: string };
 export type NodeModulesLinksResult = {
-  id: BitId;
+  id: ComponentID;
   bound: LinkDetail[];
 };
 
@@ -41,7 +41,7 @@ export default class NodeModuleLinker {
     this.dataToPersist = new DataToPersist();
   }
   async link(): Promise<NodeModulesLinksResult[]> {
-    this.components = this.components.filter((component) => this.bitMap.getComponentIfExist(component.id._legacy));
+    this.components = this.components.filter((component) => this.bitMap.getComponentIfExist(component.id));
     const links = await this.getLinks();
     const linksResults = this.getLinksResults();
     const workspacePath = this.workspace.path;
@@ -66,8 +66,8 @@ export default class NodeModuleLinker {
   }
   getLinksResults(): NodeModulesLinksResult[] {
     const linksResults: NodeModulesLinksResult[] = [];
-    const getExistingLinkResult = (id: BitId) => linksResults.find((linkResult) => linkResult.id.isEqual(id));
-    const addLinkResult = (id: BitId | null | undefined, from: string, to: string) => {
+    const getExistingLinkResult = (id: ComponentID) => linksResults.find((linkResult) => linkResult.id.isEqual(id));
+    const addLinkResult = (id: ComponentID | null | undefined, from: string, to: string) => {
       if (!id) return;
       const existingLinkResult = getExistingLinkResult(id);
       if (existingLinkResult) {
@@ -80,9 +80,9 @@ export default class NodeModuleLinker {
       addLinkResult(symlink.componentId, symlink.src, symlink.dest);
     });
     this.components.forEach((component) => {
-      const existingLinkResult = getExistingLinkResult(component.id._legacy);
+      const existingLinkResult = getExistingLinkResult(component.id);
       if (!existingLinkResult) {
-        linksResults.push({ id: component.id._legacy, bound: [] });
+        linksResults.push({ id: component.id, bound: [] });
       }
     });
     return linksResults;
@@ -103,14 +103,7 @@ export default class NodeModuleLinker {
    */
   async _populateComponentsLinks(component: Component): Promise<void> {
     const legacyComponent = component.state._consumer as ConsumerComponent;
-    const componentId = component.id._legacy;
-    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
-      bindingPrefix: legacyComponent.bindingPrefix,
-      id: componentId,
-      allowNonScope: true,
-      defaultScope: component.id.scope,
-      extensions: legacyComponent.extensions,
-    });
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(legacyComponent);
 
     this.symlinkComponentDir(component, linkPath);
     this._deleteExistingLinksRootIfSymlink(linkPath);
@@ -118,13 +111,13 @@ export default class NodeModuleLinker {
   }
 
   private symlinkComponentDir(component: Component, linkPath: PathOsBasedRelative) {
-    const componentMap = this.bitMap.getComponent(component.id._legacy);
+    const componentMap = this.bitMap.getComponent(component.id);
 
     const filesToBind = componentMap.getAllFilesPaths();
     filesToBind.forEach((file) => {
       const fileWithRootDir = path.join(componentMap.rootDir as string, file);
       const dest = path.join(linkPath, file);
-      this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, component.id._legacy, true));
+      this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, component.id, true));
     });
 
     if (IS_WINDOWS) {
@@ -133,7 +126,7 @@ export default class NodeModuleLinker {
         Symlink.makeInstance(
           componentMap.rootDir as string,
           path.join(linkPath, SOURCE_DIR_SYMLINK_TO_NM),
-          component.id._legacy
+          component.id
         )
       );
     }
@@ -173,10 +166,9 @@ export default class NodeModuleLinker {
       getNodeModulesPathOfComponent({
         ...legacyComp,
         id: legacyComp.id,
-        allowNonScope: true,
       })
     );
-    const packageJson = PackageJsonFile.createFromComponent(dest, legacyComp, true, true);
+    const packageJson = PackageJsonFile.createFromComponent(dest, legacyComp, true);
     await this._applyTransformers(component, packageJson);
     if (IS_WINDOWS) {
       // in the workspace, override the "types" and add the "src" prefix.
@@ -189,6 +181,30 @@ export default class NodeModuleLinker {
     } else {
       packageJson.packageJsonObject.version = snapToSemver(packageJson.packageJsonObject.version);
     }
+
+    // indicate that this component exists locally and it is symlinked into the workspace. not a normal package.
+    packageJson.packageJsonObject._bit_local = true;
+    packageJson.packageJsonObject.source = component.mainFile.relative;
+
+    // This is a hack because we have in the workspace package.json types:index.ts
+    // but also exports for core aspects
+    // TS can't find the types
+    // in order to solve it we copy the types to exports.types
+    // this will be applied only to aspects to minimize how it affects users
+    const envsData = component.state.aspects.get('teambit.envs/envs');
+    const isAspect = envsData?.data.type === 'aspect';
+    if (isAspect && packageJson.packageJsonObject.types && packageJson.packageJsonObject.exports) {
+      const exports = packageJson.packageJsonObject.exports['.']
+        ? packageJson.packageJsonObject.exports['.']
+        : packageJson.packageJsonObject.exports;
+      if (!exports.types) {
+        const defaultModule = exports.default;
+        if (defaultModule) delete exports.default;
+        exports.types = `./${packageJson.packageJsonObject.types}`;
+        exports.default = defaultModule;
+      }
+    }
+
     // packageJson.mergePropsFromExtensions(component);
     // TODO: we need to have an hook here to get the transformer from the pkg extension
 
@@ -196,6 +212,11 @@ export default class NodeModuleLinker {
     // an example is when developing a vscode extension, vscode expects to have a valid package.json during the development.
 
     this.dataToPersist.addFile(packageJson.toVinylFile());
+    const injectedDirs = await this.workspace.getInjectedDirs(component);
+    const src = path.join(dest, 'package.json');
+    for (const injectedDir of injectedDirs) {
+      this.dataToPersist.addSymlink(Symlink.makeInstance(src, path.join(injectedDir, 'package.json')));
+    }
   }
 
   /**
@@ -208,7 +229,7 @@ export default class NodeModuleLinker {
 
 export async function linkToNodeModulesWithCodemod(
   workspace: Workspace,
-  bitIds: BitId[],
+  bitIds: ComponentID[],
   changeRelativeToModulePaths: boolean
 ) {
   let codemodResults;
@@ -221,7 +242,7 @@ export async function linkToNodeModulesWithCodemod(
 
 export async function linkToNodeModulesByIds(
   workspace: Workspace,
-  bitIds: BitId[],
+  bitIds: ComponentID[],
   loadFromScope = false
 ): Promise<NodeModulesLinksResult[]> {
   const componentsIds = await workspace.resolveMultipleComponentIds(bitIds);
@@ -230,7 +251,7 @@ export async function linkToNodeModulesByIds(
     if (loadFromScope) {
       return workspace.scope.getMany(componentsIds);
     }
-    return workspace.getMany(componentsIds);
+    return workspace.getMany(componentsIds, { idsToNotLoadAsAspects: bitIds.map((id) => id.toString()) });
   };
   const components = await getComponents();
   const nodeModuleLinker = new NodeModuleLinker(components, workspace);

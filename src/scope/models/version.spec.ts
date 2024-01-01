@@ -195,7 +195,7 @@ describe('Version', () => {
     });
     it('should throw when a flattenDependency is invalid', () => {
       version.flattenedDependencies = [1234];
-      expect(validateFunc).to.throw('expected to be BitId, got number');
+      expect(validateFunc).to.throw('expected to be ComponentID, got number');
     });
     it('should throw when a flattenDependency does not have a version', () => {
       version.flattenedDependencies[0] = version.flattenedDependencies[0].changeVersion(null);

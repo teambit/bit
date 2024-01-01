@@ -2,8 +2,8 @@ import { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain, CommandList } from '@teambit/cli';
-import { DependencyResolverAspect, DependencyResolverMain, VariantPolicy } from '@teambit/dependency-resolver';
-import type { ComponentMain, Component, ComponentID } from '@teambit/component';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { ComponentMain, Component } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony, SlotRegistry } from '@teambit/harmony';
@@ -14,12 +14,11 @@ import { UiMain } from '@teambit/ui';
 import type { VariantsMain } from '@teambit/variants';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import type { ComponentConfigLoadOptions } from '@teambit/legacy/dist/consumer/config';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import LegacyComponentLoader, { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { GlobalConfigMain } from '@teambit/global-config';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
-import { DependencyResolver as LegacyDependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
 import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
@@ -182,43 +181,19 @@ export default async function provideWorkspace(
     }
   );
 
-  LegacyDependencyResolver.registerOnComponentAutoDetectOverridesGetter(
-    async (configuredExtensions: ExtensionDataList, id: BitId, legacyFiles: SourceFile[]) => {
-      let policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
-      // this is needed for "bit install" to install the dependencies from the merge config (see https://github.com/teambit/bit/pull/6849)
-      const depsDataOfMergeConfig = workspace.getDepsDataOfMergeConfig(id);
-      if (depsDataOfMergeConfig) {
-        const policiesFromMergeConfig = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, 'auto');
-        policy = VariantPolicy.mergePolices([policy, policiesFromMergeConfig]);
-      }
-      return policy.toLegacyAutoDetectOverrides();
-    }
-  );
-
-  LegacyDependencyResolver.registerOnComponentAutoDetectConfigMergeGetter((id: BitId) => {
-    const depsDataOfMergeConfig = workspace.getDepsDataOfMergeConfig(id);
-    if (depsDataOfMergeConfig) {
-      const policy = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, 'auto');
-      return policy.toLegacyAutoDetectOverrides();
-    }
-    return undefined;
-  });
-
-  ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id) => {
+  ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id, loadOpts: ComponentConfigLoadOptions) => {
     const componentId = await workspace.resolveComponentId(id);
     // We call here directly workspace.scope.get instead of workspace.get because part of the workspace get is loading consumer component
     // which in turn run this event, which will make an infinite loop
     // This component from scope here are only used for merging the extensions with the workspace components
     const componentFromScope = await workspace.scope.get(componentId);
-    const { extensions } = await workspace.componentExtensions(componentId, componentFromScope);
+    const { extensions } = await workspace.componentExtensions(componentId, componentFromScope, undefined, loadOpts);
     const defaultScope = await workspace.componentDefaultScope(componentId);
 
     const extensionsWithLegacyIdsP = extensions.map(async (extension) => {
       const legacyEntry = extension.clone();
       if (legacyEntry.extensionId) {
-        const compId = await workspace.resolveComponentId(legacyEntry.extensionId);
-        legacyEntry.extensionId = compId._legacy;
-        legacyEntry.newExtensionId = compId;
+        legacyEntry.newExtensionId = legacyEntry.extensionId;
       }
 
       return legacyEntry;

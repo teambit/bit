@@ -210,7 +210,7 @@ export class BuilderMain {
   // TODO: merge with getArtifactsVinylByExtensionAndName by getting aspect name and name as object with optional props
   async getArtifactsVinylByAspect(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
     const artifacts = this.getArtifactsByAspect(component, aspectName);
-    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id, this.scope.legacyScope);
     return vinyls;
   }
 
@@ -220,7 +220,7 @@ export class BuilderMain {
     name: string
   ): Promise<ArtifactVinyl[]> {
     const artifacts = this.getArtifactsByAspectAndName(component, aspectName, name);
-    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id, this.scope.legacyScope);
     return vinyls;
   }
 
@@ -230,7 +230,7 @@ export class BuilderMain {
     name: string
   ): Promise<ArtifactVinyl[]> {
     const artifacts = this.getArtifactsbyAspectAndTaskName(component, aspectName, name);
-    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id, this.scope.legacyScope);
     return vinyls;
   }
 
@@ -294,7 +294,8 @@ export class BuilderMain {
   async build(
     components: Component[],
     isolateOptions?: IsolateComponentsOptions,
-    builderOptions?: BuilderServiceOptions
+    builderOptions?: BuilderServiceOptions,
+    extraOptions?: { includeTag?: boolean; includeSnap?: boolean }
   ): Promise<TaskResultsList> {
     const ids = components.map((c) => c.id);
     const capsulesBaseDir = this.buildService.getComponentsCapsulesBaseDir();
@@ -316,7 +317,19 @@ export class BuilderMain {
       ...(builderOptions || {}),
     };
     this.logger.consoleTitle(`Total ${components.length} components to build`);
-    const buildResult = await envs.runOnce(this.buildService, builderServiceOptions);
+    const buildResult: TaskResultsList = await envs.runOnce(this.buildService, builderServiceOptions);
+
+    if (extraOptions?.includeSnap || extraOptions?.includeTag) {
+      const builderOptionsForTagSnap: BuilderServiceOptions = {
+        ...builderServiceOptions,
+        previousTasksResults: buildResult.tasksResults,
+      };
+      const deployEnvsExecutionResults = extraOptions?.includeSnap
+        ? await this.runSnapTasks(components, builderOptionsForTagSnap)
+        : await this.runTagTasks(components, builderOptionsForTagSnap);
+      buildResult.tasksResults.push(...deployEnvsExecutionResults.tasksResults);
+    }
+
     return buildResult;
   }
 

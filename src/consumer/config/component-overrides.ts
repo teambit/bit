@@ -1,23 +1,27 @@
 import R from 'ramda';
 import { pickBy } from 'lodash';
-
-import { BitId } from '../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import {
   MANUALLY_ADD_DEPENDENCY,
   MANUALLY_REMOVE_DEPENDENCY,
   OVERRIDE_COMPONENT_PREFIX,
-  OVERRIDE_FILE_PREFIX,
+  DEPENDENCIES_FIELDS,
 } from '../../constants';
 import { SourceFile } from '../component/sources';
 import ComponentConfig from './component-config';
-import {
-  ConsumerOverridesOfComponent,
-  nonPackageJsonFields,
-  overridesBitInternalFields,
-  overridesForbiddenFields,
-} from './consumer-overrides';
 import { ExtensionDataList } from './extension-data';
 import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
+
+export type ConsumerOverridesOfComponent = ComponentOverridesData & {
+  extensions?: Record<string, any>;
+  env?: Record<string, any>;
+  propagate?: boolean; // whether propagate to a more general rule,
+  defaultScope?: string; // default scope to export to
+};
+
+export const overridesForbiddenFields = ['name', 'main', 'version', 'bit'];
+export const overridesBitInternalFields = ['propagate', 'exclude', 'env', 'defaultScope', 'extensions'];
+export const nonPackageJsonFields = [...DEPENDENCIES_FIELDS, ...overridesBitInternalFields];
 
 // consumer internal fields should not be used in component overrides, otherwise, they might conflict upon import
 export const componentOverridesForbiddenFields = [...overridesForbiddenFields, ...overridesBitInternalFields];
@@ -35,7 +39,7 @@ export type ComponentOverridesData = DependenciesOverridesData & {
 type OverridesLoadRegistry = { [extId: string]: Function };
 
 export default class ComponentOverrides {
-  overrides: ConsumerOverridesOfComponent;
+  private overrides: ConsumerOverridesOfComponent;
   constructor(overrides: ConsumerOverridesOfComponent | null | undefined) {
     this.overrides = overrides || {};
   }
@@ -67,47 +71,36 @@ export default class ComponentOverrides {
    * use the component-config.
    */
   static async loadFromConsumer(
-    componentId: BitId,
+    componentId: ComponentID,
     workspaceConfig: ILegacyWorkspaceConfig,
     overridesFromModel: ComponentOverridesData | undefined,
     componentConfig: ComponentConfig,
     files: SourceFile[]
   ): Promise<ComponentOverrides> {
-    // overrides from consumer-config is not relevant and should not affect imported
-    let legacyOverridesFromConsumer = workspaceConfig?.getComponentConfig(componentId);
-
-    const plainLegacy = workspaceConfig?._legacyPlainObject();
-    if (plainLegacy && plainLegacy.env) {
-      legacyOverridesFromConsumer = legacyOverridesFromConsumer || {};
-    }
-
-    const getFromComponent = (): ComponentOverridesData | null | undefined => {
-      if (componentConfig && componentConfig.componentHasWrittenConfig) {
-        return componentConfig.overrides;
-      }
-      // @todo: we might consider using overridesFromModel here.
-      // return isAuthor ? null : overridesFromModel;
-      return null;
-    };
     const extensionsAddedOverrides = await runOnLoadOverridesEvent(
       this.componentOverridesLoadingRegistry,
-      componentConfig.parseExtensions(),
+      componentConfig.extensions,
       componentId,
       files
     );
-    const mergedLegacyConsumerOverridesWithExtensions = mergeOverrides(
-      legacyOverridesFromConsumer || {},
-      extensionsAddedOverrides
-    );
-    const fromComponent = getFromComponent();
-    if (!fromComponent) {
-      return new ComponentOverrides(mergedLegacyConsumerOverridesWithExtensions);
-    }
+    return new ComponentOverrides(extensionsAddedOverrides);
+  }
 
-    const mergedOverrides = mergedLegacyConsumerOverridesWithExtensions
-      ? mergeOverrides(fromComponent, mergedLegacyConsumerOverridesWithExtensions)
-      : fromComponent;
-    return new ComponentOverrides(mergedOverrides);
+  /**
+   * used when creating new components directly from the scope. (snap from scope command)
+   */
+  static async loadNewFromScope(
+    componentId: ComponentID,
+    files: SourceFile[],
+    extensions: ExtensionDataList
+  ): Promise<ComponentOverrides> {
+    const extensionsAddedOverrides = await runOnLoadOverridesEvent(
+      this.componentOverridesLoadingRegistry,
+      extensions,
+      componentId,
+      files
+    );
+    return new ComponentOverrides(extensionsAddedOverrides);
   }
 
   static loadFromScope(overridesFromModel: ComponentOverridesData | null | undefined = {}) {
@@ -157,49 +150,13 @@ export default class ComponentOverrides {
   getIgnored(field: string): string[] {
     return R.keys(R.filter((dep) => dep === MANUALLY_REMOVE_DEPENDENCY, this.overrides[field] || {}));
   }
-  getIgnoredFiles(field: string): string[] {
-    const ignoredRules = this.getIgnored(field);
-    return ignoredRules
-      .filter((rule) => rule.startsWith(OVERRIDE_FILE_PREFIX))
-      .map((rule) => rule.replace(OVERRIDE_FILE_PREFIX, ''));
-  }
-
   getIgnoredPackages(field: string): string[] {
     const ignoredRules = this.getIgnored(field);
-    return ignoredRules.filter((rule) => !rule.startsWith(OVERRIDE_FILE_PREFIX));
-  }
-  static getAllFilesPaths(overrides: Record<string, any>): string[] {
-    if (!overrides) return [];
-    const allDeps = Object.assign({}, overrides.dependencies, overrides.devDependencies, overrides.peerDependencies);
-    return Object.keys(allDeps)
-      .filter((rule) => rule.startsWith(OVERRIDE_FILE_PREFIX))
-      .map((rule) => rule.replace(OVERRIDE_FILE_PREFIX, ''));
+    return ignoredRules;
   }
   clone(): ComponentOverrides {
     return new ComponentOverrides(R.clone(this.overrides));
   }
-}
-
-function mergeOverrides(
-  overrides1: ComponentOverridesData,
-  overrides2: ComponentOverridesData
-): ComponentOverridesData {
-  // Make sure to not mutate the original object
-  const result = R.clone(overrides1);
-  const isObjectAndNotArray = (val) => typeof val === 'object' && !Array.isArray(val);
-  Object.keys(overrides2 || {}).forEach((field) => {
-    // Do not merge internal fields
-    if (overridesBitInternalFields.includes(field)) {
-      return; // do nothing
-    }
-    if (isObjectAndNotArray(overrides1[field]) && isObjectAndNotArray(overrides2[field])) {
-      result[field] = Object.assign({}, overrides2[field], overrides1[field]);
-    } else if (!result[field]) {
-      result[field] = overrides2[field];
-    }
-    // when overrides1[field] is set and not an object, do not override it by overrides2
-  });
-  return result;
 }
 
 /**
@@ -223,7 +180,7 @@ function mergeExtensionsOverrides(configs: DependenciesOverridesData[]): any {
 async function runOnLoadOverridesEvent(
   configsRegistry: OverridesLoadRegistry,
   extensions: ExtensionDataList,
-  id: BitId,
+  id: ComponentID,
   files: SourceFile[]
 ): Promise<DependenciesOverridesData> {
   const extensionsAddedOverridesP = Object.keys(configsRegistry).map((extId) => {

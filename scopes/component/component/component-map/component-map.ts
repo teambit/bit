@@ -130,4 +130,22 @@ export class ComponentMap<T> {
 
     return new ComponentMap(new Map(tuples));
   }
+
+  /**
+   * create a component map from components and a value predicate.
+   * @param components components to zip into the map.
+   * @param predicate predicate for returning desired value.
+   */
+  static async asAsync<U>(
+    components: Component[],
+    predicate: (component: Component) => Promise<U>
+  ): Promise<ComponentMap<U>> {
+    const tuples: [string, [Component, U]][] = await Promise.all(
+      components.map(async (component) => {
+        return [component.id.toString(), [component, await predicate(component)]];
+      })
+    );
+
+    return new ComponentMap(new Map(tuples));
+  }
 }

@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import R from 'ramda';
 import { compact } from 'lodash';
-import { BitId } from '../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import logger from '../../logger/logger';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
@@ -24,7 +24,7 @@ export async function addComponentsWithVersionToRoot(consumer: Consumer, compone
 export async function removeComponentsFromWorkspacesAndDependencies(
   consumer: Consumer,
   components: Component[],
-  invalidComponents: BitId[] = []
+  invalidComponents: ComponentID[] = []
 ) {
   const bitIds = [...components.map((c) => c.id), ...invalidComponents];
   const rootDir = consumer.getPath();
@@ -52,7 +52,7 @@ async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute,
 export async function removeComponentsFromNodeModules(consumer: Consumer, components: Component[]) {
   logger.debug(`removeComponentsFromNodeModules: ${components.map((c) => c.id.toString()).join(', ')}`);
   const pathsToRemoveWithNulls = components.map((c) => {
-    return getNodeModulesPathOfComponent({ ...c, id: c.id, allowNonScope: true });
+    return getNodeModulesPathOfComponent({ ...c, id: c.id });
   });
   const pathsToRemove = compact(pathsToRemoveWithNulls);
   logger.debug(`deleting the following paths: ${pathsToRemove.join('\n')}`);

@@ -22,7 +22,7 @@ export class ExportCmd implements Command {
   alias = 'e';
   helpUrl = 'reference/components/exporting-components';
   options = [
-    ['e', 'eject', 'remove component from the workspace and install it instead as a regular npm package'],
+    ['e', 'eject', 'after export, remove the components from the workspace and install them as packages'],
     [
       'a',
       'all',
@@ -54,7 +54,7 @@ export class ExportCmd implements Command {
       "EXPERIMENTAL. don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote",
     ],
     ['', 'fork-lane-new-scope', 'allow exporting a forked lane into a different scope than the original scope'],
-    ['', 'no-browser', 'do not open a browser once the export is completed in the cloud job url'],
+    ['', 'open-browser', 'open a browser once the export is completed in the cloud job url'],
     ['j', 'json', 'show output in json format'],
   ] as CommandOptions;
   loader = true;
@@ -75,7 +75,7 @@ export class ExportCmd implements Command {
       resume,
       headOnly,
       forkLaneNewScope = false,
-      noBrowser = false,
+      openBrowser = false,
     }: any
   ): Promise<string> {
     const { componentsIds, nonExistOnBitMap, removedIds, missingScope, exportedLanes, ejectResults, rippleJobs } =
@@ -135,7 +135,7 @@ export class ExportCmd implements Command {
     };
     const rippleJobsOutput = () => {
       if (!rippleJobs.length) return '';
-      const shouldOpenBrowser = !noBrowser && !process.env.CI;
+      const shouldOpenBrowser = openBrowser && !process.env.CI;
       const prefix = shouldOpenBrowser ? 'Your browser has been opened to the following link' : 'Visit the link below';
       const msg = `\n\n${prefix} to track the progress of building the components in the cloud\n`;
       const fullUrls = rippleJobs.map((job) => `https://${getCloudDomain()}/ripple-ci/job/${job}`);

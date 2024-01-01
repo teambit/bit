@@ -1,4 +1,4 @@
-import { BASE_LEGACY_DOCS_DOMAIN } from '../../constants';
+import { BASE_COMMUNITY_DOMAIN } from '../../constants';
 
 /**
  * schema for analytics.
@@ -9,7 +9,7 @@ export default {
       required: true,
       default: 'yes',
       description: `help us prioritize new features and bug fixes by enabling us to collect anonymous statistics about your usage. sharing anonymous usage information is completely voluntary and helps us improve Bit and build a better product.
-for more information see analytics documentation - https://${BASE_LEGACY_DOCS_DOMAIN}/conf-analytics
+for more information see analytics documentation - ${BASE_COMMUNITY_DOMAIN}/reference/usage-analytics
 would you like to help Bit with anonymous usage analytics? [yes(y)/no(n)]`,
       message: 'please choose yes or no.',
       type: 'string',

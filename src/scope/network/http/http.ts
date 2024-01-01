@@ -1,8 +1,9 @@
 import { ClientError, gql, GraphQLClient } from 'graphql-request';
 import fetch, { Response } from 'cross-fetch';
+import retry from 'async-retry';
 import readLine from 'readline';
 import HttpAgent from 'agentkeepalive';
-
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpProxyAgent } from 'http-proxy-agent';
@@ -10,7 +11,6 @@ import { LaneId } from '@teambit/lane-id';
 import { getAgent, AgentOptions } from '@teambit/toolbox.network.agent';
 import { Network } from '../network';
 import { getHarmonyVersion } from '../../../bootstrap';
-import { BitId, BitIds } from '../../../bit-id';
 import Component from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import DependencyGraph from '../../graph/scope-graph';
@@ -149,9 +149,9 @@ export class Http implements Network {
     // Reading strictSSL from both network.strict-ssl and network.strict_ssl for backward compatibility.
     const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj['network.strict_ssl'] ?? obj[CFG_PROXY_STRICT_SSL];
     const networkConfig = {
-      fetchRetries: obj[CFG_FETCH_RETRIES] ?? 2,
+      fetchRetries: obj[CFG_FETCH_RETRIES] ?? 5,
       fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR] ?? 10,
-      fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT] ?? 10000,
+      fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT] ?? 1000,
       fetchRetryMaxtimeout: obj[CFG_FETCH_RETRY_MAXTIMEOUT] ?? 60000,
       fetchTimeout: obj[CFG_FETCH_TIMEOUT] ?? 60000,
       localAddress: obj[CFG_LOCAL_ADDRESS],
@@ -164,10 +164,14 @@ export class Http implements Network {
       key: obj[CFG_NETWORK_KEY] ?? obj[CFG_PROXY_KEY],
     };
     logger.debug(
-      `the next network configuration is used in network.http: ${{
-        ...networkConfig,
-        key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
-      }}`
+      `the next network configuration is used in network.http: ${JSON.stringify(
+        {
+          ...networkConfig,
+          key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
+        },
+        null,
+        2
+      )}`
     );
     return networkConfig;
   }
@@ -344,20 +348,41 @@ export class Http implements Network {
     };
     const importerUrl = getImporterUrl();
     const urlToFetch = importerUrl ? `${importerUrl}/${this.scopeName}` : `${this.url}/${route}`;
-    const scopeData = `scopeName: ${this.scopeName}, url: ${urlToFetch}`;
+    // generate a random number of 6 digits to be used as the request ID, so it'll be easier to debug with the remote.
+    const requestId = Math.floor(Math.random() * 1000000);
+    const scopeData = `scopeName: ${this.scopeName}, url: ${urlToFetch}. requestId: ${requestId}`;
     logger.debug(`Http.fetch, ${scopeData}`);
     const body = JSON.stringify({
       ids,
       fetchOptions,
     });
-    const headers = this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': Verb.READ });
+    const headers = this.getHeaders({
+      'Content-Type': 'application/json',
+      'x-verb': Verb.READ,
+      'x-bit-request-id': requestId.toString(),
+    });
     const opts = this.addAgentIfExist({
       method: 'post',
       body,
       headers,
     });
 
-    const res = await fetch(urlToFetch, opts);
+    const res = await retry(
+      async () => {
+        const retiedRes = await fetch(urlToFetch, opts);
+        return retiedRes;
+      },
+      {
+        retries: this.networkConfig?.fetchRetries,
+        factor: this.networkConfig?.fetchRetryFactor,
+        minTimeout: this.networkConfig?.fetchRetryMintimeout,
+        maxTimeout: this.networkConfig?.fetchRetryMaxtimeout,
+        onRetry: (e: any) => {
+          logger.debug(`failed to fetch import with error: ${e?.message || ''}`);
+        },
+      }
+    );
+    // const res = await fetch(urlToFetch, opts);
     logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
     // @ts-ignore TODO: need to fix this
@@ -462,14 +487,14 @@ export class Http implements Network {
     });
 
     data.scope.components.forEach((comp) => {
-      comp.id = new BitId(comp.id);
+      comp.id = ComponentID.fromObject(comp.id);
       comp.deprecated = comp.deprecation.isDeprecate;
     });
 
     return data.scope.components;
   }
 
-  async show(bitId: BitId): Promise<Component | null | undefined> {
+  async show(bitId: ComponentID): Promise<Component | null | undefined> {
     const SHOW_COMPONENT = gql`
       query showLegacy($id: String!) {
         scope {
@@ -484,7 +509,7 @@ export class Http implements Network {
     return Component.fromString(data.scope._getLegacy);
   }
 
-  async log(id: BitId): Promise<ComponentLog[]> {
+  async log(id: ComponentID): Promise<ComponentLog[]> {
     const GET_LOG_QUERY = gql`
       query getLogs($id: String!) {
         scope {
@@ -507,7 +532,7 @@ export class Http implements Network {
     return data.scope.getLogs;
   }
 
-  async latestVersions(bitIds: BitIds): Promise<string[]> {
+  async latestVersions(bitIds: ComponentIdList): Promise<string[]> {
     const GET_LATEST_VERSIONS = gql`
       query getLatestVersions($ids: [String]!) {
         scope {
@@ -523,7 +548,7 @@ export class Http implements Network {
     return data.scope._legacyLatestVersions;
   }
 
-  async graph(bitId?: BitId): Promise<DependencyGraph> {
+  async graph(bitId?: ComponentID): Promise<DependencyGraph> {
     const GRAPH_QUERY = gql`
       query graph($ids: [String], $filter: String) {
         graph(ids: $ids, filter: $filter) {
@@ -550,7 +575,7 @@ export class Http implements Network {
       ids: bitId ? [bitId.toString()] : [],
     });
 
-    const nodes = graph.nodes.map((node) => ({ idStr: node.id, bitId: new BitId(node.component.id) }));
+    const nodes = graph.nodes.map((node) => ({ idStr: node.id, bitId: ComponentID.fromObject(node.component.id) }));
     const edges = graph.edges.map((edge) => ({
       src: edge.sourceId,
       target: edge.targetId,
@@ -584,7 +609,10 @@ export class Http implements Network {
     return res.lanes.list.map((lane) => ({
       ...lane,
       id: LaneId.from(lane.id.name, lane.id.scope),
-      components: lane.components.map((laneCompId) => ({ id: new BitId(laneCompId), head: laneCompId.version })),
+      components: lane.components.map((laneCompId) => ({
+        id: ComponentID.fromObject(laneCompId),
+        head: laneCompId.version,
+      })),
     }));
   }
 

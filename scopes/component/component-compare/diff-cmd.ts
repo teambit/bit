@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import { DiffResults, outputDiffResults } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
@@ -25,6 +26,9 @@ ${WILDCARD_HELP('diff')}`;
 
   async report([values = []]: [string[]], { verbose = false, table = false }: { verbose?: boolean; table: boolean }) {
     const diffResults: DiffResults[] = await this.componentCompareMain.diffByCLIValues(values, verbose, table);
+    if (!diffResults.length) {
+      return chalk.yellow('there are no modified components to diff');
+    }
     return outputDiffResults(diffResults);
   }
 }

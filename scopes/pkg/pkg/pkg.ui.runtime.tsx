@@ -44,7 +44,7 @@ export class PkgUI {
           isInstallable={!options?.disableInstall}
         />
       ) : null,
-      order: 10,
+      order: 30,
     };
   };
 }

@@ -1,6 +1,5 @@
 import R from 'ramda';
-
-import BitIds from '../../../bit-id/bit-ids';
+import { ComponentIdList } from '@teambit/component-id';
 import { POST_RECEIVE_OBJECTS, PRE_RECEIVE_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
 import { loadScope } from '../../../scope';
@@ -36,7 +35,7 @@ export default async function put(
     return [];
   }
   // legacy client (non-harmony) or bit-sign.
-  const componentsBitIds: BitIds = await exportManyBareScope(scope, objectList);
+  const componentsBitIds: ComponentIdList = await exportManyBareScope(scope, objectList);
   const componentsIds: string[] = componentsBitIds.map((id) => id.toString());
   let uniqComponentsIds = componentsIds;
   if (componentsIds && componentsIds.length) {

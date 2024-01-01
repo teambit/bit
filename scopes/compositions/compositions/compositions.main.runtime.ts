@@ -1,5 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
 import { AspectData, Component, ComponentMap, IComponent } from '@teambit/component';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -117,7 +118,7 @@ export class CompositionsMain {
   }
 
   getComponentDevPatterns(component: Component) {
-    const env = this.envs.calculateEnv(component, { skipWarnings: !!this.workspace.inInstallContext }).env;
+    const env = this.envs.calculateEnv(component, { skipWarnings: !!this.workspace?.inInstallContext }).env;
     const componentEnvCompositionsDevPatterns: string[] = env.getCompositionsDevPatterns
       ? env.getCompositionsDevPatterns(component)
       : [];
@@ -142,7 +143,8 @@ export class CompositionsMain {
     const pathArray = file.path.split('.');
     pathArray[pathArray.length - 1] = 'js';
 
-    const exports = this.schema.parseModule(join(this.workspace.componentDir(component.id), file.relative));
+    const modulePath = this.workspace ? join(this.workspace.componentDir(component.id), file.relative) : file.relative;
+    const exports = this.schema.parseModule(modulePath, file.contents.toString());
     return exports.map((exportModel) => {
       const displayName = exportModel.staticProperties?.get('compositionName');
 
@@ -160,16 +162,25 @@ export class CompositionsMain {
   };
 
   static runtime = MainRuntime;
-  static dependencies = [PreviewAspect, GraphqlAspect, WorkspaceAspect, SchemaAspect, DevFilesAspect, EnvsAspect];
+  static dependencies = [
+    PreviewAspect,
+    GraphqlAspect,
+    WorkspaceAspect,
+    SchemaAspect,
+    DevFilesAspect,
+    EnvsAspect,
+    ScopeAspect,
+  ];
 
   static async provider(
-    [preview, graphql, workspace, schema, devFiles, envs]: [
+    [preview, graphql, workspace, schema, devFiles, envs, scope]: [
       PreviewMain,
       GraphqlMain,
       Workspace,
       SchemaMain,
       DevFilesMain,
-      EnvsMain
+      EnvsMain,
+      ScopeMain
     ],
     config: CompositionsConfig
   ) {
@@ -190,7 +201,10 @@ export class CompositionsMain {
     preview.registerDefinition(new CompositionPreviewDefinition(compositions));
 
     if (workspace) {
-      workspace.onComponentLoad(compositions.onComponentLoad.bind(compositions));
+      workspace.registerOnComponentLoad(compositions.onComponentLoad.bind(compositions));
+    }
+    if (scope) {
+      scope.registerOnCompAspectReCalc(compositions.onComponentLoad.bind(compositions));
     }
 
     return compositions;

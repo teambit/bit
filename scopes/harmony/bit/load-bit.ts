@@ -27,8 +27,7 @@ import { Harmony, RuntimeDefinition, Extension } from '@teambit/harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
 import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
 
-import { BitId, VERSION_DELIMITER } from '@teambit/legacy-bit-id';
-import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
+import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
 import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { ConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
@@ -38,9 +37,10 @@ import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-o
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { satisfies } from 'semver';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+import ClearCacheAspect from '@teambit/clear-cache';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { findScopePath } from '@teambit/legacy/dist/utils';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
@@ -107,8 +107,11 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
     // Do nothing here, invalid bitmaps will be handled later
     // eslint-disable-next-line no-empty
   } catch (e: any) {}
-  const allBitmapIds = Object.keys(parsedBitMap).map((id) => BitMap.getBitIdFromComponentJson(id, parsedBitMap[id]));
-  const bitMapBitIds = BitIds.fromArray(allBitmapIds);
+  const defaultScope = rawConfig['teambit.workspace/workspace'].defaultScope;
+  const allBitmapIds = Object.keys(parsedBitMap).map((id) =>
+    BitMap.getComponentIdFromComponentJson(id, parsedBitMap[id], defaultScope)
+  );
+  const bitMapBitIds = ComponentIdList.fromArray(allBitmapIds);
   const result = Object.entries(rawConfig).reduce((acc, [aspectId, aspectConfig]) => {
     let newAspectEntry = aspectId;
     // In case the id already has a version we don't want to get it from the bitmap
@@ -125,10 +128,10 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
   return new Config(result);
 }
 
-function getVersionFromBitMapIds(allBitmapIds: BitIds, aspectId: string): string | undefined {
-  let aspectBitId: BitId;
+function getVersionFromBitMapIds(allBitmapIds: ComponentIdList, aspectId: string): string | undefined {
+  let aspectBitId: ComponentID;
   try {
-    aspectBitId = BitId.parse(aspectId, true);
+    aspectBitId = ComponentID.fromString(aspectId);
   } catch (err: any) {
     throw new Error(
       `unable to parse the component-id "${aspectId}" from the workspace.jsonc file, make sure this is a component id`
@@ -187,21 +190,14 @@ function getMainAspect() {
  */
 function shouldLoadInSafeMode() {
   const currentCommand = process.argv[2];
-  const safeModeCommands = [
-    'init',
-    'cat-scope',
-    'cat-object',
-    'cat-component',
-    'cmp',
-    'cat-lane',
-    'login',
-    'logout',
-    'config',
-    'remote',
-  ];
+  const safeModeCommands = ['init', 'cat-scope', 'cat-object', 'cat-component', 'cmp', 'cat-lane', 'config', 'remote'];
   const hasSafeModeFlag = process.argv.includes('--safe-mode');
-  const isSafeModeCommand = safeModeCommands.includes(currentCommand);
+  const isSafeModeCommand = safeModeCommands.includes(currentCommand) || isClearCacheCommand();
   return isSafeModeCommand || hasSafeModeFlag;
+}
+
+function isClearCacheCommand() {
+  return process.argv[2] === 'clear-cache' || process.argv[2] === 'cc';
 }
 
 function shouldRunAsDaemon() {
@@ -221,6 +217,7 @@ export async function loadBit(path = process.cwd()) {
 
   const aspectsToLoad = [CLIAspect];
   const loadCLIOnly = shouldLoadInSafeMode();
+  if (isClearCacheCommand()) aspectsToLoad.push(ClearCacheAspect);
   if (!loadCLIOnly) {
     aspectsToLoad.push(BitAspect);
   }
@@ -234,7 +231,6 @@ export async function loadBit(path = process.cwd()) {
   const aspectLoader = harmony.get<AspectLoaderMain>('teambit.harmony/aspect-loader');
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
   aspectLoader.setMainAspect(getMainAspect());
-  registerCoreAspectsToLegacyDepResolver(aspectLoader);
   return harmony;
 }
 
@@ -265,17 +261,7 @@ export async function runCLI() {
   await cli.run(hasWorkspace);
 }
 
-function registerCoreAspectsToLegacyDepResolver(aspectLoader: AspectLoaderMain) {
-  const allCoreAspectsIds = aspectLoader.getCoreAspectIds();
-  const coreAspectsPackagesAndIds = {};
-
-  allCoreAspectsIds.forEach((id) => {
-    const packageName = getCoreAspectPackageName(id);
-    coreAspectsPackagesAndIds[packageName] = id;
-  });
-  // @ts-ignore
-  DependencyResolver.getCoreAspectsPackagesAndIds = () => coreAspectsPackagesAndIds;
-}
+const globalsState: Record<string, any> = {};
 
 /**
  * loadBit may gets called multiple times (currently, it's happening during e2e-tests that call loadBit).
@@ -290,12 +276,13 @@ function clearGlobalsIfNeeded() {
   delete loadConsumer.cache;
   ComponentLoader.onComponentLoadSubscribers = [];
   ComponentOverrides.componentOverridesLoadingRegistry = {};
-  ComponentConfig.componentConfigLegacyLoadingRegistry = {};
   ComponentConfig.componentConfigLoadingRegistry = {};
   PackageJsonTransformer.packageJsonTransformersRegistry = [];
+  globalsState.loadDeps = ComponentLoader.loadDeps;
   // @ts-ignore
-  DependencyResolver.getWorkspacePolicy = undefined;
+  ComponentLoader.loadDeps = undefined;
   ExtensionDataList.coreExtensionsNames = new Map();
+  ExtensionDataList.toModelObjectsHook = [];
   // @ts-ignore
   WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;
   // @ts-ignore
@@ -303,4 +290,8 @@ function clearGlobalsIfNeeded() {
   // @ts-ignore
   WorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
   ExternalActions.externalActions = [];
+}
+
+export function restoreGlobals() {
+  if (globalsState.loadDeps) ComponentLoader.loadDeps = globalsState.loadDeps;
 }
