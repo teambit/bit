@@ -6,7 +6,7 @@ const destParent = path.join(bitDir, 'node_modules', '@teambit');
 const dest = path.join(destParent, 'legacy');
 
 try {
-  fs.rmdirSync(dest, { recursive: true });
+  fs.rmSync(dest, { recursive: true });
 } catch (err) {} // maybe doesn't exist
 
 try {
