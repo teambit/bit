@@ -64,16 +64,18 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
     const compatibleExts = ['.tsx', '.ts'];
-    const internalFiles = component.filesystem.files.filter(
-      (file) => compatibleExts.includes(file.extname) && file.path !== mainFile.path
-    );
+    const internalFiles = options.skipInternals
+      ? []
+      : component.filesystem.files.filter(
+          (file) => compatibleExts.includes(file.extname) && file.path !== mainFile.path
+        );
     const allFiles = [mainFile, ...internalFiles];
 
     const context = await this.createContext(tsserver, component, options.formatter);
 
     await pMapSeries(allFiles, async (file) => {
       const ast = this.parseSourceFile(file);
-      const identifiers = await this.computeIdentifiers(ast, context); // compute for every file
+      const identifiers = await this.computeIdentifiers(ast, context);
       const cacheKey = context.getIdentifierKeyForNode(ast);
       context.setIdentifiers(cacheKey, new IdentifierList(identifiers));
     });
@@ -86,10 +88,12 @@ export class TypeScriptExtractor implements SchemaExtractor {
 
     const location = context.getLocation(mainAst);
 
-    return new APISchema(location, apiScheme, internals, component.id);
+    return new APISchema(location, apiScheme, internals, component.id as any);
   }
 
   async computeInternalModules(context: SchemaExtractorContext, internalFiles: AbstractVinyl[]) {
+    if (internalFiles.length === 0) return [];
+
     const internals = compact(
       await Promise.all(
         [...context.internalIdentifiers.entries()].map(async ([filePath]) => {
@@ -114,7 +118,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const transformer = this.getTransformer(node, context);
     let identifiers: Identifier[] = [];
     if (!transformer || !transformer.getIdentifiers) {
-      this.logger.warn(new TransformerNotFound(node, context.component, context.getLocation(node)).toString());
+      this.logger.debug(new TransformerNotFound(node, context.component, context.getLocation(node)).toString());
     } else {
       identifiers = await transformer.getIdentifiers(node, context);
     }
@@ -201,7 +205,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
       return singleTransformer.predicate(node);
     });
     if (!transformer) {
-      this.logger.warn(new TransformerNotFound(node, context.component, context.getLocation(node)).toString());
+      this.logger.debug(new TransformerNotFound(node, context.component, context.getLocation(node)).toString());
       return undefined;
     }
 

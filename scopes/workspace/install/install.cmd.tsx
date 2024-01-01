@@ -10,6 +10,7 @@ type InstallCmdOptions = {
   skipDedupe: boolean;
   skipImport: boolean;
   skipCompile: boolean;
+  skipWriteConfigFiles: boolean;
   update: boolean;
   updateExisting: boolean;
   savePrefix: string;
@@ -17,6 +18,7 @@ type InstallCmdOptions = {
   addMissingPeers: boolean;
   noOptional: boolean;
   recurringInstall: boolean;
+  lockfileOnly: boolean;
 };
 
 type FormatOutputArgs = {
@@ -50,6 +52,7 @@ export default class InstallCmd implements Command {
     ['', 'skip-dedupe', 'do not dedupe dependencies on installation'],
     ['', 'skip-import', 'do not import bit objects post installation'],
     ['', 'skip-compile', 'do not compile components'],
+    ['', 'skip-write-config-files', 'do not write config files (such as eslint, tsconfig, prettier, etc...)'],
     ['', 'add-missing-deps', 'install all missing dependencies'],
     ['', 'add-missing-peers', 'install all missing peer dependencies'],
     [
@@ -58,6 +61,7 @@ export default class InstallCmd implements Command {
       'automatically run install again if there are non loaded old envs in your workspace',
     ],
     ['', 'no-optional [noOptional]', 'do not install optional dependencies (works with pnpm only)'],
+    ['', 'lockfile-only', 'dependencies are not written to node_modules. Only the lockfile is updated'],
   ] as CommandOptions;
 
   constructor(
@@ -92,8 +96,10 @@ export default class InstallCmd implements Command {
       addMissingPeers: options.addMissingPeers,
       compile: !options.skipCompile,
       includeOptionalDeps: !options.noOptional,
+      writeConfigFiles: !options.skipWriteConfigFiles,
       updateAll: options.update,
       recurringInstall: options.recurringInstall,
+      lockfileOnly: options.lockfileOnly,
     };
     const components = await this.install.install(packages, installOpts);
     const endTime = Date.now();

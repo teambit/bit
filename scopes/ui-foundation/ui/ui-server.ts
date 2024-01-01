@@ -101,6 +101,7 @@ export class UIServer {
     const publicDir = `/${this.publicDir}`;
     const defaultRoot = join(this.uiRoot.path, publicDir);
     const root = bundleUiRoot || defaultRoot;
+    this.logger.debug(`UiServer, start from ${root}`);
     const server = await this.graphql.createServer({ app });
 
     // set up proxy, for things like preview, e.g. '/preview/teambit.react/react'
@@ -160,7 +161,7 @@ export class UIServer {
     // TODO - should use https://github.com/chimurai/http-proxy-middleware
     server.on('upgrade', function (req, socket, head) {
       const entry = proxyEntries.find((proxy) =>
-        proxy.context.some((item) => item === stripTrailingChar(req.url, '/'))
+        proxy.context.some((item) => item === stripTrailingChar(req.url as string, '/'))
       );
       if (!entry) return;
       proxServer.ws(req, socket, head, {

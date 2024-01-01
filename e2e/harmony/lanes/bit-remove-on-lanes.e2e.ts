@@ -166,7 +166,7 @@ describe('bit lane command', function () {
     it('should remove from the lane object as well', () => {
       const lane = helper.command.showOneLaneParsed('dev');
       expect(lane.components).to.have.lengthOf(1);
-      expect(lane.components[0].id.name).to.not.have.string('comp1');
+      expect(lane.components[0].id).to.not.include('comp1');
     });
     // previously, it was throwing: "Error: unable to merge lane dev, the component 87ql0ef4-remote/comp1 was not found"
     // because the component was not removed from the lane-object.
@@ -532,6 +532,33 @@ describe('bit lane command', function () {
     it('should be marked with removed on main', () => {
       const removeData = helper.command.showAspectConfig(`${helper.scopes.remote}/comp1`, Extensions.remove);
       expect(removeData.config.removeOnMain).to.be.true;
+    });
+  });
+  describe('delete on a lane then merging the deleted component from main', () => {
+    let onMain: string;
+    let onLane: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      onMain = helper.scopeHelper.cloneLocalScope();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.softRemoveOnLane('comp1');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      onLane = helper.scopeHelper.cloneLocalScope();
+      helper.scopeHelper.getClonedLocalScope(onMain);
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(onLane);
+      helper.command.mergeLane('main', '-x');
+    });
+    it('should not merge the deleted component although main is ahead', () => {
+      const status = helper.command.statusJson();
+      expect(status.stagedComponents).to.have.lengthOf(1);
     });
   });
 });

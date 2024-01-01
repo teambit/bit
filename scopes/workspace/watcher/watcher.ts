@@ -2,10 +2,9 @@ import { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
 import { dirname, basename } from 'path';
 import { compact, difference, partition } from 'lodash';
-import { ComponentID } from '@teambit/component';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { BIT_MAP, CFG_WATCH_USE_POLLING } from '@teambit/legacy/dist/constants';
+import { BIT_MAP, CFG_WATCH_USE_POLLING, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
@@ -14,7 +13,7 @@ import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import chokidar, { FSWatcher } from '@teambit/chokidar';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
-import { PathLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { CompilationInitiator } from '@teambit/compiler';
 import {
   WorkspaceAspect,
@@ -28,7 +27,7 @@ import { CheckTypes } from './check-types';
 import { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';
 
-export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: BitId; componentIds: BitId[] };
+export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: ComponentID; componentIds: ComponentID[] };
 
 export type EventMessages = {
   onAll: Function;
@@ -55,9 +54,11 @@ export type WatchOptions = {
   spawnTSServer?: boolean; // needed for check types and extract API/docs.
   checkTypes?: CheckTypes; // if enabled, the spawnTSServer becomes true.
   preCompile?: boolean; // whether compile all components before start watching
+  compile?: boolean; // whether compile modified/added components during watch process
 };
 
 const DEBOUNCE_WAIT_MS = 100;
+type PathLinux = string; // ts fails when importing it from @teambit/legacy/dist/utils/path.
 
 export class Watcher {
   private fsWatcher: FSWatcher;
@@ -68,20 +69,25 @@ export class Watcher {
   private trackDirs: { [dir: PathLinux]: ComponentID } = {};
   private verbose = false;
   private multipleWatchers: WatcherProcessData[] = [];
-  constructor(private workspace: Workspace, private pubsub: PubsubMain, private watcherMain: WatcherMain) {
+  constructor(
+    private workspace: Workspace,
+    private pubsub: PubsubMain,
+    private watcherMain: WatcherMain,
+    private options: WatchOptions
+  ) {
     this.ipcEventsDir = this.watcherMain.ipcEvents.eventsDir;
+    this.verbose = this.options.verbose || false;
   }
 
   get consumer(): Consumer {
     return this.workspace.consumer;
   }
 
-  async watchAll(opts: WatchOptions) {
-    const { msgs, ...watchOpts } = opts;
-    this.verbose = opts.verbose || false;
+  async watch() {
+    const { msgs, ...watchOpts } = this.options;
+    await this.setTrackDirs();
     const componentIds = Object.values(this.trackDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
-    await this.setTrackDirs();
     await this.createWatcher();
     const watcher = this.fsWatcher;
     msgs?.onStart(this.workspace);
@@ -102,10 +108,7 @@ export class Watcher {
       watcher.on('all', async (event, filePath) => {
         if (event !== 'change' && event !== 'add' && event !== 'unlink') return;
         const startTime = new Date().getTime();
-        const { files, results, debounced, irrelevant, failureMsg } = await this.handleChange(
-          filePath,
-          opts?.initiator
-        );
+        const { files, results, debounced, irrelevant, failureMsg } = await this.handleChange(filePath);
         if (debounced || irrelevant) {
           return;
         }
@@ -154,10 +157,7 @@ export class Watcher {
    * this way we can also ensure that if compA was started before the .bitmap execution, it will complete before the
    * .bitmap execution starts.
    */
-  private async handleChange(
-    filePath: string,
-    initiator?: CompilationInitiator
-  ): Promise<{
+  private async handleChange(filePath: string): Promise<{
     results: OnComponentEventResult[];
     files: string[];
     failureMsg?: string;
@@ -183,6 +183,10 @@ export class Watcher {
         await this.watcherMain.ipcEvents.triggerGotEvent(eventName as 'onPostInstall');
         return { results: [], files: [filePath] };
       }
+      if (filePath.endsWith(WORKSPACE_JSONC)) {
+        await this.workspace.triggerOnWorkspaceConfigChange();
+        return { results: [], files: [filePath] };
+      }
       const componentId = this.getComponentIdByPath(filePath);
       if (!componentId) {
         loader.stop();
@@ -199,7 +203,7 @@ export class Watcher {
       const files = this.changedFilesPerComponent[compIdStr];
       delete this.changedFilesPerComponent[compIdStr];
 
-      const buildResults = await this.watchQueue.add(() => this.triggerCompChanges(componentId, files, initiator));
+      const buildResults = await this.watchQueue.add(() => this.triggerCompChanges(componentId, files));
       const failureMsg = buildResults.length
         ? undefined
         : `files ${files.join(', ')} are inside the component ${compIdStr} but configured to be ignored`;
@@ -220,8 +224,7 @@ export class Watcher {
 
   private async triggerCompChanges(
     componentId: ComponentID,
-    files: PathOsBasedAbsolute[],
-    initiator?: CompilationInitiator
+    files: PathOsBasedAbsolute[]
   ): Promise<OnComponentEventResult[]> {
     let updatedComponentId: ComponentID | undefined = componentId;
     if (!(await this.workspace.hasId(componentId))) {
@@ -262,7 +265,7 @@ export class Watcher {
       return [];
     }
     this.consumer.bitMap.updateComponentPaths(
-      componentId._legacy,
+      componentId,
       compFiles.map((f) => this.consumer.getPathRelativeToConsumer(f)),
       removedFiles.map((f) => this.consumer.getPathRelativeToConsumer(f))
     );
@@ -270,8 +273,7 @@ export class Watcher {
       updatedComponentId,
       compFiles,
       removedFiles,
-      true,
-      initiator
+      true
     );
     return buildResults;
   }
@@ -302,7 +304,7 @@ export class Watcher {
 
   private async executeWatchOperationsOnRemove(componentId: ComponentID) {
     logger.debug(`running OnComponentRemove hook for ${chalk.bold(componentId.toString())}`);
-    this.pubsub.pub(WorkspaceAspect.id, this.creatOnComponentRemovedEvent(componentId.toString()));
+    this.pubsub.pub(WorkspaceAspect.id, this.createOnComponentRemovedEvent(componentId.toString()));
     await this.workspace.triggerOnComponentRemove(componentId);
   }
 
@@ -310,8 +312,7 @@ export class Watcher {
     componentId: ComponentID,
     files: PathOsBasedAbsolute[],
     removedFiles: PathOsBasedAbsolute[] = [],
-    isChange = true,
-    initiator?: CompilationInitiator
+    isChange = true
   ): Promise<OnComponentEventResult[]> {
     if (this.isComponentWatchedExternally(componentId)) {
       // update capsule, once done, it automatically triggers the external watcher
@@ -322,33 +323,33 @@ export class Watcher {
 
     if (isChange) {
       logger.debug(`running OnComponentChange hook for ${chalk.bold(idStr)}`);
-      this.pubsub.pub(WorkspaceAspect.id, this.creatOnComponentChangeEvent(idStr, 'OnComponentChange'));
+      this.pubsub.pub(WorkspaceAspect.id, this.createOnComponentChangeEvent(idStr, 'OnComponentChange'));
     } else {
       logger.debug(`running OnComponentAdd hook for ${chalk.bold(idStr)}`);
-      this.pubsub.pub(WorkspaceAspect.id, this.creatOnComponentAddEvent(idStr, 'OnComponentAdd'));
+      this.pubsub.pub(WorkspaceAspect.id, this.createOnComponentAddEvent(idStr, 'OnComponentAdd'));
     }
 
     const buildResults = isChange
-      ? await this.workspace.triggerOnComponentChange(componentId, files, removedFiles, initiator)
-      : await this.workspace.triggerOnComponentAdd(componentId);
+      ? await this.workspace.triggerOnComponentChange(componentId, files, removedFiles, this.options)
+      : await this.workspace.triggerOnComponentAdd(componentId, this.options);
 
     return buildResults;
   }
 
-  private creatOnComponentRemovedEvent(idStr) {
+  private createOnComponentRemovedEvent(idStr) {
     return new OnComponentRemovedEvent(Date.now(), idStr);
   }
 
-  private creatOnComponentChangeEvent(idStr, hook) {
+  private createOnComponentChangeEvent(idStr, hook) {
     return new OnComponentChangeEvent(Date.now(), idStr, hook);
   }
 
-  private creatOnComponentAddEvent(idStr, hook) {
+  private createOnComponentAddEvent(idStr, hook) {
     return new OnComponentAddEvent(Date.now(), idStr, hook);
   }
 
   private isComponentWatchedExternally(componentId: ComponentID) {
-    const watcherData = this.multipleWatchers.find((m) => m.componentIds.find((id) => id.isEqual(componentId._legacy)));
+    const watcherData = this.multipleWatchers.find((m) => m.componentIds.find((id) => id.isEqual(componentId)));
     if (watcherData) {
       logger.debug(`${componentId.toString()} is watched by ${watcherData.compilerId.toString()}`);
       return true;
@@ -409,7 +410,7 @@ export class Watcher {
     }
   }
 
-  async setTrackDirs() {
+  private async setTrackDirs() {
     this.trackDirs = {};
     const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
     await Promise.all(

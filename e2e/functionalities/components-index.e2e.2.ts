@@ -28,9 +28,10 @@ describe('scope components index mechanism', function () {
       expect(indexItem).to.have.property('id');
       expect(indexItem).to.have.property('hash');
       expect(indexItem).to.have.property('isSymlink');
-      expect(indexItem.id.scope).to.be.null;
       expect(indexItem.isSymlink).to.be.false;
-      expect(indexItem.hash).to.equal('ceb1a787ad7f07dd8a289d2c4c34aee239367a66');
+      // since schema Harmony2, we can't predicate the hash because now the ModelComponent id consist of the scope as
+      // well, which is randomly generated.
+      // expect(indexItem.hash).to.equal('ceb1a787ad7f07dd8a289d2c4c34aee239367a66');
     });
     describe('after exporting the component', () => {
       before(() => {
@@ -40,11 +41,6 @@ describe('scope components index mechanism', function () {
         const indexJson = helper.general.getComponentsFromIndexJson();
         const scopes = indexJson.map((item) => item.id.scope);
         expect(scopes).to.contain(helper.scopes.remote);
-      });
-      it('should change the previous record to be a symlink', () => {
-        const indexJson = helper.general.getComponentsFromIndexJson();
-        const indexItem = indexJson.find((item) => !item.id.scope);
-        expect(indexItem.isSymlink).to.be.true;
       });
       it('bit list should show only one component', () => {
         const list = helper.command.listLocalScopeParsed();
@@ -134,13 +130,16 @@ describe('scope components index mechanism', function () {
         helper.fixtures.addComponentBarFooAsDir();
         helper.command.tagAllWithoutBuild();
         const indexJsonWithBarFoo = helper.general.getComponentsFromIndexJson();
-        helper.command.untag('bar/foo');
+        helper.command.reset('bar/foo');
         helper.general.writeIndexJson(indexJsonWithBarFoo);
         // now, index.json has barFoo, however the scope doesn't have it
       });
       it('bit status should throw an error for the first time and then should work on the second run', () => {
         // used to show "Cannot read property 'scope' of null"
-        const error = new OutdatedIndexJson('component "bar/foo"', helper.general.indexJsonPath());
+        const error = new OutdatedIndexJson(
+          `component "${helper.scopes.remote}/bar/foo"`,
+          helper.general.indexJsonPath()
+        );
         const statusCmd = () => helper.command.status();
         helper.general.expectToThrow(statusCmd, error);
 

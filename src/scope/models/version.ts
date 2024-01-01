@@ -1,9 +1,9 @@
 import R from 'ramda';
 import { pickBy } from 'lodash';
-import { isHash } from '@teambit/component-version';
+import { isSnap } from '@teambit/component-version';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
-import { BitId, BitIds } from '../../bit-id';
-import { BuildStatus, DEFAULT_BINDINGS_PREFIX, DEFAULT_BUNDLE_FILENAME, Extensions } from '../../constants';
+import { BuildStatus, DEFAULT_BUNDLE_FILENAME, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { isSchemaSupport, SchemaFeature, SchemaName } from '../../consumer/component/component-schema';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
@@ -22,6 +22,7 @@ import Repository from '../objects/repository';
 import validateVersionInstance from '../version-validator';
 import Source from './source';
 import { getHarmonyVersion } from '../../bootstrap';
+import { BitIdCompIdError } from '../exceptions/bit-id-comp-id-err';
 
 export type SourceFileModel = {
   name: string;
@@ -45,7 +46,7 @@ export type Log = {
 };
 
 export type DepEdgeType = 'prod' | 'dev' | 'ext';
-export type DepEdge = { source: BitId; target: BitId; type: DepEdgeType };
+export type DepEdge = { source: ComponentID; target: ComponentID; type: DepEdgeType };
 
 type ExternalHead = { head: Ref; laneId: LaneId };
 type SquashData = { previousParents: Ref[]; laneId: LaneId };
@@ -58,7 +59,7 @@ export type VersionProps = {
   docs?: Doclet[];
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
-  flattenedDependencies?: BitIds;
+  flattenedDependencies?: ComponentIdList;
   _flattenedEdges?: DepEdge[];
   flattenedEdges?: DepEdge[];
   flattenedEdgesRef?: Ref;
@@ -68,7 +69,7 @@ export type VersionProps = {
   devPackageDependencies?: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   peerPackageDependencies?: { [key: string]: string };
-  bindingPrefix?: string;
+  bindingPrefix: string;
   schema?: string;
   overrides: ComponentOverridesData;
   packageJsonChangedProps?: Record<string, any>;
@@ -78,7 +79,7 @@ export type VersionProps = {
   unrelated?: ExternalHead;
   extensions?: ExtensionDataList;
   buildStatus?: BuildStatus;
-  componentId?: BitId;
+  componentId?: ComponentID;
   bitVersion?: string;
   modified?: Log[];
   origin?: VersionOrigin;
@@ -94,7 +95,7 @@ export default class Version extends BitObject {
   docs: Doclet[] | undefined;
   dependencies: Dependencies;
   devDependencies: Dependencies;
-  flattenedDependencies: BitIds;
+  flattenedDependencies: ComponentIdList;
   flattenedEdgesRef?: Ref; // ref to a BitObject Source file, which is a JSON object containing the flattened edge
   _flattenedEdges?: DepEdge[]; // caching for the flattenedEdges
   /**
@@ -115,7 +116,7 @@ export default class Version extends BitObject {
   packageDependencies: { [key: string]: string };
   devPackageDependencies: { [key: string]: string };
   peerPackageDependencies: { [key: string]: string };
-  bindingPrefix: string | undefined;
+  bindingPrefix: string;
   schema: string | undefined;
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Record<string, any>;
@@ -125,7 +126,7 @@ export default class Version extends BitObject {
   unrelated?: ExternalHead; // when a component from a lane was created with the same name/scope as main, this ref points to the component of the lane
   extensions: ExtensionDataList;
   buildStatus?: BuildStatus;
-  componentId?: BitId; // can help debugging errors when validating Version object
+  componentId?: ComponentID; // can help debugging errors when validating Version object
   bitVersion?: string;
   modified: Log[] = []; // currently mutation could happen as a result of either "squash" or "sign".
   origin?: VersionOrigin; // for debugging purposes
@@ -138,7 +139,7 @@ export default class Version extends BitObject {
     this.dependencies = new Dependencies(props.dependencies);
     this.devDependencies = new Dependencies(props.devDependencies);
     this.docs = props.docs;
-    this.flattenedDependencies = props.flattenedDependencies || new BitIds();
+    this.flattenedDependencies = props.flattenedDependencies || new ComponentIdList();
     this.flattenedEdges = props.flattenedEdges || [];
     this.flattenedEdgesRef = props.flattenedEdgesRef;
     this.packageDependencies = props.packageDependencies || {};
@@ -240,24 +241,16 @@ export default class Version extends BitObject {
     return JSON.stringify(
       pickBy(
         {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           mainFile: obj.mainFile,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           files: obj.files,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           log: obj.log,
           dependencies: getDependencies(this.dependencies),
           devDependencies: getDependencies(this.devDependencies),
           extensionDependencies: getDependencies(this.extensionDependencies),
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           packageDependencies: obj.packageDependencies,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           devPackageDependencies: obj.devPackageDependencies,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           peerPackageDependencies: obj.peerPackageDependencies,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           bindingPrefix: obj.bindingPrefix,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           overrides: obj.overrides,
           extensions: getExtensions(this.extensions),
         },
@@ -286,8 +279,8 @@ export default class Version extends BitObject {
     return this.modified[this.modified.length - 1].date;
   }
 
-  getAllFlattenedDependencies(): BitIds {
-    return BitIds.fromArray([...this.flattenedDependencies]);
+  getAllFlattenedDependencies(): ComponentIdList {
+    return ComponentIdList.fromArray([...this.flattenedDependencies]);
   }
 
   getAllDependencies(): Dependency[] {
@@ -298,7 +291,11 @@ export default class Version extends BitObject {
     ];
   }
 
-  get depsIdsGroupedByType(): { dependencies: BitIds; devDependencies: BitIds; extensionDependencies: BitIds } {
+  get depsIdsGroupedByType(): {
+    dependencies: ComponentIdList;
+    devDependencies: ComponentIdList;
+    extensionDependencies: ComponentIdList;
+  } {
     return {
       dependencies: this.dependencies.getAllIds(),
       devDependencies: this.devDependencies.getAllIds(),
@@ -311,22 +308,22 @@ export default class Version extends BitObject {
     return new Dependencies(dependencies);
   }
 
-  getAllDependenciesIds(): BitIds {
+  getAllDependenciesIds(): ComponentIdList {
     const allDependencies = R.flatten(Object.values(this.depsIdsGroupedByType));
-    return BitIds.fromArray(allDependencies);
+    return ComponentIdList.fromArray(allDependencies);
   }
 
-  getDependenciesIdsExcludeExtensions(): BitIds {
-    return BitIds.fromArray([...this.dependencies.getAllIds(), ...this.devDependencies.getAllIds()]);
+  getDependenciesIdsExcludeExtensions(): ComponentIdList {
+    return ComponentIdList.fromArray([...this.dependencies.getAllIds(), ...this.devDependencies.getAllIds()]);
   }
 
-  updateFlattenedDependency(currentId: BitId, newId: BitId) {
-    const getUpdated = (flattenedDependencies: BitIds): BitIds => {
+  updateFlattenedDependency(currentId: ComponentID, newId: ComponentID) {
+    const getUpdated = (flattenedDependencies: ComponentIdList): ComponentIdList => {
       const updatedIds = flattenedDependencies.map((depId) => {
         if (depId.isEqual(currentId)) return newId;
         return depId;
       });
-      return BitIds.fromArray(updatedIds);
+      return ComponentIdList.fromArray(updatedIds);
     };
     this.flattenedDependencies = getUpdated(this.flattenedDependencies);
   }
@@ -377,8 +374,8 @@ export default class Version extends BitObject {
   }
   static depEdgeFromObject(depEdgeObj: Record<string, any>): DepEdge {
     return {
-      source: new BitId(depEdgeObj.source),
-      target: new BitId(depEdgeObj.target),
+      source: ComponentID.fromObject(depEdgeObj.source),
+      target: ComponentID.fromObject(depEdgeObj.target),
       type: depEdgeObj.type,
     };
   }
@@ -403,7 +400,7 @@ export default class Version extends BitObject {
       {
         files: this.files ? this.files.map(_convertFileToObject) : null,
         mainFile: this.mainFile,
-        bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
+        bindingPrefix: this.bindingPrefix,
         schema: this.schema,
         log: {
           message: this.log.message,
@@ -414,7 +411,7 @@ export default class Version extends BitObject {
         docs: this.docs,
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),
-        flattenedDependencies: this.flattenedDependencies.map((dep) => dep.serialize()),
+        flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toObject()),
         flattenedEdges: this.flattenedEdgesRef ? undefined : this.flattenedEdges.map((f) => Version.depEdgeToObject(f)),
         flattenedEdgesRef: this.flattenedEdgesRef?.toString(),
         extensions: this.extensions.toModelObjects(),
@@ -489,12 +486,6 @@ export default class Version extends BitObject {
     } = contentParsed;
 
     const _getDependencies = (deps = []): Dependency[] => {
-      if (deps.length && R.is(String, deps[0])) {
-        // backward compatibility
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        return deps.map((dependency) => ({ id: BitId.parseObsolete(dependency) }));
-      }
-
       const getRelativePath = (relativePath) => {
         if (relativePath.importSpecifiers) {
           // backward compatibility. Before the massive validation was added, an item of
@@ -510,17 +501,20 @@ export default class Version extends BitObject {
       };
 
       return deps.map((dependency: any) => {
-        return {
-          id: BitId.parseBackwardCompatible(dependency.id),
-          relativePaths: Array.isArray(dependency.relativePaths)
+        if (!dependency.id.scope) {
+          throw new BitIdCompIdError(dependency.id.name);
+        }
+        return new Dependency(
+          ComponentID.fromObject(dependency.id),
+          Array.isArray(dependency.relativePaths)
             ? dependency.relativePaths.map(getRelativePath)
-            : dependency.relativePaths,
-        };
+            : dependency.relativePaths
+        );
       });
     };
 
-    const _getFlattenedDependencies = (deps = []): BitId[] => {
-      return deps.map((dep) => BitId.parseBackwardCompatible(dep));
+    const _getFlattenedDependencies = (deps = []): ComponentID[] => {
+      return deps.map((dep) => ComponentID.fromObject(dep));
     };
 
     const _groupFlattenedDependencies = () => {
@@ -528,7 +522,7 @@ export default class Version extends BitObject {
       // flattenedDevDependencies. since then, these both were grouped to one flattenedDependencies
       const flattenedDeps = _getFlattenedDependencies(flattenedDependencies);
       const flattenedDevDeps = _getFlattenedDependencies(flattenedDevDependencies);
-      return BitIds.fromArray([...flattenedDeps, ...flattenedDevDeps]);
+      return ComponentIdList.fromArray([...flattenedDeps, ...flattenedDevDeps]);
     };
 
     const parseFile = (file) => {
@@ -543,7 +537,7 @@ export default class Version extends BitObject {
       if (exts.length) {
         const newExts = exts.map((extension: any) => {
           if (extension.extensionId) {
-            const extensionId = new BitId(extension.extensionId);
+            const extensionId = ComponentID.fromObject(extension.extensionId);
             const entry = new ExtensionDataEntry(undefined, extensionId, undefined, extension.config, extension.data);
             return entry;
           }
@@ -563,8 +557,8 @@ export default class Version extends BitObject {
 
     return new Version({
       mainFile,
-      files: files ? files.map(parseFile) : null,
-      bindingPrefix: bindingPrefix || null,
+      files: files.map(parseFile),
+      bindingPrefix,
       schema: schema || undefined,
       log: {
         // workaround for a bug where the log.message was saved as boolean when running `bit tag -m ""`
@@ -655,7 +649,7 @@ export default class Version extends BitObject {
       componentId: component.id,
       bitVersion: getHarmonyVersion(true),
     });
-    if (isHash(component.version)) {
+    if (isSnap(component.version)) {
       version._hash = component.version as string;
     } else {
       version.setNewHash();
@@ -728,6 +722,10 @@ export default class Version extends BitObject {
 
   removeParent(ref: Ref) {
     this.parents = this.parents.filter((p) => p.toString() !== ref.toString());
+  }
+
+  removeAllParents() {
+    this.parents = [];
   }
 
   modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {

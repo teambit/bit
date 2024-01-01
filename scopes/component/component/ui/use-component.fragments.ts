@@ -20,7 +20,6 @@ export const componentOverviewFields = gql`
       id
       data
     }
-    elementsUrl
     description
     deprecation {
       isDeprecate
@@ -47,10 +46,13 @@ export const componentOverviewFields = gql`
       legacyHeader
       isScaling
       skipIncludes
+      onlyOverview
+      useNameParam
     }
     compositions {
       identifier
       displayName
+      filepath
     }
   }
   ${componentIdFields}

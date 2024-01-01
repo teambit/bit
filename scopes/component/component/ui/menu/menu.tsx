@@ -268,7 +268,7 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
   } = props.useComponent?.({ initialLoad: true }) || {};
   const location = useLocation();
   const { lanesModel } = useLanes();
-  const lanes = id ? lanesModel?.getLanesByComponentId(id)?.filter((lane) => !lane.id.isDefault()) || [] : [];
+  const lanes = id ? lanesModel?.getLanesByComponentId(id as any)?.filter((lane) => !lane.id.isDefault()) || [] : [];
   const viewedLane =
     lanesModel?.viewedLane?.id && !lanesModel?.viewedLane?.id.isDefault() ? lanesModel.viewedLane : undefined;
 

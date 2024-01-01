@@ -39,7 +39,7 @@ describe('bit checkout command', function () {
     });
     it('before tagging it should show an error saying the component was not tagged yet', () => {
       const output = helper.general.runWithTryCatch('bit checkout 1.0.0 bar/foo');
-      expect(output).to.have.string('component bar/foo is new, no version to checkout');
+      expect(output).to.have.string('is new, no version to checkout');
     });
     describe('after the component was tagged', () => {
       before(() => {
@@ -48,7 +48,7 @@ describe('bit checkout command', function () {
       describe('using a non-exist version', () => {
         it('should show an error saying the version does not exist', () => {
           const output = helper.general.runWithTryCatch('bit checkout 1.0.0 bar/foo');
-          expect(output).to.have.string("component bar/foo doesn't have version 1.0.0");
+          expect(output).to.have.string("bar/foo doesn't have version 1.0.0");
         });
       });
       describe('and component was modified', () => {
@@ -57,7 +57,7 @@ describe('bit checkout command', function () {
         });
         it('should show an error saying the component already uses that version', () => {
           const output = helper.general.runWithTryCatch('bit checkout 0.0.5 bar/foo');
-          expect(output).to.have.string('component bar/foo is already at version 0.0.5');
+          expect(output).to.have.string('bar/foo is already at version 0.0.5');
         });
         describe('and tagged again', () => {
           let output;
@@ -97,7 +97,7 @@ describe('bit checkout command', function () {
             it('should throw an error NewerVersionFound', () => {
               const tagFunc = () => helper.command.tagComponent('bar/foo');
               const error = new NewerVersionFound([
-                { componentId: 'bar/foo', currentVersion: '0.0.5', latestVersion: '0.0.10' },
+                { componentId: `${helper.scopes.remote}/bar/foo`, currentVersion: '0.0.5', latestVersion: '0.0.10' },
               ]);
               helper.general.expectToThrow(tagFunc, error);
             });

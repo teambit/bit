@@ -112,7 +112,7 @@
               },
               "type": "number"
             },
-            "isOptional": false,
+            "isOptional": true,
             "defaultValue": "4",
             "isSpread": false
           },
@@ -133,7 +133,7 @@
               },
               "type": "number"
             },
-            "isOptional": false,
+            "isOptional": true,
             "defaultValue": "5",
             "isSpread": false
           }
@@ -308,13 +308,24 @@
               ]
             },
             {
-              "__schema": "InferenceTypeSchema",
+              "__schema": "TypeRefSchema",
               "location": {
                 "filePath": "button.tsx",
                 "line": 23,
                 "character": 5
               },
-              "name": "React.ButtonHTMLAttributes"
+              "name": "React.ButtonHTMLAttributes",
+              "typeArgs": [
+                {
+                  "__schema": "TypeRefSchema",
+                  "location": {
+                    "filePath": "button.tsx",
+                    "line": 23,
+                    "character": 32
+                  },
+                  "name": "HTMLButtonElement"
+                }
+              ]
             }
           ]
         }
@@ -479,7 +490,7 @@
               "line": 6,
               "character": 14
             },
-            "signature": "const BasicButton: () => any",
+            "signature": "function(): any",
             "name": "BasicButton",
             "params": [],
             "returnType": {
@@ -487,7 +498,7 @@
               "location": {
                 "filePath": "button.composition.tsx",
                 "line": 6,
-                "character": 14
+                "character": 28
               },
               "type": "any"
             },
@@ -548,10 +559,12 @@
                     "location": {
                       "filePath": "button.composition.tsx",
                       "line": 14,
-                      "character": 24
+                      "character": 26
                     },
                     "name": "children",
-                    "type": "any"
+                    "type": "any",
+                    "defaultValue": "<BasicButton />",
+                    "isSpread": false
                   }
                 ],
                 "isSpread": false
@@ -577,7 +590,7 @@
               "line": 18,
               "character": 14
             },
-            "signature": "const ButtonWithCustomStyles: () => any",
+            "signature": "function(): any",
             "name": "ButtonWithCustomStyles",
             "params": [],
             "returnType": {
@@ -585,7 +598,7 @@
               "location": {
                 "filePath": "button.composition.tsx",
                 "line": 18,
-                "character": 14
+                "character": 39
               },
               "type": "any"
             },
@@ -598,7 +611,7 @@
               "line": 22,
               "character": 14
             },
-            "signature": "const ButtonWithIcon: () => any",
+            "signature": "function(): any",
             "name": "ButtonWithIcon",
             "params": [],
             "returnType": {
@@ -606,7 +619,7 @@
               "location": {
                 "filePath": "button.composition.tsx",
                 "line": 22,
-                "character": 14
+                "character": 31
               },
               "type": "any"
             },
@@ -619,7 +632,7 @@
               "line": 31,
               "character": 14
             },
-            "signature": "const ButtonAsALink: () => any",
+            "signature": "function(): any",
             "name": "ButtonAsALink",
             "params": [],
             "returnType": {
@@ -627,7 +640,7 @@
               "location": {
                 "filePath": "button.composition.tsx",
                 "line": 31,
-                "character": 14
+                "character": 30
               },
               "type": "any"
             },
@@ -665,7 +678,7 @@
           "line": 30,
           "character": 14
         },
-        "signature": "const Function: () => void",
+        "signature": "function(): void",
         "name": "Function",
         "params": [],
         "returnType": {
@@ -673,7 +686,7 @@
           "location": {
             "filePath": "index.ts",
             "line": 30,
-            "character": 14
+            "character": 25
           },
           "type": "void"
         },
@@ -728,7 +741,7 @@
               },
               "type": "string"
             },
-            "isOptional": false,
+            "isOptional": true,
             "defaultValue": "''"
           },
           {
@@ -768,7 +781,8 @@
                 "filePath": "index.ts",
                 "line": 36,
                 "character": 1
-              }
+              },
+              "name": "ClassSomething"
             },
             "modifiers": []
           },
@@ -865,37 +879,33 @@
           },
           "members": [
             {
-              "__schema": "FunctionLikeSchema",
+              "__schema": "IndexSignatureSchema",
               "location": {
                 "filePath": "index.ts",
                 "line": 52,
                 "character": 26
               },
-              "signature": "(key: string): boolean",
-              "name": "",
-              "params": [
-                {
-                  "__schema": "ParameterSchema",
+              "keyType": {
+                "__schema": "ParameterSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 52,
+                  "character": 27
+                },
+                "name": "key",
+                "type": {
+                  "__schema": "KeywordTypeSchema",
                   "location": {
                     "filePath": "index.ts",
                     "line": 52,
-                    "character": 27
+                    "character": 32
                   },
-                  "name": "key",
-                  "type": {
-                    "__schema": "KeywordTypeSchema",
-                    "location": {
-                      "filePath": "index.ts",
-                      "line": 52,
-                      "character": 32
-                    },
-                    "name": "string"
-                  },
-                  "isOptional": false,
-                  "isSpread": false
-                }
-              ],
-              "returnType": {
+                  "name": "string"
+                },
+                "isOptional": false,
+                "isSpread": false
+              },
+              "valueType": {
                 "__schema": "KeywordTypeSchema",
                 "location": {
                   "filePath": "index.ts",
@@ -903,8 +913,7 @@
                   "character": 41
                 },
                 "name": "boolean"
-              },
-              "modifiers": []
+              }
             }
           ]
         }
@@ -1051,7 +1060,7 @@
           "line": 69,
           "character": 14
         },
-        "signature": "const getBar: (bar: Bar) => Bar",
+        "signature": "function(bar: Bar): Bar",
         "name": "getBar",
         "params": [
           {
@@ -1081,7 +1090,7 @@
           "location": {
             "filePath": "index.ts",
             "line": 69,
-            "character": 14
+            "character": 23
           },
           "name": "Bar",
           "internalFilePath": "index.ts"
@@ -1095,7 +1104,7 @@
           "line": 71,
           "character": 14
         },
-        "signature": "const tuple: ([a, b, c]: [string, Function, Record<string, any>]) => void",
+        "signature": "function([a, b, c]: [string, Function, Record<string, any>]): void",
         "name": "tuple",
         "params": [
           {
@@ -1133,14 +1142,33 @@
                   "name": "Function"
                 },
                 {
-                  "__schema": "InferenceTypeSchema",
+                  "__schema": "TypeRefSchema",
                   "location": {
                     "filePath": "index.ts",
                     "line": 71,
                     "character": 53
                   },
                   "name": "Record",
-                  "type": "{ [P in K]: T; }"
+                  "typeArgs": [
+                    {
+                      "__schema": "KeywordTypeSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 71,
+                        "character": 60
+                      },
+                      "name": "string"
+                    },
+                    {
+                      "__schema": "KeywordTypeSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 71,
+                        "character": 68
+                      },
+                      "name": "any"
+                    }
+                  ]
                 }
               ]
             },
@@ -1153,7 +1181,7 @@
           "location": {
             "filePath": "index.ts",
             "line": 71,
-            "character": 14
+            "character": 22
           },
           "type": "void"
         },
@@ -1212,14 +1240,24 @@
         "name": "getPromise",
         "params": [],
         "returnType": {
-          "__schema": "InferenceTypeSchema",
+          "__schema": "TypeRefSchema",
           "location": {
             "filePath": "index.ts",
             "line": 79,
             "character": 37
           },
           "name": "Promise",
-          "type": ""
+          "typeArgs": [
+            {
+              "__schema": "KeywordTypeSchema",
+              "location": {
+                "filePath": "index.ts",
+                "line": 79,
+                "character": 45
+              },
+              "name": "string"
+            }
+          ]
         },
         "modifiers": [
           "export",
@@ -1488,10 +1526,12 @@
                 "location": {
                   "filePath": "index.ts",
                   "line": 96,
-                  "character": 45
+                  "character": 47
                 },
                 "name": "prop",
-                "type": "number"
+                "type": "number",
+                "defaultValue": "1",
+                "isSpread": false
               }
             ],
             "isSpread": false
@@ -1770,14 +1810,13 @@
               }
             ],
             "returnType": {
-              "__schema": "InferenceTypeSchema",
+              "__schema": "TypeRefSchema",
               "location": {
                 "filePath": "index.ts",
                 "line": 121,
                 "character": 19
               },
-              "name": "T",
-              "type": "T"
+              "name": "T"
             },
             "modifiers": [],
             "typeParams": [
@@ -1814,44 +1853,40 @@
             "character": 30
           },
           "checkType": {
-            "__schema": "InferenceTypeSchema",
+            "__schema": "TypeRefSchema",
             "location": {
               "filePath": "index.ts",
               "line": 127,
               "character": 30
             },
-            "name": "T",
-            "type": "T"
+            "name": "T"
           },
           "extendsType": {
-            "__schema": "InferenceTypeSchema",
+            "__schema": "TypeRefSchema",
             "location": {
               "filePath": "index.ts",
               "line": 127,
               "character": 40
             },
-            "name": "U",
-            "type": "U"
+            "name": "U"
           },
           "trueType": {
-            "__schema": "InferenceTypeSchema",
+            "__schema": "TypeRefSchema",
             "location": {
               "filePath": "index.ts",
               "line": 127,
               "character": 44
             },
-            "name": "Y",
-            "type": "Y"
+            "name": "Y"
           },
           "falseType": {
-            "__schema": "InferenceTypeSchema",
+            "__schema": "TypeRefSchema",
             "location": {
               "filePath": "index.ts",
               "line": 127,
               "character": 48
             },
-            "name": "N",
-            "type": "N"
+            "name": "N"
           }
         }
       },
@@ -1874,14 +1909,13 @@
             },
             "name": "a",
             "type": {
-              "__schema": "InferenceTypeSchema",
+              "__schema": "TypeRefSchema",
               "location": {
                 "filePath": "index.ts",
                 "line": 129,
                 "character": 39
               },
-              "name": "T",
-              "type": "T"
+              "name": "T"
             },
             "isOptional": false,
             "isSpread": false
@@ -1967,7 +2001,7 @@
               },
               "type": "string"
             },
-            "isOptional": false,
+            "isOptional": true,
             "defaultValue": "''"
           },
           {
@@ -2007,7 +2041,8 @@
                 "filePath": "index.ts",
                 "line": 36,
                 "character": 1
-              }
+              },
+              "name": "ClassSomething"
             },
             "modifiers": []
           },
@@ -2527,13 +2562,24 @@
                 ]
               },
               {
-                "__schema": "InferenceTypeSchema",
+                "__schema": "TypeRefSchema",
                 "location": {
                   "filePath": "button.tsx",
                   "line": 23,
                   "character": 5
                 },
-                "name": "React.ButtonHTMLAttributes"
+                "name": "React.ButtonHTMLAttributes",
+                "typeArgs": [
+                  {
+                    "__schema": "TypeRefSchema",
+                    "location": {
+                      "filePath": "button.tsx",
+                      "line": 23,
+                      "character": 32
+                    },
+                    "name": "HTMLButtonElement"
+                  }
+                ]
               }
             ]
           }

@@ -1,4 +1,4 @@
-import { BitId, BitIds } from '../../bit-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { loadConsumer } from '../../consumer';
 import { ModelComponent, Symlink } from '../../scope/models';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
@@ -24,12 +24,12 @@ export default class OrphanSymlinkObjects extends Diagnosis {
   async _runExamine(): Promise<ExamineBareResult> {
     const consumer = await loadConsumer();
     const symlinks = await consumer.scope.objects.list([Symlink]);
-    const orphanSymlinks = new BitIds();
+    const orphanSymlinks = new ComponentIdList();
     const objectsToDelete = [];
     await Promise.all(
       symlinks.map(async (symlink) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const realComponentId: BitId = symlink.getRealComponentId();
+        const realComponentId: ComponentID = symlink.getRealComponentId();
         const realModelComponent = ModelComponent.fromBitId(realComponentId);
         const foundComponent = await consumer.scope.objects.load(realModelComponent.hash());
         if (!foundComponent) {

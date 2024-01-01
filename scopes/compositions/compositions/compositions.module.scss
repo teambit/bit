@@ -1,4 +1,4 @@
-@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 $panelBg: #fafafa;
 
 .compositionsPage {
@@ -96,4 +96,9 @@ $panelBg: #fafafa;
 
 .buildStatusMessage {
   margin: auto;
+}
+
+.compositionPanel {
+  display: flex;
+  flex: 1;
 }

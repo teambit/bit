@@ -1,6 +1,8 @@
 import React from 'react';
 import { Section } from '@teambit/component';
+import { APIReferenceUI } from '@teambit/api-reference';
 import { Overview, TitleBadgeSlot, OverviewOptionsSlot } from './overview';
+import { DocsUI } from './docs.ui.runtime';
 
 export class OverviewSection implements Section {
   constructor(
@@ -8,7 +10,9 @@ export class OverviewSection implements Section {
      * title badge slot.
      */
     private titleBadgeSlot: TitleBadgeSlot,
-    private overviewOptionsSlot: OverviewOptionsSlot
+    private overviewOptionsSlot: OverviewOptionsSlot,
+    private docs: DocsUI,
+    private apiRef: APIReferenceUI
   ) {}
 
   navigationLink = {
@@ -19,7 +23,14 @@ export class OverviewSection implements Section {
 
   route = {
     index: true,
-    element: <Overview titleBadges={this.titleBadgeSlot} overviewOptions={this.overviewOptionsSlot} />,
+    element: (
+      <Overview
+        titleBadges={this.titleBadgeSlot}
+        overviewOptions={this.overviewOptionsSlot}
+        getEmptyState={this.docs.getEmptyState.bind(this.docs)}
+        TaggedAPI={this.apiRef.TaggedAPIPage}
+      />
+    ),
   };
 
   order = 10;

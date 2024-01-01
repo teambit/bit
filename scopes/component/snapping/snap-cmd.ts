@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
 import { GlobalConfigMain } from '@teambit/global-config';
@@ -30,13 +30,9 @@ export class SnapCmd implements Command {
   alias = '';
   options = [
     ['m', 'message <message>', 'snap message describing the latest changes - will appear in component history log'],
-    ['', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
+    ['u', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
     ['', 'unmerged', 'complete a merge process by snapping the unmerged components'],
-    [
-      'b',
-      'build',
-      'not needed for now. run the build pipeline locally in case the feature-flag build-on-ci is enabled',
-    ],
+    ['b', 'build', 'locally run the build pipeline (i.e. not via rippleCI) and complete the snap'],
     [
       '',
       'editor [editor]',
@@ -51,6 +47,7 @@ export class SnapCmd implements Command {
     ],
     ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
     ['', 'ignore-build-errors', 'proceed to snap pipeline even when build pipeline fails'],
+    ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
     [
       'i',
       'ignore-issues [issues]',
@@ -90,6 +87,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       disableSnapPipeline = false,
       forceDeploy = false,
       ignoreBuildErrors = false,
+      rebuildDepsGraph,
       unmodified = false,
       failFast = false,
     }: {
@@ -139,6 +137,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       skipAutoSnap,
       disableTagAndSnapPipelines,
       ignoreBuildErrors,
+      rebuildDepsGraph,
       unmodified,
       exitOnFirstFailedTask: failFast,
     });
@@ -146,17 +145,19 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
     const { snappedComponents, autoSnappedResults, warnings, newComponents, laneName, removedComponents }: SnapResults =
       results;
-    const changedComponents = snappedComponents.filter(
-      (component) => !newComponents.searchWithoutVersion(component.id)
-    );
+    const changedComponents = snappedComponents.filter((component) => {
+      return (
+        !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id)
+      );
+    });
     const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
     const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
     const snapExplanation = `\n(use "bit export" to push these components to a remote")
-(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)\n`;
+(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)`;
 
-    const compInBold = (id: BitId) => {
+    const compInBold = (id: ComponentID) => {
       const version = id.hasVersion() ? `@${id.version}` : '';
       return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
     };
@@ -165,9 +166,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       return comps
         .map((component) => {
           let componentOutput = `     > ${compInBold(component.id)}`;
-          const autoTag = autoSnappedResults.filter((result) =>
-            result.triggeredBy.searchWithoutScopeAndVersion(component.id)
-          );
+          const autoTag = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
           if (autoTag.length) {
             const autoTagComp = autoTag.map((a) => compInBold(a.component.id));
             componentOutput += `\n       ${AUTO_SNAPPED_MSG} (${autoTagComp.length} total):
@@ -185,12 +184,12 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     const laneStr = laneName ? ` on "${laneName}" lane` : '';
 
     return (
-      warningsOutput +
-      chalk.green(`${snappedComponents.length + autoTaggedCount} component(s) snapped${laneStr}`) +
-      snapExplanation +
       outputIfExists('new components', 'first version for components', addedComponents) +
       outputIfExists('changed components', 'components that got a version bump', changedComponents) +
-      outputIdsIfExists('removed components', removedComponents)
+      outputIdsIfExists('removed components', removedComponents) +
+      warningsOutput +
+      chalk.green(`\n${snappedComponents.length + autoTaggedCount} component(s) snapped${laneStr}`) +
+      snapExplanation
     );
   }
 }

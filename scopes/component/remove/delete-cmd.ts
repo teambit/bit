@@ -4,7 +4,6 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
-import RemovedLocalObjects from '@teambit/legacy/dist/scope/removed-local-objects';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { RemoveMain } from './remove.main.runtime';
 import { removeTemplate } from './remove-template';
@@ -28,16 +27,16 @@ this command marks the components as deleted, and after snap/tag and export they
   options = [
     ['', 'lane', 'when on a lane, delete the component from this lane only. avoid merging it to main or other lanes'],
     ['', 'update-main', 'EXPERIMENTAL. delete component/s on the main lane after merging this lane into main'],
-    [
-      'f',
-      'force',
-      'removes the component from the scope, even if used as a dependency. WARNING: components that depend on this component will corrupt',
-    ],
     ['s', 'silent', 'skip confirmation'],
     [
       '',
       'hard',
       'NOT-RECOMMENDED. delete a component completely from a remote scope. careful! this is a permanent change that could corrupt dependents.',
+    ],
+    [
+      'f',
+      'force',
+      'relevant for --hard. allow the deletion even if used as a dependency. WARNING: components that depend on this component will corrupt',
     ],
   ] as CommandOptions;
   loader = true;
@@ -74,13 +73,7 @@ this command marks the components as deleted, and after snap/tag and export they
     }
 
     if (hard) {
-      const {
-        localResult,
-        remoteResult = [],
-      }: {
-        localResult: RemovedLocalObjects;
-        remoteResult: RemovedObjects[];
-      } = await this.remove.remove({ componentsPattern, remote: true, force });
+      const { localResult, remoteResult = [] } = await this.remove.remove({ componentsPattern, remote: true, force });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       let localMessage = removeTemplate(localResult, false);
       if (localMessage !== '') localMessage += '\n';

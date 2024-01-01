@@ -1,15 +1,15 @@
+import { ComponentID } from '@teambit/component-id';
 import { fetch, put, remove } from '../../../api/scope';
 import { action } from '../../../api/scope/lib/action';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 import { PushOptions } from '../../../api/scope/lib/put';
-import { BitId } from '../../../bit-id';
 import ComponentsList, { ListScopeResult } from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component/consumer-component';
-import ComponentObjects from '../../component-objects';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLog } from '../../models/model-component';
 import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
+import RemovedObjects from '../../removed-components';
 import Scope, { ScopeDescriptor } from '../../scope';
 import loadScope from '../../scope-loader';
 import { FsScopeNotLoaded } from '../exceptions';
@@ -44,14 +44,14 @@ export default class Fs implements Network {
     return action(this.scopePath, name, options);
   }
 
-  deleteMany(
+  async deleteMany(
     ids: string[],
     force: boolean,
     context: Record<string, any>,
-    idsAreLanes?: boolean
-  ): Promise<ComponentObjects[]> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return remove({ path: this.scopePath, ids, force, lanes: idsAreLanes });
+    idsAreLanes = false
+  ): Promise<RemovedObjects> {
+    const result = await remove({ path: this.scopePath, ids, force, lanes: idsAreLanes });
+    return RemovedObjects.fromObjects(result);
   }
 
   async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectItemsStream> {
@@ -59,7 +59,7 @@ export default class Fs implements Network {
     return objectsReadable;
   }
 
-  latestVersions(componentIds: BitId[]): Promise<string[]> {
+  latestVersions(componentIds: ComponentID[]): Promise<string[]> {
     return this.getScope()
       .latestVersions(componentIds)
       .then((componentsIds) => componentsIds.map((componentId) => componentId.toString()));
@@ -69,12 +69,12 @@ export default class Fs implements Network {
     return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards);
   }
 
-  show(bitId: BitId): Promise<Component> {
+  show(bitId: ComponentID): Promise<Component> {
     const scopeComponentsImporter = this.getScope().scopeImporter;
     return scopeComponentsImporter.loadComponent(bitId);
   }
 
-  log(bitId: BitId): Promise<ComponentLog[]> {
+  log(bitId: ComponentID): Promise<ComponentLog[]> {
     return this.getScope().loadComponentLogs(bitId);
   }
 
@@ -82,7 +82,7 @@ export default class Fs implements Network {
     return this.getScope().lanes.getLanesData(this.getScope(), name, mergeData);
   }
 
-  async graph(bitId?: BitId): Promise<DependencyGraph> {
+  async graph(bitId?: ComponentID): Promise<DependencyGraph> {
     const scope = this.getScope();
     const dependencyGraph = await DependencyGraph.loadLatest(scope);
     // get as string to mimic the exact steps of using ssh

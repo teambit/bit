@@ -32,17 +32,17 @@ export class ParameterTransformer implements SchemaTransformer {
     const type = await this.getType(node, context);
     return new ParameterSchema(
       context.getLocation(node),
-      this.getName(node),
+      ParameterTransformer.getName(node),
       type,
-      Boolean(node.questionToken),
+      Boolean(node.questionToken) || Boolean(node.initializer),
       node.initializer ? node.initializer.getText() : undefined,
       undefined,
-      await this.getObjectBindingNodes(node, type, context),
+      await ParameterTransformer.getObjectBindingNodes(node, type, context),
       Boolean(node.dotDotDotToken)
     );
   }
 
-  getName(param: ParameterDeclaration): string {
+  static getName(param: ParameterDeclaration): string {
     if (isIdentifier(param.name)) {
       return param.name.getText();
     }
@@ -86,7 +86,7 @@ export class ParameterTransformer implements SchemaTransformer {
     throw new Error(`unknown param type`);
   }
 
-  async getObjectBindingNodes(
+  static async getObjectBindingNodes(
     param: ParameterDeclaration,
     paramType: SchemaNode,
     context: SchemaExtractorContext
@@ -96,7 +96,9 @@ export class ParameterTransformer implements SchemaTransformer {
       const existing = paramType.findNode?.((node) => {
         return node.name === elem.name.getText().trim();
       });
-      if (existing) return existing;
+      if (existing && existing.__schema !== 'InferenceTypeSchema') {
+        return existing;
+      }
       const info = await context.getQuickInfo(elem.name);
       const parsed = info ? parseTypeFromQuickInfo(info) : elem.getText();
       const defaultValue = elem.initializer ? elem.initializer.getText() : undefined;

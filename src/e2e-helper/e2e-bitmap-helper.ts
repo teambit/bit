@@ -67,6 +67,7 @@ export default class BitMapHelper {
       'bar/foo': {
         scope: '',
         version: '',
+        defaultScope: 'my-scope',
         mainFile: 'bar/foo.js',
         rootDir: 'bar',
       },

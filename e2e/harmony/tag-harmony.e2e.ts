@@ -30,7 +30,7 @@ describe('tag components on Harmony', function () {
     it('should import successfully with the schema prop', () => {
       const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
       expect(comp1).to.have.property('schema');
-      expect(comp1.schema).to.equal(SchemaName.Harmony);
+      expect(comp1.schema).to.equal(SchemaName.Harmony2);
     });
     it('bit status should work and not show modified', () => {
       const status = helper.command.statusJson();
@@ -177,7 +177,7 @@ describe('tag components on Harmony', function () {
     describe('untag', () => {
       before(() => {
         helper.command.softTag('-a -s 3.0.0');
-        helper.command.untagSoft('--all');
+        helper.command.resetSoft('--all');
       });
       it('should remove the nextVersion from the .bitmap file', () => {
         const bitMap = helper.bitMap.readComponentsMapOnly();

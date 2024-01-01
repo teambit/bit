@@ -8,8 +8,8 @@ import type { BaseComponentTemplateOptions } from './component-template';
  * CreateOptions combines foundational properties with additional options for creating a component.
  */
 export type CreateOptions = BaseComponentTemplateOptions & {
-  env: string;
-  aspect: string;
+  env?: string;
+  aspect?: string;
 };
 
 export class CreateCmd implements Command {
@@ -64,7 +64,7 @@ export class CreateCmd implements Command {
 
   async report(
     [templateName, componentNames]: [string, string[]],
-    options: CreateOptions & {
+    options: Partial<CreateOptions> & {
       template?: string | ComponentID;
     }
   ) {

@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Command, CommandOptions } from '@teambit/cli';
 import { NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
@@ -9,7 +9,6 @@ import {
   CFG_FORCE_LOCAL_BUILD,
 } from '@teambit/legacy/dist/constants';
 import { GlobalConfigMain } from '@teambit/global-config';
-import { BitId } from '@teambit/legacy-bit-id';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
@@ -62,6 +61,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
     ['', 'disable-tag-pipeline', 'skip the tag pipeline to avoid publishing the components'],
     ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
     ['', 'ignore-build-errors', 'proceed to tag pipeline even when build pipeline fails'],
+    ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
     [
       '',
       'increment-by <number>',
@@ -84,7 +84,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       'fail-fast',
       'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
-    ['b', 'build', 'not needed for now. run the pipeline build and complete the tag'],
+    ['b', 'build', 'locally run the build pipeline (i.e. not via rippleCI) and complete the tag'],
     [
       'a',
       'all [version]',
@@ -135,6 +135,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       disableTagPipeline = false,
       forceDeploy = false,
       ignoreBuildErrors = false,
+      rebuildDepsGraph,
       failFast = false,
       incrementBy = 1,
     }: {
@@ -240,6 +241,16 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       else if (persist === 'skip-build') build = false;
       else throw new BitError(`unknown value for --persist, use either --persist or --persist=skip-build`);
     }
+    if (!build && !soft) {
+      this.logger.consoleWarning(
+        `tagging components on "main" lane when using remote build is not recommended. To avoid SemVer versions of your component with failing builds, please refer to:
+- Snap changes in a different lane and merge to "main" on your remote (learn more on lanes - https://bit.dev/reference/lanes/getting-started-with-lanes)
+- Use \`bit tag --build\` to build your components locally.
+- Use \`snap\` or \`build\` first to validate your build passing, and then version and export safely.
+
+To undo local tag use the "bit reset" command.`
+      );
+    }
 
     const params = {
       ids: patterns,
@@ -259,13 +270,14 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       unmodified,
       disableTagAndSnapPipelines,
       ignoreBuildErrors,
+      rebuildDepsGraph,
       incrementBy,
       version: ver,
       failFast,
     };
 
     const results = await this.snapping.tag(params);
-    if (!results) return chalk.yellow(NOTHING_TO_TAG_MSG);
+    if (!results) return chalk.yellow(persist ? 'no soft-tag found' : NOTHING_TO_TAG_MSG);
     const { taggedComponents, autoTaggedResults, warnings, newComponents, removedComponents }: TagResults = results;
     const changedComponents = taggedComponents.filter((component) => !newComponents.searchWithoutVersion(component.id));
     const addedComponents = taggedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
@@ -273,13 +285,13 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
     const tagExplanationPersist = `\n(use "bit export" to push these components to a remote")
-(use "bit reset" to unstage versions)\n`;
+(use "bit reset" to unstage versions)`;
     const tagExplanationSoft = `\n(use "bit tag --persist" to persist the soft-tagged changes as a fully tagged version")
-(use "bit reset --soft" to remove the soft-tags)\n`;
+(use "bit reset --soft" to remove the soft-tags)`;
 
     const tagExplanation = results.isSoftTag ? tagExplanationSoft : tagExplanationPersist;
 
-    const compInBold = (id: BitId) => {
+    const compInBold = (id: ComponentID) => {
       const version = id.hasVersion() ? `@${id.version}` : '';
       return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
     };
@@ -288,9 +300,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       return comps
         .map((component) => {
           let componentOutput = `     > ${compInBold(component.id)}`;
-          const autoTag = autoTaggedResults.filter((result) =>
-            result.triggeredBy.searchWithoutScopeAndVersion(component.id)
-          );
+          const autoTag = autoTaggedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
           if (autoTag.length) {
             const autoTagComp = autoTag.map((a) => compInBold(a.component.id));
             componentOutput += `\n       ${AUTO_TAGGED_MSG}:
@@ -326,25 +336,25 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       : 'components that got a version bump';
     const softTagClarification = results.isSoftTag
       ? chalk.bold(
-          'keep in mind that this is a soft-tag (changes recorded to be tagged), to persist the changes use --persist flag'
+          '\nkeep in mind that this is a soft-tag (changes recorded to be tagged), to persist the changes use --persist flag'
         )
       : '';
     return (
-      warningsOutput +
-      chalk.green(
-        `${taggedComponents.length + autoTaggedCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged`
-      ) +
-      tagExplanation +
       outputIfExists('new components', newDesc, addedComponents) +
       outputIfExists('changed components', changedDesc, changedComponents) +
       outputIdsIfExists('removed components', removedComponents) +
       publishOutput() +
+      warningsOutput +
+      chalk.green(
+        `\n${taggedComponents.length + autoTaggedCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged`
+      ) +
+      tagExplanation +
       softTagClarification
     );
   }
 }
 
-export function outputIdsIfExists(label: string, ids?: BitIds) {
+export function outputIdsIfExists(label: string, ids?: ComponentIdList) {
   if (!ids?.length) return '';
   return `\n${chalk.underline(label)}\n${ids.map((id) => id.toStringWithoutVersion()).join('\n')}\n`;
 }

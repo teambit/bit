@@ -28,7 +28,7 @@ const port = process.env.WDS_SOCKET_PORT;
 //   '@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils'
 // );
 
-const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', sep, `${sep}public`);
+const publicUrlOrPath = getPublicUrlOrPath(true, sep, `${sep}public`);
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -49,9 +49,6 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
 
   // Host
   const host = process.env.HOST || 'localhost';
-
-  // Required for babel-preset-react-app
-  process.env.NODE_ENV = 'development';
 
   return {
     // Environment mode
@@ -225,8 +222,22 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
                 babelrc: false,
                 sourceType: 'unambiguous',
                 presets: [
-                  // Preset includes JSX, TypeScript, and some ESnext features
-                  require.resolve('babel-preset-react-app'),
+                  [
+                    require.resolve('@babel/preset-env'),
+                    {
+                      // Exclude transforms that make all code slower
+                      exclude: ['transform-typeof-symbol'],
+                    },
+                  ],
+                  [
+                    require.resolve('@babel/preset-react'),
+                    {
+                      development: true,
+                      // Will use the native built-in instead of trying to polyfill
+                      // behavior for any plugins that require one. This option will be removed in Babel 8.
+                      useBuiltIns: true,
+                    },
+                  ],
                 ],
                 plugins: [require.resolve('react-refresh/babel')],
               },

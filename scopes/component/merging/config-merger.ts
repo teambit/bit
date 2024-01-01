@@ -1,6 +1,7 @@
 import { ComponentID } from '@teambit/component-id';
 import semver from 'semver';
 import { Logger } from '@teambit/logger';
+import BuilderAspect from '@teambit/builder';
 import { isHash } from '@teambit/component-version';
 import {
   DependencyResolverAspect,
@@ -67,7 +68,7 @@ export class ConfigMerger {
   private currentEnv: EnvData;
   private otherEnv: EnvData;
   private baseEnv?: EnvData;
-  private handledExtIds: string[] = [];
+  private handledExtIds: string[] = [BuilderAspect.id]; // don't try to merge builder, it's possible that at one end it wasn't built yet, so it's empty
   private otherLaneIdsStr: string[];
   constructor(
     private compIdStr: string,
@@ -85,6 +86,8 @@ export class ConfigMerger {
 
   merge(): ConfigMergeResult {
     this.logger.debug(`\n************** start config-merger for ${this.compIdStr} **************`);
+    this.logger.debug(`currentLabel: ${this.currentLabel}`);
+    this.logger.debug(`otherLabel: ${this.otherLabel}`);
     this.populateEnvs();
     const results = this.currentAspects.map((currentExt) => {
       const id = currentExt.stringId;
@@ -239,12 +242,16 @@ export class ConfigMerger {
     const { currentExt, otherExt, baseExt } = params;
 
     const currentConfig = this.getConfig(currentExt);
-    const currentPolicy = this.getPolicy(currentConfig);
+    const currentConfigPolicy = this.getPolicy(currentConfig);
     const otherConfig = this.getConfig(otherExt);
-    const otherPolicy = this.getPolicy(otherConfig);
+    const otherConfigPolicy = this.getPolicy(otherConfig);
 
     const baseConfig = baseExt ? this.getConfig(baseExt) : undefined;
-    const basePolicy = baseConfig ? this.getPolicy(baseConfig) : undefined;
+    const baseConfigPolicy = baseConfig ? this.getPolicy(baseConfig) : undefined;
+
+    this.logger.debug(`currentConfig, ${JSON.stringify(currentConfig, undefined, 2)}`);
+    this.logger.debug(`otherConfig, ${JSON.stringify(otherConfig, undefined, 2)}`);
+    this.logger.debug(`baseConfig, ${JSON.stringify(baseConfig, undefined, 2)}`);
 
     const getAllDeps = (ext: ExtensionDataList): SerializedDependencyWithPolicy[] => {
       const data = ext.findCoreExtension(DependencyResolverAspect.id)?.data.dependencies;
@@ -337,8 +344,14 @@ export class ConfigMerger {
         }
         const fromCurrentDataPolicy = getFromCurrentDataPolicyByPackageName(dep.dependencyId);
         if (fromCurrentDataPolicy && fromCurrentDataPolicy.value.version === dep.value.version) {
+          // -- updated comment --
+          // not sure why this block is needed. this gets called also from this if: `if (baseConfig && this.areConfigsEqual(baseConfig, currentConfig)) {`
+          // and in this case, it's possible that current/base has 5 deps, and other just added one and it has 6.
+          // in which case, we do need to add all these 5 in additional to the new one. otherwise, only the new one appears in the final
+          // merged object, and all the 5 deps are lost.
+          // --- previous comment ---
           // that's a bug. if it's in the data.policy, it should be in data.dependencies.
-          return;
+          // return;
         }
         const depType = lifecycleToDepType[dep.lifecycleType];
         mergedPolicy[depType].push({
@@ -360,8 +373,8 @@ export class ConfigMerger {
       }
       if (baseConfig && this.areConfigsEqual(baseConfig, currentConfig)) {
         // was changed on other
-        if (otherPolicy.length) {
-          otherPolicy.forEach((dep) => {
+        if (otherConfigPolicy.length) {
+          otherConfigPolicy.forEach((dep) => {
             addVariantPolicyEntryToPolicy(dep);
           });
         }
@@ -370,12 +383,12 @@ export class ConfigMerger {
 
       // either no baseConfig, or baseConfig is also different from both: other and local. that's a conflict.
       if (!currentConfig.policy && !otherConfig.policy) return;
-      const currentAndOtherConfig = uniqBy(currentPolicy.concat(otherPolicy), (d) => d.dependencyId);
+      const currentAndOtherConfig = uniqBy(currentConfigPolicy.concat(otherConfigPolicy), (d) => d.dependencyId);
       currentAndOtherConfig.forEach((dep) => {
         const depType = lifecycleToDepType[dep.lifecycleType];
-        const currentDep = currentPolicy.find((d) => d.dependencyId === dep.dependencyId);
-        const otherDep = otherPolicy.find((d) => d.dependencyId === dep.dependencyId);
-        const baseDep = basePolicy?.find((d) => d.dependencyId === dep.dependencyId);
+        const currentDep = currentConfigPolicy.find((d) => d.dependencyId === dep.dependencyId);
+        const otherDep = otherConfigPolicy.find((d) => d.dependencyId === dep.dependencyId);
+        const baseDep = baseConfigPolicy?.find((d) => d.dependencyId === dep.dependencyId);
 
         if (!otherDep) {
           return;

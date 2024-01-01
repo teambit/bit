@@ -1,7 +1,8 @@
 {
   "componentId": {
-    "name": "react",
-    "version": "0.0.10"
+    "scope": "teambit.react",
+    "name": "eslint-config-bit-react",
+    "version": "1.0.64"
   },
   "propagate": true,
   "extensions": {
@@ -33,8 +34,8 @@
     "teambit.dependencies/dependency-resolver": {
       "policy": {
         "dependencies": {
-          "@typescript-eslint/eslint-plugin": "5.35.1",
-          "@typescript-eslint/parser": "5.35.1",
+          "@typescript-eslint/eslint-plugin": "5.62.0",
+          "@typescript-eslint/parser": "5.62.0",
           "eslint-config-airbnb-typescript": "12.0.0",
           "eslint-config-prettier": "8.5.0",
           "@teambit/legacy": "-"
@@ -44,9 +45,13 @@
         },
         "peerDependencies": {
           "eslint": "> 7.0.0",
-          "@teambit/legacy": "1.0.567"
+          "@teambit/legacy": "1.0.629"
         }
       }
+    },
+    "teambit.harmony/node": {},
+    "teambit.envs/envs": {
+      "env": "teambit.harmony/node"
     }
   }
 }

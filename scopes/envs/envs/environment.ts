@@ -9,7 +9,6 @@ import type { SchemaExtractor } from '@teambit/schema';
 import type { WebpackConfigTransformer } from '@teambit/webpack';
 import type { PackageJsonProps } from '@teambit/pkg';
 import type { DependencyDetector, EnvPolicyConfigObject } from '@teambit/dependency-resolver';
-import { ElementsWrapperContext } from '@teambit/elements';
 import type { Capsule } from '@teambit/isolator';
 import type { Component } from '@teambit/component';
 import { EnvPreviewConfig } from '@teambit/preview';
@@ -161,20 +160,6 @@ export interface PreviewEnv extends Environment {
    * Required for `bit build` & `bit tag`
    */
   getTemplateBundler?: (context: BundlerContext, transformers?: any[]) => Promise<Bundler>;
-}
-
-export interface ElementsEnv extends Environment {
-  /**
-   * Returns a function that gets the context and wrap the component with a web component
-   * Required for `bit build`
-   */
-  getElementsWrapper: (context: ElementsWrapperContext) => string;
-
-  /**
-   * Returns a bundler for elements.
-   * Required for `bit build``
-   */
-  getElementsBundler: (context: BundlerContext, transformers: any[]) => Promise<Bundler>;
 }
 
 export type PipeServiceModifiersMap = Record<string, PipeServiceModifier>;

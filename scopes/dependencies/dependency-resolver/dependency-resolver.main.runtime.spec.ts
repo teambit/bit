@@ -497,7 +497,9 @@ describe('DepenendencyResolverMain.getComponentEnvPolicyFromEnv()', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any,
+      {
+        isCoreEnv: () => false,
+      } as any,
       {} as any,
       {} as any,
       {} as any,
@@ -509,17 +511,20 @@ describe('DepenendencyResolverMain.getComponentEnvPolicyFromEnv()', () => {
       {} as any
     );
     await expect(
-      depResolver.getComponentEnvPolicyFromEnv({
-        getDependencies: () => ({
-          peers: [
-            {
-              name: '@teambit/community.ui.bit-cli.commands-provider',
-              supportedRange: '',
-              version: '',
-            },
-          ],
-        }),
-      }) // @ts-ignore
+      depResolver.getComponentEnvPolicyFromEnv(
+        {
+          getDependencies: () => ({
+            peers: [
+              {
+                name: '@teambit/community.ui.bit-cli.commands-provider',
+                supportedRange: '',
+                version: '',
+              },
+            ],
+          }),
+        },
+        { envId: 'teambit.test/test' }
+      ) // @ts-ignore
     ).rejects.toThrowError('Peer "@teambit/community.ui.bit-cli.commands-provider" has an empty supportedRange');
   });
 });

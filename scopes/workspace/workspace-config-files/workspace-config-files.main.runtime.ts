@@ -4,8 +4,9 @@ import globby from 'globby';
 import chalk from 'chalk';
 import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
 import pMapSeries from 'p-map-series';
+import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import yesno from 'yesno';
-import { flatMap, isFunction, pick, uniq } from 'lodash';
+import { defaults, flatMap, isFunction, pick, uniq } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { Workspace } from '@teambit/workspace';
@@ -62,6 +63,7 @@ export type WriteConfigFilesOptions = {
   silent?: boolean; // no prompt
   dedupe?: boolean;
   dryRun?: boolean;
+  throw?: boolean;
   writers?: string[];
 };
 
@@ -90,6 +92,7 @@ export type WriteConfigFilesResult = {
   cleanResults?: string[];
   writeResults: WriteResults;
   wsDir: string;
+  err?: Error;
 };
 
 export class WorkspaceConfigFilesMain {
@@ -115,22 +118,60 @@ export class WorkspaceConfigFilesMain {
    * - cleanResults: array of deleted paths
    */
   async writeConfigFiles(options: WriteConfigFilesOptions = {}): Promise<WriteConfigFilesResult> {
+    if (!this.workspace) {
+      throw new ConsumerNotFound();
+    }
+    const defaultOpts: WriteConfigFilesOptions = {
+      clean: false,
+      dedupe: false,
+      silent: false,
+      dryRun: false,
+      throw: true,
+    };
+    const optionsWithDefaults = defaults(options, defaultOpts);
     const execContext = await this.getExecContext();
 
-    let cleanResults: string[] | undefined;
-    if (options.clean) {
-      cleanResults = await this.clean(options);
+    let pathsToClean: string[] | undefined = [];
+    if (optionsWithDefaults.clean) {
+      pathsToClean = await this.calcPathsToClean({ writers: optionsWithDefaults.writers });
     }
 
+    let writeErr;
     let writeResults;
     try {
-      writeResults = await this.write(execContext, options);
+      writeResults = await this.write(execContext, optionsWithDefaults);
+      const allWrittenFiles = writeResults.writersResult.flatMap((writerResult) => {
+        return writerResult.extendingConfigFiles.flatMap((extendingConfigFile) => {
+          return extendingConfigFile.extendingConfigFile.filePaths;
+        });
+      });
+      // Avoid delete and re-create files that were written by other config writers
+      // instead of deleting at the beginning then write all
+      // we write all and then delete the files that were not written by the config writers
+      // This reduces the config files that re-created (as many times no changes needed)
+      // which prevent issues with needing to restart the ts-server in the ide
+      pathsToClean = pathsToClean.filter(
+        (pathToClean) => !allWrittenFiles.includes(join(this.workspace.path, pathToClean))
+      );
+      await this.deleteFiles(pathsToClean);
     } catch (err) {
       this.logger.info('writeConfigFiles failed', err);
-      throw new WriteConfigFilesFailed();
+      if (optionsWithDefaults.throw) {
+        throw new WriteConfigFilesFailed();
+      }
+      writeErr = err;
     }
 
-    return { writeResults, cleanResults, wsDir: this.workspace.path };
+    return { writeResults, cleanResults: pathsToClean, wsDir: this.workspace.path, err: writeErr };
+  }
+
+  /**
+   * This will check the config.enableWorkspaceConfigWrite before writing the config files.
+   */
+  async writeConfigFilesIfEnabled(options: WriteConfigFilesOptions = {}): Promise<WriteConfigFilesResult | undefined> {
+    const shouldWrite = this.isWorkspaceConfigWriteEnabled();
+    if (!shouldWrite) return undefined;
+    return this.writeConfigFiles(options);
   }
 
   /**
@@ -141,6 +182,9 @@ export class WorkspaceConfigFilesMain {
    */
   async cleanConfigFiles(options: CleanConfigFilesOptions = {}): Promise<string[]> {
     // const execContext = await this.getExecContext();
+    if (!this.workspace) {
+      throw new ConsumerNotFound();
+    }
     const cleanResults = await this.clean(options);
     return cleanResults;
   }
@@ -159,6 +203,9 @@ export class WorkspaceConfigFilesMain {
    * @returns An array of objects with aspectId and configWriter properties.
    */
   async listConfigWriters(): Promise<EnvConfigWritersList> {
+    if (!this.workspace) {
+      throw new ConsumerNotFound();
+    }
     const execContexts = await this.getExecContext();
 
     const result: EnvConfigWritersList = execContexts.map((executionContext) => {
@@ -288,6 +335,14 @@ export class WorkspaceConfigFilesMain {
    * @returns Array of paths of deleted config files
    */
   async clean({ dryRun, silent, writers }: WriteConfigFilesOptions): Promise<string[]> {
+    const paths = await this.calcPathsToClean({ writers });
+    if (dryRun) return paths;
+    if (!silent) await this.promptForCleaning(paths);
+    await this.deleteFiles(paths);
+    return paths;
+  }
+
+  private async calcPathsToClean({ writers }: WriteConfigFilesOptions): Promise<string[]> {
     const execContext = await this.getExecContext();
     const configWriters = this.getFlatConfigWriters(execContext);
     const filteredConfigWriters = writers
@@ -312,9 +367,6 @@ export class WorkspaceConfigFilesMain {
         })
         .flat()
     );
-    if (dryRun) return paths;
-    if (!silent) await this.promptForCleaning(paths);
-    await this.deleteFiles(paths);
     return paths;
   }
 

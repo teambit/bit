@@ -18,7 +18,7 @@ export class EnvMain {
   static dependencies = [AspectAspect, EnvsAspect];
   static runtime = MainRuntime;
   static async provider([aspectAspect, envs]: [AspectMain, EnvsMain]) {
-    const envEnv = aspectAspect.compose([], new EnvEnv());
+    const envEnv = aspectAspect.compose([], new EnvEnv(aspectAspect.aspectEnv));
 
     envs.registerEnv(envEnv);
     return new EnvMain(envEnv as EnvEnv, envs);

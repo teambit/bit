@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import chai, { expect } from 'chai';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
-import { IssuesClasses } from '../../scopes/component/component-issues';
+import { IssuesClasses } from '@teambit/component-issues';
 import { Extensions, IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
@@ -101,7 +101,7 @@ describe('custom env', function () {
       });
       // previously it used to throw "error: component "node-env@0.0.1" was not found."
       it('should untag successfully', () => {
-        expect(() => helper.command.untag('--all')).to.not.throw();
+        expect(() => helper.command.reset('--all')).to.not.throw();
       });
     });
     describe('out-of-sync scenario where the id is changed during the process', () => {

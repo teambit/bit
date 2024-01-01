@@ -163,7 +163,8 @@ describe('bit dependencies command', function () {
         beforeRemove = helper.scopeHelper.cloneLocalScope();
       });
       it('should support component-id syntax', () => {
-        helper.command.dependenciesRemove('comp1', 'comp2');
+        const output = helper.command.dependenciesRemove('comp1', 'comp2');
+        expect(output).to.not.include('nothing to remove');
         const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
         expect(showConfig.config.policy.dependencies).to.deep.equal({ '@my-scope/comp2': '-' });
       });
@@ -219,6 +220,17 @@ describe('bit dependencies command', function () {
           expect(ids).to.not.include('ramda');
           expect(ids).to.include('lodash'); // just to make sure it didn't change this
         });
+      });
+    });
+  });
+  describe('bit deps usage', () => {
+    describe('finding a dependnecy', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.command.install('is-odd@3.0.1');
+      });
+      it('should return paths to subdependency', () => {
+        expect(helper.command.dependenciesUsage('is-number')).to.contain('is-number 6.0.0');
       });
     });
   });

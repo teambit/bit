@@ -2,16 +2,15 @@ import { PJV } from 'package-json-validator';
 import R from 'ramda';
 import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
-
-import { BitId, BitIds } from '../bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { isSnap } from '@teambit/component-version';
 import { DEPENDENCIES_FIELDS } from '../constants';
 import { SchemaName } from '../consumer/component/component-schema';
 import { Dependencies } from '../consumer/component/dependencies';
 import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
 import PackageJsonFile from '../consumer/component/package-json-file';
 import { getArtifactsFiles } from '../consumer/component/sources/artifact-files';
-import { componentOverridesForbiddenFields } from '../consumer/config/component-overrides';
-import { nonPackageJsonFields } from '../consumer/config/consumer-overrides';
+import { componentOverridesForbiddenFields, nonPackageJsonFields } from '../consumer/config/component-overrides';
 import { ExtensionDataEntry, ExtensionDataList } from '../consumer/config/extension-data';
 import GeneralError from '../error/general-error';
 import { isValidPath } from '../utils';
@@ -27,11 +26,11 @@ export default function validateVersionInstance(version: Version): void {
   const message = `unable to save Version object${
     version.componentId ? ` of "${version.componentId.toString()}"` : ` hash ${version.hash().toString()}`
   }`;
-  const validateBitId = (bitId: BitId, field: string, validateVersion = true, validateScope = true) => {
+  const validateComponentId = (bitId: ComponentID, field: string, validateVersion = true, validateScope = true) => {
     if (validateVersion && !bitId.hasVersion()) {
       throw new VersionInvalid(`${message}, the ${field} ${bitId.toString()} does not have a version`);
     }
-    if (validateScope && !bitId.scope) {
+    if (validateScope && !bitId.hasScope()) {
       throw new VersionInvalid(`${message}, the ${field} ${bitId.toString()} does not have a scope`);
     }
   };
@@ -77,7 +76,7 @@ export default function validateVersionInstance(version: Version): void {
 
   const _validateExtension = (extension: ExtensionDataEntry) => {
     if (extension.extensionId) {
-      validateBitId(extension.extensionId, `extensions.${extension.extensionId.toString()}`, true, false);
+      validateComponentId(extension.extensionId, `extensions.${extension.extensionId.toString()}`, true, false);
     }
     // Make sure we don't insert the remove sign ("-") by mistake to the models
     if (extension.config) {
@@ -175,11 +174,13 @@ export default function validateVersionInstance(version: Version): void {
   if (!version.dependencies.isEmpty() && !version.flattenedDependencies.length) {
     throw new VersionInvalid(`${message}, it has dependencies but its flattenedDependencies is empty`);
   }
-  const validateFlattenedDependencies = (dependencies: BitIds) => {
+  const validateFlattenedDependencies = (dependencies: ComponentIdList) => {
     validateType(message, dependencies, 'dependencies', 'array');
     dependencies.forEach((dependency) => {
-      if (dependency.constructor.name !== BitId.name) {
-        throw new VersionInvalid(`${message}, a flattenedDependency expected to be BitId, got ${typeof dependency}`);
+      if (dependency.constructor.name !== ComponentID.name) {
+        throw new VersionInvalid(
+          `${message}, a flattenedDependency expected to be ComponentID, got ${typeof dependency}`
+        );
       }
       if (!dependency.hasVersion()) {
         throw new VersionInvalid(
@@ -275,6 +276,9 @@ ${duplicationStr}`);
     version.parents.forEach((parent) => {
       if (parent.isEqual(version.hash())) {
         throw new VersionInvalid(`${message}, its parent has the same hash as itself: ${parent.toString()}`);
+      }
+      if (!isSnap(parent.toString())) {
+        throw new VersionInvalid(`${message}, its parent "${parent.toString()}" is not a valid snap (40 chars hex).`);
       }
     });
   }

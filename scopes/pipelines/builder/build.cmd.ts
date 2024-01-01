@@ -1,5 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
+import prettyTime from 'pretty-time';
 import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import chalk from 'chalk';
@@ -17,11 +18,13 @@ type BuildOpts = {
   listTasks?: string;
   skipTests?: boolean;
   failFast?: boolean;
+  includeSnap?: boolean;
+  includeTag?: boolean;
 };
 
 export class BuilderCmd implements Command {
   name = 'build [component-pattern]';
-  description = 'run set of tasks for build. ';
+  description = 'run set of tasks for build.';
   extendedDescription = 'by default, only new and modified components are built';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   helpUrl = 'reference/build-pipeline/builder-overview';
@@ -51,6 +54,16 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       'fail-fast',
       'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
+    [
+      '',
+      'include-snap',
+      'EXPERIMENTAL. include snap pipeline tasks. Warning: this may deploy/publish if you have such tasks',
+    ],
+    [
+      '',
+      'include-tag',
+      'EXPERIMENTAL. include tag pipeline tasks. Warning: this may deploy/publish if you have such tasks',
+    ],
   ] as CommandOptions;
 
   constructor(private builder: BuilderMain, private workspace: Workspace, private logger: Logger) {}
@@ -68,6 +81,8 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       listTasks,
       skipTests,
       failFast,
+      includeSnap,
+      includeTag,
     }: BuildOpts
   ): Promise<string> {
     if (!this.workspace) throw new OutsideWorkspaceError();
@@ -79,7 +94,8 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       return this.getListTasks(listTasks);
     }
 
-    const longProcessLogger = this.logger.createLongProcessLogger('build');
+    this.logger.setStatusLine('build');
+    const start = process.hrtime();
     const components = await this.workspace.getComponentsByUserInput(unmodified, pattern, true);
     if (!components.length) {
       return chalk.bold(
@@ -104,11 +120,21 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
         tasks: tasks ? tasks.split(',').map((task) => task.trim()) : [],
         skipTests,
         exitOnFirstFailedTask: failFast,
+      },
+      {
+        includeSnap,
+        includeTag,
       }
     );
-    longProcessLogger.end(envsExecutionResults.hasErrors() ? 'error' : 'success');
+    this.logger.console(`build output can be found in path: ${envsExecutionResults.capsuleRootDir}`);
+    const duration = prettyTime(process.hrtime(start));
+    const succeedOrFailed = envsExecutionResults.hasErrors() ? 'failed' : 'succeeded';
+    const msg = `build ${succeedOrFailed}. completed in ${duration}.`;
+    if (envsExecutionResults.hasErrors()) {
+      this.logger.consoleFailure(msg);
+    }
     envsExecutionResults.throwErrorsIfExist();
-    return chalk.green(`build complete. total: ${envsExecutionResults.tasksQueue.length} tasks`);
+    return chalk.green(msg);
   }
 
   private async getListTasks(componentIdStr: string): Promise<string> {

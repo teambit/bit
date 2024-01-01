@@ -25,7 +25,7 @@ export default class Init implements LegacyCommand {
   description = 'create or reinitialize an empty workspace';
   helpUrl = 'reference/workspace/creating-workspaces/?new_existing_project=1';
   group: Group = 'start';
-  extendedDescription = `https://${BASE_DOCS_DOMAIN}/workspace/creating-workspaces#initialize-a-workspace-on-an-existing-project`;
+  extendedDescription = `${BASE_DOCS_DOMAIN}workspace/creating-workspaces#initialize-a-workspace-on-an-existing-project`;
   alias = '';
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
@@ -95,8 +95,9 @@ export default class Init implements LegacyCommand {
         };
       });
     }
-    if (reset && resetHard)
+    if (reset && resetHard) {
       throw new GeneralError('cannot use both --reset and --reset-hard, please use only one of them');
+    }
     const workspaceConfigFileProps: WorkspaceConfigProps = {
       componentsDefaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),
       defaultScope: defaultScope ?? getSync(CFG_INIT_DEFAULT_SCOPE),

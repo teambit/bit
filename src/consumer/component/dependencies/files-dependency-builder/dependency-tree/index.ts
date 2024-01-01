@@ -1,14 +1,13 @@
 /**
  * this file had been forked from https://github.com/dependents/node-dependency-tree
  */
+import fs from 'fs';
+import debugFactory from 'debug';
 import cabinet from '../filing-cabinet';
 import precinct from '../precinct';
 import Config from './Config';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-const debug = require('debug')('tree');
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-const fs = require('fs');
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+
+const debug = debugFactory('tree');
 
 /**
  * Recursively find all dependencies (avoiding circular) traversing the entire dependency tree

@@ -11,7 +11,7 @@ import {
 } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP, HEAD, LATEST } from '@teambit/legacy/dist/constants';
 import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
 
@@ -32,10 +32,11 @@ export class CheckoutCmd implements Command {
   helpUrl = 'reference/components/merging-changes#checkout-snaps-to-the-working-directory';
   group = 'development';
   extendedDescription = `
-  \`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version
-  \`bit checkout head [component-pattern]\` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all
-  \`bit checkout latest [component-pattern]\` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all
-  \`bit checkout reset [component-pattern]\` => remove local modifications from the specified ids (or all components when --all is used)`;
+\`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version
+\`bit checkout head [component-pattern]\` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all
+\`bit checkout latest [component-pattern]\` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all
+\`bit checkout reset [component-pattern]\` => remove local modifications from the specified ids (or all components when --all is used)
+when on a lane, "checkout head" only checks out components on this lane. to update main components, run "bit lane merge main"`;
   alias = 'U';
   options = [
     [
@@ -126,7 +127,7 @@ export class CheckoutCmd implements Command {
     else if (to === 'reset') checkoutProps.reset = true;
     else if (to === 'main') checkoutProps.main = true;
     else {
-      if (!BitId.isValidVersion(to)) throw new BitError(`the specified version "${to}" is not a valid version`);
+      if (!ComponentID.isValidVersion(to)) throw new BitError(`the specified version "${to}" is not a valid version`);
       checkoutProps.version = to;
     }
 
@@ -153,20 +154,12 @@ export function checkoutOutput(checkoutResults: ApplyVersionResults, checkoutPro
 
   // components that failed for no legitimate reason. e.g. merge-conflict.
   const realFailedComponents = (failedComponents || []).filter((f) => !f.unchangedLegitimately);
+  if (realFailedComponents.length) {
+    throw new Error('checkout should throw in case of errors');
+  }
   // components that weren't checked out for legitimate reasons, e.g. up-to-date.
-  const notCheckedOutComponents = (failedComponents || []).filter((f) => f.unchangedLegitimately);
+  const notCheckedOutComponents = failedComponents || [];
 
-  const getFailureOutput = () => {
-    if (!realFailedComponents.length) return '';
-    const title = 'the checkout has been failed on the following component(s)';
-    const body = realFailedComponents
-      .map(
-        (failedComponent) =>
-          `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.unchangedMessage)}`
-      )
-      .join('\n');
-    return `${chalk.underline(title)}\n${body}\n\n`;
-  };
   const getNotCheckedOutOutput = () => {
     if (!notCheckedOutComponents.length) return '';
     if (!verbose && all) {
@@ -185,7 +178,7 @@ export function checkoutOutput(checkoutResults: ApplyVersionResults, checkoutPro
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
     const title = `\n\nfiles with conflicts summary\n`;
-    const suggestion = `\n\nfix the conflicts above manually and then run "bit install" and "bit compile".
+    const suggestion = `\n\nfix the conflicts above manually and then run "bit install".
 once ready, snap/tag the components to persist the changes`;
     return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
   };
@@ -230,23 +223,20 @@ once ready, snap/tag the components to persist the changes`;
   const getSummary = () => {
     const checkedOut = components?.length || 0;
     const notCheckedOutLegitimately = notCheckedOutComponents.length;
-    const failedToCheckOut = realFailedComponents.length;
     const newLines = '\n\n';
     const title = chalk.bold.underline('Summary');
     const checkedOutStr = `\nTotal Changed: ${chalk.bold(checkedOut.toString())}`;
     const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(notCheckedOutLegitimately.toString())}`;
-    const failedToCheckOutStr = `\nTotal Failed: ${chalk.bold(failedToCheckOut.toString())}`;
     const newOnLaneNum = newFromLane?.length || 0;
     const newOnLaneAddedStr = newFromLaneAdded ? ' (added)' : ' (not added)';
     const newOnLaneStr = newOnLaneNum
       ? `\nNew on lane${newOnLaneAddedStr}: ${chalk.bold(newOnLaneNum.toString())}`
       : '';
 
-    return newLines + title + checkedOutStr + unchangedLegitimatelyStr + failedToCheckOutStr + newOnLaneStr;
+    return newLines + title + checkedOutStr + unchangedLegitimatelyStr + newOnLaneStr;
   };
 
   return (
-    getFailureOutput() +
     getNotCheckedOutOutput() +
     getSuccessfulOutput() +
     getRemovedOutput(removedComponents) +

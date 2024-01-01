@@ -1,7 +1,7 @@
 import { Component } from '@teambit/component';
 import pMapSeries from 'p-map-series';
 import type { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import { BitId } from '@teambit/legacy/dist/bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { FsArtifact } from './fs-artifact';
@@ -44,6 +44,20 @@ export class ArtifactList<T extends Artifact> extends Array<T> {
     return ArtifactList.fromArray(filtered);
   }
 
+  /**
+   * find by the artifact name. it's possible to have multiple artifacts with the same name, in which case it returns the first.
+   */
+  findByName(name: string): Artifact | undefined {
+    return this.find((artifact) => artifact.name === name);
+  }
+
+  /**
+   * find by the task name. it's possible to have multiple tasks with the same name (different aspects), in which case it returns the first.
+   */
+  findByTaskName(name: string): Artifact | undefined {
+    return this.find((artifact) => artifact.task.name === name);
+  }
+
   isEmpty(): boolean {
     return this.every((artifact) => artifact.files.isEmpty());
   }
@@ -80,7 +94,7 @@ export class ArtifactList<T extends Artifact> extends Array<T> {
     }, {});
   }
 
-  async getVinylsAndImportIfMissing(id: BitId, scope: Scope): Promise<ArtifactVinyl[]> {
+  async getVinylsAndImportIfMissing(id: ComponentID, scope: Scope): Promise<ArtifactVinyl[]> {
     if (this.isEmpty()) return [];
     const vinyls = await pMapSeries(this, (artifact) => artifact.files.getVinylsAndImportIfMissing(id, scope));
     return vinyls.flat();

@@ -154,7 +154,7 @@ describe('components that are not synced between the scope and the consumer', fu
       });
       it('should throw an error saying the component does not exist', () => {
         const exportFunc = () => helper.command.exportIds('bar/foo');
-        const err = new MissingBitMapComponent('bar/foo');
+        const err = new MissingBitMapComponent(`${helper.scopes.remote}/bar/foo`);
         helper.general.expectToThrow(exportFunc, err);
       });
     });
@@ -220,7 +220,7 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.fixtures.tagComponentBarFoo();
       helper.command.tagIncludeUnmodified('2.0.0');
       const bitMap = helper.bitMap.read();
-      helper.command.untag('bar/foo', true);
+      helper.command.reset('bar/foo', true);
       helper.bitMap.write(bitMap);
       scopeOutOfSync = helper.scopeHelper.cloneLocalScope();
     });

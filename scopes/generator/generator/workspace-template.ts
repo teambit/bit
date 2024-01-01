@@ -62,11 +62,44 @@ export interface WorkspaceFile {
   content: string;
 }
 
+export interface CreateComponentInfo {
+  /**
+   * the template for generating the component
+   */
+  templateName: string;
+  /**
+   * component name to generate
+   */
+  componentName: string;
+  /**
+   * sets the component's scope-name. if not entered, the default-scope will be used
+   */
+  scope?: string;
+  /**
+   * relative path in the workspace. by default the path is `<scope>/<namespace>/<name>`
+   */
+  path?: string;
+  /**
+   * set the component's environment. (overrides the env from variants and the template)
+   */
+  env?: string;
+  /**
+   * aspect-id of the template.
+   */
+  aspect?: string;
+}
+
 export interface ForkComponentInfo extends ImportComponentInfo {
   /**
    * a new component name. if not specified, use the original id (without the scope)
    */
   targetName?: string;
+
+  /**
+   * a new scope for the component. if not specified, use the original scope
+   */
+  targetScope?: string;
+
   /**
    * env to use for the component.
    */
@@ -142,4 +175,9 @@ export interface WorkspaceTemplate {
    * change their source code and update the dependency names according to the new component names.
    */
   fork?: (context: WorkspaceContext) => ForkComponentInfo[];
+
+  /**
+   * populate new components into the new workspace and add them as new components.
+   */
+  create?: (context: WorkspaceContext) => CreateComponentInfo[];
 }

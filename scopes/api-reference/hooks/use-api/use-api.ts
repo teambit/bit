@@ -1,36 +1,36 @@
-import { DataQueryResult, useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
-import { SchemaQueryResult, APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
+import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 import { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 
 const GET_SCHEMA = gql`
-  query Schema($extensionId: String!, $componentId: String!) {
-    getHost(id: $extensionId) {
+  query Schema($componentId: String!, $skipInternals: Boolean) {
+    getHost {
       id # used for GQL caching
-      getSchema(id: $componentId)
+      getSchema(id: $componentId, skipInternals: $skipInternals)
     }
   }
 `;
 
 export function useAPI(
-  host: string,
-  componentId: string,
-  apiNodeRenderers: APINodeRenderer[]
-): { apiModel?: APIReferenceModel } & Omit<
-  DataQueryResult<SchemaQueryResult, { extensionId: string; componentId: string }>,
-  'data'
-> {
-  const { data, ...rest } = useDataQuery(GET_SCHEMA, {
+  componentId?: string,
+  apiNodeRenderers: APINodeRenderer[] = [],
+  options?: {
+    skipInternals?: boolean;
+  }
+): { apiModel?: APIReferenceModel; loading?: boolean } {
+  const { data, loading } = useDataQuery(GET_SCHEMA, {
     variables: {
-      extensionId: host,
       componentId,
+      skipInternals: options?.skipInternals,
+      skip: !componentId,
     },
   });
 
   const apiModel = data?.getHost?.getSchema ? APIReferenceModel.from(data, apiNodeRenderers) : undefined;
 
   return {
-    ...rest,
+    loading,
     apiModel,
   };
 }

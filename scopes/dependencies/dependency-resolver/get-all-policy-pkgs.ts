@@ -1,13 +1,23 @@
 import { ComponentID } from '@teambit/component-id';
 import { ManifestDependenciesKeysNames } from './manifest';
-import { VariantPolicyConfigObject, WorkspacePolicy } from './policy';
+import { VariantPolicyConfigObject, VariantPolicyEntryValue, WorkspacePolicy } from './policy';
 import { DependencyLifecycleType } from './dependencies/dependency';
 import { KEY_NAME_BY_LIFECYCLE_TYPE } from './dependencies';
+
+export type CurrentPkgSource =
+  // the variants section of "workspace.jsonc"
+  | 'variants'
+  // these are dependencies set via "bit deps set" or "component.json"
+  | 'component'
+  // these are dependencies from the dependencies policy in "workspace.jsonc"
+  | 'rootPolicy'
+  // these are dependencies stored in the component object (snapped/tagged version)
+  | 'component-model';
 
 type CurrentPkg = {
   name: string;
   currentRange: string;
-  source: 'variants' | 'component' | 'rootPolicy' | 'component-model';
+  source: CurrentPkgSource;
   variantPattern?: string | null;
   componentId?: ComponentID;
   isAuto?: boolean;
@@ -105,7 +115,8 @@ function readAllDependenciesFromPolicyObject(
         pkgs.push({
           ...context,
           name,
-          currentRange: typeof currentRange === 'string' ? currentRange : currentRange.version,
+          currentRange:
+            typeof currentRange === 'string' ? currentRange : (currentRange as VariantPolicyEntryValue).version,
           targetField,
         });
       }

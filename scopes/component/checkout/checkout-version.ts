@@ -1,27 +1,22 @@
 import * as path from 'path';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import Version from '@teambit/legacy/dist/scope/models/version';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { pathNormalizeToLinux, PathOsBased } from '@teambit/legacy/dist/utils/path';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
-import {
-  ApplyVersionResult,
-  FilesStatus,
-  FileStatus,
-  MergeOptions,
-  MergeStrategy,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { FileStatus, MergeOptions, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
+import { ApplyVersionResult, FilesStatus } from '@teambit/merging';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
-  ids?: BitId[];
+  ids?: ComponentID[];
   latestVersion?: boolean;
   promptMergeOptions?: boolean;
   mergeStrategy?: MergeStrategy | null;
@@ -38,7 +33,7 @@ export type CheckoutProps = {
 export type ComponentStatusBase = {
   currentComponent?: ConsumerComponent;
   componentFromModel?: Version;
-  id: BitId;
+  id: ComponentID;
   shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
   unchangedMessage?: string; // this gets populated either upon skip or failure.
   unchangedLegitimately?: boolean; // true for skipped legitimately (e.g. already up to date). false for failure.
@@ -48,7 +43,12 @@ export type ComponentStatus = ComponentStatusBase & {
   mergeResults?: MergeResultsThreeWay | null | undefined;
 };
 
-export type ApplyVersionWithComps = { applyVersionResult: ApplyVersionResult; component?: ConsumerComponent };
+export type ApplyVersionWithComps = {
+  applyVersionResult: ApplyVersionResult;
+  component?: ConsumerComponent;
+  // in case the component needs to be written to the filesystem, this is the component to write.
+  legacyCompToWrite?: ConsumerComponent;
+};
 
 /**
  * 1) when the files are modified with conflicts and the strategy is "ours", leave the FS as is
@@ -69,7 +69,7 @@ export type ApplyVersionWithComps = { applyVersionResult: ApplyVersionResult; co
  */
 export async function applyVersion(
   consumer: Consumer,
-  id: BitId,
+  id: ComponentID,
   componentFromFS: ConsumerComponent | null | undefined, // it can be null only when isLanes is true
   mergeResults: MergeResultsThreeWay | null | undefined,
   checkoutProps: CheckoutProps

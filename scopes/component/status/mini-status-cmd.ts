@@ -5,10 +5,11 @@ import chalk from 'chalk';
 import { StatusMain } from './status.main.runtime';
 
 export type MiniStatusOpts = {
-  showIssues?: Boolean;
+  showIssues?: boolean;
+  ignoreCircularDependencies?: boolean;
 };
 
-export default class MiniStatusCmd implements Command {
+export class MiniStatusCmd implements Command {
   name = 'mini-status [component-pattern]';
   description = 'EXPERIMENTAL. basic status for fast execution';
   extendedDescription = `shows only modified/new components with code changes. for the full status, use "bit status".
@@ -23,6 +24,11 @@ this command only checks source code changes, it doesn't check for config/aspect
   alias = 'ms';
   options = [
     ['', 'show-issues', 'show component issues (slows down the command)'],
+    [
+      'c',
+      'ignore-circular-dependencies',
+      'do not check for circular dependencies to get the results quicker (relevant when --show-issues flag is used)',
+    ],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
   loader = true;
@@ -56,7 +62,7 @@ this command only checks source code changes, it doesn't check for config/aspect
       newComps: newComps.map((m) => m.toStringWithoutVersion()),
       compWithIssues: compWithIssues?.map((c) => ({
         id: c.id.toStringWithoutVersion(),
-        issues: c.state.issues.toReadableByIDE(),
+        issues: c.state.issues.toObjectIncludeDataAsString(),
       })),
     };
   }

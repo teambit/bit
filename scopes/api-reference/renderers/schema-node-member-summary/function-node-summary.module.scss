@@ -1,13 +1,15 @@
 .summaryContainer {
-  padding: 0px 12px 2px 12px;
-  margin-bottom: 8px;
-  border-radius: var(--bit-p-sm);
-  background-color: var(--primary-surface-color);
+  padding: 0px 24px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  background-color: #f7f7f5a1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .signatureTitle {
   color: var(--on-background-color);
-  margin-bottom: 16px;
 
   > pre {
     > code {
@@ -19,7 +21,8 @@
 
 .description {
   font-size: 14px;
-  margin: 20px 0px;
+  margin-bottom: 16px;
+  font-style: italic;
 }
 
 .subtitle {
@@ -30,7 +33,6 @@
   margin-bottom: 12px;
 }
 
-.paramsContainer,
 .returnContainer {
   margin-bottom: 16px;
 }
@@ -38,5 +40,13 @@
 .functionName {
   font-size: var(--bit-p-md);
   font-weight: 500;
-  padding: 8px 0px;
+  padding: 16px 0px 8px 0px;
+}
+
+.hide {
+  padding: 8px 0px !important;
+}
+
+.paramHeading {
+  padding: 8px 0px 16px 0px;
 }

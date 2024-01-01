@@ -40,7 +40,7 @@ export class TrackerMain {
     );
     const result = await addComponent.add();
     const addedComponent = result.addedComponents[0];
-    const componentName = addedComponent?.id.name || (trackData.componentName as string);
+    const componentName = addedComponent?.id.fullName || (trackData.componentName as string);
     const files = addedComponent?.files.map((f) => f.relativePath) || [];
     return { componentName, files, warnings: result.warnings };
   }
@@ -56,7 +56,7 @@ export class TrackerMain {
     }
     const addComponents = new AddComponents(addContext, addProps);
     const addResults = await addComponents.add();
-    await this.workspace.consumer.onDestroy();
+    await this.workspace.consumer.onDestroy('add');
 
     return addResults;
   }

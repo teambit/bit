@@ -16,7 +16,7 @@ export function ClientContext({ children }: { children: ReactNode }) {
     <React.StrictMode>
       {/* TODO - try moving LoaderContext to contextSlot, and LoaderRibbon to hudSlot */}
       <LoaderContext.Provider value={loaderApi}>
-        <IconFont query="q76y7n" />
+        <IconFont query="c7vhhb" />
         <ThemeSwitcher>
           <Roboto />
           <LoaderRibbon active={isLoading} className={styles.loader} />

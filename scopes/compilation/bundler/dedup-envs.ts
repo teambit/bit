@@ -63,7 +63,7 @@ async function groupByPeersHash(contexts: ExecutionContext[], dependencyResolver
   await Promise.all(
     contexts.map(async (context) => {
       const env = context.env;
-      const policy = await dependencyResolver.getComponentEnvPolicyFromEnv(env);
+      const policy = await dependencyResolver.getComponentEnvPolicyFromEnv(env, { envId: context.id });
       const peersHash = policy.byLifecycleType('peer').hashNameVersion();
       if (!peerGroups[peersHash]) {
         peerGroups[peersHash] = [];

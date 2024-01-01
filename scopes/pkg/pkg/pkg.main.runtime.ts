@@ -170,15 +170,23 @@ export class PkgMain {
     builder.registerBuildTasks([preparePackagesTask]);
     builder.registerTagTasks([packTask, publishTask]);
     builder.registerSnapTasks([packTask]);
+
+    const calcPkgOnLoad = async (component: Component) => {
+      const data = await pkg.mergePackageJsonProps(component);
+      return {
+        packageJsonModification: data,
+      };
+    };
+
     if (workspace) {
       // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
-      workspace.onComponentLoad(async (component) => {
+      workspace.registerOnComponentLoad(async (component) => {
         await pkg.addMissingLinksFromNodeModulesIssue(component);
-        const data = await pkg.mergePackageJsonProps(component);
-        return {
-          packageJsonModification: data,
-        };
+        return calcPkgOnLoad(component);
       });
+    }
+    if (scope) {
+      scope.registerOnCompAspectReCalc(calcPkgOnLoad);
     }
 
     PackageJsonTransformer.registerPackageJsonTransformer(pkg.transformPackageJson.bind(pkg));
@@ -317,7 +325,7 @@ export class PkgMain {
       if (files.length) merged.files = files;
       return merged;
     };
-    const env = this.envs.calculateEnv(component, { skipWarnings: !!this.workspace.inInstallContext })?.env;
+    const env = this.envs.calculateEnv(component, { skipWarnings: !!this.workspace?.inInstallContext })?.env;
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
       const propsFromEnv = env.getPackageJsonProps();
       newProps = mergeToNewProps(propsFromEnv);
@@ -430,7 +438,7 @@ export class PkgMain {
     const idWithCorrectVersion = component.id.changeVersion(snap.hash);
 
     // @todo: this is a hack. see below the right way to do it.
-    const version = await this.scope.legacyScope.getVersionInstance(idWithCorrectVersion._legacy);
+    const version = await this.scope.legacyScope.getVersionInstance(idWithCorrectVersion);
     const builderData = version.extensions.findCoreExtension(BuilderAspect.id)?.data?.aspectsData;
     const currentData = builderData?.find((a) => a.aspectId === PkgAspect.id)?.data;
 

@@ -23,8 +23,8 @@ export class ConstructorTransformer implements SchemaTransformer {
     const args = await pMapSeries(node.parameters, async (param) => context.computeSchema(param));
     const info = await context.getQuickInfo(node);
     const displaySig = info?.body?.displayString || '';
-
-    const returns = new ThisTypeSchema(context.getLocation(node.parent));
+    const name = node.parent?.name?.getText() || '';
+    const returns = new ThisTypeSchema(context.getLocation(node.parent), name);
     const modifiers = node.modifiers?.map((modifier) => modifier.getText()) || [];
     const doc = await context.jsDocToDocSchema(node);
 

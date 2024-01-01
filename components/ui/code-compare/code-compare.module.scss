@@ -1,0 +1,92 @@
+@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
+.componentCompareCodeContainer {
+  display: flex;
+  height: 100%;
+  width: 100%;
+
+  &.hidden {
+    display: none;
+  }
+}
+
+.right {
+  min-width: 200px;
+  //cannot assign max-width directly to right side
+  max-width: calc(100% - 200px);
+  display: flex;
+  &.collapsed {
+    min-width: 32px;
+    //cannot assign max-width directly to right side
+    max-width: calc(100% - 32px);
+  }
+  background: var(--on-surface-neutral-low-color, #282828) !important;
+}
+
+.left {
+  position: relative;
+  background: var(--on-surface-neutral-low-color, #282828);
+  // this is to fix the right panel when it gets too big or too small
+  min-width: 200px;
+  max-width: calc(100% - 200px);
+
+  &.collapsed {
+    min-width: 32px;
+    //cannot assign max-width directly to right side
+    max-width: calc(100% - 32px);
+  }
+}
+
+.splitter {
+  position: relative;
+  background: var(--on-surface-neutral-low-color, #282828);
+  // display: none;
+
+  > :first-child {
+    z-index: $pane-splitter-zIndex;
+    position: absolute;
+  }
+}
+
+.collapser {
+  right: 1px;
+}
+
+.depNode {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 8px;
+}
+
+.loader {
+  color: var(--on-surface-neutral-low-color, #282828);
+}
+
+.codeCompareTreeCollapse {
+  padding: 8px;
+  background: var(--on-surface-neutral-low-color, #282828);
+  cursor: pointer;
+
+  img {
+    width: 16px;
+    filter: brightness(0) invert(1);
+  }
+}
+
+.codeCompareTree {
+  height: calc(100% - 32px);
+}
+
+.themeContainer {
+  min-height: calc(100% - 56px);
+  display: flex;
+  width: 100%;
+  flex: 1;
+
+  > div {
+    width: 100%;
+    min-height: calc(100% - 56px);
+    display: flex;
+  }
+}

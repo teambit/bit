@@ -19,3 +19,59 @@
   max-width: 155px;
   text-align: center;
 }
+
+.previewIframe {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: none;
+}
+
+.preview {
+  overflow: hidden;
+}
+
+.description {
+  margin-top: 10px;
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.noPreview {
+  background-color: var(--surface-color);
+  width: 100%;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  // justify-content: space-evenly;
+  margin: 0;
+  position: absolute;
+  height: 100%;
+}
+
+.component {
+  width: 90%;
+}
+
+.scopeTitle {
+  margin: 0;
+  padding-bottom: 25px;
+  font-weight: 400;
+}
+
+.componentTitle {
+  font-size: 28px !important;
+  margin: 0;
+  margin-bottom: 20px;
+}
+
+.previewOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  cursor: pointer;
+}

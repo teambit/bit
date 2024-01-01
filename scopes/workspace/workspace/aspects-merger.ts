@@ -1,25 +1,23 @@
 import { Harmony } from '@teambit/harmony';
-import { Component, ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { partition, mergeWith, merge } from 'lodash';
+import { ExtensionDataList, getCompareExtPredicate } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { partition, mergeWith, merge, uniq, uniqWith } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { AspectSpecificField, ExtensionsOrigin, Workspace } from './workspace';
 import { MergeConflictFile } from './merge-conflict-file';
-import { WorkspaceLoadAspectsOptions } from './workspace-aspects-loader';
 
 export class AspectsMerger {
-  private warnedAboutMisconfiguredEnvs: string[] = []; // cache env-ids that have been errored about not having "env" type
   readonly mergeConflictFile: MergeConflictFile;
   private mergeConfigDepsResolverDataCache: { [compIdStr: string]: Record<string, any> } = {};
   constructor(private workspace: Workspace, private harmony: Harmony) {
     this.mergeConflictFile = new MergeConflictFile(workspace.path);
   }
 
-  getDepsDataOfMergeConfig(id: BitId) {
+  getDepsDataOfMergeConfig(id: ComponentID) {
     return this.mergeConfigDepsResolverDataCache[id.toString()];
   }
 
@@ -44,11 +42,10 @@ export class AspectsMerger {
     // TODO: consider caching this result
     let configFileExtensions: ExtensionDataList | undefined;
     let variantsExtensions: ExtensionDataList | undefined;
-    let wsDefaultExtensions: ExtensionDataList | undefined;
     const mergeFromScope = true;
     const errors: Error[] = [];
 
-    const bitMapEntry = this.workspace.consumer.bitMap.getComponentIfExist(componentId._legacy);
+    const bitMapEntry = this.workspace.consumer.bitMap.getComponentIfExist(componentId);
     const bitMapExtensions = bitMapEntry?.config;
 
     let configMerge: Record<string, any> | undefined;
@@ -93,7 +90,7 @@ export class AspectsMerger {
       : undefined;
 
     this.removeAutoDepsFromConfig(componentId, configMergeExtensions);
-    const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
+    const scopeExtensions = this.getComponentFromScopeWithoutDuplications(componentFromScope);
     // backward compatibility. previously, it was saved as an array into the model (when there was merge-config)
     this.removeAutoDepsFromConfig(componentId, scopeExtensions, true);
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
@@ -125,11 +122,7 @@ export class AspectsMerger {
       }
       removedExtensionIds.push(...extensions.filter((extData) => extData.isRemoved).map((extData) => extData.stringId));
       const extsWithoutRemoved = extensions.filterRemovedExtensions();
-      const selfInMergedExtensions = extsWithoutRemoved.findExtension(
-        componentId._legacy.toStringWithoutScopeAndVersion(),
-        true,
-        true
-      );
+      const selfInMergedExtensions = extsWithoutRemoved.findExtension(componentId.toStringWithoutVersion(), true);
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
         ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
         : extsWithoutRemoved;
@@ -145,7 +138,6 @@ export class AspectsMerger {
         origin
       );
       if (envIsCurrentlySet) {
-        await this.warnAboutMisconfiguredEnv(componentId, extensions);
         envWasFoundPreviously = true;
       }
 
@@ -178,22 +170,11 @@ export class AspectsMerger {
       await addExtensionsToMerge(variantsExtensions, 'WorkspaceVariants', { appliedRules });
     }
     continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
-    // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)
-    const isDefaultExtension = wsDefaultExtensions?.findExtension(componentId.toString(), true, true);
-    if (
-      wsDefaultExtensions &&
-      continuePropagating &&
-      !isDefaultExtension &&
-      !excludeOrigins.includes('WorkspaceDefault')
-    ) {
-      await addExtensionsToMerge(wsDefaultExtensions, 'WorkspaceDefault');
-    }
     if (mergeFromScope && continuePropagating && !excludeOrigins.includes('ModelNonSpecific')) {
       await addExtensionsToMerge(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
 
     const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
-    await this.loadExtensions(afterMerge, componentId);
     const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
     const extensions = ExtensionDataList.fromArray(withoutRemoved);
     return {
@@ -204,10 +185,27 @@ export class AspectsMerger {
   }
 
   /**
+   * before version 0.0.882 it was possible to save Version object with the same extension twice.
+   */
+  private getComponentFromScopeWithoutDuplications(componentFromScope?: Component) {
+    if (!componentFromScope) return new ExtensionDataList();
+    const scopeExtensions = componentFromScope.config.extensions;
+    const scopeExtIds = scopeExtensions.ids;
+    const scopeExtHasDuplications = scopeExtIds.length !== uniq(scopeExtIds).length;
+    if (!scopeExtHasDuplications) {
+      return scopeExtensions;
+    }
+    // let's remove this duplicated extension blindly without trying to merge. (no need to merge coz it's old data from scope
+    // which will be overridden anyway by the workspace or other config strategies).
+    const arr = uniqWith(scopeExtensions, getCompareExtPredicate(true));
+    return ExtensionDataList.fromArray(arr);
+  }
+
+  /**
    * from the merge-config we get the dep-resolver policy as an array, because it needs to support "force" prop.
    * however, when we save the config, we want to save it as an object, so we need split the data into two:
    * 1. force: true, which gets saved into the config.
-   * 2. force: false, which gets saved into the data.dependencies later on. see the LegacyDependencyResolver.registerOnComponentAutoDetectOverridesGetter hook
+   * 2. force: false, which gets saved into the data.dependencies later on. see the workspace.getAutoDetectOverrides()
    */
   private removeAutoDepsFromConfig(componentId: ComponentID, conf?: ExtensionDataList, fromScope = false) {
     if (!conf) return;
@@ -246,32 +244,7 @@ export class AspectsMerger {
   }
 
   private getUnmergedData(componentId: ComponentID): UnmergedComponent | undefined {
-    return this.workspace.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
-  }
-
-  private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {
-    if (!(await this.workspace.hasId(componentId))) {
-      // if this is a dependency and not belong to the workspace, don't show the warning
-      return;
-    }
-    const envAspect = extensionDataList.findExtension(EnvsAspect.id);
-    const envFromEnvsAspect = envAspect?.config.env;
-    if (!envFromEnvsAspect) return;
-    if (this.workspace.envs.getCoreEnvsIds().includes(envFromEnvsAspect)) return;
-    if (this.warnedAboutMisconfiguredEnvs.includes(envFromEnvsAspect)) return;
-    let env: Component;
-    try {
-      const envId = await this.workspace.resolveComponentId(envFromEnvsAspect);
-      env = await this.workspace.get(envId);
-    } catch (err) {
-      return; // unable to get the component for some reason. don't sweat it. forget about the warning
-    }
-    if (!this.workspace.envs.isUsingEnvEnv(env)) {
-      this.warnedAboutMisconfiguredEnvs.push(envFromEnvsAspect);
-      this.workspace.logger.consoleWarning(
-        `env "${envFromEnvsAspect}" is not of type env. (correct the env's type, or component config with "bit env set ${envFromEnvsAspect} teambit.envs/env")`
-      );
-    }
+    return this.workspace.scope.legacyScope.objects.unmergedComponents.getEntry(componentId);
   }
 
   private async filterEnvsFromExtensionsIfNeeded(
@@ -293,7 +266,6 @@ export class AspectsMerger {
         if (
           (envFromEnvsAspect && e.stringId === envFromEnvsAspect) ||
           (envFromEnvsAspect && e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect) ||
-          (envFromEnvsAspect && e.newExtensionId?.toStringWithoutVersion() === envFromEnvsAspect) ||
           aspectsRegisteredAsEnvs.includes(e.stringId)
         ) {
           return false;
@@ -309,25 +281,12 @@ export class AspectsMerger {
       const envAspectExt = extensionDataList.find((e) => e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect);
       const ids = await this.workspace.listIds();
       const envAspectId = envAspectExt?.extensionId;
-      const found = envAspectId && ids.find((id) => id._legacy.isEqualWithoutVersion(envAspectId));
+      const found = envAspectId && ids.find((id) => id.isEqualWithoutVersion(envAspectId));
       if (found) {
-        envAspectExt.extensionId = found._legacy;
+        envAspectExt.extensionId = found;
       }
     }
     return { extensionDataListFiltered: extensionDataList, envIsCurrentlySet: Boolean(envFromEnvsAspect) };
-  }
-
-  /**
-   * Load all unloaded extensions from a list
-   * @param extensions list of extensions with config to load
-   */
-  private async loadExtensions(
-    extensions: ExtensionDataList,
-    originatedFrom?: ComponentID,
-    opts: WorkspaceLoadAspectsOptions = {}
-  ): Promise<void> {
-    const workspaceAspectsLoader = this.workspace.getWorkspaceAspectsLoader();
-    return workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, opts);
   }
 
   /**
@@ -341,14 +300,14 @@ export class AspectsMerger {
   ): Promise<ExtensionDataList> {
     const promises = extensionList.map(async (entry) => {
       if (entry.extensionId) {
-        // don't pass `entry.extensionId` (as BitId) to `resolveComponentId` because then it'll use the optimization
+        // don't pass `entry.extensionId` (as ComponentID) to `resolveComponentId` because then it'll use the optimization
         // of parsing it to ComponentID without checking the workspace. Normally, this optimization is good, but here
-        // in case the extension wasn't exported, the BitId is wrong, it has the scope-name due to incorrect BitId.parse
+        // in case the extension wasn't exported, the ComponentID is wrong, it has the scope-name due to incorrect ComponentID.fromString
         // in configEntryToDataEntry() function. It'd be ideal to fix it from there but it's not easy.
         const componentId = await this.workspace.resolveComponentId(entry.extensionId.toString());
         const idFromWorkspace = preferWorkspaceVersion ? this.workspace.getIdIfExist(componentId) : undefined;
         const id = idFromWorkspace || componentId;
-        entry.extensionId = id._legacy;
+        entry.extensionId = id;
         entry.newExtensionId = id;
       }
 

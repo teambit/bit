@@ -5,10 +5,10 @@ import { ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
-import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
+import { LaneData, serializeLaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { BitError } from '@teambit/bit-error';
 import { approveOperation } from '@teambit/legacy/dist/prompts';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP, DEFAULT_CLOUD_DOMAIN } from '@teambit/legacy/dist/constants';
 import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
 import { SwitchCmd } from './switch.cmd';
 
@@ -98,7 +98,8 @@ export class LaneListCmd implements Command {
         footer +=
           "to get more info on all lanes in local scope use 'bit lane list --details', or 'bit lane show <lane-name>' for a specific lane.";
       }
-      if (!remote && this.workspace) footer += `\nswitch lanes using 'bit switch <name>'.`;
+      if (!remote && this.workspace)
+        footer += `\nswitch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'.`;
 
       return footer;
     };
@@ -117,12 +118,13 @@ export class LaneListCmd implements Command {
   async json(args, laneOptions: LaneOptions) {
     const { remote, merged = false, notMerged = false } = laneOptions;
 
-    const lanes = await this.lanes.getLanes({
+    const lanesData = await this.lanes.getLanes({
       remote,
       showDefaultLane: true,
       merged,
       notMerged,
     });
+    const lanes = lanesData.map(serializeLaneData);
     const currentLane = this.lanes.getCurrentLaneNameOrAlias();
     return { lanes, currentLane };
   }
@@ -166,7 +168,8 @@ export class LaneShowCmd implements Command {
     const date = onlyLane.log?.date
       ? `created: ${new Date(parseInt(onlyLane.log.date)).toLocaleString()}\n`
       : undefined;
-    return title + author + date + outputComponents(onlyLane.components);
+    const link = `link: https://${DEFAULT_CLOUD_DOMAIN}/${laneId.scope.replace('.', '/')}/~lane/${laneId.name}\n`;
+    return title + author + date + link + outputComponents(onlyLane.components);
   }
 
   async json([name]: [string], laneOptions: LaneOptions) {
@@ -177,7 +180,7 @@ export class LaneShowCmd implements Command {
       remote,
     });
 
-    return lanes[0];
+    return serializeLaneData(lanes[0]);
   }
 }
 
@@ -280,7 +283,8 @@ export class LaneChangeScopeCmd implements Command {
 
 export class LaneRenameCmd implements Command {
   name = 'rename <new-name>';
-  description = `EXPERIMENTAL. change the lane-name locally and on the remote (if exported)`;
+  description = `EXPERIMENTAL. change the lane-name locally`;
+  extendedDescription = 'the remote will be updated after the next "bit export" command';
   alias = '';
   options = [
     ['l', 'lane-name <lane-name>', 'the name of the lane to rename. if not specified, the current lane is used'],
@@ -290,11 +294,8 @@ export class LaneRenameCmd implements Command {
   constructor(private lanes: LanesMain) {}
 
   async report([newName]: [string], { laneName }: { laneName?: string }): Promise<string> {
-    const { exported, exportErr, currentName } = await this.lanes.rename(newName, laneName);
-    const exportedStr = exported
-      ? `and have been exported successfully to the remote`
-      : `however failed exporting the renamed lane to the remote, due to an error: ${exportErr?.message || 'unknown'}`;
-    return `the lane ${chalk.bold(currentName)}'s name has been changed to ${chalk.bold(newName)}, ${exportedStr}`;
+    const { currentName } = await this.lanes.rename(newName, laneName);
+    return `the lane ${chalk.bold(currentName)}'s name has been changed to ${chalk.bold(newName)}.`;
   }
 }
 
@@ -494,6 +495,6 @@ function outputReadmeComponent(component: LaneData['readmeComponent']): string {
   if (!component) return '';
   return `\n\t${`${chalk.yellow('readme component')}\n\t  ${component.id} - ${
     component.head ||
-    `(unsnapped)\n\t("use bit snap ${component.id.name}" to snap the readme component on the lane before exporting)`
+    `(unsnapped)\n\t("use bit snap ${component.id.fullName}" to snap the readme component on the lane before exporting)`
   }`}\n`;
 }

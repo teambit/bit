@@ -3,7 +3,7 @@ import { compact, flatten } from 'lodash';
 import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { Menu } from '@teambit/ui-foundation.ui.menu';
+import { Menu, MenuWidgetSlot, MenuWidget } from '@teambit/ui-foundation.ui.menu';
 import SidebarAspect, { SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
 import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
@@ -62,7 +62,9 @@ export class WorkspaceUI {
 
     private drawerComponentsFiltersSlot: ComponentFiltersSlot,
 
-    private commandBarUI: CommandBarUI
+    private commandBarUI: CommandBarUI,
+
+    private menuWidgetSlot: MenuWidgetSlot
   ) {}
 
   private setKeyBindHandler: (updated: CommandHandler) => void = () => {};
@@ -87,6 +89,10 @@ export class WorkspaceUI {
 
   registerMenuItem = (menuItems: MenuItem[]) => {
     this.menuItemSlot.register(menuItems);
+  };
+
+  registerMenuWidget = (menuWidgets: MenuWidget[]) => {
+    this.menuWidgetSlot.register(menuWidgets);
   };
 
   registerMenuRoutes = (routes: RouteProps[]) => {
@@ -184,6 +190,7 @@ export class WorkspaceUI {
     Slot.withType<SidebarItemSlot>(),
     Slot.withType<DrawerWidgetSlot>(),
     Slot.withType<ComponentFiltersSlot>(),
+    Slot.withType<MenuWidgetSlot>(),
   ];
 
   static async provider(
@@ -196,14 +203,24 @@ export class WorkspaceUI {
       GraphUI
     ],
     config,
-    [routeSlot, menuSlot, menuItemSlot, sidebarSlot, sidebarItemSlot, drawerWidgetSlot, drawerComponentsFiltersSlot]: [
+    [
+      routeSlot,
+      menuSlot,
+      menuItemSlot,
+      sidebarSlot,
+      sidebarItemSlot,
+      drawerWidgetSlot,
+      drawerComponentsFiltersSlot,
+      menuWidgetSlot,
+    ]: [
       RouteSlot,
       RouteSlot,
       MenuItemSlot,
       SidebarWidgetSlot,
       SidebarItemSlot,
       DrawerWidgetSlot,
-      ComponentFiltersSlot
+      ComponentFiltersSlot,
+      MenuWidgetSlot
     ]
   ) {
     componentTree.registerTreeNode(new ComponentTreeWidget());
@@ -220,7 +237,8 @@ export class WorkspaceUI {
       sidebarItemSlot,
       drawerWidgetSlot,
       drawerComponentsFiltersSlot,
-      commandBarUI
+      commandBarUI,
+      menuWidgetSlot
     );
 
     workspaceUI.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter, ShowMainFilter(true)]);
@@ -244,7 +262,7 @@ export class WorkspaceUI {
     workspaceUI.registerMenuRoutes([
       {
         path: '/',
-        element: <Menu menuItemSlot={workspaceUI.menuItemSlot} />,
+        element: <Menu menuItemSlot={workspaceUI.menuItemSlot} widgetSlot={workspaceUI.menuWidgetSlot} />,
       },
       {
         path: workspaceUI.componentUi.routePath,

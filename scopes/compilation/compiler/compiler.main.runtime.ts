@@ -4,11 +4,12 @@ import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { IssuesClasses } from '@teambit/component-issues';
-import { Component, ComponentID } from '@teambit/component';
+import IssuesAspect, { IssuesMain } from '@teambit/issues';
+import { Component } from '@teambit/component';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
@@ -44,7 +45,7 @@ export class CompilerMain {
    * Run compilation on `bit new` and when new components are imported
    */
   compileOnWorkspace(
-    componentsIds: string[] | BitId[] | ComponentID[] = [], // when empty, it compiles all
+    componentsIds: string[] | ComponentID[] | ComponentID[] = [], // when empty, it compiles all
     options: CompileOptions = { initiator: CompilationInitiator.ComponentAdded }
   ) {
     return this.workspaceCompiler.compileComponents(componentsIds, options);
@@ -82,8 +83,8 @@ export class CompilerMain {
    * @param component
    * @returns
    */
-  isDistDirExists(component: Component): boolean {
-    const packageDir = this.workspace.getComponentPackagePath(component);
+  async isDistDirExists(component: Component): Promise<boolean> {
+    const packageDir = await this.workspace.getComponentPackagePath(component);
     const distDir = this.getRelativeDistFolder(component);
     const pathToCheck = path.join(packageDir, distDir);
     return fs.existsSync(pathToCheck);
@@ -96,13 +97,16 @@ export class CompilerMain {
     return new DistArtifact(artifacts);
   }
 
-  async addMissingDistsIssue(component: Component) {
-    const exist = this.isDistDirExists(component);
-    if (!exist) {
-      component.state.issues.getOrCreate(IssuesClasses.MissingDists).data = true;
-    }
-    // we don't want to add any data to the compiler aspect, only to add issues on the component
-    return undefined;
+  async addMissingDistsIssue(components: Component[], issuesToIgnore: string[]): Promise<void> {
+    if (issuesToIgnore.includes(IssuesClasses.MissingDists.name)) return;
+    await Promise.all(
+      components.map(async (component) => {
+        const exist = await this.isDistDirExists(component);
+        if (!exist) {
+          component.state.issues.getOrCreate(IssuesClasses.MissingDists).data = true;
+        }
+      })
+    );
   }
 
   static runtime = MainRuntime;
@@ -119,6 +123,7 @@ export class CompilerMain {
     GeneratorAspect,
     DependencyResolverAspect,
     WatcherAspect,
+    IssuesAspect,
   ];
 
   static async provider([
@@ -133,6 +138,7 @@ export class CompilerMain {
     generator,
     dependencyResolver,
     watcher,
+    issues,
   ]: [
     CLIMain,
     Workspace,
@@ -144,7 +150,8 @@ export class CompilerMain {
     UiMain,
     GeneratorMain,
     DependencyResolverMain,
-    WatcherMain
+    WatcherMain,
+    IssuesMain
   ]) {
     const logger = loggerMain.createLogger(CompilerAspect.id);
     const compilerService = new CompilerService();
@@ -170,8 +177,8 @@ export class CompilerMain {
       compilerService
     );
     cli.register(new CompileCmd(workspaceCompiler, logger, pubsub));
-    if (workspace) {
-      workspace.onComponentLoad(compilerMain.addMissingDistsIssue.bind(compilerMain));
+    if (issues) {
+      issues.registerAddComponentsIssues(compilerMain.addMissingDistsIssue.bind(compilerMain));
     }
     if (generator) generator.registerComponentTemplate([compilerTemplate]);
 

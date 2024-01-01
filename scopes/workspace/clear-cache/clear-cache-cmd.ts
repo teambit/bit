@@ -28,9 +28,19 @@ export default class ClearCacheCmd implements Command {
       }
       return chalk.red(`failed cleaning the cache of "${remote}"`);
     }
-    const cacheCleared = await this.clearCache.clearCache();
-    const title = 'the following cache(s) have been cleared:';
-    const output = cacheCleared.map((str) => `  ✔ ${str}`).join('\n');
-    return chalk.green(`${chalk.bold(title)}\n${output}`);
+    const { succeed, failed } = await this.clearCache.clearCache();
+    const getSuccessOutput = () => {
+      if (!succeed.length) return '';
+      const title = 'the following cache(s) have been cleared:';
+      const output = succeed.map((str) => `  ✔ ${str}`).join('\n');
+      return chalk.green(`${chalk.bold(title)}\n${output}`);
+    };
+    const getFailedOutput = () => {
+      if (!failed.length) return '';
+      const title = 'the following cache(s) failed to clear:';
+      const output = failed.map((str) => `  X ${str}`).join('\n');
+      return chalk.red(`${chalk.bold(title)}\n${output}`);
+    };
+    return `${getSuccessOutput()}\n${getFailedOutput()}`;
   }
 }

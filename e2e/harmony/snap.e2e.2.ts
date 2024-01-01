@@ -119,7 +119,7 @@ describe('bit snap command', function () {
     });
     describe('untag the head snap', () => {
       before(() => {
-        helper.command.untag(`bar/foo`, true);
+        helper.command.reset(`bar/foo`, true);
       });
       it('should change the head to the first snap', () => {
         const compAfterUntag = helper.command.catComponent('bar/foo');
@@ -465,7 +465,7 @@ describe('bit snap command', function () {
             helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
             // change it so the file would be valid without conflicts marks
             helper.fixtures.createComponentBarFoo('');
-            helper.command.untag('bar/foo');
+            helper.command.reset('bar/foo');
           });
           it('bit status should not show the component as a component with conflicts but as modified', () => {
             const status = helper.command.statusJson();
@@ -602,7 +602,11 @@ describe('bit snap command', function () {
       expect(comp2.dependencies[0].id.name).to.equal('comp3');
       expect(comp2.dependencies[0].id.version).to.equal(isTypeHead);
 
-      expect(comp2.flattenedDependencies).to.deep.include({ name: 'comp3', version: isTypeHead });
+      expect(comp2.flattenedDependencies).to.deep.include({
+        name: 'comp3',
+        scope: helper.scopes.remote,
+        version: isTypeHead,
+      });
     });
     it('should update the dependencies and the flattenedDependencies of the dependent of the dependent with the new versions', () => {
       const comp1 = helper.command.catComponent('comp1@latest');
@@ -610,8 +614,16 @@ describe('bit snap command', function () {
       expect(comp1.dependencies[0].id.name).to.equal('comp2');
       expect(comp1.dependencies[0].id.version).to.equal(isStringHead);
 
-      expect(comp1.flattenedDependencies).to.deep.include({ name: 'comp3', version: isTypeHead });
-      expect(comp1.flattenedDependencies).to.deep.include({ name: 'comp2', version: isStringHead });
+      expect(comp1.flattenedDependencies).to.deep.include({
+        name: 'comp3',
+        scope: helper.scopes.remote,
+        version: isTypeHead,
+      });
+      expect(comp1.flattenedDependencies).to.deep.include({
+        name: 'comp2',
+        scope: helper.scopes.remote,
+        version: isStringHead,
+      });
     });
     it('bit-status should show them all as staged and not modified', () => {
       const status = helper.command.statusJson();
@@ -705,7 +717,7 @@ describe('bit snap command', function () {
       });
       describe('reset all local versions', () => {
         before(() => {
-          helper.command.untagAll();
+          helper.command.resetAll();
         });
         it('should change the head to point to the parent of the untagged version not to the remote head', () => {
           const head = helper.command.getHead('comp1');
@@ -723,7 +735,7 @@ describe('bit snap command', function () {
       describe('reset only head', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(beforeUntag);
-          helper.command.untagAll('--head');
+          helper.command.resetAll('--head');
         });
         it('should change the head to point to the parent of the head and not to the remote head', () => {
           const head = helper.command.getHead('comp1');
@@ -744,8 +756,11 @@ describe('bit snap command', function () {
       helper.command.softRemoveComponent('comp1');
       output = helper.command.snapAllComponentsWithoutBuild('--unmodified');
     });
-    it('should indicate that the component was snapped successfully', () => {
-      expect(output).to.have.string('changed components');
+    it('should indicate that the component was removed successfully', () => {
+      expect(output).to.have.string('removed components');
+    });
+    it('should not show the component as changed (because the new snap isnt relevant for a deleted component', () => {
+      expect(output).to.not.have.string('changed components');
     });
   });
 });

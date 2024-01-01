@@ -11,6 +11,7 @@ import LegacyWorkspaceConfig, {
   WorkspaceConfigLoadFunction,
 } from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { findScopePath } from '@teambit/legacy/dist/utils';
 import { MainRuntime } from '@teambit/cli';
 import { GlobalConfig } from '@teambit/harmony';
 import path from 'path';
@@ -49,21 +50,27 @@ export class ConfigMain {
     return this.scopeConfig;
   }
 
+  async reloadWorkspaceConfig() {
+    const workspaceConfig = await loadWorkspaceConfigIfExist();
+    if (workspaceConfig) this.workspaceConfig = workspaceConfig;
+  }
+
   /**
    * Ensure the given directory has a workspace config
    * Load if existing and create new if not
    *
    * @static
-   * @param {PathOsBasedAbsolute} dirPath
+   * @param {PathOsBasedAbsolute} workspacePath
    * @param {WorkspaceConfigFileProps} [workspaceConfigProps={} as any]
    * @returns {Promise<WorkspaceConfig>}
    * @memberof WorkspaceConfig
    */
   static async ensureWorkspace(
-    dirPath: PathOsBasedAbsolute,
+    workspacePath: PathOsBasedAbsolute,
+    scopePath: PathOsBasedAbsolute,
     workspaceConfigProps: WorkspaceConfigFileProps = {} as any
   ): Promise<ConfigMain> {
-    const workspaceConfig = await WorkspaceConfig.ensure(dirPath, workspaceConfigProps);
+    const workspaceConfig = await WorkspaceConfig.ensure(workspacePath, scopePath, workspaceConfigProps);
     return new ConfigMain(workspaceConfig);
   }
 
@@ -95,11 +102,9 @@ export class ConfigMain {
   static async provider() {
     LegacyWorkspaceConfig.registerOnWorkspaceConfigIsExist(onLegacyWorkspaceConfigIsExist());
     LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());
-    const consumerInfo = await getConsumerInfo(process.cwd());
 
     let configMain: ConfigMain | any;
-    const configDirPath = consumerInfo?.path || process.cwd();
-    const workspaceConfig = await WorkspaceConfig.loadIfExist(configDirPath);
+    const workspaceConfig = await loadWorkspaceConfigIfExist();
     if (workspaceConfig) {
       configMain = new ConfigMain(workspaceConfig, undefined);
     } else {
@@ -116,6 +121,14 @@ export class ConfigMain {
 
 ConfigAspect.addRuntime(ConfigMain);
 
+async function loadWorkspaceConfigIfExist(): Promise<WorkspaceConfig | undefined> {
+  const consumerInfo = await getConsumerInfo(process.cwd());
+  const configDirPath = consumerInfo?.path || process.cwd();
+  const scopePath = findScopePath(configDirPath);
+  const workspaceConfig = await WorkspaceConfig.loadIfExist(configDirPath, scopePath);
+  return workspaceConfig;
+}
+
 function onLegacyWorkspaceConfigIsExist(): WorkspaceConfigIsExistFunction {
   return async (dirPath: PathOsBased): Promise<boolean | undefined> => {
     return WorkspaceConfig.isExist(dirPath);
@@ -123,11 +136,11 @@ function onLegacyWorkspaceConfigIsExist(): WorkspaceConfigIsExistFunction {
 }
 
 function onLegacyWorkspaceLoad(config?: ConfigMain): WorkspaceConfigLoadFunction {
-  return async (dirPath: PathOsBased): Promise<ILegacyWorkspaceConfig | undefined> => {
+  return async (dirPath: PathOsBased, scopePath: PathOsBasedAbsolute): Promise<ILegacyWorkspaceConfig | undefined> => {
     if (config?.workspaceConfig && config.path && path.normalize(dirPath) === path.dirname(config.path)) {
       return (config.config as WorkspaceConfig).toLegacy();
     }
-    const newConfig = await WorkspaceConfig.loadIfExist(dirPath);
+    const newConfig = await WorkspaceConfig.loadIfExist(dirPath, scopePath);
     if (newConfig) {
       return newConfig.toLegacy();
     }
@@ -137,7 +150,8 @@ function onLegacyWorkspaceLoad(config?: ConfigMain): WorkspaceConfigLoadFunction
 
 function onLegacyWorkspaceEnsure(): WorkspaceConfigEnsureFunction {
   const func: WorkspaceConfigEnsureFunction = async (
-    dirPath: string,
+    workspacePath: string,
+    scopePath: string,
     standAlone,
     legacyWorkspaceConfigProps?: LegacyWorkspaceConfigProps
   ) => {
@@ -145,7 +159,7 @@ function onLegacyWorkspaceEnsure(): WorkspaceConfigEnsureFunction {
     if (legacyWorkspaceConfigProps) {
       workspaceConfigProps = transformLegacyPropsToExtensions(legacyWorkspaceConfigProps);
     }
-    const config = await ConfigMain.ensureWorkspace(dirPath, workspaceConfigProps);
+    const config = await ConfigMain.ensureWorkspace(workspacePath, scopePath, workspaceConfigProps);
     const workspaceConfig = config.config;
     return (workspaceConfig as WorkspaceConfig).toLegacy();
   };

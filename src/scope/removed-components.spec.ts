@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { BitId, BitIds } from '../bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import RemovedObjects from './removed-components';
 
 describe('RemovedComponents', () => {
@@ -30,12 +30,12 @@ describe('RemovedComponents', () => {
       it('dependentBits values should be BitIds', () => {
         expect(removeComponents.dependentBits).to.be.an('object');
         Object.keys(removeComponents.dependentBits).forEach((dependent) => {
-          expect(removeComponents.dependentBits[dependent]).to.be.instanceOf(BitIds);
+          expect(removeComponents.dependentBits[dependent]).to.be.instanceOf(ComponentIdList);
         });
       });
       it('each BitIds should have BitId objects', () => {
         Object.keys(removeComponents.dependentBits).forEach((dependent) => {
-          removeComponents.dependentBits[dependent].forEach((b) => expect(b).to.be.instanceOf(BitId));
+          removeComponents.dependentBits[dependent].forEach((b) => expect(b).to.be.instanceOf(ComponentID));
         });
       });
     });

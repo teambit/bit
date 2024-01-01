@@ -104,11 +104,10 @@ export class PreviewPreview {
       })
     );
 
-    // remove `includes` (including compositions) when skipIncludes = true.
     const query = this.getQuery();
-    const skipIncludes = this.getParam(query, 'skipIncludes');
+    const onlyOverview = this.getParam(query, 'onlyOverview');
 
-    const includes = skipIncludes === 'true' ? [] : includesAll.filter((module) => !!module);
+    const includes = onlyOverview === 'true' ? [] : includesAll.filter((module) => !!module);
     // during build / tag, the component is isolated, so all aspects are relevant, and do not require filtering
     const componentAspects = this.isDev ? await this.getComponentAspects(componentId.toString()) : undefined;
     const previewModule = await this.getPreviewModule(name, componentId);
