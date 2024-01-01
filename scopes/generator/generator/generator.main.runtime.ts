@@ -8,7 +8,7 @@ import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/w
 import ComponentAspect, { ComponentID } from '@teambit/component';
 import type { ComponentMain, Component } from '@teambit/component';
 
-import { isCoreAspect, loadBit } from '@teambit/bit';
+import { isCoreAspect, loadBit, restoreGlobals } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import GitAspect, { GitMain } from '@teambit/git';
 import { BitError } from '@teambit/bit-error';
@@ -200,6 +200,8 @@ export class GeneratorMain {
     const remoteEnvsAspect = globalScopeHarmony.get<EnvsMain>(EnvsAspect.id);
     const aspect = components[0];
     const fullAspectId = aspect.id.toString();
+    restoreGlobals();
+
     return { remoteGenerator, fullAspectId, remoteEnvsAspect, aspect };
   }
 
@@ -350,7 +352,7 @@ export class GeneratorMain {
   async generateWorkspaceTemplate(
     workspaceName: string,
     templateName: string,
-    options: NewOptions & { aspect?: string }
+    options: NewOptions & { aspect?: string; currentDir?: boolean }
   ): Promise<GenerateWorkspaceTemplateResult> {
     if (this.workspace) {
       throw new BitError('Error: unable to generate a new workspace inside of an existing workspace');
@@ -446,6 +448,10 @@ export class GeneratorMain {
     });
 
     return templates;
+  }
+
+  getConfiguredEnvs(): string[] {
+    return this.config.envs ?? [];
   }
 
   async listEnvComponentTemplates(ids: string[] = [], aspectId?: string): Promise<Array<ComponentTemplateWithId>> {

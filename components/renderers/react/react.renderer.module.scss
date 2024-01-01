@@ -61,3 +61,38 @@
   font-size: var(--bit-p-xs);
   padding-bottom: 16px;
 }
+
+.reactOverview {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(247, 247, 245, 0.631372549);
+  min-width: fit-content;
+  max-width: 75%;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.reactOverviewHeader {
+  display: flex;
+  align-items: center;
+}
+
+.headingLeft {
+  display: flex;
+  gap: 4px;
+  width: 240px;
+  text-overflow: ellipsis;
+}
+
+.icon {
+  > img {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+}

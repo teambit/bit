@@ -150,25 +150,6 @@ export default class ComponentsList {
   }
 
   /**
-   * list components that their head is a snap, not a tag.
-   * this is relevant only when the lane is the default (main), otherwise, the head is always a snap.
-   * components that are during-merge are filtered out, we don't want them during tag and don't want
-   * to show them in the "snapped" section in bit-status.
-   */
-  async listSnappedComponentsOnMain() {
-    if (!this.consumer.isOnMain()) {
-      return [];
-    }
-    const componentsFromModel = await this.getModelComponents();
-    const authoredAndImportedIds = this.bitMap.getAllBitIds();
-    const compsDuringMerge = this.listDuringMergeStateComponents();
-    return componentsFromModel
-      .filter((c) => authoredAndImportedIds.hasWithoutVersion(c.toComponentId()))
-      .filter((c) => !compsDuringMerge.hasWithoutVersion(c.toComponentId()))
-      .filter((c) => c.isHeadSnap());
-  }
-
-  /**
    * list components on a lane that their main got updates.
    */
   async listUpdatesFromMainPending(): Promise<DivergeDataPerId[]> {
@@ -222,18 +203,18 @@ export default class ComponentsList {
     return compact(results);
   }
 
-  async listMergePendingComponents(loadOpts?: ComponentLoadOptions): Promise<DivergedComponent[]> {
+  async listMergePendingComponents(): Promise<DivergedComponent[]> {
     if (!this._mergePendingComponents) {
-      const componentsFromFs = await this.getComponentsFromFS(loadOpts);
+      const allIds = this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
       const componentsFromModel = await this.getModelComponents();
       const duringMergeComps = this.listDuringMergeStateComponents();
       this._mergePendingComponents = (
         await Promise.all(
-          componentsFromFs.map(async (component: Component) => {
+          allIds.map(async (componentId: ComponentID) => {
             const modelComponent = componentsFromModel.find((c) =>
-              c.toComponentId().isEqualWithoutVersion(component.componentId)
+              c.toComponentId().isEqualWithoutVersion(componentId)
             );
-            if (!modelComponent || duringMergeComps.hasWithoutVersion(component.componentId)) return null;
+            if (!modelComponent || duringMergeComps.hasWithoutVersion(componentId)) return null;
             const divergedData = await modelComponent.getDivergeDataForMergePending(this.scope.objects);
             if (!divergedData.isDiverged()) return null;
             return { id: modelComponent.toComponentId(), diverge: divergedData };
@@ -247,10 +228,6 @@ export default class ComponentsList {
   listDuringMergeStateComponents(): ComponentIdList {
     const unmergedComponents = this.scope.objects.unmergedComponents.getComponents();
     return ComponentIdList.fromArray(unmergedComponents.map((u) => ComponentID.fromObject(u.id)));
-  }
-
-  listSoftTaggedComponents(): ComponentID[] {
-    return this.bitMap.components.filter((c) => c.nextVersion).map((c) => c.id);
   }
 
   async newModifiedAndAutoTaggedComponents(): Promise<Component[]> {
@@ -297,7 +274,7 @@ export default class ComponentsList {
   }
 
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<ComponentIdList> {
-    const fromBitMap = this.bitMap.getAllBitIds();
+    const fromBitMap = this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
     const modelComponents = await this.getModelComponents();
     const pendingExportComponents = await pFilter(modelComponents, async (component: ModelComponent) => {
       if (!fromBitMap.searchWithoutVersion(component.toComponentId())) {
@@ -408,10 +385,7 @@ export default class ComponentsList {
    * in bit-status, we suggest to snap+export.
    */
   async listLocallySoftRemoved(): Promise<ComponentID[]> {
-    if (!this._removedComponents) {
-      await this.getFromFileSystem();
-    }
-    return this._removedComponents.map((c) => c.componentId);
+    return this.consumer.bitMap.getRemoved();
   }
 
   /**

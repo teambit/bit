@@ -1,6 +1,5 @@
 import { stringify, parse } from 'flatted';
 import { expose } from '@teambit/worker';
-import type jest from 'jest';
 
 export class JestWorker {
   private onTestCompleteCb;
@@ -25,7 +24,7 @@ export class JestWorker {
       // eslint-disable-next-line import/no-dynamic-require,global-require
       const jestConfig = require(jestConfigPath);
       // eslint-disable-next-line import/no-dynamic-require,global-require
-      const jestModule: typeof jest = require(jestModulePath);
+      const jestModule: any = require(jestModulePath);
 
       const jestConfigWithSpecs = Object.assign(jestConfig, {
         testMatch: testFiles,

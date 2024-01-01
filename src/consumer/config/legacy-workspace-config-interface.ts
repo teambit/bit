@@ -1,10 +1,8 @@
 // This file meant to bridge the new workspace config and the legacy one
 // when loading the workspace config we actually loading the new one, and it return something that implement this interface
 
-import { ComponentID } from '@teambit/component-id';
 import { PathOsBasedAbsolute } from '../../utils/path';
 import { AbstractVinyl } from '../component/sources';
-import ConsumerOverrides, { ConsumerOverridesOfComponent } from './consumer-overrides';
 
 // to make sure all the legacy code can work without need to change
 export type PackageManagerClients = 'npm' | 'yarn' | undefined;
@@ -24,18 +22,14 @@ export interface ILegacyWorkspaceConfig {
   _useWorkspaces?: boolean;
   dependencyResolver?: DependencyResolverExtensionProps;
   packageManager?: PackageManagerClients;
-  _bindingPrefix?: string;
   _saveDependenciesAsComponents?: boolean;
   _dependenciesDirectory?: string;
   componentsDefaultDirectory?: string;
   _manageWorkspaces?: boolean;
-  defaultOwner?: string;
   path: string;
   isLegacy: boolean;
   extensions: { [extensionId: string]: any };
   write: (options: { workspaceDir: PathOsBasedAbsolute }) => Promise<void>;
   toVinyl: (workspaceDir: PathOsBasedAbsolute) => Promise<AbstractVinyl[] | undefined>;
-  componentsConfig: ConsumerOverrides | undefined;
-  getComponentConfig: (componentId: ComponentID) => ConsumerOverridesOfComponent | undefined;
   _legacyPlainObject: () => { [prop: string]: any } | undefined;
 }

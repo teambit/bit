@@ -8,22 +8,24 @@ import styles from './composition-gallery.module.scss';
 
 export type CompositionGalleryProps = {
   component: ComponentModel;
-  isLoading?: boolean;
 };
 
-export function CompositionGallery({ component, isLoading }: CompositionGalleryProps) {
+export function CompositionGallery({ component }: CompositionGalleryProps) {
   const navigate = useNavigate();
+  const hasCompositions = component.compositions.length > 0;
+
+  if (!hasCompositions) return null;
+
   return (
     <div className={styles.compositionGallery}>
       {/* TODO - @oded replace with panelCard */}
-      <LinkedHeading size="xs" className={styles.title}>
+      <LinkedHeading size="sm" className={styles.title}>
         <Icon of="eye" /> <span>PREVIEW</span>
       </LinkedHeading>
       <div className={styles.carousel}>
         {component.compositions.map((composition) => {
           return (
             <CompositionCard
-              isLoading={isLoading}
               key={composition.identifier.toLowerCase()}
               onClick={() => navigate(`~compositions/${composition.identifier.toLowerCase()}`)}
               className={styles.compositionGalleryCard}

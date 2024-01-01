@@ -104,7 +104,8 @@ const isPositive = require('is-positive');
       helper.command.import(`${helper.scopes.remote}/comp1`);
     });
     it('should install component dependencies from their respective models to the imported components', () => {
-      expect(() => helper.command.diff()).to.throw('there are no modified components to diff');
+      const diff = helper.command.diff();
+      expect(diff).to.include('there are no modified components to diff');
     });
     after(() => {
       npmCiRegistry.destroy();

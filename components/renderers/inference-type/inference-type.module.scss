@@ -1,0 +1,15 @@
+.inferenceWrapper {
+  position: relative;
+  > pre {
+    > code {
+      // override syntax highlighter code font size
+      font-size: var(--bit-p-xxs, 12px) !important;
+    }
+  }
+}
+
+.isSpread {
+  > span {
+    font-style: italic;
+  }
+}

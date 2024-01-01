@@ -1,11 +1,12 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
 import { compact, flatten, head } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import ComponentAspect, { ComponentMain, ComponentID, Component } from '@teambit/component';
@@ -19,11 +20,10 @@ import { AppsBuildTask } from './build-application.task';
 import { RunCmd } from './run.cmd';
 import { AppService } from './application.service';
 import { AppCmd, AppListCmd } from './app.cmd';
-import { AppPlugin } from './app.plugin';
+import { AppPlugin, BIT_APP_PATTERN } from './app.plugin';
 import { AppTypePlugin } from './app-type.plugin';
 import { AppContext } from './app-context';
 import { DeployTask } from './deploy.task';
-import { AppNoSsr } from './exceptions/app-no-ssr';
 
 export type ApplicationTypeSlot = SlotRegistry<ApplicationType<unknown>[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
@@ -86,7 +86,8 @@ export class ApplicationMain {
     private aspectLoader: AspectLoaderMain,
     private workspace: Workspace,
     private logger: Logger,
-    private watcher: WatcherMain
+    private watcher: WatcherMain,
+    private harmony: Harmony
   ) {}
 
   /**
@@ -170,7 +171,7 @@ export class ApplicationMain {
       return this.getAppPattern(appType);
     });
 
-    return appTypesPatterns;
+    return appTypesPatterns.concat(BIT_APP_PATTERN);
   }
 
   async loadApps(): Promise<Application[]> {
@@ -183,17 +184,24 @@ export class ApplicationMain {
     });
 
     // const app = require(appPath);
-    const appManifests = compact(
-      pluginsToLoad.map((pluginPath) => {
-        try {
-          // eslint-disable-next-line
-          const appManifest = require(pluginPath)?.default;
-          return appManifest;
-        } catch (err) {
-          this.logger.error(`failed loading app manifest: ${pluginPath}`);
-          return undefined;
-        }
-      })
+    const appManifests = Promise.all(
+      compact(
+        pluginsToLoad.map(async (pluginPath) => {
+          try {
+            const isModule = await this.aspectLoader.isEsmModule(pluginPath);
+            if (isModule) {
+              const appManifest = await this.aspectLoader.loadEsm(pluginPath);
+              return appManifest;
+            }
+            // eslint-disable-next-line
+            const appManifest = require(pluginPath)?.default;
+            return appManifest;
+          } catch (err) {
+            this.logger.error(`failed loading app manifest: ${pluginPath}`);
+            return undefined;
+          }
+        })
+      )
     );
 
     return appManifests;
@@ -303,25 +311,23 @@ export class ApplicationMain {
     const context = await this.createAppContext(app.name, options.port);
     if (!context) throw new AppNotFound(appName);
 
-    if (options.ssr) {
-      if (!app.runSsr) throw new AppNoSsr(appName);
-
-      const result = await app.runSsr(context);
-      return { app, ...result };
-    }
-
-    const port = await app.run(context);
+    const instance = await app.run(context);
     if (options.watch) {
       this.watcher
         .watch({
           preCompile: false,
+          compile: true,
         })
         .catch((err) => {
           // don't throw an error, we don't want to break the "run" process
           this.logger.error(`compilation failed`, err);
         });
     }
-    return { app, port, errors: undefined };
+
+    const isOldApi = typeof instance === 'number';
+    const port = isOldApi ? instance : instance?.port;
+
+    return { app, port, errors: undefined, isOldApi };
   }
 
   /**
@@ -351,7 +357,45 @@ export class ApplicationMain {
     const context = res.results[0].data;
     if (!context) throw new AppNotFound(appName);
     const hostRootDir = await this.workspace.getComponentPackagePath(component);
-    const appContext = new AppContext(appName, context.dev, component, this.workspace.path, context, hostRootDir, port);
+    const workspaceComponentDir = this.workspace.componentDir(component.id);
+
+    const appContext = new AppContext(
+      appName,
+      this.harmony,
+      context.dev,
+      component,
+      this.workspace.path,
+      context,
+      hostRootDir,
+      port,
+      workspaceComponentDir
+    );
+    return appContext;
+  }
+
+  async createAppBuildContext(id: ComponentID, appName: string, capsuleRootDir: string, rootDir?: string) {
+    const host = this.componentAspect.getHost();
+    // const components = await host.list();
+    // const component = components.find((c) => c.id.isEqual(id));
+    const component = await host.get(id);
+    if (!component) throw new AppNotFound(appName);
+
+    const env = await this.envs.createEnvironment([component]);
+    const res = await env.run(this.appService);
+    const context = res.results[0].data;
+    if (!context) throw new AppNotFound(appName);
+
+    const appContext = new AppContext(
+      appName,
+      this.harmony,
+      context.dev,
+      component,
+      capsuleRootDir,
+      context,
+      rootDir,
+      undefined,
+      undefined
+    );
     return appContext;
   }
 
@@ -365,6 +409,7 @@ export class ApplicationMain {
     AspectLoaderAspect,
     WorkspaceAspect,
     WatcherAspect,
+    ScopeAspect,
   ];
 
   static slots = [
@@ -374,7 +419,7 @@ export class ApplicationMain {
   ];
 
   static async provider(
-    [cli, loggerAspect, builder, envs, component, aspectLoader, workspace, watcher]: [
+    [cli, loggerAspect, builder, envs, component, aspectLoader, workspace, watcher, scope]: [
       CLIMain,
       LoggerMain,
       BuilderMain,
@@ -382,10 +427,12 @@ export class ApplicationMain {
       ComponentMain,
       AspectLoaderMain,
       Workspace,
-      WatcherMain
+      WatcherMain,
+      ScopeMain
     ],
     config: ApplicationAspectConfig,
-    [appTypeSlot, appSlot, deploymentProviderSlot]: [ApplicationTypeSlot, ApplicationSlot, DeploymentProviderSlot]
+    [appTypeSlot, appSlot, deploymentProviderSlot]: [ApplicationTypeSlot, ApplicationSlot, DeploymentProviderSlot],
+    harmony: Harmony
   ) {
     const logger = loggerAspect.createLogger(ApplicationAspect.id);
     const appService = new AppService();
@@ -400,7 +447,8 @@ export class ApplicationMain {
       aspectLoader,
       workspace,
       logger,
-      watcher
+      watcher,
+      harmony
     );
     appService.registerAppType = application.registerAppType.bind(application);
     const appCmd = new AppCmd();
@@ -415,15 +463,19 @@ export class ApplicationMain {
     // cli.registerOnStart(async () => {
     //   await application.loadAppsToSlot();
     // });
+    const calcAppOnLoad = async (loadedComponent): Promise<ApplicationMetadata | undefined> => {
+      const app = application.calculateAppByComponent(loadedComponent);
+      if (!app) return undefined;
+      return {
+        appName: app.name,
+        type: app.applicationType,
+      };
+    };
     if (workspace) {
-      workspace.onComponentLoad(async (loadedComponent): Promise<ApplicationMetadata | undefined> => {
-        const app = application.calculateAppByComponent(loadedComponent);
-        if (!app) return undefined;
-        return {
-          appName: app.name,
-          type: app.applicationType,
-        };
-      });
+      workspace.registerOnComponentLoad(calcAppOnLoad);
+    }
+    if (scope) {
+      scope.registerOnCompAspectReCalc(calcAppOnLoad);
     }
 
     return application;

@@ -1,4 +1,5 @@
 import React from 'react';
+import { flatten } from 'lodash';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
 import { APIRefPage } from '@teambit/api-reference.sections.api-reference-page';
@@ -20,8 +21,10 @@ import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
 import { inferenceTypeRenderer } from '@teambit/api-reference.renderers.inference-type';
 import { typeArrayRenderer } from '@teambit/api-reference.renderers.type-array';
 import { thisRenderer } from '@teambit/api-reference.renderers.this';
+import { APIRefRenderersProvider } from '@teambit/api-reference.hooks.use-api-renderers';
 import { SchemaNodeConstructor, SchemaRegistry, Schemas } from '@teambit/semantics.entities.semantic-schema';
 import CodeAspect, { CodeUI } from '@teambit/code';
+import { TaggedExports } from '@teambit/tagged-exports';
 
 import { APIReferenceAspect } from './api-reference.aspect';
 
@@ -41,6 +44,14 @@ export class APIReferenceUI {
       </EditorProvider>
     );
   }
+
+  TaggedAPIPage = ({ componentId }: { componentId: string }) => {
+    return (
+      <APIRefRenderersProvider nodeRenderers={flatten(this.apiNodeRendererSlot.values())}>
+        <TaggedExports componentId={componentId} />
+      </APIRefRenderersProvider>
+    );
+  };
 
   registerSchemaClass(schema: SchemaNodeConstructor) {
     SchemaRegistry.register(schema);

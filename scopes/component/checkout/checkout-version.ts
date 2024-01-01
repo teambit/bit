@@ -7,17 +7,12 @@ import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { pathNormalizeToLinux, PathOsBased } from '@teambit/legacy/dist/utils/path';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
-import {
-  ApplyVersionResult,
-  FilesStatus,
-  FileStatus,
-  MergeOptions,
-  MergeStrategy,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { FileStatus, MergeOptions, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
+import { ApplyVersionResult, FilesStatus } from '@teambit/merging';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
@@ -48,7 +43,12 @@ export type ComponentStatus = ComponentStatusBase & {
   mergeResults?: MergeResultsThreeWay | null | undefined;
 };
 
-export type ApplyVersionWithComps = { applyVersionResult: ApplyVersionResult; component?: ConsumerComponent };
+export type ApplyVersionWithComps = {
+  applyVersionResult: ApplyVersionResult;
+  component?: ConsumerComponent;
+  // in case the component needs to be written to the filesystem, this is the component to write.
+  legacyCompToWrite?: ConsumerComponent;
+};
 
 /**
  * 1) when the files are modified with conflicts and the strategy is "ours", leave the FS as is

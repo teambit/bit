@@ -70,6 +70,7 @@ export type WorkspaceInstallOptions = {
   copyPeerToRuntimeOnRoot?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
   updateExisting?: boolean;
+  skipIfExisting?: boolean;
   savePrefix?: string;
   compile?: boolean;
   includeOptionalDeps?: boolean;
@@ -115,6 +116,8 @@ export class InstallMain {
     private wsConfigFiles: WorkspaceConfigFilesMain,
 
     private app: ApplicationMain,
+
+    private generator: GeneratorMain,
 
     private preLinkSlot: PreLinkSlot,
 
@@ -184,8 +187,26 @@ export class InstallMain {
 
   async onComponentCreate(generateResults: GenerateResult[]) {
     this.workspace.inInstallContext = true;
-    const ids = generateResults.map((r) => r.id);
+    let runInstall = false;
+    let packages: string[] = [];
+    let installMissing = false;
+
+    const ids = generateResults.map((generateResult) => {
+      if (generateResult.dependencies && generateResult.dependencies.length) {
+        packages = packages.concat(generateResult.dependencies);
+        runInstall = true;
+      }
+      if (generateResult.installMissingDependencies) {
+        installMissing = true;
+        runInstall = true;
+      }
+      if (generateResult.isApp || generateResult.isEnv) {
+        runInstall = true;
+      }
+      return generateResult.id;
+    });
     const nonLoadedEnvs: string[] = [];
+
     ids.map((id) => this.workspace.clearComponentCache(id));
     await pMapSeries(ids, async (id) => {
       const component = await this.workspace.get(id);
@@ -197,14 +218,17 @@ export class InstallMain {
       }
       return component;
     });
-    if (!nonLoadedEnvs.length) {
+    if (nonLoadedEnvs.length) {
+      runInstall = true;
+    }
+    if (!runInstall) {
       this.workspace.inInstallContext = false;
       return;
     }
-    this.logger.consoleWarning(
-      `the following environments are not installed yet: ${nonLoadedEnvs.join(', ')}. installing them now...`
-    );
-    await this.install();
+    // this.logger.console(
+    // `the following environments are not installed yet: ${nonLoadedEnvs.join(', ')}. installing them now...`
+    // );
+    await this.install(packages, { addMissingDeps: installMissing, skipIfExisting: true });
   }
 
   private async _addPackages(packages: string[], options?: WorkspaceInstallOptions) {
@@ -238,8 +262,9 @@ export class InstallMain {
     });
     this.dependencyResolver.addToRootPolicy(newWorkspacePolicyEntries, {
       updateExisting: options?.updateExisting ?? false,
+      skipIfExisting: options?.skipIfExisting ?? false,
     });
-    await this.dependencyResolver.persistConfig(this.workspace.path);
+    await this.dependencyResolver.persistConfig('install');
   }
 
   private async _installModules(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
@@ -370,6 +395,7 @@ export class InstallMain {
     }
   ): Promise<{ componentsAndManifests: ComponentsAndManifests; mergedRootPolicy: WorkspacePolicy }> {
     const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy();
+    await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
     const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, options);
     if (!options?.addMissingDeps) {
       return { componentsAndManifests, mergedRootPolicy };
@@ -442,6 +468,50 @@ export class InstallMain {
     return rootPolicy;
   }
 
+  private async addConfiguredGeneratorEnvsToWorkspacePolicy(rootPolicy: WorkspacePolicy): Promise<void> {
+    const configuredEnvs = this.generator.getConfiguredEnvs();
+    const resolvedEnvs = compact(
+      await Promise.all(
+        configuredEnvs.map(async (envIdStr) => {
+          if (this.envs.isCoreEnv(envIdStr)) {
+            return undefined;
+          }
+          const parsedId = await this.workspace.resolveComponentId(envIdStr);
+          // If we have the env in the workspace, we don't want to install it
+          const inWs = await this.workspace.hasId(parsedId);
+          if (inWs) {
+            return undefined;
+          }
+          const comps = await this.workspace.importAndGetMany(
+            [parsedId],
+            `to get the env ${parsedId.toString()} for installation`
+          );
+          const idWithVersion = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(parsedId);
+          const version = idWithVersion.split('@')[1] || '*';
+          const packageName = this.dependencyResolver.getPackageName(comps[0]);
+          return {
+            packageName,
+            version,
+          };
+        })
+      )
+    );
+
+    resolvedEnvs.forEach((env) => {
+      rootPolicy.add(
+        {
+          dependencyId: env.packageName,
+          value: {
+            version: env.version,
+          },
+          lifecycleType: 'runtime',
+        },
+        // If it's already exist from the root, take the version from the root policy
+        { skipIfExisting: true }
+      );
+    });
+  }
+
   private async _addMissingPackagesToRootPolicy(
     rootDeps: Set<string>,
     options?: WorkspaceInstallOptions
@@ -463,8 +533,8 @@ export class InstallMain {
     return uniq(
       comps
         .map((comp) => {
-          const data = comp.state.issues.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data || {};
-          return Object.values(data).flat();
+          const data = comp.state.issues.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data || [];
+          return data.map((d) => d.missingPackages).flat();
         })
         .flat()
     );
@@ -752,10 +822,10 @@ export class InstallMain {
         });
       })
     );
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write('update (dependencies)');
   }
 
-  private _updateVariantsPolicies(variantPatterns: Record<string, any>, updateVariantPolicies: string[]) {
+  private async _updateVariantsPolicies(variantPatterns: Record<string, any>, updateVariantPolicies: string[]) {
     for (const variantPattern of updateVariantPolicies) {
       this.variants.setExtension(
         variantPattern,
@@ -764,7 +834,7 @@ export class InstallMain {
         { overrideExisting: true }
       );
     }
-    return this.dependencyResolver.persistConfig(this.workspace.path);
+    await this.dependencyResolver.persistConfig('update dependencies');
   }
 
   /**
@@ -774,7 +844,7 @@ export class InstallMain {
    */
   async uninstallDependencies(packages: string[]) {
     this.dependencyResolver.removeFromRootPolicy(packages);
-    await this.dependencyResolver.persistConfig(this.workspace.path);
+    await this.dependencyResolver.persistConfig('uninstall dependencies');
     return this._installModules({ dedupe: true });
   }
 
@@ -875,7 +945,9 @@ export class InstallMain {
   }
 
   private async getComponentsDirectory(ids: ComponentID[]): Promise<ComponentMap<string>> {
-    const components = ids.length ? await this.workspace.getMany(ids) : await this.workspace.list();
+    const components = ids.length
+      ? await this.workspace.getMany(ids)
+      : await this.workspace.list(undefined, { loadSeedersAsAspects: false });
     return ComponentMap.as<string>(components, (component) => this.workspace.componentDir(component.id));
   }
 
@@ -979,6 +1051,7 @@ export class InstallMain {
       envs,
       wsConfigFiles,
       app,
+      generator,
       preLinkSlot,
       preInstallSlot,
       postInstallSlot,
@@ -1019,7 +1092,7 @@ function hasComponentsFromWorkspaceInMissingDeps({
       .map(([{ state }]) => {
         const issue = state.issues.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs);
         if (!issue) return [];
-        return Object.values(issue.data).flat();
+        return issue.data.map((d) => d.missingPackages).flat();
       })
       .flat()
   );

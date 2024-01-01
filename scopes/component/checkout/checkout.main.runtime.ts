@@ -45,6 +45,7 @@ export type CheckoutProps = {
   skipUpdatingBitmap?: boolean; // needed for stash
   restoreMissingComponents?: boolean; // in case .bitmap has a component and it's missing from the workspace, restore it (from model)
   allowAddingComponentsFromScope?: boolean; // in case the id doesn't exist in .bitmap, add it from the scope (relevant for switch)
+  includeLocallyDeleted?: boolean; // include components that were deleted locally. currently enabled for "bit checkout reset" only.
 };
 
 export type ComponentStatusBeforeMergeAttempt = ComponentStatusBase & {
@@ -113,7 +114,7 @@ export class CheckoutMain {
     if (componentWithConflict) {
       if (!promptMergeOptions && !checkoutProps.mergeStrategy) {
         throw new GeneralError(
-          `automatic merge has failed for component ${componentWithConflict.id.toStringWithoutVersion()}.\nplease use "--manual" to manually merge changes or use "--theirs / --ours" to choose one of the conflicted versions`
+          `automatic merge has failed for component ${componentWithConflict.id.toStringWithoutVersion()}.\nplease use "--auto-merge-resolve" with 'manual', 'ours' or 'theirs' to resolve the conflict/s`
         );
       }
       if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
@@ -162,6 +163,7 @@ export class CheckoutMain {
         verbose: checkoutProps.verbose,
         resetConfig: checkoutProps.reset,
         skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap,
+        reasonForBitmapChange: 'checkout',
       };
       componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
     }
@@ -227,7 +229,7 @@ export class CheckoutMain {
     if (head) await this.makeLaneComponentsAvailableOnMain();
     await this.parseValues(componentPattern, checkoutProps);
     const checkoutResults = await this.checkout(checkoutProps);
-    await consumer.onDestroy();
+    await consumer.onDestroy(`checkout (${componentPattern})`);
     return checkoutResults;
   }
 
@@ -278,9 +280,21 @@ export class CheckoutMain {
     if (checkoutProps.revert) {
       checkoutProps.skipUpdatingBitmap = true;
     }
-    const idsOnWorkspace = componentPattern
-      ? await this.workspace.idsByPattern(componentPattern)
-      : await this.workspace.listIds();
+    if (checkoutProps.reset || checkoutProps.head) {
+      checkoutProps.includeLocallyDeleted = true;
+    }
+
+    const getIds = async () => {
+      if (componentPattern) {
+        return this.workspace.idsByPattern(componentPattern, true, {
+          includeDeleted: checkoutProps.includeLocallyDeleted,
+        });
+      }
+      return checkoutProps.includeLocallyDeleted ? this.workspace.listIdsIncludeRemoved() : this.workspace.listIds();
+    };
+
+    const idsOnWorkspace = await getIds();
+
     const currentLane = await this.workspace.consumer.getCurrentLaneObject();
     const currentLaneIds = currentLane?.toBitIds();
     const ids = currentLaneIds ? idsOnWorkspace.filter((id) => currentLaneIds.hasWithoutVersion(id)) : idsOnWorkspace;
@@ -318,11 +332,19 @@ export class CheckoutMain {
     let existingBitMapId = consumer.bitMap.getComponentIdIfExist(id, { ignoreVersion: true });
     const getComponent = async () => {
       try {
-        return await consumer.loadComponent(id);
+        // TODO: check if we really need the { loadExtensions: true } here
+        const results = await consumer.loadComponents(ComponentIdList.fromArray([id]), undefined, {
+          loadExtensions: true,
+        });
+        if (results.components[0]) return results.components[0];
+        if (checkoutProps.includeLocallyDeleted && results.removedComponents[0]) {
+          return results.removedComponents[0];
+        }
       } catch (err) {
         if (checkoutProps.allowAddingComponentsFromScope && !existingBitMapId) return undefined;
         throw err;
       }
+      return undefined;
     };
     const component = await getComponent();
     if (component) {
@@ -344,7 +366,7 @@ export class CheckoutMain {
     if (main && !componentModel.head) {
       return returnFailure(`component ${id.toString()} is not available on main`);
     }
-    const unmerged = repo.unmergedComponents.getEntry(id.fullName);
+    const unmerged = repo.unmergedComponents.getEntry(id);
     if (!reset && unmerged) {
       return returnFailure(
         `component ${id.toStringWithoutVersion()} is in during-merge state, please snap/tag it first (or use bit merge --resolve/--abort)`
@@ -399,7 +421,8 @@ export class CheckoutMain {
       const currentVersionObject: Version = await componentModel.loadVersion(currentlyUsedVersion, repo);
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       isModified = await consumer.isComponentModified(currentVersionObject, component!);
-      if (!isModified && reset) {
+      const isRemoved = component && component.isRemoved();
+      if (!isModified && !isRemoved && reset) {
         return returnFailure(`component ${id.toStringWithoutVersion()} is not modified`, true);
       }
     }

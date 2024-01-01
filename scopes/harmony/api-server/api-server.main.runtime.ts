@@ -8,6 +8,7 @@ import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import ComponentCompareAspect, { ComponentCompareMain } from '@teambit/component-compare';
 import ComponentLogAspect, { ComponentLogMain } from '@teambit/component-log';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
+import { ConfigAspect, ConfigMain } from '@teambit/config';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import CheckoutAspect, { CheckoutMain } from '@teambit/checkout';
 import InstallAspect, { InstallMain } from '@teambit/install';
@@ -31,7 +32,7 @@ export class ApiServerMain {
     private importer: ImporterMain
   ) {}
 
-  async runApiServer(options: { port: number }) {
+  async runApiServer(options: { port: number; compile: boolean }) {
     if (!this.workspace) {
       throw new Error(`unable to run bit-server, the current directory ${process.cwd()} is not a workspace`);
     }
@@ -70,6 +71,7 @@ export class ApiServerMain {
     this.watcher
       .watch({
         preCompile: false,
+        compile: options.compile,
       })
       .catch((err) => {
         // don't throw an error, we don't want to break the "run" process
@@ -106,6 +108,7 @@ export class ApiServerMain {
     ComponentCompareAspect,
     GeneratorAspect,
     RemoveAspect,
+    ConfigAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -124,6 +127,7 @@ export class ApiServerMain {
     componentCompare,
     generator,
     remove,
+    config,
   ]: [
     CLIMain,
     Workspace,
@@ -139,13 +143,13 @@ export class ApiServerMain {
     ImporterMain,
     ComponentCompareMain,
     GeneratorMain,
-    RemoveMain
+    RemoveMain,
+    ConfigMain
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
     const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer, importer);
     cli.register(new ServerCmd(apiServer));
 
-    const cliRoute = new CLIRoute(logger, cli);
     const apiForIDE = new APIForIDE(
       workspace,
       snapping,
@@ -156,8 +160,10 @@ export class ApiServerMain {
       componentLog,
       componentCompare,
       generator,
-      remove
+      remove,
+      config
     );
+    const cliRoute = new CLIRoute(logger, cli, apiForIDE);
     const vscodeRoute = new IDERoute(logger, apiForIDE);
     const sseEventsRoute = new SSEEventsRoute(logger, cli);
     // register only when the workspace is available. don't register this on a remote-scope, for security reasons.

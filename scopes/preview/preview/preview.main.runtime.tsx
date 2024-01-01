@@ -31,6 +31,7 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { BundlingStrategyNotFound } from './exceptions';
 import { generateLink, MainModulesMap } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
@@ -121,6 +122,16 @@ export type PreviewAnyComponentData = {
   /**
    * don't allow other aspects implementing a preview definition to be included in your preview.
    */
+  onlyOverview?: boolean;
+
+  /**
+   * use name query params to select a specific composition to render.
+   */
+  useNameParam?: boolean;
+
+  /**
+   * don't allow other aspects implementing a preview definition to be included in your preview.
+   */
   skipIncludes?: boolean;
 };
 
@@ -129,6 +140,8 @@ export type PreviewAnyComponentData = {
  */
 export type PreviewEnvComponentData = {
   isScaling?: boolean;
+  supportsOnlyOverview?: boolean;
+  supportsUseNameParam?: boolean;
 };
 
 export type PreviewConfig = {
@@ -140,6 +153,7 @@ export type PreviewConfig = {
    * default - no limit.
    */
   maxChunkSize?: number;
+  onlyOverview?: boolean;
 };
 
 export type EnvPreviewConfig = {
@@ -244,6 +258,42 @@ export class PreviewMain {
   }
 
   /**
+   * check if the current version of env component supports skipping other included previews
+   * @param envComponent
+   * @returns
+   */
+  doesEnvIncludesOnlyOverview(envComponent: Component): boolean {
+    const previewData = this.getPreviewData(envComponent);
+    return !!previewData?.supportsOnlyOverview;
+  }
+
+  /**
+   * check if the current version of env component supports name query param
+   * @param envComponent
+   * @returns
+   */
+  doesEnvUseNameParam(envComponent: Component): boolean {
+    const previewData = this.getPreviewData(envComponent);
+    return !!previewData?.supportsUseNameParam;
+  }
+
+  private async calculateIncludeOnlyOverview(component: Component): Promise<boolean> {
+    if (this.envs.isUsingCoreEnv(component)) {
+      return true;
+    }
+    const envComponent = await this.envs.getEnvComponent(component);
+    return this.doesEnvIncludesOnlyOverview(envComponent);
+  }
+
+  private async calculateUseNameParam(component: Component): Promise<boolean> {
+    if (this.envs.isUsingCoreEnv(component)) {
+      return true;
+    }
+    const envComponent = await this.envs.getEnvComponent(component);
+    return this.doesEnvUseNameParam(envComponent);
+  }
+
+  /**
    * Calculate preview data on component load
    * @param component
    * @returns
@@ -252,8 +302,13 @@ export class PreviewMain {
     const doesScaling = await this.calcDoesScalingForComponent(component);
     const dataFromEnv = await this.calcPreviewDataFromEnv(component);
     const envData = (await this.calculateDataForEnvComponent(component)) || {};
+    const onlyOverview = await this.calculateIncludeOnlyOverview(component);
+    const useNameParam = await this.calculateUseNameParam(component);
+
     const data: PreviewComponentData = {
       doesScaling,
+      onlyOverview,
+      useNameParam,
       ...dataFromEnv,
       ...envData,
     };
@@ -267,7 +322,7 @@ export class PreviewMain {
    */
   async calcPreviewDataFromEnv(
     component: Component
-  ): Promise<Omit<PreviewAnyComponentData, 'doesScaling'> | undefined> {
+  ): Promise<Omit<PreviewAnyComponentData, 'doesScaling' | 'onlyOverview' | 'useNameParam'> | undefined> {
     // Prevent infinite loop that caused by the fact that the env of the aspect env or the env env is the same as the component
     // so we can't load it since during load we are trying to get env component and load it again
     if (
@@ -296,15 +351,17 @@ export class PreviewMain {
    */
   private async calculateDataForEnvComponent(envComponent: Component): Promise<PreviewEnvComponentData | undefined> {
     const isEnv = this.envs.isEnv(envComponent);
+
     // If the component is not an env, we don't want to store anything in the data
     if (!isEnv) return undefined;
+
     const previewAspectConfig = this.getPreviewAspectConfig(envComponent);
 
     const data = {
       // default to true if the env doesn't have a preview config
       isScaling: previewAspectConfig?.isScaling ?? true,
-      // disalbe it for now, we will re-enable it later
-      // skipIncludes: true,
+      supportsOnlyOverview: true,
+      supportsUseNameParam: true,
     };
     return data;
   }
@@ -428,12 +485,31 @@ export class PreviewMain {
   }
 
   async isSupportSkipIncludes(component: Component) {
+    if (!this.config.onlyOverview) return false;
+
     const isCore = this.envs.isUsingCoreEnv(component);
     if (isCore) return false;
 
     const envComponent = await this.envs.getEnvComponent(component);
     const previewData = this.getPreviewData(envComponent);
     return !!previewData?.skipIncludes;
+  }
+
+  /**
+   * check if the component preview should only include the overview (skipping rendering of the compostions and properties table)
+   */
+  async getOnlyOverview(component: Component): Promise<boolean> {
+    if (!this.config.onlyOverview) return false;
+    const previewData = this.getPreviewData(component);
+    return previewData?.onlyOverview ?? false;
+  }
+
+  /**
+   * check if the component preview should include the name query param
+   */
+  async getUseNameParam(component: Component): Promise<boolean> {
+    const previewData = this.getPreviewData(component);
+    return previewData?.useNameParam ?? false;
   }
 
   /**
@@ -809,10 +885,12 @@ export class PreviewMain {
     DependencyResolverAspect,
     GraphqlAspect,
     WatcherAspect,
+    ScopeAspect,
   ];
 
   static defaultConfig = {
     disabled: false,
+    onlyOverview: false,
   };
 
   static async provider(
@@ -831,6 +909,7 @@ export class PreviewMain {
       dependencyResolver,
       graphql,
       watcher,
+      scope,
     ]: [
       BundlerMain,
       BuilderMain,
@@ -844,7 +923,8 @@ export class PreviewMain {
       LoggerMain,
       DependencyResolverMain,
       GraphqlMain,
-      WatcherMain
+      WatcherMain,
+      ScopeMain
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
@@ -895,13 +975,16 @@ export class PreviewMain {
       workspace.registerOnComponentAdd((c) =>
         preview.handleComponentChange(c, (currentComponents) => currentComponents.add(c))
       );
-      workspace.onComponentLoad(async (component) => {
+      workspace.registerOnComponentLoad(async (component) => {
         return preview.calcPreviewData(component);
       });
       workspace.registerOnComponentChange((c) =>
         preview.handleComponentChange(c, (currentComponents) => currentComponents.update(c))
       );
       workspace.registerOnComponentRemove((cId) => preview.handleComponentRemoval(cId));
+    }
+    if (scope) {
+      scope.registerOnCompAspectReCalc((c) => preview.calcPreviewData(c));
     }
 
     envs.registerService(new PreviewService());

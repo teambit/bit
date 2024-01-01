@@ -61,7 +61,7 @@ export function DependenciesGraph({
   const handleLoad = useCallback(
     (instance: OnLoadParams) => {
       if ((graph?.nodes.length ?? 0) <= 3) {
-        graphRef.current?.fitView({
+        instance.fitView({
           padding: 2,
         });
       } else {

@@ -8,7 +8,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { LaneData, serializeLaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { BitError } from '@teambit/bit-error';
 import { approveOperation } from '@teambit/legacy/dist/prompts';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP, DEFAULT_CLOUD_DOMAIN } from '@teambit/legacy/dist/constants';
 import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
 import { SwitchCmd } from './switch.cmd';
 
@@ -98,7 +98,8 @@ export class LaneListCmd implements Command {
         footer +=
           "to get more info on all lanes in local scope use 'bit lane list --details', or 'bit lane show <lane-name>' for a specific lane.";
       }
-      if (!remote && this.workspace) footer += `\nswitch lanes using 'bit switch <name>'.`;
+      if (!remote && this.workspace)
+        footer += `\nswitch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'.`;
 
       return footer;
     };
@@ -167,7 +168,8 @@ export class LaneShowCmd implements Command {
     const date = onlyLane.log?.date
       ? `created: ${new Date(parseInt(onlyLane.log.date)).toLocaleString()}\n`
       : undefined;
-    return title + author + date + outputComponents(onlyLane.components);
+    const link = `link: https://${DEFAULT_CLOUD_DOMAIN}/${laneId.scope.replace('.', '/')}/~lane/${laneId.name}\n`;
+    return title + author + date + link + outputComponents(onlyLane.components);
   }
 
   async json([name]: [string], laneOptions: LaneOptions) {

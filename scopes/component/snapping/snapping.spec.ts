@@ -28,7 +28,7 @@ describe('Snapping aspect', () => {
       const compiler: CompilerMain = await loadAspect(CompilerAspect, workspacePath);
       await compiler.compileOnWorkspace();
       snapping = await loadAspect(SnappingAspect, workspacePath);
-    });
+    }, 30000);
     it('tag should throw an ComponentsHaveIssues error', async () => {
       try {
         await snapping.tag({ ids: ['comp1'] });

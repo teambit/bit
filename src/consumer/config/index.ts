@@ -1,5 +1,7 @@
 import ComponentConfig from './component-config';
 
+export type { ComponentConfigLoadOptions } from './component-config';
+
 export {
   default as LegacyWorkspaceConfig,
   WorkspaceConfigProps as LegacyWorkspaceConfigProps,

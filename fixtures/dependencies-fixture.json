@@ -10,10 +10,6 @@
                       "mainFile": {
                           "isDefault": false,
                           "name": "isString"
-                      },
-                      "linkFile": {
-                          "isDefault": true,
-                          "name": "isString"
                       }
                   }
               ],

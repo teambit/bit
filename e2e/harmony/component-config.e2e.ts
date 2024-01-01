@@ -227,7 +227,7 @@ function getExtensionEntry(extensionName: string, config: any): any {
     extensionId: `my-scope/${extensionName}`,
     config,
     newExtensionId: {
-      legacyComponentId: {
+      _legacy: {
         scope: null,
         name: extensionName,
         version: 'latest',

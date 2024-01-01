@@ -42,7 +42,7 @@ export class BundleUiTask implements BuildTask {
         })
       );
     } catch (error) {
-      this.logger.error('Generating UI bundle failed');
+      this.logger.error('Generating UI bundle failed', error);
       throw new Error('Generating UI bundle failed');
     }
     const artifacts = BundleUiTask.getArtifactDef();

@@ -1,12 +1,12 @@
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { MainRuntime } from '@teambit/cli';
 import { parse } from 'comment-json';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { flatten, isFunction } from 'lodash';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
-import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { Component, ComponentMain, ComponentAspect } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { DevFilesAspect } from './dev-files.aspect';
@@ -115,7 +115,7 @@ export class DevFilesMain {
     const fromEnvJsonFile = await this.computeDevPatternsFromEnvJsoncFile(envId);
     let fromEnvFunc;
     if (!fromEnvJsonFile) {
-      const envDef = await this.envs.calculateEnv(component, { skipWarnings: !!this.workspace.inInstallContext });
+      const envDef = await this.envs.calculateEnv(component, { skipWarnings: !!this.workspace?.inInstallContext });
       fromEnvFunc = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns(component) : [];
     }
     const envPatterns = fromEnvJsonFile || fromEnvFunc || {};
@@ -190,6 +190,15 @@ export class DevFilesMain {
     return new DevFiles(rawDevFiles);
   }
 
+  async getDevFilesForConsumerComp(consumerComponent: LegacyComponent): Promise<string[]> {
+    const componentId = await this.workspace.resolveComponentId(consumerComponent.id);
+    // Do not change the storeInCache=false arg. if you think you need to change it, please talk to Gilad first
+    const component = await this.workspace.get(componentId, consumerComponent, true, false, { loadExtensions: false });
+    if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
+    const computedDevFiles = await this.computeDevFiles(component);
+    return computedDevFiles.list();
+  }
+
   /**
    * compute all dev files of a component.
    */
@@ -213,32 +222,28 @@ export class DevFilesMain {
 
   static runtime = MainRuntime;
 
-  static dependencies = [EnvsAspect, WorkspaceAspect, ComponentAspect, GraphqlAspect];
+  static dependencies = [EnvsAspect, WorkspaceAspect, ComponentAspect, GraphqlAspect, ScopeAspect];
 
   static async provider(
-    [envs, workspace, componentAspect, graphql]: [EnvsMain, Workspace, ComponentMain, GraphqlMain],
+    [envs, workspace, componentAspect, graphql, scope]: [EnvsMain, Workspace, ComponentMain, GraphqlMain, ScopeMain],
     config: DevFilesConfig,
     [devPatternSlot]: [DevPatternSlot]
   ) {
     const devFiles = new DevFilesMain(envs, workspace, devPatternSlot, config);
     componentAspect.registerShowFragments([new DevFilesFragment(devFiles)]);
 
-    if (workspace) {
-      workspace.onComponentLoad(async (component) => {
-        return {
-          devPatterns: await devFiles.computeDevPatterns(component),
-          devFiles: (await devFiles.computeDevFiles(component)).toObject(),
-        };
-      });
-
-      DependencyResolver.getDevFiles = async (consumerComponent: LegacyComponent): Promise<string[]> => {
-        const componentId = await workspace.resolveComponentId(consumerComponent.id);
-        // Do not change the storeInCache=false arg. if you think you need to change it, please talk to Gilad first
-        const component = await workspace.get(componentId, consumerComponent, true, false);
-        if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
-        const computedDevFiles = await devFiles.computeDevFiles(component);
-        return computedDevFiles.list();
+    const calcDevOnLoad = async (component: Component) => {
+      return {
+        devPatterns: await devFiles.computeDevPatterns(component),
+        devFiles: (await devFiles.computeDevFiles(component)).toObject(),
       };
+    };
+
+    if (workspace) {
+      workspace.registerOnComponentLoad(calcDevOnLoad);
+    }
+    if (scope) {
+      scope.registerOnCompAspectReCalc(calcDevOnLoad);
     }
 
     graphql.register(devFilesSchema(devFiles));

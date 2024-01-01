@@ -17,6 +17,12 @@ import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-sn
 import { ConfigMerger } from './config-merger';
 import { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } from './merging.main.runtime';
 
+export type MergeStatusProviderOptions = {
+  resolveUnrelated?: MergeStrategy;
+  ignoreConfigChanges?: boolean;
+  shouldSquash?: boolean;
+};
+
 export class MergeStatusProvider {
   constructor(
     private workspace: Workspace,
@@ -24,7 +30,7 @@ export class MergeStatusProvider {
     private importer: ImporterMain,
     private currentLane?: Lane, // currently checked out lane. if on main, then it's undefined.
     private otherLane?: Lane, // the lane we want to merged to our lane. (undefined if it's "main").
-    private options?: { resolveUnrelated?: MergeStrategy; ignoreConfigChanges?: boolean }
+    private options?: MergeStatusProviderOptions
   ) {}
 
   async getStatus(
@@ -39,8 +45,9 @@ export class MergeStatusProvider {
     // whether or not we need to import the gap between the common-snap and the other lane.
     // the common-snap itself we need anyway in order to get the files hash/content for checking conflicts.
     const shouldImportHistoryOfOtherLane =
-      !this.currentLane || // on main. we need all history in order to push each component to its remote
-      this.currentLane.scope !== this.otherLane?.scope; // on lane, but the other lane is from a different scope. we need all history in order to push to the current lane's scope
+      !this.options?.shouldSquash && // when squashing, no need for all history, only the head is going to be pushed
+      (!this.currentLane || // on main. we need all history in order to push each component to its remote
+        this.currentLane.scope !== this.otherLane?.scope); // on lane, but the other lane is from a different scope. we need all history in order to push to the current lane's scope
     const toImport = componentStatusBeforeMergeAttempt
       .map((compStatus) => {
         if (!compStatus.divergeData) return [];
@@ -158,7 +165,7 @@ other:   ${otherLaneHead.toString()}`);
         `component ${id.toString()} is on the lane/main but its objects were not found, please re-import the lane`
       );
     }
-    const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id.fullName);
+    const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id);
     if (unmerged) {
       return this.returnUnmerged(
         id,
@@ -204,7 +211,7 @@ other:   ${otherLaneHead.toString()}`);
       return { ...componentStatus, componentFromModel: componentOnOther, divergeData };
     }
     const getCurrentComponent = () => {
-      if (existingBitMapId) return consumer.loadComponent(existingBitMapId);
+      if (existingBitMapId) return consumer.loadComponent(existingBitMapId, { loadExtensions: true });
       return consumer.scope.getConsumerComponent(currentId);
     };
     const currentComponent = await getCurrentComponent();

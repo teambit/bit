@@ -6,7 +6,7 @@ export { useComponentHost } from './host';
 export { Component, InvalidComponent } from './component';
 export { ComponentID } from '@teambit/component-id';
 export { default as ComponentFS } from './component-fs';
-export type { default as ComponentConfig } from './config';
+export type { Config as ComponentConfig } from './config';
 export type {
   ComponentFactory,
   ResolveAspectsOptions,
@@ -29,24 +29,19 @@ export { TagMap } from './tag-map';
 export { ComponentMap } from './component-map';
 export type { ComponentMain } from './component.main.runtime';
 export type { ComponentUI } from './component.ui.runtime';
-export { Section } from './section';
+export type { Section } from './section';
 export { ComponentContext, ComponentDescriptorContext, useComponentDescriptor } from './ui/context/component-context';
 export type { ComponentProviderProps, ComponentDescriptorProviderProps } from './ui/context';
 export { ComponentProvider, ComponentDescriptorProvider } from './ui/context';
 export { componentFields, componentIdFields, componentOverviewFields } from './ui';
-export {
-  NavPlugin,
-  ConsumePlugin,
-  CollapsibleMenuNav,
-  MenuNavProps,
-  ComponentMenu,
-  VersionRelatedDropdowns,
-} from './ui/menu';
-export { RegisteredComponentRoute, ComponentUrlParams } from './component.route';
-export { ComponentModel, ComponentModelProps } from './ui/component-model';
+export type { NavPlugin, ConsumePlugin, MenuNavProps } from './ui/menu';
+export { CollapsibleMenuNav, ComponentMenu, VersionRelatedDropdowns } from './ui/menu';
+export type { RegisteredComponentRoute, ComponentUrlParams } from './component.route';
+export type { ComponentModelProps } from './ui/component-model';
+export { ComponentModel } from './ui/component-model';
 export { TopBarNav } from './ui/top-bar-nav';
 export type { ShowFragment, ShowRow, ShowJSONRow } from './show';
-export { default as Config } from './config';
+export { Config } from './config';
 export { useComponent, useIdFromLocation, useComponentLogs, ComponentLogsResult, Filters } from './ui';
 
 // export { AspectList } from './aspect-list';

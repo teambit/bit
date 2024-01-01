@@ -1,0 +1,31 @@
+.apiRefToc {
+  display: flex;
+  gap: 48px;
+}
+
+.apiRefTocGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.apiRefTocGroupItem {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+.apiRefTocGroupItemName {
+  display: flex;
+  font-size: 16px;
+}
+
+.apiRefTocGroupIcon {
+  display: flex;
+  > img {
+    height: 16px;
+    width: 16px;
+  }
+}

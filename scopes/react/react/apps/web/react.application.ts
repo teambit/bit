@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { join, resolve, basename } from 'path';
-import { Application, AppContext, AppBuildContext, AppResult } from '@teambit/application';
+import { Application, AppContext, AppBuildContext, AppResult, ApplicationInstance } from '@teambit/application';
 import type { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { ComponentMap } from '@teambit/component';
@@ -43,13 +43,18 @@ export class ReactApp implements Application {
   readonly dir = 'public';
   readonly ssrDir = 'ssr';
 
-  async run(context: AppContext): Promise<number> {
+  async run(context: AppContext): Promise<ApplicationInstance> {
     const [from, to] = this.portRange;
     const port = context.port || (await Port.getPort(from, to));
 
     if (this.devServer) {
       await this.devServer.listen(port);
-      return port;
+      this.logger.console(`${context.appName} is listening on http://localhost:${port}`);
+
+      return {
+        appName: context.appName,
+        port,
+      };
     }
 
     const devServerContext = await this.getDevServerContext(context);
@@ -60,7 +65,12 @@ export class ReactApp implements Application {
       this.webpackDevServerModulePath
     );
     await devServer.listen(port);
-    return port;
+    this.logger.console(`${context.appName} is listening on http://localhost:${port}`);
+
+    return {
+      appName: context.appName,
+      port,
+    };
   }
 
   async runSsr(context: AppContext): Promise<AppResult> {
@@ -91,6 +101,7 @@ export class ReactApp implements Application {
     });
 
     expressApp.listen(port);
+    this.logger.console(`listening on port ${port}`);
     return { port };
   }
 

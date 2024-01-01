@@ -280,6 +280,9 @@ export default class CommandHelper {
   dependenciesRemove(pattern: string, pkg: string, flags = '') {
     return this.runCmd(`bit dependencies remove ${pattern} ${pkg} ${flags}`);
   }
+  dependenciesUsage(depName: string) {
+    return this.runCmd(`bit dependencies usage ${depName}`);
+  }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
   }
@@ -416,13 +419,13 @@ export default class CommandHelper {
     if (!artifacts) throw new Error(`unable to find artifacts data for ${id}`);
     return artifacts;
   }
-  untag(id: string, head = false, flag = '') {
+  reset(id: string, head = false, flag = '') {
     return this.runCmd(`bit reset ${id} ${head ? '--head' : ''} ${flag}`);
   }
-  untagAll(options = '') {
+  resetAll(options = '') {
     return this.runCmd(`bit reset ${options} --all`);
   }
-  untagSoft(id: string) {
+  resetSoft(id: string) {
     return this.runCmd(`bit reset ${id} --soft`);
   }
   exportIds(ids: string, flags = '', assert = true) {
@@ -644,6 +647,11 @@ export default class CommandHelper {
   showAspectConfig(compId: string, aspectId: string) {
     const show = this.showComponentParsedHarmony(compId);
     return show.find((_) => _.title === 'configuration').json.find((_) => _.id === aspectId);
+  }
+
+  showDependenciesData(compId: string): Array<{ id: string; version: string; packageName: string }> {
+    const showConfig = this.showAspectConfig(compId, Extensions.dependencyResolver);
+    return showConfig.data.dependencies;
   }
 
   getCompDepsIdsFromData(compId: string): string[] {

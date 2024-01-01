@@ -1,3 +1,4 @@
+import pMap from 'p-map';
 import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import * as path from 'path';
@@ -13,16 +14,19 @@ import ComponentsPendingImport from '../component-ops/exceptions/components-pend
 import Component, { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
 import { ComponentFsCache } from './component-fs-cache';
-import { updateDependenciesVersions } from './dependencies/dependency-resolver';
-import { DependenciesLoader } from './dependencies/dependency-resolver/dependencies-loader';
 import ComponentMap from '../bit-map/component-map';
 import { VERSION_ZERO } from '../../scope/models/model-component';
 import loader from '../../cli/loader';
+import { concurrentComponentsLimit } from '../../utils/concurrency';
 
 export type ComponentLoadOptions = {
   loadDocs?: boolean;
   loadCompositions?: boolean;
   originatedFromHarmony?: boolean;
+  loadExtensions?: boolean;
+  storeInCache?: boolean;
+  storeDepsInFsCache?: boolean;
+  resolveExtensionsVersions?: boolean;
 };
 export type LoadManyResult = {
   components: Component[];
@@ -32,6 +36,16 @@ export type LoadManyResult = {
 
 type OnComponentLoadSubscriber = (component: Component, loadOpts?: ComponentLoadOptions) => Promise<Component>;
 type OnComponentIssuesCalcSubscriber = (component: Component) => Promise<ComponentIssue[]>;
+
+export type DependencyLoaderOpts = {
+  cacheResolvedDependencies: Record<string, any>;
+  cacheProjectAst?: Record<string, any>;
+  useDependenciesCache: boolean;
+  storeInFsCache?: boolean;
+  resolveExtensionsVersions?: boolean;
+};
+
+type LoadDepsFunc = (component: Component, opts: DependencyLoaderOpts) => Promise<any>;
 
 export default class ComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
@@ -56,6 +70,8 @@ export default class ComponentLoader {
   static registerOnComponentIssuesCalcSubscriber(func: OnComponentIssuesCalcSubscriber) {
     this.onComponentIssuesCalcSubscribers.push(func);
   }
+
+  static loadDeps: LoadDepsFunc;
 
   clearComponentsCache() {
     this.componentsCache.deleteAll();
@@ -119,7 +135,7 @@ export default class ComponentLoader {
       const fromCache = this.componentsCache.get(idStr);
       if (fromCache) {
         alreadyLoadedComponents.push(fromCache);
-      } else {
+      } else if (!idsToProcess.includes(idWithVersion)) {
         idsToProcess.push(idWithVersion);
       }
     });
@@ -129,18 +145,26 @@ export default class ComponentLoader {
       { idsStr: alreadyLoadedComponents.map((c) => c.id.toString()).join(', ') }
     );
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents, removedComponents };
-
+    const storeInCache = loadOpts?.storeInCache ?? true;
     const allComponents: Component[] = [];
-    await mapSeries(idsToProcess, async (id: ComponentID) => {
-      const component = await this.loadOne(id, throwOnFailure, invalidComponents, removedComponents, loadOpts);
-      if (component) {
-        this.componentsCache.set(component.id.toString(), component);
-        logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
-          id: component.id.toString(),
-        });
-        allComponents.push(component);
-      }
-    });
+    // await mapSeries(idsToProcess, async (id: BitId) => {
+    // await Promise.all(
+    await pMap(
+      idsToProcess,
+      async (id: ComponentID) => {
+        const component = await this.loadOne(id, throwOnFailure, invalidComponents, removedComponents, loadOpts);
+        if (component) {
+          if (storeInCache) {
+            this.componentsCache.set(component.id.toString(), component);
+          }
+          logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
+            id: component.id.toString(),
+          });
+          allComponents.push(component);
+        }
+      },
+      { concurrency: concurrentComponentsLimit() }
+    );
 
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents, removedComponents };
   }
@@ -194,6 +218,7 @@ export default class ComponentLoader {
         componentMap,
         id: updatedId,
         consumer: this.consumer,
+        loadOpts,
       });
     } catch (err: any) {
       return handleError(err);
@@ -204,13 +229,13 @@ export default class ComponentLoader {
 
     const loadDependencies = async () => {
       await this.invalidateDependenciesCacheIfNeeded();
-      const dependenciesLoader = new DependenciesLoader(component, this.consumer, {
+      await ComponentLoader.loadDeps(component, {
         cacheResolvedDependencies: this.cacheResolvedDependencies,
         cacheProjectAst: this.cacheProjectAst,
         useDependenciesCache: component.issues.isEmpty(),
+        storeInFsCache: loadOpts?.storeDepsInFsCache,
+        resolveExtensionsVersions: loadOpts?.resolveExtensionsVersions,
       });
-      await dependenciesLoader.load();
-      updateDependenciesVersions(this.consumer, component);
     };
 
     const runOnComponentLoadEvent = async () => {
@@ -221,7 +246,9 @@ export default class ComponentLoader {
 
     try {
       await loadDependencies();
-      await runOnComponentLoadEvent();
+      if (loadOpts?.loadExtensions) {
+        await runOnComponentLoadEvent();
+      }
     } catch (err: any) {
       return handleError(err);
     }

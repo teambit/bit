@@ -1,7 +1,8 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import classNames from 'classnames';
 import React, { useCallback } from 'react';
-
+import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
+import { useNavigate, useLocation } from '@teambit/base-react.navigation.link';
 import { Composition } from '../../composition';
 import styles from './compositions-panel.module.scss';
 
@@ -28,6 +29,8 @@ export type CompositionsPanelProps = {
   isScaling?: boolean;
 
   includesEnvTemplate?: boolean;
+
+  useNameParam?: boolean;
 } & React.HTMLAttributes<HTMLUListElement>;
 
 export function CompositionsPanel({
@@ -37,10 +40,11 @@ export function CompositionsPanel({
   onSelectComposition: onSelect,
   active,
   includesEnvTemplate,
+  useNameParam,
   className,
   ...rest
 }: CompositionsPanelProps) {
-  const shouldAddNameParam = isScaling && includesEnvTemplate === false;
+  const shouldAddNameParam = useNameParam || (isScaling && includesEnvTemplate === false);
 
   const handleSelect = useCallback(
     (selected: Composition) => {
@@ -49,12 +53,22 @@ export function CompositionsPanel({
     [onSelect]
   );
 
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const onCompositionCodeClicked = useCallback(
+    (composition: Composition) => (e: React.MouseEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      const basePath = location?.pathname.split('/~compositions')[0];
+      navigate(`${basePath}/~code/${composition.filepath}#search=${composition.identifier}`);
+    },
+    [location?.pathname]
+  );
+
   return (
     <ul {...rest} className={classNames(className)}>
       {compositions.map((composition) => {
         const href = shouldAddNameParam ? `${url}&name=${composition.identifier}` : `${url}&${composition.identifier}`;
-
-        // TODO - move to composition panel node
         return (
           <li
             key={composition.identifier}
@@ -65,6 +79,12 @@ export function CompositionsPanel({
               <span className={styles.name}>{composition.displayName}</span>
             </a>
             <div className={styles.right}>
+              <MenuWidgetIcon
+                className={styles.codeLink}
+                icon="Code"
+                tooltipContent="Code"
+                onClick={onCompositionCodeClicked(composition)}
+              />
               <a className={styles.panelLink} target="_blank" rel="noopener noreferrer" href={href}>
                 <Icon className={styles.icon} of="open-tab" />
               </a>

@@ -22,7 +22,7 @@ import {
   MergeOptions,
   threeWayMerge,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { FilesStatus, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
+import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ComponentsPendingMerge from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-merge';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
@@ -35,6 +35,7 @@ import { ComponentWriterMain, ComponentWriterResults, ManyComponentsWriterParams
 import { LATEST_VERSION } from '@teambit/component-version';
 import { EnvsMain } from '@teambit/envs';
 import { compact } from 'lodash';
+import { FilesStatus } from '@teambit/merging';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -623,7 +624,8 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     if (!componentStatus.modified) return mergeStatus;
     const componentModel = await this.consumer.scope.getModelComponent(component.id);
     const existingBitMapBitId = this.consumer.bitMap.getComponentId(component.id, { ignoreVersion: true });
-    const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
+    // TODO: check if we really need the { loadExtensions: true } here
+    const fsComponent = await this.consumer.loadComponent(existingBitMapBitId, { loadExtensions: true });
     const currentlyUsedVersion = existingBitMapBitId.version;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);
@@ -767,6 +769,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       verbose: this.options.verbose,
       throwForExistingDir: !this.options.override,
       skipWritingToFs: this.options.trackOnly,
+      reasonForBitmapChange: 'import',
     };
     return this.componentWriter.writeMany(manyComponentsWriterOpts);
   }

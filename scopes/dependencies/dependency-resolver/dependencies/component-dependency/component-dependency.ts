@@ -23,9 +23,10 @@ export class ComponentDependency extends BaseDependency {
     version: string,
     lifecycle: DependencyLifecycleType,
     source?: DependencySource,
-    hidden?: boolean
+    hidden?: boolean,
+    optional?: boolean
   ) {
-    super(id, version, lifecycle, source, hidden);
+    super(id, version, lifecycle, source, hidden, optional);
     this._type = TYPE;
   }
 

@@ -1,6 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
+import pMap from 'p-map';
+import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
@@ -34,6 +35,7 @@ import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
+import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -286,7 +288,7 @@ if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-
     };
     this.scope.legacyScope.lanes.trackLane(trackLaneData);
     this.scope.legacyScope.scopeJson.setLaneAsNew(name);
-    await this.workspace.consumer.onDestroy();
+    await this.workspace.consumer.onDestroy('lane-create');
 
     const results = {
       alias,
@@ -321,7 +323,7 @@ if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-
       remoteScope,
     };
     this.scope.legacyScope.lanes.trackLane(afterTrackData);
-    await this.workspace.consumer.onDestroy();
+    await this.workspace.consumer.onDestroy('lane-track');
 
     return { beforeTrackData: beforeTrackDataCloned, afterTrackData };
   }
@@ -351,7 +353,7 @@ if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-
       : laneName;
     this.scope.legacyScope.lanes.removeTrackLane(laneNameWithoutScope);
     this.scope.legacyScope.lanes.trackLane(trackData);
-    await this.workspace.consumer.onDestroy();
+    await this.workspace.consumer.onDestroy('lane-alias');
 
     return { laneId };
   }
@@ -393,7 +395,7 @@ please create a new lane instead, which will include all components of this lane
     this.scope.legacyScope.lanes.trackLane(trackData);
     await this.scope.legacyScope.lanes.saveLane(lane);
     this.workspace.consumer.bitMap.setCurrentLane(newLaneId, false);
-    await this.workspace.consumer.onDestroy();
+    await this.workspace.consumer.onDestroy('lane-scope-change');
 
     return { remoteScopeBefore, localName: laneNameWithoutScope };
   }
@@ -424,18 +426,8 @@ please create a new lane instead, which will include all components of this lane
     // rename the ref file
     await this.scope.legacyScope.objects.remoteLanes.renameRefByNewLaneName(laneNameWithoutScope, newName, lane.scope);
 
-    // change tracking data
-    const afterTrackData = {
-      localLane: newName,
-      remoteLane: newName,
-      remoteScope: lane.scope,
-    };
-    this.scope.legacyScope.lanes.trackLane(afterTrackData);
-    this.scope.legacyScope.lanes.removeTrackLane(laneNameWithoutScope);
-
-    // change the lane object
-    lane.name = newName;
-    await this.scope.legacyScope.lanes.saveLane(lane);
+    // change scope.json related data and change the lane object
+    await this.scope.legacyScope.lanes.renameLane(lane, newName);
 
     // change current-lane if needed
     const currentLaneId = this.getCurrentLaneId();
@@ -445,7 +437,8 @@ please create a new lane instead, which will include all components of this lane
       this.setCurrentLane(newLaneId, undefined, isExported);
     }
 
-    await this.workspace.consumer.onDestroy();
+    // this writes the changes done on scope.json file (along with .bitmap)
+    await this.workspace.consumer.onDestroy('lane-rename');
 
     return { currentName };
   }
@@ -462,31 +455,6 @@ please create a new lane instead, which will include all components of this lane
 
   async importLaneObject(laneId: LaneId, persistIfNotExists = true): Promise<Lane> {
     return this.importer.importLaneObject(laneId, persistIfNotExists);
-  }
-
-  /**
-   * get the distance for a component between two lanes. for example, lane-b forked from lane-a and lane-b added some new snaps
-   * @param componentId
-   * @param sourceHead head on the source lane. leave empty if the source is main
-   * @param targetHead head on the target lane. leave empty if the target is main
-   * @returns
-   */
-  async getSnapsDistance(
-    componentId: ComponentID,
-    sourceHead?: string,
-    targetHead?: string,
-    throws?: boolean
-  ): Promise<SnapsDistance> {
-    if (!sourceHead && !targetHead)
-      throw new Error(`getDivergeData got sourceHead and targetHead empty. at least one of them should be populated`);
-    const modelComponent = await this.scope.legacyScope.getModelComponent(componentId);
-    return getDivergeData({
-      modelComponent,
-      repo: this.scope.legacyScope.objects,
-      sourceHead: sourceHead ? Ref.from(sourceHead) : modelComponent.head || null,
-      targetHead: targetHead ? Ref.from(targetHead) : modelComponent.head || null,
-      throws,
-    });
   }
 
   /**
@@ -521,7 +489,7 @@ please create a new lane instead, which will include all components of this lane
       return laneNames;
     }
     const results = await removeLanes(this.workspace?.consumer, laneNames, !!opts?.remote, !!opts?.force);
-    if (this.workspace) await this.workspace.consumer.onDestroy();
+    if (this.workspace) await this.workspace.consumer.onDestroy('lane-remove');
 
     return results.laneResults;
   }
@@ -601,7 +569,7 @@ please create a new lane instead, which will include all components of this lane
    * [from, to] => diff between "from" lane and "to" lane.
    */
   public async getDiff(values: string[], diffOptions: DiffOptions = {}, pattern?: string): Promise<LaneDiffResults> {
-    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope);
+    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
     return laneDiffGenerator.generate(values, diffOptions, pattern);
   }
 
@@ -684,7 +652,7 @@ please create a new lane instead, which will include all components of this lane
 
     lane.setReadmeComponent(undefined);
     await scope.lanes.saveLane(lane);
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`lane-remove-readme`);
 
     return { result: true };
   }
@@ -694,9 +662,15 @@ please create a new lane instead, which will include all components of this lane
     targetLaneId?: LaneId,
     options?: LaneDiffStatusOptions
   ): Promise<LaneDiffStatus> {
+    this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
+
+    const sourceLane = sourceLaneId.isDefault()
+      ? await this.getLaneDataOfDefaultLane()
+      : await this.loadLane(sourceLaneId);
+
     const sourceLaneComponents = sourceLaneId.isDefault()
-      ? (await this.getLaneDataOfDefaultLane())?.components.map((main) => ({ id: main.id, head: Ref.from(main.head) }))
-      : (await this.loadLane(sourceLaneId))?.components;
+      ? sourceLane?.components.map((main) => ({ id: main.id, head: Ref.from(main.head) }))
+      : sourceLane?.components;
 
     const targetLane = targetLaneId ? await this.loadLane(targetLaneId) : undefined;
     const targetLaneIds = targetLane?.toBitIds();
@@ -750,9 +724,77 @@ please create a new lane instead, which will include all components of this lane
       )
     );
 
-    const results = await pMapSeries(diffProps, async ({ componentId, sourceHead, targetHead }) =>
-      this.componentDiffStatus(componentId, sourceHead, targetHead, options)
+    const snapDistancesByComponentId = new Map<
+      string,
+      {
+        snapsDistance: SnapsDistance;
+        sourceHead: string;
+        targetHead?: string;
+        componentId: ComponentID;
+      }
+    >();
+
+    this.logger.profile(
+      `get snaps distance for source lane: ${sourceLane?.id.name} and target lane: ${targetLane?.id.name} with ${diffProps.length} components`
     );
+    await pMap(
+      diffProps,
+      async ({ componentId, sourceHead, targetHead }) => {
+        const snapsDistance = await this.scope.getSnapsDistanceBetweenTwoSnaps(
+          componentId,
+          sourceHead,
+          targetHead,
+          false
+        );
+        if (snapsDistance) {
+          snapDistancesByComponentId.set(componentId.toString(), {
+            snapsDistance,
+            sourceHead,
+            targetHead,
+            componentId,
+          });
+        }
+      },
+      {
+        concurrency: concurrentComponentsLimit(),
+      }
+    );
+    this.logger.profile(
+      `get snaps distance for source lane: ${sourceLane?.id.name} and target lane: ${targetLane?.id.name} with ${diffProps.length} components`
+    );
+
+    const commonSnapsToImport = compact(
+      [...snapDistancesByComponentId.values()].map((s) =>
+        s.snapsDistance.commonSnapBeforeDiverge
+          ? s.componentId.changeVersion(s.snapsDistance.commonSnapBeforeDiverge.hash)
+          : null
+      )
+    );
+
+    const sourceOrTargetLane =
+      ((sourceLaneId.isDefault() ? null : (sourceLane as Lane)) ||
+        (targetLaneId?.isDefault() ? null : (targetLane as Lane))) ??
+      undefined;
+
+    if (commonSnapsToImport.length > 0 && !options?.skipChanges) {
+      await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(commonSnapsToImport), {
+        cache: true,
+        reason: `get the common snap for lane diff`,
+        lane: sourceOrTargetLane,
+      });
+    }
+
+    const results = await pMapSeries(diffProps, async ({ componentId, sourceHead, targetHead }) =>
+      this.componentDiffStatus(
+        componentId,
+        sourceHead,
+        targetHead,
+        snapDistancesByComponentId.get(componentId.toString())?.snapsDistance,
+        options
+      )
+    );
+
+    this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
 
     return {
       source: sourceLaneId,
@@ -761,13 +803,84 @@ please create a new lane instead, which will include all components of this lane
     };
   }
 
-  async componentDiffStatus(
+  private async componentDiffStatus(
+    componentId: ComponentID,
+    sourceHead: string,
+    targetHead?: string,
+    snapsDistance?: SnapsDistance,
+    options?: LaneDiffStatusOptions
+  ): Promise<LaneComponentDiffStatus> {
+    if (snapsDistance?.err) {
+      const noCommonSnap = snapsDistance.err instanceof NoCommonSnap;
+
+      return {
+        componentId,
+        sourceHead,
+        targetHead,
+        upToDate: snapsDistance?.isUpToDate(),
+        unrelated: noCommonSnap || undefined,
+        changes: [],
+      };
+    }
+
+    const commonSnap = snapsDistance?.commonSnapBeforeDiverge;
+
+    const getChanges = async (): Promise<ChangeType[]> => {
+      if (!commonSnap) return [ChangeType.NEW];
+
+      // import common snap before we compare
+      const compare = await this.componentCompare.compare(
+        componentId.changeVersion(commonSnap.hash).toString(),
+        componentId.changeVersion(sourceHead).toString()
+      );
+
+      if (!compare.fields.length && (!compare.code.length || !compare.code.some((c) => c.status !== 'UNCHANGED'))) {
+        return [ChangeType.NONE];
+      }
+
+      const changed: ChangeType[] = [];
+
+      if (compare.code.some((f) => f.status !== 'UNCHANGED')) {
+        changed.push(ChangeType.SOURCE_CODE);
+      }
+
+      if (compare.fields.length > 0) {
+        changed.push(ChangeType.ASPECTS);
+      }
+
+      const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
+      if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
+        changed.push(ChangeType.DEPENDENCY);
+      }
+
+      return changed;
+    };
+
+    const changes = !options?.skipChanges ? await getChanges() : undefined;
+    const changeType = changes ? changes[0] : undefined;
+
+    return {
+      componentId,
+      changeType,
+      changes,
+      sourceHead,
+      targetHead: commonSnap?.hash,
+      upToDate: snapsDistance?.isUpToDate(),
+      snapsDistance: {
+        onSource: snapsDistance?.snapsOnSourceOnly.map((s) => s.hash) ?? [],
+        onTarget: snapsDistance?.snapsOnTargetOnly.map((s) => s.hash) ?? [],
+        common: snapsDistance?.commonSnapBeforeDiverge?.hash,
+      },
+    };
+  }
+
+  async componentDiffStatusOld(
     componentId: ComponentID,
     sourceHead: string,
     targetHead?: string,
     options?: LaneDiffStatusOptions
   ): Promise<LaneComponentDiffStatus> {
-    const snapsDistance = await this.getSnapsDistance(componentId, sourceHead, targetHead, false);
+    const snapsDistance = await this.scope.getSnapsDistanceBetweenTwoSnaps(componentId, sourceHead, targetHead, false);
 
     if (snapsDistance?.err) {
       const noCommonSnap = snapsDistance.err instanceof NoCommonSnap;
@@ -886,7 +999,7 @@ please create a new lane instead, which will include all components of this lane
         },
       });
     }
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write('lane-add-readme');
     return { result: true };
   }
 
@@ -1050,7 +1163,7 @@ please create a new lane instead, which will include all components of this lane
       new LaneChangeScopeCmd(lanesMain),
       new LaneAliasCmd(lanesMain),
       new LaneRenameCmd(lanesMain),
-      new LaneDiffCmd(workspace, scope),
+      new LaneDiffCmd(workspace, scope, componentCompare),
       new LaneAddReadmeCmd(lanesMain),
       new LaneRemoveReadmeCmd(lanesMain),
       new LaneImportCmd(switchCmd),

@@ -1,0 +1,14 @@
+.login {
+  margin-left: 20px;
+  display: flex;
+  align-items: center;
+  column-gap: 24px;
+}
+
+.text {
+  color: var(--on-background-color, #2b2b2b);
+  &:hover {
+    text-decoration: none;
+    color: var(--primary-color, #6c5ce7);
+  }
+}

@@ -1,6 +1,6 @@
+import { gitIgnoreTemplate } from '@teambit/git.modules.git-ignore';
 import { WorkspaceContext, Starter } from '../..';
 import { workspaceConfig } from './template/files/workspace-config';
-import { gitIgnore } from './template/files/git-ignore';
 
 export const BasicWorkspaceStarter: Starter = {
   name: 'basic',
@@ -13,7 +13,7 @@ export const BasicWorkspaceStarter: Starter = {
       },
       {
         relativePath: '.gitignore',
-        content: gitIgnore(),
+        content: gitIgnoreTemplate(),
       },
     ];
   },
