@@ -115,7 +115,6 @@ export default class Component {
   license: License | undefined;
   log: Log | undefined;
   writtenPath?: PathOsBasedRelative; // needed for generate links
-  dependenciesSavedAsComponents: boolean | undefined = true; // otherwise they're saved as npm packages.
   loadedFromFileSystem = false; // whether a component was loaded from the filesystem or converted from the model
   schema?: string;
   componentMap: ComponentMap | undefined; // always populated when the loadedFromFileSystem is true
