@@ -633,10 +633,10 @@
         ]
       },
       "teambit.pkg/pkg": {
+        "packageManagerPublishArgs": [
+          "--access public"
+        ],
         "packageJson": {
-          "packageManagerPublishArgs": [
-            "--access public"
-          ],
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "bvm": {
             "node": "20.10.0"
