@@ -9,9 +9,11 @@ import { BitError } from '@teambit/bit-error';
 import { Scope } from '@teambit/legacy/dist/scope';
 import fsx from 'fs-extra';
 import mapSeries from 'p-map-series';
+import { join } from 'path';
 import execa from 'execa';
 import { PkgAspect } from './pkg.aspect';
 import { PkgExtensionConfig } from './pkg.main.runtime';
+import { DEFAULT_TAR_DIR_IN_CAPSULE } from './packer';
 
 export type PublisherOptions = {
   dryRun?: boolean;
@@ -50,6 +52,14 @@ export class Publisher {
   private async publishOneCapsule(capsule: Capsule): Promise<ComponentResult> {
     const startTime = Date.now();
     const publishParams = ['publish'];
+    const tarFolderPath = join(capsule.path, DEFAULT_TAR_DIR_IN_CAPSULE);
+    const files = fsx.readdirSync(tarFolderPath);
+    const tarPath = files.find((file) => file.endsWith('.tgz'));
+    let cwd = capsule.path;
+    if (tarPath) {
+      cwd = tarFolderPath;
+      publishParams.push(tarPath);
+    }
     if (this.options.dryRun) publishParams.push('--dry-run');
     publishParams.push(...this.getTagFlagForPreRelease(capsule.component.id));
     const extraArgs = this.getExtraArgsFromConfig(capsule.component);
@@ -58,7 +68,7 @@ export class Publisher {
       publishParams.push(...extraArgsSplit);
     }
     const publishParamsStr = publishParams.join(' ');
-    const cwd = capsule.path;
+
     const componentIdStr = capsule.id.toString();
     const errors: string[] = [];
     let metadata: TaskMetadata = {};

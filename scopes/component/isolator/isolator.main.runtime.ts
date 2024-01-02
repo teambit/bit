@@ -790,6 +790,7 @@ export class IsolatorMain {
       useNesting: isolateInstallOptions.useNesting,
       keepExistingModulesDir: this.dependencyResolver.isolatedCapsules(),
       hasRootComponents: this.dependencyResolver.isolatedCapsules(),
+      hoistWorkspacePackages: true,
     };
     await installer.install(
       capsulesDir,
