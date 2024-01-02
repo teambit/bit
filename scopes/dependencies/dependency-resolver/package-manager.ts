@@ -96,6 +96,12 @@ export type PackageManagerInstallOptions = {
   dryRun?: boolean;
 
   dedupeInjectedDeps?: boolean;
+
+  /**
+   * When this is set to true, pnpm will hoist workspace packages to node_modules/.pnpm/node_modules.
+   * This is something we need in capsules.
+   */
+  hoistWorkspacePackages?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
