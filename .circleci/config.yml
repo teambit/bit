@@ -1496,18 +1496,18 @@ workflows:
             - harmony_deploy_approval_job
             - docker_build_node_20
   # uncomment to debug symphony_docker_build
-  # symphony_docker_build_workflow:
-  #   jobs:
-  #     - checkout_code:
-  #         filters:
-  #           branches:
-  #             only: circle-docker-symphony
-  #     - symphony_docker_build:
-  #         filters:
-  #           branches:
-  #             only: circle-docker-symphony
-  #         requires:
-  #           - checkout_code
+  symphony_docker_build_workflow:
+    jobs:
+      - checkout_code:
+          filters:
+            branches:
+              only: manual-nightly
+      - symphony_docker_build:
+          filters:
+            branches:
+              only: manual-nightly
+          requires:
+            - checkout_code
 
   # uncomment to update esbuild arm64 cache
   # get_arm64_workflow_packages:
@@ -1517,56 +1517,56 @@ workflows:
   #           branches:
   #             only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  # bvm_bundle_debug:
-  #   jobs:
-  #     - checkout_code:
-  #         filters:
-  #           branches:
-  #             only: release-with-pnpm
-  #     - bundle_version:
-  #         filters:
-  #           branches:
-  #             only: release-with-pnpm
-  #     - harmony_publish_to_gcloud:
-  #         filters:
-  #           branches:
-  #             only: release-with-pnpm
-  #         requires:
-  #           - bundle_version
-  #           - checkout_code # This is needed to generate index.json
-  #     # - docker_build:
-  #     #     requires:
-  #     #       - checkout_code
-  #     #       - harmony_publish_to_gcloud
-  # #     - docker_build_node_18:
-  # #         requires:
-  # #           - checkout_code
-  # #           - harmony_publish_to_gcloud
-  #     - docker_build_node_20:
+  bvm_bundle_debug:
+    jobs:
+      - checkout_code:
+          filters:
+            branches:
+              only: manual-nightly
+      - bundle_version:
+          filters:
+            branches:
+              only: manual-nightly
+      - harmony_publish_to_gcloud:
+          filters:
+            branches:
+              only: manual-nightly
+          requires:
+            - bundle_version
+            - checkout_code # This is needed to generate index.json
+      # - docker_build:
+      #     requires:
+      #       - checkout_code
+      #       - harmony_publish_to_gcloud
+  #     - docker_build_node_18:
   #         requires:
   #           - checkout_code
   #           - harmony_publish_to_gcloud
-  #     # - docker_non_root_build:
-  #     #     requires:
-  #     #       - checkout_code
-  #     #       - harmony_publish_to_gcloud
-  # #     - docker_non_root_build_node_18:
-  # #         requires:
-  # #           - checkout_code
-  # #           - harmony_publish_to_gcloud
-  #     - docker_non_root_build_node_20:
+      - docker_build_node_20:
+          requires:
+            - checkout_code
+            - harmony_publish_to_gcloud
+      # - docker_non_root_build:
+      #     requires:
+      #       - checkout_code
+      #       - harmony_publish_to_gcloud
+  #     - docker_non_root_build_node_18:
   #         requires:
   #           - checkout_code
   #           - harmony_publish_to_gcloud
-  #     # - server_docker_build:
-  #     #     requires:
-  #     #       - docker_build
-  # #     - server_docker_build_node_18:
-  # #         requires:
-  # #           - docker_build_node_18
-  #     - server_docker_build_node_20:
+      - docker_non_root_build_node_20:
+          requires:
+            - checkout_code
+            - harmony_publish_to_gcloud
+      # - server_docker_build:
+      #     requires:
+      #       - docker_build
+  #     - server_docker_build_node_18:
   #         requires:
-  #           - docker_build_node_20
+  #           - docker_build_node_18
+      - server_docker_build_node_20:
+          requires:
+            - docker_build_node_20
   # uncomment to print node version on windows default orb
   # windows_print_node_version_workflow:
   #   jobs:
