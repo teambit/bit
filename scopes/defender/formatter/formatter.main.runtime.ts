@@ -1,13 +1,14 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { FormatterAspect } from './formatter.aspect';
-import { FormatterService, FormatterServiceOptions } from './formatter.service';
+import { FormatterService } from './formatter.service';
 import { FormatTask } from './format.task';
 import { FormatCmd } from './format.cmd';
 import { FormatterOptions } from './formatter-context';
+import { Formatter } from './formatter';
 
 export type FormatterConfig = {};
 export class FormatterMain {
@@ -33,7 +34,11 @@ export class FormatterMain {
     return formatResults;
   }
 
-  private toFormatServiceOptions(opts: FormatterOptions, check = false): FormatterServiceOptions {
+  getFormatter(context: ExecutionContext, options: FormatterOptions): Formatter {
+    return this.formatterService.getFormatter(context, options);
+  }
+
+  private toFormatServiceOptions(opts: FormatterOptions, check = false): FormatterOptions {
     return {
       ...opts,
       check,

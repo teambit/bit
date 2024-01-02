@@ -20,14 +20,17 @@ export class CompositionsPreview {
     private preview: PreviewPreview
   ) {}
 
-  render(componentId: ComponentID, modules: PreviewModule, otherPreviewDefs, context: RenderingContext) {
+  render(componentId: ComponentID, envId: string, modules: PreviewModule, otherPreviewDefs, context: RenderingContext) {
     if (!modules.componentMap[componentId.fullName]) return;
 
     const compositions = this.selectPreviewModel(componentId.fullName, modules);
     const metadata = this.getMetadata(componentId.fullName, modules);
     const active = this.getActiveComposition(compositions, metadata);
 
-    modules.mainModule.default(active, context);
+    const mainModule = modules.modulesMap[envId] || modules.modulesMap.default;
+    const defaultExports = mainModule.default;
+
+    defaultExports(active, context);
   }
 
   /** gets relevant information for this preview to render */

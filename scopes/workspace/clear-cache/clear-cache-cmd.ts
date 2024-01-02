@@ -11,13 +11,13 @@ export default class ClearCacheCmd implements Command {
   options = [['r', 'remote <remote-name>', 'clear memory cache from a remote scope']] as CommandOptions;
   loader = false;
   skipWorkspace = true;
+  helpUrl = 'reference/workspace/clearing-cache';
 
-  constructor(private clearCache: ClearCacheMain, private docsDomain: string) {
+  constructor(private clearCache: ClearCacheMain) {
     this.extendedDescription = `The following gets removed by this command:
 1) V8 compiled code (generated the first time Bit is loaded by v8-compile-cache package)
 2) components cache on the filesystem (mainly the dependencies graph and docs)
-3) scope's index file, which maps the component-id:object-hash
-https://${docsDomain}/workspace/clearing-cache`;
+3) scope's index file, which maps the component-id:object-hash`;
   }
 
   async report(arg, { remote }: { remote?: string }): Promise<string> {
@@ -28,9 +28,19 @@ https://${docsDomain}/workspace/clearing-cache`;
       }
       return chalk.red(`failed cleaning the cache of "${remote}"`);
     }
-    const cacheCleared = await this.clearCache.clearCache();
-    const title = 'the following cache(s) have been cleared:';
-    const output = cacheCleared.map((str) => `  ✔ ${str}`).join('\n');
-    return chalk.green(`${chalk.bold(title)}\n${output}`);
+    const { succeed, failed } = await this.clearCache.clearCache();
+    const getSuccessOutput = () => {
+      if (!succeed.length) return '';
+      const title = 'the following cache(s) have been cleared:';
+      const output = succeed.map((str) => `  ✔ ${str}`).join('\n');
+      return chalk.green(`${chalk.bold(title)}\n${output}`);
+    };
+    const getFailedOutput = () => {
+      if (!failed.length) return '';
+      const title = 'the following cache(s) failed to clear:';
+      const output = failed.map((str) => `  X ${str}`).join('\n');
+      return chalk.red(`${chalk.bold(title)}\n${output}`);
+    };
+    return `${getSuccessOutput()}\n${getFailedOutput()}`;
   }
 }

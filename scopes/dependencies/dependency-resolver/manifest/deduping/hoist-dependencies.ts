@@ -45,7 +45,10 @@ type CombinationWithTotal = {
  * @param {PackageNameIndex} depIdIndex
  * @returns {DedupedDependencies}
  */
-export function hoistDependencies(depIdIndex: PackageNameIndex): DedupedDependencies {
+export function hoistDependencies(
+  depIdIndex: PackageNameIndex,
+  options?: { dedupePeerDependencies?: boolean }
+): DedupedDependencies {
   const result: DedupedDependencies = getEmptyDedupedDependencies();
 
   // TODO: handle git urls
@@ -57,7 +60,7 @@ export function hoistDependencies(depIdIndex: PackageNameIndex): DedupedDependen
     toContinue = addOneOccurrenceToRoot(result, packageName, indexItem.componentItems);
     if (!toContinue) return;
     toContinue = handlePeersOnly(result, packageName, indexItem.componentItems);
-    if (!toContinue) return;
+    if (!toContinue && !options?.dedupePeerDependencies) return;
     const groupedByRangeOrVersion = groupByRangeOrVersion(indexItem.componentItems);
     if (groupedByRangeOrVersion.versions.length > 0 && groupedByRangeOrVersion.ranges.length === 0) {
       handleExactVersionsOnly(result, packageName, indexItem.componentItems);
@@ -410,6 +413,7 @@ function addToComponentDependenciesMapInDeduped(
     if (!compEntry) {
       compEntry = {
         dependencies: {},
+        optionalDependencies: {},
         devDependencies: {},
         peerDependencies: {},
       };
@@ -434,31 +438,36 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexComponentItem[]): Ite
     versions: [],
   };
   indexItems.forEach((item) => {
-    const validRange = semver.validRange(item.range);
-    if (!validRange && !isHash(item.range)) {
-      throw new Error(
-        `fatal: the version "${item.range}" originated from a dependent "${item.origin}" is invalid semver range and not a hash`
-      );
-    }
-    if (!validRange && isHash(item.range)) {
-      result.versions.push(item);
-      return;
-    }
-    // parseRange does not support `*` as version
-    // `*` does not affect resulted version, it might be just ignored
-    if (validRange === '*') {
-      // to prevent empty `result.ranges`, it needs to be pushed
+    const isVersionRange = isRange(item.range, item.origin);
+    if (isVersionRange) {
       result.ranges.push(item);
-      return;
-    }
-    const parsed = parseRange(validRange);
-    if (parsed.condition === '=') {
+    } else {
       result.versions.push(item);
-      return;
     }
-    result.ranges.push(item);
   });
   return result;
+}
+
+export function isRange(version: string, compIdStr: string) {
+  const validRange = semver.validRange(version);
+  if (!validRange) {
+    if (!isHash(version) && !version.startsWith('workspace:')) {
+      throw new Error(
+        `fatal: the version "${version}" originated from a dependent "${compIdStr}" is invalid semver range and not a hash`
+      );
+    }
+    return false;
+  }
+  // parseRange does not support `*` as version
+  // `*` does not affect resulted version, it might be just ignored
+  if (validRange === '*') {
+    return true;
+  }
+  const parsed = parseRange(validRange);
+  if (parsed.condition === '=') {
+    return false;
+  }
+  return true;
 }
 
 // Taken from https://web.archive.org/web/20140418004051/http://dzone.com/snippets/calculate-all-combinations
@@ -495,6 +504,7 @@ export function getEmptyDedupedDependencies(): DedupedDependencies {
   const result: DedupedDependencies = {
     rootDependencies: {
       dependencies: {},
+      optionalDependencies: {},
       devDependencies: {},
       peerDependencies: {},
     },

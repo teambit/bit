@@ -1,6 +1,7 @@
-import type { AspectMain } from '@teambit/aspect';
+import { existsSync, readFileSync } from 'fs';
 import { ComponentType } from 'react';
-import { AspectDefinition } from '@teambit/aspect-loader';
+import type { AspectMain } from '@teambit/aspect';
+import { AspectDefinition, getAspectDirFromBvm } from '@teambit/aspect-loader';
 import { CacheAspect, CacheMain } from '@teambit/cache';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
@@ -30,6 +31,7 @@ import { UIAspect, UIRuntime } from './ui.aspect';
 import createWebpackConfig from './webpack/webpack.browser.config';
 import createSsrWebpackConfig from './webpack/webpack.ssr.config';
 import { StartPlugin, StartPluginOptions } from './start-plugin';
+import { BundleUiTask, BUNDLE_UI_HASH_FILENAME } from './bundle-ui.task';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
 
@@ -91,6 +93,7 @@ export type RuntimeOptions = {
    * name of the UI root to load.
    */
   uiRootName?: string;
+  uiRootAspectIdOrName?: string;
 
   /**
    * component selector pattern to load.
@@ -111,9 +114,16 @@ export type RuntimeOptions = {
    * determine whether to rebuild the UI before start.
    */
   rebuild?: boolean;
+
+  /**
+   * skip build the UI before start
+   */
+  skipUiBuild?: boolean;
 };
 
 export class UiMain {
+  private _isBundleUiServed = false;
+
   constructor(
     /**
      * Pubsub extension.
@@ -204,27 +214,28 @@ export class UiMain {
   /**
    * create a build of the given UI root.
    */
-  async build(uiRootName?: string): Promise<webpack.MultiStats | undefined> {
+  async build(uiRootAspectIdOrName?: string, customOutputPath?: string): Promise<webpack.MultiStats | undefined> {
     // TODO: change to MultiStats from webpack once they export it in their types
-    this.logger.debug(`build, uiRootName: "${uiRootName}"`);
-    const maybeUiRoot = this.getUi(uiRootName);
+    this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}"`);
+    const maybeUiRoot = this.getUi(uiRootAspectIdOrName);
 
-    if (!maybeUiRoot) throw new UnknownUI(uiRootName, this.possibleUis());
-    const [name, uiRoot] = maybeUiRoot;
+    if (!maybeUiRoot) throw new UnknownUI(uiRootAspectIdOrName, this.possibleUis());
+    const [uiRootAspectId, uiRoot] = maybeUiRoot;
 
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
     const ssr = uiRoot.buildOptions?.ssr || false;
-    const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name);
+    const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), uiRootAspectId);
+    const outputPath = customOutputPath || uiRoot.path;
 
-    const browserConfig = createWebpackConfig(uiRoot.path, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
-    const ssrConfig = ssr && createSsrWebpackConfig(uiRoot.path, [mainEntry], await this.publicDir(uiRoot));
+    const browserConfig = createWebpackConfig(outputPath, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
+    const ssrConfig = ssr && createSsrWebpackConfig(outputPath, [mainEntry], await this.publicDir(uiRoot));
 
     const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
     const compiler = webpack(config);
-    this.logger.debug(`build, uiRootName: "${uiRootName}" running webpack`);
+    this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" running webpack`);
     const compilerRun = promisify(compiler.run.bind(compiler));
     const results = await compilerRun();
-    this.logger.debug(`build, uiRootName: "${uiRootName}" completed webpack`);
+    this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" completed webpack`);
     if (!results) throw new UnknownBuildError();
     if (results?.hasErrors()) {
       this.clearConsole();
@@ -248,27 +259,39 @@ export class UiMain {
   /**
    * create a Bit UI runtime.
    */
-  async createRuntime({ uiRootName, pattern, dev, port, rebuild, verbose }: RuntimeOptions) {
-    const maybeUiRoot = this.getUi(uiRootName);
-    if (!maybeUiRoot) throw new UnknownUI(uiRootName, this.possibleUis());
+  async createRuntime({
+    uiRootName,
+    uiRootAspectIdOrName,
+    pattern,
+    dev,
+    port,
+    rebuild,
+    verbose,
+    skipUiBuild,
+  }: RuntimeOptions) {
+    // uiRootName to be deprecated
+    uiRootAspectIdOrName = uiRootName || uiRootAspectIdOrName;
+    const maybeUiRoot = this.getUi(uiRootAspectIdOrName);
+    if (!maybeUiRoot) throw new UnknownUI(uiRootAspectIdOrName, this.possibleUis());
 
-    const [name, uiRoot] = maybeUiRoot;
+    const [uiRootAspectId, uiRoot] = maybeUiRoot;
 
     const plugins = await this.initiatePlugins({
       verbose,
       pattern,
     });
 
-    if (this.componentExtension.isHost(name)) this.componentExtension.setHostPriority(name);
+    if (this.componentExtension.isHost(uiRootAspectId)) this.componentExtension.setHostPriority(uiRootAspectId);
 
+    const publicDir = await this.publicDir(uiRoot);
     const uiServer = UIServer.create({
       express: this.express,
       graphql: this.graphql,
       uiRoot,
-      uiRootExtension: name,
+      uiRootExtension: uiRootAspectId,
       ui: this,
       logger: this.logger,
-      publicDir: await this.publicDir(uiRoot),
+      publicDir,
       startPlugins: plugins,
     });
 
@@ -277,8 +300,16 @@ export class UiMain {
     if (dev) {
       await uiServer.dev({ portRange: port || this.config.portRange });
     } else {
-      await this.buildUI(name, uiRoot, rebuild);
-      await uiServer.start({ portRange: port || this.config.portRange });
+      if (!skipUiBuild) await this.buildUI(uiRootAspectId, uiRoot, rebuild);
+      const bundleUiPath = this.getBundleUiPath(uiRootAspectId);
+      const bundleUiPublicPath = bundleUiPath ? join(bundleUiPath, publicDir) : undefined;
+      const bundleUiRoot =
+        this._isBundleUiServed && bundleUiPublicPath && existsSync(bundleUiPublicPath || '')
+          ? bundleUiPublicPath
+          : undefined;
+      if (bundleUiRoot)
+        this.logger.debug(`UI createRuntime of ${uiRootAspectId}, bundle will be served from ${bundleUiRoot}`);
+      await uiServer.start({ portRange: port || this.config.portRange, bundleUiRoot });
     }
 
     this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, uiServer.port, uiRoot));
@@ -379,11 +410,11 @@ export class UiMain {
   /**
    * get a UI runtime instance.
    */
-  getUi(uiRootName?: string): [string, UIRoot] | undefined {
-    if (uiRootName) {
-      const root = this.uiRootSlot.get(uiRootName) || this.getUiByName(uiRootName);
+  getUi(uiRootAspectIdOrName?: string): [string, UIRoot] | undefined {
+    if (uiRootAspectIdOrName) {
+      const root = this.uiRootSlot.get(uiRootAspectIdOrName) || this.getUiByName(uiRootAspectIdOrName);
       if (!root) return undefined;
-      return [uiRootName, root];
+      return [uiRootAspectIdOrName, root];
     }
     const uis = this.uiRootSlot.toArray();
     if (uis.length === 1) return uis[0];
@@ -394,8 +425,8 @@ export class UiMain {
     return Boolean(this.componentExtension.getHost());
   }
 
-  getUiName(uiRootName?: string): string | undefined {
-    const [, ui] = this.getUi(uiRootName) || [];
+  getUiName(uiRootAspectIdOrName?: string): string | undefined {
+    const [, ui] = this.getUi(uiRootAspectIdOrName) || [];
     if (!ui) return undefined;
 
     return ui.name;
@@ -418,14 +449,22 @@ export class UiMain {
     runtimeName = UIRuntime.name,
     rootAspect = UIAspect.id,
     config?: object,
-    path?: string
+    path?: string,
+    ignoreVersion?: boolean,
+    addRuntimes?: boolean,
+    harmonyPackage?: string,
+    shouldRun = false
   ) {
     const contents = await createRoot(
       aspectDefs,
       rootExtensionName,
       rootAspect,
       runtimeName,
-      config || this.harmony.config.toObject()
+      config || this.harmony.config.toObject(),
+      ignoreVersion,
+      addRuntimes,
+      harmonyPackage,
+      shouldRun
     );
     const filepath = resolve(join(path || __dirname, `${runtimeName}.root${sha1(contents)}.js`));
     if (fs.existsSync(filepath)) return filepath;
@@ -442,33 +481,50 @@ export class UiMain {
     return port;
   }
 
-  private async buildUI(name: string, uiRoot: UIRoot, rebuild?: boolean): Promise<string> {
-    this.logger.debug(`buildUI, name ${name}`);
+  private async buildUI(uiRootAspectId: string, uiRoot: UIRoot, rebuild?: boolean): Promise<string> {
+    this.logger.debug(`buildUI, uiRootAspectId ${uiRootAspectId}`);
+
     const overwrite = this.getOverwriteBuildFn();
-    if (overwrite) return overwrite(name, uiRoot, rebuild);
-    const hash = await this.buildIfChanged(name, uiRoot, rebuild);
-    await this.buildIfNoBundle(name, uiRoot);
-    return hash;
+    if (overwrite) return overwrite(uiRootAspectId, uiRoot, rebuild);
+
+    this._isBundleUiServed = await this.shouldServeBundleUi(uiRootAspectId, uiRoot, rebuild);
+    await this.buildIfChanged(uiRootAspectId, uiRoot, rebuild);
+    await this.buildIfNoBundle(uiRootAspectId, uiRoot);
+    return '';
   }
 
-  async buildUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
-    const aspects = await uiRoot.resolveAspects(runtime);
-    aspects.sort((a, b) => (a.aspectPath > b.aspectPath ? 1 : -1));
-    const hash = aspects.map((aspect) => {
-      return [aspect.aspectPath, aspect.runtimePath].join('');
-    });
-    return sha1(hash.join(''));
-  }
-
-  async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined): Promise<string> {
-    this.logger.debug(`buildIfChanged, name ${name}`);
-    const hash = await this.buildUiHash(uiRoot);
-    const hashed = await this.cache.get(uiRoot.path);
-    if (hash === hashed && !force) {
-      this.logger.debug(`buildIfChanged, name ${name}, returned from cache`);
-      return hash;
+  private async shouldServeBundleUi(
+    uiRootAspectId: string,
+    uiRoot: UIRoot,
+    force: boolean | undefined
+  ): Promise<boolean> {
+    if (!uiRoot.buildOptions?.prebundle) {
+      return false;
     }
-    if (!hashed) {
+
+    const currentBundleUiHash = await this.createBundleUiHash(uiRoot);
+    const cachedBundleUiHash = this.readBundleUiHash(uiRootAspectId);
+    const isLocalBuildAvailable = existsSync(join(uiRoot.path, await this.publicDir(uiRoot)));
+
+    return currentBundleUiHash === cachedBundleUiHash && !isLocalBuildAvailable && !force;
+  }
+
+  async buildIfChanged(uiRootAspectId: string, uiRoot: UIRoot, force: boolean | undefined): Promise<boolean> {
+    this.logger.debug(`buildIfChanged, uiRootAspectId ${uiRootAspectId}`);
+
+    if (this._isBundleUiServed) {
+      this.logger.debug(`buildIfChanged, uiRootAspectId ${uiRootAspectId}, returned from ui bundle cache`);
+      return false;
+    }
+
+    const currentBuildUiHash = await this.createBuildUiHash(uiRoot);
+    const cachedBuildUiHash = await this.cache.get(uiRoot.path);
+    if (currentBuildUiHash === cachedBuildUiHash && !force) {
+      this.logger.debug(`buildIfChanged, uiRootAspectId ${uiRootAspectId}, returned from ui build cache`);
+      return false;
+    }
+
+    if (!cachedBuildUiHash) {
       this.logger.console(
         `Building UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(
           await this.publicDir(uiRoot)
@@ -482,26 +538,75 @@ export class UiMain {
       );
     }
 
-    await this.build(name);
+    await this.build(uiRootAspectId);
+    await this.cache.set(uiRoot.path, currentBuildUiHash);
+    return true;
+  }
+
+  private async createBuildUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
+    const aspects = await uiRoot.resolveAspects(runtime);
+    aspects.sort((a, b) => (a.aspectPath > b.aspectPath ? 1 : -1));
+    const aspectPathStrings = aspects.map((aspect) => {
+      return [aspect.aspectPath, aspect.runtimePath].join('');
+    });
+    return sha1(aspectPathStrings.join(''));
+  }
+
+  /**
+   * Generate hash for a given root
+   * This API is public and used by external users, do not rename this function
+   */
+  async buildUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
+    return this.createBuildUiHash(uiRoot, runtime);
+  }
+
+  async createBundleUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
+    const aspects = await uiRoot.resolveAspects(runtime);
+    aspects.sort((a, b) => ((a.getId || a.aspectPath) > (b.getId || b.aspectPath) ? 1 : -1));
+    const aspectIds = aspects.map((aspect) => aspect.getId || aspect.aspectPath);
+    return sha1(aspectIds.join(''));
+  }
+
+  private readBundleUiHash(uiRootAspectId: string) {
+    const bundleUiPathFromBvm = this.getBundleUiPath(uiRootAspectId);
+    if (!bundleUiPathFromBvm) {
+      return '';
+    }
+    const hashFilePath = join(bundleUiPathFromBvm, BUNDLE_UI_HASH_FILENAME);
+    if (existsSync(hashFilePath)) {
+      return readFileSync(hashFilePath).toString();
+    }
+    return '';
+  }
+
+  private getBundleUiPath(uiRootAspectId: string): string | undefined {
+    try {
+      const uiPathFromBvm = getAspectDirFromBvm(UIAspect.id);
+      return join(uiPathFromBvm, BundleUiTask.getArtifactDirectory(uiRootAspectId));
+    } catch (err) {
+      this.logger.error(`getBundleUiPath, getAspectDirFromBvm failed with err: ${err}`);
+      return undefined;
+    }
+  }
+
+  private async buildIfNoBundle(uiRootAspectId: string, uiRoot: UIRoot): Promise<boolean> {
+    if (this._isBundleUiServed) return false;
+
+    const config = createWebpackConfig(
+      uiRoot.path,
+      [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), uiRootAspectId)],
+      uiRoot.name,
+      await this.publicDir(uiRoot)
+    );
+    if (config.output?.path && fs.pathExistsSync(config.output.path)) return false;
+    const hash = await this.createBuildUiHash(uiRoot);
+    await this.build(uiRootAspectId);
     await this.cache.set(uiRoot.path, hash);
-    return hash;
+    return true;
   }
 
   clearConsole() {
     process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
-  }
-
-  async buildIfNoBundle(name: string, uiRoot: UIRoot) {
-    const config = createWebpackConfig(
-      uiRoot.path,
-      [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
-      uiRoot.name,
-      await this.publicDir(uiRoot)
-    );
-    if (config.output?.path && fs.pathExistsSync(config.output.path)) return;
-    const hash = await this.buildUiHash(uiRoot);
-    await this.build(name);
-    await this.cache.set(uiRoot.path, hash);
   }
 
   get publicUrl() {
@@ -566,7 +671,9 @@ export class UiMain {
       harmony,
       proxyGetterSlot
     );
+
     cli.register(new StartCmd(ui, logger), new UIBuildCmd(ui));
+
     return ui;
   }
 }

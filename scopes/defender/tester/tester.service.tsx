@@ -2,7 +2,7 @@ import { Logger } from '@teambit/logger';
 import { resolve } from 'path';
 import React from 'react';
 import { Text, Newline } from 'ink';
-import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
+import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import { ComponentMap } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
 import highlight from 'cli-highlight';
@@ -16,6 +16,10 @@ import { detectTestFiles } from './utils';
 const chalk = require('chalk');
 
 export const OnTestsChanged = 'OnTestsChanged';
+
+type TesterTransformationMap = ServiceTransformationMap & {
+  getTester: () => Tester;
+};
 
 export type TesterDescriptor = {
   /**
@@ -91,6 +95,15 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     };
   }
 
+  transform(env: Env, context: EnvContext): TesterTransformationMap | undefined {
+    // Old env
+    if (!env?.tester) return undefined;
+
+    return {
+      getTester: () => env.tester()(context),
+    };
+  }
+
   onTestRunComplete(callback: CallbackFn) {
     this._callback = callback;
   }
@@ -108,18 +121,21 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     }, 0);
 
     if (testCount === 0 && !options.ui) {
-      this.logger.consoleWarning(`no tests found for environment ${chalk.cyan(context.id)}\n`);
+      this.logger.consoleWarning(`no tests found for components using environment ${chalk.cyan(context.id)}\n`);
       return new Tests([]);
     }
 
     if (!options.ui)
       this.logger.console(`testing ${componentWithTests} components with environment ${chalk.cyan(context.id)}\n`);
 
-    const patterns = ComponentMap.as(context.components, (component) => {
+    const patterns = await ComponentMap.asAsync(context.components, async (component) => {
       const componentDir = this.workspace.componentDir(component.id);
       const componentPatterns = this.devFiles.getDevPatterns(component, TesterAspect.id);
+      const packageRootDir = await this.workspace.getComponentPackagePath(component);
+
       return {
         componentDir,
+        packageRootDir,
         paths:
           componentPatterns.map((pattern: string) => ({
             path: resolve(componentDir, pattern),

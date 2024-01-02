@@ -3,13 +3,17 @@ import { Component, ComponentID } from '@teambit/component';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { BitError } from '@teambit/bit-error';
 import { Scope } from '@teambit/legacy/dist/scope';
+import fsx from 'fs-extra';
 import mapSeries from 'p-map-series';
+import { join } from 'path';
 import execa from 'execa';
 import { PkgAspect } from './pkg.aspect';
+import { PkgExtensionConfig } from './pkg.main.runtime';
+import { DEFAULT_TAR_DIR_IN_CAPSULE } from './packer';
 
 export type PublisherOptions = {
   dryRun?: boolean;
@@ -48,6 +52,14 @@ export class Publisher {
   private async publishOneCapsule(capsule: Capsule): Promise<ComponentResult> {
     const startTime = Date.now();
     const publishParams = ['publish'];
+    const tarFolderPath = join(capsule.path, DEFAULT_TAR_DIR_IN_CAPSULE);
+    const files = fsx.readdirSync(tarFolderPath);
+    const tarPath = files.find((file) => file.endsWith('.tgz'));
+    let cwd = capsule.path;
+    if (tarPath) {
+      cwd = tarFolderPath;
+      publishParams.push(tarPath);
+    }
     if (this.options.dryRun) publishParams.push('--dry-run');
     publishParams.push(...this.getTagFlagForPreRelease(capsule.component.id));
     const extraArgs = this.getExtraArgsFromConfig(capsule.component);
@@ -56,23 +68,23 @@ export class Publisher {
       publishParams.push(...extraArgsSplit);
     }
     const publishParamsStr = publishParams.join(' ');
-    const cwd = capsule.path;
+
     const componentIdStr = capsule.id.toString();
     const errors: string[] = [];
     let metadata: TaskMetadata = {};
     try {
+      this.logger.off();
       // @todo: once capsule.exec works properly, replace this
-      const { stdout, stderr } = await execa(this.packageManager, publishParams, { cwd });
+      // It is important to use stdio: 'inherit' so when npm asks for the OTP, the user can enter it
+      await execa(this.packageManager, publishParams, { cwd, stdio: 'inherit' });
+      this.logger.on();
       this.logger.debug(`${componentIdStr}, successfully ran ${this.packageManager} ${publishParamsStr} at ${cwd}`);
-      this.logger.debug(`${componentIdStr}, stdout: ${stdout}`);
-      this.logger.debug(`${componentIdStr}, stderr: ${stderr}`);
-      const publishedPackage = stdout.replace('+ ', ''); // npm adds "+ " prefix before the published package
-      metadata = this.options.dryRun ? {} : { publishedPackage };
+      const pkg = await fsx.readJSON(`${capsule.path}/package.json`);
+      metadata = this.options.dryRun ? {} : { publishedPackage: `${pkg.name}@${pkg.version}` };
     } catch (err: any) {
       const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}`;
       this.logger.error(`${componentIdStr}, ${errorMsg}`);
-      if (err.stderr) this.logger.error(`${componentIdStr}, ${err.stderr}`);
-      errors.push(`${errorMsg}\n${err.stderr}`);
+      errors.push(errorMsg);
     }
     const component = capsule.component;
     return { component, metadata, errors, startTime, endTime: Date.now() };
@@ -102,18 +114,20 @@ export class Publisher {
    */
   private async getIdsToPublish(componentIds: ComponentID[]): Promise<string[]> {
     await this.throwForNonStagedOrTaggedComponents(componentIds);
-    const ids = BitIds.fromArray(componentIds.map((compId) => compId._legacy));
+    const ids = ComponentIdList.fromArray(componentIds);
     const components = await this.scope.getComponentsAndVersions(ids, true);
     return components
       .filter((c) => this.shouldPublish(c.version.extensions))
-      .map((c) => c.component.toBitId().changeVersion(c.versionStr).toString());
+      .map((c) => c.component.toComponentId().changeVersion(c.versionStr).toString());
   }
 
   // TODO: consider using isPublishedToExternalRegistry from pkg.main.runtime (need to send it a component not extensions)
   public shouldPublish(extensions: ExtensionDataList): boolean {
     const pkgExt = extensions.findExtension(PkgAspect.id);
     if (!pkgExt) return false;
-    return pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig;
+    const config = pkgExt.config as PkgExtensionConfig;
+    if (config?.avoidPublishToNPM) return false;
+    return config?.packageJson?.name || config?.packageJson?.publishConfig;
   }
 
   private getExtraArgsFromConfig(component: Component): string | undefined {
@@ -122,7 +136,7 @@ export class Publisher {
   }
 
   private async throwForNonStagedOrTaggedComponents(componentIds: ComponentID[]) {
-    const idsWithoutScope = componentIds.filter((id) => !id._legacy.hasScope());
+    const idsWithoutScope = componentIds.filter((id) => !this.scope.isExported(id));
     if (!idsWithoutScope.length) return;
     if (!this.options.allowStaged && !this.options.dryRun) {
       throw new BitError(
@@ -134,7 +148,7 @@ export class Publisher {
     const missingFromScope: ComponentID[] = [];
     await Promise.all(
       idsWithoutScope.map(async (id) => {
-        const inScope = await this.scope.isComponentInScope(id._legacy);
+        const inScope = await this.scope.isComponentInScope(id);
         if (!inScope) {
           missingFromScope.push(id);
         }

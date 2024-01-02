@@ -1,5 +1,5 @@
 import { BitObject } from '.';
-import { ExportMetadata, Lane, ModelComponent, Version } from '../models';
+import { ExportMetadata, Lane, ModelComponent, Version, VersionHistory } from '../models';
 
 export class BitObjectList {
   constructor(private objects: BitObject[]) {}
@@ -14,6 +14,10 @@ export class BitObjectList {
 
   getLanes(): Lane[] {
     return this.objects.filter((object) => object instanceof Lane) as Lane[];
+  }
+
+  getVersionHistories(): VersionHistory[] {
+    return this.objects.filter((object) => object instanceof VersionHistory) as VersionHistory[];
   }
 
   getAll(): BitObject[] {
@@ -42,6 +46,6 @@ export class BitObjectList {
   }
 
   private objectTypesRequireMerge() {
-    return [ModelComponent, Lane];
+    return [ModelComponent, Lane, VersionHistory];
   }
 }

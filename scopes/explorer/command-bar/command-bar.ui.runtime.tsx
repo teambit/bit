@@ -137,7 +137,13 @@ export class CommandBarUI {
   /**
    * generate the ui for command bar
    */
-  CommandBar = ({ ResultComponent }: { ResultComponent?: ComponentType<ResultsComponentProps> }) => {
+  CommandBar = ({
+    ResultComponent,
+    onEnter,
+  }: {
+    ResultComponent?: ComponentType<ResultsComponentProps>;
+    onEnter?: (value: string) => void;
+  }) => {
     const [visible, setVisibility] = useState(false);
     this.setVisibility = setVisibility;
 
@@ -148,6 +154,7 @@ export class CommandBarUI {
     return (
       <CommandBar
         {...results}
+        onEnter={onEnter}
         key="CommandBarUI"
         className={styles.commanderUi}
         placeholder="Search anything or type > to only search commands"

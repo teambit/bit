@@ -160,7 +160,7 @@ describe('track directories functionality', function () {
       });
       it('should not change the rootDir', () => {
         const bitMap = helper.bitMap.read();
-        helper.bitMap.expectToHaveIdHarmony('utils/bar', '0.0.1', helper.scopes.remote);
+        helper.bitMap.expectToHaveId('utils/bar', '0.0.1', helper.scopes.remote);
         expect(bitMap['utils/bar'].rootDir).to.equal('utils/bar');
       });
     });

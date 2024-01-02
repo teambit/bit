@@ -6,7 +6,7 @@
     "character": 1
   },
   "module": {
-    "__schema": "Module",
+    "__schema": "ModuleSchema",
     "location": {
       "file": "index.ts",
       "line": 13,

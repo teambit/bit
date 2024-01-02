@@ -1,22 +1,96 @@
 import React, { useMemo } from 'react';
 import classnames from 'classnames';
+import { ResponsiveNavbar } from '@teambit/design.navigation.responsive-navbar';
+import type { TabProps } from '@teambit/design.navigation.responsive-navbar';
 import { TopBarNav } from '../top-bar-nav';
 import styles from './menu.module.scss';
 import { NavPlugin, OrderedNavigationSlot } from './nav-plugin';
 
 export type MenuNavProps = {
-  navigationSlot: OrderedNavigationSlot;
+  /**
+   * @deprecated
+   * use @property navPlugins
+   */
+  navigationSlot?: OrderedNavigationSlot;
+  /**
+   * @deprecated
+   * use @property widgetPlugins
+   */
+  widgetSlot?: OrderedNavigationSlot;
+  navPlugins?: [string, NavPlugin][];
+  widgetPlugins?: [string, NavPlugin][];
+  /**
+   * A className to pass to the secondary nav, i.e dropdown
+   */
+  secondaryNavClassName?: string;
+  activeTabIndex?: number;
+  alwaysShowActiveTab?: boolean;
 } & React.HTMLAttributes<HTMLElement>;
 
-export function MenuNav({ navigationSlot, className }: MenuNavProps) {
-  const plugins = useMemo(() => navigationSlot.toArray().sort(sortFn), [navigationSlot]);
+function TopBarNavComponent({ isInMenu, menuItemProps }: TabProps) {
+  /**
+   * to accommodate for the top level nav which should display the children
+   * in the dropdown secondary menu if there is a displayName set
+   */
+  const widgetDisplayText = menuItemProps?.displayName && isInMenu ? menuItemProps?.displayName : undefined;
+  return (
+    <TopBarNav
+      {...menuItemProps}
+      className={classnames(menuItemProps?.className, styles.topBarNav, isInMenu && styles.noBorder)}
+    >
+      {widgetDisplayText || menuItemProps?.children}
+    </TopBarNav>
+  );
+}
+
+export function CollapsibleMenuNav({
+  navigationSlot,
+  widgetSlot,
+  navPlugins = [],
+  widgetPlugins = [],
+  className,
+  secondaryNavClassName,
+  activeTabIndex,
+  alwaysShowActiveTab,
+  children,
+}: MenuNavProps) {
+  const plugins = useMemo(() => {
+    const _navPlugins = navPlugins.length > 0 ? navPlugins : navigationSlot?.toArray();
+    return (_navPlugins || []).sort(sortFn);
+  }, [navigationSlot, navPlugins]);
+  const widgets = useMemo(() => {
+    const _widgetPlugins = widgetPlugins.length > 0 ? widgetPlugins : widgetSlot?.toArray();
+    return (_widgetPlugins || []).sort(sortFn);
+  }, [widgetSlot, widgetPlugins]);
+
+  const links = [...plugins, ...widgets].map(([, menuItem], index) => {
+    // these styles keep plugins to the left and widgets to the right.
+    const lastPluginStyle = plugins.length - 1 === index ? { marginRight: 'auto' } : {};
+
+    const firstWidgetStyle = plugins.length === index ? { marginLeft: 'auto' } : {};
+
+    return {
+      component: TopBarNavComponent,
+      tabProps: {
+        menuItemProps: menuItem.props,
+      },
+      style: { ...firstWidgetStyle, ...lastPluginStyle },
+      className: menuItem.props.className,
+    };
+  });
 
   return (
-    <nav className={classnames(styles.navigation, styles.desktopNav, className)}>
-      {plugins.map(([id, menuItem]) => {
-        return <TopBarNav key={id} {...menuItem.props} />;
-      })}
-    </nav>
+    <ResponsiveNavbar
+      navClassName={classnames(styles.tab, className)}
+      secondaryNavClassName={secondaryNavClassName}
+      style={{ width: '100%', height: '100%' }}
+      priority="none"
+      tabs={links}
+      defaultActiveIndex={activeTabIndex}
+      alwaysShowActiveTab={alwaysShowActiveTab}
+    >
+      {children}
+    </ResponsiveNavbar>
   );
 }
 

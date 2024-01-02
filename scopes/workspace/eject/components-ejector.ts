@@ -9,7 +9,7 @@
  */
 import { Workspace } from '@teambit/workspace';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import defaultErrorHandler from '@teambit/legacy/dist/cli/default-error-handler';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -19,29 +19,28 @@ import * as packageJsonUtils from '@teambit/legacy/dist/consumer/component/packa
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { Logger } from '@teambit/logger';
-import { ComponentID } from '@teambit/component-id';
 import { InstallMain } from '@teambit/install';
 
 export type EjectResults = {
-  ejectedComponents: BitIds;
+  ejectedComponents: ComponentIdList;
   failedComponents: FailedComponents;
 };
 
 export type EjectOptions = {
-  force: boolean; // eject although a component is modified/staged
-  keepFiles: boolean; // keep component files on the workspace
+  force?: boolean; // eject although a component is modified/staged
+  keepFiles?: boolean; // keep component files on the workspace
 };
 
 type FailedComponents = {
-  modifiedComponents: BitIds;
-  stagedComponents: BitIds;
-  notExportedComponents: BitIds;
-  selfHostedExportedComponents: BitIds;
+  modifiedComponents: ComponentIdList;
+  stagedComponents: ComponentIdList;
+  notExportedComponents: ComponentIdList;
+  selfHostedExportedComponents: ComponentIdList;
 };
 
 export class ComponentsEjector {
   consumer: Consumer;
-  idsToEject: BitIds;
+  idsToEject: ComponentIdList;
   componentsToEject: Component[] = [];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   notEjectedDependents: Array<{ dependent: Component; ejectedDependencies: Component[] }>;
@@ -56,12 +55,12 @@ export class ComponentsEjector {
     private ejectOptions: EjectOptions
   ) {
     this.consumer = this.workspace.consumer;
-    this.idsToEject = new BitIds();
+    this.idsToEject = new ComponentIdList();
     this.failedComponents = {
-      modifiedComponents: new BitIds(),
-      stagedComponents: new BitIds(),
-      notExportedComponents: new BitIds(),
-      selfHostedExportedComponents: new BitIds(),
+      modifiedComponents: new ComponentIdList(),
+      stagedComponents: new ComponentIdList(),
+      notExportedComponents: new ComponentIdList(),
+      selfHostedExportedComponents: new ComponentIdList(),
     };
   }
 
@@ -88,10 +87,10 @@ export class ComponentsEjector {
     this.logger.setStatusLine('Eject: getting the components status');
     if (!this.componentsIds.length) return;
     const remotes = await getScopeRemotes(this.consumer.scope);
-    const hubExportedComponents = new BitIds();
+    const hubExportedComponents = new ComponentIdList();
     this.componentsIds.forEach((componentId) => {
-      const bitId = componentId._legacy;
-      if (!bitId.hasScope()) this.failedComponents.notExportedComponents.push(bitId);
+      const bitId = componentId;
+      if (!this.workspace.isExported(bitId)) this.failedComponents.notExportedComponents.push(bitId);
       else if (remotes.isHub(bitId.scope as string)) hubExportedComponents.push(bitId);
       else this.failedComponents.selfHostedExportedComponents.push(bitId);
     });
@@ -119,7 +118,8 @@ export class ComponentsEjector {
   }
 
   async loadComponentsToEject() {
-    const { components } = await this.consumer.loadComponents(this.idsToEject);
+    // TODO: check if we really need the { loadExtensions: true } here
+    const { components } = await this.consumer.loadComponents(this.idsToEject, undefined, { loadExtensions: true });
     this.componentsToEject = components;
   }
 

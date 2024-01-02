@@ -143,7 +143,6 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -164,7 +163,6 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -190,7 +188,6 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -215,7 +212,6 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -239,7 +235,6 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -274,7 +269,6 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();

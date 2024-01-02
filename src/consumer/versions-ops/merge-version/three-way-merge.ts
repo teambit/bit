@@ -22,10 +22,14 @@ export type MergeResultsThreeWay = {
   remainDeletedFiles: Array<{
     filePath: PathLinux;
   }>;
+  deletedConflictFiles: Array<{
+    filePath: PathLinux;
+    fsFile?: SourceFile;
+  }>;
   modifiedFiles: Array<{
     filePath: PathLinux;
     fsFile: SourceFile;
-    baseFile: SourceFileModel;
+    baseFile?: SourceFileModel;
     otherFile: SourceFileModel;
     output: string | null | undefined;
     conflict: string | null | undefined;
@@ -96,6 +100,7 @@ export default async function threeWayMergeVersions({
     addFiles: [],
     removeFiles: [],
     remainDeletedFiles: [],
+    deletedConflictFiles: [],
     modifiedFiles: [],
     unModifiedFiles: [],
     overrideFiles: [],
@@ -104,6 +109,8 @@ export default async function threeWayMergeVersions({
   };
   const getFileResult = async (fsFile: SourceFile, baseFile?: SourceFileModel, otherFile?: SourceFileModel) => {
     const filePath: PathLinux = pathNormalizeToLinux(fsFile.relative);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const fsFileHash = sha1(fsFile.contents);
     if (!otherFile) {
       // if !otherFile && !baseFile, the file was created after the last tag, no need to do any
       // calculation, the file should be added
@@ -111,26 +118,21 @@ export default async function threeWayMergeVersions({
         results.addFiles.push({ filePath, fsFile });
         return;
       }
-      // if !otherFile && baseFile, the file was created as part of the last tag but not
-      // available on the other, so it needs to be removed.
-      results.removeFiles.push({ filePath });
+      const baseFileHash = baseFile.file.hash;
+      if (fsFileHash === baseFileHash) {
+        results.removeFiles.push({ filePath });
+        return;
+      }
+      results.deletedConflictFiles.push({ filePath });
       return;
     }
-    if (!baseFile) {
-      // if otherFile && !baseFile, the file was deleted as part of the last tag
-      results.overrideFiles.push({ filePath, fsFile });
-      return;
-    }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const fsFileHash = sha1(fsFile.contents);
-    const baseFileHash = baseFile.file.hash;
     const otherFileHash = otherFile.file.hash;
     if (fsFileHash === otherFileHash) {
       // if fs === other, no need to take any action (regardless the base)
       results.unModifiedFiles.push({ filePath, fsFile });
       return;
     }
-    if (fsFileHash === baseFileHash) {
+    if (baseFile && fsFileHash === baseFile.file.hash) {
       // the file has no local modification.
       // the file currently in the fs, is not the same as the file we want to write (other).
       // but no need to check whether it has conflicts because we always want to write the other.
@@ -138,7 +140,7 @@ export default async function threeWayMergeVersions({
       results.updatedFiles.push({ filePath, otherFile, content: content.contents });
       return;
     }
-    // it was changed in both, there is a chance for conflict
+    // it was changed in both, there is a chance for conflict. (regardless the base)
     fsFile.label = currentLabel;
     // @ts-ignore it's a hack to pass the data, version is not a valid attribute.
     otherFile.label = otherLabel;
@@ -155,18 +157,39 @@ export default async function threeWayMergeVersions({
   );
   const fsFilesPaths = currentFiles.map((fsFile) => pathNormalizeToLinux(fsFile.relative));
   const baseFilesPaths = baseFiles.map((baseFile) => baseFile.relativePath);
+  const isOtherSameAsBase = (otherFile: SourceFileModel) => {
+    const baseFile = baseFiles.find((file) => file.relativePath === otherFile.relativePath);
+    if (!baseFile) throw new Error('isOtherSameAsBase expect the base to be there');
+    return baseFile.file.hash === otherFile.file.hash;
+  };
   const deletedFromFs = otherFiles.filter(
-    (otherFile) => !fsFilesPaths.includes(otherFile.relativePath) && baseFilesPaths.includes(otherFile.relativePath)
+    (otherFile) =>
+      !fsFilesPaths.includes(otherFile.relativePath) &&
+      baseFilesPaths.includes(otherFile.relativePath) &&
+      isOtherSameAsBase(otherFile)
+  );
+  const deletedAndModified = otherFiles.filter(
+    (otherFile) =>
+      !fsFilesPaths.includes(otherFile.relativePath) &&
+      baseFilesPaths.includes(otherFile.relativePath) &&
+      !isOtherSameAsBase(otherFile)
   );
   const addedOnOther = otherFiles.filter(
     (otherFile) => !fsFilesPaths.includes(otherFile.relativePath) && !baseFilesPaths.includes(otherFile.relativePath)
   );
   deletedFromFs.forEach((file) => results.remainDeletedFiles.push({ filePath: file.relativePath }));
+  deletedAndModified.forEach((file) => results.deletedConflictFiles.push({ filePath: file.relativePath }));
 
   await Promise.all(
     addedOnOther.map(async (file) => {
       const fsFile = await SourceFile.loadFromSourceFileModel(file, consumer.scope.objects);
       results.addFiles.push({ filePath: file.relativePath, fsFile });
+    })
+  );
+  await Promise.all(
+    deletedAndModified.map(async (file) => {
+      const fsFile = await SourceFile.loadFromSourceFileModel(file, consumer.scope.objects);
+      results.deletedConflictFiles.push({ filePath: file.relativePath, fsFile });
     })
   );
   if (R.isEmpty(results.modifiedFiles)) return results;
@@ -197,7 +220,7 @@ async function getMergeResults(
       // @ts-ignore
       return tmp.save(content.contents.toString());
     };
-    const baseFilePathP = writeFile(modifiedFile.baseFile);
+    const baseFilePathP = modifiedFile.baseFile ? writeFile(modifiedFile.baseFile) : tmp.save('');
     const otherFilePathP = writeFile(modifiedFile.otherFile);
     const [fsFilePath, baseFilePath, otherFilePath] = await Promise.all([fsFilePathP, baseFilePathP, otherFilePathP]);
     const mergeFilesParams: MergeFileParams = {

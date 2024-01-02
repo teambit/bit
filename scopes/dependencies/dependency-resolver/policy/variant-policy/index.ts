@@ -1,2 +1,10 @@
-export { VariantPolicy, VariantPolicyConfigObject, SerializedVariantPolicy } from './variant-policy';
-export { VariantPolicyFactory } from './variant-policy-factory';
+export {
+  VariantPolicy,
+  VariantPolicyConfigObject,
+  VariantPolicyFromConfigObjectOptions,
+  SerializedVariantPolicy,
+  VariantPolicyEntry,
+  VariantPolicyEntryValue,
+  createVariantPolicyEntry,
+  DependencySource,
+} from './variant-policy';

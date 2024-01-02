@@ -10,28 +10,41 @@ export class PkgUI {
   static dependencies = [ComponentAspect];
 
   static async provider([componentUI]: [ComponentUI]) {
-    const pkg = new PkgUI();
+    const pkg = new PkgUI(componentUI);
     componentUI.registerConsumeMethod(pkg.npmConsumeMethod);
     return pkg;
   }
 
-  private npmConsumeMethod: ConsumePlugin = (comp, options) => {
-    if (options?.currentLane) return undefined;
+  constructor(private compUI: ComponentUI) {}
 
-    const registry = comp.packageName.split('/')[0];
-    const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
+  private npmConsumeMethod: ConsumePlugin = ({
+    packageName: packageNameFromProps,
+    latest: latestFromProps,
+    id: componentId,
+    options,
+    componentModel,
+  }) => {
+    const packageName = componentModel?.packageName || packageNameFromProps;
+    const latest = componentModel?.latest || latestFromProps;
+
+    const registry = packageName.split('/')[0];
+
+    const packageVersion =
+      componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version as string)}`;
+
     return {
       Title: <img style={{ width: '30px' }} src="https://static.bit.dev/brands/logo-npm-new.svg" />,
-      Component: (
+      Component: !options?.hide ? (
         <Install
-          config={`npm config set '${registry}:registry' https://node.bit.cloud`}
-          componentName={comp.id.name}
+          config={`npm config set '${registry}:registry' https://node-registry.bit.cloud`}
+          componentName={componentId.name}
           packageManager="npm"
-          copyString={`npm i ${comp.packageName}${packageVersion}`}
+          copyString={`npm i ${packageName}${packageVersion}`}
           registryName={registry}
+          isInstallable={!options?.disableInstall}
         />
-      ),
-      order: 10,
+      ) : null,
+      order: 30,
     };
   };
 }

@@ -468,7 +468,7 @@ export const descriptorMock = ComponentDescriptor.fromObject({
                     },
                     devDependencies: {
                       '@types/testing-library__jest-dom': '5.9.5',
-                      '@babel/runtime': '7.12.18',
+                      '@babel/runtime': '7.20.0',
                       '@types/jest': '^26.0.0',
                       '@types/react-dom': '^17.0.5',
                       '@types/react': '^17.0.8',
@@ -488,7 +488,7 @@ export const descriptorMock = ComponentDescriptor.fromObject({
                         },
                         devDependencies: {
                           '@types/testing-library__jest-dom': '5.9.5',
-                          '@babel/runtime': '7.12.18',
+                          '@babel/runtime': '7.20.0',
                           '@types/jest': '^26.0.0',
                           '@types/react-dom': '^17.0.5',
                           '@types/react': '^17.0.8',

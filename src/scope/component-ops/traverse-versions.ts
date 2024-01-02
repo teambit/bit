@@ -13,7 +13,8 @@
 import memoize from 'memoizee';
 import pMapSeries from 'p-map-series';
 import { HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
-import { ModelComponent, Version } from '../models';
+import type { ModelComponent, Version } from '../models';
+import type { VersionParents } from '../models/version-history';
 import { Ref, Repository } from '../objects';
 
 export type VersionInfo = {
@@ -63,17 +64,13 @@ export async function getAllVersionsInfo({
     if (repo) return (await ref.load(repo)) as Version;
     return undefined;
   };
-  const getRefToStartFrom = () => {
-    if (typeof startFrom !== 'undefined') return startFrom;
-    return modelComponent.getHeadRegardlessOfLane();
-  };
-
-  const laneHead = getRefToStartFrom();
-  const headOnMain = modelComponent.getHead()?.toString();
-  let foundOnMain = laneHead?.toString() === headOnMain;
+  const laneHead = getRefToStartFrom(modelComponent, startFrom);
   if (!laneHead) {
     return results;
   }
+  const headOnMain = modelComponent.getHead()?.toString();
+  let foundOnMain = laneHead.toString() === headOnMain;
+
   const headInfo: VersionInfo = {
     ref: laneHead,
     tag: modelComponent.getTagOfRefIfExists(laneHead),
@@ -127,36 +124,35 @@ export async function getAllVersionsInfo({
   return results;
 }
 
-export async function getAllVersionsObjects(
-  modelComponent: ModelComponent,
-  repo: Repository,
-  throws = true
-): Promise<Version[]> {
-  const allVersionsInfo = await getAllVersionsInfo({ modelComponent, repo, throws });
-  return allVersionsInfo.map((a) => a.version).filter((a) => a) as Version[];
-}
-
-export async function getAllVersionHashesByVersionsObjects(
-  modelComponent: ModelComponent,
-  versionObjects: Version[],
-  throws = true
-): Promise<Ref[]> {
-  const allVersionsInfo = await getAllVersionsInfo({ modelComponent, throws, versionObjects });
-  return allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
+function getRefToStartFrom(modelComponent: ModelComponent, startFrom?: null | Ref) {
+  if (typeof startFrom !== 'undefined') return startFrom;
+  return modelComponent.getHeadRegardlessOfLane();
 }
 
 export type GetAllVersionHashesParams = {
   modelComponent: ModelComponent;
   repo: Repository;
   throws?: boolean; // in case objects are missing. by default, it's true
-  versionObjects?: Version[];
+  versionParentsFromObjects?: VersionParents[];
   startFrom?: Ref | null; // by default, start from the head
-  stopAt?: Ref[] | null; // by default, stop when the parents is empty
+  stopAt?: Ref[]; // by default, stop when the parents is empty
 };
 
 export async function getAllVersionHashes(options: GetAllVersionHashesParams): Promise<Ref[]> {
-  const allVersionsInfo = await getAllVersionsInfo(options);
-  return allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
+  const { repo, modelComponent, throws, versionParentsFromObjects, startFrom, stopAt } = options;
+  const head = getRefToStartFrom(modelComponent, startFrom);
+  if (!head) {
+    return [];
+  }
+  const versionParents = await getAllVersionParents({
+    repo,
+    modelComponent,
+    throws,
+    versionParentsFromObjects,
+    heads: [head],
+  });
+  const subsetOfVersionParents = getSubsetOfVersionParents(versionParents, head, stopAt);
+  return subsetOfVersionParents.map((s) => s.hash);
 }
 
 export const getAllVersionHashesMemoized = memoize(getAllVersionHashes, {
@@ -173,4 +169,113 @@ export async function hasVersionByRef(
 ): Promise<boolean> {
   const allVersionHashes = await getAllVersionHashes({ modelComponent, repo, startFrom });
   return allVersionHashes.some((hash) => hash.isEqual(ref));
+}
+
+export async function getAllVersionParents({
+  repo,
+  modelComponent,
+  heads,
+  throws,
+  versionParentsFromObjects, // relevant for remote-scope where during export the data is not in the repo yet.
+  missingRefsFromVersionHistory, // only this function set it to run the function recursively if VersionHistory is outdated
+}: {
+  repo: Repository;
+  modelComponent: ModelComponent;
+  heads: Ref[];
+  throws?: boolean;
+  versionParentsFromObjects?: VersionParents[];
+  missingRefsFromVersionHistory?: Ref[];
+}): Promise<VersionParents[]> {
+  const versionHistory = await modelComponent.getVersionHistory(repo);
+  const versionParents: VersionParents[] = [];
+  const push = (versionParentsItem: VersionParents) => {
+    const existing = versionParents.find((v) => v.hash.isEqual(versionParentsItem.hash));
+    if (!existing) versionParents.push(versionParentsItem);
+    else {
+      // override it
+      Object.keys(existing).forEach((field) => (existing[field] = versionParentsItem[field]));
+    }
+  };
+  await pMapSeries([...heads, ...(missingRefsFromVersionHistory || [])], async (head) => {
+    const { err, added } = await modelComponent.populateVersionHistoryIfMissingGracefully(repo, versionHistory, head);
+    if (err) {
+      if (throws) {
+        // keep also the current stack. otherwise, the stack will have the recursive traversal data, which won't help much.
+        const newErr = new Error(err.message);
+        err.stack = `${err.stack}\nCurrent stack ${newErr.stack}`;
+        throw err;
+      }
+      if (added) added.forEach((a) => push(a));
+    } else {
+      versionHistory.versions.forEach((v) => push(v));
+    }
+  });
+
+  if (versionParentsFromObjects) {
+    versionParentsFromObjects.forEach((versionParentItem) => push(versionParentItem));
+    const allParentsFromObj = versionParentsFromObjects.map((v) => v.parents).flat();
+    const missingParents = allParentsFromObj.filter((parent) => !versionParents.some((v) => v.hash.isEqual(parent)));
+    if (missingParents.length) {
+      if (missingRefsFromVersionHistory) {
+        // stops the recursion
+        throw new Error(`unable to get the full history of "${modelComponent.id()}".
+the client sent the following snaps: ${versionParentsFromObjects.map((v) => v.hash.toString()).join(', ')}.
+however some of the parents of these snaps are missing from the local scope.
+missing snaps: ${missingParents.map((m) => m.toString()).join(', ')}
+`);
+      }
+      // the VersionObject is not up to date.
+      // recursively run this function and try to add these missing parents as heads so then it tries
+      // to find them locally and populate the VersionHistory object in the scope accordingly.
+      return getAllVersionParents({
+        repo,
+        modelComponent,
+        heads,
+        throws,
+        versionParentsFromObjects,
+        missingRefsFromVersionHistory: missingParents,
+      });
+    }
+  }
+  return versionParents;
+}
+
+export function getSubsetOfVersionParents(
+  versionParents: VersionParents[],
+  from: Ref,
+  stopAt?: Ref[]
+): VersionParents[] {
+  const results: VersionParents[] = [];
+  const shouldStop = (ref: Ref): boolean => Boolean(stopAt?.find((r) => r.isEqual(ref)));
+  const getVersionParent = (ref: Ref) => versionParents.find((v) => v.hash.isEqual(ref));
+  const isAlreadyProcessed = (ref: Ref): boolean => {
+    return Boolean(results.find((result) => result.hash.isEqual(ref)));
+  };
+  const addVersionParentRecursively = (version: VersionParents) => {
+    results.push(version);
+    version.parents.forEach((parent) => {
+      if (shouldStop(parent)) {
+        return;
+      }
+      if (isAlreadyProcessed(parent)) {
+        // happens when there are two parents at some point, and then they merged
+        return;
+      }
+      const parentVersion = getVersionParent(parent);
+      if (parentVersion) addVersionParentRecursively(parentVersion);
+    });
+  };
+  const head = getVersionParent(from);
+  if (!head || shouldStop(head.hash)) return [];
+  addVersionParentRecursively(head);
+  return results;
+}
+
+export function getVersionParentsFromVersion(version: Version): VersionParents {
+  return {
+    hash: version.hash(),
+    parents: version.parents,
+    unrelated: version.unrelated?.head,
+    squashed: version.squashed?.previousParents,
+  };
 }

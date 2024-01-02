@@ -11,8 +11,13 @@ import { ComponentServer } from './component-server';
 import { BundlerContext } from './bundler-context';
 import { devServerSchema } from './dev-server.graphql';
 import { DevServerService } from './dev-server.service';
+import { BundlerService } from './bundler.service';
+import { DevServer } from './dev-server';
+
+export type DevServerTransformer = (devServer: DevServer, { envId }: { envId: string }) => DevServer;
 
 export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
+export type DevServerTransformerSlot = SlotRegistry<DevServerTransformer>;
 
 export type BundlerConfig = {
   dedicatedEnvDevServers: string[];
@@ -42,7 +47,12 @@ export class BundlerMain {
     /**
      * browser runtime slot.
      */
-    private runtimeSlot: BrowserRuntimeSlot
+    private runtimeSlot: BrowserRuntimeSlot,
+
+    /**
+     * dev server transformer slot.
+     */
+    private devServerTransformerSlot: DevServerTransformerSlot
   ) {}
 
   /**
@@ -52,6 +62,7 @@ export class BundlerMain {
   async devServer(components: Component[]): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
     // TODO: this must be refactored away from here. this logic should be in the Preview.
+    // @ts-ignore
     const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer[]>(this.devService, {
       dedicatedEnvDevServers: this.config.dedicatedEnvDevServers,
     });
@@ -106,13 +117,22 @@ export class BundlerMain {
   }
 
   /**
+   * register a new dev server transformer.
+   * @param devServerTransformer
+   */
+  registerDevServerTransformer(devServerTransformer: DevServerTransformer) {
+    this.devServerTransformerSlot.register(devServerTransformer);
+    return this;
+  }
+
+  /**
    * component servers.
    */
   private _componentServers: null | ComponentServer[];
 
   private indexByComponent() {}
 
-  static slots = [Slot.withType<BrowserRuntime>()];
+  static slots = [Slot.withType<BrowserRuntime>(), Slot.withType<DevServerTransformerSlot>()];
 
   static runtime = MainRuntime;
   static dependencies = [PubsubAspect, EnvsAspect, GraphqlAspect, DependencyResolverAspect, ComponentAspect];
@@ -124,11 +144,11 @@ export class BundlerMain {
   static async provider(
     [pubsub, envs, graphql, dependencyResolver]: [PubsubMain, EnvsMain, GraphqlMain, DependencyResolverMain],
     config,
-    [runtimeSlot]: [BrowserRuntimeSlot]
+    [runtimeSlot, devServerTransformerSlot]: [BrowserRuntimeSlot, DevServerTransformerSlot]
   ) {
-    const devServerService = new DevServerService(pubsub, dependencyResolver, runtimeSlot);
-    const bundler = new BundlerMain(config, pubsub, envs, devServerService, runtimeSlot);
-    envs.registerService(devServerService);
+    const devServerService = new DevServerService(pubsub, dependencyResolver, runtimeSlot, devServerTransformerSlot);
+    const bundler = new BundlerMain(config, pubsub, envs, devServerService, runtimeSlot, devServerTransformerSlot);
+    envs.registerService(devServerService, new BundlerService());
 
     graphql.register(devServerSchema(bundler));
 

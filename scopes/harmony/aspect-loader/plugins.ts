@@ -1,12 +1,22 @@
 import { Component } from '@teambit/component';
+import esmLoader from '@teambit/node.utils.esm-loader';
+import { NativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
+import { Logger } from '@teambit/logger';
 import { Aspect } from '@teambit/harmony';
 import { PluginDefinition } from './plugin-definition';
+import { isEsmModule } from './is-esm-module';
 import { Plugin } from './plugin';
+import { OnAspectLoadErrorHandler } from './aspect-loader.main.runtime';
 
 export type PluginMap = { [filePath: string]: PluginDefinition };
 
 export class Plugins {
-  constructor(readonly component: Component, readonly plugins: Plugin[]) {}
+  constructor(
+    readonly component: Component,
+    readonly plugins: Plugin[],
+    private triggerOnAspectLoadError: OnAspectLoadErrorHandler,
+    private logger: Logger
+  ) {}
 
   // computeDependencies(runtime: string): Aspect[] {
   //   const inRuntime = this.getByRuntime(runtime);
@@ -29,9 +39,14 @@ export class Plugins {
 
     aspect.addRuntime({
       provider: async () => {
-        plugins.forEach((plugin) => {
-          plugin.register(aspect);
-        });
+        await Promise.all(
+          plugins.map(async (plugin) => {
+            return this.registerPluginWithTryCatch(plugin, aspect);
+          })
+        );
+        // Return an empty object so haromny will have something in the extension instance
+        // otherwise it will throw an error when trying to access the extension instance (harmony.get)
+        return {};
       },
       runtime,
       // dependencies: this.computeDependencies(runtime)
@@ -41,11 +56,67 @@ export class Plugins {
     return aspect;
   }
 
+  async loadModule(path: string) {
+    NativeCompileCache.uninstall();
+    const module = await esmLoader(path);
+    return module.default;
+  }
+
+  async registerPluginWithTryCatch(plugin: Plugin, aspect: Aspect) {
+    const isModule = isEsmModule(plugin.path);
+    const module = isModule ? await this.loadModule(plugin.path) : undefined;
+
+    try {
+      if (isModule && !module) {
+        this.logger.consoleFailure(
+          `failed to load plugin ${plugin.path}, make sure to use 'export default' to expose your plugin`
+        );
+        return undefined;
+      }
+      return plugin.register(aspect, module);
+    } catch (firstErr: any) {
+      this.logger.warn(
+        `failed loading plugin with pattern "${
+          plugin.def.pattern
+        }", in component ${this.component.id.toString()}, will try to fix and reload`,
+        firstErr
+      );
+      const isFixed = await this.triggerOnAspectLoadError(firstErr, this.component);
+      let errAfterReLoad;
+      if (isFixed) {
+        this.logger.info(
+          `the loading issue might be fixed now, re-loading plugin with pattern "${
+            plugin.def.pattern
+          }", in component ${this.component.id.toString()}`
+        );
+        try {
+          return plugin.register(aspect, module);
+        } catch (err: any) {
+          this.logger.warn(
+            `re-load of the plugin with pattern "${
+              plugin.def.pattern
+            }", in component ${this.component.id.toString()} failed as well`,
+            err
+          );
+          errAfterReLoad = err;
+        }
+      }
+      const error = errAfterReLoad || firstErr;
+      throw error;
+    }
+  }
+
   has() {
     return Boolean(this.plugins.length);
   }
 
-  static from(component: Component, defs: PluginDefinition[], resolvePath?: (path: string) => string) {
+  static from(
+    component: Component,
+    defs: PluginDefinition[],
+    triggerOnAspectLoadError: OnAspectLoadErrorHandler,
+    logger: Logger,
+    resolvePath?: (path: string) => string
+  ) {
     const plugins = defs.flatMap((pluginDef) => {
       const files =
         typeof pluginDef.pattern === 'string'
@@ -57,6 +128,23 @@ export class Plugins {
       });
     });
 
-    return new Plugins(component, plugins);
+    return new Plugins(component, plugins, triggerOnAspectLoadError, logger);
+  }
+
+  /**
+   * Get the plugin files from the component.
+   */
+  static files(component: Component, defs: PluginDefinition[], resolvePath?: (path: string) => string): string[] {
+    const files = defs.flatMap((pluginDef) => {
+      const matches =
+        typeof pluginDef.pattern === 'string'
+          ? component.filesystem.byGlob([pluginDef.pattern])
+          : component.filesystem.byRegex(pluginDef.pattern);
+
+      return matches.map((file) => {
+        return resolvePath ? resolvePath(file.relative) : file.path;
+      });
+    });
+    return files;
   }
 }

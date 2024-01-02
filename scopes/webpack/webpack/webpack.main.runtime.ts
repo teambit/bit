@@ -13,6 +13,8 @@ import { MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { merge } from 'webpack-merge';
+// We want to import it to make sure bit recognizes it as a dependency
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import WsDevServer from 'webpack-dev-server';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 
@@ -32,6 +34,10 @@ export type WebpackConfigDevServerTransformContext = GlobalWebpackConfigTransfor
 
 export type GlobalWebpackConfigTransformContext = {
   mode: BundlerMode;
+  /**
+   * Whether the config is for an env template bundling
+   */
+  isEnvTemplate?: boolean;
   /**
    * A path for the host root dir
    * Host root dir is usually the env root dir
@@ -77,15 +83,22 @@ export class WebpackMain {
   /**
    * create an instance of bit-compliant webpack dev server for a set of components
    */
-  createDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
+  createDevServer(
+    context: DevServerContext,
+    transformers: WebpackConfigTransformer[] = [],
+    webpackModulePath?: string,
+    webpackDevServerModulePath?: string
+  ): DevServer {
     const config = this.createDevServerConfig(
       context.entry,
       this.workspace.path,
       context.id,
       context.rootPath,
       context.publicPath,
+      this.workspace.getComponentPathsRegExps(),
       context.title
     ) as any;
+    const wdsPath = webpackDevServerModulePath || require.resolve('webpack-dev-server');
     const configMutator = new WebpackConfigMutator(config);
     const transformerContext: WebpackConfigDevServerTransformContext = Object.assign(context, { mode: 'dev' as const });
     const internalTransformers = this.generateTransformers(undefined, transformerContext);
@@ -96,7 +109,7 @@ export class WebpackMain {
       transformerContext
     );
     // @ts-ignore - fix this
-    return new WebpackDevServer(afterMutation.raw, webpack, WsDevServer);
+    return new WebpackDevServer(afterMutation.raw, this.getWebpackInstance(webpackModulePath, webpack), wdsPath);
   }
 
   mergeConfig(target: any, source: any): any {
@@ -107,14 +120,23 @@ export class WebpackMain {
     context: BundlerContext,
     transformers: WebpackConfigTransformer[] = [],
     initialConfigs?: webpack.Configuration[],
-    webpackInstance?: any
+    webpackModuleOrPath?: string | any
   ) {
-    const transformerContext: GlobalWebpackConfigTransformContext = { mode: 'prod' };
+    const transformerContext: GlobalWebpackConfigTransformContext = {
+      mode: 'prod',
+      isEnvTemplate: context.metaData?.isEnvTemplate,
+    };
     // eslint-disable-next-line max-len
     const configs =
       initialConfigs ||
       this.createConfigs(context.targets, baseConfigFactory, transformers, transformerContext, context);
-    return new WebpackBundler(context.targets, configs, this.logger, webpackInstance || webpack, context.metaData);
+    return new WebpackBundler(
+      context.targets,
+      configs,
+      this.logger,
+      this.getWebpackInstance(webpackModuleOrPath, webpack),
+      context.metaData
+    );
   }
 
   private createConfigs(
@@ -159,15 +181,36 @@ export class WebpackMain {
     return transformers;
   }
 
+  private getWebpackInstance(webpackOrPath?: any | string, fallback?: any) {
+    if (!webpackOrPath) {
+      return fallback;
+    }
+    if (typeof webpackOrPath === 'string') {
+      // eslint-disable-next-line import/no-dynamic-require, global-require
+      return require(webpackOrPath);
+    }
+    return webpackOrPath;
+  }
+
   private createDevServerConfig(
     entry: string[],
     rootPath: string,
     devServerID: string,
     publicRoot: string,
     publicPath: string,
+    componentPathsRegExps: RegExp[],
     title?: string
   ) {
-    return devServerConfigFactory(devServerID, rootPath, entry, publicRoot, publicPath, this.pubsub, title);
+    return devServerConfigFactory(
+      devServerID,
+      rootPath,
+      entry,
+      publicRoot,
+      publicPath,
+      componentPathsRegExps,
+      this.pubsub,
+      title
+    );
   }
 
   static slots = [];

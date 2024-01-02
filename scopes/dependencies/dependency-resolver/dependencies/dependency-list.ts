@@ -1,4 +1,5 @@
 import { uniqBy, property } from 'lodash';
+import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 import { Dependency, DependencyLifecycleType, SerializedDependency, SemverVersion, PackageName } from './dependency';
 import { KEY_NAME_BY_LIFECYCLE_TYPE } from './constants';
 import { ComponentDependency } from './component-dependency';
@@ -7,8 +8,18 @@ export type LifecycleDependenciesManifest = Record<PackageName, SemverVersion>;
 
 export interface DependenciesManifest {
   dependencies?: LifecycleDependenciesManifest;
+  optionalDependencies?: LifecycleDependenciesManifest;
   devDependencies?: LifecycleDependenciesManifest;
   peerDependencies?: LifecycleDependenciesManifest;
+  peerDependenciesMeta?: PeerDependenciesMeta;
+}
+
+export interface PeerDependenciesMeta {
+  [peerName: string]: PeerDependencyMeta;
+}
+
+export interface PeerDependencyMeta {
+  optional: true;
 }
 
 export type FindDependencyOptions = {
@@ -50,9 +61,30 @@ export class DependencyList {
   }
 
   findByPkgNameOrCompId(id: string, version?: string): Dependency | undefined {
-    const found = this.dependencies.find((dep) => dep.id === id || dep.getPackageName?.() === id);
+    const findByVariousStrategies = () => {
+      // try by full-id or package-name
+      const found = this.dependencies.find(
+        (dep) => dep.id === id || dep.getPackageName?.() === id || dep.id.startsWith(`${id}@`)
+      );
+      if (found) return found;
+      const compDeps = this.toTypeArray<ComponentDependency>('component');
+
+      // try by component-name
+      const foundByName = compDeps.filter((dep) => dep.componentId.fullName === id);
+      if (foundByName.length > 1) {
+        throw new Error(
+          `found multiple dependencies with the same component-name "${id}", please specify the full component-id`
+        );
+      }
+      if (foundByName.length === 1) return foundByName[0];
+      return undefined;
+    };
+    const found = findByVariousStrategies();
     if (!found) return undefined;
     if (version) {
+      // because the version for snaps is stored in deps as the hash without the prefix of "0.0.0-""
+      if (version.startsWith(SNAP_VERSION_PREFIX) && found.version === version.replace(SNAP_VERSION_PREFIX, ''))
+        return found;
       return found.version === version ? found : undefined;
     }
     return found;
@@ -69,6 +101,10 @@ export class DependencyList {
   filter(predicate: (dep: Dependency, index?: number) => boolean): DependencyList {
     const filtered = this.dependencies.filter(predicate);
     return DependencyList.fromArray(filtered);
+  }
+
+  filterHidden(): DependencyList {
+    return this.filter((dep) => !dep.hidden);
   }
 
   toTypeArray<T extends Dependency>(typeName: string): T[] {
@@ -100,14 +136,22 @@ export class DependencyList {
   toDependenciesManifest(): Required<DependenciesManifest> {
     const manifest: Required<DependenciesManifest> = {
       dependencies: {},
+      optionalDependencies: {},
       devDependencies: {},
       peerDependencies: {},
+      peerDependenciesMeta: {},
     };
     this.forEach((dep) => {
-      const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
+      const keyName =
+        dep.optional && dep.lifecycle === 'runtime'
+          ? 'optionalDependencies'
+          : KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
       const entry = dep.toManifest();
       if (entry) {
         manifest[keyName][entry.packageName] = entry.version;
+        if (dep.optional && dep.lifecycle === 'peer') {
+          manifest.peerDependenciesMeta[entry.packageName] = { optional: true };
+        }
       }
     });
     return manifest;

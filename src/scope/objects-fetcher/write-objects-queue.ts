@@ -3,7 +3,7 @@ import { concurrentIOLimit } from '../../utils/concurrency';
 
 export class WriteObjectsQueue {
   private queue: PQueue;
-  private addedHashes: string[] = [];
+  addedHashes: string[] = [];
   added = 0;
   constructor(concurrency = concurrentIOLimit()) {
     this.queue = new PQueue({ concurrency, autoStart: true });

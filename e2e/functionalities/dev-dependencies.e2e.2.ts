@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -17,7 +18,6 @@ describe('dev-dependencies functionality', function () {
       let comp1;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
         helper.fixtures.populateComponents();
         helper.fs.outputFile('comp1/foo.spec.js', 'require("chai");');
         helper.npm.addFakeNpmPackage('chai', '4.1.2');
@@ -40,15 +40,22 @@ describe('dev-dependencies functionality', function () {
         expect(comp1.dependencies[0].id.version).to.equal('0.0.1');
       });
       it('should leave the flattened-dependencies intact', () => {
-        expect(comp1.flattenedDependencies).to.deep.include({ name: 'comp3', version: '0.0.1' });
-        expect(comp1.flattenedDependencies).to.deep.include({ name: 'comp2', version: '0.0.1' });
+        expect(comp1.flattenedDependencies).to.deep.include({
+          name: 'comp3',
+          scope: helper.scopes.remote,
+          version: '0.0.1',
+        });
+        expect(comp1.flattenedDependencies).to.deep.include({
+          name: 'comp2',
+          scope: helper.scopes.remote,
+          version: '0.0.1',
+        });
       });
     });
     describe('without dependencies and with dev-dependencies', () => {
       let comp1;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
         // foo.js doesn't have any dependencies. foo.spec.js does have dependencies.
         helper.fixtures.populateComponents();
         helper.fs.outputFile('comp1/foo.spec.js', `require("chai"); require('@${helper.scopes.remote}/comp2');`);
@@ -60,11 +67,23 @@ describe('dev-dependencies functionality', function () {
       });
       it('should save the dev-dependencies', () => {
         expect(comp1.devDependencies).to.be.an('array').that.have.lengthOf(1);
-        expect(comp1.devDependencies[0].id).to.deep.equal({ name: 'comp2', version: '0.0.1' });
+        expect(comp1.devDependencies[0].id).to.deep.equal({
+          name: 'comp2',
+          scope: helper.scopes.remote,
+          version: '0.0.1',
+        });
       });
       it('should save the flattened-dependencies', () => {
-        expect(comp1.flattenedDependencies).to.deep.include({ name: 'comp3', version: '0.0.1' });
-        expect(comp1.flattenedDependencies).to.deep.include({ name: 'comp2', version: '0.0.1' });
+        expect(comp1.flattenedDependencies).to.deep.include({
+          name: 'comp3',
+          scope: helper.scopes.remote,
+          version: '0.0.1',
+        });
+        expect(comp1.flattenedDependencies).to.deep.include({
+          name: 'comp2',
+          scope: helper.scopes.remote,
+          version: '0.0.1',
+        });
       });
       it('should save "chai" in the dev-packages', () => {
         expect(comp1.devPackageDependencies).to.be.an('object').that.has.property('chai');
@@ -89,7 +108,6 @@ describe('dev-dependencies functionality', function () {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(4);
       helper.fs.moveSync('comp2/index.js', 'comp2/foo.spec.js');
       helper.fs.outputFile('comp2/index.js');
@@ -117,7 +135,6 @@ describe('dev-dependencies functionality', function () {
   describe('dev-dependency of a nested component that originated from a dev dep', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(3);
 
       helper.fs.moveSync('comp1/index.js', 'comp1/foo.spec.js');
@@ -155,7 +172,29 @@ describe('dev-dependencies functionality', function () {
       expect(barFoo.devDependencies[0].id.name).to.equal('comp2');
     });
     it('should include the prod dependencies inside flattenedDependencies', () => {
-      expect(barFoo.flattenedDependencies).to.deep.include({ name: 'comp3', version: '0.0.1' });
+      expect(barFoo.flattenedDependencies).to.deep.include({
+        name: 'comp3',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
+    });
+  });
+  describe('component with devDependency coming from an env and is used as prod', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      const envName = helper.env.setCustomEnv('node-env-dev-dep');
+      const envId = `${helper.scopes.remote}/${envName}`;
+      helper.extensions.addExtensionToVariant('*', envId);
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile(`comp1/index.js`, `const isPositive = require('is-positive');`);
+      helper.command.install();
+      helper.command.tagWithoutBuild();
+    });
+    it('should be able to remove it from DevDependency only by "bit deps remove --dev"', () => {
+      helper.command.dependenciesRemove('comp1', 'is-positive', '--dev');
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp1.config[Extensions.dependencyResolver].policy).to.have.property('devDependencies');
+      expect(bitMap.comp1.config[Extensions.dependencyResolver].policy.devDependencies['is-positive']).to.equal('-');
     });
   });
 });

@@ -2,11 +2,11 @@
 import merge from 'lodash.merge';
 import * as os from 'os';
 import R from 'ramda';
+import { ComponentID } from '@teambit/component-id';
 import { Client as Ssh2Client } from 'ssh2';
 import { Analytics } from '../../../analytics/analytics';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import * as globalConfig from '../../../api/consumer/lib/global-config';
-import { BitId } from '../../../bit-id';
 import globalFlags from '../../../cli/global-flags';
 import { CFG_SSH_NO_COMPRESS, CFG_USER_TOKEN_KEY, DEFAULT_SSH_READY_TIMEOUT } from '../../../constants';
 import ConsumerComponent from '../../../consumer/component';
@@ -15,7 +15,6 @@ import GeneralError from '../../../error/general-error';
 import logger from '../../../logger/logger';
 import { userpass as promptUserpass } from '../../../prompts';
 import { buildCommandMessage, packCommand, toBase64, unpackCommand } from '../../../utils';
-import ComponentObjects from '../../component-objects';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLog } from '../../models/model-component';
@@ -364,7 +363,7 @@ export default class SSH implements Network {
     force: boolean,
     context?: Record<string, any>,
     idsAreLanes?: boolean
-  ): Promise<ComponentObjects[] | RemovedObjects> {
+  ): Promise<RemovedObjects> {
     return this.exec(
       '_delete',
       {
@@ -396,7 +395,7 @@ export default class SSH implements Network {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
       payload.forEach((result) => {
-        result.id = new BitId(result.id);
+        result.id = new ComponentID(result.id);
       });
       return payload;
     });
@@ -409,11 +408,14 @@ export default class SSH implements Network {
     checkVersionCompatibility(headers.version);
     return payload.map((result) => ({
       ...result,
-      components: result.components.map((component) => ({ id: new BitId(component.id), head: component.head })),
+      components: result.components.map((component) => ({
+        id: ComponentID.fromObject(component.id),
+        head: component.head,
+      })),
     }));
   }
 
-  latestVersions(componentIds: BitId[]): Promise<string[]> {
+  latestVersions(componentIds: ComponentID[]): Promise<string[]> {
     const componentIdsStr = componentIds.map((componentId) => componentId.toString());
     return this.exec('_latest', componentIdsStr).then((str: string) => {
       const { payload, headers } = this._unpack(str);
@@ -430,7 +432,7 @@ export default class SSH implements Network {
     });
   }
 
-  show(id: BitId): Promise<ConsumerComponent | null | undefined> {
+  show(id: ComponentID): Promise<ConsumerComponent | null | undefined> {
     return this.exec('_show', id.toString()).then((str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
@@ -438,7 +440,7 @@ export default class SSH implements Network {
     });
   }
 
-  log(id: BitId): Promise<ComponentLog[]> {
+  log(id: ComponentID): Promise<ComponentLog[]> {
     return this.exec('_log', id.toString()).then((str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
@@ -446,7 +448,7 @@ export default class SSH implements Network {
     });
   }
 
-  graph(bitId?: BitId): Promise<DependencyGraph> {
+  graph(bitId?: ComponentID): Promise<DependencyGraph> {
     const idStr = bitId ? bitId.toString() : '';
     return this.exec('_graph', idStr).then((str: string) => {
       const { payload, headers } = this._unpack(str);

@@ -1,6 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import ejectTemplate from '@teambit/legacy/dist/cli/templates/eject-template';
-import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
+import open from 'open';
+import { ejectTemplate } from '@teambit/eject';
+import { WILDCARD_HELP, COMPONENT_PATTERN_HELP, getCloudDomain } from '@teambit/legacy/dist/constants';
 import chalk from 'chalk';
 import { isEmpty } from 'lodash';
 import { ExportMain } from './export.main.runtime';
@@ -11,21 +12,17 @@ export class ExportCmd implements Command {
   arguments = [
     {
       name: 'component-patterns...',
-      description:
-        'component IDs, component names, or component patterns (separated by space). Use patterns to export groups of components using a common scope or namespace. E.g., "utils/*" (wrap with double quotes)',
+      description: `(not recommended) ${COMPONENT_PATTERN_HELP}`,
     },
   ];
-  extendedDescription = `bit export => export all staged components to their current scope, if checked out to a lane, export the lane as well
-  \`bit export [id...]\` => export the given ids to their current scope
-  ${WILDCARD_HELP('export remote-scope')}`;
+  extendedDescription = `bit export => export all staged snaps/tags of components to their remote scope. if checked out to a lane, export the lane as well
+  \`bit export [pattern...]\` => export components included by the pattern to their remote scope (we recommend not using a pattern in
+    most scenarios so that all changes are exported simultaneously)
+  ${WILDCARD_HELP('export')}`;
   alias = 'e';
-  helpUrl = 'components/exporting-components';
+  helpUrl = 'reference/components/exporting-components';
   options = [
-    [
-      'e',
-      'eject',
-      'replace the exported components with their corresponding packages (to use these components without further maintaining them)',
-    ],
+    ['e', 'eject', 'after export, remove the components from the workspace and install them as packages'],
     [
       'a',
       'all',
@@ -48,9 +45,16 @@ export class ExportCmd implements Command {
     ],
     [
       '',
+      'head-only',
+      'EXPERIMENTAL. in case previous export failed and locally it shows exported and only one snap/tag was created, try using this flag',
+    ],
+    [
+      '',
       'ignore-missing-artifacts',
       "EXPERIMENTAL. don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote",
     ],
+    ['', 'fork-lane-new-scope', 'allow exporting a forked lane into a different scope than the original scope'],
+    ['', 'open-browser', 'open a browser once the export is completed in the cloud job url'],
     ['j', 'json', 'show output in json format'],
   ] as CommandOptions;
   loader = true;
@@ -69,9 +73,12 @@ export class ExportCmd implements Command {
       originDirectly = false,
       ignoreMissingArtifacts = false,
       resume,
+      headOnly,
+      forkLaneNewScope = false,
+      openBrowser = false,
     }: any
   ): Promise<string> {
-    const { componentsIds, nonExistOnBitMap, removedIds, missingScope, exportedLanes, ejectResults } =
+    const { componentsIds, nonExistOnBitMap, removedIds, missingScope, exportedLanes, ejectResults, rippleJobs } =
       await this.exportMain.export({
         ids,
         eject,
@@ -79,7 +86,9 @@ export class ExportCmd implements Command {
         allVersions: allVersions || all,
         originDirectly,
         resumeExportId: resume,
+        headOnly,
         ignoreMissingArtifacts,
+        forkLaneNewScope,
       });
     if (isEmpty(componentsIds) && isEmpty(nonExistOnBitMap) && isEmpty(missingScope)) {
       return chalk.yellow('nothing to export');
@@ -103,7 +112,10 @@ export class ExportCmd implements Command {
     };
     const removedOutput = () => {
       if (!removedIds.length) return '';
-      const title = chalk.bold(`\n\nthe following component(s) have been marked as removed on the remote\n`);
+      const remoteLaneStr = exportedLanes.length ? ' lane' : '';
+      const title = chalk.bold(
+        `\n\nthe following component(s) have been marked as removed on the remote${remoteLaneStr}\n`
+      );
       const idsStr = removedIds.join('\n');
       return title + idsStr;
     };
@@ -111,9 +123,9 @@ export class ExportCmd implements Command {
       if (isEmpty(missingScope)) return '';
       const idsStr = missingScope.map((id) => id.toString()).join(', ');
       return chalk.yellow(
-        `the following component(s) were not exported: ${chalk.bold(
+        `the following component(s) were not exported as no remote scope is configured for them: ${chalk.bold(
           idsStr
-        )}.\nplease specify <remote> to export them, or set a "defaultScope" in your workspace config\n\n`
+        )}.\nplease specify <remote> to export them, run 'bit scope set <scope> <component>,  or set a "defaultScope" in your workspace config\n\n`
       );
     };
     const ejectOutput = () => {
@@ -121,8 +133,29 @@ export class ExportCmd implements Command {
       const output = ejectTemplate(ejectResults);
       return `\n${output}`;
     };
+    const rippleJobsOutput = () => {
+      if (!rippleJobs.length) return '';
+      const shouldOpenBrowser = openBrowser && !process.env.CI;
+      const prefix = shouldOpenBrowser ? 'Your browser has been opened to the following link' : 'Visit the link below';
+      const msg = `\n\n${prefix} to track the progress of building the components in the cloud\n`;
+      const fullUrls = rippleJobs.map((job) => `https://${getCloudDomain()}/ripple-ci/job/${job}`);
+      if (shouldOpenBrowser) {
+        open(fullUrls[0], { url: true }).catch(() => {
+          /** it's ok, the user is instructed to open the browser manually */
+        });
+      }
+      const urlsColored = fullUrls.map((url) => chalk.bold.underline(url));
+      return msg + urlsColored.join('\n');
+    };
 
-    return nonExistOnBitMapOutput() + missingScopeOutput() + exportOutput() + ejectOutput() + removedOutput();
+    return (
+      nonExistOnBitMapOutput() +
+      missingScopeOutput() +
+      exportOutput() +
+      ejectOutput() +
+      removedOutput() +
+      rippleJobsOutput()
+    );
   }
 
   async json(

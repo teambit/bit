@@ -15,7 +15,6 @@ describe('untag components on Harmony', function () {
   describe('when an old version is missing from the scope', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       const v1Head = helper.command.getHead('comp1');
@@ -30,7 +29,7 @@ describe('untag components on Harmony', function () {
     });
     // before, it was throwing: "error: version "0.0.1" of component scope/comp1 was not found"
     it('should untag successfully with no errors', () => {
-      expect(() => helper.command.untagAll()).not.to.throw();
+      expect(() => helper.command.resetAll()).not.to.throw();
     });
   });
   describe('untagging multiple versions', () => {
@@ -39,7 +38,7 @@ describe('untag components on Harmony', function () {
       helper.fixtures.populateComponents(1);
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.1
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.2
-      helper.command.untagAll();
+      helper.command.resetAll();
     });
     // a previous bug saved the hash of 0.0.1 as the head, which made the component both: staged and snapped.
     it('should show the component as new only, not as staged nor snapped', () => {
@@ -49,13 +48,12 @@ describe('untag components on Harmony', function () {
   describe('untagging multiple versions when the new head is exported', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.1
       helper.command.export();
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.2
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.3
-      helper.command.untagAll();
+      helper.command.resetAll();
     });
     // a previous bug saved the hash of 0.0.2 as the head.
     it('bit status should be clean', () => {

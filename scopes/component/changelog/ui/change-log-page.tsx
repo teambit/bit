@@ -1,4 +1,9 @@
-import { ComponentContext } from '@teambit/component';
+import {
+  ComponentContext,
+  useComponentLogs as defaultUseComponentLogs,
+  ComponentLogsResult,
+  Filters,
+} from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/design.ui.separator';
 import { VersionBlock } from '@teambit/component.ui.version-block';
@@ -10,15 +15,25 @@ import React, { HTMLAttributes, useContext } from 'react';
 
 import styles from './change-log-page.module.scss';
 
-type ChangeLogPageProps = {} & HTMLAttributes<HTMLDivElement>;
+export type ChangeLogPageProps = {
+  host?: string;
+  useComponentLogs?: (id: string, host: string, filters?: Filters, skip?: boolean) => ComponentLogsResult;
+} & HTMLAttributes<HTMLDivElement>;
 
-export function ChangeLogPage({ className }: ChangeLogPageProps) {
+export function ChangeLogPage({
+  className,
+  useComponentLogs = defaultUseComponentLogs,
+  host = '',
+}: ChangeLogPageProps) {
   const component = useContext(ComponentContext);
-  const { logs } = component;
+  const { loading, componentLogs, latest, id } =
+    useComponentLogs?.(component?.id.toString(), host, undefined, !component) || {};
 
-  if (!logs) return null;
+  if (loading || !componentLogs) return null;
 
-  if (logs.length === 0) {
+  const { logs = [] } = componentLogs;
+
+  if (logs?.length === 0) {
     return (
       <div className={classNames(styles.changeLogPage, className)}>
         <H1 className={styles.title}>History</H1>
@@ -43,12 +58,12 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
       <Separator isPresentational className={styles.separator} />
       <div className={styles.logContainer}>
         {logs.map((snap, index) => {
-          const isLatest = component.latest === snap.tag || component.latest === snap.hash;
-          const isCurrent = component.version === snap.tag || component.version === snap.hash;
+          const isLatest = latest === snap.tag || latest === snap.hash;
+          const isCurrent = id?.version === snap.tag || id?.version === snap.hash;
           return (
             <VersionBlock
               key={index}
-              componentId={component.id.fullName}
+              componentId={id?.fullName ?? ''}
               isLatest={isLatest}
               snap={snap}
               isCurrent={isCurrent}

@@ -1,5 +1,6 @@
 import R from 'ramda';
 import { ResolvedPackageData } from '../../../../../utils/packages';
+import { DependencyDetector } from '../detector-hook';
 
 /**
  * Import Specifier data.
@@ -19,24 +20,15 @@ export type Specifier = {
  */
 export type ImportSpecifier = {
   mainFile: Specifier;
-  linkFile?: Specifier; // relevant only when the dependency is a link file (e.g. index.js which import and export the variable from other file)
 };
 
 export type FileObject = {
   file: string;
   importSpecifiers?: ImportSpecifier[];
   importSource?: string;
-  isCustomResolveUsed?: boolean;
-  isLink?: boolean;
-  linkDependencies?: Record<string, any>[];
 };
 
-export type LinkFile = {
-  file: string;
-  importSpecifiers: ImportSpecifier[];
-};
-
-type MissingType = 'files' | 'packages' | 'components';
+type MissingType = 'files' | 'packages';
 
 export class DependenciesTreeItem {
   files: FileObject[] = [];
@@ -62,19 +54,12 @@ export type DependenciesTree = {
   [filePath: string]: DependenciesTreeItem;
 };
 
-export type ResolveModulesConfig = {
-  modulesDirectories?: string[];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  aliases?: { [key: string]: string }; // e.g. { '@': 'src' }
-};
-
 export type DependencyTreeParams = {
   componentDir: string;
   workspacePath: string;
   filePaths: string[];
-  bindingPrefix: string;
-  resolveModulesConfig?: ResolveModulesConfig;
   visited?: Record<string, any>;
   cacheResolvedDependencies?: Record<string, any>;
   cacheProjectAst?: Record<string, any>;
+  envDetectors?: DependencyDetector[] | null;
 };

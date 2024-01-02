@@ -4,7 +4,7 @@ import { compact } from 'lodash';
 // import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import LegacyShow from '@teambit/legacy/dist/cli/commands/public-cmds/show-cmd';
 import { ComponentMain } from '../component.main.runtime';
 
@@ -15,13 +15,13 @@ export class ShowCmd implements Command {
   group = 'info';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
   options = [
-    ['j', 'json', 'return the component data in a json format'],
+    ['j', 'json', 'return the component data in json format'],
     ['l', 'legacy', 'use the legacy bit show.'],
-    ['r', 'remote', 'show a remote component'],
+    ['r', 'remote', 'show data for a remote component'],
     [
       'c',
       'compare',
-      'compare current file system component to the latest tagged component [default=latest]. only works in legacy.',
+      'legacy-only. compare current file system component to its latest tagged version [default=latest]',
     ],
   ] as CommandOptions;
 
@@ -29,7 +29,7 @@ export class ShowCmd implements Command {
 
   private async getComponent(idStr: string, remote: boolean) {
     if (remote) {
-      const bitId: BitId = BitId.parse(idStr, true); // user used --remote so we know it has a scope
+      const bitId: ComponentID = ComponentID.fromString(idStr); // user used --remote so we know it has a scope
       const host = this.component.getHost('teambit.scope/scope');
       const id = await host.resolveComponentId(bitId);
       if (!host.getRemoteComponent) {

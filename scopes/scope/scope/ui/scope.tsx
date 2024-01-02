@@ -15,7 +15,7 @@ import { ScopeProvider } from '@teambit/scope.ui.hooks.scope-context';
 import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
 import { ScopeOverview } from './scope-overview';
 import styles from './scope.module.scss';
-import ScopeUI, { ScopeBadgeSlot, ScopeContextType, CornerSlot, OverviewLineSlot } from '../scope.ui.runtime';
+import { ScopeUI, ScopeBadgeSlot, ScopeContextType, CornerSlot, OverviewLineSlot } from '../scope.ui.runtime';
 import { ScopeModel } from '..';
 
 export type ScopeProps = {
@@ -83,7 +83,7 @@ export function Scope({
           />
 
           <SplitPane className={styles.main} size={264} layout={sidebarOpenness}>
-            <Pane className={styles.sidebar}>{sidebar}</Pane>
+            <Pane className={classNames(styles.sidebar, !isSidebarOpen && styles.collapsed)}>{sidebar}</Pane>
             <HoverSplitter className={styles.splitter}>
               <Collapser
                 isOpen={isSidebarOpen}

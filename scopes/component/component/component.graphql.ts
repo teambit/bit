@@ -45,12 +45,15 @@ export function componentSchema(componentExtension: ComponentMain) {
 
       type LogEntry {
         message: String!
+        displayName: String
         username: String
+        parents: [String]!
         email: String
         date: String
         hash: String!
         tag: String
         id: String!
+        profileImage: String
       }
 
       type Author {
@@ -92,6 +95,9 @@ export function componentSchema(componentExtension: ComponentMain) {
         # list of component releases.
         tags: [Tag]!
 
+        # Log entry of the component.
+        log: LogEntry!
+
         """
         component logs
         """
@@ -114,6 +120,12 @@ export function componentSchema(componentExtension: ComponentMain) {
         ): [LogEntry]!
 
         aspects(include: [String]): [Aspect]
+
+        """
+        element url of the component - this is deprecated, and will return empty string now.
+        it's here to not break old queries
+        """
+        elementsUrl: String @deprecated(reason: "Not in use anymore")
       }
 
       type Aspect {
@@ -158,6 +170,17 @@ export function componentSchema(componentExtension: ComponentMain) {
         fs: (component: Component) => {
           return component.state.filesystem.files.map((file) => file.relative);
         },
+        log: async (component: Component) => {
+          const snap = await component.loadSnap(component.id.version);
+          return {
+            ...snap,
+            date: snap.timestamp.getTime(),
+            email: snap.author.email,
+            username: snap.author.name,
+            displayName: snap.author.displayName,
+            id: snap.hash,
+          };
+        },
         getFile: (component: Component, { path }: { path: string }) => {
           const maybeFile = component.state.filesystem.files.find(
             (file) => pathNormalizeToLinux(file.relative) === path
@@ -177,6 +200,8 @@ export function componentSchema(componentExtension: ComponentMain) {
         aspects: (component: Component, { include }: { include?: string[] }) => {
           return component.state.aspects.filter(include).serialize();
         },
+        // Here only to not break old queries
+        elementsUrl: () => undefined,
         logs: async (
           component: Component,
           filter?: {

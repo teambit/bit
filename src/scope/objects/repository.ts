@@ -1,13 +1,15 @@
 import fs from 'fs-extra';
 import { Mutex } from 'async-mutex';
-import { compact, uniqBy } from 'lodash';
-import { isHash } from '@teambit/component-version';
+import { compact, uniqBy, differenceWith, isEqual } from 'lodash';
+import { BitError } from '@teambit/bit-error';
+import { ComponentID } from '@teambit/component-id';
+import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
 import pMap from 'p-map';
 import { OBJECTS_DIR } from '../../constants';
 import logger from '../../logger/logger';
 import { glob, resolveGroupId, writeFile } from '../../utils';
-import removeFile from '../../utils/fs-remove-file';
+import removeEmptyDir from '../../utils/fs/remove-empty-dir';
 import { ChownOptions } from '../../utils/fs-write-file';
 import { PathOsBasedAbsolute } from '../../utils/path';
 import { HashNotFound, OutdatedIndexJson } from '../exceptions';
@@ -15,7 +17,7 @@ import RemoteLanes from '../lanes/remote-lanes';
 import UnmergedComponents from '../lanes/unmerged-components';
 import ScopeMeta from '../models/scopeMeta';
 import { ScopeJson } from '../scope-json';
-import ScopeIndex, { IndexType } from './components-index';
+import ScopeIndex, { IndexType } from './scope-index';
 import BitObject from './object';
 import { ObjectItem, ObjectList } from './object-list';
 import BitRawObject from './raw-object';
@@ -25,9 +27,12 @@ import { concurrentIOLimit } from '../../utils/concurrency';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForObjects, InMemoryCache } from '../../cache/in-memory-cache';
 import { Types } from '../object-registrar';
-import { Lane, ModelComponent, Symlink } from '../models';
+import { Lane, ModelComponent } from '../models';
+import { ComponentFsCache } from '../../consumer/component/component-fs-cache';
+import { pMapPool } from '../../utils/promise-with-concurrent';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
+const TRASH_DIR = 'trash';
 
 export default class Repository {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -37,18 +42,19 @@ export default class Repository {
   onRead: ContentTransformer;
   onPersist: ContentTransformer;
   scopePath: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   scopeIndex: ScopeIndex;
   private cache: InMemoryCache<BitObject>;
   remoteLanes!: RemoteLanes;
   unmergedComponents!: UnmergedComponents;
   persistMutex = new Mutex();
+  componentFsCache: ComponentFsCache;
   constructor(scopePath: string, scopeJson: ScopeJson) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
     this.onRead = onRead(scopePath, scopeJson);
     this.onPersist = onPersist(scopePath, scopeJson);
     this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects() });
+    this.componentFsCache = new ComponentFsCache(scopePath);
   }
 
   static async load({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
@@ -60,10 +66,12 @@ export default class Repository {
     return repository;
   }
 
-  static create({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Repository {
+  static async create({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
     const repository = new Repository(scopePath, scopeJson);
     const scopeIndex = ScopeIndex.create(scopePath);
     repository.scopeIndex = scopeIndex;
+    repository.unmergedComponents = await UnmergedComponents.load(scopePath);
+    repository.remoteLanes = new RemoteLanes(scopePath);
     return repository;
   }
 
@@ -77,6 +85,34 @@ export default class Repository {
 
   static onPostObjectsPersist: () => Promise<void>;
 
+  async reLoadScopeIndex() {
+    this.scopeIndex = await this.loadOptionallyCreateScopeIndex();
+  }
+
+  /**
+   * current scope index difference with <scope_folder>/index.json content, reload it
+   * @deprecated use Scope aspect `watchSystemFiles` instead, it's way more efficient.
+   */
+  public async reloadScopeIndexIfNeed(force = false) {
+    const latestScopeIndex = await this.loadOptionallyCreateScopeIndex();
+    if (force) {
+      this.scopeIndex = latestScopeIndex;
+      return;
+    }
+
+    const currentAllScopeIndexItems = this.scopeIndex.getAll();
+    const latestAllScopeIndexItems = latestScopeIndex.getAll();
+
+    if (currentAllScopeIndexItems.length !== latestAllScopeIndexItems.length) {
+      this.scopeIndex = latestScopeIndex;
+      return;
+    }
+
+    if (differenceWith(currentAllScopeIndexItems, latestAllScopeIndexItems, isEqual).length) {
+      this.scopeIndex = latestScopeIndex;
+    }
+  }
+
   ensureDir() {
     return fs.ensureDir(this.getPath());
   }
@@ -88,6 +124,10 @@ export default class Repository {
   getBackupPath(dirName?: string): string {
     const backupPath = path.join(this.scopePath, OBJECTS_BACKUP_DIR);
     return dirName ? path.join(backupPath, dirName) : backupPath;
+  }
+
+  getTrashDir() {
+    return path.join(this.scopePath, TRASH_DIR);
   }
 
   getLicense(): Promise<string> {
@@ -118,6 +158,9 @@ export default class Repository {
       const inMemoryObjects = this.objects[ref.hash.toString()];
       if (inMemoryObjects) return inMemoryObjects;
     }
+    if (ref.hash.length < HASH_SIZE) {
+      ref = await this.getFullRefFromShortHash(ref);
+    }
     const cached = this.getCache(ref);
     if (cached) {
       return cached;
@@ -142,7 +185,9 @@ export default class Repository {
       return null;
     }
     const size = fileContentsRaw.byteLength;
-    const fileContents = await this.onRead(fileContentsRaw);
+    const fileContents = this.onRead(fileContentsRaw);
+    // uncomment to debug the transformed objects by onRead
+    // console.log('transformedContent load', ref.toString(), BitObject.parseSync(fileContents).getType());
     const parsedObject = await BitObject.parseObject(fileContents, objectPath);
     const maxSizeToCache = 100 * 1024; // 100KB
     if (size < maxSizeToCache) {
@@ -160,28 +205,66 @@ export default class Repository {
     const refs = await this.listRefs();
     const concurrency = concurrentIOLimit();
     const objects: BitObject[] = [];
-    await pMap(
+    const loadGracefully = process.argv.includes('--never-exported');
+    const isTypeIncluded = (obj: BitObject) => types.some((type) => type.name === obj.constructor.name); // avoid using "obj instanceof type" for Harmony to call this function successfully
+    await pMapPool(
       refs,
       async (ref) => {
-        const object = await this.load(ref);
-        types.forEach((type) => {
-          if (
-            object instanceof type ||
-            type.name === object.constructor.name // needed when Harmony calls this function
-          )
-            objects.push(object);
-        });
+        const object = loadGracefully
+          ? await this.loadRefDeleteIfInvalid(ref)
+          : await this.loadRefOnlyIfType(ref, types);
+        if (!object) return;
+        if (loadGracefully && !isTypeIncluded(object)) return;
+        objects.push(object);
       },
       { concurrency }
     );
-
     return objects;
   }
+
+  async loadRefDeleteIfInvalid(ref: Ref) {
+    try {
+      return await this.load(ref, true);
+    } catch (err: any) {
+      // this is needed temporarily to allow `bit reset --never-exported` to fix the bit-id-comp-id error.
+      // in a few months, we can remove this condition (around min 2024)
+      if (err.constructor.name === 'BitIdCompIdError' || err.constructor.name === 'MissingScope') {
+        logger.debug(`bit-id-comp-id error, moving an object to trash ${ref.toString()}`);
+        await this.moveOneObjectToTrash(ref);
+        return undefined;
+      }
+      throw err;
+    }
+  }
+
+  async loadRefOnlyIfType(ref: Ref, types: Types): Promise<BitObject | null> {
+    const objectPath = this.objectPath(ref);
+    const fileContentsRaw = await fs.readFile(objectPath);
+    const fileContents = this.onRead(fileContentsRaw);
+    const typeNames = types.map((type) => type.name);
+    const parsedObject = await BitObject.parseObjectOnlyIfType(fileContents, typeNames, objectPath);
+    return parsedObject;
+  }
+
   async listRefs(cwd = this.getPath()): Promise<Array<Ref>> {
     const matches = await glob(path.join('*', '*'), { cwd });
     const refs = matches.map((str) => {
       const hash = str.replace(path.sep, '');
-      if (!isHash(hash)) {
+      if (!isSnap(hash)) {
+        logger.error(`fatal: the file "${str}" is not a valid bit object path`);
+        return null;
+      }
+      return new Ref(hash);
+    });
+    return compact(refs);
+  }
+
+  async listRefsStartWith(shortHash: Ref): Promise<Array<Ref>> {
+    const pathPrefix = this.hashPath(shortHash);
+    const matches = await glob(`${pathPrefix}*`, { cwd: this.getPath() });
+    const refs = matches.map((str) => {
+      const hash = str.replace(path.sep, '');
+      if (!isSnap(hash)) {
         logger.error(`fatal: the file "${str}" is not a valid bit object path`);
         return null;
       }
@@ -250,7 +333,7 @@ export default class Repository {
       return scopeIndex;
     } catch (err: any) {
       if (err.code === 'ENOENT') {
-        const bitObjects: BitObject[] = await this.list([ModelComponent, Symlink, Lane]);
+        const bitObjects: BitObject[] = await this.list([ModelComponent, Lane]);
         const scopeIndex = ScopeIndex.create(this.scopePath);
         const added = scopeIndex.addMany(bitObjects);
         if (added) await scopeIndex.write();
@@ -261,10 +344,28 @@ export default class Repository {
   }
 
   async loadRaw(ref: Ref): Promise<Buffer> {
+    if (ref.hash.length < HASH_SIZE) {
+      ref = await this.getFullRefFromShortHash(ref);
+    }
     const raw = await fs.readFile(this.objectPath(ref));
     // Run hook to transform content pre reading
     const transformedContent = this.onRead(raw);
+    // uncomment to debug the transformed objects by onRead
+    // console.log('transformedContent loadRaw', ref.toString(), BitObject.parseSync(transformedContent).getType());
     return transformedContent;
+  }
+
+  async getFullRefFromShortHash(ref: Ref): Promise<Ref> {
+    const refs = await this.listRefsStartWith(ref);
+    if (refs.length > 1) {
+      throw new Error(
+        `found ${refs.length} objects with the same short hash ${ref.toString()}, please use longer hash`
+      );
+    }
+    if (refs.length === 0) {
+      throw new Error(`failed finding an object with the short hash ${ref.toString()}`);
+    }
+    return refs[0];
   }
 
   async loadManyRaw(refs: Ref[]): Promise<ObjectItem[]> {
@@ -328,8 +429,13 @@ export default class Repository {
     this.cache.delete(ref.toString());
   }
 
-  clearCache() {
+  async clearCache() {
     logger.debug('repository.clearCache');
+    this.cache.deleteAll();
+    await this.reLoadScopeIndex();
+  }
+  clearObjectsFromCache() {
+    logger.debug('repository.clearObjectsFromCache');
     this.cache.deleteAll();
   }
 
@@ -449,8 +555,50 @@ export default class Repository {
     if (removed) await this.scopeIndex.write();
   }
 
-  async deleteRecordsFromUnmergedComponents(componentNames: string[]) {
-    this.unmergedComponents.removeMultipleComponents(componentNames);
+  async moveObjectsToTrash(refs: Ref[]): Promise<void> {
+    if (!refs.length) return;
+    const uniqRefs = uniqBy(refs, 'hash');
+    logger.debug(`Repository.moveObjectsToTrash: ${uniqRefs.length} objects`);
+    const concurrency = concurrentIOLimit();
+    await pMap(uniqRefs, (ref) => this.moveOneObjectToTrash(ref), { concurrency });
+    const removed = this.scopeIndex.removeMany(uniqRefs);
+    if (removed) await this.scopeIndex.write();
+  }
+
+  async getFromTrash(refs: Ref[]): Promise<BitObject[]> {
+    const objectsFromTrash = await Promise.all(
+      refs.map(async (ref) => {
+        const trashObjPath = path.join(this.getTrashDir(), this.hashPath(ref));
+        let buffer: Buffer;
+        try {
+          buffer = await fs.readFile(trashObjPath);
+        } catch (err: any) {
+          if (err.code === 'ENOENT') {
+            throw new BitError(`unable to find the object ${ref.toString()} in the trash`);
+          }
+          throw err;
+        }
+        return BitObject.parseObject(buffer, trashObjPath);
+      })
+    );
+    return objectsFromTrash;
+  }
+
+  async restoreFromTrash(refs: Ref[]) {
+    logger.debug(`Repository.restoreFromTrash: ${refs.length} objects`);
+    const objectsFromTrash = await this.getFromTrash(refs);
+    await this.writeObjectsToTheFS(objectsFromTrash);
+  }
+
+  private async moveOneObjectToTrash(ref: Ref) {
+    const currentPath = this.objectPath(ref);
+    const trashObjPath = path.join(this.getTrashDir(), this.hashPath(ref));
+    await fs.move(currentPath, trashObjPath, { overwrite: true });
+    this.removeFromCache(ref);
+  }
+
+  async deleteRecordsFromUnmergedComponents(compIds: ComponentID[]) {
+    this.unmergedComponents.removeMultipleComponents(compIds);
     await this.unmergedComponents.write();
   }
 
@@ -527,4 +675,20 @@ export default class Repository {
     const hash = ref.toString();
     return path.join(hash.slice(0, 2), hash.slice(2));
   }
+}
+
+async function removeFile(filePath: string, propagateDirs = false): Promise<boolean> {
+  try {
+    await fs.unlink(filePath);
+  } catch (err: any) {
+    if (err.code === 'ENOENT') {
+      // the file doesn't exist, that's fine, no need to do anything
+      return false;
+    }
+    throw err;
+  }
+  if (!propagateDirs) return true;
+  const { dir } = path.parse(filePath);
+  await removeEmptyDir(dir);
+  return true;
 }

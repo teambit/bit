@@ -5,10 +5,14 @@
  * and it throws an error if the file doesn't exists on Docker/CI.
  */
 import chalk from 'chalk';
+import fs from 'fs-extra';
+import path from 'path';
 import { serializeError } from 'serialize-error';
 import format from 'string-format';
 import { Logger as PinoLogger, Level } from 'pino';
 import yn from 'yn';
+import pMapSeries from 'p-map-series';
+
 import { Analytics } from '../analytics/analytics';
 import { getSync } from '../api/consumer/lib/global-config';
 import defaultHandleError from '../cli/default-error-handler';
@@ -47,6 +51,8 @@ export interface IBitLogger {
   console(msg: string): void;
 }
 
+const commandHistoryFile = 'command-history';
+
 /**
  * the method signatures of debug/info/error/etc are similar to Winston.logger.
  * the way how it is formatted in the log file is according to the `customPrint` function above.
@@ -61,6 +67,8 @@ export interface IBitLogger {
 class BitLogger implements IBitLogger {
   logger: PinoLogger;
   private profiler: Profiler;
+  private onBeforeExitFns: Function[] = [];
+
   isDaemon = false; // 'bit cli' is a daemon as it should never exit the process, unless the user kills it
   /**
    * being set on command-registrar, once the flags are parsed. here, it's a workaround to have
@@ -68,7 +76,11 @@ class BitLogger implements IBitLogger {
    * is actually "json". that's why this variable is overridden once the command-registrar is up.
    */
   shouldWriteToConsole = !process.argv.includes('--json') && !process.argv.includes('-j');
-
+  /**
+   * helpful to get a list in the .bit/command-history of all commands that were running on this workspace.
+   * it's written only if the consumer is loaded. otherwise, the commandHistory.fileBasePath is undefined
+   */
+  commandHistoryBasePath: string | undefined;
   constructor(logger: PinoLogger) {
     this.logger = logger;
     this.profiler = new Profiler();
@@ -160,6 +172,14 @@ class BitLogger implements IBitLogger {
     console ? this.console(fullMsg) : this.info(fullMsg);
   }
 
+  registerOnBeforeExitFn(fn: Function) {
+    this.onBeforeExitFns.push(fn);
+  }
+
+  async runOnBeforeExitFns() {
+    return pMapSeries(this.onBeforeExitFns, (fn) => fn());
+  }
+
   async exitAfterFlush(code = 0, commandName: string, cliOutput = '') {
     await Analytics.sendData();
     const isSuccess = code === 0;
@@ -175,7 +195,36 @@ class BitLogger implements IBitLogger {
     // const finalLogger = pino.final(pinoLogger);
     // finalLogger[level](msg);
     this.logger[level](msg);
+    this.writeCommandHistoryEnd(code);
+    await this.runOnBeforeExitFns();
     if (!this.isDaemon) process.exit(code);
+  }
+
+  private commandHistoryMsgPrefix() {
+    return `${new Date().toISOString()} ${process.pid} ${process.argv.slice(2).join(' ')}`;
+  }
+
+  writeCommandHistoryStart() {
+    const str = `${this.commandHistoryMsgPrefix()}, started`;
+    this.writeToCommandHistory(str);
+  }
+
+  private writeCommandHistoryEnd(code: number) {
+    const endStr = code === 0 ? 'succeeded' : 'failed';
+    const str = `${this.commandHistoryMsgPrefix()}, ${endStr}`;
+    this.writeToCommandHistory(str);
+  }
+
+  /**
+   * keep this method sync. for some reason, if it's promise, the exit-code is zero when Jest/Mocha tests fail.
+   */
+  private writeToCommandHistory(str: string) {
+    if (!this.commandHistoryBasePath) return;
+    try {
+      fs.appendFileSync(path.join(this.commandHistoryBasePath, commandHistoryFile), `${str}\n`);
+    } catch (error) {
+      // never mind
+    }
   }
 
   debugAndAddBreadCrumb(

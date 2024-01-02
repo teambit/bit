@@ -9,7 +9,7 @@ import { slice } from 'lodash';
 import { ComponentFactory } from './component-factory';
 import ComponentFS from './component-fs';
 // import { NothingToSnap } from './exceptions';
-import ComponentConfig from './config';
+import { Config as ComponentConfig } from './config';
 // eslint-disable-next-line import/no-cycle
 import { Snap } from './snap';
 import { State } from './state';
@@ -177,6 +177,13 @@ export class Component implements IComponent {
    */
   isModified(): Promise<boolean> {
     return this.factory.isModified(this);
+  }
+
+  /**
+   * whether a component is marked as deleted.
+   */
+  isDeleted(): boolean {
+    return this.state._consumer.isRemoved();
   }
 
   /**

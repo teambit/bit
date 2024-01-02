@@ -1,4 +1,6 @@
 import fs from 'fs-extra';
+import pathLib from 'path';
+import writeFileAtomic from 'write-file-atomic';
 import { userInfo } from 'os';
 
 export type ChownOptions = {
@@ -11,9 +13,11 @@ export default async function writeFile(
   contents: string | Buffer,
   options: ChownOptions = {}
 ): Promise<void> {
-  await fs.outputFile(path, contents);
+  let chown;
   if (options.gid || options.uid) {
     const user = userInfo();
-    await fs.chown(path, options.uid || user.uid, options.gid || user.gid);
+    chown = { uid: options.uid || user.uid, gid: options.gid || user.gid };
   }
+  await fs.ensureDir(pathLib.dirname(path));
+  await writeFileAtomic(path, contents, { chown, fsync: false });
 }

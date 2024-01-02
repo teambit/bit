@@ -1,9 +1,8 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { buildRegistry } from '@teambit/legacy/dist/cli';
+import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { Command } from '@teambit/legacy/dist/cli/command';
-import { CommunityAspect } from '@teambit/community';
-import type { CommunityMain } from '@teambit/community';
-
+import pMapSeries from 'p-map-series';
 import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -15,19 +14,22 @@ import { CLIParser } from './cli-parser';
 import { CompletionCmd } from './completion.cmd';
 import { CliCmd, CliGenerateCmd } from './cli.cmd';
 import { HelpCmd } from './help.cmd';
+import { VersionCmd } from './version.cmd';
 
 export type CommandList = Array<Command>;
-export type OnStart = (hasWorkspace: boolean) => Promise<void>;
+export type OnStart = (hasWorkspace: boolean, currentCommand: string) => Promise<void>;
+export type OnBeforeExitFn = () => Promise<void>;
 
 export type OnStartSlot = SlotRegistry<OnStart>;
 export type CommandsSlot = SlotRegistry<CommandList>;
+export type OnBeforeExitSlot = SlotRegistry<OnBeforeExitFn>;
 
 export class CLIMain {
   public groups: GroupsType = clone(groups); // if it's not cloned, it is cached across loadBit() instances
   constructor(
     private commandsSlot: CommandsSlot,
     private onStartSlot: OnStartSlot,
-    private community: CommunityMain,
+    private onBeforeExitSlot: OnBeforeExitSlot,
     private logger: Logger
   ) {}
 
@@ -90,18 +92,39 @@ export class CLIMain {
   }
 
   /**
+   * This will register a function to be called before the process exits.
+   * This will run only for "regular" exits
+   * e.g.
+   * yes - command run and finished successfully
+   * yes - command run and failed gracefully (code 1)
+   * not SIGKILL (kill -9)
+   * not SIGINT (Ctrl+C)
+   * not SIGTERM (kill)
+   * not uncaughtException
+   * not unhandledRejection
+   *
+   * @param onBeforeExitFn
+   * @returns
+   */
+  registerOnBeforeExit(onBeforeExitFn: OnBeforeExitFn) {
+    this.onBeforeExitSlot.register(onBeforeExitFn);
+    legacyLogger.registerOnBeforeExitFn(onBeforeExitFn);
+    return this;
+  }
+
+  /**
    * execute commands registered to this aspect.
    */
   async run(hasWorkspace: boolean) {
     await this.invokeOnStart(hasWorkspace);
-    const CliParser = new CLIParser(this.commands, this.groups, undefined, this.community.getDocsDomain());
+    const CliParser = new CLIParser(this.commands, this.groups);
     await CliParser.parse();
   }
 
   private async invokeOnStart(hasWorkspace: boolean) {
     const onStartFns = this.onStartSlot.values();
-    const promises = onStartFns.map(async (onStart) => onStart(hasWorkspace));
-    return Promise.all(promises);
+    const currentCommand = process.argv[2];
+    await pMapSeries(onStartFns, (onStart) => onStart(hasWorkspace, currentCommand));
   }
 
   private setDefaults(command: Command) {
@@ -112,6 +135,7 @@ export class CLIMain {
     command.options = command.options || [];
     command.private = command.private || false;
     command.commands = command.commands || [];
+    command.name = command.name.trim();
     if (command.loader === undefined) {
       if (command.internal) {
         command.loader = false;
@@ -120,30 +144,30 @@ export class CLIMain {
       }
     }
     if (command.helpUrl && !isFullUrl(command.helpUrl)) {
-      command.helpUrl = `https://${this.community.getDocsDomain()}/${command.helpUrl}`;
+      command.helpUrl = `https://bit.dev/${command.helpUrl}`;
     }
   }
 
-  static dependencies = [CommunityAspect, LoggerAspect];
+  static dependencies = [LoggerAspect];
   static runtime = MainRuntime;
-  static slots = [Slot.withType<CommandList>(), Slot.withType<OnStart>()];
+  static slots = [Slot.withType<CommandList>(), Slot.withType<OnStart>(), Slot.withType<OnBeforeExitFn>()];
 
   static async provider(
-    [community, loggerMain]: [CommunityMain, LoggerMain],
+    [loggerMain]: [LoggerMain],
     config,
-    [commandsSlot, onStartSlot]: [CommandsSlot, OnStartSlot]
+    [commandsSlot, onStartSlot, onBeforeExitSlot]: [CommandsSlot, OnStartSlot, OnBeforeExitSlot]
   ) {
     const logger = loggerMain.createLogger(CLIAspect.id);
-    const cliMain = new CLIMain(commandsSlot, onStartSlot, community, logger);
+    const cliMain = new CLIMain(commandsSlot, onStartSlot, onBeforeExitSlot, logger);
     const legacyRegistry = buildRegistry();
     await ensureWorkspaceAndScope();
     const legacyCommands = legacyRegistry.commands;
     const legacyCommandsAdapters = legacyCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
     const cliGenerateCmd = new CliGenerateCmd(cliMain);
-    const cliCmd = new CliCmd(cliMain, community.getDocsDomain());
-    const helpCmd = new HelpCmd(cliMain, community.getDocsDomain());
+    const cliCmd = new CliCmd(cliMain);
+    const helpCmd = new HelpCmd(cliMain);
     cliCmd.commands.push(cliGenerateCmd);
-    cliMain.register(...legacyCommandsAdapters, new CompletionCmd(), cliCmd, helpCmd);
+    cliMain.register(...legacyCommandsAdapters, new CompletionCmd(), cliCmd, helpCmd, new VersionCmd());
     return cliMain;
   }
 }

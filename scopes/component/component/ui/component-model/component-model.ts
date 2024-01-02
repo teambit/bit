@@ -19,7 +19,6 @@ export type ComponentModelProps = {
   server?: ComponentServer;
   displayName: string;
   packageName: string; // pkg aspect
-  elementsUrl?: string; // pkg aspect
   compositions?: CompositionProps[];
   tags?: TagProps[];
   issuesCount?: number; // component/issues aspect
@@ -37,12 +36,28 @@ export type ComponentModelProps = {
 export type ComponentPreview = {
   includesEnvTemplate?: boolean;
   isScaling?: boolean;
+  onlyOverview?: boolean;
   legacyHeader?: boolean;
+  useNameParam?: boolean;
+  skipIncludes?: boolean;
 };
 
 export type ComponentServer = {
   env: string;
-  url: string;
+  /**
+   * Full dev server url.
+   */
+  url?: string;
+
+  /**
+   * host of the component server (used mostly by cloud providers for remote scopes)
+   */
+  host?: string;
+
+  /**
+   * This is used mostly by cloud to proxy requests to the correct scope.
+   */
+  basePath?: string;
 };
 
 export class ComponentModel {
@@ -86,10 +101,6 @@ export class ComponentModel {
      * issues of component.
      */
     readonly issuesCount?: number,
-    /**
-     * elements url
-     */
-    readonly elementsUrl?: string,
     /**
      * status of component.
      */
@@ -148,7 +159,6 @@ export class ComponentModel {
     displayName,
     compositions = [],
     packageName,
-    elementsUrl,
     tags = [],
     deprecation,
     buildStatus,
@@ -172,7 +182,6 @@ export class ComponentModel {
       TagMap.fromArray(tags.map((tag) => Tag.fromObject(tag))),
       buildStatus,
       issuesCount,
-      elementsUrl,
       status,
       deprecation,
       env,
@@ -182,7 +191,7 @@ export class ComponentModel {
       size,
       latest,
       preview,
-      logs
+      logs?.map((log) => log ?? { hash: '[error]', tag: '[error]', message: '', parents: [] })
     );
   }
 

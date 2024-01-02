@@ -3,7 +3,7 @@ import { Card } from '@teambit/base-ui.surfaces.card';
 import { mutedText } from '@teambit/base-ui.text.muted-text';
 import { ComponentID } from '@teambit/component';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import { CompareStatusResolver } from '@teambit/component.ui.compare';
+import { CompareStatusResolver } from '@teambit/component.ui.component-compare.status-resolver';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';

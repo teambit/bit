@@ -1,4 +1,6 @@
+import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { expect } from 'chai';
+import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
@@ -13,7 +15,6 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -30,7 +31,7 @@ const isPositive = require('is-positive');
       helper.command.tagComponent('comp3 comp1');
       helper.command.export();
       helper.command.removeComponent('comp1');
-      helper.command.install('is-positive@2.0.0 --update-existing');
+      helper.command.install('is-positive@2.0.0');
       helper.command.tagComponent('comp3 comp2', undefined, '--unmodified');
       helper.command.export();
 
@@ -50,10 +51,18 @@ const isPositive = require('is-positive');
       ).to.eq('0.0.2');
     });
     it('should install package dependencies from their respective models to the imported components', () => {
-      expect(helper.fs.readJsonFile(`node_modules/is-positive/package.json`).version).to.eq('1.0.0');
       expect(
-        helper.fs.readJsonFile(
-          path.join(helper.scopes.remoteWithoutOwner, `comp2/node_modules/is-positive/package.json`)
+        fs.readJsonSync(
+          resolveFrom(path.join(helper.fixtures.scopes.localPath, helper.scopes.remoteWithoutOwner, 'comp1'), [
+            'is-positive/package.json',
+          ])
+        ).version
+      ).to.eq('1.0.0');
+      expect(
+        fs.readJsonSync(
+          resolveFrom(path.join(helper.fixtures.scopes.localPath, helper.scopes.remoteWithoutOwner, 'comp2'), [
+            'is-positive/package.json',
+          ])
         ).version
       ).to.eq('2.0.0');
     });
@@ -72,7 +81,6 @@ const isPositive = require('is-positive');
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       helper.bitJsonc.addKeyValToDependencyResolver('policy', {
         peerDependencies: {
@@ -96,7 +104,8 @@ const isPositive = require('is-positive');
       helper.command.import(`${helper.scopes.remote}/comp1`);
     });
     it('should install component dependencies from their respective models to the imported components', () => {
-      expect(() => helper.command.diff()).to.throw('there are no modified components to diff');
+      const diff = helper.command.diff();
+      expect(diff).to.include('there are no modified components to diff');
     });
     after(() => {
       npmCiRegistry.destroy();

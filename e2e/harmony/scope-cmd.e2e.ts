@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import path from 'path';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -17,7 +18,6 @@ describe('bit scope command', function () {
     let output: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -37,9 +37,33 @@ describe('bit scope command', function () {
       expect(showFork.config.forkedFrom.name).to.equal('comp1');
     });
   });
-  describe('bit scope rename --refactor', () => {
+  describe('bit scope rename', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.renameScope(helper.scopes.remote, 'new-scope');
+    });
+    it('should rename the scope', () => {
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(1);
+      expect(list[0].id).to.equal('new-scope/comp1');
+    });
+    it('should delete the old link to node_modules', () => {
+      const linkPath = path.join(helper.scopes.localPath, 'node_modules', `@${helper.scopes.remote}`, 'comp1');
+      expect(linkPath).to.not.be.a.path();
+    });
+    it('should create a new link to node_modules', () => {
+      const linkPath = path.join(helper.scopes.localPath, 'node_modules', '@new-scope', 'comp1');
+      expect(linkPath).to.be.a.directory();
+    });
+    it('should compile the renamed components', () => {
+      const linkPath = path.join(helper.scopes.localPath, 'node_modules', '@new-scope', 'comp1', 'dist');
+      expect(linkPath).to.be.a.directory();
+    });
+  });
+  describe('bit scope rename --refactor', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponents(3);
       helper.bitJsonc.addKeyVal('my-scope/comp2', {});
       helper.command.renameScope('my-scope', helper.scopes.remote, '--refactor');
@@ -53,6 +77,41 @@ describe('bit scope command', function () {
       const workspaceJsonc = helper.bitJsonc.read();
       expect(workspaceJsonc).to.have.property(`${helper.scopes.remote}/comp2`);
       expect(workspaceJsonc).not.to.have.property(`my-scope/comp2`);
+    });
+  });
+  describe('bit scope rename-owner', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.addDefaultScope('old-org.my-scope');
+      helper.fixtures.populateComponents(2);
+      helper.command.setScope('old-org.my-scope1', 'comp1');
+      helper.command.setScope('old-org.my-scope2', 'comp2');
+
+      helper.command.renameScopeOwner('old-org', 'new-org');
+    });
+    it('should rename the default-scope in workspace.jsonc', () => {
+      expect(helper.bitJsonc.getDefaultScope()).to.equal('new-org.my-scope');
+    });
+    it('should rename the scope of the components', () => {
+      const list = helper.command.listParsed();
+      const ids = list.map((c) => c.id);
+      expect(ids).to.have.members(['new-org.my-scope1/comp1', 'new-org.my-scope2/comp2']);
+    });
+    it('should delete the old link to node_modules', () => {
+      const linkPath1 = path.join(helper.scopes.localPath, 'node_modules', '@old-org/my-scope1.comp1');
+      expect(linkPath1).to.not.be.a.path();
+      const linkPath2 = path.join(helper.scopes.localPath, 'node_modules', '@old-org/my-scope2.comp2');
+      expect(linkPath2).to.not.be.a.path();
+    });
+    it('should create a new link to node_modules', () => {
+      const linkPath1 = path.join(helper.scopes.localPath, 'node_modules', '@new-org/my-scope1.comp1');
+      expect(linkPath1).to.be.a.directory();
+      const linkPath2 = path.join(helper.scopes.localPath, 'node_modules', '@new-org/my-scope2.comp2');
+      expect(linkPath2).to.be.a.directory();
+    });
+    it('should compile the renamed components', () => {
+      const linkPath = path.join(helper.scopes.localPath, 'node_modules', '@new-org/my-scope1.comp1/dist');
+      expect(linkPath).to.be.a.directory();
     });
   });
 });

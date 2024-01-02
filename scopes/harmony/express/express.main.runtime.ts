@@ -1,8 +1,9 @@
 import { MainRuntime } from '@teambit/cli';
+import { Server } from 'http';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import express, { Express } from 'express';
-import { concat, flatten, lowerCase } from 'lodash';
+import { concat, flatten, lowerCase, sortBy } from 'lodash';
 import bodyParser from 'body-parser';
 import { ExpressAspect } from './express.aspect';
 import { catchErrors } from './middlewares';
@@ -42,12 +43,12 @@ export class ExpressMain {
   ) {}
 
   /**
-   * start a express server.
+   * start an express server.
    */
-  async listen(port?: number) {
+  async listen(port?: number): Promise<Server> {
     const serverPort = port || this.config.port;
     const app = this.createApp();
-    app.listen(serverPort);
+    return app.listen(serverPort);
   }
 
   /**
@@ -75,6 +76,7 @@ export class ExpressMain {
         method: 'get',
         path: '/_health',
         disableNamespace: false,
+        priority: 0,
         middlewares: [async (req: Request, res: Response) => res.send('ok')],
       },
     ];
@@ -84,6 +86,7 @@ export class ExpressMain {
     const internalRoutes = this.createRootRoutes();
     const routes = this.createRoutes();
     const allRoutes = concat(routes, internalRoutes);
+    const sortedRoutes = sortBy(allRoutes, (r) => r.priority).reverse();
     const app = expressApp || express();
     app.use((req, res, next) => {
       if (this.config.loggerIgnorePath.includes(req.url)) return next();
@@ -92,12 +95,15 @@ export class ExpressMain {
     });
     if (!options?.disableBodyParser) this.bodyParser(app);
 
-    this.middlewareSlot
-      .toArray()
-      .flatMap(([, middlewares]) =>
-        middlewares.flatMap((middlewareManifest) => app.use(middlewareManifest.middleware))
-      );
-    allRoutes.forEach((routeInfo) => {
+    const middlewaresSlot = this.middlewareSlot.values().flat();
+    middlewaresSlot.forEach(({ route, middleware }) => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      if (!route) app.use(middleware);
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      if (route) app.use(route, middleware);
+    });
+
+    sortedRoutes.forEach((routeInfo) => {
       const { method, path, middlewares, disableNamespace } = routeInfo;
       // TODO: @guy make sure to support single middleware here.
       const namespace = disableNamespace ? '' : `/${this.config.namespace}`;
@@ -117,6 +123,7 @@ export class ExpressMain {
           path: route.route,
           disableNamespace: route.disableNamespace,
           middlewares,
+          priority: route.priority || 0,
         };
       });
     });

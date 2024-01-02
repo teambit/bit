@@ -5,3 +5,5 @@ export const CommandBarAspect = Aspect.create({
   dependencies: [],
   defaultConfig: {},
 });
+
+export default CommandBarAspect;

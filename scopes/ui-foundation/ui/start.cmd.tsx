@@ -1,12 +1,13 @@
+import { BitError } from '@teambit/bit-error';
+import { Command, CommandOptions } from '@teambit/cli';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { Logger } from '@teambit/logger';
+import { UIServerConsole } from '@teambit/ui-foundation.cli.ui-server-console';
 import React from 'react';
 import openBrowser from 'react-dev-utils/openBrowser';
-import { Command, CommandOptions } from '@teambit/cli';
-import { Logger } from '@teambit/logger';
-import { BitError } from '@teambit/bit-error';
-import { UIServerConsole } from '@teambit/ui-foundation.cli.ui-server-console';
 import type { UiMain } from './ui.main.runtime';
 
-type StartArgs = [uiName: string, userPattern: string];
+type StartArgs = [userPattern: string];
 type StartFlags = {
   dev: boolean;
   port: string;
@@ -14,20 +15,38 @@ type StartFlags = {
   verbose: boolean;
   noBrowser: boolean;
   skipCompilation: boolean;
+  skipUiBuild: boolean;
+  uiRootName: string;
 };
 
 export class StartCmd implements Command {
-  name = 'start [type] [pattern]';
+  name = 'start [component-pattern]';
   description = 'run the ui/development server';
+  arguments = [
+    {
+      name: 'component-pattern',
+      description: COMPONENT_PATTERN_HELP,
+    },
+  ];
   alias = 'c';
   group = 'development';
   options = [
     ['d', 'dev', 'start UI server in dev mode.'],
     ['p', 'port [port-number]', 'port of the UI server.'],
-    ['r', 'rebuild', 'rebuild the UI'],
+    [
+      'r',
+      'rebuild',
+      'rebuild the UI (useful e.g. when updating the workspace UI - can use the dev flag for HMR in this case)',
+    ],
+    ['', 'skip-ui-build', 'skip building UI'],
     ['v', 'verbose', 'show verbose output for inspection and prints stack trace'],
-    ['', 'no-browser', 'do not automatically open browser when ready'],
+    ['n', 'no-browser', 'do not automatically open browser when ready'],
     ['', 'skip-compilation', 'skip the auto-compilation before starting the web-server'],
+    [
+      'u',
+      'ui-root-name [type]',
+      'name of the ui root to use, e.g. "teambit.scope/scope" or "teambit.workspace/workspace"',
+    ],
   ] as CommandOptions;
 
   constructor(
@@ -56,8 +75,17 @@ export class StartCmd implements Command {
   // }
 
   async render(
-    [uiRootName, userPattern]: StartArgs,
-    { dev, port, rebuild, verbose, noBrowser, skipCompilation }: StartFlags
+    [userPattern]: StartArgs,
+    {
+      dev,
+      port,
+      rebuild,
+      verbose,
+      noBrowser,
+      skipCompilation,
+      skipUiBuild,
+      uiRootName: uiRootAspectIdOrName,
+    }: StartFlags
   ): Promise<React.ReactElement> {
     this.logger.off();
     if (!this.ui.isHostAvailable()) {
@@ -65,10 +93,11 @@ export class StartCmd implements Command {
         `bit start can only be run inside a bit workspace or a bit scope - please ensure you are running the command in the correct directory`
       );
     }
-    const appName = this.ui.getUiName(uiRootName);
+    const appName = this.ui.getUiName(uiRootAspectIdOrName);
     await this.ui.invokePreStart({ skipCompilation });
     const uiServer = this.ui.createRuntime({
-      uiRootName,
+      uiRootAspectIdOrName,
+      skipUiBuild,
       pattern: userPattern,
       dev,
       port: +port,

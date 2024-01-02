@@ -8,7 +8,6 @@ describe('bit fork command', function () {
   before(() => {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setupDefault();
     helper.fixtures.populateComponents(1);
     helper.command.tagAllWithoutBuild();
     helper.command.export();
@@ -34,9 +33,18 @@ describe('bit fork command', function () {
       expect(bitmap.comp2.config[Extensions.forking]).to.not.have.property('__specific');
     });
   });
+  describe('fork a component with --no-link', () => {
+    before(() => {
+      helper.command.fork('comp1 comp-no-link', '--no-link');
+    });
+    it('bit show should not show the forked component', () => {
+      const showFork = helper.command.showAspectConfig('comp-no-link', Extensions.forking);
+      expect(showFork).to.be.undefined;
+    });
+  });
   describe('fork a remote component with no --target-id flag', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
       helper.scopeHelper.addRemoteScope();
       helper.command.fork(`${helper.scopes.remote}/comp1`);
     });

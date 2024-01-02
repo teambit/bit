@@ -12,7 +12,6 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setupDefault();
     helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();

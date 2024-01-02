@@ -17,7 +17,6 @@ chai.use(require('chai-fs'));
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
-    helper.bitJsonc.setupDefault();
     remote = helper.scopes.remote;
 
     npmCiRegistry = new NpmCiRegistry(helper);
@@ -71,7 +70,6 @@ chai.use(require('chai-fs'));
   describe('complex scenario', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
 
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
       const name = `@ci/${randomStr}.{name}`;
@@ -196,7 +194,7 @@ const get = require("lodash.get");`
     });
     it("should install the package from the root manifest when the component doesn't have a policy for it", () => {
       const comp4Output = helper.command.showComponentParsed('comp4');
-      expect(comp4Output.packageDependencies['lodash.get']).to.equal('4.4.2');
+      expect(comp4Output.packageDependencies['lodash.get']).to.equal('^4.4.2');
     });
   });
 });

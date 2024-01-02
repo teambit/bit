@@ -42,7 +42,7 @@ class ResolverReset implements LegacyCommand {
   }
 
   report(): string {
-    return 'resovler path has successfully reset to default';
+    return 'resolver path has been successfully reset to default';
   }
 }
 

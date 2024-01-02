@@ -1,3 +1,4 @@
+import { OutsideWorkspaceError } from '@teambit/workspace';
 import { expect } from 'chai';
 
 import { ConsumerNotFound } from '../../src/consumer/exceptions';
@@ -27,8 +28,8 @@ describe('bit remote command', function () {
     after(() => {
       helper.command.runCmd(`bit remote del ${helper.scopes.remote} --global`);
     });
-    it('bit status should throw an error ConsumerNotFound', () => {
-      const error = new ConsumerNotFound();
+    it('bit status should throw an error OutsideWorkspaceError', () => {
+      const error = new OutsideWorkspaceError();
       const func = () => helper.command.status();
       helper.general.expectToThrow(func, error);
     });
@@ -50,7 +51,7 @@ describe('bit remote command', function () {
     describe('bit remove with --remote flag', () => {
       let output;
       before(() => {
-        output = helper.command.removeComponent(`${helper.scopes.remote}/bar/foo`, '--remote');
+        output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/bar/foo`);
       });
       it('should not throw an error', () => {
         expect(output).to.have.string('successfully removed');

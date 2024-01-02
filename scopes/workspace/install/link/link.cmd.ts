@@ -1,10 +1,9 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import { LinkResults } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { timeFormat } from '@teambit/toolbox.time.time-format';
 import chalk from 'chalk';
 import { Workspace } from '@teambit/workspace';
-import { InstallMain, WorkspaceLinkOptions } from '../install.main.runtime';
+import { InstallMain, WorkspaceLinkOptions, WorkspaceLinkResults } from '../install.main.runtime';
 import { ComponentListLinks } from './component-list-links';
 import { CoreAspectsLinks } from './core-aspects-links';
 import { NestedComponentLinksLinks } from './nested-deps-in-nm-links';
@@ -16,11 +15,13 @@ type LinkCommandOpts = {
   verbose: boolean;
   target: string;
   skipFetchingObjects?: boolean;
+  peers?: boolean;
 };
 export class LinkCommand implements Command {
   name = 'link [component-names...]';
   alias = '';
   description = 'create links in the node_modules directory, to core aspects and to components in the workspace';
+  helpUrl = 'reference/workspace/component-links';
   extendedDescription: string;
   group = 'development';
   private = false;
@@ -32,9 +33,10 @@ export class LinkCommand implements Command {
     [
       '',
       'target <dir>',
-      'EXPERIMENTAL. link to an external directory (similar to npm-link) so other projects could use these components',
+      'link to an external directory (similar to npm-link) so other projects could use these components',
     ],
     ['', 'skip-fetching-objects', 'skip fetch missing objects from remotes before linking'],
+    ['', 'peers', 'link peer dependencies of the components too'],
   ] as CommandOptions;
 
   constructor(
@@ -47,12 +49,8 @@ export class LinkCommand implements Command {
     /**
      * logger extension.
      */
-    private logger: Logger,
-
-    private docsDomain: string
-  ) {
-    this.extendedDescription = `https://${this.docsDomain}/workspace/component-links`;
-  }
+    private logger: Logger
+  ) {}
 
   async report([ids]: [string[]], opts: LinkCommandOpts) {
     const startTime = Date.now();
@@ -83,18 +81,19 @@ export class LinkCommand implements Command {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async json([ids]: [string[]], opts: LinkCommandOpts): Promise<LinkResults> {
+  async json([ids]: [string[]], opts: LinkCommandOpts): Promise<WorkspaceLinkResults> {
     this.logger.console(
       `Linking components and core aspects to node_modules for workspaces: '${chalk.cyan(this.workspace.name)}'`
     );
 
     const linkOpts: WorkspaceLinkOptions = {
-      legacyLink: true,
+      linkToBitRoots: true,
       rewire: opts.rewire,
       linkCoreAspects: true,
       linkTeambitBit: true,
       linkToDir: opts.target,
       fetchObject: !opts.skipFetchingObjects,
+      includePeers: opts.peers,
     };
     const linkResults = await this.install.link(linkOpts);
     return linkResults;

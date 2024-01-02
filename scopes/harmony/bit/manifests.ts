@@ -33,8 +33,6 @@ import { ComponentSizerAspect } from '@teambit/component-sizer';
 import { ReactAspect } from '@teambit/react';
 import { ReactNativeAspect } from '@teambit/react-native';
 import { ReactRouterAspect } from '@teambit/react-router';
-import { ReactElementsAspect } from '@teambit/react-elements';
-import { ElementsAspect } from '@teambit/elements';
 import { SchemaAspect } from '@teambit/schema';
 import { PubsubAspect } from '@teambit/pubsub';
 import { ScopeAspect } from '@teambit/scope';
@@ -47,6 +45,7 @@ import { UIAspect } from '@teambit/ui';
 import { VariantsAspect } from '@teambit/variants';
 import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
+import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
 import { InstallAspect } from '@teambit/install';
 import { LinterAspect } from '@teambit/linter';
 import { FormatterAspect } from '@teambit/formatter';
@@ -79,7 +78,6 @@ import { ClearCacheAspect } from '@teambit/clear-cache';
 import { DiagnosticAspect } from '@teambit/diagnostic';
 import { NewComponentHelperAspect } from '@teambit/new-component-helper';
 import { MochaAspect } from '@teambit/mocha';
-import { BitCustomAspectAspect } from '@teambit/bit-custom-aspect';
 import { CommunityAspect } from '@teambit/community';
 import { CloudAspect } from '@teambit/cloud';
 import { StatusAspect } from '@teambit/status';
@@ -89,11 +87,19 @@ import { IssuesAspect } from '@teambit/issues';
 import { RefactoringAspect } from '@teambit/refactoring';
 import { ComponentCompareAspect } from '@teambit/component-compare';
 import { ListerAspect } from '@teambit/lister';
-import { BuilderUIAspect } from '@teambit/builder-ui';
 import { DependenciesAspect } from '@teambit/dependencies';
 import { RemoveAspect } from '@teambit/remove';
 import { MergeLanesAspect } from '@teambit/merge-lanes';
 import { CheckoutAspect } from '@teambit/checkout';
+import { APIReferenceAspect } from '@teambit/api-reference';
+import { ApiServerAspect } from '@teambit/api-server';
+import { ComponentWriterAspect } from '@teambit/component-writer';
+import { TrackerAspect } from '@teambit/tracker';
+import { MoverAspect } from '@teambit/mover';
+import { WatcherAspect } from '@teambit/watcher';
+import { StashAspect } from '@teambit/stash';
+import { GitAspect } from '@teambit/git';
+import { IpcEventsAspect } from '@teambit/ipc-events';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -101,6 +107,7 @@ export const manifestsMap = {
   [CLIAspect.id]: CLIAspect,
   [DevFilesAspect.id]: DevFilesAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
+  [WorkspaceConfigFilesAspect.id]: WorkspaceConfigFilesAspect,
   [InstallAspect.id]: InstallAspect,
   [ESLintAspect.id]: ESLintAspect,
   [PrettierAspect.id]: PrettierAspect,
@@ -132,8 +139,6 @@ export const manifestsMap = {
   [PkgAspect.id]: PkgAspect,
   [ReactAspect.id]: ReactAspect,
   [ReactNativeAspect.id]: ReactNativeAspect,
-  [ReactElementsAspect.id]: ReactElementsAspect,
-  [ElementsAspect.id]: ElementsAspect,
   [WorkerAspect.id]: WorkerAspect,
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,
@@ -176,7 +181,6 @@ export const manifestsMap = {
   [ComponentLogAspect.id]: ComponentLogAspect,
   [ClearCacheAspect.id]: ClearCacheAspect,
   [MochaAspect.id]: MochaAspect,
-  [BitCustomAspectAspect.id]: BitCustomAspectAspect,
   [DiagnosticAspect.id]: DiagnosticAspect,
   [StatusAspect.id]: StatusAspect,
   [CommunityAspect.id]: CommunityAspect,
@@ -187,11 +191,19 @@ export const manifestsMap = {
   [RefactoringAspect.id]: RefactoringAspect,
   [ComponentCompareAspect.id]: ComponentCompareAspect,
   [ListerAspect.id]: ListerAspect,
-  [BuilderUIAspect.id]: BuilderUIAspect,
   [DependenciesAspect.id]: DependenciesAspect,
   [RemoveAspect.id]: RemoveAspect,
   [MergeLanesAspect.id]: MergeLanesAspect,
   [CheckoutAspect.id]: CheckoutAspect,
+  [ComponentWriterAspect.id]: ComponentWriterAspect,
+  [APIReferenceAspect.id]: APIReferenceAspect,
+  [ApiServerAspect.id]: ApiServerAspect,
+  [TrackerAspect.id]: TrackerAspect,
+  [MoverAspect.id]: MoverAspect,
+  [WatcherAspect.id]: WatcherAspect,
+  [StashAspect.id]: StashAspect,
+  [GitAspect.id]: GitAspect,
+  [IpcEventsAspect.id]: IpcEventsAspect,
 };
 
 export function isCoreAspect(id: string) {

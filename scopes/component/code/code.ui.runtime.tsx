@@ -1,14 +1,16 @@
+import React from 'react';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
-import React from 'react';
-import { SlotRegistry, Slot } from '@teambit/harmony';
+import { CodeCompare, CodeCompareEditorProvider, CodeCompareProps } from '@teambit/code.ui.code-compare';
+import { Harmony, SlotRegistry, Slot } from '@teambit/harmony';
 import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
-import { CodePage } from '@teambit/code.ui.code-tab-page';
+import { CodePage, CodePageProps } from '@teambit/code.ui.code-tab-page';
 import { ComponentCompareUI, ComponentCompareAspect } from '@teambit/component-compare';
+import { CodeEditorProvider } from '@teambit/code.ui.code-editor';
+import { CodeCompareSection } from '@teambit/code.ui.code-compare-section';
 import { CodeAspect } from './code.aspect';
 import { CodeSection } from './code.section';
-import { CodeCompareSection } from './code.compare.section';
 
 const isTsx = /\.tsx$/;
 
@@ -23,17 +25,30 @@ export class CodeUI {
     /**
      * register an icon for a specific file type. pass icon and a match method/regexp
      */
+    private host: string,
     private fileIconSlot?: FileIconSlot
   ) {}
 
-  getCodePage = () => {
-    return <CodePage fileIconSlot={this.fileIconSlot} />;
+  getCodePage = (props?: Partial<CodePageProps>) => {
+    return <CodePage {...(props || {})} fileIconSlot={this.fileIconSlot} host={this.host} />;
   };
+
+  getCodeCompare = (props?: Partial<CodeCompareProps>) => {
+    return (
+      <CodeCompareEditorProvider>
+        <CodeCompare {...(props || {})} fileIconSlot={this.fileIconSlot} />
+      </CodeCompareEditorProvider>
+    );
+  };
+
+  getCodeEditorProvider = () => CodeEditorProvider;
+  getCodeDiffEditorProvider = () => CodeCompareEditorProvider;
 
   registerEnvFileIcon(icons: FileIconMatch[]) {
     this.fileIconSlot?.register(icons);
     return this;
   }
+
   static dependencies = [ComponentAspect, ComponentCompareAspect];
 
   static runtime = UIRuntime;
@@ -42,22 +57,23 @@ export class CodeUI {
 
   static async provider(
     [component, componentCompare]: [ComponentUI, ComponentCompareUI],
-    config,
-    [fileIconSlot]: [FileIconSlot]
+    _,
+    [fileIconSlot]: [FileIconSlot],
+    harmony: Harmony
   ) {
-    const ui = new CodeUI(fileIconSlot);
+    const { config } = harmony;
+    const host = String(config.get('teambit.harmony/bit'));
+    const ui = new CodeUI(host, fileIconSlot);
     const section = new CodeSection(ui);
+
     // overrides the default tsx react icon with the typescript icon
     ui.registerEnvFileIcon([
       (fileName) => (isTsx.test(fileName) ? `${staticStorageUrl}/file-icons/file_type_typescript.svg` : undefined),
     ]);
     component.registerRoute([section.route]);
     component.registerWidget(section.navigationLink, section.order);
-    const codeCompare = new CodeCompareSection(fileIconSlot);
-    componentCompare.registerNavigation({
-      props: codeCompare.navigationLink,
-      order: codeCompare.navigationLink.order,
-    });
+    const codeCompare = new CodeCompareSection(ui);
+    componentCompare.registerNavigation(codeCompare);
     componentCompare.registerRoutes([codeCompare.route]);
     return ui;
   }

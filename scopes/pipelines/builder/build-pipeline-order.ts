@@ -4,6 +4,7 @@ import { EnvDefinition, Environment } from '@teambit/envs';
 import { BuildTask, BuildTaskHelper } from './build-task';
 import type { TaskSlot } from './builder.main.runtime';
 import { TasksQueue } from './tasks-queue';
+import { PipeFunctionNames } from './builder.service';
 
 type TaskDependenciesGraph = Graph<string, string>;
 type Location = 'start' | 'middle' | 'end';
@@ -44,7 +45,7 @@ type DataPerLocation = { location: Location; graph: TaskDependenciesGraph; pipel
 export function calculatePipelineOrder(
   taskSlot: TaskSlot,
   envs: EnvDefinition[],
-  pipeNameOnEnv = 'getBuildPipe',
+  pipeNameOnEnv: PipeFunctionNames,
   tasks: string[] = [],
   skipTests = false
 ): TasksQueue {
@@ -114,7 +115,7 @@ function addDependenciesToGraph(graphs: TasksLocationGraph[], pipeline: BuildTas
     });
     if (dependencyTasks.length === 0) {
       throw new Error(
-        `unable to find dependency "${dependency}" of "${BuildTaskHelper.serializeId(task)}" in the pipeline`
+        `Pipeline error - missing task dependency "${dependency}" of the "${BuildTaskHelper.serializeId(task)}"`
       );
     }
     dependencyTasks.forEach((dependencyTask) => {

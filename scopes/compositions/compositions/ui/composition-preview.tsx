@@ -11,12 +11,15 @@ export type ComponentCompositionProps = {
 } & ComponentPreviewProps;
 
 export function ComponentComposition({ composition, component, queryParams = [], ...rest }: ComponentCompositionProps) {
+  const includesEnvTemplate = component.preview?.includesEnvTemplate;
+  const isScaling = component.preview?.isScaling;
+  const shouldAddNameParam = component.preview?.useNameParam || (isScaling && includesEnvTemplate === false);
+
   const compositionParams = useMemo(
     () =>
-      (composition
-        ? [component.preview?.isScaling ? `name=${composition.identifier}` : composition.identifier]
-        : []
-      ).concat(queryParams),
+      (composition ? [shouldAddNameParam ? `name=${composition.identifier}` : composition.identifier] : []).concat(
+        queryParams
+      ),
     [composition?.identifier, queryParams]
   );
 

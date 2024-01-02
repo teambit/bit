@@ -6,7 +6,7 @@ import Config from '../../../global-config/config';
 
 export function set(key: string, val: string): Promise<Config> {
   if (!key || !val) {
-    throw new GeneralError(`missing a configuration key and value. https://${BASE_DOCS_DOMAIN}/config/bit-config`);
+    throw new GeneralError(`missing a configuration key and value. ${BASE_DOCS_DOMAIN}config/bit-config`);
   }
   return Config.load().then((config) => {
     config.set(key, val);
@@ -40,6 +40,7 @@ export function delSync(key: string): Config {
 }
 
 export async function get(key: string): Promise<string | undefined> {
+  if (!key) return undefined;
   const getConfigObject = async () => {
     const configFromCache = cache().get();
     if (configFromCache) return configFromCache;
@@ -64,6 +65,7 @@ export async function get(key: string): Promise<string | undefined> {
 }
 
 export function getSync(key: string): string | undefined {
+  if (!key) return undefined;
   const getConfigObject = () => {
     const configFromCache = cache().get();
     if (configFromCache) return configFromCache;
@@ -138,7 +140,7 @@ function gitCache() {
   };
 }
 
-function invalidateCache() {
+export function invalidateCache() {
   cache().set(null);
 }
 

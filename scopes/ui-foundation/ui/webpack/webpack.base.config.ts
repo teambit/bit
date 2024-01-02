@@ -42,7 +42,7 @@ const isEnvProduction = true;
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
 export default function createWebpackConfig(
-  workspaceDir: string,
+  outputDir: string,
   entryFiles: string[],
   publicDir = 'public'
 ): Configuration {
@@ -68,7 +68,7 @@ export default function createWebpackConfig(
 
     output: {
       // The build folder.
-      path: path.join(workspaceDir, publicDir), // default value
+      path: path.join(outputDir, publicDir), // default value
 
       filename: 'static/js/[name].[contenthash:8].js',
       // TODO: remove this when upgrading to webpack 5
@@ -92,6 +92,7 @@ export default function createWebpackConfig(
 
       alias: {
         // TODO: @uri please remember to remove after publishing evangelist and base-ui
+        'react/jsx-runtime': require.resolve('react/jsx-runtime'),
         react: require.resolve('react'),
         'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
@@ -166,6 +167,13 @@ export default function createWebpackConfig(
                 },
               },
             },
+            {
+              test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
+              type: 'asset',
+              generator: {
+                filename: 'static/fonts/[hash][ext][query]',
+              },
+            },
             // Process application JS with Babel.
             // The preset includes JSX, Flow, TypeScript, and some ESnext features.
             {
@@ -174,7 +182,6 @@ export default function createWebpackConfig(
               options: {
                 babelrc: false,
                 configFile: false,
-                customize: require.resolve('babel-preset-react-app/webpack-overrides'),
                 // This is a feature of `babel-loader` for webpack (not Babel itself).
                 // It enables caching results in ./node_modules/.cache/babel-loader/
                 // directory for faster rebuilds.
@@ -182,32 +189,9 @@ export default function createWebpackConfig(
                 // See #6846 for context on why cacheCompression is disabled
                 cacheCompression: false,
                 compact: isEnvProduction,
+                sourceType: 'unambiguous',
               },
             },
-            // Process any JS outside of the app with Babel.
-            // Unlike the application JS, we only compile the standard ES features.
-            // Probably not needed in our use case
-            // {
-            //   test: /\.(js|mjs)$/,
-            //   exclude: /@babel(?:\/|\\{1,2})runtime/,
-            //   loader: require.resolve('babel-loader'),
-            //   options: {
-            //     babelrc: false,
-            //     configFile: false,
-            //     compact: false,
-            //     presets: [[require.resolve('babel-preset-react-app/dependencies'), { helpers: true }]],
-            //     cacheDirectory: true,
-            //     // See #6846 for context on why cacheCompression is disabled
-            //     cacheCompression: false,
-
-            //     // Babel sourcemaps are needed for debugging into node_modules
-            //     // code.  Without the options below, debuggers like VSCode
-            //     // show incorrect code and set breakpoints on the wrong lines.
-            //     sourceMaps: shouldUseSourceMap,
-            //     inputSourceMap: shouldUseSourceMap,
-            //   },
-            // },
-
             // Adds support for CSS Modules (https://github.com/css-modules/css-modules)
             // using the extension .module.css
             {

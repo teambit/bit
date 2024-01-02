@@ -1,11 +1,12 @@
 import fs from 'fs-extra';
 import * as pathLib from 'path';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import R from 'ramda';
-import { compact } from 'lodash';
 import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
+import { isTag } from '@teambit/component-version';
 import { Analytics } from '../analytics/analytics';
-import { BitId, BitIds } from '../bit-id';
+import { BitId } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
 import loader from '../cli/loader';
 import { BEFORE_MIGRATION } from '../cli/loader/loader-messages';
@@ -28,7 +29,7 @@ import Consumer from '../consumer/consumer';
 import GeneralError from '../error/general-error';
 import logger from '../logger/logger';
 import getMigrationVersions, { MigrationResult } from '../migration/migration-helper';
-import { currentDirName, first, pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
+import { pathHasAll, findScopePath, readDirSyncIgnoreDsStore } from '../utils';
 import { PathOsBasedAbsolute } from '../utils/path';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
@@ -42,23 +43,22 @@ import { ModelComponent, Symlink, Version } from './models';
 import Lane from './models/lane';
 import { ComponentLog } from './models/model-component';
 import { BitObject, BitRawObject, Ref, Repository } from './objects';
-import { ComponentItem, IndexType } from './objects/components-index';
+import { ComponentItem, IndexType } from './objects/scope-index';
 import RemovedObjects from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
 import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-json';
-import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
 import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
 import { getDivergeData } from './component-ops/get-diverge-data';
+import { StagedSnaps } from './staged-snaps';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
 
 type HasIdOpts = {
   includeSymlink?: boolean;
-  includeOrphaned?: boolean;
   includeVersion?: boolean;
 };
 
@@ -93,7 +93,7 @@ export type ComponentsAndVersions = {
 };
 
 export type LegacyOnTagResult = {
-  id: BitId;
+  id: ComponentID;
   builderData: ExtensionDataEntry;
 };
 
@@ -114,11 +114,20 @@ export default class Scope {
   _dependencyGraph: DependencyGraph; // cache DependencyGraph instance
   lanes: Lanes;
   /**
+   * important! never use this function directly, even inside this class. Only use getCurrentLaneId().
+   *
    * normally, the data about the current-lane is saved in .bitmap. the reason for having this prop here is that we
    * need this data when loading model-component, which gets called in multiple places where the consumer is not passed.
    * another instance this is needed is for bit-sign, this way when loading aspects and fetching dists, it'll go to lane-scope.
    */
-  currentLaneId?: LaneId;
+  private currentLaneId?: LaneId;
+  /**
+   * when the consumer is available, this function is set with the consumer.getCurrentLaneIdIfExist, so then we guarantee
+   * that it's always in sync with the consumer.
+   */
+  currentLaneIdFunc?: () => LaneId | undefined;
+  notExportedIdsFunc?: () => ComponentIdList;
+  stagedSnaps: StagedSnaps;
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
     this.scopeJson = scopeProps.scopeJson;
@@ -129,26 +138,28 @@ export default class Scope {
     this.lanes = new Lanes(this.objects, this.scopeJson);
     this.isBare = scopeProps.isBare ?? false;
     this.scopeImporter = ScopeComponentsImporter.getInstance(this);
+    this.stagedSnaps = StagedSnaps.load(this.path);
   }
 
-  static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
+  static onPostExport: (ids: ComponentID[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
 
-  /**
-   * import components to the `Scope.
-   */
-  async import(
-    ids: BitIds,
-    cache = true,
-    reFetchUnBuiltVersion = true,
-    lanes?: Lane[]
-  ): Promise<VersionDependencies[]> {
-    return this.scopeImporter.importMany({
-      ids,
-      cache,
-      throwForDependencyNotFound: false,
-      reFetchUnBuiltVersion,
-      lanes,
-    });
+  public async refreshScopeIndex(force = false) {
+    await this.objects.reloadScopeIndexIfNeed(force);
+  }
+
+  getCurrentLaneId(): LaneId | undefined {
+    if (this.currentLaneIdFunc) return this.currentLaneIdFunc();
+    return this.currentLaneId;
+  }
+
+  get notExportedIds(): ComponentIdList {
+    if (this.notExportedIdsFunc) return this.notExportedIdsFunc();
+    return new ComponentIdList();
+  }
+
+  isExported(id: ComponentID): boolean {
+    if (!this.notExportedIdsFunc) return true; // there is no workspace, it must be exported
+    return id.hasScope() && !this.notExportedIds.hasWithoutVersion(id);
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {
@@ -175,8 +186,12 @@ export default class Scope {
 
   setCurrentLaneId(laneId?: LaneId) {
     if (!laneId) return;
-    if (laneId.isDefault()) return;
-    this.currentLaneId = laneId;
+    if (laneId.isDefault()) this.currentLaneId = undefined;
+    else this.currentLaneId = laneId;
+  }
+
+  isLocal(componentId: ComponentID) {
+    return componentId.isLocal(this.name) || !this.isExported(componentId);
   }
 
   getPath() {
@@ -293,21 +308,18 @@ export default class Scope {
     );
   }
 
-  async hasId(id: BitId, opts: HasIdOpts) {
+  async hasId(id: ComponentID, opts: HasIdOpts) {
     const filter = (comp: ComponentItem) => {
       const symlinkCond = opts.includeSymlink ? true : !comp.isSymlink;
-      const idMatch = comp.id.scope === id.scope && comp.id.name === id.name;
+      const idMatch = comp.id.scope === id.scope && comp.id.name === id.fullName;
       return symlinkCond && idMatch;
     };
     const modelComponentList = await this.objects.listObjectsFromIndex(IndexType.components, filter);
     if (!modelComponentList || !modelComponentList.length) return false;
     if (!opts.includeVersion || !id.version) return true;
-    if (id.getVersion().latest) return true;
+    if (id._legacy.getVersion().latest) return true;
     const modelComponent = modelComponentList[0] as ModelComponent;
-    if (opts.includeOrphaned) {
-      return modelComponent.hasTagIncludeOrphaned(id.version);
-    }
-    return modelComponent.hasTag(id.version);
+    return modelComponent.hasVersion(id.version, this.objects);
   }
 
   async list(): Promise<ModelComponent[]> {
@@ -358,41 +370,89 @@ once done, to continue working, please run "bit cc"`
   }
 
   /**
+   * returns null if we can't determine whether it's on the lane or not.
+   * if throwForDivergeDataErr is false, it also returns null when divergeData wasn't able to get Version objects or failed for whatever reason.
+   *
    * sadly, there are not good tests for this. it pretty complex to create them as it involves multiple scopes and
    * packages installations. be careful when changing this.
    * the goal is to check whether a given id with the given version exits on the given lane or it's on main.
    * it's needed for importing artifacts to know whether the artifact could be found on the origin scope or on the
    * lane-scope
    */
-  async isIdOnLane(id: BitId, lane?: Lane | null): Promise<boolean> {
+  async isIdOnLane(id: ComponentID, lane?: Lane | null, throwForDivergeDataErr = true): Promise<boolean | null> {
     if (!lane) return false;
+
+    // it's important to remove the version here before passing it to the `getModelComponent` function.
+    // otherwise, in case this version doesn't exist, it'll throw a ComponentNotFound error.
+    const component = await this.getModelComponent(id.changeVersion(undefined));
+    // it's possible that main was merged to the lane, so the ref in the lane object is actually a tag.
+    // in which case, we prefer to go to main instead of the lane.
+    // for some reason (needs to check why) the tag-artifacts which got created using merge+tag from-scope
+    // exist only on main and not on the lane-scope.
+    if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
+    if (component.head.toString() === id.version) return false; // it's on main
+    if (isTag(id.version)) return false; // tags can be on main only
+
     const laneIds = lane.toBitIds();
     if (laneIds.has(id)) return true; // in the lane with the same version
     const laneIdWithDifferentVersion = laneIds.searchWithoutVersion(id);
     if (!laneIdWithDifferentVersion) return false; // not in the lane at all
+
     // component is in the lane object but with a different version.
     // we have to figure out whether the current version exists on the lane or not.
-    const component = await this.getModelComponent(id);
-    if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
-    if (component.head.toString() === id.version) return false; // it's on main
-    // get the diverge between main and the lane. (in this context, main is "remote", lane is "local").
+    // get the diverge between main and the lane.
     const divergeData = await getDivergeData({
       repo: this.objects,
       modelComponent: component,
-      remoteHead: component.head,
-      checkedOutLocalHead: Ref.from(laneIdWithDifferentVersion.version as string),
+      throws: throwForDivergeDataErr,
+      targetHead: component.head, // target is main
+      sourceHead: Ref.from(laneIdWithDifferentVersion.version as string), // source is lane
     });
     // if the snap found "locally", then it's on the lane.
-    return Boolean(divergeData.snapsOnLocalOnly.find((snap) => snap.toString() === id.version));
+    const foundOnLane = Boolean(divergeData.snapsOnSourceOnly.find((snap) => snap.toString() === id.version));
+    if (foundOnLane) return true;
+    const foundOnMain = Boolean(divergeData.snapsOnTargetOnly.find((snap) => snap.toString() === id.version));
+    if (foundOnMain) return false;
+    // we don't have enough data to determine whether it's on the lane or not.
+    return null;
   }
 
-  async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
+  async isPartOfLaneHistory(id: ComponentID, lane: Lane) {
+    if (!id.version) throw new Error(`isIdOnGivenLane expects id with version, got ${id.toString()}`);
+    const laneIds = lane.toBitIds();
+    if (laneIds.has(id)) return true; // in the lane with the same version
+    const laneIdWithDifferentVersion = laneIds.searchWithoutVersion(id);
+    if (!laneIdWithDifferentVersion) return false; // not in the lane at all
+
+    // component is in the lane object but with a different version.
+    // we have to figure out whether this version is part of the lane history
+    const component = await this.getModelComponent(id);
+    const laneVersionRef = Ref.from(laneIdWithDifferentVersion.version as string);
+    const verHistory = await component.getAndPopulateVersionHistory(this.objects, laneVersionRef);
+    const verRef = component.getRef(id.version);
+    if (!verRef) throw new Error(`isIdOnGivenLane unable to find ref for ${id.toString()}`);
+    return verHistory.isRefPartOfHistory(laneVersionRef, verRef);
+  }
+
+  async isPartOfMainHistory(id: ComponentID) {
+    if (!id.version) throw new Error(`isIdOnMain expects id with version, got ${id.toString()}`);
+    if (isTag(id.version)) return true; // tags can be on main only
+    const component = await this.getModelComponent(id);
+    if (!component.head) return false; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
+    if (component.head.toString() === id.version) return true; // it's on main
+
+    const verHistory = await component.getAndPopulateVersionHistory(this.objects, component.head);
+    const verRef = Ref.from(id.version);
+    return verHistory.isRefPartOfHistory(component.head, verRef);
+  }
+
+  async latestVersions(componentIds: ComponentID[], throwOnFailure = true): Promise<ComponentIdList> {
     componentIds = componentIds.map((componentId) => componentId.changeVersion(undefined));
     const components = await this.sources.getMany(componentIds);
     const ids = components.map((component) => {
       const getVersion = () => {
         if (component.component) {
-          return component.component.latest();
+          return component.component.getHeadRegardlessOfLaneAsTagOrHash();
         }
         if (throwOnFailure) throw new ComponentNotFound(component.id.toString());
         return DEFAULT_BIT_VERSION;
@@ -400,7 +460,7 @@ once done, to continue working, please run "bit cc"`
       const version = getVersion();
       return component.id.changeVersion(version);
     });
-    return BitIds.fromArray(ids);
+    return ComponentIdList.fromArray(ids);
   }
 
   getObject(hash: string): Promise<BitObject> {
@@ -427,33 +487,37 @@ once done, to continue working, please run "bit cc"`
     };
   }
 
-  async getModelComponentIfExist(id: BitId): Promise<ModelComponent | undefined> {
+  async getModelComponentIfExist(id: ComponentID): Promise<ModelComponent | undefined> {
     return this.sources.get(id);
   }
 
   async getCurrentLaneObject(): Promise<Lane | null> {
-    return this.currentLaneId ? this.loadLane(this.currentLaneId) : null;
+    const currentLaneId = this.getCurrentLaneId();
+    return currentLaneId ? this.loadLane(currentLaneId) : null;
   }
 
   /**
    * Remove components from scope
    * @force Boolean - remove component from scope even if other components use it
    */
-  async removeMany(bitIds: BitIds, force: boolean, consumer?: Consumer, fromLane?: boolean): Promise<RemovedObjects> {
+  async removeMany(bitIds: ComponentIdList, force: boolean, consumer?: Consumer): Promise<RemovedObjects> {
     logger.debug(`scope.removeMany ${bitIds.toString()} with force flag: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'removeMany',
       `scope.removeMany ${Analytics.hashData(bitIds)} with force flag: ${force.toString()}`
     );
     const currentLane = await consumer?.getCurrentLaneObject();
-    const removeComponents = new RemoveModelComponents(this, bitIds, force, consumer, currentLane, fromLane);
+    const removeComponents = new RemoveModelComponents(this, bitIds, force, consumer, currentLane);
     return removeComponents.remove();
   }
 
   /**
    * for each one of the given components, find its dependents
    */
-  async getDependentsBitIds(bitIds: BitIds, returnResultsWithVersion = false): Promise<{ [key: string]: BitId[] }> {
+  async getDependentsBitIds(
+    bitIds: ComponentID[],
+    returnResultsWithVersion = false
+  ): Promise<{ [key: string]: ComponentIdList }> {
     logger.debug(`scope.getDependentsBitIds, bitIds: ${bitIds.toString()}`);
     const idsGraph = await DependencyGraph.buildIdsGraphWithAllVersions(this);
     logger.debug(`scope.getDependentsBitIds, idsGraph the graph was built successfully`);
@@ -462,7 +526,7 @@ once done, to continue working, please run "bit cc"`
       const dependents = dependencyGraph.getDependentsForAllVersions(current);
       if (dependents.length) {
         const dependentsIds = dependents.map((id) => (returnResultsWithVersion ? id : id.changeVersion(undefined)));
-        acc[current.toStringWithoutVersion()] = BitIds.uniqFromArray(dependentsIds);
+        acc[current.toStringWithoutVersion()] = ComponentIdList.uniqFromArray(dependentsIds);
       }
       return acc;
     }, {});
@@ -474,10 +538,10 @@ once done, to continue working, please run "bit cc"`
    * split bit array to found and missing components (incase user misspelled id)
    */
   async filterFoundAndMissingComponents(
-    bitIds: BitIds
-  ): Promise<{ missingComponents: BitIds; foundComponents: BitIds }> {
-    const missingComponents = new BitIds();
-    const foundComponents = new BitIds();
+    bitIds: ComponentID[]
+  ): Promise<{ missingComponents: ComponentIdList; foundComponents: ComponentIdList }> {
+    const missingComponents: ComponentIdList = new ComponentIdList();
+    const foundComponents: ComponentIdList = new ComponentIdList();
     const resultP = bitIds.map(async (id) => {
       const component = await this.getModelComponentIfExist(id);
       if (!component) missingComponents.push(id);
@@ -491,27 +555,29 @@ once done, to continue working, please run "bit cc"`
    * load components from the model and return them as ComponentVersion array.
    * if a component is not available locally, it'll just ignore it without throwing any error.
    */
-  async loadLocalComponents(ids: BitIds): Promise<ComponentVersion[]> {
+  async loadLocalComponents(ids: ComponentIdList): Promise<ComponentVersion[]> {
     const componentsObjects = await this.sources.getMany(ids);
     const components = componentsObjects.map((componentObject) => {
       const component = componentObject.component;
       if (!component) return null;
-      const version = componentObject.id.hasVersion() ? componentObject.id.version : component.latest();
+      const version = componentObject.id.hasVersion()
+        ? componentObject.id.version
+        : component.getHeadRegardlessOfLaneAsTagOrHash(true);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return component.toComponentVersion(version);
     });
     return removeNils(components);
   }
 
-  async loadComponentLogs(id: BitId, shortHash = false, startFrom?: string): Promise<ComponentLog[]> {
+  async loadComponentLogs(id: ComponentID, shortHash = false, startFrom?: string): Promise<ComponentLog[]> {
     const componentModel = await this.getModelComponentIfExist(id);
     if (!componentModel) return [];
     const startFromRef = startFrom ? componentModel.getRef(startFrom) ?? undefined : undefined;
-    const logs = await componentModel.collectLogs(this.objects, shortHash, startFromRef);
+    const logs = await componentModel.collectLogs(this, shortHash, startFromRef);
     return logs;
   }
 
-  loadAllVersions(id: BitId): Promise<Component[]> {
+  loadAllVersions(id: ComponentID): Promise<Component[]> {
     return this.getModelComponentIfExist(id).then((componentModel) => {
       if (!componentModel) throw new ComponentNotFound(id.toString());
       return componentModel.collectVersions(this.objects);
@@ -522,9 +588,8 @@ once done, to continue working, please run "bit cc"`
    * get ModelComponent instance per bit-id.
    * it throws an error if the component wasn't found.
    * @see getModelComponentIfExist to not throw an error
-   * @see getModelComponentIgnoreScope to ignore the scope name
    */
-  async getModelComponent(id: BitId): Promise<ModelComponent> {
+  async getModelComponent(id: ComponentID): Promise<ModelComponent> {
     const component = await this.getModelComponentIfExist(id);
     if (component) {
       return component;
@@ -533,27 +598,9 @@ once done, to continue working, please run "bit cc"`
   }
 
   /**
-   * the id can be either with or without a scope-name.
-   * in case the component is saved in the model only with the scope (imported), it loads all
-   * components and search for it.
-   * it throws an error if the component wasn't found.
-   */
-  async getModelComponentIgnoreScope(id: BitId): Promise<ModelComponent> {
-    const component = await this.getModelComponentIfExist(id);
-    if (component) return component;
-    if (!id.scope) {
-      // search for the complete ID
-      const components: ModelComponent[] = await this.list();
-      const foundComponent = components.filter((c) => c.toBitId().isEqualWithoutScopeAndVersion(id));
-      if (foundComponent.length) return first(foundComponent);
-    }
-    throw new ComponentNotFound(id.toString());
-  }
-
-  /**
    * throws if component was not found
    */
-  async getConsumerComponent(id: BitId): Promise<Component> {
+  async getConsumerComponent(id: ComponentID): Promise<Component> {
     const modelComponent: ModelComponent = await this.getModelComponent(id);
     // $FlowFixMe version must be set
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -562,39 +609,39 @@ once done, to continue working, please run "bit cc"`
     return componentVersion.toConsumer(this.objects);
   }
 
-  async getManyConsumerComponents(ids: BitId[]): Promise<Component[]> {
+  async getManyConsumerComponents(ids: ComponentID[]): Promise<Component[]> {
     return Promise.all(ids.map((id) => this.getConsumerComponent(id)));
   }
 
   /**
    * return undefined if component was not found
    */
-  async getConsumerComponentIfExist(id: BitId): Promise<Component | undefined> {
+  async getConsumerComponentIfExist(id: ComponentID): Promise<Component | undefined> {
     const modelComponent: ModelComponent | undefined = await this.getModelComponentIfExist(id);
     if (!modelComponent) return undefined;
-    // $FlowFixMe version must be set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentVersion = modelComponent.toComponentVersion(id.version);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return componentVersion.toConsumer(this.objects);
   }
 
-  async getVersionInstance(id: BitId): Promise<Version> {
+  async getVersionInstance(id: ComponentID): Promise<Version> {
     if (!id.hasVersion()) throw new TypeError(`scope.getVersionInstance - id ${id.toString()} is missing the version`);
     const component: ModelComponent = await this.getModelComponent(id);
     return component.loadVersion(id.version as string, this.objects);
   }
 
-  async getComponentsAndVersions(ids: BitIds, defaultToLatestVersion = false): Promise<ComponentsAndVersions[]> {
+  async getComponentsAndVersions(
+    ids: ComponentIdList,
+    defaultToLatestVersion = false
+  ): Promise<ComponentsAndVersions[]> {
     const componentsObjects = await this.sources.getMany(ids);
     const componentsAndVersionsP = componentsObjects.map(async (componentObjects) => {
       if (!componentObjects.component) return null;
       const component: ModelComponent = componentObjects.component;
       const getVersionStr = (): string => {
-        if (componentObjects.id.hasVersion()) return componentObjects.id.getVersion().toString();
+        if (componentObjects.id.hasVersion()) return componentObjects.id._legacy.getVersion().toString();
         if (!defaultToLatestVersion)
           throw new Error(`getComponentsAndVersions expect ${componentObjects.id.toString()} to have a version`);
-        return componentObjects.component?.latest() as string;
+        return componentObjects.component?.getHeadRegardlessOfLaneAsTagOrHash() as string;
       };
       const versionStr = getVersionStr();
       const version: Version = await component.loadVersion(versionStr, this.objects);
@@ -604,7 +651,7 @@ once done, to continue working, please run "bit cc"`
     return removeNils(componentsAndVersions);
   }
 
-  async isComponentInScope(id: BitId): Promise<boolean> {
+  async isComponentInScope(id: ComponentID): Promise<boolean> {
     const comp = await this.sources.get(id);
     return Boolean(comp);
   }
@@ -613,11 +660,11 @@ once done, to continue working, please run "bit cc"`
    * Creates a symlink object with the local-scope which links to the real-object of the remote-scope
    * This way, local components that have dependencies to the exported component won't break.
    */
-  createSymlink(id: BitId, remote: string) {
+  createSymlink(id: ComponentID, remote: string) {
     const symlink = new Symlink({
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       scope: id.scope,
-      name: id.name,
+      name: id.fullName,
       realScope: remote,
     });
     return this.objects.add(symlink);
@@ -632,73 +679,49 @@ once done, to continue working, please run "bit cc"`
       .then(() => this);
   }
 
-  /**
-   * find the components in componentsPool which one of their dependencies include in potentialDependencies
-   */
-  async findDirectDependentComponents(componentsPool: BitIds, potentialDependencies: BitIds): Promise<BitIds> {
-    const componentsVersions = await this.loadLocalComponents(componentsPool);
-    const dependentsP = componentsVersions.map(async (componentVersion: ComponentVersion) => {
-      const component: Version = await componentVersion.getVersion(this.objects);
-      const found = component
-        .getAllDependencies()
-        .find((dependency) => potentialDependencies.searchWithoutVersion(dependency.id));
-      return found ? componentVersion : null;
-    });
-    const dependents = await Promise.all(dependentsP);
-    const dependentsWithoutNull = removeNils(dependents);
-    return BitIds.fromArray(dependentsWithoutNull.map((c) => c.id));
-  }
-
-  async loadModelComponentByIdStr(id: string): Promise<ModelComponent> {
+  async loadModelComponentByIdStr(id: string): Promise<ModelComponent | Symlink> {
     // Remove the version before hashing since hashing with the version number will result a wrong hash
-    const idWithoutVersion = BitId.getStringWithoutVersion(id);
+    const idWithoutVersion = ComponentID.getStringWithoutVersion(id);
     const ref = Ref.from(BitObject.makeHash(idWithoutVersion));
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.objects.load(ref);
   }
 
-  async getParsedId(id: BitIdStr): Promise<BitId> {
+  async getParsedId(id: BitIdStr): Promise<ComponentID> {
     if (id.startsWith('@')) {
       throw new UnexpectedPackageName(id);
     }
     const component = await this.loadModelComponentByIdStr(id);
     const idHasScope = Boolean(component && component.scope);
     if (idHasScope) {
-      const bitId: BitId = component.toBitId();
-      const version = BitId.getVersionOnlyFromString(id);
+      const bitId = component.toComponentId();
+      const version = ComponentID.getVersionFromString(id);
       return bitId.changeVersion(version || LATEST);
     }
-    const [idWithoutVersion] = id.toString().split('@');
+    const [idWithoutVersion, version] = id.toString().split('@');
     if (idWithoutVersion.includes('.')) {
       // we allow . only on scope names, so if it has . it must be with scope name
-      return BitId.parse(id, true);
+      return ComponentID.fromString(id);
+    }
+    const filter = (comp: ComponentItem) => comp.id.name === idWithoutVersion;
+    const fromIndex = this.objects.getHashFromIndex(IndexType.components, filter);
+    if (fromIndex) {
+      // the given id is only the name, find out the full-id
+      const obj = await this.objects._getBitObjectsByHashes([fromIndex]);
+      const modelComp = obj[0] as ModelComponent;
+      return modelComp.toComponentId().changeVersion(version);
     }
     const idSplit = id.split('/');
     if (idSplit.length === 1) {
       // it doesn't have any slash, so the id doesn't include the scope-name
-      return BitId.parse(id, false);
+      throw new Error(`scope.getParsedId, the component ${id} must include a scope-name`);
     }
     const maybeScope = idSplit[0];
     const isRemoteConfiguredLocally = this.scopeJson.remotes[maybeScope];
     if (isRemoteConfiguredLocally) {
-      return BitId.parse(id, true);
+      return ComponentID.fromString(id);
     }
-    // it's probably new, we assume it doesn't have scope.
-    return BitId.parse(id, false);
-  }
-
-  /**
-   * returns the main ids of the given lane
-   */
-  async getDefaultLaneIdsFromLane(lane: Lane): Promise<BitId[]> {
-    const laneIds = lane.toBitIds();
-    const modelComponents = await Promise.all(laneIds.map((id) => this.getModelComponent(id)));
-    return compact(
-      modelComponents.map((c) => {
-        if (!c.head) return null; // probably the component was never merged to main
-        return c.toBitId().changeVersion(c.head.toString());
-      })
-    );
+    return ComponentID.fromString(id);
   }
 
   async writeObjectsToPendingDir(objectList: ObjectList, clientId: string): Promise<void> {
@@ -717,14 +740,28 @@ once done, to continue working, please run "bit cc"`
 
   async removePendingDir(clientId: string) {
     const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
-    return fs.remove(pendingDir); // no error is thrown if not exists
+    try {
+      await fs.remove(pendingDir); // no error is thrown if not exists
+    } catch (err: any) {
+      if (err.code === 'ENOTEMPTY') {
+        // it rarely happens, but when it does, the export gets stuck. it's probably a bug with fs-extra.
+        // a workaround is to try again after a second.
+        // see this: https://github.com/jprichardson/node-fs-extra/issues/532
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await fs.remove(pendingDir);
+      } else {
+        throw err;
+      }
+    }
   }
 
-  static ensure(path: PathOsBasedAbsolute, name?: string | null, groupName?: string | null): Promise<Scope> {
+  static async ensure(path: PathOsBasedAbsolute, name?: string | null, groupName?: string | null): Promise<Scope> {
     if (pathHasScope(path)) return this.load(path);
     const scopeJson = Scope.ensureScopeJson(path, name, groupName);
-    const repository = Repository.create({ scopePath: path, scopeJson });
-    return Promise.resolve(new Scope({ path, created: true, scopeJson, objects: repository }));
+    const repository = await Repository.create({ scopePath: path, scopeJson });
+    const scope = new Scope({ path, created: true, scopeJson, objects: repository });
+    Scope.scopeCache[path] = scope;
+    return scope;
   }
 
   static ensureScopeJson(
@@ -732,7 +769,7 @@ once done, to continue working, please run "bit cc"`
     name?: string | null | undefined,
     groupName?: string | null | undefined
   ): ScopeJson {
-    if (!name) name = currentDirName();
+    if (!name) name = pathLib.basename(process.cwd());
     if (name === CURRENT_UPSTREAM) {
       throw new GeneralError(`the name "${CURRENT_UPSTREAM}" is a reserved word, please use another name`);
     }
@@ -752,18 +789,10 @@ once done, to continue working, please run "bit cc"`
   }
 
   static async load(absPath: string, useCache = true): Promise<Scope> {
-    let scopePath = propogateUntil(absPath);
-    let isBare = true;
+    let scopePath = findScopePath(absPath);
     if (!scopePath) throw new ScopeNotFound(absPath);
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
-      isBare = false;
-    }
-    if (
-      scopePath.endsWith(pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR)) ||
-      scopePath.endsWith(pathLib.join(BIT_HIDDEN_DIR))
-    ) {
-      isBare = false;
     }
     if (useCache && Scope.scopeCache[scopePath]) {
       logger.debug(`scope.load, found scope at ${scopePath} from cache`);
@@ -778,6 +807,8 @@ once done, to continue working, please run "bit cc"`
       scopeJson = Scope.ensureScopeJson(scopePath);
     }
     const objects = await Repository.load({ scopePath, scopeJson });
+    const isBare =
+      !scopePath.endsWith(pathLib.join(BIT_HIDDEN_DIR)) && !scopePath.endsWith(pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR));
     const scope = new Scope({ path: scopePath, scopeJson, objects, isBare });
     Scope.scopeCache[scopePath] = scope;
     return scope;

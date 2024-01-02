@@ -12,6 +12,9 @@ import { LegacyCommand } from '../../legacy-command';
 class ConfigSet implements LegacyCommand {
   name = 'set <key> <val>';
   description = 'set a global configuration';
+  extendedDescription = `to set temporary configuration by env variable, prefix with "BIT_CONFIG", replace "." with "_" and change to upper case.
+for example, "user.token" becomes "BIT_CONFIG_USER_TOKEN"`;
+  baseUrl = 'reference/config/bit-config/';
   alias = '';
   skipWorkspace = true;
   opts = [];
@@ -27,7 +30,7 @@ class ConfigSet implements LegacyCommand {
 
 class ConfigGet implements LegacyCommand {
   name = 'get <key>';
-  description = 'get a global configuration';
+  description = 'get a value from global configuration';
   alias = '';
   opts = [];
 
@@ -77,7 +80,7 @@ class ConfigDel implements LegacyCommand {
 export default class Config implements LegacyCommand {
   name = 'config';
   description = 'global config management';
-  extendedDescription = `https://${BASE_DOCS_DOMAIN}/config/bit-config`;
+  extendedDescription = `${BASE_DOCS_DOMAIN}reference/config/bit-config`;
   group: Group = 'general';
   alias = '';
   commands = [new ConfigSet(), new ConfigDel(), new ConfigGet(), new ConfigList()];

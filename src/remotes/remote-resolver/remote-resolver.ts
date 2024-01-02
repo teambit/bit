@@ -1,13 +1,7 @@
 import { GraphQLClient, gql } from 'graphql-request';
 import { InvalidScopeName, isValidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import { getSync } from '../../api/consumer/lib/global-config';
-import {
-  CFG_HUB_DOMAIN_KEY,
-  DEFAULT_HUB_DOMAIN,
-  CFG_USER_TOKEN_KEY,
-  SYMPHONY_URL,
-  CFG_SYMPHONY_URL_KEY,
-} from '../../constants';
+import { CFG_HUB_DOMAIN_KEY, DEFAULT_HUB_DOMAIN, CFG_USER_TOKEN_KEY, getSymphonyUrl } from '../../constants';
 
 import Scope from '../../scope/scope';
 import { getAuthHeader, getFetcherWithAgent } from '../../scope/network/http/http';
@@ -15,7 +9,7 @@ import logger from '../../logger/logger';
 import { ScopeNotFoundOrDenied } from '../exceptions/scope-not-found-or-denied';
 
 const hubDomain = getSync(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;
-const symphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || SYMPHONY_URL;
+const symphonyUrl = getSymphonyUrl();
 
 type ResolverFunction = (scopeName: string, thisScopeName?: string, token?: string) => Promise<string>;
 
@@ -50,7 +44,9 @@ async function getScope(name: string) {
   } catch (err: any) {
     logger.error('getScope has failed', err);
     const msg: string =
-      err?.response?.errors?.[0].message || "unknown error. please use the '--log' flag for the full error.";
+      err?.response?.errors?.[0].message ||
+      err?.message ||
+      "unknown error. please use the '--log' flag for the full error.";
     const errorCode = err?.response?.errors?.[0].ERR_CODE;
     if (msg === 'access denied') {
       throw new ScopeNotFoundOrDenied(name);

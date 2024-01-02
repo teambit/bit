@@ -11,8 +11,15 @@ export class PnpmMain {
 
   static async provider([depResolver, loggerExt]: [DependencyResolverMain, LoggerMain]) {
     const logger = loggerExt.createLogger(PnpmAspect.id);
-    depResolver.registerPackageManager(new PnpmPackageManager(depResolver, logger));
-    return new PnpmMain();
+    const packageManager = new PnpmPackageManager(depResolver, logger);
+    depResolver.registerPackageManager(packageManager);
+    return new PnpmMain(packageManager);
+  }
+
+  constructor(private packageManager: PnpmPackageManager) {}
+
+  getPackageManager(): PnpmPackageManager {
+    return this.packageManager;
   }
 }
 

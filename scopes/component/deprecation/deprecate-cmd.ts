@@ -10,10 +10,17 @@ export class DeprecateCmd implements Command {
   group = 'collaborate';
   skipWorkspace = true;
   alias = 'd';
-  options = [['', 'new-id <string>', 'if replaced by another component, enter the new component id']] as CommandOptions;
+  options = [
+    [
+      '',
+      'new-id <string>',
+      'if replaced by another component, enter the new component id. alternatively use "bit rename" to do this automatically',
+    ],
+  ] as CommandOptions;
   loader = true;
   migration = true;
   remoteOp = true;
+  helpUrl = 'reference/components/removing-components';
 
   constructor(private deprecation: DeprecationMain, private workspace: Workspace) {}
 

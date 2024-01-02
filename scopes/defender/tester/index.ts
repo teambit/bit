@@ -1,6 +1,7 @@
 import { TesterAspect } from './tester.aspect';
 
 export { Tests } from './tester';
+export type { TesterEnv } from './tester-env';
 export type {
   Tester,
   TesterContext,

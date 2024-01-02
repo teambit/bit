@@ -5,7 +5,7 @@ description: 'webpack config mutator.'
 
 A small wrapper around webpack config object.
 This wrapper help you to mutate the webpack config in a chainable way.
-In general it is a sugar syntax to do commong operation on the config like add a plugin or and entry.
+In general it is a sugar syntax to do common operation on the config like add a plugin or and entry.
 It also give you different options like append and prepend for arrays and override, ignore, throw (for conflict) for objects;
 
 You can also mutate the raw config itself by accessing `mutator.raw`.

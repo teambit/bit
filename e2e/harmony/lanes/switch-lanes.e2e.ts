@@ -4,6 +4,7 @@ import { statusWorkspaceIsCleanMsg } from '../../../src/constants';
 import { LANE_KEY } from '../../../src/consumer/bit-map/bit-map';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../../src/fixtures/fixtures';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -21,13 +22,13 @@ describe('bit lane command', function () {
       let beforeLaneSwitch;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
-        helper.command.snapAllComponents();
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.export();
         helper.command.createLane();
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-        helper.command.snapAllComponents();
+        helper.command.snapAllComponentsWithoutBuild();
         helper.command.exportLane();
 
         helper.scopeHelper.reInitLocalScope();
@@ -46,7 +47,7 @@ describe('bit lane command', function () {
       it('bit lane should show the component in the checked out lane', () => {
         const lanes = helper.command.showOneLaneParsed('dev');
         expect(lanes.components).to.have.lengthOf(1);
-        expect(lanes.components[0].id.name).to.equal('bar/foo');
+        expect(lanes.components[0].id).to.include('bar/foo');
       });
       it('bit status should not show the component as pending updates', () => {
         const status = helper.command.statusJson();
@@ -125,9 +126,9 @@ describe('bit lane command', function () {
   describe('switching lanes with deleted files', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
+      helper.command.export();
       helper.command.createLane('migration');
       helper.fs.outputFile('comp1/comp1.spec.js');
       helper.command.addComponent('comp1/');
@@ -145,7 +146,6 @@ describe('bit lane command', function () {
     let laneScope;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
 
       mainScope = helper.scopeHelper.cloneLocalScope();
       helper.command.createLane('dev');
@@ -192,7 +192,6 @@ describe('bit lane command', function () {
   describe('switch to main after importing a lane', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild(); // main has 0.0.1
       helper.command.export();
@@ -220,4 +219,104 @@ describe('bit lane command', function () {
       expect(list[0].currentVersion).to.equal('0.0.1');
     });
   });
+  describe('switch to main after merging the lane somewhere else', () => {
+    let originalWorkspace: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      originalWorkspace = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('main');
+      helper.command.mergeLane('dev');
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(originalWorkspace);
+      helper.command.switchLocalLane('main');
+      helper.command.import();
+    });
+    it('should not make the component available on main', () => {
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(0);
+    });
+    it('bit status should show a section of unavailable components on main', () => {
+      const status = helper.command.statusJson();
+      expect(status.unavailableOnMain).to.have.lengthOf(1);
+    });
+    it('bit checkout should make it available', () => {
+      helper.command.checkoutHead();
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(1);
+    });
+  });
+  describe('switch from main to a lane when main has staged components', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('main');
+      helper.command.tagAllWithoutBuild('--unmodified');
+    });
+    it('should block the switch and suggest to export or reset', () => {
+      expect(() => helper.command.switchLocalLane('dev')).to.throw(
+        'please export or reset the following components first'
+      );
+    });
+  });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'lane-b has dep as a component, switch to lane-a where the dep is a pkg',
+    () => {
+      let npmCiRegistry: NpmCiRegistry;
+      before(async () => {
+        helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.fixtures.createComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
+        npmCiRegistry = new NpmCiRegistry(helper);
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        await npmCiRegistry.init();
+        helper.command.tagAllComponents();
+        helper.command.export();
+
+        const pkgName = helper.general.getPackageNameByCompName('bar/foo');
+
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.createLane('lane-a');
+        helper.fs.outputFile('comp1/comp1.js', `import '${pkgName}';`);
+        helper.command.addComponent('comp1');
+        helper.command.install(pkgName);
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.export();
+
+        helper.command.createLane('lane-b');
+        npmCiRegistry.setResolver();
+        helper.command.importComponent('bar/foo');
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.export();
+
+        helper.command.switchLocalLane('lane-a', '-x');
+        helper.fs.appendFile('comp1/comp1.js');
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      // previously, the bar/foo component was available on lane-a with a version from lane-b unexpectedly.
+      // this test was to make sure that if we have such bugs, it won't let snapping.
+      it.skip('bit snap should throw an error saying a dependency is from another lane', () => {
+        expect(() => helper.command.snapAllComponentsWithoutBuild()).to.throw(
+          'is not part of current lane "lane-a" history'
+        );
+      });
+      it('should use the dep from main and not from the previous lane', () => {
+        const comp1 = helper.command.catComponent('comp1@latest');
+        expect(comp1.dependencies[0].id.version).to.equal('0.0.1');
+      });
+    }
+  );
 });

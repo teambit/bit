@@ -1,8 +1,8 @@
 import openEditor from 'open-editor';
 import fs from 'fs-extra';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { spawn } from 'child_process';
 import { Tmp } from '../repositories';
-import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
 
 const DEFAULT_MESSAGE = 'DEFAULT:';
@@ -11,12 +11,12 @@ const formatId = (id: string) => `${id}:`;
 const addSpace = (str: string) => `${str} `;
 const DEFAULT_EDITOR = 'vim';
 
-export type MessagePerComponent = { id: BitId; msg: string };
+export type MessagePerComponent = { id: ComponentID; msg: string };
 
 export class MessagePerComponentFetcher {
-  private idsToTagObject: { [bitIdStr: string]: BitId };
-  private idsToAutoTagObject: { [bitIdStr: string]: BitId };
-  constructor(idsToTag: BitIds, idsToAutoTag: BitIds) {
+  private idsToTagObject: { [bitIdStr: string]: ComponentID };
+  private idsToAutoTagObject: { [bitIdStr: string]: ComponentID };
+  constructor(idsToTag: ComponentIdList, idsToAutoTag: ComponentIdList) {
     this.idsToTagObject = idsToTag.toObject();
     this.idsToAutoTagObject = idsToAutoTag.toObject();
   }

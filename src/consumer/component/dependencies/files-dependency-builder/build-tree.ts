@@ -1,25 +1,11 @@
 import { set } from 'lodash';
 import path from 'path';
 import R from 'ramda';
-import fs from 'fs-extra';
-import { DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
 import { resolvePackageData } from '../../../../utils/packages';
 import generateTree, { MadgeTree } from './generate-tree-madge';
 import { FoundPackages, MissingGroupItem, MissingHandler } from './missing-handler';
-import { convertPathMapToRelativePaths, getPathMapWithLinkFilesData, PathMapItem } from './path-map';
-import {
-  DependencyTreeParams,
-  FileObject,
-  ImportSpecifier,
-  ResolveModulesConfig,
-  DependenciesTree,
-  DependenciesTreeItem,
-} from './types/dependency-tree-type';
-
-export type LinkFile = {
-  file: string;
-  importSpecifiers: ImportSpecifier[];
-};
+import { convertPathMapToRelativePaths, PathMapItem } from './path-map';
+import { DependencyTreeParams, FileObject, DependenciesTree, DependenciesTreeItem } from './types/dependency-tree-type';
 
 /**
  * Gets a list of dependencies and group them by types (files, components, packages)
@@ -28,15 +14,9 @@ export type LinkFile = {
  *
  * componentDir is the root of working directory (used for node packages version calculation)
  */
-function groupDependencyList(
-  dependenciesPaths: string[],
-  componentDir: string,
-  bindingPrefix: string
-): DependenciesTreeItem {
+function groupDependencyList(dependenciesPaths: string[], componentDir: string): DependenciesTreeItem {
   const resultGroups = new DependenciesTreeItem();
   const isPackage = (str: string) => str.includes('node_modules/');
-  const isBitLegacyInsideHarmony = (str: string) =>
-    str.includes(`node_modules/${bindingPrefix}`) || str.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`);
   dependenciesPaths.forEach((dependencyPath) => {
     if (!isPackage(dependencyPath)) {
       resultGroups.files.push({ file: dependencyPath });
@@ -50,20 +30,9 @@ function groupDependencyList(
     }
 
     // If the package is a component add it to the components list
-    // @todo: currently, for author, the package.json doesn't have any version.
-    // we might change this decision later. see https://github.com/teambit/bit/pull/2924
     if (resolvedPackage.componentId) {
       resultGroups.components.push(resolvedPackage);
       return;
-    }
-    if (isBitLegacyInsideHarmony(dependencyPath)) {
-      const pkgRootDir = resolvedPackage.packageJsonContent?.componentRootFolder;
-      const hasLegacyBitFiles = pkgRootDir && fs.existsSync(path.join(pkgRootDir, '.bit_env_has_installed'));
-      if (hasLegacyBitFiles) {
-        throw new Error(`error: legacy dependency "${resolvedPackage.name}" was imported to one of the files in "${componentDir}".
-this workspace is Harmony and therefore legacy components/packages are unsupported.
-remove the import statement to fix this error`);
-      }
     }
     const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
     const packageWithVersion = {
@@ -81,11 +50,11 @@ remove the import statement to fix this error`);
  *
  * @returns new tree with grouped dependencies
  */
-function MadgeTreeToDependenciesTree(tree: MadgeTree, componentDir: string, bindingPrefix: string): DependenciesTree {
+function MadgeTreeToDependenciesTree(tree: MadgeTree, componentDir: string): DependenciesTree {
   const result: DependenciesTree = {};
   Object.keys(tree).forEach((filePath) => {
     if (tree[filePath] && !R.isEmpty(tree[filePath])) {
-      result[filePath] = groupDependencyList(tree[filePath], componentDir, bindingPrefix);
+      result[filePath] = groupDependencyList(tree[filePath], componentDir);
     } else {
       result[filePath] = new DependenciesTreeItem();
     }
@@ -99,8 +68,7 @@ function MadgeTreeToDependenciesTree(tree: MadgeTree, componentDir: string, bind
  */
 function updateTreeWithPathMap(tree: DependenciesTree, pathMapAbsolute: PathMapItem[], baseDir: string): void {
   if (!pathMapAbsolute.length) return;
-  const pathMapRelative = convertPathMapToRelativePaths(pathMapAbsolute, baseDir);
-  const pathMap = getPathMapWithLinkFilesData(pathMapRelative);
+  const pathMap = convertPathMapToRelativePaths(pathMapAbsolute, baseDir);
   Object.keys(tree).forEach((filePath: string) => {
     const treeFiles = tree[filePath].files;
     if (!treeFiles.length) return; // file has no dependency
@@ -114,12 +82,6 @@ function updateTreeWithPathMap(tree: DependenciesTree, pathMapAbsolute: PathMapI
         throw new Error(`updateTreeWithPathMap: dependencyPathMap is missing for ${fileObject.file}`);
       }
       fileObject.importSource = dependencyPathMap.importSource;
-      fileObject.isCustomResolveUsed = dependencyPathMap.isCustomResolveUsed;
-      if (dependencyPathMap.linkFile) {
-        fileObject.isLink = true;
-        fileObject.linkDependencies = dependencyPathMap.realDependencies;
-        return fileObject;
-      }
       if (dependencyPathMap.importSpecifiers && dependencyPathMap.importSpecifiers.length) {
         const depImportSpecifiers = dependencyPathMap.importSpecifiers.map((importSpecifier) => {
           return {
@@ -131,30 +93,6 @@ function updateTreeWithPathMap(tree: DependenciesTree, pathMapAbsolute: PathMapI
       return fileObject;
     });
   });
-}
-
-/**
- * config aliases are passed later on to webpack-enhancer and it expects them to have the full path
- */
-function getResolveConfigAbsolute(
-  workspacePath: string,
-  resolveConfig: ResolveModulesConfig | null | undefined
-): ResolveModulesConfig | null | undefined {
-  if (!resolveConfig) return resolveConfig;
-  const resolveConfigAbsolute = R.clone(resolveConfig);
-  if (resolveConfig.modulesDirectories) {
-    resolveConfigAbsolute.modulesDirectories = resolveConfig.modulesDirectories.map((moduleDirectory) => {
-      return path.isAbsolute(moduleDirectory) ? moduleDirectory : path.join(workspacePath, moduleDirectory);
-    });
-  }
-  if (resolveConfigAbsolute.aliases) {
-    Object.keys(resolveConfigAbsolute.aliases).forEach((alias) => {
-      if (!path.isAbsolute(resolveConfigAbsolute.aliases[alias])) {
-        resolveConfigAbsolute.aliases[alias] = path.join(workspacePath, resolveConfigAbsolute.aliases[alias]);
-      }
-    });
-  }
-  return resolveConfigAbsolute;
 }
 
 function mergeManuallyFoundPackagesToTree(
@@ -175,16 +113,6 @@ function mergeManuallyFoundPackagesToTree(
   });
   foundPackages.components.forEach((component) => {
     missingGroups.forEach((fileDep: MissingGroupItem) => {
-      if (
-        fileDep.components &&
-        ((component.fullPath && fileDep.components.includes(component.fullPath)) ||
-          fileDep.components.includes(component.name))
-      ) {
-        fileDep.components = fileDep.components.filter((existComponent) => {
-          return existComponent !== component.fullPath && existComponent !== component.name;
-        });
-        (tree[fileDep.originFile] ||= new DependenciesTreeItem()).components.push(component);
-      }
       if (fileDep.packages && fileDep.packages.includes(component.name)) {
         fileDep.packages = fileDep.packages.filter((packageName) => packageName !== component.name);
         (tree[fileDep.originFile] ||= new DependenciesTreeItem()).components.push(component);
@@ -214,18 +142,15 @@ function mergeErrorsToTree(errors, tree: DependenciesTree) {
  * @param baseDir working directory
  * @param workspacePath
  * @param filePaths path of the file to calculate the dependencies
- * @param bindingPrefix
  */
 export async function getDependencyTree({
-  componentDir, // component rootDir, for legacy-authored it's the same as workspacePath
+  componentDir, // component rootDir
   workspacePath,
   filePaths,
-  bindingPrefix,
-  resolveModulesConfig,
   visited = {},
   cacheProjectAst,
+  envDetectors,
 }: DependencyTreeParams): Promise<{ tree: DependenciesTree }> {
-  const resolveConfigAbsolute = getResolveConfigAbsolute(workspacePath, resolveModulesConfig);
   const config = {
     baseDir: componentDir,
     includeNpm: true,
@@ -233,8 +158,8 @@ export async function getDependencyTree({
     webpackConfig: null,
     visited,
     nonExistent: [],
-    resolveConfig: resolveConfigAbsolute,
     cacheProjectAst,
+    envDetectors,
   };
   // This is important because without this, madge won't know to resolve files if we run the
   // CMD not from the root dir
@@ -245,12 +170,11 @@ export async function getDependencyTree({
     return path.resolve(componentDir, filePath);
   });
   const { madgeTree, skipped, pathMap, errors } = generateTree(fullPaths, config);
-  const tree: DependenciesTree = MadgeTreeToDependenciesTree(madgeTree, componentDir, bindingPrefix);
+  const tree: DependenciesTree = MadgeTreeToDependenciesTree(madgeTree, componentDir);
   const { missingGroups, foundPackages } = new MissingHandler(
     skipped,
     componentDir,
-    workspacePath,
-    bindingPrefix
+    workspacePath
   ).groupAndFindMissing();
 
   if (foundPackages) mergeManuallyFoundPackagesToTree(foundPackages, missingGroups, tree);

@@ -1,4 +1,4 @@
-@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 .scope {
   display: flex;
@@ -19,7 +19,6 @@
 
 .main {
   flex: 1 1;
-
   height: 100%;
   overflow: hidden;
 }
@@ -37,8 +36,12 @@
   min-width: 100px;
   max-width: 85%;
   position: relative;
-
+  overflow: unset;
   height: 100%;
+
+  &.collapsed {
+    overflow: hidden;
+  }
 }
 
 .pane {

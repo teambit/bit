@@ -8,11 +8,11 @@ import {
   ScopeTreeNode,
 } from '@teambit/ui-foundation.ui.side-bar';
 import { TreeNode as TreeNodeType, TreeNodeProps } from '@teambit/design.ui.tree';
-import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { useLanes as defaultUseLanesHook } from '@teambit/lanes.hooks.use-lanes';
 import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
 import { ComponentModel } from '@teambit/component';
 import { useScope, ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
-// import { WorkspaceModel } from '@teambit/workspace';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { SidebarSlot } from './scope.ui.runtime';
 
 export type ScopeDrawerProps = {
@@ -21,6 +21,7 @@ export type ScopeDrawerProps = {
   drawerWidgetSlot: DrawerWidgetSlot;
   assumeScopeInUrl?: boolean;
   overrideUseComponents?: () => { components: ComponentModel[] };
+  overrideUseLanes?: () => { lanesModel?: LanesModel; loading?: boolean };
 };
 
 export const scopeDrawer = ({
@@ -29,12 +30,30 @@ export const scopeDrawer = ({
   drawerWidgetSlot,
   assumeScopeInUrl = false,
   overrideUseComponents,
+  overrideUseLanes: useLanesFromProps,
 }: ScopeDrawerProps) => {
+  const useLanes = useLanesFromProps || defaultUseLanesHook;
+
   const customScopeTreeNodeRenderer = (treeNodeSlot, host?: any) =>
     function TreeNode(props: TreeNodeProps<PayloadType>) {
       const children = props.node.children;
 
-      if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
+      if (!children)
+        return (
+          <ComponentView
+            {...props}
+            treeNodeSlot={treeNodeSlot}
+            /**
+             * this is a hack to get around incompatible component id b/w the new sidebar and components in this workspace
+             * the new sidebar has been tagged with the new LanesModel component which has been upgraded to a new major component id version
+             * which makes it incompatible with all other components in this workspace
+             *
+             * hopefully when wave gets released it becomes seamless to update all dependents for a given version
+             */
+            useLanes={useLanes as any}
+            scopeName={host?.name}
+          />
+        );
 
       // skip over scope node and render only children
       if (props.node.payload instanceof ScopePayload) {
@@ -76,6 +95,7 @@ export const scopeDrawer = ({
       drawerWidgets: drawerWidgetSlot,
     },
     useHost: () => useScope(),
+    useLanes,
     emptyMessage: 'Scope is empty',
     // TODO: create an interface for Component host.
     transformTree: (host?: any) => {
@@ -86,10 +106,11 @@ export const scopeDrawer = ({
           return scopeNameFromNode === host?.name;
         });
 
-        const thisScope = rootNode.children ? rootNode.children[thisScopeIndex || ''] : undefined;
+        const thisScope =
+          rootNode.children && thisScopeIndex !== undefined ? rootNode.children[thisScopeIndex] : undefined;
 
-        if (thisScopeIndex && thisScopeIndex !== -1 && rootNode.children) {
-          delete rootNode.children[thisScopeIndex];
+        if (thisScope && thisScope.children && rootNode.children) {
+          delete rootNode.children[thisScopeIndex as number];
           const children = rootNode.children.concat(thisScope.children);
           rootNode.children = children;
         }

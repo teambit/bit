@@ -5,6 +5,7 @@ export { ScopeComponentCard } from './ui/scope-overview/scope-overview';
 export type { ScopeMain } from './scope.main.runtime';
 export type { ScopeModel } from '@teambit/scope.models.scope-model';
 export { ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
+export type { StagedConfig } from './staged-config';
 export type { ScopeUI, ScopeBadgeSlot, ScopeOverview, ScopeOverviewSlot, OverviewLineSlot } from './scope.ui.runtime';
 export { ScopeAspect };
 export default ScopeAspect;

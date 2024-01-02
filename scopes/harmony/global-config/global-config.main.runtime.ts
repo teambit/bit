@@ -16,10 +16,12 @@ import {
   listSync,
   set,
   setSync,
+  invalidateCache,
 } from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import { GlobalConfig } from '@teambit/legacy/dist/global-config';
 import { GlobalConfigAspect } from './global-config.aspect';
 import { GlobalsCmd } from './globals.cmd';
+import { SystemCmd, SystemLogCmd } from './system.cmd';
 
 export class GlobalConfigMain {
   static runtime = MainRuntime;
@@ -28,6 +30,15 @@ export class GlobalConfigMain {
 
   async get(key: string): Promise<string | undefined> {
     return get(key);
+  }
+
+  async getBool(key: string): Promise<boolean | undefined> {
+    const result = await get(key);
+    if (result === undefined || result === null) return undefined;
+    if (typeof result === 'boolean') return result;
+    if (result === 'true') return true;
+    if (result === 'false') return false;
+    throw new Error(`the configuration "${key}" has an invalid value "${result}". it should be boolean`);
   }
 
   getSync(key: string): string | undefined {
@@ -60,6 +71,10 @@ export class GlobalConfigMain {
     return this.getSync(CFG_CAPSULES_ROOT_BASE_DIR) || GLOBALS_DEFAULT_CAPSULES;
   }
 
+  invalidateCache() {
+    invalidateCache();
+  }
+
   getKnownGlobalDirs() {
     return {
       'Global Dir': CACHE_ROOT,
@@ -72,7 +87,10 @@ export class GlobalConfigMain {
 
   static async provider([cli]: [CLIMain]) {
     const globalConfig = new GlobalConfigMain();
-    cli.register(new GlobalsCmd(globalConfig));
+    const systemCmd = new SystemCmd();
+    const systemLogCmd = new SystemLogCmd();
+    systemCmd.commands = [systemLogCmd];
+    cli.register(new GlobalsCmd(globalConfig), systemCmd);
     return globalConfig;
   }
 }

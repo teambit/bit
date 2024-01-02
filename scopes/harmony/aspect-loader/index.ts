@@ -5,6 +5,8 @@ export type {
   AspectDescriptor,
   MainAspect,
   OnLoadRequireableExtension,
+  AspectResolver,
+  ResolvedAspect,
 } from './aspect-loader.main.runtime';
 export {
   getAspectDef,
@@ -14,7 +16,8 @@ export {
   getCoreAspectName,
   getAspectDirFromBvm,
 } from './core-aspects';
-export { PluginDefinition } from './plugin-definition';
+export type { PluginDefinition } from './plugin-definition';
 export { AspectDefinition } from './aspect-definition';
+export { UNABLE_TO_LOAD_EXTENSION } from './constants';
 export { AspectLoaderAspect };
 export default AspectLoaderAspect;

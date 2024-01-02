@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import chalk from 'chalk';
+import path from 'path';
 import { uniq } from 'lodash';
 import { Extensions } from '../../src/constants';
 import { SchemaName } from '../../src/consumer/component/component-schema';
@@ -19,7 +20,6 @@ describe('tag components on Harmony', function () {
   describe('workspace with standard components', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
       helper.command.export();
@@ -30,7 +30,7 @@ describe('tag components on Harmony', function () {
     it('should import successfully with the schema prop', () => {
       const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
       expect(comp1).to.have.property('schema');
-      expect(comp1.schema).to.equal(SchemaName.Harmony);
+      expect(comp1.schema).to.equal(SchemaName.Harmony2);
     });
     it('bit status should work and not show modified', () => {
       const status = helper.command.statusJson();
@@ -54,7 +54,6 @@ describe('tag components on Harmony', function () {
   describe('tag on Harmony', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
       helper.command.export();
@@ -86,7 +85,6 @@ describe('tag components on Harmony', function () {
   describe('soft tag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.softTag('--all');
     });
@@ -179,7 +177,7 @@ describe('tag components on Harmony', function () {
     describe('untag', () => {
       before(() => {
         helper.command.softTag('-a -s 3.0.0');
-        helper.command.untagSoft('--all');
+        helper.command.resetSoft('--all');
       });
       it('should remove the nextVersion from the .bitmap file', () => {
         const bitMap = helper.bitMap.readComponentsMapOnly();
@@ -228,7 +226,6 @@ describe('tag components on Harmony', function () {
     let beforeTagScope: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fs.outputFile('bar/index.js');
       helper.fs.outputFile('bar/foo.spec.js'); // it will fail as it doesn't have any test
       helper.command.addComponent('bar');
@@ -238,6 +235,8 @@ describe('tag components on Harmony', function () {
       expect(() => helper.command.tagAllComponents()).to.throw(
         'Failed task 1: "teambit.defender/tester:TestComponents" of env "teambit.harmony/node"'
       );
+      const stagedConfigPath = helper.general.getStagedConfigPath();
+      expect(stagedConfigPath).to.not.be.a.path();
     });
     it('should succeed with --skip-tests', () => {
       helper.scopeHelper.getClonedLocalScope(beforeTagScope);
@@ -251,7 +250,6 @@ describe('tag components on Harmony', function () {
   describe('modified one component, the rest are auto-tag pending', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
       // modify only comp3. so then comp1 and comp2 are auto-tag pending
@@ -285,7 +283,6 @@ describe('tag components on Harmony', function () {
     let afterFirstTag: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
@@ -335,7 +332,6 @@ describe('tag components on Harmony', function () {
     let tagOutput: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
       tagOutput = helper.command.tagAllWithoutBuild('--increment prerelease --prerelease-id dev');
@@ -353,11 +349,22 @@ describe('tag components on Harmony', function () {
       });
     });
   });
+  describe('auto-tag with pre-release', () => {
+    let tagOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      tagOutput = helper.command.tagWithoutBuild('comp3', '--unmodified --increment prerelease --prerelease-id dev');
+    });
+    it('should auto-tag dependents according to the pre-release version', () => {
+      expect(tagOutput).to.have.string('comp1@0.0.2-dev.0');
+    });
+  });
   describe('soft-tag pre-release', () => {
     let tagOutput: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
       tagOutput = helper.command.softTag('--all --pre-release dev');
@@ -394,7 +401,6 @@ describe('tag components on Harmony', function () {
   describe('soft tag --minor with auto-tag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
       helper.fs.appendFile('comp2/index.js');
@@ -423,45 +429,18 @@ describe('tag components on Harmony', function () {
       expect(() => helper.command.tagAllComponents()).not.to.throw();
     });
   });
-  describe('tag from scope', () => {
-    let bareTag;
-    let beforeTagging;
+  describe('package.json update', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
-      helper.fixtures.populateComponents(3);
-      helper.command.snapAllComponentsWithoutBuild();
-      helper.command.export();
-
-      bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
-      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
-      beforeTagging = helper.scopeHelper.cloneScope(bareTag.scopePath);
-      helper.command.tagFromScope(bareTag.scopePath, `${helper.scopes.remote}/comp2 ${helper.scopes.remote}/comp3`);
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
     });
-    it('should tag them successfully', () => {
-      const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2`, bareTag.scopePath);
-      expect(comp2OnBare.versions).to.have.property('0.0.1');
-      const comp3OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp3`, bareTag.scopePath);
-      expect(comp3OnBare.versions).to.have.property('0.0.1');
-    });
-    describe('running with --push flag', () => {
-      before(() => {
-        helper.scopeHelper.getClonedScope(beforeTagging, bareTag.scopePath);
-        helper.command.tagFromScope(
-          bareTag.scopePath,
-          `${helper.scopes.remote}/comp2 ${helper.scopes.remote}/comp3`,
-          '--push'
-        );
-      });
-      it('should export the modified components to the remote', () => {
-        const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2`, bareTag.scopePath);
-        const comp1OnRemote = helper.command.catComponent(`${helper.scopes.remote}/comp2`, helper.scopes.remotePath);
-        expect(comp2OnBare.head).to.equal(comp1OnRemote.head);
-
-        const comp3OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp3`, bareTag.scopePath);
-        const comp2OnRemote = helper.command.catComponent(`${helper.scopes.remote}/comp3`, helper.scopes.remotePath);
-        expect(comp3OnBare.head).to.equal(comp2OnRemote.head);
-      });
+    it('should update package.json on the workspace with the new tag', () => {
+      const pkgJson = helper.fs.readJsonFile(
+        path.join('node_modules', `@${helper.scopes.remote}/comp1`, 'package.json')
+      );
+      expect(pkgJson.version).to.equal('0.0.1');
+      expect(pkgJson.componentId.version).to.equal('0.0.1');
     });
   });
 });

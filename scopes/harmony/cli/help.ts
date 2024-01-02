@@ -19,20 +19,20 @@ type GroupContent = {
   description: string;
 };
 
-export function formatHelp(commands: CommandList, groups: GroupsType, docsDomain: string) {
-  const helpProps = groupCommands(commands, groups);
+export function formatHelp(commands: CommandList, groups: GroupsType, showPrivateCommands = false) {
+  const helpProps = groupCommands(commands, groups, showPrivateCommands);
   const commandsStr = formatCommandsHelp(helpProps);
 
-  return `${getHeader(docsDomain)}
+  return `${getHeader()}
 
 ${commandsStr}
 
 ${getFooter()}`;
 }
 
-function groupCommands(commands: CommandList, groups: GroupsType): HelpProps {
+function groupCommands(commands: CommandList, groups: GroupsType, showPrivateCommands = false): HelpProps {
   const help: HelpProps = commands
-    .filter((command) => !command.private && command.description)
+    .filter((command) => (showPrivateCommands ? true : !command.private && command.description))
     .reduce(function (partialHelp, command) {
       const groupName = command.group as string; // at this stage, it must be set
       partialHelp[groupName] = partialHelp[groupName] || {
@@ -69,10 +69,10 @@ function commandTemplate(name: string, description: string): string {
   return res;
 }
 
-function getHeader(docsDomain: string): string {
+function getHeader(): string {
   return `${chalk.bold('usage: bit [--version] [--help] <command> [<args>]')}
 
-${chalk.yellow(`bit documentation: https://${docsDomain}`)}`;
+${chalk.yellow(`bit documentation: https://bit.dev/`)}`;
 }
 
 function getFooter(): string {

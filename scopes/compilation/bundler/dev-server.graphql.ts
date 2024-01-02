@@ -15,6 +15,8 @@ export function devServerSchema(bundler: BundlerMain): Schema {
       type ComponentServer {
         env: String
         url: String
+        host: String
+        basePath: String
       }
     `,
     resolvers: {

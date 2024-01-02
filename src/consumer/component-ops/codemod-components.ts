@@ -1,24 +1,23 @@
 import path from 'path';
 import { IssuesClasses, RelativeComponentsAuthoredEntry } from '@teambit/component-issues';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Consumer } from '..';
-import { BitId, BitIds } from '../../bit-id';
 import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '../../utils';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import replacePackageName from '../../utils/string/replace-package-name';
 import Component from '../component/consumer-component';
-import { ImportSpecifier } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { SourceFile } from '../component/sources';
 import DataToPersist from '../component/sources/data-to-persist';
 
 export type CodemodResult = {
-  id: BitId;
+  id: ComponentID;
   changedFiles: string[];
   warnings?: string[];
 };
 
 export async function changeCodeFromRelativeToModulePaths(
   consumer: Consumer,
-  bitIds: BitId[]
+  bitIds: ComponentID[]
 ): Promise<CodemodResult[]> {
   const components = await loadComponents(consumer, bitIds);
   const componentsWithRelativeIssues = components.filter(
@@ -39,8 +38,8 @@ export async function changeCodeFromRelativeToModulePaths(
   return codemodResults.filter((c) => c.changedFiles.length || c.warnings);
 }
 
-async function reloadComponents(consumer: Consumer, bitIds: BitId[]) {
-  consumer.clearCache();
+async function reloadComponents(consumer: Consumer, bitIds: ComponentID[]) {
+  await consumer.clearCache();
   if (!bitIds.length) return;
   const components = await loadComponents(consumer, bitIds);
   const componentsWithRelativeIssues = components.filter(
@@ -52,8 +51,8 @@ async function reloadComponents(consumer: Consumer, bitIds: BitId[]) {
   }
 }
 
-async function loadComponents(consumer: Consumer, bitIds: BitId[]): Promise<Component[]> {
-  const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : consumer.bitmapIdsFromCurrentLane;
+async function loadComponents(consumer: Consumer, bitIds: ComponentID[]): Promise<Component[]> {
+  const componentsIds = bitIds.length ? ComponentIdList.fromArray(bitIds) : consumer.bitmapIdsFromCurrentLane;
   const { components } = await consumer.loadComponents(componentsIds);
 
   return components;
@@ -79,14 +78,6 @@ async function codemodComponent(
       await Promise.all(
         relativeInstances.map(async (relativeEntry: RelativeComponentsAuthoredEntry) => {
           const id = relativeEntry.componentId;
-          if (isLinkFileHasDifferentImportType(relativeEntry.relativePath.importSpecifiers)) {
-            warnings.push(
-              `"${file.relative}" requires "${id.toString()}" through a link-file ("${
-                relativeEntry.importSource
-              }") and not directly, which makes it difficult change the import, please change your code to require the component directly`
-            );
-            return;
-          }
           const requiredComponent = await consumer.loadComponent(id);
           const packageName = componentIdToPackageName({ ...requiredComponent, id });
           const cssFamily = ['.css', '.scss', '.less', '.sass'];
@@ -147,18 +138,4 @@ function getNameWithoutInternalPath(consumer: Consumer, relativeEntry: RelativeC
 
   // unable to find anything useful. just return the importSource.
   return importSource;
-}
-
-/**
- * if this is a link-file (a file that only import and export other files), bit doesn't require
- * the user to track it and it knows to skip it. If however, the link file uses default import and
- * the real file uses non-default, or vice versa, the codemod will result in an incorrect import
- * statement, and won't work.
- */
-function isLinkFileHasDifferentImportType(importSpecifiers?: ImportSpecifier[]) {
-  if (!importSpecifiers) return false;
-  return importSpecifiers.some((importSpecifier) => {
-    if (!importSpecifier.linkFile) return false;
-    return importSpecifier.linkFile.isDefault !== importSpecifier.mainFile.isDefault;
-  });
 }

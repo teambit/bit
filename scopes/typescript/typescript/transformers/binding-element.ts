@@ -2,9 +2,8 @@ import ts, { BindingElement, Node } from 'typescript';
 import { VariableLikeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
 import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
-import { jsDocToDocSchema } from './utils/jsdoc-to-doc-schema';
+import { Identifier } from '../identifier';
 
 /**
  * for example:
@@ -19,7 +18,7 @@ export class BindingElementTransformer implements SchemaTransformer {
   }
 
   async getIdentifiers(node: BindingElement) {
-    return [new ExportIdentifier(node.name.getText(), node.getSourceFile().fileName)];
+    return [new Identifier(node.name.getText(), node.getSourceFile().fileName)];
   }
 
   async transform(node: BindingElement, context: SchemaExtractorContext) {
@@ -28,7 +27,8 @@ export class BindingElementTransformer implements SchemaTransformer {
     const displaySig = info?.body?.displayString || '';
     const typeStr = parseTypeFromQuickInfo(info);
     const type = await context.resolveType(node, typeStr);
-    const doc = await jsDocToDocSchema(node, context);
-    return new VariableLikeSchema(context.getLocation(node), name, displaySig, type, false, doc);
+    const doc = await context.jsDocToDocSchema(node);
+    const defaultValue = node.initializer ? node.initializer.getText() : undefined;
+    return new VariableLikeSchema(context.getLocation(node), name, displaySig, type, false, doc, defaultValue);
   }
 }

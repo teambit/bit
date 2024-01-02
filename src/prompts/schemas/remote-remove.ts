@@ -6,7 +6,7 @@ export default function (deleteFiles: boolean, remote: boolean) {
     ? ' and the files will be deleted from the filesystem (can be avoided by entering --keep-files)'
     : '';
   const remoteOrLocalOutput = remote
-    ? `the component(s) will be permanently deleted from the remote. prefer using --soft to only mark the component as deleted`
+    ? `the component(s) will be permanently deleted from the remote. prefer using --delete to only mark the component as deleted`
     : `the component(s) will be untracked${filesDeletionStr}`;
   return {
     properties: {

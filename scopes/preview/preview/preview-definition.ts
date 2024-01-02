@@ -16,13 +16,13 @@ export interface PreviewDefinition {
   /**
    * path of the default template to be executed.
    */
-  renderTemplatePath?: (context: ExecutionContext) => Promise<string>;
+  renderTemplatePath: (context: ExecutionContext) => Promise<string | undefined>;
 
   /**
    * get the template by env.
    * TODO: refactor `renderTemplatePath` to accept only an env and remove this method.
    */
-  renderTemplatePathByEnv?: (env: Environment) => Promise<string>;
+  renderTemplatePathByEnv: (env: Environment) => Promise<string | undefined>;
 
   /**
    * get all files to require in the preview runtime.

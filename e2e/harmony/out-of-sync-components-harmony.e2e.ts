@@ -16,7 +16,6 @@ describe('components that are not synced between the scope and the consumer', fu
     let scopeOutOfSync;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       const bitMap = helper.bitMap.read();
@@ -42,7 +41,7 @@ describe('components that are not synced between the scope and the consumer', fu
       });
       it('should sync .bitmap according to the scope', () => {
         helper.command.expectStatusToBeClean();
-        helper.bitMap.expectToHaveIdHarmony('bar/foo', '0.0.1', helper.scopes.remote);
+        helper.bitMap.expectToHaveId('bar/foo', '0.0.1', helper.scopes.remote);
       });
     });
   });
@@ -50,7 +49,6 @@ describe('components that are not synced between the scope and the consumer', fu
     let scopeOutOfSync;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();
@@ -83,6 +81,39 @@ describe('components that are not synced between the scope and the consumer', fu
         const show = helper.command.showComponent('bar/foo');
         expect(show).to.not.have.string('0.0.1');
       });
+    });
+  });
+  describe('consumer with a tagged exported component and scope with no components', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.2
+      helper.fs.deletePath('.bit');
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('bit import should not throw', () => {
+      expect(() => helper.command.import()).to.not.throw();
+    });
+    it('bit import followed by bit status should sync .bitmap', () => {
+      helper.command.import();
+      helper.command.status();
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.1');
+    });
+  });
+  describe('new lane got deleted', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.fs.deletePath('.bit');
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('should recrate the lane', () => {
+      expect(() => helper.command.showOneLane('dev')).to.not.throw();
     });
   });
 });

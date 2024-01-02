@@ -2,6 +2,7 @@ const fs = require('fs');
 const https = require('https');
 
 const BIT_VERSION = process.env.BIT_VERSION;
+const random = Math.floor(Math.random() * 100000);
 
 (async () => {
   if (!BIT_VERSION) {
@@ -11,7 +12,11 @@ const BIT_VERSION = process.env.BIT_VERSION;
   https.get(
     {
       host: 'bvm.bit.dev',
-      path: '/bit/index.json',
+      // Going to the google storage directly to not getting a version from the cache
+      // host: 'https://storage.googleapis.com',
+      // adding random to avoid cache
+      path: `/bit/index.json?random=${random}`,
+      // path: '/bvm.bit.dev/bit/index.json',
       port: 443,
       headers: {
         'Content-Type': 'application/json',
@@ -29,12 +34,15 @@ const BIT_VERSION = process.env.BIT_VERSION;
         } else {
           index = JSON.parse(body);
         }
-        index = index.filter((release) => release.version !== BIT_VERSION);
-        index.push({
-          version: BIT_VERSION,
-          date: new Date().toISOString(),
-          nightly: true,
-        });
+        const found = index.find((release) => release.version === BIT_VERSION);
+        if (!found) {
+          index = index.filter((release) => release.version !== BIT_VERSION);
+          index.push({
+            version: BIT_VERSION,
+            date: new Date().toISOString(),
+            nightly: true,
+          });
+        }
         fs.writeFileSync('index.json', JSON.stringify(index), 'utf8');
       });
     }

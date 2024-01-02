@@ -8,10 +8,12 @@ export abstract class BaseDependency implements Dependency {
     private _id: string,
     private _version: string,
     private _lifecycle: DependencyLifecycleType,
-    private _source?: DependencySource
+    private _source?: DependencySource,
+    private _hidden?: boolean,
+    private _optional?: boolean
   ) {}
 
-  get id() {
+  get id(): string {
     return this._id;
   }
 
@@ -39,6 +41,22 @@ export abstract class BaseDependency implements Dependency {
     this._source = source;
   }
 
+  set hidden(hidden) {
+    this._hidden = hidden;
+  }
+
+  get hidden() {
+    return this._hidden;
+  }
+
+  set optional(optional) {
+    this._optional = optional;
+  }
+
+  get optional() {
+    return this._optional;
+  }
+
   serialize<SerializedDependency>(): SerializedDependency {
     return {
       id: this.id,
@@ -46,6 +64,8 @@ export abstract class BaseDependency implements Dependency {
       __type: this.type,
       lifecycle: this.lifecycle.toString(),
       source: this.source,
+      hidden: this.hidden,
+      optional: this.optional,
     } as unknown as SerializedDependency;
   }
 

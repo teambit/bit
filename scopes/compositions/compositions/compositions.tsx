@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState, useMemo, useRef, ReactNode } from 'react';
+import { useParams } from 'react-router-dom';
 import head from 'lodash.head';
 import queryString from 'query-string';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
@@ -18,7 +19,7 @@ import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { Separator } from '@teambit/design.ui.separator';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { AlertCard } from '@teambit/design.ui.alert-card';
-import { Link } from '@teambit/base-react.navigation.link';
+import { Link, useNavigate, useLocation } from '@teambit/base-react.navigation.link';
 import { OptionButton } from '@teambit/design.ui.input.option-button';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { EmptyStateSlot } from './compositions.ui.runtime';
@@ -27,6 +28,7 @@ import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import type { CompositionsMenuSlot } from './compositions.ui.runtime';
+import { ComponentCompositionProps } from './ui/composition-preview';
 
 export type MenuBarWidget = {
   location: 'start' | 'end';
@@ -36,20 +38,30 @@ export type CompositionsProp = { menuBarWidgets?: CompositionsMenuSlot; emptySta
 
 export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
   const component = useContext(ComponentContext);
-  const [selected, selectComposition] = useState(head(component.compositions));
-  const selectedRef = useRef(selected);
-  selectedRef.current = selected;
+  // const [searchParams, setSearchParams] = useSearchParams();
+  const params = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentCompositionName = params['*'];
+  // console.log(routes);
+  const currentComposition =
+    component.compositions.find((composition) => composition.identifier.toLowerCase() === currentCompositionName) ||
+    head(component.compositions);
+
+  // const [selected, selectComposition] = useState(head(component.compositions));
+  const selectedRef = useRef(currentComposition);
+  selectedRef.current = currentComposition;
 
   const properties = useDocs(component.id);
 
   // reset selected composition when component changes.
   // this does trigger renderer, but perf seems to be ok
-  useEffect(() => {
-    const prevId = selectedRef.current?.identifier;
-    const next = component.compositions.find((c) => c.identifier === prevId) || component.compositions[0];
+  // useEffect(() => {
+  //   const prevId = selectedRef.current?.identifier;
+  //   const next = component.compositions.find((c) => c.identifier === prevId) || component.compositions[0];
 
-    selectComposition(next);
-  }, [component]);
+  //   navigate(next.displayName.toLowerCase().replaceAll(' ', '-'));
+  // }, [component]);
   const isMobile = useIsMobile();
   const showSidebar = !isMobile && component.compositions.length > 0;
   const [isSidebarOpen, setSidebarOpenness] = useState(showSidebar);
@@ -58,7 +70,13 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
 
   const compositionUrl = toPreviewUrl(component, 'compositions');
   const isScaling = component?.preview?.isScaling;
-  const compositionIdentifierParam = isScaling ? `name=${selected?.identifier}` : selected?.identifier;
+  const includesEnvTemplates = component?.preview?.includesEnvTemplate;
+  const useNameParam = component?.preview?.useNameParam;
+  const compositionIdentifierParam =
+    useNameParam || (isScaling && includesEnvTemplates === false)
+      ? `name=${currentComposition?.identifier}`
+      : currentComposition?.identifier;
+
   const currentCompositionFullUrl = toPreviewUrl(component, 'compositions', compositionIdentifierParam);
 
   const [compositionParams, setCompositionParams] = useState<Record<string, any>>({});
@@ -76,9 +94,10 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
             </Link>
           </CompositionsMenuBar>
           <CompositionContent
+            className={styles.compositionPanel}
             emptyState={emptyState}
             component={component}
-            selected={selected}
+            selected={currentComposition}
             queryParams={queryParams}
           />
         </Pane>
@@ -102,11 +121,31 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
               <TabPanel className={styles.tabContent}>
                 <CompositionsPanel
                   isScaling={isScaling}
-                  onSelectComposition={selectComposition}
+                  useNameParam={useNameParam}
+                  includesEnvTemplate={component.preview?.includesEnvTemplate}
+                  onSelectComposition={(composition) => {
+                    if (!currentComposition || !location) return;
+                    if (location.pathname.includes(currentComposition.identifier.toLowerCase())) {
+                      navigate(composition.identifier.toLowerCase());
+                      return;
+                    }
+
+                    const path = location.pathname.replace(
+                      currentComposition.identifier.toLowerCase(),
+                      composition.identifier.toLowerCase()
+                    );
+
+                    if (!path) return;
+                    if (!path.includes(composition.identifier.toLowerCase())) {
+                      const nextPath = location.pathname.concat(`/${composition.identifier.toLowerCase()}`);
+                      navigate(nextPath);
+                      return;
+                    }
+                    navigate(path);
+                  }}
                   url={compositionUrl}
                   compositions={component.compositions}
-                  active={selected}
-                  className={styles.compost}
+                  active={currentComposition}
                 />
               </TabPanel>
               <TabPanel className={styles.tabContent}>
@@ -125,9 +164,15 @@ export type CompositionContentProps = {
   selected?: Composition;
   queryParams?: string | string[];
   emptyState?: EmptyStateSlot;
-};
+} & ComponentCompositionProps;
 
-export function CompositionContent({ component, selected, queryParams, emptyState }: CompositionContentProps) {
+export function CompositionContent({
+  component,
+  selected,
+  queryParams,
+  emptyState,
+  ...componentCompositionProps
+}: CompositionContentProps) {
   const env = component.environment?.id;
   const EmptyStateTemplate = emptyState?.get(env || ''); // || defaultTemplate;
 
@@ -172,7 +217,7 @@ export function CompositionContent({ component, selected, queryParams, emptyStat
       <EmptyBox
         title="There are no compositions for this component."
         linkText="Learn how to create compositions"
-        link={`https://bit.dev/docs/dev-services-overview/compositions/compositions-overview`}
+        link={`https://bit.dev/reference/dev-services-overview/compositions/compositions-overview`}
       />
     );
   }
@@ -188,6 +233,7 @@ export function CompositionContent({ component, selected, queryParams, emptyStat
       fullContentHeight
       pubsub={true}
       queryParams={queryParams}
+      {...componentCompositionProps}
     />
   );
 }

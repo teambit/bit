@@ -5,3 +5,5 @@ export const PnpmAspect = Aspect.create({
   dependencies: [],
   defaultConfig: {},
 });
+
+export default PnpmAspect;

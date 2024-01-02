@@ -183,11 +183,11 @@ export class TesterMain {
   }
 
   getComponentDevPatterns(component: Component) {
-    const env = this.envs.calculateEnv(component).env;
+    const env = this.envs.calculateEnv(component, { skipWarnings: !!this.workspace?.inInstallContext }).env;
     const componentPatterns: string[] = env.getTestsDevPatterns
       ? env.getTestsDevPatterns(component)
       : this.getPatterns();
-    return componentPatterns;
+    return { name: 'tests', pattern: componentPatterns };
   }
 
   getDevPatternToRegister() {
@@ -219,7 +219,7 @@ export class TesterMain {
     /**
      * determine whether to watch on start.
      */
-    watchOnStart: true,
+    watchOnStart: false,
   };
 
   static async provider(

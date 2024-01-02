@@ -1,6 +1,5 @@
 import R from 'ramda';
-
-import { BitId } from '../../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import loader from '../../../cli/loader';
 import { BEFORE_LOCAL_LIST, BEFORE_REMOTE_LIST } from '../../../cli/loader/loader-messages';
 import { Consumer, loadConsumerIfExist } from '../../../consumer';
@@ -34,7 +33,7 @@ export async function listScope({
   async function remoteList(): Promise<ListScopeResult[]> {
     const remote: Remote = await getRemoteByName(scopeName as string, consumer);
     loader.start(BEFORE_REMOTE_LIST);
-    return remote.list(namespacesUsingWildcards, strategiesNames);
+    return remote.list(`${scopeName}/${namespacesUsingWildcards}`, strategiesNames);
   }
 
   async function localList(): Promise<ListScopeResult[]> {
@@ -47,7 +46,7 @@ export async function listScope({
   }
 }
 
-export async function getRemoteBitIdsByWildcards(idStr: string): Promise<BitId[]> {
+export async function getRemoteBitIdsByWildcards(idStr: string, includeDeprecated = true): Promise<ComponentID[]> {
   if (!idStr.includes('/')) {
     throw new GeneralError(
       `import with wildcards expects full scope-name before the wildcards, instead, got "${idStr}"`
@@ -57,8 +56,9 @@ export async function getRemoteBitIdsByWildcards(idStr: string): Promise<BitId[]
   const scopeName = idSplit[0];
   const namespacesUsingWildcards = R.tail(idSplit).join('/');
   const listResult = await listScope({ scopeName, namespacesUsingWildcards });
-  if (!listResult.length) {
+  const listResultFiltered = includeDeprecated ? listResult : listResult.filter((r) => !r.deprecated);
+  if (!listResultFiltered.length) {
     throw new NoIdMatchWildcard([idStr]);
   }
-  return listResult.map((result) => result.id);
+  return listResultFiltered.map((result) => result.id);
 }

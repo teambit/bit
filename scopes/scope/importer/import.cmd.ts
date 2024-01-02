@@ -2,22 +2,44 @@ import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { compact } from 'lodash';
 import R from 'ramda';
-import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
+import { installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
 import {
   FileStatus,
   MergeOptions,
   MergeStrategy,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
 import { ImporterMain } from './importer.main.runtime';
-import { ImportOptions, ImportDetails, ImportStatus } from './import-components';
+import { ImportOptions, ImportDetails, ImportStatus, ImportResult } from './import-components';
+
+type ImportFlags = {
+  path?: string;
+  objects?: boolean;
+  displayDependencies?: boolean;
+  override?: boolean;
+  verbose?: boolean;
+  json?: boolean;
+  conf?: string;
+  skipDependencyInstallation?: boolean;
+  skipWriteConfigFiles?: boolean;
+  merge?: MergeStrategy;
+  filterEnvs?: string;
+  saveInLane?: boolean;
+  dependencies?: boolean;
+  dependents?: boolean;
+  allHistory?: boolean;
+  fetchDeps?: boolean;
+  trackOnly?: boolean;
+  includeDeprecated?: boolean;
+};
 
 export class ImportCmd implements Command {
   name = 'import [component-patterns...]';
   description = 'import components from their remote scopes to the local workspace';
+  helpUrl = 'reference/components/importing-components';
   arguments = [
     {
       name: 'component-patterns...',
@@ -33,86 +55,144 @@ export class ImportCmd implements Command {
     [
       'o',
       'objects',
-      'import components objects to the local scope without checkout (without writing them to the file system). This is a default behavior for import with no id argument',
+      'import components objects to the local scope without checkout (without writing them to the file system). This is the default behavior for import with no id argument',
     ],
-    ['d', 'display-dependencies', 'display the imported dependencies'],
     ['O', 'override', 'override local changes'],
     ['v', 'verbose', 'show verbose output for inspection'],
     ['j', 'json', 'return the output as JSON'],
     // ['', 'conf', 'write the configuration file (component.json) of the component'], // not working. need to fix once ComponentWriter is moved to Harmony
-    ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not auto-install dependencies of the imported components'],
+    ['', 'skip-write-config-files', 'do not write config files (such as eslint, tsconfig, prettier, etc...)'],
     [
       'm',
       'merge [strategy]',
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"',
     ],
-    ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
+    [
+      '',
+      'dependencies',
+      'import all dependencies (bit components only) of imported components and write them to the workspace',
+    ],
     [
       '',
       'dependents',
-      'EXPERIMENTAL. import components found while traversing from the given ids upwards to the workspace components',
+      'import components found while traversing from the imported components upwards to the workspace components',
+    ],
+    [
+      '',
+      'filter-envs <envs>',
+      'only import components that have the specified environment (e.g., "teambit.react/react-env")',
     ],
     [
       '',
       'save-in-lane',
-      'EXPERIMENTAL. when checked out to a lane and the component is not on the remote-lane, save it in the lane (default to save on main)',
+      'when checked out to a lane and the component is not on the remote-lane, save it in the lane (defaults to save on main)',
     ],
     [
       '',
       'all-history',
       'relevant for fetching all components objects. avoid optimizations, fetch all history versions, always',
     ],
+    [
+      '',
+      'fetch-deps',
+      'fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data',
+    ],
+    [
+      '',
+      'track-only',
+      'do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap',
+    ],
+    ['', 'include-deprecated', 'when importing with patterns, include deprecated components (default to exclude them)'],
   ] as CommandOptions;
   loader = true;
   migration = true;
   remoteOp = true;
   _packageManagerArgs: string[]; // gets populated by yargs-adapter.handler().
 
-  constructor(private importer: ImporterMain, private docsDomain: string) {
-    this.extendedDescription = `https://${docsDomain}/components/importing-components
-${WILDCARD_HELP('import')}`;
+  constructor(private importer: ImporterMain) {}
+
+  async report([ids = []]: [string[]], importFlags: ImportFlags): Promise<any> {
+    const {
+      importDetails,
+      importedIds,
+      importedDeps,
+      installationError,
+      compilationError,
+      missingIds,
+      cancellationMessage,
+    } = await this.getImportResults(ids, importFlags);
+    if (!importedIds.length && !missingIds?.length) {
+      return chalk.yellow(cancellationMessage || 'nothing to import');
+    }
+    const importedIdsUniqNoVersion = ComponentIdList.fromArray(importedIds).toVersionLatest();
+    const summaryPrefix =
+      importedIdsUniqNoVersion.length === 1
+        ? 'successfully imported one component'
+        : `successfully imported ${importedIdsUniqNoVersion.length} components`;
+
+    let upToDateCount = 0;
+    const importedComponents = importedIds.map((bitId) => {
+      const details = importDetails.find((c) => c.id === bitId.toStringWithoutVersion());
+      if (!details) throw new Error(`missing details for component ${bitId.toString()}`);
+      if (details.status === 'up to date') {
+        upToDateCount += 1;
+      }
+      return formatPlainComponentItemWithVersions(bitId, details);
+    });
+    const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date`;
+    const summary = `${summaryPrefix}${upToDateStr}`;
+    const importOutput = [...compact(importedComponents), chalk.green(summary)].join('\n');
+    const importedDepsOutput =
+      importFlags.displayDependencies && importedDeps.length
+        ? immutableUnshift(
+            R.uniq(importedDeps.map(formatPlainComponentItem)),
+            chalk.green(`\n\nsuccessfully imported ${importedDeps.length} component dependencies`)
+          ).join('\n')
+        : '';
+
+    const output =
+      importOutput +
+      importedDepsOutput +
+      formatMissingComponents(missingIds) +
+      installationErrorOutput(installationError) +
+      compilationErrorOutput(compilationError);
+
+    return output;
   }
 
-  async report(
-    [ids = []]: [string[]],
+  async json([ids]: [string[]], importFlags: ImportFlags) {
+    const { importDetails, installationError, missingIds } = await this.getImportResults(ids, importFlags);
+
+    return { importDetails, installationError, missingIds };
+  }
+
+  private async getImportResults(
+    ids: string[],
     {
       path,
       objects = false,
-      displayDependencies = false,
       override = false,
       verbose = false,
-      json = false,
       conf,
-      skipNpmInstall = false,
       skipDependencyInstallation = false,
+      skipWriteConfigFiles = false,
       merge,
+      filterEnvs,
       saveInLane = false,
       dependencies = false,
       dependents = false,
       allHistory = false,
-    }: {
-      path?: string;
-      objects?: boolean;
-      displayDependencies?: boolean;
-      override?: boolean;
-      verbose?: boolean;
-      json?: boolean;
-      conf?: string;
-      skipNpmInstall?: boolean;
-      skipDependencyInstallation?: boolean;
-      merge?: MergeStrategy;
-      saveInLane?: boolean;
-      dependencies?: boolean;
-      dependents?: boolean;
-      allHistory?: boolean;
-    }
-  ): Promise<any> {
+      fetchDeps = false,
+      trackOnly = false,
+      includeDeprecated = false,
+    }: ImportFlags
+  ): Promise<ImportResult> {
     if (objects && merge) {
-      throw new GeneralError('you cant use --objects and --merge flags combined');
+      throw new GeneralError(' --objects and --merge flags cannot be used together');
     }
     if (override && merge) {
-      throw new GeneralError('you cant use --override and --merge flags combined');
+      throw new GeneralError('--override and --merge cannot be used together');
     }
     if (!ids.length && dependencies) {
       throw new GeneralError('you have to specify ids to use "--dependencies" flag');
@@ -120,12 +200,8 @@ ${WILDCARD_HELP('import')}`;
     if (!ids.length && dependents) {
       throw new GeneralError('you have to specify ids to use "--dependents" flag');
     }
-    if (skipNpmInstall) {
-      // eslint-disable-next-line no-console
-      console.log(
-        chalk.yellow(`"--skip-npm-install" has been deprecated, please use "--skip-dependency-installation" instead`)
-      );
-      skipDependencyInstallation = true;
+    if (!ids.length && trackOnly) {
+      throw new GeneralError('you have to specify ids to use "--track-only" flag');
     }
     let mergeStrategy;
     if (merge && R.is(String, merge)) {
@@ -136,64 +212,42 @@ ${WILDCARD_HELP('import')}`;
       mergeStrategy = merge;
     }
 
+    const envsToFilter = filterEnvs ? filterEnvs.split(',').map((p) => p.trim()) : undefined;
+
     const importOptions: ImportOptions = {
       ids,
       verbose,
       merge: Boolean(merge),
+      filterEnvs: envsToFilter,
       mergeStrategy,
       writeToPath: path,
       objectsOnly: objects,
       override,
       writeConfig: Boolean(conf),
       installNpmPackages: !skipDependencyInstallation,
+      writeConfigFiles: !skipWriteConfigFiles,
       saveInLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
       allHistory,
+      fetchDeps,
+      trackOnly,
+      includeDeprecated,
     };
-    const importResults = await this.importer.import(importOptions, this._packageManagerArgs);
-    const { importDetails, importedIds, importedDeps } = importResults;
-
-    if (json) {
-      return JSON.stringify({ importDetails }, null, 4);
-    }
-
-    if (!importedIds.length) {
-      return chalk.yellow(importResults.cancellationMessage || 'nothing to import');
-    }
-
-    const titlePrefix =
-      importedIds.length === 1
-        ? 'successfully imported one component'
-        : `successfully imported ${importedIds.length} components`;
-
-    let upToDateCount = 0;
-    const importedComponents = importedIds.map((bitId) => {
-      const details = importDetails.find((c) => c.id === bitId.toStringWithoutVersion());
-      if (!details) throw new Error(`missing details of component ${bitId.toString()}`);
-      if (details.status === 'up to date') {
-        upToDateCount += 1;
-      }
-      return formatPlainComponentItemWithVersions(bitId, details);
-    });
-    const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date`;
-    const title = `${titlePrefix}${upToDateStr}`;
-    const componentDependenciesOutput = [chalk.green(title), ...compact(importedComponents)].join('\n');
-    const importedDepsOutput =
-      displayDependencies && importedDeps.length
-        ? immutableUnshift(
-            R.uniq(importedDeps.map(formatPlainComponentItem)),
-            chalk.green(`\n\nsuccessfully imported ${importedDeps.length} component dependencies`)
-          ).join('\n')
-        : '';
-
-    const dependenciesOutput = componentDependenciesOutput + importedDepsOutput;
-
-    return dependenciesOutput;
+    return this.importer.import(importOptions, this._packageManagerArgs);
   }
 }
 
-function formatPlainComponentItemWithVersions(bitId: BitId, importDetails: ImportDetails) {
+function formatMissingComponents(missing?: string[]) {
+  if (!missing?.length) return '';
+  const title = chalk.underline('Missing Components');
+  const subTitle = `The following components are missing from the remote in the requested version, try running "bit status" to re-sync your .bitmap file
+Also, check that the requested version exists on main or the checked out lane`;
+  const body = chalk.red(missing.join('\n'));
+  return `\n\n${title}\n${subTitle}\n${body}`;
+}
+
+function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails: ImportDetails) {
   const status: ImportStatus = importDetails.status;
   const id = bitId.toStringWithoutVersion();
   const getVersionsOutput = () => {
@@ -216,15 +270,17 @@ function formatPlainComponentItemWithVersions(bitId: BitId, importDetails: Impor
       .join(', ')}) `;
   };
   const conflictMessage = getConflictMessage();
-  const deprecated = importDetails.deprecated ? chalk.yellow('deprecated') : '';
+  const deprecated = importDetails.deprecated && !importDetails.removed ? chalk.yellow('deprecated') : '';
   const removed = importDetails.removed ? chalk.red('removed') : '';
   const missingDeps = importDetails.missingDeps.length
     ? chalk.red(`missing dependencies: ${importDetails.missingDeps.map((d) => d.toString()).join(', ')}`)
     : '';
-  if (status === 'up to date' && !missingDeps && !deprecated && !conflictMessage) {
+  if (status === 'up to date' && !missingDeps && !deprecated && !conflictMessage && !removed) {
     return undefined;
   }
-  return `- ${chalk.green(status)} ${chalk.cyan(
-    id
-  )} ${versions}${usedVersion} ${conflictMessage}${deprecated}${removed} ${missingDeps}`;
+  return chalk.dim(
+    `- ${chalk.green(status)} ${chalk.cyan(
+      id
+    )} ${versions}${usedVersion} ${conflictMessage}${deprecated}${removed} ${missingDeps}`
+  );
 }

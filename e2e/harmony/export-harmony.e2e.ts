@@ -17,7 +17,6 @@ describe('export functionality on Harmony', function () {
   describe('export, re-init the remote scope, tag and export', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -37,7 +36,6 @@ describe('export functionality on Harmony', function () {
   describe('export, tag and export', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -48,11 +46,19 @@ describe('export functionality on Harmony', function () {
     it('should not delete the first version', () => {
       expect(() => helper.command.catComponent('comp1@0.0.1')).not.to.throw();
     });
+    it('should update the VersionHistory on the remote', () => {
+      const versionHistory = helper.command.catVersionHistory(
+        `${helper.scopes.remote}/comp1`,
+        helper.scopes.remotePath
+      );
+      expect(versionHistory).to.have.property('versions');
+      expect(versionHistory.versions).to.have.lengthOf(2);
+    });
     it('should enable un-tagging after a new tag', () => {
       // before it used to throw VersionNotFound
       helper.fixtures.populateComponents(1, undefined, '-v3');
       helper.command.tagAllWithoutBuild();
-      expect(() => helper.command.untag('comp1')).not.to.throw();
+      expect(() => helper.command.reset('comp1')).not.to.throw();
     });
   });
   describe.skip('export to multiple scope with circular between the scopes', () => {
@@ -60,7 +66,6 @@ describe('export functionality on Harmony', function () {
     let exportOutput;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       anotherRemote = scopeName;
       helper.scopeHelper.addRemoteScope(scopePath);
@@ -69,8 +74,8 @@ describe('export functionality on Harmony', function () {
       helper.fs.outputFile('bar1/foo1.js', `require('@${anotherRemote}/bar2');`);
       helper.fs.outputFile('bar2/foo2.js', `require('@${helper.scopes.remote}/bar1');`);
       helper.command.addComponent('bar1');
-      helper.command.addComponent('bar2');
       helper.bitJsonc.addToVariant('bar2', 'defaultScope', anotherRemote);
+      helper.command.addComponent('bar2');
       helper.command.linkAndRewire();
       helper.command.compile();
       helper.command.tagAllComponents();
@@ -143,10 +148,10 @@ describe('export functionality on Harmony', function () {
 
         helper.fs.outputFile('bar1/foo1.js', `require('@${remote2Name}/bar2');`);
         helper.fs.outputFile('bar2/foo2.js', `require('@${remote1Name}/bar1');`);
-        helper.command.addComponent('bar1');
-        helper.command.addComponent('bar2');
         helper.bitJsonc.addToVariant('bar1', 'defaultScope', remote1Name);
         helper.bitJsonc.addToVariant('bar2', 'defaultScope', remote2Name);
+        helper.command.addComponent('bar1');
+        helper.command.addComponent('bar2');
         helper.command.linkAndRewire();
         helper.command.compile();
         helper.command.tagAllWithoutBuild();
@@ -239,6 +244,28 @@ describe('export functionality on Harmony', function () {
           expect(output).to.have.string('no components were left to persist for this export-id');
         });
       });
+    });
+  });
+
+  // in this test, VersionHistory never got built (coz there was not any import).
+  describe('when version history is out of date', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('lane-a', '-x');
+      helper.command.mergeLane('lane-b', '-x');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    // previously, it was throwing:
+    // component stg9sr19-remote/comp1 missing data. parent 96679459f6975660d88b921bb15b4864e0440896 of version d405d26392dbfcaaf8a0f69d640122a5a0256c26 was not found.
+    it('bit export should not throw about missing data', () => {
+      expect(() => helper.command.export()).not.to.throw();
     });
   });
 });

@@ -36,6 +36,7 @@ export class WorkspaceUIRoot implements UIRoot {
   buildOptions = {
     ssr: false,
     launchBrowserOnStart: true,
+    prebundle: true,
   };
 
   async resolveAspects(runtimeName: string, componentIds?: ComponentID[], opts?: ResolveAspectsOptions) {

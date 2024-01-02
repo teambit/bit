@@ -33,11 +33,12 @@ export class ComponentDependencyFactory implements DependencyFactory {
   ): Promise<ComponentDependency> {
     let id;
 
-    if (serialized.componentId.scope) {
-      // @ts-ignore - ts is saying scope is possibly missing, but just checked it is defined
-      id = ComponentID.fromObject(serialized.componentId);
+    if (serialized.componentId instanceof ComponentID) {
+      id = serialized.componentId;
+    } else if (typeof serialized.componentId === 'object' && serialized.componentId.scope) {
+      id = ComponentID.fromObject(serialized.componentId as any);
     } else {
-      id = await this.componentAspect.getHost().resolveComponentId(serialized.id);
+      throw new Error(`ComponentDependencyFactory, unable to parse ${serialized.componentId}`);
     }
 
     return new ComponentDependency(
@@ -47,7 +48,9 @@ export class ComponentDependencyFactory implements DependencyFactory {
       serialized.id,
       serialized.version,
       serialized.lifecycle as DependencyLifecycleType,
-      serialized.source
+      serialized.source,
+      serialized.hidden,
+      serialized.optional
     ) as unknown as ComponentDependency;
   }
 
@@ -76,9 +79,9 @@ export class ComponentDependencyFactory implements DependencyFactory {
     if (!packageName) {
       const host = this.componentAspect.getHost();
       const id = await host.resolveComponentId(legacyDep.id);
-      const depComponent = await host.get(id);
+      const depComponent = await host.getLegacyMinimal(id);
       if (depComponent) {
-        packageName = componentIdToPackageName(depComponent.state._consumer);
+        packageName = componentIdToPackageName(depComponent);
       }
     }
 
@@ -87,7 +90,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
       isExtension: false,
       packageName,
       componentId: legacyDep.id.serialize(),
-      version: legacyDep.id.getVersion().toString(),
+      version: legacyDep.id._legacy.getVersion().toString(),
       __type: TYPE,
       lifecycle,
     };
@@ -112,7 +115,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
       isExtension: true,
       packageName,
       componentId: extension.extensionId.serialize(),
-      version: extension.extensionId.getVersion().toString(),
+      version: extension.extensionId._legacy.getVersion().toString(),
       __type: TYPE,
       lifecycle,
     };

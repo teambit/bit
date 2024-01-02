@@ -21,6 +21,13 @@ const wcComponentFields = gql`
       version
       scope
     }
+    aspects(include: ["teambit.preview/preview", "teambit.envs/envs"]) {
+      # 'id' property in gql refers to a *global* identifier and used for caching.
+      # this makes aspect data cache under the same key, even when they are under different components.
+      # renaming the property fixes that.
+      aspectId: id
+      data
+    }
     compositions {
       identifier
     }
@@ -37,8 +44,12 @@ const wcComponentFields = gql`
       }
       isDeleted
     }
+    buildStatus
     preview {
+      includesEnvTemplate
+      legacyHeader
       isScaling
+      skipIncludes
     }
     deprecation {
       isDeprecate

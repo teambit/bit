@@ -18,6 +18,6 @@ export default class Migrate implements LegacyCommand {
   }
 
   report(): string {
-    return chalk.green('migrate finished');
+    return chalk.green('migration finished');
   }
 }

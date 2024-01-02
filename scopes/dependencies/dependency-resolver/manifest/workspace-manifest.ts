@@ -1,5 +1,5 @@
 import { SemVer } from 'semver';
-import { PeersAutoDetectPolicy } from '..';
+import { VariantPolicy } from '../policy';
 
 import { ComponentsManifestsMap } from '../types';
 import { Manifest, ManifestToJsonOptions, ManifestDependenciesObject } from './manifest';
@@ -14,7 +14,7 @@ export class WorkspaceManifest extends Manifest {
     public name: string,
     public version: SemVer,
     public dependencies: ManifestDependenciesObject,
-    private envPeersAutoDetectPolicy: PeersAutoDetectPolicy | undefined,
+    private envSelfPeersPolicy: VariantPolicy | undefined,
     private rootDir: string,
     public componentsManifestsMap: ComponentsManifestsMap
   ) {
@@ -30,7 +30,7 @@ export class WorkspaceManifest extends Manifest {
   toJson(options: WorkspaceManifestToJsonOptions = {}): Record<string, any> {
     const manifest = super.toJson(options);
     if (options.installPeersFromEnvs) {
-      const peersManifest = this.envPeersAutoDetectPolicy?.toVersionManifest();
+      const peersManifest = this.envSelfPeersPolicy?.toVersionManifest();
       manifest.dependencies = manifest.dependencies || {};
       Object.assign(manifest.dependencies, peersManifest);
     }

@@ -1,4 +1,4 @@
-import { BitId } from '../../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { loadScope, Scope } from '../../../scope';
 import DependencyGraph from '../../../scope/graph/scope-graph';
 
@@ -8,7 +8,7 @@ export default (async function graph(path: string, id: string | null | undefined
   if (!id) {
     return dependencyGraph.serialize();
   }
-  const bitId: BitId = await scope.getParsedId(id);
+  const bitId: ComponentID = await scope.getParsedId(id);
   const componentGraph = dependencyGraph.getSubGraphOfConnectedComponents(bitId);
   return dependencyGraph.serialize(componentGraph);
 });

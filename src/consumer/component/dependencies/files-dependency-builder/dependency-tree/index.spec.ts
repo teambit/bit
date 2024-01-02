@@ -1,42 +1,41 @@
+import { BIT_TEMP_ROOT } from '@teambit/defender.fs.global-bit-temp-dir';
 import assert from 'assert';
-import mockfs from 'mock-fs';
 import path from 'path';
 import rewire from 'rewire';
 import sinon from 'sinon';
+import fs from 'fs-extra';
 
 import precinct from '../precinct';
 import Config from './Config';
 
+const UNIT_TEST_DIR = path.join(BIT_TEMP_ROOT, 'unit-test');
 const expect = require('chai').expect;
-
-// needed for the lazy loading.
-require('module-definition');
-require('detective-stylus');
-require('typescript');
-require('../../../../../constants');
-require('../../../../../utils');
-require('../../../../../utils/is-relative-import');
-require('../detectives/detective-css-and-preprocessors');
-require('../detectives/detective-typescript');
-require('../detectives/detective-css');
-require('../detectives/detective-sass');
-require('../detectives/detective-scss');
-require('../detectives/detective-less');
-require('../detectives/parser-helper');
-require('../dependency-tree/Config');
-require('../precinct');
-require('../filing-cabinet');
 
 const dependencyTreeRewired = rewire('./');
 const dependencyTree = dependencyTreeRewired.default;
 const fixtures = path.resolve(`${__dirname}/../../../../../../fixtures/dependency-tree`);
+
+function mockfs(obj: any) {
+  Object.entries(obj).forEach(([key, value]) => {
+    fs.mkdirSync(key, { recursive: true });
+    // @ts-ignore
+    Object.entries(value).forEach(([file, content]) => {
+      const filePath = path.join(key, file);
+      fs.writeFileSync(filePath, content);
+    });
+  });
+}
+
+function cleanUnitDir() {
+  fs.removeSync(UNIT_TEST_DIR);
+}
 
 describe('dependencyTree', function () {
   // @ts-ignore
   this.timeout(8000);
   function testTreesForFormat(format, ext = '.js') {
     it('returns an object form of the dependency tree for a file', () => {
-      const root = `${fixtures}/${format}`;
+      const root = `${UNIT_TEST_DIR}/${format}`;
       const filename = path.normalize(`${root}/a${ext}`);
 
       const tree = dependencyTree({ filename, root });
@@ -54,7 +53,7 @@ describe('dependencyTree', function () {
 
   function mockStylus() {
     mockfs({
-      [`${fixtures}/stylus`]: {
+      [`${UNIT_TEST_DIR}/stylus`]: {
         'a.styl': `
           @import "b"
           @require "c.styl"
@@ -67,7 +66,7 @@ describe('dependencyTree', function () {
 
   function mockSass() {
     mockfs({
-      [`${fixtures}/sass`]: {
+      [`${UNIT_TEST_DIR}/sass`]: {
         'a.scss': `
           @import "_b";
           @import "_c.scss";
@@ -80,7 +79,7 @@ describe('dependencyTree', function () {
 
   function mockLess() {
     mockfs({
-      [`${fixtures}/less`]: {
+      [`${UNIT_TEST_DIR}/less`]: {
         'a.less': `
           @import "b.css";
           @import "c.less";
@@ -91,9 +90,28 @@ describe('dependencyTree', function () {
     });
   }
 
+  function mockcommonjs() {
+    mockfs({
+      [`${UNIT_TEST_DIR}/commonjs`]: {
+        'a.js': `
+        var b = require('./b');
+        var c = require('./c');
+        `,
+        'b.js': `
+          var path = require('path');
+          module.exports = {};
+        `,
+        'c.js': `
+          var fs = require('fs');
+          module.exports = {};
+        `,
+      },
+    });
+  }
+
   function mockes6() {
     mockfs({
-      [`${fixtures}/es6`]: {
+      [`${UNIT_TEST_DIR}/es6`]: {
         'a.js': `
           import b from './b';
           import c from './c';
@@ -109,7 +127,7 @@ describe('dependencyTree', function () {
 
   function mockTS() {
     mockfs({
-      [`${fixtures}/ts`]: {
+      [`${UNIT_TEST_DIR}/ts`]: {
         'a.ts': `
           import b from './b';
           import c from './c';
@@ -121,7 +139,8 @@ describe('dependencyTree', function () {
   }
 
   afterEach(() => {
-    mockfs.restore();
+    // mockfs.restore();
+    cleanUnitDir();
   });
 
   it('returns an empty object for a non-existent filename', () => {
@@ -129,7 +148,7 @@ describe('dependencyTree', function () {
       imaginary: {},
     });
 
-    const root = `${__dirname}/imaginary`;
+    const root = `${UNIT_TEST_DIR}/imaginary`;
     const filename = `${root}/notafile.js`;
     const tree = dependencyTree({ filename, root });
 
@@ -138,14 +157,19 @@ describe('dependencyTree', function () {
   });
 
   it('handles nested tree structures', () => {
+    const directory = `${UNIT_TEST_DIR}/extended`;
+
     mockfs({
-      [`${__dirname}/extended`]: {
-        'a.js': `var b = require('./b');
-                 var c = require('./c');`,
-        'b.js': `var d = require('./d');
-                 var e = require('./e');`,
-        'c.js': `var f = require('./f');
-                 var g = require('./g');`,
+      [directory]: {
+        'a.js': `
+          var b = require('./b');
+          var c = require('./c');`,
+        'b.js': `
+          var d = require('./d');
+          var e = require('./e');`,
+        'c.js': `
+          var f = require('./f');
+          var g = require('./g');`,
         'd.js': '',
         'e.js': '',
         'f.js': '',
@@ -153,9 +177,7 @@ describe('dependencyTree', function () {
       },
     });
 
-    const directory = `${__dirname}/extended`;
     const filename = path.normalize(`${directory}/a.js`);
-
     const tree = dependencyTree({ filename, directory });
     assert(tree[filename] instanceof Object);
 
@@ -173,12 +195,12 @@ describe('dependencyTree', function () {
 
   it('does not include files that are not real (#13)', () => {
     mockfs({
-      [`${__dirname}/onlyRealDeps`]: {
+      [`${UNIT_TEST_DIR}/onlyRealDeps`]: {
         'a.js': 'var notReal = require("./notReal");',
       },
     });
 
-    const directory = `${__dirname}/onlyRealDeps`;
+    const directory = `${UNIT_TEST_DIR}/onlyRealDeps`;
     const filename = path.normalize(`${directory}/a.js`);
 
     const tree = dependencyTree({ filename, directory });
@@ -189,13 +211,13 @@ describe('dependencyTree', function () {
 
   it('does not choke on cyclic dependencies', () => {
     mockfs({
-      [`${__dirname}/cyclic`]: {
+      [`${UNIT_TEST_DIR}/cyclic`]: {
         'a.js': 'var b = require("./b");',
         'b.js': 'var a = require("./a");',
       },
     });
 
-    const directory = `${__dirname}/cyclic`;
+    const directory = `${UNIT_TEST_DIR}/cyclic`;
     const filename = path.normalize(`${directory}/a.js`);
 
     const spy = sinon.spy(dependencyTreeRewired, '_getDependencies');
@@ -228,7 +250,7 @@ describe('dependencyTree', function () {
   });
 
   it('returns a list of absolutely pathed files', () => {
-    const directory = `${fixtures}/commonjs`;
+    const directory = `${UNIT_TEST_DIR}/commonjs`;
     const filename = `${directory}/b.js`;
 
     const tree = dependencyTree({ filename, directory });
@@ -264,12 +286,12 @@ describe('dependencyTree', function () {
     describe('and the file contains no valid partials', () => {
       it('stores the invalid partials', () => {
         mockfs({
-          [`${__dirname}/onlyRealDeps`]: {
+          [`${UNIT_TEST_DIR}/onlyRealDeps`]: {
             'a.js': 'var notReal = require("./notReal");',
           },
         });
 
-        const directory = path.normalize(`${__dirname}/onlyRealDeps`);
+        const directory = path.normalize(`${UNIT_TEST_DIR}/onlyRealDeps`);
         const filename = path.normalize(`${directory}/a.js`);
         const nonExistent = [];
 
@@ -283,13 +305,13 @@ describe('dependencyTree', function () {
     describe('and the file contains all valid partials', () => {
       it('does not store anything', () => {
         mockfs({
-          [`${__dirname}/onlyRealDeps`]: {
+          [`${UNIT_TEST_DIR}/onlyRealDeps`]: {
             'a.js': 'var b = require("./b");',
             'b.js': 'export default 1;',
           },
         });
 
-        const directory = `${__dirname}/onlyRealDeps`;
+        const directory = `${UNIT_TEST_DIR}/onlyRealDeps`;
         const filename = `${directory}/a.js`;
         const nonExistent = [];
 
@@ -302,14 +324,14 @@ describe('dependencyTree', function () {
     describe('and the file contains a mix of invalid and valid partials', () => {
       it('stores the invalid ones', () => {
         mockfs({
-          [`${__dirname}/onlyRealDeps`]: {
+          [`${UNIT_TEST_DIR}/onlyRealDeps`]: {
             'a.js': 'var b = require("./b");',
             'b.js': 'var c = require("./c"); export default 1;',
             'c.js': 'var crap = require("./notRealMan");',
           },
         });
 
-        const directory = path.normalize(`${__dirname}/onlyRealDeps`);
+        const directory = path.normalize(`${UNIT_TEST_DIR}/onlyRealDeps`);
         const filename = path.normalize(`${directory}/a.js`);
         const nonExistent = [];
 
@@ -323,14 +345,14 @@ describe('dependencyTree', function () {
     describe('and there is more than one reference to the invalid partial', () => {
       it('should include the non-existent partial per file', () => {
         mockfs({
-          [`${__dirname}/onlyRealDeps`]: {
+          [`${UNIT_TEST_DIR}/onlyRealDeps`]: {
             'a.js': 'var b = require("./b");\nvar crap = require("./notRealMan");',
             'b.js': 'var c = require("./c"); export default 1;',
             'c.js': 'var crap = require("./notRealMan");',
           },
         });
 
-        const directory = path.normalize(`${__dirname}/onlyRealDeps`);
+        const directory = path.normalize(`${UNIT_TEST_DIR}/onlyRealDeps`);
         const filename = path.normalize(`${directory}/a.js`);
         const nonExistent = [];
 
@@ -346,7 +368,7 @@ describe('dependencyTree', function () {
   describe('throws', () => {
     beforeEach(() => {
       // @ts-ignore
-      this._directory = `${fixtures}/commonjs`;
+      this._directory = `${UNIT_TEST_DIR}/commonjs`;
       // @ts-ignore
       this._revert = dependencyTreeRewired.__set__('traverse', () => []);
     });
@@ -374,7 +396,7 @@ describe('dependencyTree', function () {
 
     it('throws if a supplied filter is not a function', () => {
       assert.throws(() => {
-        const directory = `${fixtures}/onlyRealDeps`;
+        const directory = `${UNIT_TEST_DIR}/onlyRealDeps`;
         const filename = `${directory}/a.js`;
 
         dependencyTree({
@@ -387,7 +409,7 @@ describe('dependencyTree', function () {
 
     it('does not throw on the legacy `root` option', () => {
       assert.doesNotThrow(() => {
-        const directory = `${fixtures}/onlyRealDeps`;
+        const directory = `${UNIT_TEST_DIR}/onlyRealDeps`;
         const filename = `${directory}/a.js`;
 
         dependencyTree({
@@ -401,7 +423,7 @@ describe('dependencyTree', function () {
   describe('on file error', () => {
     beforeEach(() => {
       // @ts-ignore
-      this._directory = `${fixtures}/commonjs`;
+      this._directory = `${UNIT_TEST_DIR}/commonjs`;
     });
 
     it('does not throw', () => {
@@ -432,8 +454,8 @@ describe('dependencyTree', function () {
     });
 
     it('returns the precomputed list of a cached entry point', () => {
-      const filename = `${fixtures}/amd/a.js`;
-      const directory = `${fixtures}/amd`;
+      const filename = `${UNIT_TEST_DIR}/amd/a.js`;
+      const directory = `${UNIT_TEST_DIR}/amd`;
 
       const cache = {
         // Shouldn't process the first file's tree
@@ -452,13 +474,19 @@ describe('dependencyTree', function () {
 
   describe('module formats', () => {
     describe('commonjs', () => {
+      beforeEach(() => {
+        // @ts-ignore
+        this._directory = path.normalize(`${UNIT_TEST_DIR}/es6`);
+        mockcommonjs();
+      });
+
       testTreesForFormat('commonjs');
     });
 
     describe('es6', () => {
       beforeEach(() => {
         // @ts-ignore
-        this._directory = path.normalize(`${fixtures}/es6`);
+        this._directory = path.normalize(`${UNIT_TEST_DIR}/es6`);
         mockes6();
       });
 
@@ -543,13 +571,13 @@ describe('dependencyTree', function () {
       // Note: not mocking because webpack's resolver needs a real project with dependencies;
       // otherwise, we'd have to mock a ton of files.
       // @ts-ignore
-      this._root = path.join(__dirname, '../');
+      this._root = path.join(UNIT_TEST_DIR, '../');
       // @ts-ignore
       this._webpackConfig = `${this._root}/webpack.config.js`;
       // @ts-ignore
       this._testResolution = (name) => {
         const results = dependencyTree.toList({
-          filename: `${fixtures}/webpack/${name}.js`,
+          filename: `${UNIT_TEST_DIR}/webpack/${name}.js`,
           // @ts-ignore
           directory: this._root,
           // @ts-ignore
@@ -595,7 +623,7 @@ describe('dependencyTree', function () {
   describe('when given a CJS file with lazy requires', () => {
     beforeEach(() => {
       mockfs({
-        [`${__dirname}/cjs`]: {
+        [`${UNIT_TEST_DIR}/cjs`]: {
           'foo.js': 'module.exports = function(bar = require("./bar")) {};',
           'bar.js': 'module.exports = 1;',
         },
@@ -603,7 +631,7 @@ describe('dependencyTree', function () {
     });
 
     it('includes the lazy dependency', () => {
-      const directory = `${__dirname}/cjs`;
+      const directory = `${UNIT_TEST_DIR}/cjs`;
       const filename = path.normalize(`${directory}/foo.js`);
 
       const tree = dependencyTree({ filename, directory });
@@ -614,7 +642,7 @@ describe('dependencyTree', function () {
   describe('when given an es6 file using CJS lazy requires', () => {
     beforeEach(() => {
       mockfs({
-        [`${__dirname}/es6`]: {
+        [`${UNIT_TEST_DIR}/es6`]: {
           'foo.js': 'export default function(bar = require("./bar")) {};',
           'bar.js': 'export default 1;',
         },
@@ -623,7 +651,7 @@ describe('dependencyTree', function () {
 
     describe('and mixedImport mode is turned on', () => {
       it('includes the lazy dependency', () => {
-        const directory = `${__dirname}/es6`;
+        const directory = `${UNIT_TEST_DIR}/es6`;
         const filename = path.normalize(`${directory}/foo.js`);
 
         const tree = dependencyTree({
@@ -644,7 +672,7 @@ describe('dependencyTree', function () {
   describe('when given an es6 file using dynamic imports', () => {
     beforeEach(() => {
       mockfs({
-        [`${__dirname}/es6`]: {
+        [`${UNIT_TEST_DIR}/es6`]: {
           'foo.js': 'import("./bar");',
           'bar.js': 'export default 1;',
         },
@@ -652,7 +680,7 @@ describe('dependencyTree', function () {
     });
 
     it('includes the dynamic import', () => {
-      const directory = path.normalize(`${__dirname}/es6`);
+      const directory = path.normalize(`${UNIT_TEST_DIR}/es6`);
       const filename = path.normalize(`${directory}/foo.js`);
 
       const tree = dependencyTree({
@@ -669,7 +697,7 @@ describe('dependencyTree', function () {
   describe('when a dependency of the main file is not supported', () => {
     beforeEach(() => {
       mockfs({
-        [`${__dirname}/baz`]: {
+        [`${UNIT_TEST_DIR}/baz`]: {
           'foo.js': 'require("./bar.json");',
           'bar.json': '{ "main": "I\'m a simple JSON object" }',
         },
@@ -677,7 +705,7 @@ describe('dependencyTree', function () {
     });
 
     it('should include it as a dependency and not throw an error', () => {
-      const directory = path.normalize(`${__dirname}/baz`);
+      const directory = path.normalize(`${UNIT_TEST_DIR}/baz`);
       const filename = path.normalize(`${directory}/foo.js`);
 
       const tree = dependencyTree({
@@ -696,7 +724,7 @@ describe('dependencyTree', function () {
   describe.skip('when given a CJS file with module property in package.json', () => {
     beforeEach(() => {
       mockfs({
-        [`${__dirname}/es6`]: {
+        [`${UNIT_TEST_DIR}/es6`]: {
           'module.entry.js': 'import * as module from "module.entry"',
           node_modules: {
             'module.entry': {
@@ -710,7 +738,7 @@ describe('dependencyTree', function () {
     });
 
     it('it includes the module entry as dependency', () => {
-      const directory = `${__dirname}/es6`;
+      const directory = `${UNIT_TEST_DIR}/es6`;
       const filename = `${directory}/module.entry.js`;
 
       const tree = dependencyTree({
@@ -753,7 +781,7 @@ describe('dependencyTree', function () {
   describe('when a dependency has missing packages and is retrieved from the cache (visited)', () => {
     beforeEach(() => {
       mockfs({
-        [`${__dirname}/baz`]: {
+        [`${UNIT_TEST_DIR}/baz`]: {
           'foo.js': 'require("non-exist-foo-pkg");',
           'bar.js': 'require("./foo"); require("non-exist-bar-pkg")',
           'baz.js': 'require("./foo"); require("./bar"); require("non-exist-baz-pkg")',
@@ -762,7 +790,7 @@ describe('dependencyTree', function () {
     });
 
     it('should not override the cache with wrong packages', () => {
-      const directory = path.normalize(`${__dirname}/baz`);
+      const directory = path.normalize(`${UNIT_TEST_DIR}/baz`);
       const fooFile = path.normalize(`${directory}/foo.js`);
       const barFile = path.normalize(`${directory}/bar.js`);
       const bazFile = path.normalize(`${directory}/baz.js`);
@@ -795,14 +823,14 @@ describe('dependencyTree', function () {
   describe('passing css files and then javascript files', () => {
     beforeEach(() => {
       mockfs({
-        [`${__dirname}/baz`]: {
+        [`${UNIT_TEST_DIR}/baz`]: {
           'base.scss': 'li {} a {}', // don't change the content. it crash only with this for some reason
           'index.jsx': "require('some-module');",
         },
       });
     });
     it('should not crash with "RangeError: Maximum call stack size exceeded" error', () => {
-      const directory = path.normalize(`${__dirname}/baz`);
+      const directory = path.normalize(`${UNIT_TEST_DIR}/baz`);
       const baseFile = path.normalize(`${directory}/base.scss`);
       const indexFile = path.normalize(`${directory}/index.jsx`);
       const config = {
@@ -822,11 +850,11 @@ describe('dependencyTree', function () {
   describe('files with dynamic import', () => {
     it('should not show missing dependencies', () => {
       mockfs({
-        [`${__dirname}/dynamic`]: {
+        [`${UNIT_TEST_DIR}/dynamic`]: {
           'foo.js': 'const a = "./b"; import(a); require(a);',
         },
       });
-      const directory = path.normalize(`${__dirname}/dynamic`);
+      const directory = path.normalize(`${UNIT_TEST_DIR}/dynamic`);
       const filename = path.normalize(`${directory}/foo.js`);
       const visited = {};
 
@@ -841,11 +869,11 @@ describe('dependencyTree', function () {
   describe('files with import from cdn (http, https)', () => {
     it('should not show missing dependencies when importing from https', () => {
       mockfs({
-        [`${__dirname}/cdn`]: {
+        [`${UNIT_TEST_DIR}/cdn`]: {
           'foo.js': 'import { a } from "https://unpkg.com";',
         },
       });
-      const directory = path.normalize(`${__dirname}/cdn`);
+      const directory = path.normalize(`${UNIT_TEST_DIR}/cdn`);
       const filename = path.normalize(`${directory}/foo.js`);
       const visited = {};
       dependencyTree({
@@ -857,11 +885,11 @@ describe('dependencyTree', function () {
     });
     it('should not show missing dependencies when importing from http', () => {
       mockfs({
-        [`${__dirname}/cdn`]: {
+        [`${UNIT_TEST_DIR}/cdn`]: {
           'bar.js': 'const b = require("http://pkg.com");',
         },
       });
-      const directory = path.normalize(`${__dirname}/cdn`);
+      const directory = path.normalize(`${UNIT_TEST_DIR}/cdn`);
       const filename = path.normalize(`${directory}/bar.js`);
       const visited = {};
       dependencyTree({
@@ -870,60 +898,6 @@ describe('dependencyTree', function () {
         visited,
       });
       expect(visited[filename].missing).to.be.undefined;
-    });
-  });
-  describe('resolve config when the dependency is "."', () => {
-    it('should not set the dependency with isCustomResolveUsed=true', () => {
-      mockfs({
-        [`${__dirname}/src`]: {
-          'foo.js': "require('.');",
-          'index.js': 'module.exports = {}',
-        },
-      });
-      const directory = path.normalize(`${__dirname}/src`);
-      const filename = path.normalize(`${directory}/foo.js`);
-      const config = {
-        filename,
-        directory,
-        pathMap: [],
-        resolveConfig: { aliases: { something: 'anything' } },
-      };
-      dependencyTree(config);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const pathMapRecord = config.pathMap.find((f) => f.file === filename);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(pathMapRecord.dependencies).to.have.lengthOf(1);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const dependency = pathMapRecord.dependencies[0];
-      expect(dependency).to.not.have.property('isCustomResolveUsed');
-    });
-  });
-  describe('resolve config when the dependency is ".."', () => {
-    it('should not set the dependency with isCustomResolveUsed=true', () => {
-      mockfs({
-        [`${__dirname}/src`]: {
-          'index.js': 'module.exports = {}',
-          bar: {
-            'foo.js': "require('..');",
-          },
-        },
-      });
-      const directory = path.normalize(`${__dirname}/src`);
-      const filename = path.normalize(`${directory}/bar/foo.js`);
-      const config = {
-        filename,
-        directory,
-        pathMap: [],
-        resolveConfig: { aliases: { something: 'anything' } },
-      };
-      dependencyTree(config);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const pathMapRecord = config.pathMap.find((f) => f.file === filename);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(pathMapRecord.dependencies).to.have.lengthOf(1);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const dependency = pathMapRecord.dependencies[0];
-      expect(dependency).to.not.have.property('isCustomResolveUsed');
     });
   });
 });

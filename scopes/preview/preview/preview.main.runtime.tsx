@@ -29,16 +29,26 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { BundlingStrategyNotFound } from './exceptions';
-import { generateLink } from './generate-link';
+import { generateLink, MainModulesMap } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
 import { PreviewDefinition } from './preview-definition';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { PreviewRoute } from './preview.route';
 import { PreviewTask, PREVIEW_TASK_NAME } from './preview.task';
 import { BundlingStrategy } from './bundling-strategy';
-import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
+import {
+  EnvBundlingStrategy,
+  ComponentBundlingStrategy,
+  COMPONENT_STRATEGY_ARTIFACT_NAME,
+  COMPONENT_STRATEGY_SIZE_KEY_NAME,
+  ENV_PREVIEW_STRATEGY_NAME,
+  ENV_STRATEGY_ARTIFACT_NAME,
+  COMPONENT_PREVIEW_STRATEGY_NAME,
+} from './strategies';
 import { ExecutionRef } from './execution-ref';
 import { PreviewStartPlugin } from './preview.start-plugin';
 import {
@@ -48,10 +58,9 @@ import {
 } from './env-preview-template.task';
 import { EnvTemplateRoute } from './env-template.route';
 import { ComponentPreviewRoute } from './component-preview.route';
-import { COMPONENT_STRATEGY_ARTIFACT_NAME, COMPONENT_STRATEGY_SIZE_KEY_NAME } from './strategies/component-strategy';
-import { ENV_STRATEGY_ARTIFACT_NAME } from './strategies/env-strategy';
 import { previewSchema } from './preview.graphql';
 import { PreviewAssetsRoute } from './preview-assets.route';
+import { PreviewService } from './preview.service';
 
 const noopResult = {
   results: [],
@@ -62,7 +71,9 @@ const DEFAULT_TEMP_DIR = join(CACHE_ROOT, PreviewAspect.id);
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
-type PreviewFiles = {
+export type PreviewStrategyName = 'env' | 'component';
+
+export type PreviewFiles = {
   files: string[];
   isBundledWithEnv: boolean;
 };
@@ -91,9 +102,46 @@ export type PreviewVariantConfig = {
 /**
  * Preview data that stored on the component on load
  */
-export type PreviewComponentData = {
+export type PreviewComponentData = PreviewAnyComponentData & PreviewEnvComponentData;
+
+/**
+ * Preview data that stored on the component on load for any component
+ */
+export type PreviewAnyComponentData = {
   doesScaling?: boolean;
+  /**
+   * The strategy configured by the component's env
+   */
+  strategyName?: PreviewStrategyName;
+  /**
+   * Does the component has a bundle for the component itself (separated from the compositions/docs)
+   * Calculated by the component's env
+   */
+  splitComponentBundle?: boolean;
+
+  /**
+   * don't allow other aspects implementing a preview definition to be included in your preview.
+   */
+  onlyOverview?: boolean;
+
+  /**
+   * use name query params to select a specific composition to render.
+   */
+  useNameParam?: boolean;
+
+  /**
+   * don't allow other aspects implementing a preview definition to be included in your preview.
+   */
+  skipIncludes?: boolean;
+};
+
+/**
+ * Preview data that stored on the component on load if the component is an env
+ */
+export type PreviewEnvComponentData = {
   isScaling?: boolean;
+  supportsOnlyOverview?: boolean;
+  supportsUseNameParam?: boolean;
 };
 
 export type PreviewConfig = {
@@ -105,10 +153,11 @@ export type PreviewConfig = {
    * default - no limit.
    */
   maxChunkSize?: number;
+  onlyOverview?: boolean;
 };
 
 export type EnvPreviewConfig = {
-  strategyName?: string;
+  strategyName?: PreviewStrategyName;
   splitComponentBundle?: boolean;
 };
 
@@ -188,12 +237,170 @@ export class PreviewMain {
   }
 
   /**
+   * Get the preview config of the component.
+   * (config that was set by variants or on bitmap)
+   * @param component
+   * @returns
+   */
+  getPreviewAspectConfig(component: Component): PreviewVariantConfig | undefined {
+    return component.state.aspects.get(PreviewAspect.id)?.config;
+  }
+
+  /**
+   * Get the preview data of the component.
+   * (data that was calculated during the on load process)
+   * @param component
+   * @returns
+   */
+  getPreviewData(component: Component): PreviewComponentData | undefined {
+    const previewData = component.state.aspects.get(PreviewAspect.id)?.data;
+    return previewData;
+  }
+
+  /**
+   * check if the current version of env component supports skipping other included previews
+   * @param envComponent
+   * @returns
+   */
+  doesEnvIncludesOnlyOverview(envComponent: Component): boolean {
+    const previewData = this.getPreviewData(envComponent);
+    return !!previewData?.supportsOnlyOverview;
+  }
+
+  /**
+   * check if the current version of env component supports name query param
+   * @param envComponent
+   * @returns
+   */
+  doesEnvUseNameParam(envComponent: Component): boolean {
+    const previewData = this.getPreviewData(envComponent);
+    return !!previewData?.supportsUseNameParam;
+  }
+
+  private async calculateIncludeOnlyOverview(component: Component): Promise<boolean> {
+    if (this.envs.isUsingCoreEnv(component)) {
+      return true;
+    }
+    const envComponent = await this.envs.getEnvComponent(component);
+    return this.doesEnvIncludesOnlyOverview(envComponent);
+  }
+
+  private async calculateUseNameParam(component: Component): Promise<boolean> {
+    if (this.envs.isUsingCoreEnv(component)) {
+      return true;
+    }
+    const envComponent = await this.envs.getEnvComponent(component);
+    return this.doesEnvUseNameParam(envComponent);
+  }
+
+  /**
+   * Calculate preview data on component load
+   * @param component
+   * @returns
+   */
+  async calcPreviewData(component: Component): Promise<PreviewComponentData> {
+    const doesScaling = await this.calcDoesScalingForComponent(component);
+    const dataFromEnv = await this.calcPreviewDataFromEnv(component);
+    const envData = (await this.calculateDataForEnvComponent(component)) || {};
+    const onlyOverview = await this.calculateIncludeOnlyOverview(component);
+    const useNameParam = await this.calculateUseNameParam(component);
+
+    const data: PreviewComponentData = {
+      doesScaling,
+      onlyOverview,
+      useNameParam,
+      ...dataFromEnv,
+      ...envData,
+    };
+    return data;
+  }
+
+  /**
+   * Calculate preview data on component that configured by its env
+   * @param component
+   * @returns
+   */
+  async calcPreviewDataFromEnv(
+    component: Component
+  ): Promise<Omit<PreviewAnyComponentData, 'doesScaling' | 'onlyOverview' | 'useNameParam'> | undefined> {
+    // Prevent infinite loop that caused by the fact that the env of the aspect env or the env env is the same as the component
+    // so we can't load it since during load we are trying to get env component and load it again
+    if (
+      component.id.toStringWithoutVersion() === 'teambit.harmony/aspect' ||
+      component.id.toStringWithoutVersion() === 'teambit.envs/env'
+    ) {
+      return {
+        strategyName: COMPONENT_PREVIEW_STRATEGY_NAME,
+        splitComponentBundle: false,
+      };
+    }
+
+    const env = this.envs.getEnv(component).env;
+    const envPreviewConfig = this.getEnvPreviewConfig(env);
+    const data = {
+      strategyName: envPreviewConfig?.strategyName,
+      splitComponentBundle: envPreviewConfig?.splitComponentBundle ?? false,
+    };
+    return data;
+  }
+
+  /**
+   * calculate extra preview data for env components (on load)
+   * @param envComponent
+   * @returns
+   */
+  private async calculateDataForEnvComponent(envComponent: Component): Promise<PreviewEnvComponentData | undefined> {
+    const isEnv = this.envs.isEnv(envComponent);
+
+    // If the component is not an env, we don't want to store anything in the data
+    if (!isEnv) return undefined;
+
+    const previewAspectConfig = this.getPreviewAspectConfig(envComponent);
+
+    const data = {
+      // default to true if the env doesn't have a preview config
+      isScaling: previewAspectConfig?.isScaling ?? true,
+      supportsOnlyOverview: true,
+      supportsUseNameParam: true,
+    };
+    return data;
+  }
+
+  /**
+   * Check if the component preview bundle contain the env as part of the bundle or only the component code
+   * (we used in the past to bundle them together, there might also be specific envs which still uses the env strategy)
+   * This should be used only for calculating the value on load.
+   * otherwise, use the isBundledWithEnv function
+   * @param component
+   * @returns
+   */
+  async calcIsBundledWithEnv(component: Component): Promise<boolean> {
+    const envPreviewData = await this.calcPreviewDataFromEnv(component);
+    return envPreviewData?.strategyName !== 'component';
+  }
+
+  /**
    * Check if the component preview bundle contain the env as part of the bundle or only the component code
    * (we used in the past to bundle them together, there might also be specific envs which still uses the env strategy)
    * @param component
    * @returns
    */
   async isBundledWithEnv(component: Component): Promise<boolean> {
+    const data = await this.getPreviewData(component);
+    // For components that tagged in the past we didn't store the data, so we calculate it the old way
+    // We comparing the strategyName to undefined to cover a specific case when it doesn't exist at all.
+    if (!data || data.strategyName === undefined) return this.isBundledWithEnvBackward(component);
+    return data.strategyName === ENV_PREVIEW_STRATEGY_NAME;
+  }
+
+  /**
+   * This is a legacy calculation for the isBundledWithEnv
+   * This calc is based on the component artifacts which is very expensive operation as it requires to fetch and load the artifacts
+   * See the new implementation in the isBundledWithEnv method
+   * @param component
+   * @returns
+   */
+  private async isBundledWithEnvBackward(component: Component): Promise<boolean> {
     const artifacts = await this.builder.getArtifactsVinylByAspectAndName(
       component,
       PreviewAspect.id,
@@ -209,7 +416,7 @@ export class PreviewMain {
   // if you want to get the final result use the `doesScaling` method below
   // This should be used only for component load
   private async calcDoesScalingForComponent(component: Component): Promise<boolean> {
-    const isBundledWithEnv = await this.isBundledWithEnv(component);
+    const isBundledWithEnv = await this.calcIsBundledWithEnv(component);
     // if it's a core env and the env template is apart from the component it means the template bundle already contain the scaling functionality
     if (this.envs.isUsingCoreEnv(component)) {
       // If the component is new, no point to check the is bundle with env (there is no artifacts so it will for sure return false)
@@ -237,11 +444,22 @@ export class PreviewMain {
     // Support case when we have the dev server for the env, in that case we calc the data of the env as we can't rely on the env data from the scope
     // since we bundle it for the dev server again
     if (inWorkspace) {
+      // if it's a core env and the env template is apart from the component it means the template bundle already contain the scaling functionality
+      if (this.envs.isUsingCoreEnv(component)) {
+        const isBundledWithEnv = await this.isBundledWithEnv(component);
+        // If the component is new, no point to check the is bundle with env (there is no artifacts so it will for sure return false)
+        // If it's new, and we are here, it means that we already use a version of the env that support scaling
+        const isNew = await component.isNew();
+        if (isNew) {
+          return true;
+        }
+        return isBundledWithEnv === false;
+      }
       const envComponent = await this.envs.getEnvComponent(component);
       const envSupportScaling = await this.calculateIsEnvSupportScaling(envComponent);
       return envSupportScaling ?? true;
     }
-    const previewData = component.state.aspects.get(PreviewAspect.id)?.data;
+    const previewData = this.getPreviewData(component);
     if (!previewData) return false;
     // Get the does scaling (the new calculation) or the old calc used in isScaling (between versions (about) 848 and 860)
     if (previewData.doesScaling !== undefined) return previewData.doesScaling;
@@ -262,8 +480,36 @@ export class PreviewMain {
    * @returns
    */
   isEnvSupportScaling(envComponent: Component): boolean {
-    const previewData = envComponent.state.aspects.get(PreviewAspect.id)?.data;
+    const previewData = this.getPreviewData(envComponent);
     return !!previewData?.isScaling;
+  }
+
+  async isSupportSkipIncludes(component: Component) {
+    if (!this.config.onlyOverview) return false;
+
+    const isCore = this.envs.isUsingCoreEnv(component);
+    if (isCore) return false;
+
+    const envComponent = await this.envs.getEnvComponent(component);
+    const previewData = this.getPreviewData(envComponent);
+    return !!previewData?.skipIncludes;
+  }
+
+  /**
+   * check if the component preview should only include the overview (skipping rendering of the compostions and properties table)
+   */
+  async getOnlyOverview(component: Component): Promise<boolean> {
+    if (!this.config.onlyOverview) return false;
+    const previewData = this.getPreviewData(component);
+    return previewData?.onlyOverview ?? false;
+  }
+
+  /**
+   * check if the component preview should include the name query param
+   */
+  async getUseNameParam(component: Component): Promise<boolean> {
+    const previewData = this.getPreviewData(component);
+    return previewData?.useNameParam ?? false;
   }
 
   /**
@@ -279,19 +525,9 @@ export class PreviewMain {
     const isEnv = this.envs.isEnv(envComponent);
     // If the component is not an env, we don't want to store anything in the data
     if (!isEnv) return undefined;
-    const previewAspectConfig = this.getPreviewConfig(envComponent);
+    const previewAspectConfig = this.getPreviewAspectConfig(envComponent);
     // default to true if the env doesn't have a preview config
     return previewAspectConfig?.isScaling ?? true;
-  }
-
-  /**
-   * Get the preview config of the component.
-   * (config that was set by variants or on bitmap)
-   * @param component
-   * @returns
-   */
-  getPreviewConfig(component: Component): PreviewVariantConfig | undefined {
-    return component.state.aspects.get(PreviewAspect.id)?.config;
   }
 
   /**
@@ -310,7 +546,7 @@ export class PreviewMain {
       ENV_STRATEGY_ARTIFACT_NAME
     );
     const envType = this.envs.getEnvData(component).type;
-    return !!artifacts && !!artifacts.length && ENV_WITH_LEGACY_DOCS.includes(envType);
+    return !!artifacts && !!artifacts.length && ENV_WITH_LEGACY_DOCS.includes(envType || '');
   }
 
   /**
@@ -407,11 +643,11 @@ export class PreviewMain {
   writeLink(
     prefix: string,
     moduleMap: ComponentMap<string[]>,
-    defaultModule: string | undefined,
+    mainModulesMap: MainModulesMap,
     dirName: string,
     isSplitComponentBundle: boolean
   ) {
-    const contents = generateLink(prefix, moduleMap, defaultModule, isSplitComponentBundle);
+    const contents = generateLink(prefix, moduleMap, mainModulesMap, isSplitComponentBundle);
     return this.writeLinkContents(contents, dirName, prefix);
   }
 
@@ -449,12 +685,28 @@ export class PreviewMain {
   private updateLinkFiles(components: Component[] = [], context: ExecutionContext) {
     const previews = this.previewSlot.values();
     const paths = previews.map(async (previewDef) => {
-      const templatePath = await previewDef.renderTemplatePath?.(context);
+      const defaultTemplatePath = await previewDef.renderTemplatePathByEnv?.(context.env);
+      const visitedEnvs = new Set();
+      const mainModulesMap: MainModulesMap = {
+        // @ts-ignore
+        default: defaultTemplatePath,
+        [context.envDefinition.id]: defaultTemplatePath,
+      };
 
       const map = await previewDef.getModuleMap(components);
       const isSplitComponentBundle = this.getEnvPreviewConfig().splitComponentBundle ?? false;
-      const withPaths = map.map<string[]>((files, component) => {
-        const environment = this.envs.getEnv(component).env;
+      const withPathsP = map.asyncMap(async (files, component) => {
+        const envDef = this.envs.getEnv(component);
+        const environment = envDef.env;
+        const envId = envDef.id;
+
+        if (!mainModulesMap[envId] && !visitedEnvs.has(envId)) {
+          const modulePath = await previewDef.renderTemplatePathByEnv?.(envDef.env);
+          if (modulePath) {
+            mainModulesMap[envId] = modulePath;
+          }
+          visitedEnvs.add(envId);
+        }
         const compilerInstance = environment.getCompiler?.();
         const modulePath =
           compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getRuntimeModulePath(component);
@@ -467,11 +719,12 @@ export class PreviewMain {
         });
         // return files.map((file) => file.path);
       });
+      const withPaths = await withPathsP;
 
       const dirPath = join(this.tempFolder, context.id);
       if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
 
-      const link = this.writeLink(previewDef.prefix, withPaths, templatePath, dirPath, isSplitComponentBundle);
+      const link = this.writeLink(previewDef.prefix, withPaths, mainModulesMap, dirPath, isSplitComponentBundle);
       return link;
     });
 
@@ -562,7 +815,6 @@ export class PreviewMain {
     updater(executionRef);
 
     await this.updateLinkFiles(executionRef.currentComponents, executionRef.executionCtx);
-
     return noopResult;
   };
 
@@ -632,10 +884,13 @@ export class PreviewMain {
     LoggerAspect,
     DependencyResolverAspect,
     GraphqlAspect,
+    WatcherAspect,
+    ScopeAspect,
   ];
 
   static defaultConfig = {
     disabled: false,
+    onlyOverview: false,
   };
 
   static async provider(
@@ -653,6 +908,8 @@ export class PreviewMain {
       loggerMain,
       dependencyResolver,
       graphql,
+      watcher,
+      scope,
     ]: [
       BundlerMain,
       BuilderMain,
@@ -665,7 +922,9 @@ export class PreviewMain {
       AspectLoaderMain,
       LoggerMain,
       DependencyResolverMain,
-      GraphqlMain
+      GraphqlMain,
+      WatcherMain,
+      ScopeMain
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
@@ -689,7 +948,8 @@ export class PreviewMain {
       dependencyResolver
     );
 
-    if (workspace) uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger));
+    if (workspace)
+      uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger, watcher));
 
     componentExtension.registerRoute([
       new PreviewRoute(preview, logger),
@@ -715,23 +975,19 @@ export class PreviewMain {
       workspace.registerOnComponentAdd((c) =>
         preview.handleComponentChange(c, (currentComponents) => currentComponents.add(c))
       );
-      workspace.onComponentLoad(async (component) => {
-        const doesScaling = await preview.calcDoesScalingForComponent(component);
-        const isScaling = await preview.calculateIsEnvSupportScaling(component);
-        const data: PreviewComponentData = {
-          doesScaling,
-        };
-        // If there is no isScaling result at all, it's probably not an env. don't store any data.
-        if (isScaling !== undefined) {
-          data.isScaling = isScaling;
-        }
-        return data;
+      workspace.registerOnComponentLoad(async (component) => {
+        return preview.calcPreviewData(component);
       });
       workspace.registerOnComponentChange((c) =>
         preview.handleComponentChange(c, (currentComponents) => currentComponents.update(c))
       );
       workspace.registerOnComponentRemove((cId) => preview.handleComponentRemoval(cId));
     }
+    if (scope) {
+      scope.registerOnCompAspectReCalc((c) => preview.calcPreviewData(c));
+    }
+
+    envs.registerService(new PreviewService());
 
     graphql.register(previewSchema(preview));
 

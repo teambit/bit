@@ -1,5 +1,5 @@
 import { CLIAspect, MainRuntime, CLIMain } from '@teambit/cli';
-import { GraphAspect, GraphBuilder } from '@teambit/graph';
+import { GraphAspect, GraphMain } from '@teambit/graph';
 import { IssuesClasses } from '@teambit/component-issues';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
@@ -46,14 +46,14 @@ export class InsightsMain {
   static config = {
     silence: false,
   };
-  static async provider([graphBuilder, cli, issues]: [GraphBuilder, CLIMain, IssuesMain]) {
+  static async provider([graphMain, cli, issues]: [GraphMain, CLIMain, IssuesMain]) {
     // get all insights from registry
-    const initialInsights: Insight[] = getCoreInsights(graphBuilder);
+    const initialInsights: Insight[] = getCoreInsights(graphMain);
     // register all insights in cli
     // TODO - get user-defined insights as well, and use them when instantiating InsightManager and InsightsCmd
     const insightManager = new InsightManager(initialInsights);
     const insightsMain = new InsightsMain(insightManager);
-    issues.registerAddComponentsIssues(insightsMain.addInsightsAsComponentIssues.bind(insightsMain));
+    if (issues) issues.registerAddComponentsIssues(insightsMain.addInsightsAsComponentIssues.bind(insightsMain));
     const insightsCmd = new InsightsCmd(insightsMain);
     cli.register(insightsCmd);
     return insightsMain;

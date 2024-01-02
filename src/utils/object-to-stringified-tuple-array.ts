@@ -1,4 +1,4 @@
-import forEach from './object/foreach';
+import { forEach } from 'lodash';
 
 export default function objectToStringifiedTupleArray(obj: { [key: string]: any }): [string | number][] {
   const arr: any[] = [];

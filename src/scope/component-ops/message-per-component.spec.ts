@@ -1,9 +1,12 @@
 import { expect } from 'chai';
-import { BitId, BitIds } from '../../bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { MessagePerComponentFetcher } from './message-per-component';
 
 function getInstance() {
-  return new MessagePerComponentFetcher(new BitIds(new BitId({ name: 'bar' })), new BitIds());
+  return new MessagePerComponentFetcher(
+    new ComponentIdList(ComponentID.fromObject({ name: 'bar', scope: 'some-scope' })),
+    new ComponentIdList()
+  );
 }
 
 describe('MessagePerComponent', () => {

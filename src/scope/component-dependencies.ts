@@ -1,4 +1,4 @@
-import BitId from '../bit-id/bit-id';
+import { ComponentID } from '@teambit/component-id';
 import Component from '../consumer/component/consumer-component';
 
 export default class ComponentWithDependencies {
@@ -6,14 +6,14 @@ export default class ComponentWithDependencies {
   dependencies: Component[];
   devDependencies: Component[];
   extensionDependencies: Component[];
-  missingDependencies: BitId[];
+  missingDependencies: ComponentID[];
 
   constructor(props: {
     component: Component;
     dependencies: Component[];
     devDependencies: Component[];
     extensionDependencies: Component[];
-    missingDependencies?: BitId[];
+    missingDependencies?: ComponentID[];
   }) {
     this.component = props.component;
     this.dependencies = props.dependencies || [];
@@ -25,9 +25,5 @@ export default class ComponentWithDependencies {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get allDependencies() {
     return [...this.dependencies, ...this.devDependencies, ...this.extensionDependencies];
-  }
-
-  hasDependency(id: BitId) {
-    this.allDependencies.some((dependency) => dependency.id.isEqual(id));
   }
 }

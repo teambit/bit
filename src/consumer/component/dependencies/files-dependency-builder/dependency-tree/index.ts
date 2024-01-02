@@ -1,14 +1,13 @@
 /**
  * this file had been forked from https://github.com/dependents/node-dependency-tree
  */
+import fs from 'fs';
+import debugFactory from 'debug';
 import cabinet from '../filing-cabinet';
 import precinct from '../precinct';
 import Config from './Config';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-const debug = require('debug')('tree');
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-const fs = require('fs');
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+
+const debug = debugFactory('tree');
 
 /**
  * Recursively find all dependencies (avoiding circular) traversing the entire dependency tree
@@ -31,7 +30,6 @@ export default function (options) {
     debug(`file ${config.filename} does not exist`);
     return {};
   }
-
   return traverse(config);
 }
 
@@ -65,6 +63,7 @@ module.exports._getDependencies = function (config) {
   let dependenciesRaw; // from some detectives it comes as an array, from some it is an object
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
+  precinctOptions.envDetectors = config.envDetectors;
   // @ts-ignore
   delete precinct.ast;
 
@@ -108,6 +107,7 @@ module.exports._getDependencies = function (config) {
       config: config.requireConfig,
       webpackConfig: config.webpackConfig,
       resolveConfig: config.resolveConfig,
+      envDetectors: config.envDetectors,
     };
     if (!isDependenciesArray && dependenciesRaw[dependency].isScript !== undefined) {
       // used for vue
@@ -141,11 +141,6 @@ module.exports._getDependencies = function (config) {
     if (!isDependenciesArray && dependenciesRaw[dependency].importSpecifiers) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       pathMap.importSpecifiers = dependenciesRaw[dependency].importSpecifiers;
-    }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (cabinetParams.wasCustomResolveUsed) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      pathMap.isCustomResolveUsed = true;
     }
 
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

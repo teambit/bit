@@ -1,16 +1,20 @@
 import * as path from 'path';
+import globby from 'globby';
+import ignore from 'ignore';
 import R from 'ramda';
-import { BitId } from '../../bit-id';
-import { BIT_MAP, Extensions } from '../../constants';
+import { ComponentID } from '@teambit/component-id';
+import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
-import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '../../utils';
+import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, retrieveIgnoreList } from '../../utils';
 import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '../../utils/path';
-import { getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
 import { removeInternalConfigFields } from '../config/extension-data';
 import Consumer from '../consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
+import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
+import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
+import { BIT_IGNORE, getBitIgnoreFile } from '../../utils/ignore/ignore';
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
 
@@ -29,7 +33,7 @@ export type NextVersion = {
 };
 
 export type ComponentMapData = {
-  id: BitId;
+  id: ComponentID;
   files: ComponentMapFile[];
   defaultScope?: string;
   mainFile: PathLinux;
@@ -37,7 +41,7 @@ export type ComponentMapData = {
   trackDir?: PathLinux;
   wrapDir?: PathLinux;
   exported?: boolean;
-  onLanesOnly: boolean;
+  onLanesOnly?: boolean;
   isAvailableOnCurrentLane?: boolean;
   nextVersion?: NextVersion;
   config?: Config;
@@ -46,7 +50,7 @@ export type ComponentMapData = {
 export type PathChange = { from: PathLinux; to: PathLinux };
 
 export default class ComponentMap {
-  id: BitId;
+  id: ComponentID;
   files: ComponentMapFile[];
   defaultScope?: string;
   mainFile: PathLinux;
@@ -61,12 +65,20 @@ export default class ComponentMap {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   markBitMapChangedCb: Function;
   exported: boolean | null | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
-  onLanesOnly? = false; // whether a component is available only on lanes and not on main
   isAvailableOnCurrentLane? = true; // if a component was created on another lane, it might not be available on the current lane
+  /**
+   * @deprecated here for forward compatibility.
+   * used to determine whether a component is available only on lanes and not on main
+   * schema 15 used this prop, and if it was false/undefined, it assumed the component is available regardless of `isAvailableOnCurrentLane`.
+   * schema 16 is not using this prop anymore.
+   * this is still here for projects that loaded .bitmap with schema 16 and then downgraded bit to a version with schema 15.
+   */
+  onLanesOnly? = false;
   nextVersion?: NextVersion; // for soft-tag (harmony only), this data is used in the CI to persist
   recentlyTracked?: boolean; // eventually the timestamp is saved in the filesystem cache so it won't be re-tracked if not changed
-  scope?: string | null; // Harmony only. empty string if new/staged. (undefined if legacy).
-  version?: string; // Harmony only. empty string if new. (undefined if legacy).
+  name: string; // name of the component (including namespace)
+  scope?: string | null; // empty string if new/staged. (undefined if legacy).
+  version?: string; // empty string if new. (undefined if legacy).
   noFilesError?: Error; // set if during finding the files an error was found
   config?: { [aspectId: string]: Record<string, any> | '-' };
   constructor({
@@ -101,6 +113,7 @@ export default class ComponentMap {
 
   toPlainObject(): Record<string, any> {
     let res = {
+      name: this.name,
       scope: this.scope,
       version: this.version,
       files: null,
@@ -288,7 +301,7 @@ export default class ComponentMap {
    * if the component dir has changed since the last tracking, re-scan the component-dir to get the
    * updated list of the files
    */
-  async trackDirectoryChangesHarmony(consumer: Consumer, id: BitId): Promise<void> {
+  async trackDirectoryChangesHarmony(consumer: Consumer, id: ComponentID): Promise<void> {
     const trackDir = this.rootDir;
     if (!trackDir) {
       return;
@@ -329,6 +342,11 @@ export default class ComponentMap {
     if (!removeAspectConf) return false;
     return removeAspectConf !== '-' && removeAspectConf.removed;
   }
+  isRecovered() {
+    const removeAspectConf = this.config?.[Extensions.remove];
+    if (!removeAspectConf) return false;
+    return removeAspectConf !== '-' && removeAspectConf.removed === false;
+  }
 
   sort() {
     this.files = R.sortBy(R.prop('relativePath'), this.files);
@@ -354,6 +372,10 @@ export default class ComponentMap {
     if (this.nextVersion && !this.nextVersion.version) {
       throw new ValidationError(`${errorMessage} version attribute should be set when nextVersion prop is set`);
     }
+    if (this.isRemoved()) {
+      // the following validation are related to the files, which don't exist in case of soft-remove
+      return;
+    }
 
     if (!this.files || !this.files.length) throw new ValidationError(`${errorMessage} files list is missing`);
     this.files.forEach((file) => {
@@ -374,4 +396,42 @@ if you renamed the mainFile, please re-add the component with the "--main" flag 
       throw new ValidationError(`${errorMessage} the following files are duplicated ${duplicateFiles.join(', ')}`);
     }
   }
+}
+
+export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore: any): Promise<ComponentMapFile[]> {
+  const matches = await globby(dir, {
+    cwd: consumerPath,
+    dot: true,
+    onlyFiles: true,
+    // must ignore node_modules at this stage, although we check for gitignore later on.
+    // otherwise, it hurts performance dramatically for components that have node_modules in the comp-dir.
+    ignore: [`${dir}/node_modules/`],
+  });
+  if (!matches.length) throw new ComponentNotFoundInPath(dir);
+  const filteredMatches: string[] = gitIgnore.filter(matches);
+  // the path is relative to consumer. remove the rootDir.
+  const relativePathsLinux = filteredMatches.map((match) => pathNormalizeToLinux(match).replace(`${dir}/`, ''));
+  const filteredByIgnoredFromRoot = relativePathsLinux.filter((match) => !IGNORE_ROOT_ONLY_LIST.includes(match));
+  const bitIgnore = filteredByIgnoredFromRoot.includes(BIT_IGNORE) ? await getBitIgnoreFile(dir) : '';
+  const filteredByBitIgnore = bitIgnore
+    ? ignore().add(bitIgnore).filter(filteredByIgnoredFromRoot)
+    : filteredByIgnoredFromRoot;
+  if (!filteredByBitIgnore.length) throw new IgnoredDirectory(dir);
+  return filteredByBitIgnore.map((relativePath) => ({
+    relativePath,
+    test: false,
+    name: path.basename(relativePath),
+  }));
+}
+
+export function getGitIgnoreHarmony(consumerPath: string): any {
+  const ignoreList = getIgnoreListHarmony(consumerPath);
+  return ignore().add(ignoreList);
+}
+
+export function getIgnoreListHarmony(consumerPath: string): string[] {
+  const ignoreList = retrieveIgnoreList(consumerPath);
+  // the ability to track package.json is deprecated since Harmony
+  ignoreList.push(PACKAGE_JSON);
+  return ignoreList;
 }

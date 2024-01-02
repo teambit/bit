@@ -1,14 +1,15 @@
 import mapSeries from 'p-map-series';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { BitError } from '@teambit/bit-error';
 import { Consumer } from '..';
-import { BitId } from '../../bit-id';
 import { LATEST } from '../../constants';
-import ShowDoctorError from '../../error/show-doctor-error';
 import { ModelComponent } from '../../scope/models';
 import { MissingBitMapComponent } from '../bit-map/exceptions';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
 import MissingFilesFromComponent from '../component/exceptions/missing-files-from-component';
 import ComponentOutOfSync from '../exceptions/component-out-of-sync';
+import { VERSION_ZERO } from '../../scope/models/model-component';
 
 export type ComponentStatus = {
   modified: boolean;
@@ -17,16 +18,15 @@ export type ComponentStatus = {
   staged: boolean;
   notExist: boolean;
   missingFromScope: boolean;
-  nested: boolean; // when a component is nested, it doesn't matter whether it was modified
 };
 
-export type ComponentStatusResult = { id: BitId; status: ComponentStatus };
+export type ComponentStatusResult = { id: ComponentID; status: ComponentStatus };
 
 export class ComponentStatusLoader {
   private _componentsStatusCache: Record<string, any> = {}; // cache loaded components
   constructor(private consumer: Consumer) {}
 
-  async getManyComponentsStatuses(ids: BitId[]): Promise<ComponentStatusResult[]> {
+  async getManyComponentsStatuses(ids: ComponentID[]): Promise<ComponentStatusResult[]> {
     const results: ComponentStatusResult[] = [];
     await mapSeries(ids, async (id) => {
       const status = await this.getComponentStatusById(id);
@@ -47,14 +47,14 @@ export class ComponentStatusLoader {
    *
    * The result is cached per ID and can be called several times with no penalties.
    */
-  async getComponentStatusById(id: BitId): Promise<ComponentStatus> {
+  async getComponentStatusById(id: ComponentID): Promise<ComponentStatus> {
     if (!this._componentsStatusCache[id.toString()]) {
       this._componentsStatusCache[id.toString()] = await this.getStatus(id);
     }
     return this._componentsStatusCache[id.toString()];
   }
 
-  private async getStatus(id: BitId) {
+  private async getStatus(id: ComponentID) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const status: ComponentStatus = {};
     const componentFromModel: ModelComponent | undefined = await this.consumer.scope.getModelComponentIfExist(id);
@@ -64,7 +64,14 @@ export class ComponentStatusLoader {
       // loadOne to not find model component as it assumes there is no version
       // also, don't leave the id as is, otherwise, it'll cause issues with import --merge, when
       // imported version is bigger than .bitmap, it won't find it and will consider as deleted
-      componentFromFileSystem = await this.consumer.loadComponent(id.changeVersion(LATEST));
+      const { components, removedComponents } = await this.consumer.loadComponents(
+        new ComponentIdList(id.changeVersion(LATEST))
+      );
+      if (removedComponents.length) {
+        status.deleted = true;
+        return status;
+      }
+      componentFromFileSystem = components[0];
     } catch (err: any) {
       if (
         err instanceof MissingFilesFromComponent ||
@@ -86,6 +93,10 @@ export class ComponentStatusLoader {
       status.newlyCreated = true;
       return status;
     }
+    if (componentFromModel.getHeadRegardlessOfLaneAsTagOrHash(true) === VERSION_ZERO) {
+      status.newlyCreated = true;
+      return status;
+    }
 
     const lane = await this.consumer.getCurrentLaneObject();
     await componentFromModel.setDivergeData(this.consumer.scope.objects);
@@ -99,13 +110,17 @@ export class ComponentStatusLoader {
     // const versionFromModel = await componentFromModel.loadVersion(versionFromFs, this.consumer.scope.objects);
     // it looks like it's exactly the same code but it's not working from some reason
     const versionRef = componentFromModel.getRef(versionFromFs);
-    if (!versionRef) throw new ShowDoctorError(`version ${versionFromFs} was not found in ${idStr}`);
+    if (!versionRef) throw new BitError(`version ${versionFromFs} was not found in ${idStr}`);
     const versionFromModel = await this.consumer.scope.getObject(versionRef.hash);
     if (!versionFromModel) {
-      throw new ShowDoctorError(`failed loading version ${versionFromFs} of ${idStr} from the scope`);
+      throw new BitError(`failed loading version ${versionFromFs} of ${idStr} from the scope`);
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     status.modified = await this.consumer.isComponentModified(versionFromModel, componentFromFileSystem);
     return status;
+  }
+
+  clearOneComponentCache(id: ComponentID) {
+    delete this._componentsStatusCache[id.toString()];
   }
 }

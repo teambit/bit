@@ -1,6 +1,5 @@
 import R from 'ramda';
-
-import { BitId } from '../../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { PathLinux } from '../../../utils/path';
 import { ImportSpecifier } from './files-dependency-builder/types/dependency-tree-type';
 
@@ -18,19 +17,33 @@ export type RelativePath = {
   sourceRelativePath: PathLinux; // location of the link file
   destinationRelativePath: PathLinux; // destination written inside the link file
   importSpecifiers?: ImportSpecifier[];
-  isCustomResolveUsed?: boolean; // custom resolve can be configured on consumer bit.json file in resolveModules attribute
   importSource?: string; // available when isCustomResolveUsed=true, contains the import path. e.g. "import x from 'src/utils'", importSource is 'src/utils'.
 };
 
 export default class Dependency {
-  id: BitId;
+  id: ComponentID;
   relativePaths: RelativePath[];
   packageName?: string;
 
-  constructor(id: BitId, relativePaths: RelativePath[], packageName?: string) {
+  constructor(id: ComponentID, relativePaths: RelativePath[], packageName?: string) {
     this.id = id;
     this.relativePaths = relativePaths;
     this.packageName = packageName;
+  }
+
+  serialize() {
+    return {
+      id: this.id.toObject(),
+      relativePaths: this.relativePaths,
+      packageName: this.packageName,
+    };
+  }
+
+  static deserialize(serialized: Record<string, any>) {
+    const id = ComponentID.fromObject(serialized.id);
+    const relativePaths = serialized.relativePaths;
+    const packageName = serialized.packageName;
+    return new Dependency(id, relativePaths, packageName);
   }
 
   static getClone(dependency: Dependency): Record<string, any> {

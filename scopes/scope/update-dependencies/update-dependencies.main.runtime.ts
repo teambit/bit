@@ -7,12 +7,10 @@ import { ScopeAspect, ScopeMain, ComponentNotFound } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Component, ComponentID } from '@teambit/component';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
-import { isHash } from '@teambit/component-version';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
-import { BitId } from '@teambit/legacy-bit-id';
 import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ExportAspect, ExportMain } from '@teambit/export';
@@ -89,7 +87,7 @@ export class UpdateDependenciesMain {
     await this.updateAllDeps();
     this.addLogToComponents();
     if (!updateDepsOptions.simulation) {
-      await this.snapping._addFlattenedDependenciesToComponents(this.scope.legacyScope, this.legacyComponents);
+      await this.snapping._addFlattenedDependenciesToComponents(this.legacyComponents);
     }
     this.addBuildStatus();
     await this.addComponentsToScope();
@@ -134,6 +132,7 @@ export class UpdateDependenciesMain {
       // this is critical. otherwise, later on, when loading aspects and isolating capsules, we'll try to fetch dists
       // from the original scope instead of the lane-scope.
       this.scope.legacyScope.setCurrentLaneId(laneId);
+      this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
     }
   }
 
@@ -167,7 +166,12 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     }
     // do not use cache. for dependencies we must fetch the latest ModelComponent from the remote
     // in order to match the semver later.
-    await this.scope.import(idsToImport, { useCache: false, lane: this.laneObj });
+    await this.scope.import(idsToImport, {
+      useCache: false,
+      lane: this.laneObj,
+      preferDependencyGraph: false,
+      reason: 'which are the seeders for the update-dependencies process',
+    });
   }
 
   private async addComponentsToScope() {
@@ -205,9 +209,9 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     // current bit ids are needed because we might update multiple components that are depend on
     // each other. in which case, we want the dependency version to be the same as the currently
     // tagged/snapped component.
-    const currentBitIds = components.map((c) => c.id._legacy);
+    const currentBitIds = components.map((c) => c.id);
     await mapSeries(this.depsUpdateItems, async ({ component, dependencies }) => {
-      await this.updateDependenciesVersionsOfComponent(component, dependencies, currentBitIds);
+      await this.snapping.updateDependenciesVersionsOfComponent(component, dependencies, currentBitIds);
       await this.updateDependencyResolver(component);
     });
   }
@@ -232,16 +236,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       // exact version, expect the entered version to be okay.
       return compId;
     }
-    if (isHash(compId.version)) {
-      return compId;
-    }
-    const range = compId.version || '*'; // if not version specified, assume the latest
-    const id = compId.changeVersion(undefined);
-    const exactVersion = await this.scope.getExactVersionBySemverRange(id, range);
-    if (!exactVersion) {
-      throw new Error(`unable to find a version that satisfies "${range}" of "${depStr}"`);
-    }
-    return compId.changeVersion(exactVersion);
+    return this.snapping.getCompIdWithExactVersionAccordingToSemver(compId);
   }
 
   private async updateFutureVersion() {
@@ -251,16 +246,17 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       const modelComponent = await this.scope.legacyScope.getModelComponent(legacyComp.id);
       if (this.updateDepsOptions.tag) {
         const { releaseType, exactVersion } = getValidVersionOrReleaseType(depUpdateItem.versionToTag || 'patch');
-        legacyComp.version = modelComponent.getVersionToAdd(releaseType, exactVersion);
+        legacyComp.setNewVersion(modelComponent.getVersionToAdd(releaseType, exactVersion));
       } else {
         // snap is the default
-        legacyComp.version = modelComponent.getSnapToAdd();
+        legacyComp.setNewVersion();
       }
     });
   }
 
   private async updateDependencyResolver(component: Component) {
-    const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
+    const dependenciesList = await this.dependencyResolver.extractDepsFromLegacy(component);
+    const dependencies = dependenciesList.serialize();
     const extId = DependencyResolverAspect.id;
     const data = { dependencies };
     const existingExtension = component.state._consumer.extensions.findExtension(extId);
@@ -271,44 +267,6 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     }
     const extension = new ExtensionDataEntry(undefined, undefined, extId, undefined, data);
     component.state._consumer.extensions.push(extension);
-  }
-
-  private async updateDependenciesVersionsOfComponent(
-    component: Component,
-    dependencies: ComponentID[],
-    currentBitIds: BitId[]
-  ) {
-    const depsBitIds = dependencies.map((d) => d._legacy);
-    const updatedIds = BitIds.fromArray([...currentBitIds, ...depsBitIds]);
-    const componentIdStr = component.id.toString();
-    const legacyComponent: ConsumerComponent = component.state._consumer;
-    const deps = [...legacyComponent.dependencies.get(), ...legacyComponent.devDependencies.get()];
-    const dependenciesList = await this.dependencyResolver.getDependencies(component);
-    deps.forEach((dep) => {
-      const updatedBitId = updatedIds.searchWithoutVersion(dep.id);
-      if (updatedBitId) {
-        const depIdStr = dep.id.toString();
-        const packageName = dependenciesList.findDependency(depIdStr)?.getPackageName?.();
-        if (!packageName) {
-          throw new Error(
-            `unable to find the package-name of "${depIdStr}" dependency inside the dependency-resolver data of "${componentIdStr}"`
-          );
-        }
-        this.logger.debug(`updating "${componentIdStr}", dependency ${depIdStr} to version ${updatedBitId.version}}`);
-        dep.id = updatedBitId;
-        dep.packageName = packageName;
-      }
-    });
-    legacyComponent.extensions.forEach((ext) => {
-      if (!ext.extensionId) return;
-      const updatedBitId = updatedIds.searchWithoutVersion(ext.extensionId);
-      if (updatedBitId) {
-        this.logger.debug(
-          `updating "${componentIdStr}", extension ${ext.extensionId.toString()} to version ${updatedBitId.version}}`
-        );
-        ext.extensionId = updatedBitId;
-      }
-    });
   }
 
   private async saveDataIntoLocalScope(buildStatus: BuildStatus) {
@@ -322,13 +280,14 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
   private async export() {
     const shouldExport = this.updateDepsOptions.push;
     if (!shouldExport) return;
-    const ids = BitIds.fromArray(this.legacyComponents.map((c) => c.id));
+    const ids = ComponentIdList.fromArray(this.legacyComponents.map((c) => c.id));
     await this.exporter.exportMany({
       scope: this.scope.legacyScope,
       ids,
       idsWithFutureScope: ids,
       laneObject: this.laneObj,
       allVersions: false,
+      exportOrigin: 'update-dependencies',
     });
   }
 

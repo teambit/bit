@@ -1,54 +1,47 @@
-import { ComponentFactory, ComponentID, ComponentMain } from '@teambit/component';
-import { Node, Edge } from '@teambit/graph.cleargraph';
-import type LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
+import { Component, ComponentFactory, ComponentID, ComponentMain } from '@teambit/component';
+import { Edge, Graph } from '@teambit/graph.cleargraph';
 import { ComponentGraph } from './component-graph';
+import { ComponentIdGraph } from './component-id-graph';
 import { Dependency } from './model/dependency';
 
 export type GetGraphOpts = {
   host?: ComponentFactory;
 };
 
-type BuildFromLegacyGraphOpts = {
-  host?: ComponentFactory;
-};
-
 export class GraphBuilder {
   constructor(private componentAspect: ComponentMain) {}
 
+  /**
+   * important - prefer using `getGraphIds()` it's way better in terms of performance.
+   */
   async getGraph(ids?: ComponentID[], opts: GetGraphOpts = {}): Promise<ComponentGraph> {
     const componentHost = opts.host || this.componentAspect.getHost();
 
-    const legacyGraph = await componentHost.getLegacyGraph(ids, false);
-    const graph = await this.buildFromLegacy(legacyGraph, { host: opts.host });
-    graph.seederIds = ids || (await componentHost.listIds());
-    return graph;
+    const graph = await componentHost.getGraph(ids, false);
+    const componentGraph = await this.toComponentGraph(graph);
+    componentGraph.seederIds = ids || (await componentHost.listIds());
+    return componentGraph;
   }
 
-  private async buildFromLegacy(
-    legacyGraph: LegacyGraph,
-    opts: BuildFromLegacyGraphOpts = {}
-  ): Promise<ComponentGraph> {
-    const newGraph = new ComponentGraph();
+  async getGraphIds(ids?: ComponentID[], opts: GetGraphOpts = {}): Promise<ComponentIdGraph> {
     const componentHost = opts.host || this.componentAspect.getHost();
 
-    const setNodeP = legacyGraph.nodes().map(async (nodeId) => {
-      const componentId = await componentHost.resolveComponentId(nodeId);
-      const component = await componentHost.get(componentId);
-      if (component) {
-        newGraph.setNode(new Node(componentId.toString(), component));
-      }
-    });
-    await Promise.all(setNodeP);
+    const graph = await componentHost.getGraphIds(ids, false);
+    const componentIdGraph = new ComponentIdGraph(graph.nodes, graph.edges);
+    componentIdGraph.seederIds = ids || (await componentHost.listIds());
+    return componentIdGraph;
+  }
 
-    const setEdgePromise = legacyGraph.edges().map(async (edgeId) => {
-      const source = await componentHost.resolveComponentId(edgeId.v);
-      const target = await componentHost.resolveComponentId(edgeId.w);
+  private async toComponentGraph(graph: Graph<Component, string>): Promise<ComponentGraph> {
+    const newGraph = new ComponentGraph();
+    graph.nodes.forEach((node) => {
+      newGraph.setNode(node);
+    });
+    graph.edges.forEach((edge) => {
       const edgeObj =
-        legacyGraph.edge(edgeId.v, edgeId.w) === 'dependencies' ? new Dependency('runtime') : new Dependency('dev');
-      newGraph.setEdge(new Edge(source.toString(), target.toString(), edgeObj));
+        edge.attr === 'dependencies' || edge.attr === 'runtime' ? new Dependency('runtime') : new Dependency('dev');
+      newGraph.setEdge(new Edge(edge.sourceId, edge.targetId, edgeObj));
     });
-    await Promise.all(setEdgePromise);
-
     return newGraph;
   }
 }

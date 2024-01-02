@@ -1,3 +1,5 @@
+import stripAnsi from 'strip-ansi';
+import { ComponentID } from '@teambit/component';
 import { makeOutdatedPkgChoices } from './pick-outdated-pkgs';
 
 describe('makeOutdatedPkgChoices', () => {
@@ -32,8 +34,11 @@ describe('makeOutdatedPkgChoices', () => {
         targetField: 'peerDependencies',
       },
     ]);
+    // Removing the ansi chars for better work on bit build on ci
+    const stripped = stripAnsiFromChoices(choices);
     // @ts-ignore
-    expect(choices).toMatchSnapshot();
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    expect(stripped).toMatchObject(orderedChoices);
   });
   it('should render choices with context information', () => {
     const choices = makeOutdatedPkgChoices([
@@ -42,7 +47,7 @@ describe('makeOutdatedPkgChoices', () => {
         currentRange: '1.0.0',
         latestRange: '2.0.0',
         source: 'component',
-        componentId: 'comp1',
+        componentId: ComponentID.fromString('scope/comp1'),
         targetField: 'dependencies',
       },
       {
@@ -54,73 +59,109 @@ describe('makeOutdatedPkgChoices', () => {
         targetField: 'peerDependencies',
       },
     ]);
+    // Removing the ansi chars for better work on bit build on ci
+    const stripped = stripAnsiFromChoices(choices);
     // @ts-ignore
-    expect(choices).toMatchSnapshot();
-  });
-  it('should group component model updates of the same dependency', () => {
-    const choices = makeOutdatedPkgChoices([
-      {
-        name: 'foo',
-        currentRange: '1.0.0',
-        latestRange: '2.0.0',
-        source: 'component-model',
-        componentId: 'comp1',
-        targetField: 'devDependencies',
-      },
-      {
-        name: 'foo',
-        currentRange: '1.1.0',
-        latestRange: '2.0.0',
-        source: 'component-model',
-        componentId: 'comp2',
-        targetField: 'dependencies',
-      },
-    ]);
-    // @ts-ignore
-    expect(choices).toMatchSnapshot();
-  });
-  it("should group component model updates of the same dependency and use * as current range when can't compare ranges", () => {
-    const choices = makeOutdatedPkgChoices([
-      {
-        name: 'foo',
-        currentRange: '<=10.0.0',
-        latestRange: '2.0.0',
-        source: 'component-model',
-        componentId: 'comp1',
-        targetField: 'dependencies',
-      },
-      {
-        name: 'foo',
-        currentRange: '1.1.0',
-        latestRange: '2.0.0',
-        source: 'component-model',
-        componentId: 'comp2',
-        targetField: 'dependencies',
-      },
-    ]);
-    // @ts-ignore
-    expect(choices).toMatchSnapshot();
-  });
-  it('should group component model updates of the same dependency and display the current range when all components use the same range', () => {
-    const choices = makeOutdatedPkgChoices([
-      {
-        name: 'foo',
-        currentRange: '^1.2.3',
-        latestRange: '2.0.0',
-        source: 'component-model',
-        componentId: 'comp1',
-        targetField: 'dependencies',
-      },
-      {
-        name: 'foo',
-        currentRange: '^1.2.3',
-        latestRange: '2.0.0',
-        source: 'component-model',
-        componentId: 'comp2',
-        targetField: 'dependencies',
-      },
-    ]);
-    // @ts-ignore
-    expect(choices).toMatchSnapshot();
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    expect(stripped).toMatchObject(contextOrders);
   });
 });
+
+function stripAnsiFromChoices(choices) {
+  choices.forEach((choice) => {
+    choice.message = stripAnsi(choice.message);
+    choice.choices.forEach((currChoice) => {
+      currChoice.message = stripAnsi(currChoice.message);
+    });
+  });
+  return choices;
+}
+
+const orderedChoices = [
+  {
+    choices: [
+      {
+        message: 'foo (runtime) 1.0.0 ❯ 2.0.0   ',
+        name: 'foo',
+        value: {
+          currentRange: '1.0.0',
+          latestRange: '2.0.0',
+          name: 'foo',
+          source: 'rootPolicy',
+          targetField: 'dependencies',
+        },
+      },
+      {
+        message: 'qar (runtime) 1.0.0 ❯ 1.1.0   ',
+        name: 'qar',
+        value: {
+          currentRange: '1.0.0',
+          latestRange: '1.1.0',
+          name: 'qar',
+          source: 'rootPolicy',
+          targetField: 'dependencies',
+        },
+      },
+      {
+        message: 'zoo (dev)     1.0.0 ❯ 1.1.0   ',
+        name: 'zoo',
+        value: {
+          currentRange: '1.0.0',
+          latestRange: '1.1.0',
+          name: 'zoo',
+          source: 'rootPolicy',
+          targetField: 'devDependencies',
+        },
+      },
+      {
+        message: 'bar (peer)    1.0.0 ❯ 1.1.0   ',
+        name: 'bar',
+        value: {
+          currentRange: '1.0.0',
+          latestRange: '1.1.0',
+          name: 'bar',
+          source: 'rootPolicy',
+          targetField: 'peerDependencies',
+        },
+      },
+    ],
+    message: 'Root policies',
+  },
+];
+
+const contextOrders = [
+  {
+    choices: [
+      {
+        message: 'foo (runtime) 1.0.0 ❯ 2.0.0   ',
+        name: 'foo',
+        value: {
+          componentId: ComponentID.fromString('scope/comp1'),
+          currentRange: '1.0.0',
+          latestRange: '2.0.0',
+          name: 'foo',
+          source: 'component',
+          targetField: 'dependencies',
+        },
+      },
+    ],
+    message: 'scope/comp1 (component)',
+  },
+  {
+    choices: [
+      {
+        message: 'bar (peer)    1.0.0 ❯ 1.1.0   ',
+        name: 'bar',
+        value: {
+          currentRange: '1.0.0',
+          latestRange: '1.1.0',
+          name: 'bar',
+          source: 'variants',
+          targetField: 'peerDependencies',
+          variantPattern: '{comp2}',
+        },
+      },
+    ],
+    message: '{comp2} (variant)',
+  },
+];

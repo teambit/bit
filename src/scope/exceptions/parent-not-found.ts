@@ -1,13 +1,8 @@
-import AbstractError from '../../error/abstract-error';
+import { BitError } from '@teambit/bit-error';
+import chalk from 'chalk';
 
-export default class ParentNotFound extends AbstractError {
-  id: string;
-  versionHash: string;
-  parentHash: string;
-  constructor(id: string, versionHash: string, parentHash: string) {
-    super();
-    this.id = id;
-    this.versionHash = versionHash;
-    this.parentHash = parentHash;
+export default class ParentNotFound extends BitError {
+  constructor(private id: string, private versionHash: string, private parentHash: string) {
+    super(`component ${chalk.bold(id)} missing data. parent ${parentHash} of version ${versionHash} was not found.`);
   }
 }

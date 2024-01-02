@@ -16,7 +16,10 @@ export async function dedupEnvs(
   dedicatedEnvDevServers?: string[]
 ) {
   const idsGroups = groupByEnvId(contexts, dedicatedEnvDevServers);
-  const finalGroups = await splitByPeers(idsGroups, dependencyResolver);
+  const hasRootComponents = dependencyResolver.hasRootComponents();
+  // Do not split envs by peers if root components is enabled as it should be already handled by the package manager
+  // this will improve the performance of the dev server when root components is enabled
+  const finalGroups = hasRootComponents ? idsGroups : await splitByPeers(idsGroups, dependencyResolver);
   return finalGroups;
 }
 
@@ -60,14 +63,12 @@ async function groupByPeersHash(contexts: ExecutionContext[], dependencyResolver
   await Promise.all(
     contexts.map(async (context) => {
       const env = context.env;
-      const policy = await dependencyResolver.getComponentEnvPolicyFromEnv(env);
-      const autoDetectPeersHash = policy.peersAutoDetectPolicy.hashNameVersion();
-      const regularPeersHash = policy.variantPolicy.byLifecycleType('peer').hashNameVersion();
-      const combinedHash = `${autoDetectPeersHash}:${regularPeersHash}`;
-      if (!peerGroups[combinedHash]) {
-        peerGroups[combinedHash] = [];
+      const policy = await dependencyResolver.getComponentEnvPolicyFromEnv(env, { envId: context.id });
+      const peersHash = policy.byLifecycleType('peer').hashNameVersion();
+      if (!peerGroups[peersHash]) {
+        peerGroups[peersHash] = [];
       }
-      peerGroups[combinedHash].push(context);
+      peerGroups[peersHash].push(context);
     })
   );
   return indexPeerGroupsById(peerGroups);

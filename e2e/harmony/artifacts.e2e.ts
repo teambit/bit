@@ -16,12 +16,25 @@ describe('bit artifacts command', function () {
   describe('staged component that was never exported', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
     });
     it('should not throw an error about missing scope', () => {
       expect(() => helper.command.artifacts('comp1')).to.not.throw();
+    });
+    it('should be able to work when using the full component-id', () => {
+      expect(() => helper.command.artifacts(`${helper.scopes.remote}/comp1`)).to.not.throw();
+    });
+  });
+  describe('running the command on a snap', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponents();
+    });
+    it('should not throw an error about non exist component', () => {
+      const head = helper.command.getHead('comp1');
+      expect(() => helper.command.artifacts(`comp1@${head}`)).to.not.throw();
     });
   });
 });

@@ -5,7 +5,7 @@ import { Response } from './response';
 /**
  * define express Middleware
  */
-export type Middleware = (req: Request, res: Response, next: NextFunction) => Promise<any>;
+export type Middleware = (req: Request, res: Response, next: NextFunction) => void | Promise<any>;
 
 export enum Verb {
   WRITE = 'write',
@@ -22,4 +22,6 @@ export interface Route {
   disableNamespace?: boolean;
   verb?: Verb;
   middlewares: Middleware[];
+  /** route priority if 2 route with the same name default is 0 */
+  priority?: number;
 }

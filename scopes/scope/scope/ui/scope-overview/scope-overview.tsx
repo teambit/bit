@@ -18,6 +18,7 @@ export type ScopeOverviewProps = {
 export function ScopeOverview({ badgeSlot, overviewSlot, TargetOverview }: ScopeOverviewProps) {
   const scope = useContext(ScopeContext);
   const { components } = scope;
+  if (TargetOverview) return <TargetOverview />;
   if (!components || components.length === 0) return <EmptyScope name={scope.name} />;
 
   return (
@@ -31,20 +32,16 @@ export function ScopeOverview({ badgeSlot, overviewSlot, TargetOverview }: Scope
         description={scope.description}
         componentCount={scope.components.length}
       />
-      {TargetOverview ? (
-        <TargetOverview />
-      ) : (
-        <ComponentGrid>
-          {components.map((component, index) => {
-            if (component.deprecation?.isDeprecate) return null;
-            return (
-              <div key={index}>
-                <ScopeComponentCard component={component} />
-              </div>
-            );
-          })}
-        </ComponentGrid>
-      )}
+      <ComponentGrid>
+        {components.map((component, index) => {
+          if (component.deprecation?.isDeprecate) return null;
+          return (
+            <div key={index}>
+              <ScopeComponentCard component={component} />
+            </div>
+          );
+        })}
+      </ComponentGrid>
     </div>
   );
 }

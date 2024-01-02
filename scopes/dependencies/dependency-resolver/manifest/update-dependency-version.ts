@@ -26,16 +26,16 @@ import { VariantPolicy, WorkspacePolicy } from '../policy';
  */
 export function updateDependencyVersion(
   dependency: Dependency,
-  rootPolicy: WorkspacePolicy,
-  variantPolicy: VariantPolicy
+  rootPolicy?: WorkspacePolicy,
+  variantPolicy?: VariantPolicy
 ): void {
   if (dependency.getPackageName) {
     const packageName = dependency.getPackageName();
-    const variantVersion = variantPolicy.getDepVersion(packageName, dependency.lifecycle);
+    const variantVersion = variantPolicy?.getDepVersion(packageName, dependency.lifecycle);
     const variantVersionWithoutMinus = variantVersion && variantVersion !== '-' ? variantVersion : undefined;
     const version =
       variantVersionWithoutMinus ||
-      rootPolicy.getValidSemverDepVersion(packageName, dependency.lifecycle === 'peer' ? 'peer' : 'runtime') ||
+      rootPolicy?.getValidSemverDepVersion(packageName, dependency.lifecycle === 'peer' ? 'peer' : 'runtime') ||
       snapToSemver(dependency.version) ||
       '0.0.1-new';
 

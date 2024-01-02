@@ -1,13 +1,12 @@
 import R from 'ramda';
-
-import { BitId, BitIds } from '../../../bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitIdStr } from '../../../bit-id/bit-id';
 import ValidationError from '../../../error/validation-error';
 import Scope from '../../../scope/scope';
 import { fetchRemoteVersions } from '../../../scope/scope-remotes';
 import { isValidPath } from '../../../utils';
 import validateType from '../../../utils/validate-type';
-import Dependency, { RelativePath } from './dependency';
+import Dependency from './dependency';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
 export const DEPENDENCIES_TYPES_UI_MAP = {
@@ -80,23 +79,7 @@ export default class Dependencies {
     });
   }
 
-  /**
-   * needed for calculating the originallySharedDir. when isCustomResolveUsed, don't take into
-   * account the dependencies as they don't have relative paths
-   */
-  getSourcesPaths(): string[] {
-    return R.flatten(
-      this.dependencies.map((dependency) =>
-        dependency.relativePaths
-          .map((relativePath) => {
-            return relativePath.isCustomResolveUsed ? null : relativePath.sourceRelativePath;
-          })
-          .filter((x) => x)
-      )
-    );
-  }
-
-  getById(id: BitId): Dependency | null | undefined {
+  getById(id: ComponentID): Dependency | null | undefined {
     return this.dependencies.find((dep) => dep.id.isEqual(id));
   }
 
@@ -112,11 +95,11 @@ export default class Dependencies {
     );
   }
 
-  getAllIds(): BitIds {
-    return BitIds.fromArray(this.dependencies.map((dependency) => dependency.id));
+  getAllIds(): ComponentIdList {
+    return ComponentIdList.fromArray(this.dependencies.map((dependency) => dependency.id));
   }
 
-  getIdsMap(): Record<string, BitId> {
+  getIdsMap(): Record<string, ComponentID> {
     const result = {};
     this.dependencies.forEach((dep) => {
       result[dep.id.toString()] = dep.id;
@@ -146,30 +129,7 @@ export default class Dependencies {
     });
   }
 
-  getCustomResolvedData(): { [importSource: string]: BitId } {
-    const importSourceMap = {};
-    this.dependencies.forEach((dependency: Dependency) => {
-      dependency.relativePaths.forEach((relativePath: RelativePath) => {
-        if (relativePath.isCustomResolveUsed) {
-          if (!relativePath.importSource) {
-            throw new Error(
-              `${dependency.id.toString()} relativePath.importSource must be set when relativePath.isCustomResolveUsed`
-            );
-          }
-          importSourceMap[relativePath.importSource] = dependency.id;
-        }
-      });
-    });
-    return importSourceMap;
-  }
-
-  isCustomResolvedUsed(): boolean {
-    return this.dependencies.some((dependency: Dependency) => {
-      return dependency.relativePaths.some((relativePath: RelativePath) => relativePath.isCustomResolveUsed);
-    });
-  }
-
-  validate(bitId?: BitId): void {
+  validate(bitId?: ComponentID): void {
     const compIdStr = bitId ? ` of ${bitId.toString()}` : '';
     let message = `failed validating the dependencies${compIdStr}.`;
     validateType(message, this.dependencies, 'dependencies', 'array');
@@ -204,7 +164,7 @@ export default class Dependencies {
         validateType(message, dependency, 'dependency', 'object');
         const requiredProps = ['sourceRelativePath', 'destinationRelativePath'];
         const pathProps = ['sourceRelativePath', 'destinationRelativePath'];
-        const optionalProps = ['importSpecifiers', 'isCustomResolveUsed', 'importSource'];
+        const optionalProps = ['importSpecifiers', 'importSource'];
         const allProps = requiredProps.concat(optionalProps);
         requiredProps.forEach((prop) => {
           if (!relativePath[prop]) {
@@ -221,12 +181,6 @@ export default class Dependencies {
             throw new ValidationError(`${message} undetected property of relativePaths "${prop}"`);
           }
         });
-        if (relativePath.isCustomResolveUsed) {
-          if (!relativePath.importSource) {
-            throw new ValidationError(`a dependency ${dependency.id.toString()} is missing relativePath.importSource`);
-          }
-          validateType(message, relativePath.importSource, 'relativePath.importSource', 'string');
-        }
         if (relativePath.importSpecifiers) {
           validateType(message, relativePath.importSpecifiers, 'relativePath.importSpecifiers', 'array');
           // $FlowFixMe it's already confirmed that relativePath.importSpecifiers is set
@@ -242,15 +196,7 @@ export default class Dependencies {
                 `${message} expected properties of importSpecifier.mainFile "${specifierProps}", got "${mainFileProps}"`
               );
             }
-            if (importSpecifier.linkFile) {
-              const linkFileProps = Object.keys(importSpecifier.linkFile).sort().toString();
-              if (linkFileProps !== specifierProps) {
-                throw new ValidationError(
-                  `${message} expected properties of importSpecifier.linkFile "${specifierProps}", got "${linkFileProps}"`
-                );
-              }
-            }
-            const specifierPermittedProps = ['mainFile', 'linkFile'];
+            const specifierPermittedProps = ['mainFile'];
             Object.keys(importSpecifier).forEach((prop) => {
               if (!specifierPermittedProps.includes(prop)) {
                 throw new ValidationError(`${message} undetected property of importSpecifier "${prop}"`);

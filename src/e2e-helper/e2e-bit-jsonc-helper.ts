@@ -42,7 +42,7 @@ export default class BitJsoncHelper {
     bitJsoncDir: string = this.scopes.localPath
   ) {
     const bitJsonc = this.read(bitJsoncDir);
-    const variants = bitJsonc['teambit.workspace/variants'];
+    const variants = bitJsonc['teambit.workspace/variants'] || {};
     const newVariant = replaceExisting ? {} : variants[variant] ?? {};
     assign(newVariant, { [key]: val });
     this.setVariant(bitJsoncDir, variant, newVariant);
@@ -57,7 +57,7 @@ export default class BitJsoncHelper {
    */
   setVariant(bitJsoncDir: string = this.scopes.localPath, variant: string, config: any) {
     const bitJsonc = this.read(bitJsoncDir);
-    const variants = bitJsonc['teambit.workspace/variants'];
+    const variants = bitJsonc['teambit.workspace/variants'] || {};
     const newVariant = config;
     assign(variants, { [variant]: newVariant });
     this.addKeyVal('teambit.workspace/variants', variants, bitJsoncDir);
@@ -101,6 +101,11 @@ export default class BitJsoncHelper {
   addDefaultScope(scope = this.scopes.remote) {
     this.addKeyValToWorkspace('defaultScope', scope);
   }
+  getDefaultScope() {
+    const bitJsonc = this.read();
+    const workspace = bitJsonc['teambit.workspace/workspace'];
+    return workspace.defaultScope;
+  }
 
   setComponentsDir(compDir: string) {
     this.addKeyValToWorkspace('defaultDirectory', compDir);
@@ -110,12 +115,14 @@ export default class BitJsoncHelper {
     this.addKeyValToDependencyResolver('packageManager', packageManager);
   }
 
-  addDefaultOwner(owner: string) {
-    this.addKeyValToWorkspace('defaultOwner', owner);
-  }
   corrupt() {
     const bitJsoncPath = composePath(this.scopes.localPath);
     fs.writeFileSync(bitJsoncPath, '"corrupted');
+  }
+  disableMissingManuallyConfiguredPackagesIssue() {
+    this.addKeyVal('teambit.component/issues', {
+      ignoreIssues: ['MissingManuallyConfiguredPackages'],
+    });
   }
   disablePreview() {
     this.addKeyVal('teambit.preview/preview', { disabled: true });
@@ -123,6 +130,9 @@ export default class BitJsoncHelper {
   setupDefault() {
     this.disablePreview();
     this.addDefaultScope();
+    // otherwise, "bit tag" and "bit status" will always fail with "MissingManuallyConfiguredPackages" for jest/babel
+    // until "bit install" is running, because they're coming from the default env.
+    this.disableMissingManuallyConfiguredPackagesIssue();
   }
 }
 

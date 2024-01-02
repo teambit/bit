@@ -10,29 +10,41 @@ export class YarnUI {
   static dependencies = [ComponentAspect];
 
   static async provider([componentUI]: [ComponentUI]) {
-    const yarn = new YarnUI();
+    const yarn = new YarnUI(componentUI);
     componentUI.registerConsumeMethod(yarn.consumeMethod);
     return yarn;
   }
 
-  private consumeMethod: ConsumePlugin = (comp, options) => {
-    if (options?.currentLane) return undefined;
+  constructor(private compUI: ComponentUI) {}
 
-    const registry = comp.packageName.split('/')[0];
-    const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
+  private consumeMethod: ConsumePlugin = ({
+    packageName: packageNameFromProps,
+    id: componentId,
+    latest: latestFromProps,
+    options,
+    componentModel,
+  }) => {
+    const packageName = componentModel?.packageName || packageNameFromProps;
+    const latest = componentModel?.latest || latestFromProps;
+
+    const registry = packageName.split('/')[0];
+    const packageVersion =
+      componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version as string)}`;
+
     return {
       Title: (
         <img style={{ height: '17px', paddingTop: '4px' }} src="https://static.bit.dev/brands/logo-yarn-text.svg" />
       ),
-      Component: (
+      Component: !options?.hide ? (
         <Install
-          config={`npm config set '${registry}:registry' https://node.bit.cloud`}
-          componentName={comp.id.name}
+          config={`npm config set '${registry}:registry' https://node-registry.bit.cloud`}
+          componentName={componentId.name}
           packageManager="yarn"
-          copyString={`yarn add ${comp.packageName}${packageVersion}`}
+          copyString={`yarn add ${packageName}${packageVersion}`}
           registryName={registry}
+          isInstallable={!options?.disableInstall}
         />
-      ),
+      ) : null,
       order: 20,
     };
   };

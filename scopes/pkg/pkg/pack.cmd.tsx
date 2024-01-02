@@ -26,6 +26,7 @@ export class PackCmd implements Command {
   ] as CommandOptions;
   alias = '';
   group = 'collaborate';
+  private = true;
 
   constructor(private packer: Packer) {}
 

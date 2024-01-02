@@ -4,7 +4,7 @@ import { Consumer } from '../../../consumer';
 import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
 import { Scope } from '../../../scope';
 import { Repository } from '../../../scope/objects';
-import { isDirEmpty } from '../../../utils';
+import { findScopePath, isDirEmpty } from '../../../utils';
 import ObjectsWithoutConsumer from './exceptions/objects-without-consumer';
 
 export default async function init(
@@ -12,6 +12,7 @@ export default async function init(
   noGit = false,
   reset = false,
   resetNew = false,
+  resetLaneNew = false,
   resetHard = false,
   resetScope = false,
   force = false,
@@ -20,15 +21,28 @@ export default async function init(
   if (reset || resetHard) {
     await Consumer.reset(absPath, resetHard, noGit);
   }
-  const consumer: Consumer = await Consumer.create(absPath, noGit, workspaceConfigProps);
+  let consumer: Consumer | undefined;
+  try {
+    consumer = await Consumer.create(absPath, noGit, workspaceConfigProps);
+  } catch (err) {
+    // it's possible that at this stage the consumer fails to load due to scope issues.
+    // still we want to load it to include its instance of "scope.json", so then later when "consumer.write()", we
+    // don't lose some scope metadata
+  }
+  if (resetScope) {
+    const scopePath = findScopePath(process.cwd());
+    if (!scopePath) throw new Error(`fatal: scope not found in the path: ${process.cwd()}`);
+    await Scope.reset(scopePath, true);
+  }
+  if (!consumer) consumer = await Consumer.create(absPath, noGit, workspaceConfigProps);
   if (!force && !resetScope) {
     await throwForOutOfSyncScope(consumer);
   }
   if (resetNew) {
     await consumer.resetNew();
   }
-  if (resetScope) {
-    await Scope.reset(consumer.scope.path, true);
+  if (resetLaneNew) {
+    await consumer.resetLaneNew();
   }
   return consumer.write();
 }

@@ -1,11 +1,8 @@
-import AbstractError from '../../error/abstract-error';
+import { BitError } from '@teambit/bit-error';
+import chalk from 'chalk';
 
-export default class HeadNotFound extends AbstractError {
-  id: string;
-  headHash: string;
+export default class HeadNotFound extends BitError {
   constructor(id: string, headHash: string) {
-    super();
-    this.id = id;
-    this.headHash = headHash;
+    super(`head snap ${chalk.bold(headHash)} was not found for a component ${chalk.bold(id)}`);
   }
 }

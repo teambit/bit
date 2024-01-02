@@ -36,6 +36,8 @@ export type FormatResults = {
 };
 
 export interface Formatter {
+  id: string;
   format(context: FormatterContext): Promise<FormatResults>;
+  formatSnippet(snippet: string, filepath?: string): Promise<string>;
   check(context: FormatterContext): Promise<FormatResults>;
 }

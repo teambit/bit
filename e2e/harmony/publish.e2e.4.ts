@@ -23,7 +23,6 @@ describe('publish functionality', function () {
     let scopeWithoutOwner: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       appOutput = helper.fixtures.populateComponentsTS(3);
@@ -110,8 +109,7 @@ describe('publish functionality', function () {
     let pkgName: string;
     before(async function () {
       npmCiRegistry = new NpmCiRegistry(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.disablePreview();
+      helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
       helper.fs.outputFile('ui/button.js', 'console.log("hello button");');
       helper.command.addComponent('ui', { i: 'ui/button' });
 
@@ -131,7 +129,7 @@ describe('publish functionality', function () {
     });
     describe('installing the component as a package', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
         helper.npm.initNpm();
         npmCiRegistry.installPackage(pkgName);
       });
@@ -153,17 +151,22 @@ describe('publish functionality', function () {
       });
     });
   });
-  // we ended up not running the publish dry-run tasks
-  describe.skip('with invalid package name', () => {
+  describe('prevent publishing to npm when custom-package-name is needed', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      npmCiRegistry = new NpmCiRegistry(helper);
-      helper.fixtures.populateComponentsTS(1);
-      npmCiRegistry.configureCustomNameInPackageJsonHarmony('invalid/name/{name}');
+      helper.fixtures.populateComponents(1, false);
+      const pkg = {
+        packageJson: {
+          name: 'no', // custom-name so it will try to publish to npm
+        },
+        avoidPublishToNPM: true,
+      };
+      helper.bitJsonc.addToVariant('*', 'teambit.pkg/pkg', pkg);
     });
-    it('builder should show the npm error about invalid name', () => {
-      const output = helper.general.runWithTryCatch('bit build');
-      expect(output).to.have.string('npm ERR! Invalid name: "invalid/name/comp1"');
+    it('should not publish to npm', () => {
+      // if it was publishing, it would failed with an error:
+      // "failed running npm publish at /Users/davidfirst/Library/Caches/Bit/capsules/d7865720a5a6eb77903fb2536ba6e34efcaa0344/ci.w4hrkz2p-remote_comp1@0.0.1"
+      expect(() => helper.command.tagAllComponents()).to.not.throw();
     });
   });
 });

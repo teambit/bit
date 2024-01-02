@@ -6,7 +6,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import ts from 'typescript';
 import { BitError } from '@teambit/bit-error';
-import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import { TypeScriptCompilerOptions } from './compiler-options';
 
 export class TypescriptCompiler implements Compiler {
@@ -108,20 +107,6 @@ export class TypescriptCompiler implements Compiler {
       artifacts: this.getArtifactDefinition(),
       componentsResults,
     };
-  }
-
-  async postBuild(context: BuildContext) {
-    await Promise.all(
-      context.capsuleNetwork.seedersCapsules.map(async (capsule) => {
-        const packageJson = PackageJsonFile.loadFromCapsuleSync(capsule.path);
-        // the types['index.ts'] is needed only during the build to avoid errors when tsc finds the
-        // same type once in the d.ts and once in the ts file.
-        if (packageJson.packageJsonObject.types) {
-          delete packageJson.packageJsonObject.types;
-          await packageJson.write();
-        }
-      })
-    );
   }
 
   getArtifactDefinition() {

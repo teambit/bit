@@ -1,5 +1,4 @@
 import { Consumer } from '..';
-import { DEFAULT_BINDINGS_PREFIX } from '../../constants';
 import { getDependencyTree } from '../component/dependencies/files-dependency-builder';
 
 export type DependencyStatusResult = { missingFiles: string[] };
@@ -12,8 +11,6 @@ async function getTopLevelDependencies(consumer: Consumer, dependencyStatusProps
     componentDir: consumerPath,
     workspacePath: consumerPath,
     filePaths: paths,
-    bindingPrefix: DEFAULT_BINDINGS_PREFIX,
-    resolveModulesConfig: consumer.config._resolveModules,
   });
   const topLevelDependencies = Object.keys(tree.tree).map((topLevelFile) => topLevelFile);
   return topLevelDependencies;

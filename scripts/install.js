@@ -4,18 +4,18 @@ const semver = require('semver');
 const path = require('path');
 const chalk = require('chalk');
 const { execSync } = require('child_process');
-const userHome = require('user-home');
+const { homedir } = require('os');
 const { version, scripts } = require('../package.json');
 const {
   CURRENT_BINARY_FILE_NAME,
   CURRENT_DEFAULT_BINARY_PATH,
   CURRENT_BINARY_PATH,
   BINARY_FINAL_FILE_NAME,
-  IS_WINDOWS
+  IS_WINDOWS,
 } = require('./scripts-constants');
 // const { IS_WINDOWS } = require('../src/constants');
 
-const EXECUTABLE_CACHE_LOCATION = path.join(userHome, 'Library', 'Caches', 'Bit', 'bit-executable'); // TODO: get this from constants
+const EXECUTABLE_CACHE_LOCATION = path.join(homedir(), 'Library', 'Caches', 'Bit', 'bit-executable'); // TODO: get this from constants
 
 // This was temporarily copied from constants since constants has import statements that are not supported without build step
 
@@ -34,7 +34,7 @@ function findFileUrl() {
 async function fetchBinary(binaryFileUrl) {
   const res = await fetch(binaryFileUrl, {
     cacheManager: EXECUTABLE_CACHE_LOCATION,
-    retry: 3 // 3 is arbitrary
+    retry: 3, // 3 is arbitrary
   });
   if (res.status !== 200) {
     throw new Error(`failed to fetch binary: ${res.statusText}`);
@@ -82,7 +82,7 @@ function getInstallationPathFromEnv() {
 function correctInstallationPathForWindows(originalDir) {
   const osPath = process.env.path;
   const splittedOsPath = osPath.split(';');
-  const pathsExistingInOrigDir = splittedOsPath.filter(currPath => {
+  const pathsExistingInOrigDir = splittedOsPath.filter((currPath) => {
     const includes = currPath && originalDir.includes(currPath);
     return includes;
   });

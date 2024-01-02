@@ -31,7 +31,24 @@ export type ComponentsResults = {
 };
 
 export type SpecFiles = ComponentMap<AbstractVinyl[]>;
-export type ComponentPatternsEntry = { componentDir: string; paths: { path: string; relative: string }[] };
+
+export type ComponentPatternsEntry = {
+  /**
+   * component directory in the workspace.
+   */
+  componentDir: string;
+
+  /**
+   * paths to test files.
+   */
+  paths: { path: string; relative: string }[];
+
+  /**
+   * root dir of the package in bit_roots.
+   */
+  packageRootDir: string;
+};
+
 export type ComponentPatternsMap = ComponentMap<ComponentPatternsEntry>;
 
 export interface TesterContext extends ExecutionContext {
@@ -145,9 +162,11 @@ export interface Tester {
    * watch tests on all components
    */
   watch?(context: TesterContext): Promise<Tests>;
+
   /**
    * return the tester version.
    */
   version(): string;
 }
+
 export type CallbackFn = (testSuite: Tests) => void;

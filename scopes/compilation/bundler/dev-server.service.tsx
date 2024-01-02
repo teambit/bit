@@ -1,4 +1,4 @@
-import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
+import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import { PubsubMain } from '@teambit/pubsub';
 import { flatten } from 'lodash';
 import React from 'react';
@@ -6,7 +6,7 @@ import { Text, Newline } from 'ink';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import highlight from 'cli-highlight';
 import { sep } from 'path';
-import { BrowserRuntimeSlot } from './bundler.main.runtime';
+import { BrowserRuntimeSlot, DevServerTransformerSlot } from './bundler.main.runtime';
 import { ComponentServer } from './component-server';
 import { dedupEnvs } from './dedup-envs';
 import { DevServer } from './dev-server';
@@ -15,14 +15,27 @@ import { getEntry } from './get-entry';
 
 export type DevServerServiceOptions = { dedicatedEnvDevServers?: string[] };
 
+type DevServiceTransformationMap = ServiceTransformationMap & {
+  /**
+   * Required for `bit start`
+   */
+  getDevEnvId?: (context?: any) => string;
+
+  /**
+   * Returns and configures the dev server
+   * Required for `bit start`
+   */
+  getDevServer?: (context: DevServerContext) => DevServer | Promise<DevServer>;
+};
+
 export type DevServerDescriptor = {
   /**
-   * id of the dev server (e.g. jest/mocha)
+   * id of the dev server (e.g. webpack)
    */
   id: string;
 
   /**
-   * display name of the dev server (e.g. Jest / Mocha)
+   * display name of the dev server (e.g. Webpack dev server)
    */
   displayName: string;
 
@@ -43,9 +56,6 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
   name = 'dev server';
 
   constructor(
-    /**
-     * browser runtime slot
-     */
     private pubsub: PubsubMain,
 
     private dependencyResolver: DependencyResolverMain,
@@ -53,7 +63,9 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     /**
      * browser runtime slot
      */
-    private runtimeSlot: BrowserRuntimeSlot
+    private runtimeSlot: BrowserRuntimeSlot,
+
+    private devServerTransformerSlot: DevServerTransformerSlot
   ) {}
 
   async render(env: EnvDefinition, context: ExecutionContext[]) {
@@ -95,6 +107,21 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     };
   }
 
+  transform(env: Env, envContext: EnvContext): DevServiceTransformationMap | undefined {
+    // Old env
+    if (!env?.preview) return undefined;
+    const preview = env.preview()(envContext);
+
+    return {
+      getDevEnvId: () => {
+        return preview.getDevEnvId();
+      },
+      getDevServer: (context) => {
+        return preview.getDevServer(context)(envContext);
+      },
+    };
+  }
+
   // async run(context: ExecutionContext): Promise<ComponentServer[]> {
   //   const devServerContext = await this.buildContext(context);
   //   const devServer: DevServer = context.env.getDevServer(devServerContext);
@@ -116,8 +143,9 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
 
         const devServerContext = await this.buildContext(mainContext, additionalContexts);
         const devServer: DevServer = await devServerContext.envRuntime.env.getDevServer(devServerContext);
+        const transformedDevServer: DevServer = this.transformDevServer(devServer, { envId: id });
 
-        return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], devServer);
+        return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], transformedDevServer);
       })
     );
 
@@ -143,7 +171,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
   ): Promise<DevServerContext> {
     context.relatedContexts = additionalContexts.map((ctx) => ctx.envDefinition.id);
     context.components = context.components.concat(this.getComponentsFromContexts(additionalContexts));
-    const peers = await this.dependencyResolver.getPeerDependenciesListFromEnv(context.env);
+    const peers = await this.dependencyResolver.getPreviewHostDependenciesFromEnv(context.envDefinition.env);
     const hostRootDir = context.envRuntime.envAspectDefinition?.aspectPath;
 
     return Object.assign(context, {
@@ -155,5 +183,11 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
       hostDependencies: peers,
       aliasHostDependencies: true,
     });
+  }
+
+  private transformDevServer(devServer: DevServer, { envId }: { envId: string }): DevServer {
+    return this.devServerTransformerSlot
+      .values()
+      .reduce((updatedDevServer, transformFn) => transformFn(updatedDevServer, { envId }), devServer);
   }
 }

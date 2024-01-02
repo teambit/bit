@@ -10,6 +10,9 @@ export interface SerializedDependency {
   __type: string;
   lifecycle: string;
   source?: DependencySource;
+  hidden?: boolean;
+  optional?: boolean;
+  packageName?: string;
 }
 
 /**
@@ -29,6 +32,8 @@ export interface Dependency {
   type: string;
   lifecycle: DependencyLifecycleType;
   source?: DependencySource;
+  hidden?: boolean;
+  optional?: boolean;
 
   serialize: <T extends SerializedDependency>() => T;
   setVersion: (newVersion: string) => void;

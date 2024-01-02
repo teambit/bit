@@ -3,15 +3,17 @@ import { MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { Component, ComponentMap, IComponent } from '@teambit/component';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import type { Environment } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
+import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Doc, DocPropList } from '@teambit/docs.entities.doc';
+import { isFunction } from 'lodash';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { DocsAspect } from './docs.aspect';
 import { DocsPreviewDefinition } from './docs.preview-definition';
@@ -76,7 +78,7 @@ export class DocsMain {
   }
 
   getDocsFiles(component: Component): AbstractVinyl[] {
-    const devFiles = this.devFiles.computeDevFiles(component);
+    const devFiles = this.devFiles.getDevFiles(component);
     const docFiles = devFiles.get(DocsAspect.id);
     return component.state.filesystem.files.filter((file) => docFiles.includes(file.relative));
   }
@@ -87,15 +89,14 @@ export class DocsMain {
   async getDescription(component: Component): Promise<string> {
     const componentDoc = this.getDoc(component);
     const desc = componentDoc?.description;
-    if (desc) return desc;
-    const consumerComponent: ConsumerComponent = component.state._consumer;
-    const fromJsDocs = consumerComponent.docs?.find((doc) => doc.description);
-
-    return fromJsDocs?.description || '';
+    return desc || '';
   }
 
-  async getTemplate(env: Environment) {
-    return env.getDocsTemplate();
+  async getTemplate(env: Environment): Promise<string | undefined> {
+    if (env.getDocsTemplate && isFunction(env.getDocsTemplate)) {
+      return env.getDocsTemplate();
+    }
+    return undefined;
   }
 
   getDocReader(extension: string) {
@@ -137,10 +138,10 @@ export class DocsMain {
   }
 
   getComponentDevPatterns(component: Component) {
-    const env = this.envs.calculateEnv(component).env;
+    const env = this.envs.calculateEnv(component, { skipWarnings: !!this.workspace?.inInstallContext }).env;
     const componentEnvDocsDevPatterns: string[] = env.getDocsDevPatterns ? env.getDocsDevPatterns(component) : [];
     const componentPatterns = componentEnvDocsDevPatterns.concat(this.getPatterns());
-    return componentPatterns;
+    return { name: 'docs', pattern: componentPatterns };
   }
 
   getDevPatternToRegister() {
@@ -167,6 +168,7 @@ export class DocsMain {
     LoggerAspect,
     DevFilesAspect,
     EnvsAspect,
+    ScopeAspect,
   ];
 
   static defaultConfig = {
@@ -174,7 +176,7 @@ export class DocsMain {
   };
 
   static async provider(
-    [preview, graphql, workspace, pkg, compiler, loggerAspect, devFiles, envs]: [
+    [preview, graphql, workspace, pkg, compiler, loggerAspect, devFiles, envs, scope]: [
       PreviewMain,
       GraphqlMain,
       Workspace,
@@ -182,7 +184,8 @@ export class DocsMain {
       CompilerMain,
       LoggerMain,
       DevFilesMain,
-      EnvsMain
+      EnvsMain,
+      ScopeMain
     ],
     config: DocsConfig,
     [docPropSlot, docReaderSlot]: [DocPropSlot, DocReaderSlot]
@@ -190,37 +193,35 @@ export class DocsMain {
     const logger = loggerAspect.createLogger(DocsAspect.id);
     const docs = new DocsMain(
       config.patterns,
-
       preview,
-
       pkg,
-
       compiler,
-
       workspace,
-
       logger,
-
       devFiles,
-
       envs,
-
       docPropSlot,
-
       docReaderSlot
     );
     docs.registerDocReader(new DefaultDocReader(pkg, compiler, workspace));
     devFiles.registerDevPattern(docs.getDevPatternToRegister());
 
-    if (workspace) {
-      workspace.onComponentLoad(async (component, opts) => {
-        if (opts?.loadDocs === false) return undefined;
-        const doc = await docs.computeDoc(component);
+    const computeDocsOnLoad = async (component: Component, opts?: ComponentLoadOptions) => {
+      if (opts?.loadDocs === false) return undefined;
+      // const docFiles = await docs.computeDocs(component);
+      const doc = await docs.computeDoc(component);
 
-        return {
-          doc: doc?.toObject(),
-        };
-      });
+      return {
+        doc: doc?.toObject(),
+        // docFiles
+      };
+    };
+
+    if (workspace) {
+      workspace.registerOnComponentLoad(computeDocsOnLoad);
+    }
+    if (scope) {
+      scope.registerOnCompAspectReCalc(computeDocsOnLoad);
     }
 
     graphql.register(docsSchema(docs));

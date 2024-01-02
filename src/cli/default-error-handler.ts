@@ -6,12 +6,11 @@ import { Analytics, LEVEL } from '../analytics/analytics';
 import ConfigKeyNotFound from '../api/consumer/lib/exceptions/config-key-not-found';
 import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-found';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
-import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnosis-name';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
-import { BASE_DOCS_DOMAIN, BASE_LEGACY_DOCS_DOMAIN, DEBUG_LOG, IMPORT_PENDING_MSG } from '../constants';
+import { BASE_DOCS_DOMAIN, BASE_LEGACY_DOCS_DOMAIN, DEBUG_LOG } from '../constants';
 import { InvalidBitMap, MissingMainFile } from '../consumer/bit-map/exceptions';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import {
@@ -25,7 +24,6 @@ import {
   VersionShouldBeRemoved,
 } from '../consumer/component-ops/add-components/exceptions';
 import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/adding-individual-files';
-import ComponentsPendingImport from '../consumer/component-ops/exceptions/components-pending-import';
 import ComponentsPendingMerge from '../consumer/component-ops/exceptions/components-pending-merge';
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
@@ -36,8 +34,6 @@ import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejecte
 import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
 import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
 import { NoComponentDir } from '../consumer/component/exceptions/no-component-dir';
-import InvalidBitJson from '../consumer/config/exceptions/invalid-bit-json';
-import InvalidConfigPropPath from '../consumer/config/exceptions/invalid-config-prop-path';
 import InvalidPackageJson from '../consumer/config/exceptions/invalid-package-json';
 import InvalidPackageManager from '../consumer/config/exceptions/invalid-package-manager';
 import {
@@ -61,7 +57,6 @@ import {
   CyclicDependencies,
   HashMismatch,
   HashNotFound,
-  HeadNotFound,
   InvalidIndexJson,
   OutdatedIndexJson,
   ParentNotFound,
@@ -125,7 +120,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [RemoteScopeNotFound, (err) => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
   [InjectNonEjected, () => 'error: could not inject config for already injected component'],
-  [ComponentsPendingImport, () => IMPORT_PENDING_MSG],
   // TODO: improve error
   [
     ComponentsPendingMerge,
@@ -175,7 +169,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   this usually happens when a component is old and the migration script was not running or interrupted`,
   ],
   [HashNotFound, (err) => `hash ${chalk.bold(err.hash)} not found`],
-  [HeadNotFound, (err) => `head snap ${chalk.bold(err.headHash)} was not found for a component ${chalk.bold(err.id)}`],
   [
     OutdatedIndexJson,
     (err) => `error: ${chalk.bold(err.id)} found in the index.json file, however, is missing from the scope.
@@ -198,7 +191,7 @@ ${err.message ? `server responded with: "${err.message}"` : ''}`,
     ) => `error: unable to export components to ${err.destinationScope} because they have dependencies on components in ${err.sourceScope}.
 bit does not allow setting dependencies between components in private collections managed by different owners.
 
-see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/bit-dev#permissions-for-collections`,
+see troubleshooting at ${BASE_DOCS_DOMAIN}docs/bit-dev#permissions-for-collections`,
   ],
   [
     SSHInvalidResponse,
@@ -230,11 +223,6 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
   ],
   [NothingToImport, () => chalk.yellow('nothing to import. please use `bit import [component_id]`')],
   [
-    InvalidBitJson,
-    (err) => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.
-consider running ${chalk.bold('bit init --reset')} to recreate the file`,
-  ],
-  [
     InvalidPackageManager,
     (err) => `error: the package manager provided ${chalk.bold(err.packageManager)} is not a valid package manager.
 please specify 'npm' or 'yarn'`,
@@ -245,30 +233,23 @@ please specify 'npm' or 'yarn'`,
 please fix the file in order to run bit commands`,
   ],
   [
-    InvalidConfigPropPath,
-    (err) => `error: the path "${chalk.bold(err.fieldValue)}" of "${chalk.bold(
-      err.fieldName
-    )}" in your bit.json or package.json file is invalid.
-please make sure it's not absolute and doesn't contain invalid characters`,
-  ],
-  [
     MissingMainFile,
     (err) =>
       `error: the component ${chalk.bold(
         err.componentId
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/components/component-main-file`,
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at ${BASE_DOCS_DOMAIN}components/component-main-file`,
   ],
   [
     NoComponentDir,
     (err) => `"${err.id}" doesn't have a component directory, which is invalid.
-please run "bit status" to get more info.\nLearn more at https://${BASE_DOCS_DOMAIN}/workspace/component-directory`,
+please run "bit status" to get more info.\nLearn more at https:/BASE_DOCS_DOMAIN/reference/workspace/component-directory`,
   ],
   [
     MissingMainFileMultipleComponents,
     (err) =>
       `error: the components ${chalk.bold(
         err.componentIds.join(', ')
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/components/component-main-file`,
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at ${BASE_DOCS_DOMAIN}components/component-main-file`,
   ],
   [
     InvalidBitMap,
@@ -339,11 +320,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     (err) => `component ${chalk.bold(err.id)} has been already exported to ${chalk.bold(err.remote)}`,
   ],
   [
-    InvalidVersion,
-    (err) =>
-      `error: version ${chalk.bold(err.version)} is not a valid semantic version. learn more: https://semver.org`,
-  ],
-  [
     NoIdMatchWildcard,
     (err) => `unable to find component ids that match the following: ${err.idsWithWildcards.join(', ')}`,
   ],
@@ -391,7 +367,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
       err.scopePath
     )}.
 1. use the ${chalk.bold('--reset-hard')} flag to clear all data and initialize an empty workspace.
-2. if deleted by mistake, please restore .bitmap and bit.json.
+2. if deleted by mistake, please restore .bitmap and workspace.jsonc.
 3. force workspace initialization without clearing data use the ${chalk.bold('--force')} flag.`,
   ],
 ];

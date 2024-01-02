@@ -4,9 +4,15 @@ import { affix } from '@teambit/base-ui.utils.string.affix';
 /**
  * generates a full url to a preview (overview / docs etc)
  */
-export function toPreviewUrl(component: ComponentModel, previewName?: string, additionalParams?: string | string[]) {
+export function toPreviewUrl(
+  component: ComponentModel,
+  previewName?: string,
+  additionalParams?: string | string[],
+  includeEnvId = true
+) {
   const serverPath = toPreviewServer(component, previewName);
-  const hash = toPreviewHash(component, previewName, additionalParams);
+  const envId = getEnvIdQueryParam(component, includeEnvId);
+  const hash = toPreviewHash(component, previewName, envId, additionalParams);
 
   return `${serverPath}#${hash}`;
 }
@@ -17,7 +23,10 @@ export function toPreviewUrl(component: ComponentModel, previewName?: string, ad
 export function toPreviewServer(component: ComponentModel, previewName?: string) {
   // explicit url is especially important for local workspace, because it's the url of the dev server.
   const explicitUrl = component.server?.url;
-  if (explicitUrl) return explicitUrl;
+  // We use the explicit server url only if there is no host
+  // we prefer host over url, because host is the host of the component server, and url is the dev server url.
+  // this is required for backward compatibility with the cloud.
+  if (explicitUrl && !component.server.host) return explicitUrl;
 
   // Checking specifically with === false, to make sure we fallback to the old url
   if (component.preview?.includesEnvTemplate === false) {
@@ -30,14 +39,35 @@ export function toPreviewServer(component: ComponentModel, previewName?: string)
   return toComponentPreviewUrl(component);
 }
 
+function getEnvIdQueryParam(component: ComponentModel, includeEnvId = true): string | undefined {
+  if (!includeEnvId) return undefined;
+  // This is remote host server, used by cloud, as opposed to local dev server host
+  // which is under component.server.
+  if (component.server?.host || component.server?.basePath) return undefined;
+  // If there is no local dev server url, it means it's a scope and we don't need the env id.
+  if (!component.server?.url) return undefined;
+  return component.environment?.id;
+}
+
 /**
  * The old URL for components which their bundle contains the env template inside
  * @param component
  * @returns
  */
 function toComponentPreviewUrl(component: ComponentModel) {
-  const componentBasedUrl = `/api/${component.id.toString()}/~aspect/preview/`;
+  const prefix = createPrefix(component.server?.basePath, component.server?.host);
+
+  const componentBasedUrl = `${prefix}/${component.id.toString()}/~aspect/preview/`;
   return componentBasedUrl;
+}
+
+function createPrefix(basePath?: string, host?: string) {
+  const actualBasePath = basePath || '/api';
+  const basePathWithSlash = actualBasePath.startsWith('/') ? actualBasePath : `/${actualBasePath}`;
+  const hostWithoutSlash = host?.endsWith('/') ? host.slice(0, -1) : host;
+  const prefix = hostWithoutSlash ? `${hostWithoutSlash}${basePathWithSlash}` : basePathWithSlash;
+  const prefixWithoutSlash = prefix.endsWith('/') ? prefix.slice(0, -1) : prefix;
+  return prefixWithoutSlash;
 }
 
 /**
@@ -53,7 +83,9 @@ function toEnvTemplatePreviewUrl(component: ComponentModel, previewName?: string
   // otherwise might have leftovers when switching between components of the same env.
   // This query param is currently not used yet.
   const search = `compId=${component.id.toString()}`;
-  const envBasedUrl = `/api/${envId}/~aspect/env-template/${previewName}/?${search}`;
+  const prefix = createPrefix(component.server?.basePath, component.server?.host);
+
+  const envBasedUrl = `${prefix}/${envId}/~aspect/env-template/${previewName}/?${search}`;
   return envBasedUrl;
 }
 
@@ -70,13 +102,18 @@ export function toPreviewHash(
    */
   previewName?: string,
   /**
+   * Environment ID of the component
+   */
+  envId?: string,
+  /**
    * extra data to append to query
    */
   queryParams: string | string[] = ''
 ) {
   const previewParam = affix(`preview=`, previewName);
+  const envIdParam = affix(`env=`, envId);
 
-  const hashQuery = [previewParam]
+  const hashQuery = [previewParam, envIdParam]
     .concat(queryParams)
     .filter((x) => !!x) // also removes empty strings
     .join('&');

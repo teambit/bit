@@ -19,13 +19,12 @@ describe('auto tagging functionality', function () {
     let beforeSecondTag: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
 
       helper.fs.appendFile('comp3/index.js');
       const statusOutput = helper.command.runCmd('bit status');
-      expect(statusOutput).to.have.string('components pending to be tagged automatically');
+      expect(statusOutput).to.have.string('components pending auto-tag');
       beforeSecondTag = helper.scopeHelper.cloneLocalScope();
       tagOutput = helper.command.tagWithoutBuild('comp3');
     });
@@ -42,7 +41,11 @@ describe('auto tagging functionality', function () {
       expect(barFoo.dependencies[0].id.version).to.equal('0.0.2');
 
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(barFoo.flattenedDependencies).to.deep.include({ name: 'comp3', version: '0.0.2' });
+      expect(barFoo.flattenedDependencies).to.deep.include({
+        scope: helper.scopes.remote,
+        name: 'comp3',
+        version: '0.0.2',
+      });
     });
     it('should update the dependencies and the flattenedDependencies of the dependent of the dependent with the new versions', () => {
       const barFoo = helper.command.catComponent('comp1@latest');
@@ -52,9 +55,17 @@ describe('auto tagging functionality', function () {
       expect(barFoo.dependencies[0].id.version).to.equal('0.0.2');
 
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(barFoo.flattenedDependencies).to.deep.include({ name: 'comp3', version: '0.0.2' });
+      expect(barFoo.flattenedDependencies).to.deep.include({
+        scope: helper.scopes.remote,
+        name: 'comp3',
+        version: '0.0.2',
+      });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(barFoo.flattenedDependencies).to.deep.include({ name: 'comp2', version: '0.0.2' });
+      expect(barFoo.flattenedDependencies).to.deep.include({
+        scope: helper.scopes.remote,
+        name: 'comp2',
+        version: '0.0.2',
+      });
     });
     it('bit-status should show them all as staged and not modified', () => {
       const status = helper.command.statusJson();
@@ -87,8 +98,6 @@ describe('auto tagging functionality', function () {
     let scopeBeforeTag;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
-      helper.bitJson.addKeyVal('packageManager', 'yarn');
       helper.fs.createFile('bar/a', 'a.js', 'require("../b/b")');
       helper.fs.createFile('bar/b', 'b.js', 'require("../c/c")');
       helper.fs.createFile('bar/c', 'c.js', 'require("../a/a"); console.log("I am C v1")');
@@ -203,7 +212,6 @@ describe('auto tagging functionality', function () {
   describe('with same component as direct and indirect dependent (A in: A => B => C, A => C)', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fs.createFile('bar/a', 'a.js', 'require("../b/b"); require("../c/c");');
       helper.fs.createFile('bar/b', 'b.js', 'require("../c/c")');
       helper.fs.createFile('bar/c', 'c.js', 'console.log("I am C v1")');
@@ -223,8 +231,8 @@ describe('auto tagging functionality', function () {
     });
     it('bit-status should show the auto-tagged pending', () => {
       const status = helper.command.statusJson();
-      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remote}/bar/a@0.0.1`);
-      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remote}/bar/b@0.0.1`);
+      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remote}/bar/a`);
+      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remote}/bar/b`);
     });
     describe('tagging the dependency', () => {
       let tagOutput;

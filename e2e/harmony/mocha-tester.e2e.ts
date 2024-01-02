@@ -15,9 +15,8 @@ describe('Mocha Tester', function () {
   describe('component that use Mocha as a tester', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
-      helper.command.setEnv('comp1', 'teambit.harmony/bit-custom-aspect');
+      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env@0.0.8');
       helper.command.install();
     });
     describe('component without any test file', () => {
@@ -52,11 +51,11 @@ describe('Mocha Tester', function () {
       it('bit test should exit with non-zero code', () => {
         expect(() => helper.command.test()).to.throw();
       });
-      it('bit test should show the failing component via Jest output', () => {
+      it('bit test should show the failing component via Mocha output', () => {
         const output = helper.general.runWithTryCatch('bit test');
         expect(output).to.have.string('1 failing');
       });
-      it('bit build should show the failing component via Jest output', () => {
+      it('bit build should show the failing component via Mocha output', () => {
         const output = helper.general.runWithTryCatch('bit build');
         expect(output).to.have.string('1 failing');
       });
@@ -76,6 +75,51 @@ describe('Mocha Tester', function () {
         const output = helper.general.runWithTryCatch('bit build');
         expect(output).to.have.string('SomeError');
       });
+    });
+    describe('component with an errored before hook', () => {
+      before(() => {
+        helper.fs.outputFile('comp1/comp1.spec.ts', specFileWithErrorInBeforeHook());
+      });
+      it('bit test should exit with non-zero code', () => {
+        expect(() => helper.command.test()).to.throw();
+      });
+      it('bit test should show the error', () => {
+        const output = helper.general.runWithTryCatch('bit test');
+        expect(output).to.have.string('SomeError');
+      });
+      it('bit build should show the error', () => {
+        const output = helper.general.runWithTryCatch('bit build');
+        expect(output).to.have.string('SomeError');
+      });
+    });
+  });
+  describe('typescript component', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponentsTS(1);
+      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env@0.0.8');
+      helper.command.install();
+      helper.fs.outputFile(
+        'comp1/foo.ts',
+        `export function addOne(num: number): number {
+  return num + 1;
+}`
+      );
+      helper.fs.outputFile(
+        'comp1/foo.spec.ts',
+        `import { addOne } from './foo';
+import { expect } from 'chai';
+
+describe('addOne', () => {
+  it('should add one', () => {
+    const result = addOne(1);
+    expect(result).to.equal(2);
+  });
+});`
+      );
+    });
+    it('should not throw an error compilation errors', () => {
+      expect(() => helper.command.test()).to.not.throw();
     });
   });
 });
@@ -110,6 +154,21 @@ function specFileErroringFixture() {
   return `import { expect } from 'chai';
 describe('test', () => {
     throw new Error('SomeError');
+  it('should not reach here', () => {
+    expect(true).to.be.true;
+  });
+});
+`;
+}
+
+function specFileWithErrorInBeforeHook() {
+  return `import { expect } from 'chai';
+
+describe('test', () => {
+  // @ts-ignore
+  before(() => {
+    throw new Error('SomeError');
+  });
   it('should not reach here', () => {
     expect(true).to.be.true;
   });
