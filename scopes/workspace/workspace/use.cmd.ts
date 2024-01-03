@@ -11,7 +11,6 @@ export class UseCmd implements Command {
   alias = '';
   options = [] as CommandOptions;
   loader = true;
-  migration = true;
   remoteOp = true;
 
   constructor(private workspace: Workspace) {}

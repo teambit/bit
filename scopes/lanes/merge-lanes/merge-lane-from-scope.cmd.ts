@@ -51,7 +51,6 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
   ] as CommandOptions;
   loader = true;
   private = true;
-  migration = true;
   remoteOp = true;
 
   constructor(private mergeLanes: MergeLanesMain) {}

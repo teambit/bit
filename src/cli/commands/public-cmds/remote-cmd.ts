@@ -53,7 +53,6 @@ export default class Remote implements LegacyCommand {
   helpUrl = 'reference/scope/remote-scopes';
   alias = '';
   opts = [['g', 'global', 'see globally configured remotes']] as CommandOptions;
-  migration = true;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   commands = [new RemoteAdd(), new RemoteRm()];
 

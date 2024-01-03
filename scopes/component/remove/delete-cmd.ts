@@ -40,7 +40,6 @@ this command marks the components as deleted, and after snap/tag and export they
     ],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   remoteOp = true;
 
   constructor(private remove: RemoveMain, private workspace?: Workspace) {}
