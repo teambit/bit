@@ -131,8 +131,6 @@ export const DEFAULT_DEPENDENCIES_DIR_PATH = `${BITS_DIRNAME}/${DEFAULT_DIR_DEPE
 
 export const COMPONENT_DIR = 'COMPONENT_DIR';
 
-export const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
-
 export const DEFAULT_SEPARATOR = '/';
 
 export const LATEST_BIT_VERSION = 'latest';
