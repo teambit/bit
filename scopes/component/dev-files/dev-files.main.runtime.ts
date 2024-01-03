@@ -194,8 +194,7 @@ export class DevFilesMain {
     const componentId = await this.workspace.resolveComponentId(consumerComponent.id);
     // Do not change the storeInCache=false arg. if you think you need to change it, please talk to Gilad first
     const component = await this.workspace.get(componentId, consumerComponent, true, false, {
-      loadExtensions: false,
-      executeLoadSlot: false,
+      loadExtensions: false
     });
     if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
     const computedDevFiles = await this.computeDevFiles(component);
