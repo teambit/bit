@@ -40,7 +40,6 @@ export class RenameCmd implements Command {
     ['', 'ast', 'EXPERIMENTAL. use ast to transform files instead of regex'],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   remoteOp = true;
 
   constructor(private renaming: RenamingMain) {}

@@ -73,7 +73,6 @@ export class StatusCmd implements Command {
     ['c', 'ignore-circular-dependencies', 'do not check for circular dependencies to get the results quicker'],
   ] as CommandOptions;
   loader = true;
-  migration = true;
 
   constructor(private status: StatusMain) {}
 

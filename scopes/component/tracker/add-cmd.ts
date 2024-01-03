@@ -42,7 +42,6 @@ export class AddCmd implements Command {
     ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;
-  migration = true;
 
   constructor(private tracker: TrackerMain) {}
 

@@ -11,7 +11,6 @@ if source and target snaps are provided, the command will use them to calculate 
   alias = '';
   options = [] as CommandOptions;
   loader = true;
-  migration = true;
   private = true;
 
   constructor(private scope: ScopeMain) {}

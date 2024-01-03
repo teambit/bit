@@ -20,7 +20,6 @@ also, checkout the workspace components according to the restored lane state`;
   ] as CommandOptions;
   loader = true;
   private = true;
-  migration = true;
   remoteOp = true;
 
   constructor(private mergeLanes: MergeLanesMain) {}

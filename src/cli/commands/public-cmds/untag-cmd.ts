@@ -29,7 +29,6 @@ ${WILDCARD_HELP('untag')}`;
     ],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   private = true;
 
   action(): any {
