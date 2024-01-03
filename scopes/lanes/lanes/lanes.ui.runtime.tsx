@@ -280,10 +280,6 @@ export class LanesUI {
         groupByScope={this.lanesHost === 'workspace'}
         mainIcon={this.lanesHost === 'scope' ? mainIcon : undefined}
         useLanes={useLanes}
-        // getHref={(laneId) => {
-        //   if(laneId.isDefault()) return '/'
-        //   return LanesModel.getLaneUrl(laneId);
-        // }}
       />
     );
 
