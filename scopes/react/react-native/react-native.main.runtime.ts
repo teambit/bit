@@ -123,7 +123,7 @@ export class ReactNativeMain {
     envs.registerEnv(reactNativeComposedEnv);
 
     // if (generator) {
-      // generator.registerComponentTemplate(componentTemplates);
+    // generator.registerComponentTemplate(componentTemplates);
     // }
 
     return new ReactNativeMain(react, reactNativeComposedEnv, envs);

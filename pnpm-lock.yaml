@@ -1232,6 +1232,9 @@ importers:
       array-difference:
         specifier: 0.0.2
         version: 0.0.2
+      assert:
+        specifier: 2.0.0
+        version: 2.0.0
       async-mutex:
         specifier: 0.3.1
         version: 0.3.1
@@ -1746,8 +1749,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       npm:
-        specifier: 6.14.17
-        version: 6.14.17
+        specifier: 10.2.5
+        version: 10.2.5
       npm-run-all:
         specifier: 4.1.5
         version: 4.1.5
@@ -1859,6 +1862,9 @@ importers:
       prompt:
         specifier: 1.1.0
         version: 1.1.0
+      punycode:
+        specifier: 2.1.1
+        version: 2.1.1
       puppeteer:
         specifier: 13.7.0
         version: 13.7.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
@@ -2009,6 +2015,9 @@ importers:
       string-format:
         specifier: 0.5.0
         version: 0.5.0
+      string_decoder:
+        specifier: 1.3.0
+        version: 1.3.0
       stringify-package:
         specifier: 1.0.1
         version: 1.0.1
@@ -2078,6 +2087,9 @@ importers:
       unist-util-visit:
         specifier: 2.0.3
         version: 2.0.3
+      url:
+        specifier: 0.11.2
+        version: 0.11.2
       url-join:
         specifier: 4.0.1
         version: 4.0.1
@@ -2087,6 +2099,9 @@ importers:
       utf-8-validate:
         specifier: 5.0.5
         version: 5.0.5
+      util:
+        specifier: 0.12.3
+        version: 0.12.3
       v8-compile-cache:
         specifier: 2.3.0
         version: 2.3.0
@@ -21148,9 +21163,15 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
+      assert:
+        specifier: 2.0.0
+        version: 2.0.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
+      buffer:
+        specifier: 6.0.3
+        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -21205,6 +21226,9 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
+      punycode:
+        specifier: 2.1.1
+        version: 2.1.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -21226,12 +21250,21 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
+      string_decoder:
+        specifier: 1.3.0
+        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
+      url:
+        specifier: 0.11.2
+        version: 0.11.2
+      util:
+        specifier: 0.12.3
+        version: 0.12.3
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -58341,6 +58374,7 @@ packages:
       loose-envify: 1.4.0
       object-assign: 4.1.1
     dev: false
+    bundledDependencies: false
 
   /credentials-by-uri@2.0.0:
     resolution: {integrity: sha512-HptfRWLKfaeewvzKPybPFsR8TRbLSsu5MvHQLc6FWqvIS1CqFHze+IteKQlpLXzx4KwSteZa0MdsN/jEYESVXA==}
@@ -67476,134 +67510,82 @@ packages:
     dependencies:
       path-key: 3.1.1
 
-  /npm@6.14.17:
-    resolution: {integrity: sha512-CxEDn1ydVRPDl4tHrlnq+WevYAhv4GF2AEHzJKQ4prZDZ96IS3Uo6t0Sy6O9kB6XzqkI+J00WfYCqqk0p6IJ1Q==}
-    engines: {node: 6 >=6.2.0 || 8 || >=9.3.0}
+  /npm@10.2.5:
+    resolution: {integrity: sha512-lXdZ7titEN8CH5YJk9C/aYRU9JeDxQ4d8rwIIDsvH3SMjLjHTukB2CFstMiB30zXs4vCrPN2WH6cDq1yHBeJAw==}
+    engines: {node: ^18.17.0 || >=20.5.0}
     hasBin: true
     dev: false
     bundledDependencies:
+      - '@isaacs/string-locale-compare'
+      - '@npmcli/arborist'
+      - '@npmcli/config'
+      - '@npmcli/fs'
+      - '@npmcli/map-workspaces'
+      - '@npmcli/package-json'
+      - '@npmcli/promise-spawn'
+      - '@npmcli/run-script'
+      - '@sigstore/tuf'
       - abbrev
-      - ansicolors
-      - ansistyles
-      - aproba
       - archy
-      - bin-links
-      - bluebird
-      - byte-size
       - cacache
-      - call-limit
-      - chownr
+      - chalk
       - ci-info
       - cli-columns
       - cli-table3
-      - cmd-shim
       - columnify
-      - config-chain
-      - debuglog
-      - detect-indent
-      - detect-newline
-      - dezalgo
-      - editor
-      - figgy-pudding
-      - find-npm-prefix
-      - fs-vacuum
-      - fs-write-stream-atomic
-      - gentle-fs
+      - fastest-levenshtein
+      - fs-minipass
       - glob
       - graceful-fs
-      - has-unicode
       - hosted-git-info
-      - iferr
-      - imurmurhash
-      - infer-owner
-      - inflight
-      - inherits
       - ini
       - init-package-json
       - is-cidr
-      - json-parse-better-errors
-      - JSONStream
-      - lazy-property
-      - libcipm
-      - libnpm
+      - json-parse-even-better-errors
       - libnpmaccess
+      - libnpmdiff
+      - libnpmexec
+      - libnpmfund
       - libnpmhook
       - libnpmorg
+      - libnpmpack
+      - libnpmpublish
       - libnpmsearch
       - libnpmteam
-      - libnpx
-      - lock-verify
-      - lockfile
-      - lodash._baseindexof
-      - lodash._baseuniq
-      - lodash._bindcallback
-      - lodash._cacheindexof
-      - lodash._createcache
-      - lodash._getnative
-      - lodash.clonedeep
-      - lodash.restparam
-      - lodash.union
-      - lodash.uniq
-      - lodash.without
-      - lru-cache
-      - meant
-      - mississippi
-      - mkdirp
-      - move-concurrently
+      - libnpmversion
+      - make-fetch-happen
+      - minimatch
+      - minipass
+      - minipass-pipeline
+      - ms
       - node-gyp
       - nopt
       - normalize-package-data
       - npm-audit-report
-      - npm-cache-filename
       - npm-install-checks
-      - npm-lifecycle
       - npm-package-arg
-      - npm-packlist
       - npm-pick-manifest
       - npm-profile
       - npm-registry-fetch
       - npm-user-validate
       - npmlog
-      - once
-      - opener
-      - osenv
+      - p-map
       - pacote
-      - path-is-inside
-      - promise-inflight
+      - parse-conflict-json
+      - proc-log
       - qrcode-terminal
-      - query-string
-      - qw
-      - read-cmd-shim
-      - read-installed
-      - read-package-json
-      - read-package-tree
       - read
-      - readable-stream
-      - readdir-scoped-modules
-      - request
-      - retry
-      - rimraf
-      - safe-buffer
       - semver
-      - sha
-      - slide
-      - sorted-object
-      - sorted-union-stream
+      - spdx-expression-parse
       - ssri
-      - stringify-package
+      - strip-ansi
+      - supports-color
       - tar
       - text-table
       - tiny-relative-date
-      - uid-number
-      - umask
-      - unique-filename
-      - unpipe
-      - update-notifier
-      - uuid
-      - validate-npm-package-license
+      - treeverse
       - validate-npm-package-name
       - which
-      - worker-farm
       - write-file-atomic
 
   /npmlog@4.1.2:

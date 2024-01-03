@@ -1,4 +1,3 @@
-
 # Docker 容器运行 bit harmony
 
 _这些 Docker 容器不处理旧版的 bit (pre-harmony),对于旧版的 bit 请参考 [bit-docker](https://github.com/teambit/bit-docker)_
@@ -26,7 +25,7 @@ Docker 镜像托管在 Dockerhub，链接是 [Dockerfile-bit](https://hub.docker
 1. `docker run -it bitcli/bit:latest /bin/bash`
 2. `bit -v` 查看 bit 版本以确保工作正常。
 
-### 运行 server 容器 
+### 运行 server 容器
 
 1. `docker run -it -p {host-port}:3000 bitcli/bit-server:latest` - 将 `{host-port}` 替换为主机要使用的端口，例如 5000。
 2. 浏览 `http://localhost:{host-port}` 并确保可以看到 bit 的界面。

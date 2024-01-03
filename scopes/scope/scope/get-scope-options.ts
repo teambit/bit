@@ -12,5 +12,5 @@ export type GetScopeOptions = {
   PaneWrapper?: ComponentType<{ children: ReactNode }>;
   overrideDrawers?: DrawerType[];
   onSidebarToggle?: (callback: () => void) => void;
-  getComponentUrl?: ComponentUrlResolver
+  getComponentUrl?: ComponentUrlResolver;
 };
