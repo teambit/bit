@@ -8,11 +8,9 @@ import { promisify } from 'util';
 import { PreviewAspect } from './preview.aspect';
 import { createWebpackConfig, clearConsole } from './pre-bundle-utils';
 
-export const PRE_BUNDLE_PREVIEW_RUNTIME_NAME = 'preview';
-export const PRE_BUNDLE_PREVIEW_TASK_NAME = 'PreBundlePreview';
-export const PRE_BUNDLE_PREVIEW_ID = PreviewAspect.id;
-export const PRE_BUNDLE_PREVIEW_DIR = 'ui-bundle';
-export const PRE_BUNDLE_PREVIEW_PUBLIC_DIR = 'public/bit-preview';
+export const RUNTIME_NAME = 'preview';
+export const PUBLIC_DIR = 'public/bit-preview';
+export const UIROOT_ASPECT_ID = 'teambit.workspace/workspace';
 
 const ENTRY_CONTENT_TEMPLATE = `__IMPORTS__
 
@@ -92,13 +90,12 @@ export const generatePreBundlePreviewEntry = (
 };
 
 export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[], customOutputDir?: string) {
-  const outputDir = customOutputDir || resolve(PRE_BUNDLE_PREVIEW_PUBLIC_DIR);
-  const uiRootAspectId = 'teambit.workspace/workspace';
+  const outputDir = customOutputDir || resolve(PUBLIC_DIR);
   const mainEntry = generatePreBundlePreviewEntry(
     resolvedAspects,
-    uiRootAspectId,
-    PRE_BUNDLE_PREVIEW_RUNTIME_NAME,
-    PRE_BUNDLE_PREVIEW_ID,
+    UIROOT_ASPECT_ID,
+    RUNTIME_NAME,
+    PreviewAspect.id,
     __dirname
   );
   const config = createWebpackConfig(outputDir, mainEntry);

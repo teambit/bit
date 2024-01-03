@@ -5,8 +5,8 @@ import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { merge } from 'webpack-merge';
 import { fallbacksProvidePluginConfig } from '@teambit/webpack';
-import createBaseConfig from './webpack.base.config';
 import { html } from './html';
+import createBaseConfig from './webpack.base.config';
 
 export default function createWebpackConfig(
   outputDir: string,
@@ -22,7 +22,6 @@ export default function createWebpackConfig(
   return combined;
 }
 
-// function createBrowserConfig(outputDir: string, title: string, publicDir: string, entryFiles: string[]) {
 function createBrowserConfig(outputDir: string, title: string, publicDir: string) {
   const browserConfig: Configuration = {
     output: {

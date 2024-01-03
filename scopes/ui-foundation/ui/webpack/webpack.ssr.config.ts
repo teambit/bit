@@ -16,7 +16,6 @@ export default function createWebpackConfig(
   return combined;
 }
 
-// function createSsrConfig(workspaceDir: string, publicDir: string, entryFiles: string[]) {
 function createSsrConfig(workspaceDir: string, publicDir: string) {
   const ssrConfig: Configuration = {
     target: 'node',

@@ -1,7 +1,3 @@
-/**
- * @fileoverview
- */
-
 import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs-extra';
 import { UIRoot } from '@teambit/ui';

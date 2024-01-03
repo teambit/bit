@@ -62,9 +62,9 @@ import { ComponentPreviewRoute } from './component-preview.route';
 import { previewSchema } from './preview.graphql';
 import { PreviewAssetsRoute } from './preview-assets.route';
 import { PreviewService } from './preview.service';
-import { buildPreBundlePreview, generateBundlePreviewEntry } from './pre-bundle';
+import { PUBLIC_DIR, RUNTIME_NAME, buildPreBundlePreview, generateBundlePreviewEntry } from './pre-bundle';
+import { BUNDLE_DIR, PreBundlePreviewTask } from './pre-bundle.task';
 import { createBundleHash, getBundlePath, readBundleHash } from './pre-bundle-utils';
-import { PreBundlePreviewTask } from './pre-bundle.task';
 
 const noopResult = {
   results: [],
@@ -692,16 +692,18 @@ export class PreviewMain {
     const { rebuild, skipUiBuild } = this.ui.runtimeOptions;
 
     const [name, uiRoot] = this.getUi();
-    const currentBundleHash = await createBundleHash(uiRoot, 'preview');
-    const preBundleHash = readBundleHash(PreviewAspect.id, 'ui-bundle', '');
-    const workspaceBundleDir = join(uiRoot.path, 'public/bit-preview');
-    const lastBundleHash = await this.cache.get(`${uiRoot.path}|preview`);
+    const cacheKey = `${uiRoot.path}|${RUNTIME_NAME}`;
+    const currentBundleHash = await createBundleHash(uiRoot, RUNTIME_NAME);
+    const preBundleHash = readBundleHash(PreviewAspect.id, BUNDLE_DIR, '');
+    const workspaceBundleDir = join(uiRoot.path, PUBLIC_DIR);
+    const lastBundleHash = await this.cache.get(cacheKey);
 
     let bundlePath = '';
 
+    // ensure the pre-bundle is ready
     if (!rebuild && !existsSync(workspaceBundleDir) && (currentBundleHash === preBundleHash || skipUiBuild)) {
       // use pre-bundle
-      bundlePath = getBundlePath(PreviewAspect.id, 'ui-bundle', '') as string;
+      bundlePath = getBundlePath(PreviewAspect.id, BUNDLE_DIR, '') as string;
     } else if (!rebuild && existsSync(workspaceBundleDir) && (currentBundleHash === lastBundleHash || skipUiBuild)) {
       // use workspace bundle
       bundlePath = workspaceBundleDir;
@@ -712,9 +714,10 @@ export class PreviewMain {
 
       await buildPreBundlePreview(filteredAspects);
       bundlePath = workspaceBundleDir;
-      await this.cache.set(`${uiRoot.path}|preview`, currentBundleHash);
+      await this.cache.set(cacheKey, currentBundleHash);
     }
 
+    // prepare the runtime entry
     const previewRuntime = await generateBundlePreviewEntry(name, bundlePath, this.harmony.config.toObject());
 
     return previewRuntime;

@@ -1,21 +1,17 @@
-/* eslint-disable no-console */
 import { join } from 'path';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
 import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { UIRoot, UiMain } from '@teambit/ui';
-import { createBundleHash } from './pre-bundle-utils';
-import { buildPreBundlePreview } from './pre-bundle';
+import { generateBundleHash, getBundleArtifactDef } from './pre-bundle-utils';
+import { RUNTIME_NAME, buildPreBundlePreview } from './pre-bundle';
 
-export const UIROOT_ASPECT_ID = 'teambit.workspace/workspace';
-export const PRE_BUNDLE_PREVIEW_TASK_NAME = 'PreBundlePreview';
-export const PRE_BUNDLE_PREVIEW_DIR = 'ui-bundle';
-export const PRE_BUNDLE_PREVIEW_HASH_FILENAME = '.hash';
+export const BUNDLE_TASK_NAME = 'PreBundlePreview';
+export const BUNDLE_DIR = 'ui-bundle';
 
 export class PreBundlePreviewTask implements BuildTask {
   aspectId = 'teambit.preview/preview';
-  name = PRE_BUNDLE_PREVIEW_TASK_NAME;
+  name = BUNDLE_TASK_NAME;
   location: TaskLocation = 'end';
 
   constructor(private ui: UiMain, private logger: Logger) {}
@@ -29,7 +25,7 @@ export class PreBundlePreviewTask implements BuildTask {
     }
 
     try {
-      const outputPath = join(capsule.path, 'artifacts', PRE_BUNDLE_PREVIEW_DIR);
+      const outputPath = join(capsule.path, 'artifacts', BUNDLE_DIR);
       this.logger.info(`Generating UI bundle at ${outputPath}...`);
       const [, uiRoot] = this.ui.getUi() as [string, UIRoot];
       const resolvedAspects = await uiRoot.resolveAspects('preview');
@@ -40,15 +36,9 @@ export class PreBundlePreviewTask implements BuildTask {
       throw new Error('Generating UI bundle failed');
     }
 
-    const artifacts = [
-      {
-        name: PRE_BUNDLE_PREVIEW_DIR,
-        globPatterns: [`${join('artifacts', PRE_BUNDLE_PREVIEW_DIR)}/**`],
-      },
-    ];
     return {
       componentsResults: [],
-      artifacts,
+      artifacts: [getBundleArtifactDef(BUNDLE_DIR, '')],
     };
   }
 
@@ -57,9 +47,6 @@ export class PreBundlePreviewTask implements BuildTask {
     if (!maybeUiRoot) throw new Error('no uiRoot found');
 
     const [, uiRoot] = maybeUiRoot;
-    const hash = await createBundleHash(uiRoot, 'preview');
-
-    if (!existsSync(outputPath)) mkdirSync(outputPath);
-    writeFileSync(join(outputPath, PRE_BUNDLE_PREVIEW_HASH_FILENAME), hash);
+    await generateBundleHash(uiRoot, RUNTIME_NAME, outputPath);
   }
 }
