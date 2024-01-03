@@ -15,7 +15,6 @@ import { Configuration, ProvidePlugin } from 'webpack';
 import { merge } from 'webpack-merge';
 import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
-import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 
 /// webpack config
 
@@ -69,13 +68,7 @@ function createPreBundleConfig(outputDir: string, entryFile: string) {
       },
     },
     externalsType: 'commonjs',
-    externals: [
-      'react',
-      'react-dom',
-      '@mdx-js/react',
-      '@teambit/mdx.ui.mdx-scope-context',
-      // '@teambit/preview.modules.preview-modules',
-    ],
+    externals: ['react', 'react-dom', '@mdx-js/react', '@teambit/mdx.ui.mdx-scope-context'],
     plugins: [
       // Generate an asset manifest file with the following content:
       // - "files" key: Mapping of all asset filenames to their corresponding
@@ -97,25 +90,6 @@ function createPreBundleConfig(outputDir: string, entryFile: string) {
             entrypoints: entrypointFiles,
           } as Record<string, string>;
         },
-      }),
-
-      // Generate a service worker script that will precache, and keep up to date,
-      // the HTML & assets that are part of the webpack build.
-      new WorkboxWebpackPlugin.GenerateSW({
-        clientsClaim: true,
-        maximumFileSizeToCacheInBytes: 5000000,
-        exclude: [/\.map$/, /asset-manifest\.json$/],
-        // importWorkboxFrom: 'cdn',
-        navigateFallback: 'public/index.html',
-        navigateFallbackDenylist: [
-          // Exclude URLs starting with /_, as they're likely an API call
-          new RegExp('^/_'),
-          // Exclude any URLs whose last part seems to be a file extension
-          // as they're likely a resource and not a SPA route.
-          // URLs containing a "?" character won't be blacklisted as they're likely
-          // a route with query params (e.g. auth callbacks).
-          new RegExp('/[^/?]+\\.[^/]+$'),
-        ],
       }),
 
       new ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
@@ -178,21 +152,11 @@ export function getBundlePath(bundleId: string, bundleDir: string, aspectDir: st
   try {
     const dirFromBvms = getAspectDirFromBvm(bundleId);
     const bundlePath = join(dirFromBvms, getBundleArtifactDirectory(bundleDir, aspectDir));
-    // // eslint-disable-next-line no-console
-    // console.log('\n[getBundlePath]', {
-    //   bundleId,
-    //   bundleDir,
-    //   aspectDir,
-    //   dirFromBvms,
-    //   bundlePath,
-    // })
     if (!existsSync(bundlePath)) {
       return undefined;
     }
     return bundlePath;
   } catch (err) {
-    // TODO: logger -> move external
-    // this.logger.error(`getBundlePath, getAspectDirFromBvm failed with err: ${err}`);
     return undefined;
   }
 }

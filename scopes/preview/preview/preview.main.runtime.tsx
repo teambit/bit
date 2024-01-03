@@ -20,7 +20,7 @@ import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
 import { uniq } from 'lodash';
-import { writeFileSync, existsSync, mkdirSync, readFileSync } from 'fs-extra';
+import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
 import { join } from 'path';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { AspectLoaderAspect, getAspectDir, getAspectDirFromBvm } from '@teambit/aspect-loader';
@@ -682,7 +682,6 @@ export class PreviewMain {
       this.executionRefs.set(ctxId, new ExecutionRef(context));
     });
 
-    // const previewRuntime = await this.writePreviewRuntime(context);
     const previewRuntime = await this.writePreviewEntry(context);
     const linkFiles = await this.updateLinkFiles(context.components, context);
 
@@ -697,32 +696,17 @@ export class PreviewMain {
     const preBundleHash = readBundleHash(PreviewAspect.id, 'ui-bundle', '');
     const workspaceBundleDir = join(uiRoot.path, 'public/bit-preview');
     const lastBundleHash = await this.cache.get(`${uiRoot.path}|preview`);
-    // eslint-disable-next-line no-console
-    console.log({
-      rebuild,
-      skipUiBuild,
-      currentBundleHash,
-      lastBundleHash,
-      preBundleHash,
-      workspaceBundleDir,
-    });
 
     let bundlePath = '';
 
     if (!rebuild && !existsSync(workspaceBundleDir) && (currentBundleHash === preBundleHash || skipUiBuild)) {
       // use pre-bundle
-      // eslint-disable-next-line no-console
-      console.log('\n[use pre bundle]');
       bundlePath = getBundlePath(PreviewAspect.id, 'ui-bundle', '') as string;
     } else if (!rebuild && existsSync(workspaceBundleDir) && (currentBundleHash === lastBundleHash || skipUiBuild)) {
       // use workspace bundle
-      // eslint-disable-next-line no-console
-      console.log('\n[use workspace bundle]');
       bundlePath = workspaceBundleDir;
     } else {
       // do build
-      // eslint-disable-next-line no-console
-      console.log('\n[do build]');
       const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
       const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
 
@@ -731,18 +715,8 @@ export class PreviewMain {
       await this.cache.set(`${uiRoot.path}|preview`, currentBundleHash);
     }
 
-    const previewRuntime = await generateBundlePreviewEntry(
-      name,
-      bundlePath,
-      // harmonyConfig
-      this.harmony.config.toObject()
-    );
-    // // eslint-disable-next-line no-console
-    // console.log('\n[writePreviewEntry]', {
-    //   bundlePath,
-    //   uiPath: uiRoot.path,
-    //   previewRuntime,
-    // });
+    const previewRuntime = await generateBundlePreviewEntry(name, bundlePath, this.harmony.config.toObject());
+
     return previewRuntime;
   }
 
@@ -800,23 +774,6 @@ export class PreviewMain {
     const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
     const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
     const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id);
-    // eslint-disable-next-line no-console
-    console.log('\n[writePreviewRuntime 3]', {
-      name,
-      runtimeName: 'preview',
-      previewAspectId: PreviewAspect.id,
-      filePath,
-    });
-    try {
-      const contents = readFileSync(filePath, 'utf-8');
-      // eslint-disable-next-line no-console
-      console.log(contents);
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.log({ e });
-    }
-    // eslint-disable-next-line no-console
-    // console.log('[over]');
     return filePath;
   }
 
@@ -1049,10 +1006,6 @@ export class PreviewMain {
         entry: preview.getPreviewTarget.bind(preview),
       },
     ]);
-
-    // // eslint-disable-next-line no-console
-    // console.log('\n[[registering ui-bundle task (preview)]]');
-    // builder.registerBuildTasks([new PreBundlePreviewTask(uiMain, logger)]);
 
     if (!config.disabled)
       builder.registerBuildTasks([

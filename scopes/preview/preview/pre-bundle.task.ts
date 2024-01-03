@@ -21,7 +21,6 @@ export class PreBundlePreviewTask implements BuildTask {
   constructor(private ui: UiMain, private logger: Logger) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
-    // console.log('\n[PreBundlePreviewTask.execute]');
     const capsule: Capsule | undefined = context.capsuleNetwork.seedersCapsules.find(
       (c) => c.component.id.toStringWithoutVersion() === 'teambit.preview/preview'
     );
@@ -29,28 +28,24 @@ export class PreBundlePreviewTask implements BuildTask {
       return { componentsResults: [] };
     }
 
-    // console.log('\n[PreBundlePreviewTask.execute] capsule.path', capsule.path);
     try {
       const outputPath = join(capsule.path, 'artifacts', PRE_BUNDLE_PREVIEW_DIR);
       this.logger.info(`Generating UI bundle at ${outputPath}...`);
       const [, uiRoot] = this.ui.getUi() as [string, UIRoot];
       const resolvedAspects = await uiRoot.resolveAspects('preview');
-      // console.log('\n[PreBundlePreviewTask.execute] buildPreBundlePreview');
       await buildPreBundlePreview(resolvedAspects, outputPath);
-      // console.log('\n[PreBundlePreviewTask.execute] generateHash');
       await this.generateHash(outputPath);
-      // console.log('\n[PreBundlePreviewTask.execute] done');
     } catch (error) {
       this.logger.error('Generating UI bundle failed', error);
       throw new Error('Generating UI bundle failed');
     }
+
     const artifacts = [
       {
         name: PRE_BUNDLE_PREVIEW_DIR,
         globPatterns: [`${join('artifacts', PRE_BUNDLE_PREVIEW_DIR)}/**`],
       },
     ];
-    // console.log('\n[PreBundlePreviewTask.execute] artifacts', artifacts);
     return {
       componentsResults: [],
       artifacts,
