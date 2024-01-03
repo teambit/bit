@@ -18,7 +18,6 @@ export class DeprecateCmd implements Command {
     ],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   remoteOp = true;
   helpUrl = 'reference/components/removing-components';
 

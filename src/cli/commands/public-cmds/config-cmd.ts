@@ -85,7 +85,6 @@ export default class Config implements LegacyCommand {
   alias = '';
   commands = [new ConfigSet(), new ConfigDel(), new ConfigGet(), new ConfigList()];
   opts = [];
-  migration = false;
 
   action(): Promise<any> {
     return config.list();

@@ -33,7 +33,6 @@ export class RemoveCmd implements Command {
     ['s', 'silent', 'skip confirmation'],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   remoteOp = true;
 
   constructor(private remove: RemoveMain, private workspace?: Workspace) {}

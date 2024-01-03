@@ -19,7 +19,6 @@ export default class _Show implements LegacyCommand {
     compressResponse = clientSupportCompressedCommand(headers.version);
     checkVersionCompatibilityOnTheServer(headers.version);
     // validateVersion(headers)
-    logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
     return scopeShow(scopePath, payload);
   }

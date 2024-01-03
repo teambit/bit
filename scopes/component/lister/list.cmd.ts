@@ -27,7 +27,6 @@ export class ListCmd implements Command {
     ['n', 'namespace <string>', "show only components in the specified namespace/s e.g. '-n ui' or '*/ui'"],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   skipWorkspace = true;
   remoteOp = true;
 

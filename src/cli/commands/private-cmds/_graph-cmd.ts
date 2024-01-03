@@ -18,7 +18,6 @@ export default class _Graph implements LegacyCommand {
     const { payload, headers } = unpackCommand(args);
     compressResponse = clientSupportCompressedCommand(headers.version);
     checkVersionCompatibilityOnTheServer(headers.version);
-    logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
     return graph(scopePath, payload);
   }
