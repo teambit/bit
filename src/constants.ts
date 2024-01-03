@@ -125,10 +125,6 @@ export const NODE_PATH_COMPONENT_SEPARATOR = '.';
 
 export const DEFAULT_COMPONENTS_DIR_PATH = `${BITS_DIRNAME}/{name}`;
 
-export const DEFAULT_DIR_DEPENDENCIES = '.dependencies';
-
-export const DEFAULT_DEPENDENCIES_DIR_PATH = `${BITS_DIRNAME}/${DEFAULT_DIR_DEPENDENCIES}`;
-
 export const COMPONENT_DIR = 'COMPONENT_DIR';
 
 export const DEFAULT_SEPARATOR = '/';
@@ -148,12 +144,6 @@ export const NULL_BYTE = '\u0000';
 export const SPACE_DELIMITER = ' ';
 
 export const VERSION_DELIMITER = '@';
-
-export const DEPENDENCIES_DIR = 'dependencies';
-
-export const DEFAULT_REMOTES = {};
-
-export const DEFAULT_DEPENDENCIES = {};
 
 export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.dots : cliSpinners.dots12;
 

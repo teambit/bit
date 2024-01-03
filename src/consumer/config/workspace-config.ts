@@ -1,6 +1,6 @@
 import { pickBy } from 'lodash';
 import R from 'ramda';
-import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_DEPENDENCIES_DIR_PATH, DEFAULT_PACKAGE_MANAGER } from '../../constants';
+import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_PACKAGE_MANAGER } from '../../constants';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import AbstractConfig from './abstract-config';
 import { InvalidPackageJson } from './exceptions';
@@ -30,7 +30,6 @@ export type WorkspaceConfigResetFunction = (dirPath: PathOsBasedAbsolute, resetH
 export type WorkspaceConfigProps = {
   lang?: string;
   componentsDefaultDirectory?: string;
-  dependenciesDirectory?: string;
   extensions?: ExtensionDataList;
   packageManager?: PackageManagerClients;
   packageManagerArgs?: string[];
@@ -42,7 +41,6 @@ export type WorkspaceConfigProps = {
 
 export default class WorkspaceConfig extends AbstractConfig {
   componentsDefaultDirectory: string;
-  dependenciesDirectory: string;
   packageManager: PackageManagerClients;
   packageManagerArgs: string[] | undefined; // package manager client to use
   packageManagerProcessOptions: Record<string, any> | undefined; // package manager process options
@@ -72,7 +70,6 @@ export default class WorkspaceConfig extends AbstractConfig {
   constructor({
     lang,
     componentsDefaultDirectory = DEFAULT_COMPONENTS_DIR_PATH,
-    dependenciesDirectory = DEFAULT_DEPENDENCIES_DIR_PATH,
     extensions,
     packageManager = DEFAULT_PACKAGE_MANAGER,
     packageManagerArgs,
@@ -90,7 +87,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     if (!componentsDefaultDirectory.includes('{name}')) {
       this.componentsDefaultDirectory = `${this.componentsDefaultDirectory}/{name}`;
     }
-    this.dependenciesDirectory = dependenciesDirectory;
     this.packageManager = packageManager;
     this.packageManagerArgs = packageManagerArgs;
     this.packageManagerProcessOptions = packageManagerProcessOptions;
@@ -104,7 +100,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     const consumerObject = {
       ...superObject,
       componentsDefaultDirectory: this.componentsDefaultDirectory,
-      dependenciesDirectory: this.dependenciesDirectory,
       packageManager: this.packageManager,
       packageManagerArgs: this.packageManagerArgs,
       packageManagerProcessOptions: this.packageManagerProcessOptions,
@@ -114,7 +109,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     };
 
     const isPropDefault = (val, key) => {
-      if (key === 'dependenciesDirectory') return val !== DEFAULT_DEPENDENCIES_DIR_PATH;
       if (key === 'useWorkspaces') return val !== DEFAULT_USE_WORKSPACES;
       if (key === 'manageWorkspaces') return val !== DEFAULT_MANAGE_WORKSPACES;
       if (key === 'resolveModules') return !R.isEmpty(val);

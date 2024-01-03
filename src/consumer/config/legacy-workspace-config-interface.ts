@@ -22,7 +22,6 @@ export interface ILegacyWorkspaceConfig {
   _useWorkspaces?: boolean;
   dependencyResolver?: DependencyResolverExtensionProps;
   packageManager?: PackageManagerClients;
-  _dependenciesDirectory?: string;
   componentsDefaultDirectory?: string;
   _manageWorkspaces?: boolean;
   path: string;
