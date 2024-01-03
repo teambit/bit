@@ -1,4 +1,3 @@
-import { migrate } from '../../../api/consumer';
 import { latestVersions } from '../../../api/scope';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
@@ -21,9 +20,7 @@ export default class Latest implements LegacyCommand {
     checkVersionCompatibilityOnTheServer(headers.version);
     logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
-    return migrate(scopePath, false).then(() => {
-      return latestVersions(scopePath, payload);
-    });
+    return latestVersions(scopePath, payload);
   }
 
   report(str: string): string {

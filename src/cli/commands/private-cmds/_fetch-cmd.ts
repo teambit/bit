@@ -1,4 +1,3 @@
-import { migrate } from '../../../api/consumer';
 import { fetch } from '../../../api/scope';
 import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS, FETCH_TYPE } from '../../../api/scope/lib/fetch';
 import logger from '../../../logger/logger';
@@ -46,9 +45,7 @@ export default class Fetch implements LegacyCommand {
       includeArtifacts,
       allowExternal: false, // not relevant for SSH. only used in http for lanes.
     };
-    return migrate(scopePath, false)
-      .then(() => fetch(scopePath, payload, fetchOptions, headers))
-      .then((readable) => ObjectList.fromReadableStream(readable));
+    return fetch(scopePath, payload, fetchOptions, headers).then((readable) => ObjectList.fromReadableStream(readable));
   }
 
   report(objectList: ObjectList): string {

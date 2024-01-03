@@ -1,4 +1,3 @@
-import { migrate } from '../../../api/consumer';
 import { scopeShow } from '../../../api/scope';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
@@ -22,9 +21,7 @@ export default class _Show implements LegacyCommand {
     // validateVersion(headers)
     logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
-    return migrate(scopePath, false).then(() => {
-      return scopeShow(scopePath, payload);
-    });
+    return scopeShow(scopePath, payload);
   }
 
   report(str: string): string {

@@ -8,8 +8,6 @@ import { isTag } from '@teambit/component-version';
 import { Analytics } from '../analytics/analytics';
 import { BitId } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
-import loader from '../cli/loader';
-import { BEFORE_MIGRATION } from '../cli/loader/loader-messages';
 import {
   BIT_GIT_DIR,
   BIT_HIDDEN_DIR,
@@ -28,7 +26,6 @@ import { ExtensionDataEntry } from '../consumer/config';
 import Consumer from '../consumer/consumer';
 import GeneralError from '../error/general-error';
 import logger from '../logger/logger';
-import getMigrationVersions, { MigrationResult } from '../migration/migration-helper';
 import { pathHasAll, findScopePath, readDirSyncIgnoreDsStore } from '../utils';
 import { PathOsBasedAbsolute } from '../utils/path';
 import RemoveModelComponents from './component-ops/remove-model-components';
@@ -37,8 +34,6 @@ import ComponentVersion from './component-version';
 import { ComponentNotFound, ScopeNotFound } from './exceptions';
 import DependencyGraph from './graph/scope-graph';
 import Lanes from './lanes/lanes';
-import migrate, { ScopeMigrationResult } from './migrations/scope-migrator';
-import migratonManifest from './migrations/scope-migrator-manifest';
 import { ModelComponent, Symlink, Version } from './models';
 import Lane from './models/lane';
 import { ComponentLog } from './models/model-component';
@@ -241,56 +236,6 @@ export default class Scope {
 
   getBitPathInComponentsDir(id: BitId): string {
     return pathLib.join(this.getComponentsPath(), id.toFullPath());
-  }
-
-  /**
-   * Running migration process for scope to update the stores (bit objects) to the current version
-   *
-   * @param {any} verbose - print debug logs
-   * @returns {Object} - wether the process run and wether it successeded
-   * @memberof Consumer
-   */
-  async migrate(verbose: boolean): Promise<MigrationResult> {
-    logger.trace('scope.migrate, running migration process for scope');
-    if (verbose) console.log('running migration process for scope'); // eslint-disable-line
-    // We start to use this process after version 0.10.9, so we assume the scope is in the last production version
-    const scopeVersion = this.scopeJson.get('version') || '0.10.9';
-    if (semver.gte(scopeVersion, BIT_VERSION)) {
-      const upToDateMsg = 'scope version is up to date';
-      if (verbose) console.log(upToDateMsg); // eslint-disable-line
-      logger.trace(`scope.migrate, ${upToDateMsg}`);
-      return {
-        run: false,
-      };
-    }
-    loader.start(BEFORE_MIGRATION);
-    logger.debugAndAddBreadCrumb(
-      'scope.migrate',
-      `start scope migration. scope version ${scopeVersion}, bit version ${BIT_VERSION}`
-    );
-    const migrations = getMigrationVersions(BIT_VERSION, scopeVersion, migratonManifest, verbose);
-    const rawObjects = migrations.length ? await this.objects.listRawObjects() : [];
-    // @ts-ignore
-    const resultObjects: ScopeMigrationResult = await migrate(migrations, rawObjects, verbose);
-    if (!R.isEmpty(resultObjects.newObjects) || !R.isEmpty(resultObjects.refsToRemove)) {
-      // Add the new / updated objects
-      this.objects.addMany(resultObjects.newObjects);
-      // Remove old objects
-      this.objects.removeManyObjects(resultObjects.refsToRemove);
-      // Persists new / remove objects
-      const validateBeforePersist = false;
-      await this.objects.persist(validateBeforePersist);
-    }
-
-    // Update the scope version
-    this.scopeJson.set('version', BIT_VERSION);
-    logger.debugAndAddBreadCrumb('scope.migrate', `updating scope version to version ${BIT_VERSION}`);
-    await this.scopeJson.write(this.getPath());
-    loader.stop();
-    return {
-      run: true,
-      success: true,
-    };
   }
 
   describe(): ScopeDescriptor {
