@@ -688,9 +688,6 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {}
       }
-    },
-    "teambit.preview/preview": {
-      "onlyOverview": true
     }
   }
 }
