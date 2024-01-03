@@ -32,7 +32,6 @@ export default class ResetCmd implements Command {
     ['', 'never-exported', 'reset only components that were never exported'],
   ] as CommandOptions;
   loader = true;
-  migration = true;
 
   constructor(private snapping: SnappingMain) {}
 

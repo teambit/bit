@@ -1,6 +1,4 @@
-import { migrate } from '../../../api/consumer';
 import { put } from '../../../api/scope';
-import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
 import { ObjectList } from '../../../scope/objects/object-list';
 import { buildCommandMessage, fromBase64, packCommand, unpackCommand } from '../../../utils';
@@ -28,13 +26,8 @@ export default class Put implements LegacyCommand {
         })
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         .on('end', () => {
-          logger.info('Checking if a migration is needed');
-          const scopePath = fromBase64(path);
           const objectList = ObjectList.fromJsonString(data);
-          return migrate(scopePath, false)
-            .then(() => {
-              return put({ objectList, path: fromBase64(path) }, payload, headers);
-            })
+          return put({ objectList, path: fromBase64(path) }, payload, headers)
             .then(resolve)
             .catch(reject);
         });

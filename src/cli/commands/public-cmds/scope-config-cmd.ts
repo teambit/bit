@@ -79,7 +79,6 @@ export default class ScopeConfig implements LegacyCommand {
   alias = '';
   commands = [new ScopeConfigSet(), new ScopeConfigDel(), new ScopeConfigGet(), new ScopeConfigList()];
   opts = [];
-  migration = true;
 
   action(): Promise<any> {
     return scopeConfig.list();

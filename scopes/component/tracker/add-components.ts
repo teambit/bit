@@ -78,14 +78,9 @@ export type AddProps = {
   shouldHandleOutOfSync?: boolean;
   env?: string;
 };
-// This is the contxt of the add operation. By default, the add is executed in the same folder in which the consumer is located and it is the process.cwd().
-// In that case , give the value false to overridenConsumer .
-// There is a possibility to execute add when the process.cwd() is different from the project directory. In that case , when add is done on a folder wchih is
-// Different from process.cwd(), transfer true.
-// Required for determining if the paths are relative to consumer or to process.cwd().
+
 export type AddContext = {
   workspace: Workspace;
-  alternateCwd?: string;
 };
 
 export default class AddComponents {
@@ -102,17 +97,15 @@ export default class AddComponents {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   ignoreList: string[];
   gitIgnore: any;
-  alternateCwd: string | null | undefined;
   addedComponents: AddResult[];
   defaultScope?: string; // helpful for out-of-sync
   config?: Config;
   shouldHandleOutOfSync?: boolean; // only bit-add (not bit-create/new) should handle out-of-sync scenario
   constructor(context: AddContext, addProps: AddProps) {
-    this.alternateCwd = context.alternateCwd;
     this.workspace = context.workspace;
     this.consumer = context.workspace.consumer;
     this.bitMap = this.consumer.bitMap;
-    this.componentPaths = this.joinConsumerPathIfNeeded(addProps.componentPaths);
+    this.componentPaths = addProps.componentPaths;
     this.id = addProps.id;
     this.main = addProps.main;
     this.namespace = addProps.namespace;
@@ -127,17 +120,6 @@ export default class AddComponents {
     this.defaultScope = addProps.defaultScope;
     this.config = addProps.config;
     this.shouldHandleOutOfSync = addProps.shouldHandleOutOfSync;
-  }
-
-  joinConsumerPathIfNeeded(paths: PathOrDSL[]): PathOrDSL[] {
-    if (paths.length > 0) {
-      if (this.alternateCwd !== undefined && this.alternateCwd !== null) {
-        const alternate = this.alternateCwd;
-        return paths.map((file) => path.join(alternate, file));
-      }
-      return paths;
-    }
-    return [];
   }
 
   /**
@@ -427,9 +409,6 @@ you can add the directory these files are located at and it'll change the root d
       });
     }
     if (!mainFile) return undefined;
-    if (this.alternateCwd) {
-      mainFile = path.join(this.alternateCwd, mainFile);
-    }
     const mainFileRelativeToConsumer = this.consumer.getPathRelativeToConsumer(mainFile);
     const mainPath = this.consumer.toAbsolutePath(mainFileRelativeToConsumer);
     if (fs.existsSync(mainPath)) {

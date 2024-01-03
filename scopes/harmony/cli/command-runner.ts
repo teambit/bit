@@ -1,5 +1,4 @@
 import { render } from 'ink';
-import { migrate } from '@teambit/legacy/dist/api/consumer';
 import logger, { LoggerLevel } from '@teambit/legacy/dist/logger/logger';
 import { CLIArgs, Command, Flags, RenderResult } from '@teambit/legacy/dist/cli/command';
 import { parseCommandName } from '@teambit/legacy/dist/cli/command-registry';
@@ -21,7 +20,6 @@ export class CommandRunner {
   async runCommand() {
     try {
       this.bootstrapCommand();
-      await this.runMigrateIfNeeded();
       this.determineConsoleWritingDuringCommand();
       if (this.flags.json) {
         return await this.runJsonHandler();
@@ -120,16 +118,6 @@ export class CommandRunner {
   private async writeAndExit(data: string, exitCode: number) {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     return process.stdout.write(data, async () => logger.exitAfterFlush(exitCode, this.commandName, data));
-  }
-
-  private async runMigrateIfNeeded(): Promise<any> {
-    // @ts-ignore LegacyCommandAdapter has .migration
-    if (this.command.migration) {
-      logger.debug('Checking if a migration is needed');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return migrate(null, false);
-    }
-    return null;
   }
 }
 

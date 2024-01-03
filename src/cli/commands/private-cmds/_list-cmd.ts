@@ -3,7 +3,6 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// import { migrate } from '../../../api/consumer';
 // import { scopeList } from '../../../api/scope';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 // import logger from '../../../logger/logger';
@@ -27,11 +26,8 @@ export default class List implements LegacyCommand {
     // const { payload, headers } = unpackCommand(args);
     // compressResponse = clientSupportCompressedCommand(headers.version);
     // checkVersionCompatibilityOnTheServer(headers.version);
-    // logger.info('Checking if a migration is needed');
     // const scopePath = fromBase64(path);
-    // return migrate(scopePath, false).then(() => {
-    //   return scopeList(scopePath, payload);
-    // });
+    // return scopeList(scopePath, payload);
   }
 
   report(str: string): string {

@@ -34,7 +34,6 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
   ] as CommandOptions;
   loader = true;
   private = true;
-  migration = true;
   remoteOp = true;
   skipWorkspace = true;
 

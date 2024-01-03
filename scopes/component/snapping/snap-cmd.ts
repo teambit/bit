@@ -68,7 +68,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     ],
   ] as CommandOptions;
   loader = true;
-  migration = true;
 
   constructor(private snapping: SnappingMain, private logger: Logger, private globalConfig: GlobalConfigMain) {}
 

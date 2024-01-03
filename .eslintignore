@@ -5,20 +5,7 @@ scopes/semantics/schema/mock
 # A temp file should be required from outside (via npm) so no point to fix it
 src/graph/graph.ts
 
-# Should be replaced by an external graph - no point to fix it
-src/r-graph/toposort.ts
-
 # files that are not in use, so no point fixing them
-src/git-hooks/exceptions/index.ts
-src/git-hooks/git-hook.ts
-src/git-hooks/git-hooks-manager.ts
 src/hooks/hooks-manager.ts
-src/consumer/migrations/consumer-migrator.ts
-src/consumer/migrations/bit-map/index.ts
-src/scope/migrations/component-version/to-semver-migration.ts
-src/scope/migrations/scope-migrator.ts
-src/scope/migrations/component-version/remove-latest-from-compiler.ts
-src/consumer/component/environment/validate-plugin.ts
-src/addons/run-configuration.ts
 
 scripts

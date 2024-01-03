@@ -17,7 +17,6 @@ import CatLane from './commands/private-cmds/cat-lane-cmd';
 import CatObject from './commands/private-cmds/cat-object-cmd';
 import CatScope from './commands/private-cmds/cat-scope-cmd';
 import DependencyStatus from './commands/private-cmds/dependency-status-cmd';
-import Migrate from './commands/private-cmds/migrate-cmd';
 import Config from './commands/public-cmds/config-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
 import Init from './commands/public-cmds/init-cmd';
@@ -58,8 +57,6 @@ export default function registerCommands(): CommandRegistry {
     new Untag(),
     new Delete(),
     new Latest(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    new Migrate(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Doctor(),
     new RunAction(),
