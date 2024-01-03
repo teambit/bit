@@ -32,7 +32,6 @@ export class LaneListCmd implements Command {
     ['', 'not-merged', "list only lanes that haven't been merged"],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   remoteOp = true;
   skipWorkspace = true;
 
@@ -139,7 +138,6 @@ export class LaneShowCmd implements Command {
     ['r', 'remote', 'show details of the remote head of the provided lane'],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   remoteOp = true;
   skipWorkspace = true;
 
@@ -215,7 +213,6 @@ a lane created from another lane contains all the components of the original lan
     ],
   ] as CommandOptions;
   loader = true;
-  migration = true;
 
   constructor(private lanes: LanesMain) {}
 
@@ -246,7 +243,6 @@ it is useful e.g. when having multiple lanes with the same name, but with differ
   alias = '';
   options = [] as CommandOptions;
   loader = true;
-  migration = true;
 
   constructor(private lanes: LanesMain) {}
 
@@ -269,7 +265,6 @@ export class LaneChangeScopeCmd implements Command {
     ],
   ] as CommandOptions;
   loader = true;
-  migration = true;
 
   constructor(private lanes: LanesMain) {}
 
@@ -290,7 +285,6 @@ export class LaneRenameCmd implements Command {
     ['l', 'lane-name <lane-name>', 'the name of the lane to rename. if not specified, the current lane is used'],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   constructor(private lanes: LanesMain) {}
 
   async report([newName]: [string], { laneName }: { laneName?: string }): Promise<string> {
@@ -315,7 +309,6 @@ export class LaneRemoveCmd implements Command {
     ['s', 'silent', 'skip confirmation'],
   ] as CommandOptions;
   loader = true;
-  migration = true;
 
   constructor(private lanes: LanesMain) {}
 
@@ -369,7 +362,6 @@ export class LaneRemoveCompCmd implements Command {
     ],
   ] as CommandOptions;
   loader = true;
-  migration = true;
 
   constructor(private workspace: Workspace, private lanes: LanesMain) {}
 
@@ -392,7 +384,6 @@ export class LaneImportCmd implements Command {
     ],
   ] as CommandOptions;
   loader = true;
-  migration = true;
 
   constructor(private switchCmd: SwitchCmd) {}
 
@@ -416,7 +407,6 @@ export class LaneCmd implements Command {
     ['', 'not-merged', "list only lanes that haven't been merged"],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   group = 'collaborate';
   remoteOp = true;
   skipWorkspace = true;

@@ -12,7 +12,6 @@ export class LegacyCommandAdapter implements Command {
   loader?: boolean;
   commands: Command[];
   private?: boolean;
-  migration?: boolean;
   internal?: boolean;
   skipWorkspace?: boolean;
   helpUrl?: string;
@@ -28,7 +27,6 @@ export class LegacyCommandAdapter implements Command {
     this.group = cmd.group;
     this.loader = cmd.loader;
     this.private = cmd.private;
-    this.migration = cmd.migration;
     this.internal = cmd.internal;
     this.commands = (cmd.commands || []).map((sub) => new LegacyCommandAdapter(sub, cliExtension));
   }

@@ -36,7 +36,6 @@
       "src/jsdoc",
       "src/links",
       "src/logger",
-      "src/migration",
       "src/prompts",
       "src/remotes",
       "src/scope",
