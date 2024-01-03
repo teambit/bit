@@ -3,7 +3,6 @@ import pFilter from 'p-filter';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import R from 'ramda';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
-import { LATEST } from '../../constants';
 import { SnapsDistance } from '../../scope/component-ops/snaps-distance';
 import { getDivergeData } from '../../scope/component-ops/get-diverge-data';
 import { Lane } from '../../scope/models';
@@ -289,8 +288,7 @@ export default class ComponentsList {
       await component.setDivergeData(this.scope.objects);
       return component.isLocallyChanged(this.scope.objects, lane);
     });
-    const ids = ComponentIdList.fromArray(pendingExportComponents.map((c) => c.toComponentId()));
-    return this.updateIdsFromModelIfTheyOutOfSync(ids);
+    return ComponentIdList.fromArray(pendingExportComponents.map((c) => c.toComponentId()));
   }
 
   async listNonNewComponentsIds(loadOpts?: ComponentLoadOptions): Promise<ComponentIdList> {
@@ -299,23 +297,6 @@ export default class ComponentsList {
     const newComponents: ComponentIdList = await this.listNewComponents();
     const nonNewComponents = authoredAndImported.filter((component) => !newComponents.has(component.componentId));
     return ComponentIdList.fromArray(nonNewComponents.map((c) => c.componentId.changeVersion(undefined)));
-  }
-
-  async updateIdsFromModelIfTheyOutOfSync(
-    ids: ComponentIdList,
-    loadOpts?: ComponentLoadOptions
-  ): Promise<ComponentIdList> {
-    const updatedIdsP = ids.map(async (id: ComponentID) => {
-      const componentMap = this.bitMap.getComponentIfExist(id, { ignoreVersion: true });
-      if (!componentMap || componentMap.id.hasVersion()) return id;
-      const areSameScope = id.scope ? id.scope === componentMap.defaultScope : true;
-      if (!areSameScope) return id;
-      // component is out of sync, fix it by loading it from the consumer
-      const component = await this.consumer.loadComponent(id.changeVersion(LATEST), loadOpts);
-      return component.componentId;
-    });
-    const updatedIds = await Promise.all(updatedIdsP);
-    return ComponentIdList.fromArray(updatedIds);
   }
 
   async listExportPendingComponents(laneObj: Lane | null): Promise<ModelComponent[]> {
