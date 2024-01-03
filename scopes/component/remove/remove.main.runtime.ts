@@ -75,17 +75,20 @@ export class RemoveMain {
   /**
    * remove components from the workspace.
    */
-  async removeLocallyByIds(ids: ComponentID[], { force = false }: { force?: boolean } = {}) {
+  async removeLocallyByIds(
+    ids: ComponentID[],
+    { force = false, reasonForRemoval }: { force?: boolean; reasonForRemoval?: string } = {}
+  ) {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const results = await removeComponents({
-      consumer: this.workspace.consumer,
+      workspace: this.workspace,
       ids: ComponentIdList.fromArray(ids),
       force,
       remote: false,
       track: false,
       deleteFiles: true,
     });
-    await this.workspace.bitMap.write('remove');
+    await this.workspace.bitMap.write(`remove (by ${reasonForRemoval || 'N/A'})`);
 
     return results;
   }
