@@ -1,4 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import path from 'path';
 import EnvsAspect from '@teambit/envs';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -30,7 +31,7 @@ export class TrackerMain {
     const addComponent = new AddComponents(
       { workspace: this.workspace },
       {
-        componentPaths: [trackData.rootDir],
+        componentPaths: [path.join(this.workspace.path, trackData.rootDir)],
         id: trackData.componentName,
         main: trackData.mainFile,
         override: false,
