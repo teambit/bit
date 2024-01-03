@@ -6,7 +6,8 @@ import { sha1 } from '@teambit/legacy/dist/utils';
 import webpack from 'webpack';
 import { promisify } from 'util';
 import { PreviewAspect } from './preview.aspect';
-import { createWebpackConfig, clearConsole } from './pre-bundle-utils';
+import { createWebpackConfig } from './webpack/webpack.config';
+import { clearConsole } from './pre-bundle-utils';
 
 export const RUNTIME_NAME = 'preview';
 export const PUBLIC_DIR = 'public/bit-preview';
