@@ -61,7 +61,7 @@ export class RemoveMain {
     this.logger.setStatusLine(BEFORE_REMOVE); // again because the loader might changed when talking to the remote
     const consumer = this.workspace?.consumer;
     const removeResults = await removeComponents({
-      consumer,
+      workspace: this.workspace,
       ids: ComponentIdList.fromArray(bitIds),
       force,
       remote,
