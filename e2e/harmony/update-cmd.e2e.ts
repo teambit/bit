@@ -252,6 +252,40 @@ const isPositive = require("is-positive");`
       });
     });
   });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('updates auto-detected dependencies from the model', () => {
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      helper.fixtures.populateComponents(2);
+      helper.command.install();
+      helper.command.compile();
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.import(`${helper.scopes.remote}/comp2`);
+      helper.command.tagAllComponents('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.import(`${helper.scopes.remote}/comp1`);
+      helper.command.update('--yes --latest');
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+    });
+    it('should update dependency', function () {
+      const showOutput = helper.command.showComponentParsed('comp1');
+      expect(showOutput.dependencies[0].id).to.equal(`${helper.scopes.remote}/comp2@0.0.2`);
+    });
+  });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('dependency in the model is also a local component', () => {
     let configFile;
     let npmCiRegistry: NpmCiRegistry;
