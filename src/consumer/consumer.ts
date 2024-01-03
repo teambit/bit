@@ -23,7 +23,7 @@ import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
 import { generateRandomStr, sortObject } from '../utils';
-import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
+import { composeComponentPath } from '../utils/bit/compose-component-path';
 import {
   PathAbsolute,
   PathLinuxRelative,
@@ -109,7 +109,7 @@ export default class Consumer {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get dirStructure(): DirStructure {
     if (!this._dirStructure) {
-      this._dirStructure = new DirStructure(this.config.componentsDefaultDirectory, this.config._dependenciesDirectory);
+      this._dirStructure = new DirStructure(this.config.componentsDefaultDirectory);
     }
     return this._dirStructure;
   }
@@ -478,16 +478,6 @@ export default class Consumer {
     logger.debug(`component dir path: ${addToPath.join('/')}`);
     Analytics.addBreadCrumb('composeComponentPath', `component dir path: ${Analytics.hashData(addToPath.join('/'))}`);
     return path.join(...addToPath);
-  }
-
-  composeRelativeDependencyPath(bitId: ComponentID): PathOsBased {
-    const dependenciesDir = this.dirStructure.dependenciesDirStructure;
-    return composeDependencyPath(bitId, dependenciesDir);
-  }
-
-  composeDependencyPath(bitId: ComponentID): PathOsBased {
-    const relativeDependencyPath = this.composeRelativeDependencyPath(bitId);
-    return path.join(this.getPath(), relativeDependencyPath);
   }
 
   static create(

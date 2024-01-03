@@ -59,16 +59,11 @@ export type WorkspaceSettingsNewProps = {
   'teambit.dependencies/dependency-resolver': DependencyResolverExtensionProps;
 };
 
-export type WorkspaceLegacyProps = {
-  dependenciesDirectory?: string;
-};
-
 export type ExtensionsDefs = WorkspaceSettingsNewProps;
 
 export class WorkspaceConfig implements HostConfig {
   raw?: any;
   _extensions: ExtensionDataList;
-  _legacyProps?: WorkspaceLegacyProps;
   isLegacy: boolean;
 
   constructor(
@@ -331,7 +326,6 @@ export class WorkspaceConfig implements HostConfig {
       _useWorkspaces: this.extension('teambit.dependencies/dependency-resolver', true)?.useWorkspaces,
       dependencyResolver: this.extension('teambit.dependencies/dependency-resolver', true),
       packageManager: this.extension('teambit.dependencies/dependency-resolver', true)?.packageManager,
-      _dependenciesDirectory: this._legacyProps?.dependenciesDirectory,
       componentsDefaultDirectory,
       _manageWorkspaces: this.extension('teambit.dependencies/dependency-resolver', true)?.manageWorkspaces,
       extensions: this.extensions.toConfigObject(),
