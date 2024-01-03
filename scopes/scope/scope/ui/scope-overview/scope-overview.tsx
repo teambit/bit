@@ -6,6 +6,7 @@ import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 import { EmptyScope } from '@teambit/scope.ui.empty-scope';
 import { ComponentModel } from '@teambit/component';
 import { ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
+import { ComponentDescriptor } from '@teambit/component-descriptor';
 import styles from './scope-overview.module.scss';
 import type { ScopeBadgeSlot, OverviewLineSlot } from '../../scope.ui.runtime';
 
@@ -17,9 +18,10 @@ export type ScopeOverviewProps = {
 
 export function ScopeOverview({ badgeSlot, overviewSlot, TargetOverview }: ScopeOverviewProps) {
   const scope = useContext(ScopeContext);
-  const { components } = scope;
+  const { components, componentDescriptors } = scope;
   if (TargetOverview) return <TargetOverview />;
   if (!components || components.length === 0) return <EmptyScope name={scope.name} />;
+  const compDescriptorById = new Map(componentDescriptors.map((comp) => [comp.id.toString(), comp]));
 
   return (
     <div className={styles.container}>
@@ -32,12 +34,15 @@ export function ScopeOverview({ badgeSlot, overviewSlot, TargetOverview }: Scope
         description={scope.description}
         componentCount={scope.components.length}
       />
-      <ComponentGrid>
+      <ComponentGrid className={styles.cardGrid}>
         {components.map((component, index) => {
           if (component.deprecation?.isDeprecate) return null;
           return (
             <div key={index}>
-              <ScopeComponentCard component={component} />
+              <ScopeComponentCard
+                component={component}
+                componentDescriptor={compDescriptorById.get(component.id.toString())}
+              />
             </div>
           );
         })}
@@ -48,11 +53,13 @@ export function ScopeOverview({ badgeSlot, overviewSlot, TargetOverview }: Scope
 
 type ScopeComponentCardProps = {
   component: ComponentModel;
+  componentDescriptor?: ComponentDescriptor;
   componentUrl?: string;
 };
 
-export function ScopeComponentCard({ component, componentUrl }: ScopeComponentCardProps) {
+export function ScopeComponentCard({ component, componentDescriptor, componentUrl }: ScopeComponentCardProps) {
   const shouldShowPreview = component.compositions.length > 0;
+
   return (
     <ComponentCard
       id={component.id.fullName}
@@ -60,7 +67,13 @@ export function ScopeComponentCard({ component, componentUrl }: ScopeComponentCa
       description={component.description}
       version={component.version}
       href={componentUrl}
-      preview={<PreviewPlaceholder component={component} shouldShowPreview={shouldShowPreview} />}
+      preview={
+        <PreviewPlaceholder
+          componentDescriptor={componentDescriptor}
+          component={component}
+          shouldShowPreview={shouldShowPreview}
+        />
+      }
     />
   );
 }

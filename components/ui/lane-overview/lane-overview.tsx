@@ -103,12 +103,16 @@ function LaneOverviewWithPreview({ currentLane, overviewItems, routeSlot, host }
             />
           );
         }
-      : ({ component }) => (
-          <ScopeComponentCard
-            component={component}
-            componentUrl={LanesModel.getLaneComponentUrl(component.id, currentLane.id)}
-          />
-        );
+      : ({ component }) => {
+          const compDescriptor = compDescriptorById.get(component.id.toString());
+          return (
+            <ScopeComponentCard
+              component={component}
+              componentDescriptor={compDescriptor}
+              componentUrl={LanesModel.getLaneComponentUrl(component.id, currentLane.id)}
+            />
+          );
+        };
 
   return (
     <div className={styles.container}>
