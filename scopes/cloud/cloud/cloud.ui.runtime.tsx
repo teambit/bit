@@ -4,6 +4,7 @@ import { flatten } from 'lodash';
 import { SubMenu } from '@teambit/design.controls.menu';
 import { Slot } from '@teambit/harmony';
 import { UserBar, UserBarItem, UserBarItemSlot, UserBarSection, UserBarSectionSlot } from '@teambit/cloud.ui.user-bar';
+import LanesAspect, { LanesUI } from '@teambit/lanes';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
 import { CloudAspect } from './cloud.aspect';
 
@@ -41,12 +42,12 @@ export class CloudUI {
 
   static runtime = UIRuntime;
 
-  static dependencies = [WorkspaceAspect];
+  static dependencies = [WorkspaceAspect, LanesAspect];
 
   static slots = [Slot.withType<UserBarItem[]>(), Slot.withType<UserBarSection[]>()];
 
   static async provider(
-    [workspace]: [WorkspaceUI],
+    [workspace, lanes]: [WorkspaceUI, LanesUI],
     _,
     [userBarItemSlot, userBarSectionSlot]: [UserBarItemSlot, UserBarSectionSlot]
   ) {
@@ -118,6 +119,7 @@ export class CloudUI {
     const userBarSections = cloudUI.listUserBarSections();
     const CloudUserBar = () => <UserBar sections={userBarSections} items={userBarItems} />;
     workspace.registerMenuWidget([CloudUserBar]);
+    lanes.registerMenuWidget(CloudUserBar);
     return cloudUI;
   }
 }

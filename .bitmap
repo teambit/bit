@@ -660,6 +660,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/hooks/use-current-user"
     },
+    "hooks/use-lane-components": {
+        "name": "hooks/use-lane-components",
+        "scope": "teambit.lanes",
+        "version": "0.0.254",
+        "mainFile": "index.ts",
+        "rootDir": "components/hooks/use-lane-components"
+    },
     "hooks/use-logout": {
         "name": "hooks/use-logout",
         "scope": "teambit.cloud",
@@ -1591,6 +1598,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/hooks/scope-context"
     },
+    "ui/lane-overview": {
+        "name": "ui/lane-overview",
+        "scope": "teambit.lanes",
+        "version": "0.0.210",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/lane-overview"
+    },
     "ui/loader-fallback": {
         "name": "ui/loader-fallback",
         "scope": "teambit.react",
@@ -1625,6 +1639,13 @@
         "version": "0.0.3",
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/ui/user-bar"
+    },
+    "ui/workspace-component-card": {
+        "name": "ui/workspace-component-card",
+        "scope": "teambit.workspace",
+        "version": "0.0.516",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/workspace-component-card"
     },
     "update-dependencies": {
         "name": "update-dependencies",
