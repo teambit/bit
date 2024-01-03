@@ -1,5 +1,4 @@
 import lanesList from '../../../api/scope/lib/scope-lanes-list';
-import logger from '../../../logger/logger';
 import { LaneData } from '../../../scope/lanes/lanes';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
 import { buildCommandMessage, fromBase64, packCommand, unpackCommand } from '../../../utils';

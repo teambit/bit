@@ -1,5 +1,4 @@
 import { put } from '../../../api/scope';
-import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
 import { ObjectList } from '../../../scope/objects/object-list';
 import { buildCommandMessage, fromBase64, packCommand, unpackCommand } from '../../../utils';
