@@ -260,7 +260,6 @@
         "@teambit/html.generator.html-templates": "^1.0.8",
         "@teambit/html.modules.inject-html-element": "0.0.4",
         "@teambit/html.modules.render-template": "0.0.104",
-        "@teambit/lanes.hooks.use-lane-components": "0.0.253",
         "@teambit/lanes.hooks.use-lane-readme": "0.0.253",
         "@teambit/lanes.hooks.use-lanes": "0.0.254",
         "@teambit/lanes.hooks.use-viewed-lane-from-url": "0.0.217",
@@ -275,7 +274,6 @@
         "@teambit/lanes.ui.icons.lane-icon": "^0.0.9",
         "@teambit/lanes.ui.inputs.lane-selector": "^0.0.212",
         "@teambit/lanes.ui.lane-details": "^0.0.204",
-        "@teambit/lanes.ui.lane-overview": "^0.0.210",
         "@teambit/lanes.ui.lane-readme": "0.0.116",
         "@teambit/lanes.ui.menus.lanes-overview-menu": "^0.0.10",
         "@teambit/lanes.ui.menus.use-lanes-menu": "0.0.207",
@@ -357,7 +355,6 @@
         "@teambit/workspace.ui.empty-workspace": "^0.0.508",
         "@teambit/workspace.ui.load-preview": "^0.0.504",
         "@teambit/workspace.ui.status": "^0.0.504",
-        "@teambit/workspace.ui.workspace-component-card": "^0.0.516",
         "@testing-library/jest-dom": "5.16.2",
         "@testing-library/jest-native": "4.0.4",
         "@testing-library/react": "12.1.5",
@@ -715,6 +712,9 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {}
       }
+    },
+    "teambit.preview/preview": {
+      "onlyOverview": true
     }
   }
 }
