@@ -1,17 +1,11 @@
 import { BitError } from '@teambit/bit-error';
-import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_DEPENDENCIES_DIR_PATH } from '../../constants';
+import { DEFAULT_COMPONENTS_DIR_PATH } from '../../constants';
 
 export default class BitStructure {
   private _componentsDefaultDirectory: string;
   private isComponentsDefaultDirectoryValidated = false;
-  dependenciesDirectory: string;
-  constructor(componentsDefaultDirectory: string | undefined, dependenciesDirectory: string | undefined) {
+  constructor(componentsDefaultDirectory: string | undefined) {
     this._componentsDefaultDirectory = componentsDefaultDirectory || DEFAULT_COMPONENTS_DIR_PATH;
-    this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DEPENDENCIES_DIR_PATH;
-  }
-
-  get dependenciesDirStructure(): string {
-    return this.dependenciesDirectory;
   }
 
   get componentsDefaultDirectory(): string {
