@@ -609,6 +609,12 @@ jobs:
     steps:
       - run: sleep 300;
 
+  setup_bit_version:
+    steps:
+      - run:
+          name: Setup bit version environment variables
+          command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
+
   setup_pnpm:
     steps:
       - run:
@@ -642,9 +648,7 @@ jobs:
       - run:
           name: print bit version
           command: npm view @teambit/bit version
-      - run:
-          name: Setup bit version environment variables
-          command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
+      - setup_bit_version
       - run:
           name: create empty folder
           command: mkdir bit-${BIT_VERSION}
@@ -696,9 +700,7 @@ jobs:
       - run:
           name: print bit version
           command: npm view @teambit/bit version
-      - run:
-          name: Setup bit version environment variables
-          command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
+      - setup_bit_version
       - run:
           name: create empty folder
           command: mkdir bit-${BIT_VERSION}
@@ -750,9 +752,7 @@ jobs:
       - run:
           name: print bit version
           command: npm view @teambit/bit version
-      - run:
-          name: Setup bit version environment variables
-          command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
+      - setup_bit_version
       - run:
           name: create empty folder
           command: mkdir bit-${BIT_VERSION}
