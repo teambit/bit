@@ -481,4 +481,16 @@ describe('bit remove command', function () {
       expect(removeExt.config.removed).to.be.true;
     });
   });
+  describe('remove component that exists in workspace.jsonc', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.create('bit-aspect', 'my-aspect');
+      helper.command.use(`${helper.scopes.remote}/my-aspect`);
+      helper.command.removeComponent('my-aspect');
+    });
+    it('should remove the id from the root of workspace.jsonc', () => {
+      const ws = helper.bitJsonc.read();
+      expect(ws).to.not.have.property(`${helper.scopes.remote}/my-aspect`);
+    });
+  });
 });

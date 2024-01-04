@@ -241,7 +241,7 @@ export class MergeLanesMain {
 
     if (!keepReadme && otherLane && otherLane.readmeComponent && mergedSuccessfully) {
       const readmeComponentId = otherLane.readmeComponent.id.changeVersion(otherLane.readmeComponent?.head?.hash);
-      deleteResults = await this.remove.removeLocallyByIds([readmeComponentId]);
+      deleteResults = await this.remove.removeLocallyByIds([readmeComponentId], { reasonForRemoval: 'lane-merge' });
     } else if (otherLane && !otherLane.readmeComponent) {
       deleteResults = { readmeResult: '' };
     }

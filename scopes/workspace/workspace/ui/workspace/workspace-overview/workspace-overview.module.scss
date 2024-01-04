@@ -35,3 +35,14 @@
   margin-bottom: 4px;
   box-shadow: 0px 2px 18px rgb(0 0 0 / 10%);
 }
+
+.cardGrid {
+  grid-column-gap: 10px;
+  grid-gap: 32px 24px;
+  -moz-column-gap: 10px;
+  column-gap: 10px;
+  display: grid;
+  gap: 32px 24px;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  max-width: 1280px;
+}

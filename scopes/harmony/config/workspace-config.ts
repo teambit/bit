@@ -116,6 +116,13 @@ export class WorkspaceConfig implements HostConfig {
     return false;
   }
 
+  removeExtension(extId: string): boolean {
+    if (!this.raw[extId]) return false;
+    delete this.raw[extId];
+    this.loadExtensions();
+    return true;
+  }
+
   /**
    * Create an instance of the WorkspaceConfig by data
    *
