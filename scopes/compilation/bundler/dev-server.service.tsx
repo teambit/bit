@@ -6,6 +6,7 @@ import { Text, Newline } from 'ink';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import highlight from 'cli-highlight';
 import { sep } from 'path';
+import pMapSeries from 'p-map-series';
 import { BrowserRuntimeSlot, DevServerTransformerSlot } from './bundler.main.runtime';
 import { ComponentServer } from './component-server';
 import { dedupEnvs } from './dedup-envs';
@@ -136,18 +137,17 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
   ): Promise<ComponentServer[]> {
     const groupedEnvs = await dedupEnvs(contexts, this.dependencyResolver, dedicatedEnvDevServers);
 
-    const servers = await Promise.all(
-      Object.entries(groupedEnvs).map(async ([id, contextList]) => {
-        const mainContext = contextList.find((context) => context.envDefinition.id === id) || contextList[0];
-        const additionalContexts = contextList.filter((context) => context.envDefinition.id !== id);
+    // TODO: (gilad) - change this back to promise all once we make the preview pre-bundle to run before that loop
+    const servers = await pMapSeries(Object.entries(groupedEnvs), async ([id, contextList]) => {
+      const mainContext = contextList.find((context) => context.envDefinition.id === id) || contextList[0];
+      const additionalContexts = contextList.filter((context) => context.envDefinition.id !== id);
 
-        const devServerContext = await this.buildContext(mainContext, additionalContexts);
-        const devServer: DevServer = await devServerContext.envRuntime.env.getDevServer(devServerContext);
-        const transformedDevServer: DevServer = this.transformDevServer(devServer, { envId: id });
+      const devServerContext = await this.buildContext(mainContext, additionalContexts);
+      const devServer: DevServer = await devServerContext.envRuntime.env.getDevServer(devServerContext);
+      const transformedDevServer: DevServer = this.transformDevServer(devServer, { envId: id });
 
-        return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], transformedDevServer);
-      })
-    );
+      return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], transformedDevServer);
+    });
 
     return servers;
   }
