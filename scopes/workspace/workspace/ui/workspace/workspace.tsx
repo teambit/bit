@@ -49,13 +49,15 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
     <WorkspaceProvider workspace={workspace}>
       <div className={styles.workspaceWrapper}>
         <TopBar
-          className={styles.topbar}
+          className={classNames(styles.topbar, styles.topbarDarkColors)}
           Corner={() => <Corner className={styles.corner} name={workspace.name} icon={workspace.icon} />}
           menu={menuSlot}
         />
 
         <SplitPane className={styles.main} size={264} layout={sidebarOpenness}>
-          <Pane className={classNames(styles.sidebar, !isSidebarOpen && styles.closed)}>{sidebar}</Pane>
+          <Pane className={classNames(styles.sidebar, styles.sidebarDarkColors, !isSidebarOpen && styles.closed)}>
+            {sidebar}
+          </Pane>
           <HoverSplitter className={styles.splitter}>
             <Collapser
               isOpen={isSidebarOpen}
