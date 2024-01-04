@@ -1,8 +1,7 @@
-import * as path from 'path';
 import { ComponentID } from '@teambit/component-id';
 import format from 'string-format';
-import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_DEPENDENCIES_DIR_PATH } from '../../constants';
-import { PathLinuxRelative, PathOsBased } from '../path';
+import { DEFAULT_COMPONENTS_DIR_PATH } from '../../constants';
+import { PathLinuxRelative } from '../path';
 import { parseScope } from './parse-scope';
 
 /**
@@ -33,11 +32,4 @@ export function composeComponentPath(
   }
   const result = format(defaultDir, { name: bitId.fullName, scope, owner, scopeId: bitId.scope });
   return result;
-}
-
-export function composeDependencyPath(
-  bitId: ComponentID,
-  dependenciesDir: string = DEFAULT_DEPENDENCIES_DIR_PATH
-): PathOsBased {
-  return path.join(dependenciesDir, bitId._legacy.toFullPath());
 }

@@ -7,7 +7,9 @@ import { ComponentID } from '@teambit/component-id';
 import { ComponentModel } from '@teambit/component';
 import { useCloudScopes } from '@teambit/cloud.hooks.use-cloud-scopes';
 import { ScopeID } from '@teambit/scopes.scope-id';
-import { ComponentCard, ComponentCardPluginType, PluginProps } from '@teambit/explorer.ui.component-card';
+import { compact } from 'lodash';
+import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';
+import { ComponentCardPluginType, PluginProps } from '@teambit/explorer.ui.component-card';
 import { WorkspaceContext } from '../workspace-context';
 import styles from './workspace-overview.module.scss';
 import { LinkPlugin } from './link-plugin';
@@ -20,27 +22,37 @@ export function WorkspaceOverview() {
   const uniqueScopesArr = Array.from(uniqueScopes);
   const { cloudScopes = [] } = useCloudScopes(uniqueScopesArr);
   const cloudScopesById = new Map(cloudScopes.map((scope) => [scope.id.toString(), scope]));
+
   const plugins = useCardPlugins({ compModelsById });
+
   if (!components || components.length === 0) return <EmptyWorkspace name={workspace.name} />;
+
   const compDescriptorById = new Map(componentDescriptors.map((comp) => [comp.id.toString(), comp]));
+  const componentsWithDescriptorAndScope = compact(
+    components.map((component) => {
+      if (component.deprecation?.isDeprecate) return null;
+      const componentDescriptor = compDescriptorById.get(component.id.toString());
+      if (!componentDescriptor) return null;
+      const cloudScope = cloudScopesById.get(component.id.scope);
+      const scope =
+        cloudScope ||
+        (ScopeID.isValid(component.id.scope) && { id: ScopeID.fromString(component.id.scope) }) ||
+        undefined;
+
+      return { component, componentDescriptor, scope };
+    })
+  );
+
   return (
     <div className={styles.container}>
-      <ComponentGrid>
-        {components.map((component) => {
-          if (component.deprecation?.isDeprecate) return null;
-          const compDescriptor = compDescriptorById.get(component.id.toString());
-          if (!compDescriptor) return null;
-          const cloudScope = cloudScopesById.get(component.id.scope);
-          const scope =
-            cloudScope ||
-            (ScopeID.isValid(component.id.scope) && { id: ScopeID.fromString(component.id.scope) }) ||
-            undefined;
+      <ComponentGrid className={styles.cardGrid}>
+        {componentsWithDescriptorAndScope.map(({ component, componentDescriptor, scope }) => {
           return (
-            <ComponentCard
+            <WorkspaceComponentCard
               key={component.id.toString()}
-              component={compDescriptor}
+              componentDescriptor={componentDescriptor}
+              component={component}
               plugins={plugins}
-              displayOwnerDetails="all"
               scope={scope}
             />
           );
@@ -58,10 +70,16 @@ export function useCardPlugins({
   const plugins = React.useMemo(
     () => [
       {
-        preview: function Preview({ component }) {
+        preview: function Preview({ component, shouldShowPreview }) {
           const compModel = compModelsById.get(component.id.toString());
           if (!compModel) return null;
-          return <PreviewPlaceholder componentDescriptor={component} component={compModel} />;
+          return (
+            <PreviewPlaceholder
+              componentDescriptor={component}
+              component={compModel}
+              shouldShowPreview={shouldShowPreview}
+            />
+          );
         },
       },
       {

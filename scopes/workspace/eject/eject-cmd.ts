@@ -26,7 +26,6 @@ export class EjectCmd implements Command {
     ['', 'keep-files', 'keep the component files in the workspace intact'],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   group = 'development';
 
   constructor(private ejectMain: EjectMain, private workspace: Workspace) {}

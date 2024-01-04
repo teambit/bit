@@ -40,7 +40,6 @@ this command marks the components as deleted, and after snap/tag and export they
     ],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   remoteOp = true;
 
   constructor(private remove: RemoveMain, private workspace?: Workspace) {}
@@ -69,7 +68,7 @@ this command marks the components as deleted, and after snap/tag and export they
     }
 
     if (!silent) {
-      await this.removePrompt(hard);
+      await this.removePrompt(hard, lane);
     }
 
     if (hard) {
@@ -91,12 +90,15 @@ ${chalk.bold('to update the remote, please tag/snap and then export. to revert, 
     return removedObjectsArray.map((item) => removeTemplate(item, true));
   }
 
-  private async removePrompt(hard?: boolean) {
+  private async removePrompt(hard?: boolean, lane?: boolean) {
     this.remove.logger.clearStatusLine();
+    const laneOrMainWarning = lane
+      ? `this command will mark the component as removed from this lane, resetting the component to its pre-lane state and content (after tag/snap and export)`
+      : `this command will mark the component as deleted, and it won’t be visible on the remote scope (after tag/snap and export).`;
     const remoteOrLocalOutput = hard
-      ? `WARNING: the component(s) will be permanently deleted from the remote with no option to recover. prefer omitting --hard to only mark the component as deleted`
-      : `this command will mark the component as deleted, and it won’t be shown on the remote scope after tag/snap and export.
-if your intent, is to remove the component only from your local workspace, refer to bit remove.`;
+      ? `WARNING: the component(s) will be permanently deleted from the remote with no option to recover. prefer omitting --hard to only mark the component as soft deleted`
+      : `${laneOrMainWarning}
+if your intent is to remove the component only from your local workspace, refer to bit remove or bit eject.`;
 
     const ok = await yesno({
       question: `${remoteOrLocalOutput}

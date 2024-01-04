@@ -744,6 +744,14 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     await this.list();
   }
 
+  async cleanFromConfig(ids: ComponentID[]) {
+    const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
+    const workspaceConfig = config.workspaceConfig;
+    if (!workspaceConfig) throw new Error('workspace config is missing from Config aspect');
+    const hasChanged = ids.some((id) => workspaceConfig.removeExtension(id.toStringWithoutVersion()));
+    if (hasChanged) await workspaceConfig.write({ reasonForChange: 'remove components' });
+  }
+
   async triggerOnComponentChange(
     id: ComponentID,
     files: PathOsBasedAbsolute[],

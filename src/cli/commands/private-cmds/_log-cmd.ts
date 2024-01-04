@@ -1,4 +1,3 @@
-import { migrate } from '../../../api/consumer';
 import log from '../../../api/scope/lib/log';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
 import { buildCommandMessage, fromBase64, packCommand, unpackCommand } from '../../../utils';
@@ -19,9 +18,7 @@ export default class _Log implements LegacyCommand {
     compressResponse = clientSupportCompressedCommand(headers.version);
     checkVersionCompatibilityOnTheServer(headers.version);
     const scopePath = fromBase64(path);
-    return migrate(scopePath, false).then(() => {
-      return log(scopePath, payload);
-    });
+    return log(scopePath, payload);
   }
 
   report(str: string): string {

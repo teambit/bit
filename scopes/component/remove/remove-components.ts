@@ -1,7 +1,7 @@
 import groupArray from 'group-array';
 import partition from 'lodash.partition';
+import { Workspace } from '@teambit/workspace';
 import R from 'ramda';
-import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ComponentIdList } from '@teambit/component-id';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
@@ -30,14 +30,14 @@ export type RemoveComponentsResult = { localResult: RemovedLocalObjects; remoteR
  * @param {boolean} deleteFiles - delete local added files from fs.
  */
 export async function removeComponents({
-  consumer,
+  workspace,
   ids,
   force,
   remote,
   track,
   deleteFiles,
 }: {
-  consumer: Consumer | null | undefined; // when remote is false, it's always set
+  workspace?: Workspace; // when remote is false, it's always set
   ids: ComponentIdList;
   force: boolean;
   remote: boolean;
@@ -57,9 +57,9 @@ export async function removeComponents({
       `unable to remove the remote components: ${localIds.join(',')} as they don't contain a scope-name`
     );
   }
-  const remoteResult = remote && !R.isEmpty(remoteIds) ? await removeRemote(consumer, remoteIds, force) : [];
+  const remoteResult = remote && !R.isEmpty(remoteIds) ? await removeRemote(workspace, remoteIds, force) : [];
   const localResult = !remote
-    ? await removeLocal(consumer as Consumer, bitIdsLatest, force, track, deleteFiles)
+    ? await removeLocal(workspace as Workspace, bitIdsLatest, force, track, deleteFiles)
     : new RemovedLocalObjects();
 
   return { localResult, remoteResult };
@@ -72,12 +72,12 @@ export async function removeComponents({
  * @param {boolean} force - delete component that are used by other components.
  */
 async function removeRemote(
-  consumer: Consumer | null | undefined,
+  workspace: Workspace | undefined,
   bitIds: ComponentIdList,
   force: boolean
 ): Promise<RemovedObjects[]> {
   const groupedBitsByScope = groupArray(bitIds, 'scope');
-  const remotes = consumer ? await getScopeRemotes(consumer.scope) : await Remotes.getGlobalRemotes();
+  const remotes = workspace ? await getScopeRemotes(workspace.scope.legacyScope) : await Remotes.getGlobalRemotes();
   const shouldGoToCentralHub = remotes.shouldGoToCentralHub(Object.keys(groupedBitsByScope));
   if (shouldGoToCentralHub) {
     const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
@@ -89,7 +89,7 @@ async function removeRemote(
   const context = {};
   enrichContextFromGlobal(context);
   const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
-    const resolvedRemote = await remotes.resolve(key, consumer?.scope);
+    const resolvedRemote = await remotes.resolve(key, workspace?.scope.legacyScope);
     const idsStr = groupedBitsByScope[key].map((id) => id.toStringWithoutVersion());
     return resolvedRemote.deleteMany(idsStr, force, context);
   });
@@ -104,12 +104,13 @@ async function removeRemote(
  * @param {boolean} deleteFiles - delete component that are used by other components.
  */
 async function removeLocal(
-  consumer: Consumer,
+  workspace: Workspace,
   bitIds: ComponentIdList,
   force: boolean,
   track: boolean,
   deleteFiles: boolean
 ): Promise<RemovedLocalObjects> {
+  const consumer = workspace.consumer;
   // local remove in case user wants to delete tagged components
   const modifiedComponents = new ComponentIdList();
   const nonModifiedComponents = new ComponentIdList();
@@ -159,6 +160,7 @@ async function removeLocal(
         invalidComponentsIds
       );
       await consumer.cleanFromBitMap(idsToCleanFromWorkspace);
+      await workspace.cleanFromConfig(idsToCleanFromWorkspace);
     }
   }
   return new RemovedLocalObjects(
