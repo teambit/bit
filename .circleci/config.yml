@@ -612,8 +612,14 @@ jobs:
   setup_bit_version:
     steps:
       - run:
+          name: print bit version
+          command: npm view @teambit/bit version
+      - run:
           name: Setup bit version environment variables
           command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
+      - run:
+          name: create empty folder
+          command: mkdir bit-${BIT_VERSION}
 
   setup_pnpm:
     steps:
@@ -635,7 +641,6 @@ jobs:
             --exclude=bit-${BIT_VERSION}/pnpm-lock.yaml
             bit-${BIT_VERSION}
 
-
   bundle_version_linux:
     <<: *defaults
     environment:
@@ -645,13 +650,7 @@ jobs:
       - attach_workspace:
             at: ./
       - set_bit_cloud_registry
-      - run:
-          name: print bit version
-          command: npm view @teambit/bit version
       - setup_bit_version
-      - run:
-          name: create empty folder
-          command: mkdir bit-${BIT_VERSION}
       - setup_pnpm
       - run:
           name: install bit for Linux x64
@@ -697,13 +696,7 @@ jobs:
       - attach_workspace:
             at: ./
       - set_bit_cloud_registry
-      - run:
-          name: print bit version
-          command: npm view @teambit/bit version
       - setup_bit_version
-      - run:
-          name: create empty folder
-          command: mkdir bit-${BIT_VERSION}
       - setup_pnpm
       - run:
           name: install bit for macOS x64
@@ -749,13 +742,7 @@ jobs:
       - attach_workspace:
             at: ./
       - set_bit_cloud_registry
-      - run:
-          name: print bit version
-          command: npm view @teambit/bit version
       - setup_bit_version
-      - run:
-          name: create empty folder
-          command: mkdir bit-${BIT_VERSION}
       - setup_pnpm
       - run:
           name: install bit for Windows x64
