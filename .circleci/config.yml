@@ -710,6 +710,7 @@ jobs:
           name: install bit for macOS x64
           command: >
             cd bit-${BIT_VERSION} &&
+            pnpm init &&
             echo "node-linker=hoisted" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values darwin --values darwin &&
@@ -782,6 +783,7 @@ jobs:
           name: install bit for Windows x64
           command: >
             cd bit-${BIT_VERSION} &&
+            pnpm init &&
             echo "node-linker=hoisted" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
             echo "prefer-symlinked-executables=false" >> .npmrc &&
