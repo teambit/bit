@@ -612,11 +612,23 @@ jobs:
   setup_pnpm:
     steps:
       - run:
-          name: install pnpm
+          name: Install pnpm
           command: >
             npm config set prefix '~/.npm-global' &&
             npm install --global pnpm@8.10.4 &&
             echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+
+  compress_bit:
+    steps:
+      - run:
+          name: Compress Bit
+          command: >
+            tar -cvf bit-${BIT_VERSION}.tar.gz
+            --exclude=bit-${BIT_VERSION}/.npmrc
+            --exclude=bit-${BIT_VERSION}/package.json
+            --exclude=bit-${BIT_VERSION}/pnpm-lock.yaml
+            bit-${BIT_VERSION}
+
 
   bundle_version_linux:
     <<: *defaults
@@ -647,14 +659,7 @@ jobs:
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values linux --values linux &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm add @teambit/bit
-      - run:
-          name: compress bit for Linux x64
-          command: >
-            tar -cvf bit-${BIT_VERSION}.tar.gz
-            --exclude=bit-${BIT_VERSION}/.npmrc
-            --exclude=bit-${BIT_VERSION}/package.json
-            --exclude=bit-${BIT_VERSION}/pnpm-lock.yaml
-            bit-${BIT_VERSION}
+      - compress_bit
       - run:
           name: move to linux folder
           command: mkdir linux && mv bit-${BIT_VERSION}.tar.gz linux/bit-${BIT_VERSION}.tar.gz
@@ -664,14 +669,7 @@ jobs:
             cd bit-${BIT_VERSION} &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values arm64 --values arm64 &&
             pnpm install
-      - run:
-          name: compress bit for Linux arm64
-          command: >
-            tar -cvf bit-${BIT_VERSION}.tar.gz
-            --exclude=bit-${BIT_VERSION}/.npmrc
-            --exclude=bit-${BIT_VERSION}/package.json
-            --exclude=bit-${BIT_VERSION}/pnpm-lock.yaml
-            bit-${BIT_VERSION}
+      - compress_bit
       - run:
           name: move to linux-arm64 folder
           command: mkdir linux-arm64 && mv bit-${BIT_VERSION}.tar.gz linux-arm64/bit-${BIT_VERSION}.tar.gz
@@ -715,14 +713,7 @@ jobs:
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values darwin --values darwin &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm add @teambit/bit
-      - run:
-          name: compress bit for macOS x64
-          command: >
-            tar -cvf bit-${BIT_VERSION}.tar.gz
-            --exclude=bit-${BIT_VERSION}/.npmrc
-            --exclude=bit-${BIT_VERSION}/package.json
-            --exclude=bit-${BIT_VERSION}/pnpm-lock.yaml
-            bit-${BIT_VERSION}
+      - compress_bit
       - run:
           name: move to macos folder
           command: mkdir macos && mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
@@ -732,14 +723,7 @@ jobs:
             cd bit-${BIT_VERSION} &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values arm64 --values arm64 &&
             pnpm install
-      - run:
-          name: compress bit for macOS arm64
-          command: >
-            tar -cvf bit-${BIT_VERSION}.tar.gz
-            --exclude=bit-${BIT_VERSION}/.npmrc
-            --exclude=bit-${BIT_VERSION}/package.json
-            --exclude=bit-${BIT_VERSION}/pnpm-lock.yaml
-            bit-${BIT_VERSION}
+      - compress_bit
       - run:
           name: move to macos-arm64 folder
           command: mkdir macos-arm64 && mv bit-${BIT_VERSION}.tar.gz macos-arm64/bit-${BIT_VERSION}.tar.gz
@@ -784,14 +768,7 @@ jobs:
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values win32 --values win32 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm add @teambit/bit
-      - run:
-          name: compress bit for Windows x64
-          command: >
-            tar -cvf bit-${BIT_VERSION}.tar.gz
-            --exclude=bit-${BIT_VERSION}/.npmrc
-            --exclude=bit-${BIT_VERSION}/package.json
-            --exclude=bit-${BIT_VERSION}/pnpm-lock.yaml
-            bit-${BIT_VERSION}
+      - compress_bit
       - run:
           name: move to windows folder
           command: mkdir windows && mv bit-${BIT_VERSION}.tar.gz windows/bit-${BIT_VERSION}.tar.gz
