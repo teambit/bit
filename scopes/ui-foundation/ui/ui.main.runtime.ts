@@ -256,21 +256,16 @@ export class UiMain {
     return plugins;
   }
 
+  runtimeOptions: RuntimeOptions = {};
+
   /**
    * create a Bit UI runtime.
    */
-  async createRuntime({
-    uiRootName,
-    uiRootAspectIdOrName,
-    pattern,
-    dev,
-    port,
-    rebuild,
-    verbose,
-    skipUiBuild,
-  }: RuntimeOptions) {
+  async createRuntime(runtimeOptions: RuntimeOptions) {
+    this.runtimeOptions = runtimeOptions;
+    const { uiRootName, pattern, dev, port, rebuild, verbose, skipUiBuild } = this.runtimeOptions;
     // uiRootName to be deprecated
-    uiRootAspectIdOrName = uiRootName || uiRootAspectIdOrName;
+    const uiRootAspectIdOrName = uiRootName || runtimeOptions.uiRootAspectIdOrName;
     const maybeUiRoot = this.getUi(uiRootAspectIdOrName);
     if (!maybeUiRoot) throw new UnknownUI(uiRootAspectIdOrName, this.possibleUis());
 
