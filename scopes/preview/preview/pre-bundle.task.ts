@@ -1,16 +1,17 @@
 import { join } from 'path';
-import { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
+import { BuildContext, BuildTask, BuiltTaskResult, CAPSULE_ARTIFACTS_DIR, TaskLocation } from '@teambit/builder';
 import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { UIRoot, UiMain } from '@teambit/ui';
 import { generateBundleHash, getBundleArtifactDef } from './pre-bundle-utils';
 import { RUNTIME_NAME, buildPreBundlePreview } from './pre-bundle';
+import { PreviewAspect } from './preview.aspect';
 
 export const BUNDLE_TASK_NAME = 'PreBundlePreview';
 export const BUNDLE_DIR = 'ui-bundle';
 
 export class PreBundlePreviewTask implements BuildTask {
-  aspectId = 'teambit.preview/preview';
+  aspectId = PreviewAspect.id;
   name = BUNDLE_TASK_NAME;
   location: TaskLocation = 'end';
 
@@ -18,17 +19,17 @@ export class PreBundlePreviewTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const capsule: Capsule | undefined = context.capsuleNetwork.seedersCapsules.find(
-      (c) => c.component.id.toStringWithoutVersion() === 'teambit.preview/preview'
+      (c) => c.component.id.toStringWithoutVersion() === PreviewAspect.id
     );
     if (!capsule) {
       return { componentsResults: [] };
     }
 
     try {
-      const outputPath = join(capsule.path, 'artifacts', BUNDLE_DIR);
+      const outputPath = join(capsule.path, CAPSULE_ARTIFACTS_DIR, BUNDLE_DIR);
       this.logger.info(`Generating UI bundle at ${outputPath}...`);
       const [, uiRoot] = this.ui.getUi() as [string, UIRoot];
-      const resolvedAspects = await uiRoot.resolveAspects('preview');
+      const resolvedAspects = await uiRoot.resolveAspects(RUNTIME_NAME);
       await buildPreBundlePreview(resolvedAspects, outputPath);
       await this.generateHash(outputPath);
     } catch (error) {
