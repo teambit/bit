@@ -869,6 +869,9 @@ importers:
       '@teambit/react.ui.component-highlighter':
         specifier: 0.2.1
         version: 0.2.1(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/react.webpack.react-webpack':
+        specifier: ^1.0.23
+        version: 1.0.23(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(less@4.2.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/scope.ui.empty-scope':
         specifier: ^0.0.509
         version: 0.0.509(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
@@ -3919,7 +3922,7 @@ importers:
         version: file:scopes/defender/prettier(@types/react@17.0.74)(react@17.0.2)
       '@teambit/preview':
         specifier: workspace:*
-        version: file:scopes/preview/preview(@testing-library/react@12.1.5)(@types/react@17.0.74)(react@17.0.2)
+        version: file:scopes/preview/preview(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react-dom@17.0.25)(@types/react@17.0.74)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(less@4.2.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/preview.aspect-docs.preview':
         specifier: workspace:*
         version: file:scopes/preview/aspect-docs/preview(react-dom@17.0.2)(react@17.0.2)
@@ -5193,7 +5196,7 @@ importers:
         version: file:scopes/defender/prettier(@types/react@17.0.74)(react@18.2.0)
       '@teambit/preview':
         specifier: workspace:*
-        version: file:scopes/preview/preview(@testing-library/react@12.1.5)(@types/react@17.0.74)(react@18.2.0)
+        version: file:scopes/preview/preview(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react-dom@17.0.25)(@types/react@17.0.74)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(less@4.2.0)(react-dom@18.2.0)(react@18.2.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/preview.aspect-docs.preview':
         specifier: workspace:*
         version: file:scopes/preview/aspect-docs/preview(react-dom@18.2.0)(react@18.2.0)
@@ -6473,7 +6476,7 @@ importers:
         version: file:scopes/defender/prettier(@types/react@17.0.74)(react@17.0.2)
       '@teambit/preview':
         specifier: workspace:*
-        version: file:scopes/preview/preview(@testing-library/react@12.1.5)(@types/react@17.0.74)(react@17.0.2)
+        version: file:scopes/preview/preview(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react-dom@17.0.25)(@types/react@17.0.74)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(less@4.2.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/preview.aspect-docs.preview':
         specifier: workspace:*
         version: file:scopes/preview/aspect-docs/preview(react-dom@17.0.2)(react@17.0.2)
@@ -7732,7 +7735,7 @@ importers:
         version: file:scopes/defender/prettier(@types/react@17.0.74)(react@17.0.2)
       '@teambit/preview':
         specifier: workspace:*
-        version: file:scopes/preview/preview(@testing-library/react@12.1.5)(@types/react@17.0.74)(react@17.0.2)
+        version: file:scopes/preview/preview(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react-dom@17.0.25)(@types/react@17.0.74)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(less@4.2.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/preview.aspect-docs.preview':
         specifier: workspace:*
         version: file:scopes/preview/aspect-docs/preview(react-dom@17.0.2)(react@17.0.2)
@@ -8997,7 +9000,7 @@ importers:
         version: file:scopes/defender/prettier(@types/react@17.0.74)(react@17.0.2)
       '@teambit/preview':
         specifier: workspace:*
-        version: file:scopes/preview/preview(@testing-library/react@12.1.5)(@types/react@17.0.74)(react@17.0.2)
+        version: file:scopes/preview/preview(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react-dom@17.0.25)(@types/react@17.0.74)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(less@4.2.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/preview.aspect-docs.preview':
         specifier: workspace:*
         version: file:scopes/preview/aspect-docs/preview(react-dom@17.0.2)(react@17.0.2)
@@ -18256,6 +18259,9 @@ importers:
       '@teambit/preview.modules.preview-modules':
         specifier: ^1.0.2
         version: 1.0.2
+      '@teambit/react.webpack.react-webpack':
+        specifier: ^1.0.23
+        version: 1.0.23(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(less@4.2.0)(react@18.2.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/ui-foundation.ui.pages.static-error':
         specifier: ^0.0.92
         version: 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)
@@ -18307,6 +18313,15 @@ importers:
       react-router-dom:
         specifier: 6.8.1
         version: 6.8.1(react-dom@18.2.0)(react@18.2.0)
+      webpack:
+        specifier: 5.84.1
+        version: 5.84.1(esbuild@0.14.29)
+      webpack-manifest-plugin:
+        specifier: 4.0.2
+        version: 4.0.2(webpack@5.84.1)
+      webpack-merge:
+        specifier: 5.8.0
+        version: 5.8.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 0.0.15
@@ -18338,6 +18353,9 @@ importers:
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
+      '@types/webpack':
+        specifier: 5.28.1
+        version: 5.28.1(esbuild@0.14.29)
       cross-fetch:
         specifier: 3.1.5
         version: 3.1.5
@@ -27487,7 +27505,7 @@ packages:
       schema-utils: 3.3.0
       source-map: 0.7.4
       webpack: 5.89.0(esbuild@0.14.29)
-      webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.89.0)
+      webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.84.1)
 
   /@pmmmwh/react-refresh-webpack-plugin@0.5.4(@types/webpack@5.28.1)(react-refresh@0.10.0)(webpack-dev-server@4.15.0)(webpack@5.84.1):
     resolution: {integrity: sha512-zZbZeHQDnoTlt2AF+diQT0wsSXpvWiaIOZwBRdltNFhG1+I3ozyaw7U/nBiUwyJ0D+zwdXp0E3bWOl38Ag2BMw==}
@@ -32847,17 +32865,6 @@ packages:
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  /@teambit/base-ui.theme.fonts.book@1.0.2(react-dom@18.2.0)(react@17.0.2):
-    resolution: {integrity: sha1-TzaJASmrWjLeCze8rnRp8IZgxwA=}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 18.2.0(react@17.0.2)
     dev: false
 
   /@teambit/base-ui.theme.fonts.book@1.0.2(react-dom@18.2.0)(react@18.2.0):
@@ -47328,6 +47335,23 @@ packages:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
+  /@teambit/react.babel.bit-react-transformer@1.0.2(react-dom@18.2.0)(react@17.0.2):
+    resolution: {integrity: sha512-ZD9JtXgNthmDE0OY7ojda1V3SmveqYTVfy+LreM2PKJ+FipwHFVAOE4mQ+VMxmal+I+iknPnnexGlPGJi1D+Xg==}
+    engines: {node: '>=12.22.0'}
+    dependencies:
+      '@babel/core': 7.19.6
+      '@babel/types': 7.22.3
+      '@teambit/component-id': 0.0.427
+      '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.32(react-dom@18.2.0)(react@17.0.2)
+      find-root: 1.1.0
+      fs-extra: 10.0.0
+      memoizee: 0.4.15
+    transitivePeerDependencies:
+      - react
+      - react-dom
+      - supports-color
+    dev: false
+
   /@teambit/react.babel.bit-react-transformer@1.0.2(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-ZD9JtXgNthmDE0OY7ojda1V3SmveqYTVfy+LreM2PKJ+FipwHFVAOE4mQ+VMxmal+I+iknPnnexGlPGJi1D+Xg==}
     engines: {node: '>=12.22.0'}
@@ -47921,6 +47945,17 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
+  /@teambit/react.ui.highlighter.component-metadata.bit-component-meta@0.0.32(react-dom@18.2.0)(react@17.0.2):
+    resolution: {integrity: sha512-T6vM8J7O8J3NeaVRGDxBhIVwLGAtihm4VAJVjmVX7HZaDusXIpYrNbzFDZNNZQ9EGK4GGCRcpZlWPKWV1ijnuQ==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      react: 17.0.2
+      react-dom: 18.2.0(react@17.0.2)
+    dev: false
+
   /@teambit/react.ui.highlighter.component-metadata.bit-component-meta@0.0.32(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-T6vM8J7O8J3NeaVRGDxBhIVwLGAtihm4VAJVjmVX7HZaDusXIpYrNbzFDZNNZQ9EGK4GGCRcpZlWPKWV1ijnuQ==}
     engines: {node: '>=12.22.0'}
@@ -48090,6 +48125,146 @@ packages:
       - webpack-dev-server
       - webpack-hot-middleware
       - webpack-plugin-serve
+
+  /@teambit/react.webpack.react-webpack@1.0.23(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(less@4.2.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
+    resolution: {integrity: sha512-mGlldzbz+/DanhvrZCJi6JUUXxQplzC796HXoWYVcIgdy6ME6Ol/TfMQR5Ubr7FFNwxevPfZWJ9ObbYAwdESVA==}
+    dependencies:
+      '@babel/preset-env': 7.22.15(@babel/core@7.19.6)
+      '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
+      '@bitdev/react.webpack.refresh-overlay': 0.0.1
+      '@pmmmwh/react-refresh-webpack-plugin': 0.5.11(@types/webpack@5.28.1)(react-refresh@0.14.0)(webpack-dev-server@4.15.0)(webpack@5.89.0)
+      '@svgr/webpack': 8.1.0(typescript@4.7.4)
+      '@teambit/component-id': 1.0.0
+      '@teambit/mdx.modules.mdx-loader': 1.0.14(@babel/core@7.19.6)(esbuild@0.14.29)
+      '@teambit/react.babel.bit-react-transformer': 1.0.2(react-dom@18.2.0)(react@17.0.2)
+      '@teambit/webpack.modules.generate-style-loaders': 1.0.0
+      '@teambit/webpack.modules.style-regexps': 1.0.4
+      '@teambit/webpack.webpack-dev-server': 1.0.7(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack@5.89.0)
+      babel-loader: 9.1.0(@babel/core@7.19.6)(webpack@5.89.0)
+      babel-preset-react-app: 10.0.1
+      browserslist: 4.21.4
+      css-loader: 6.7.2(webpack@5.89.0)
+      css-minimizer-webpack-plugin: 5.0.1(esbuild@0.14.29)(webpack@5.89.0)
+      esbuild: 0.14.29
+      less-loader: 11.1.0(less@4.2.0)(webpack@5.89.0)
+      lodash: 4.17.21
+      mini-css-extract-plugin: 2.7.6(webpack@5.89.0)
+      new-url-loader: 0.1.1(webpack@5.89.0)
+      postcss: 8.4.19
+      postcss-flexbugs-fixes: 5.0.2(postcss@8.4.19)
+      postcss-loader: 7.0.1(postcss@8.4.19)(webpack@5.89.0)
+      postcss-normalize: 10.0.1(browserslist@4.21.4)(postcss@8.4.19)
+      postcss-preset-env: 7.8.3(postcss@8.4.19)
+      react-dev-utils: 12.0.1(eslint@7.32.0)(typescript@4.7.4)(webpack@5.89.0)
+      react-dom: 18.2.0(react@17.0.2)
+      react-refresh: 0.14.0
+      resolve-url-loader: 5.0.0
+      sass: 1.63.6
+      sass-loader: 13.3.2(sass@1.63.6)(webpack@5.89.0)
+      source-map-loader: 4.0.1(webpack@5.89.0)
+      style-loader: 3.3.1(webpack@5.89.0)
+      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.89.0)
+      webpack: 5.89.0(esbuild@0.14.29)
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@parcel/css'
+      - '@swc/core'
+      - '@swc/css'
+      - '@teambit/legacy'
+      - '@types/webpack'
+      - bufferutil
+      - clean-css
+      - csso
+      - debug
+      - eslint
+      - fibers
+      - less
+      - lightningcss
+      - node-sass
+      - react
+      - sass-embedded
+      - sockjs-client
+      - supports-color
+      - type-fest
+      - typescript
+      - uglify-js
+      - utf-8-validate
+      - vue-template-compiler
+      - webpack-cli
+      - webpack-dev-server
+      - webpack-hot-middleware
+      - webpack-plugin-serve
+    dev: false
+
+  /@teambit/react.webpack.react-webpack@1.0.23(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(less@4.2.0)(react@18.2.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
+    resolution: {integrity: sha512-mGlldzbz+/DanhvrZCJi6JUUXxQplzC796HXoWYVcIgdy6ME6Ol/TfMQR5Ubr7FFNwxevPfZWJ9ObbYAwdESVA==}
+    dependencies:
+      '@babel/preset-env': 7.22.15(@babel/core@7.19.6)
+      '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
+      '@bitdev/react.webpack.refresh-overlay': 0.0.1
+      '@pmmmwh/react-refresh-webpack-plugin': 0.5.11(@types/webpack@5.28.1)(react-refresh@0.14.0)(webpack-dev-server@4.15.0)(webpack@5.89.0)
+      '@svgr/webpack': 8.1.0(typescript@4.7.4)
+      '@teambit/component-id': 1.0.0
+      '@teambit/mdx.modules.mdx-loader': 1.0.14(@babel/core@7.19.6)(esbuild@0.14.29)
+      '@teambit/react.babel.bit-react-transformer': 1.0.2(react-dom@18.2.0)(react@18.2.0)
+      '@teambit/webpack.modules.generate-style-loaders': 1.0.0
+      '@teambit/webpack.modules.style-regexps': 1.0.4
+      '@teambit/webpack.webpack-dev-server': 1.0.7(@teambit/legacy@node_modules+@teambit+legacy)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack@5.89.0)
+      babel-loader: 9.1.0(@babel/core@7.19.6)(webpack@5.89.0)
+      babel-preset-react-app: 10.0.1
+      browserslist: 4.21.4
+      css-loader: 6.7.2(webpack@5.89.0)
+      css-minimizer-webpack-plugin: 5.0.1(esbuild@0.14.29)(webpack@5.89.0)
+      esbuild: 0.14.29
+      less-loader: 11.1.0(less@4.2.0)(webpack@5.89.0)
+      lodash: 4.17.21
+      mini-css-extract-plugin: 2.7.6(webpack@5.89.0)
+      new-url-loader: 0.1.1(webpack@5.89.0)
+      postcss: 8.4.19
+      postcss-flexbugs-fixes: 5.0.2(postcss@8.4.19)
+      postcss-loader: 7.0.1(postcss@8.4.19)(webpack@5.89.0)
+      postcss-normalize: 10.0.1(browserslist@4.21.4)(postcss@8.4.19)
+      postcss-preset-env: 7.8.3(postcss@8.4.19)
+      react-dev-utils: 12.0.1(eslint@7.32.0)(typescript@4.7.4)(webpack@5.89.0)
+      react-dom: 18.2.0(react@18.2.0)
+      react-refresh: 0.14.0
+      resolve-url-loader: 5.0.0
+      sass: 1.63.6
+      sass-loader: 13.3.2(sass@1.63.6)(webpack@5.89.0)
+      source-map-loader: 4.0.1(webpack@5.89.0)
+      style-loader: 3.3.1(webpack@5.89.0)
+      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.89.0)
+      webpack: 5.89.0(esbuild@0.14.29)
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@parcel/css'
+      - '@swc/core'
+      - '@swc/css'
+      - '@teambit/legacy'
+      - '@types/webpack'
+      - bufferutil
+      - clean-css
+      - csso
+      - debug
+      - eslint
+      - fibers
+      - less
+      - lightningcss
+      - node-sass
+      - react
+      - sass-embedded
+      - sockjs-client
+      - supports-color
+      - type-fest
+      - typescript
+      - uglify-js
+      - utf-8-validate
+      - vue-template-compiler
+      - webpack-cli
+      - webpack-dev-server
+      - webpack-hot-middleware
+      - webpack-plugin-serve
+    dev: false
 
   /@teambit/scope.content.scope-overview@1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-q6rTENX4D2/Cg2fabNBlj8miHdc=}
@@ -50125,18 +50300,6 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/ui-foundation.ui.pages.preview-not-found@0.0.84(react-dom@18.2.0)(react@17.0.2):
-    resolution: {integrity: sha512-Odjiu1fDYg0dc5VK8oFEAjyAYWWBOVk4i+x74o9lI8hKXbjtVBdSvLcvyvQQKV2wxqlfg9NlslUlHSrsIcMl+g==}
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 18.2.0(react@17.0.2)
-    dev: false
-
   /@teambit/ui-foundation.ui.pages.preview-not-found@0.0.84(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-Odjiu1fDYg0dc5VK8oFEAjyAYWWBOVk4i+x74o9lI8hKXbjtVBdSvLcvyvQQKV2wxqlfg9NlslUlHSrsIcMl+g==}
     engines: {node: '>=12.22.0'}
@@ -50182,26 +50345,6 @@ packages:
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-    transitivePeerDependencies:
-      - '@testing-library/react'
-      - '@types/react'
-    dev: false
-
-  /@teambit/ui-foundation.ui.pages.static-error@0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@17.0.2):
-    resolution: {integrity: sha512-IMNDNB5Vy9hMCW5GXGlfa/UFzos1IZVTOBPVZcdDU6+6dIJwcUZtEt/kl2u6HcJXRO5v/BvMUy5AjQDKZOFgmg==}
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/base-ui.theme.fonts.book': 1.0.2(react-dom@18.2.0)(react@17.0.2)
-      '@teambit/design.ui.pages.not-found': 0.0.366(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@17.0.2)
-      '@teambit/design.ui.pages.server-error': 0.0.366(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@17.0.2)
-      '@teambit/ui-foundation.ui.pages.preview-not-found': 0.0.84(react-dom@18.2.0)(react@17.0.2)
-      '@teambit/ui-foundation.ui.rendering.html': 0.0.85(react-dom@18.2.0)(react@17.0.2)
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 18.2.0(react@17.0.2)
     transitivePeerDependencies:
       - '@testing-library/react'
       - '@types/react'
@@ -50438,18 +50581,6 @@ packages:
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  /@teambit/ui-foundation.ui.rendering.html@0.0.85(react-dom@18.2.0)(react@17.0.2):
-    resolution: {integrity: sha512-vhUMNosGssFUIZrEyBlAZOvU3/dK/6X6gZYharYamRY4xedI6gS1BfoTSmhwOvW23FYr3Pm3K3/1TfaTvYlm5w==}
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 18.2.0(react@17.0.2)
     dev: false
 
   /@teambit/ui-foundation.ui.rendering.html@0.0.85(react-dom@18.2.0)(react@18.2.0):
@@ -51485,6 +51616,11 @@ packages:
   /@teambit/webpack.modules.style-regexps@1.0.2:
     resolution: {integrity: sha512-ONfN6gcvBqdphFyugGdmFRZ0sKJ+r6yqBm0O991pCwYSAaLRG1BXOqsMEwus6NESHRsvKUV4UlBqhOoDH8hBvQ==}
     engines: {node: '>=12.22.0'}
+
+  /@teambit/webpack.modules.style-regexps@1.0.4:
+    resolution: {integrity: sha512-NA0/Yqp11j5PENwXw1gXUPPYFDaamQ1HUcVfkjTXpK/taE908kNmLRtFT7u7mIyUd6Ff7bcKBFOI2olcAQVFGQ==}
+    engines: {node: '>=12.22.0'}
+    dev: false
 
   /@teambit/webpack.transformers.favicon-reload@1.0.0:
     resolution: {integrity: sha512-FPKaTpT0G4/OTciVg0A+RRn7zWiJwFLgymB36vhaIt6URsc0V+7mxpVQOSw2+lXQ5Yp9/sRlRd9MjzEpLoTamw==}
@@ -67807,7 +67943,7 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
-      browserslist: 4.21.4
+      browserslist: 4.22.2
       caniuse-api: 3.0.0
       colord: 2.9.3
       postcss: 8.4.32
@@ -67830,7 +67966,7 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
-      browserslist: 4.21.4
+      browserslist: 4.22.2
       postcss: 8.4.32
       postcss-value-parser: 4.2.0
 
@@ -68259,7 +68395,7 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
-      browserslist: 4.21.4
+      browserslist: 4.22.2
       caniuse-api: 3.0.0
       cssnano-utils: 4.0.1(postcss@8.4.32)
       postcss: 8.4.32
@@ -68325,7 +68461,7 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
-      browserslist: 4.21.4
+      browserslist: 4.22.2
       cssnano-utils: 4.0.1(postcss@8.4.32)
       postcss: 8.4.32
       postcss-value-parser: 4.2.0
@@ -68536,7 +68672,7 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
-      browserslist: 4.21.4
+      browserslist: 4.22.2
       postcss: 8.4.32
       postcss-value-parser: 4.2.0
 
@@ -68776,7 +68912,7 @@ packages:
       '@csstools/postcss-trigonometric-functions': 1.0.2(postcss@8.4.19)
       '@csstools/postcss-unset-value': 1.0.2(postcss@8.4.19)
       autoprefixer: 10.4.16(postcss@8.4.19)
-      browserslist: 4.21.4
+      browserslist: 4.22.2
       css-blank-pseudo: 3.0.3(postcss@8.4.19)
       css-has-pseudo: 3.0.4(postcss@8.4.19)
       css-prefers-color-scheme: 6.0.3(postcss@8.4.19)
@@ -68848,7 +68984,7 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
-      browserslist: 4.21.4
+      browserslist: 4.22.2
       caniuse-api: 3.0.0
       postcss: 8.4.32
 
@@ -69650,7 +69786,7 @@ packages:
     dependencies:
       '@babel/code-frame': 7.23.5
       address: 1.2.2
-      browserslist: 4.21.4
+      browserslist: 4.22.2
       chalk: 4.1.2
       cross-spawn: 7.0.3
       detect-port-alt: 1.1.6
@@ -69691,7 +69827,7 @@ packages:
     dependencies:
       '@babel/code-frame': 7.23.5
       address: 1.2.2
-      browserslist: 4.21.4
+      browserslist: 4.22.2
       chalk: 4.1.2
       cross-spawn: 7.0.3
       detect-port-alt: 1.1.6
@@ -72737,7 +72873,7 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
-      browserslist: 4.21.4
+      browserslist: 4.22.2
       postcss: 8.4.32
       postcss-selector-parser: 6.0.15
 
@@ -74767,7 +74903,6 @@ packages:
       range-parser: 1.2.1
       schema-utils: 4.2.0
       webpack: 5.84.1(esbuild@0.14.29)
-    dev: false
 
   /webpack-dev-middleware@5.3.3(webpack@5.89.0):
     resolution: {integrity: sha512-hj5CYrY0bZLB+eTO+x/j67Pkrquiy7kWepMHmUMoPsmcUaeEnQJqFzHJOyxgWlq746/wUuA64p9ta34Kyb01pA==}
@@ -74831,7 +74966,6 @@ packages:
       - debug
       - supports-color
       - utf-8-validate
-    dev: false
 
   /webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.89.0):
     resolution: {integrity: sha512-HmNB5QeSl1KpulTBQ8UT4FPrByYyaLxpJoQ0+s7EvUrMc16m0ZS1sgb1XGqzmgCPk0c9y+aaXxn11tbLzuM7NQ==}
@@ -82411,51 +82545,85 @@ packages:
     name: '@teambit/preview.cli.webpack-events-listener'
     dev: false
 
-  file:scopes/preview/preview(@testing-library/react@12.1.5)(@types/react@17.0.74)(react@17.0.2):
+  file:scopes/preview/preview(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react-dom@17.0.25)(@types/react@17.0.74)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(less@4.2.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
     resolution: {directory: scopes/preview/preview, type: directory}
     id: file:scopes/preview/preview
     name: '@teambit/preview'
     peerDependencies:
       '@types/react': ^17.0.67
+      '@types/react-dom': ^17.0.21
       react: ^17.0.0 || ^18.0.0
+      react-dom: ^17.0.0 || ^18.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
       '@teambit/harmony': 0.4.6
-      '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/preview.modules.preview-modules': 1.0.2
-      '@teambit/ui-foundation.ui.pages.static-error': 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@17.0.2)
+      '@teambit/react.webpack.react-webpack': 1.0.23(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(less@4.2.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+      '@teambit/ui-foundation.ui.pages.static-error': 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@types/react': 17.0.74
       '@types/react-dom': 17.0.25
       camelcase: 6.2.0
-      cross-fetch: 3.1.5
       fs-extra: 10.0.0
       graphql: 15.8.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      memoizee: 0.4.15
       mime: 2.5.2
       mocha: 10.2.0
       object-hash: 2.1.1
       p-map-series: 2.1.0
       react: 17.0.2
-      react-dom: 18.2.0(react@17.0.2)
-      react-router-dom: 6.8.1(react-dom@18.2.0)(react@17.0.2)
+      react-dom: 17.0.2(react@17.0.2)
+      react-router-dom: 6.8.1(react-dom@17.0.2)(react@17.0.2)
+      webpack: 5.84.1(esbuild@0.14.29)
+      webpack-manifest-plugin: 4.0.2(webpack@5.84.1)
+      webpack-merge: 5.8.0
     transitivePeerDependencies:
+      - '@babel/core'
+      - '@parcel/css'
+      - '@swc/core'
+      - '@swc/css'
+      - '@teambit/legacy'
       - '@testing-library/react'
+      - '@types/webpack'
+      - bufferutil
+      - clean-css
+      - csso
+      - debug
       - encoding
+      - esbuild
+      - eslint
+      - fibers
+      - less
+      - lightningcss
+      - node-sass
+      - sass-embedded
+      - sockjs-client
+      - supports-color
+      - type-fest
+      - typescript
+      - uglify-js
+      - utf-8-validate
+      - vue-template-compiler
+      - webpack-cli
+      - webpack-dev-server
+      - webpack-hot-middleware
+      - webpack-plugin-serve
     dev: false
 
-  file:scopes/preview/preview(@testing-library/react@12.1.5)(@types/react@17.0.74)(react@18.2.0):
+  file:scopes/preview/preview(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react-dom@17.0.25)(@types/react@17.0.74)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(less@4.2.0)(react-dom@18.2.0)(react@18.2.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
     resolution: {directory: scopes/preview/preview, type: directory}
     id: file:scopes/preview/preview
     name: '@teambit/preview'
     peerDependencies:
       '@types/react': ^17.0.67
+      '@types/react-dom': ^17.0.21
       react: ^17.0.0 || ^18.0.0
+      react-dom: ^17.0.0 || ^18.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@18.2.0)
       '@teambit/bit-error': 0.0.404
@@ -82463,18 +82631,17 @@ packages:
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.2.0)(react@18.2.0)
       '@teambit/preview.modules.preview-modules': 1.0.2
+      '@teambit/react.webpack.react-webpack': 1.0.23(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(less@4.2.0)(react@18.2.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/ui-foundation.ui.pages.static-error': 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)
       '@types/react': 17.0.74
       '@types/react-dom': 17.0.25
       camelcase: 6.2.0
-      cross-fetch: 3.1.5
       fs-extra: 10.0.0
       graphql: 15.8.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      memoizee: 0.4.15
       mime: 2.5.2
       mocha: 10.2.0
       object-hash: 2.1.1
@@ -82482,9 +82649,40 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       react-router-dom: 6.8.1(react-dom@18.2.0)(react@18.2.0)
+      webpack: 5.84.1(esbuild@0.14.29)
+      webpack-manifest-plugin: 4.0.2(webpack@5.84.1)
+      webpack-merge: 5.8.0
     transitivePeerDependencies:
+      - '@babel/core'
+      - '@parcel/css'
+      - '@swc/core'
+      - '@swc/css'
+      - '@teambit/legacy'
       - '@testing-library/react'
+      - '@types/webpack'
+      - bufferutil
+      - clean-css
+      - csso
+      - debug
       - encoding
+      - esbuild
+      - eslint
+      - fibers
+      - less
+      - lightningcss
+      - node-sass
+      - sass-embedded
+      - sockjs-client
+      - supports-color
+      - type-fest
+      - typescript
+      - uglify-js
+      - utf-8-validate
+      - vue-template-compiler
+      - webpack-cli
+      - webpack-dev-server
+      - webpack-hot-middleware
+      - webpack-plugin-serve
     dev: false
 
   file:scopes/preview/ui/component-preview(react-dom@17.0.2)(react@17.0.2):
