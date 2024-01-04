@@ -5,7 +5,6 @@ import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { merge } from 'webpack-merge';
 import { fallbacksProvidePluginConfig } from '@teambit/webpack';
-
 import { html } from './html';
 import createBaseConfig from './webpack.base.config';
 
@@ -17,18 +16,18 @@ export default function createWebpackConfig(
 ): Configuration {
   const baseConfig = createBaseConfig(outputDir, entryFiles);
   const browserConfig = createBrowserConfig(outputDir, title, publicDir);
-
+  // @ts-ignore that's an issue because of different types/webpack version
   const combined = merge(baseConfig, browserConfig);
-
+  // @ts-ignore that's an issue because of different types/webpack version
   return combined;
 }
 
 function createBrowserConfig(outputDir: string, title: string, publicDir: string) {
   const browserConfig: Configuration = {
-    // target: 'web', // already default
-
     output: {
       path: path.resolve(outputDir, publicDir),
+      filename: 'static/js/[name].[contenthash:8].js',
+      chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
       // webpack uses `publicPath` to determine where the app is being served from.
       // It requires a trailing slash, or the file assets will get an incorrect path.
       // We inferred the "public path" (such as / or /my-project) from homepage.
@@ -122,6 +121,7 @@ function createBrowserConfig(outputDir: string, title: string, publicDir: string
           minifyURLs: true,
         },
       }),
+
       new ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
     ],
   };

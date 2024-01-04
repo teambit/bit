@@ -6,6 +6,7 @@ import { Icon } from '@teambit/evangelist.elements.icon';
 import { ComponentModel } from '@teambit/component';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
 import DocsAspect from '@teambit/docs';
+
 import styles from './preview-placeholder.module.scss';
 
 export function getCompositions(component: ComponentDescriptor) {
@@ -39,20 +40,25 @@ export function PreviewPlaceholder({
   component,
   componentDescriptor,
   Container = ({ children, className }) => <div className={className}>{children}</div>,
-  shouldShowPreview = true,
+  shouldShowPreview = (component?.compositions.length ?? 0) > 0 && component?.buildStatus !== 'pending',
 }: {
   component?: ComponentModel;
   componentDescriptor?: ComponentDescriptor;
   Container?: ComponentType<{ component: any; children: ReactNode; className: string }>;
   shouldShowPreview?: boolean;
 }) {
+  const compositions = component?.compositions;
+  const description = componentDescriptor && getDescription(componentDescriptor);
+  const displayName = componentDescriptor && getDisplayName(componentDescriptor);
+
+  const selectedPreview = useMemo(() => {
+    if (!shouldShowPreview || !component) return undefined;
+    return selectDefaultComposition(component);
+  }, [component, shouldShowPreview]);
+
   if (!component || !componentDescriptor) return null;
 
-  const compositions = component.compositions;
-  const description = getDescription(componentDescriptor);
-  const displayName = getDisplayName(componentDescriptor);
-
-  if (!compositions || !compositions.length || component.buildStatus?.toLowerCase() !== 'succeed') {
+  if (!shouldShowPreview || !compositions || !compositions.length) {
     return (
       <Container className={styles.noPreview} component={component}>
         <div className={styles.scope}>
@@ -65,13 +71,8 @@ export function PreviewPlaceholder({
       </Container>
     );
   }
-
-  const selectedPreview = useMemo(() => {
-    if (!shouldShowPreview) return undefined;
-    return selectDefaultComposition(component);
-  }, [component, shouldShowPreview]);
-
   const name = component.id.toString();
+
   if (component.buildStatus === 'pending')
     return (
       <div className={styles.previewPlaceholder} data-tip="" data-for={name}>
@@ -86,13 +87,6 @@ export function PreviewPlaceholder({
       <div className={styles.previewOverlay} />
     </>
   );
-
-  // return (
-  //   <div className={styles.previewPlaceholder} data-tip="" data-for={name}>
-  //     <Icon of="img" />
-  //     <div>No preview available</div>
-  //   </div>
-  // );
 }
 
 const PREVIEW_COMPOSITION_SUFFIX = 'Preview';
