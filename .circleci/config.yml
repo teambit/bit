@@ -609,6 +609,15 @@ jobs:
     steps:
       - run: sleep 300;
 
+  setup_pnpm:
+    steps:
+      - run:
+          name: install pnpm
+          command: >
+            npm config set prefix '~/.npm-global' &&
+            npm install --global pnpm@8.10.4 &&
+            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+
   bundle_version_linux:
     <<: *defaults
     environment:
@@ -627,12 +636,7 @@ jobs:
       - run:
           name: create empty folder
           command: mkdir bit-${BIT_VERSION}
-      - run:
-          name: install pnpm
-          command: >
-            npm config set prefix '~/.npm-global' &&
-            npm install --global pnpm@8.10.4 &&
-            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+      - setup_pnpm
       - run:
           name: install bit for Linux x64
           command: >
@@ -700,12 +704,7 @@ jobs:
       - run:
           name: create empty folder
           command: mkdir bit-${BIT_VERSION}
-      - run:
-          name: install pnpm
-          command: >
-            npm config set prefix '~/.npm-global' &&
-            npm install --global pnpm@8.10.4 &&
-            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+      - setup_pnpm
       - run:
           name: install bit for macOS x64
           command: >
@@ -773,12 +772,7 @@ jobs:
       - run:
           name: create empty folder
           command: mkdir bit-${BIT_VERSION}
-      - run:
-          name: install pnpm
-          command: >
-            npm config set prefix '~/.npm-global' &&
-            npm install --global pnpm@8.10.4 &&
-            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+      - setup_pnpm
       - run:
           name: install bit for Windows x64
           command: >
@@ -1596,23 +1590,23 @@ workflows:
   #     - checkout_code:
   #         filters:
   #           branches:
-  #             only: release-with-pnpm
+  #             only: improve-bundling
   #     - bundle_version_linux:
   #         filters:
   #           branches:
-  #             only: release-with-pnpm
+  #             only: improve-bundling
   #     - bundle_version_macos:
   #         filters:
   #           branches:
-  #             only: release-with-pnpm
+  #             only: improve-bundling
   #     - bundle_version_windows:
   #         filters:
   #           branches:
-  #             only: release-with-pnpm
+  #             only: improve-bundling
   #     - harmony_publish_to_gcloud:
   #         filters:
   #           branches:
-  #             only: release-with-pnpm
+  #             only: improve-bundling
   #         requires:
   #           - bundle_version_linux
   #           - bundle_version_macos
