@@ -212,6 +212,38 @@ commands: # reusable commands
       - run: Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "C:\Users\circleci\AppData\Local\.bvm;$env:PATH"'
       - run: $Env:Path.Split(';')
 
+  setup_bit_version:
+    steps:
+      - run:
+          name: print bit version
+          command: npm view @teambit/bit version
+      - run:
+          name: Setup bit version environment variables
+          command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
+      - run:
+          name: create empty folder
+          command: mkdir bit-${BIT_VERSION}
+
+  setup_pnpm:
+    steps:
+      - run:
+          name: Install pnpm
+          command: >
+            npm config set prefix '~/.npm-global' &&
+            npm install --global pnpm@8.10.4 &&
+            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+
+  compress_bit:
+    steps:
+      - run:
+          name: Compress Bit
+          command: >
+            tar -cvf bit-${BIT_VERSION}.tar.gz
+            --exclude=bit-${BIT_VERSION}/.npmrc
+            --exclude=bit-${BIT_VERSION}/package.json
+            --exclude=bit-${BIT_VERSION}/pnpm-lock.yaml
+            bit-${BIT_VERSION}
+
 jobs:
   checkout_code:
     <<: *defaults
@@ -608,41 +640,6 @@ jobs:
     resource_class: small
     steps:
       - run: sleep 300;
-
-  setup_bit_version:
-    <<: *defaults
-    steps:
-      - run:
-          name: print bit version
-          command: npm view @teambit/bit version
-      - run:
-          name: Setup bit version environment variables
-          command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
-      - run:
-          name: create empty folder
-          command: mkdir bit-${BIT_VERSION}
-
-  setup_pnpm:
-    <<: *defaults
-    steps:
-      - run:
-          name: Install pnpm
-          command: >
-            npm config set prefix '~/.npm-global' &&
-            npm install --global pnpm@8.10.4 &&
-            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
-
-  compress_bit:
-    <<: *defaults
-    steps:
-      - run:
-          name: Compress Bit
-          command: >
-            tar -cvf bit-${BIT_VERSION}.tar.gz
-            --exclude=bit-${BIT_VERSION}/.npmrc
-            --exclude=bit-${BIT_VERSION}/package.json
-            --exclude=bit-${BIT_VERSION}/pnpm-lock.yaml
-            bit-${BIT_VERSION}
 
   bundle_version_linux:
     <<: *defaults
