@@ -64,6 +64,10 @@ export class ApiServerMain {
       sendEventsToClients('onBitmapChange', {});
     });
 
+    this.workspace.registerOnWorkspaceConfigChange(async () => {
+      sendEventsToClients('onWorkspaceConfigChange', {});
+    });
+
     this.installer.registerPostInstall(async () => {
       sendEventsToClients('onPostInstall', {});
     });
