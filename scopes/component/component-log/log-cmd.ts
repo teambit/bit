@@ -18,7 +18,6 @@ export default class LogCmd implements Command {
     ['f', 'full-hash', 'show full hash of the snap (default to the first 9 characters for --one-line/--parents flags)'],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
-  migration = true;
   remoteOp = true; // should support log against remote
   skipWorkspace = true;
   arguments = [{ name: 'id', description: 'component-id or component-name' }];

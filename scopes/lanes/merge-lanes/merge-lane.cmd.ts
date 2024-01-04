@@ -90,7 +90,6 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
   ] as CommandOptions;
   loader = true;
   private = true;
-  migration = true;
   remoteOp = true;
 
   constructor(private mergeLanes: MergeLanesMain, private globalConfig: GlobalConfigMain) {}

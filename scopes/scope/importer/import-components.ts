@@ -49,7 +49,6 @@ export type ImportOptions = {
   installNpmPackages: boolean; // default: true
   writeConfigFiles: boolean; // default: true
   objectsOnly?: boolean;
-  saveDependenciesAsComponents?: boolean;
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages, not as imported
   importDependents?: boolean;
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
@@ -113,7 +112,6 @@ export default class ImportComponents {
     let result;
     loader.start(BEFORE_IMPORT_ACTION);
     const startTime = process.hrtime();
-    this.options.saveDependenciesAsComponents = this.consumer.config._saveDependenciesAsComponents;
     if (this.options.lanes && !this.options.ids.length) {
       result = await this.importObjectsOnLane();
       loader.succeed(BEFORE_IMPORT_ACTION, startTime);

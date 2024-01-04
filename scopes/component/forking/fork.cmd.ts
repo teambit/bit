@@ -59,7 +59,6 @@ export class ForkCmd implements Command {
     }
   ];
   loader = true;
-  migration = true;
   remoteOp = true;
 
   constructor(private forking: ForkingMain) {}

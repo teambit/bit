@@ -17,7 +17,6 @@ export class RecoverCmd implements Command {
     ['', 'skip-write-config-files', 'do not write config files (such as eslint, tsconfig, prettier, etc...)'],
   ] as CommandOptions;
   loader = true;
-  migration = true;
 
   constructor(private remove: RemoveMain) {}
 

@@ -98,7 +98,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     ],
     ['', 'disable-deploy-pipeline', 'DEPRECATED. use --disable-tag-pipeline instead'],
   ] as CommandOptions;
-  migration = true;
   remoteOp = true; // In case a compiler / tester is not installed
   examples = [{ cmd: 'tag --ver 1.0.0', description: 'tag all components to version 1.0.0' }];
 

@@ -198,6 +198,7 @@ export async function install(
     | 'peerDependencyRules'
     | 'neverBuiltDependencies'
     | 'ignorePackageManifest'
+    | 'hoistWorkspacePackages'
   > &
     Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

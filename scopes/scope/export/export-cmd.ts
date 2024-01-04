@@ -58,7 +58,6 @@ export class ExportCmd implements Command {
     ['j', 'json', 'show output in json format'],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   group = 'collaborate';
   remoteOp = true;
 

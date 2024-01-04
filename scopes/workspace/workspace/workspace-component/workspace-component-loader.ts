@@ -18,6 +18,7 @@ import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
 import { ComponentLoadOptions as LegacyComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
+import { pMapPool } from '@teambit/legacy/dist/utils/promise-with-concurrent';
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 import { MergeConfigConflict } from '../exceptions/merge-config-conflict';
@@ -140,6 +141,9 @@ export class WorkspaceComponentLoader {
     const components = [...loadedComponents, ...loadOrCached.fromCache];
 
     // this.logger.clearStatusLine();
+    components.forEach((comp) => {
+      this.saveInCache(comp, { loadExtensions: true, executeLoadSlot: true });
+    });
     return { components, invalidComponents };
   }
 
@@ -288,7 +292,7 @@ export class WorkspaceComponentLoader {
     await this.workspace.loadComponentsExtensions(mergedExtensions);
     let wsComponentsWithAspects = workspaceComponents;
     // if (loadOpts.seeders) {
-    wsComponentsWithAspects = await pMap(workspaceComponents, (component) => this.executeLoadSlot(component), {
+    wsComponentsWithAspects = await pMapPool(workspaceComponents, (component) => this.executeLoadSlot(component), {
       concurrency: concurrentComponentsLimit(),
     });
     await this.warnAboutMisconfiguredEnvs(wsComponentsWithAspects);
@@ -828,7 +832,7 @@ export class WorkspaceComponentLoader {
 }
 
 function createComponentCacheKey(id: ComponentID, loadOpts?: ComponentLoadOptions): string {
-  const relevantOpts = pick(loadOpts, ['loadExtensions', 'executeLoadSlot']);
+  const relevantOpts = pick(loadOpts, ['loadExtensions', 'executeLoadSlot', 'loadDocs', 'loadCompositions']);
   return `${id.toString()}:${JSON.stringify(sortKeys(relevantOpts ?? {}))}`;
 }
 
