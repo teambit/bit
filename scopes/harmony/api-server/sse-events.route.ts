@@ -9,7 +9,7 @@ type CLIENT = {
 
 let clients: CLIENT[] = [];
 
-type EventName = 'onComponentChange' | 'onBitmapChange' | 'onPostInstall';
+type EventName = 'onComponentChange' | 'onBitmapChange' | 'onWorkspaceConfigChange' | 'onPostInstall';
 
 export function sendEventsToClients(eventName: EventName, data: any) {
   clients.forEach((client) => client.response.write(`event:${eventName}\ndata: ${JSON.stringify(data)}\n\n`));

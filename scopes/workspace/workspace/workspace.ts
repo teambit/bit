@@ -77,6 +77,8 @@ import {
   OnAspectsResolveSlot,
   OnBitmapChange,
   OnBitmapChangeSlot,
+  OnWorkspaceConfigChange,
+  OnWorkspaceConfigChangeSlot,
   OnComponentAddSlot,
   OnComponentChangeSlot,
   OnComponentLoadSlot,
@@ -231,7 +233,9 @@ export class Workspace implements ComponentFactory {
 
     private graphql: GraphqlMain,
 
-    private onBitmapChangeSlot: OnBitmapChangeSlot
+    private onBitmapChangeSlot: OnBitmapChangeSlot,
+
+    private onWorkspaceConfigChangeSlot: OnWorkspaceConfigChangeSlot
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
@@ -301,6 +305,10 @@ export class Workspace implements ComponentFactory {
   registerOnBitmapChange(OnBitmapChangeFunc: OnBitmapChange) {
     this.onBitmapChangeSlot.register(OnBitmapChangeFunc);
     return this;
+  }
+
+  registerOnWorkspaceConfigChange(onWorkspaceConfigChangeFunc: OnWorkspaceConfigChange) {
+    this.onWorkspaceConfigChangeSlot.register(onWorkspaceConfigChangeFunc);
   }
 
   registerOnAspectsResolve(onAspectsResolveFunc: OnAspectsResolve) {
@@ -824,8 +832,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   /**
-   * if needed, add a slot to let other aspects react to this event.
-   * currently, the purpose is to reload the workspace config when it changes, so entries like "defaultScope" are updated.
+   * the purpose is mostly to reload the workspace config when it changes, so entries like "defaultScope" are updated.
    * it also updates the DependencyResolver config. I couldn't find a good way to update all aspects in workspace.jsonc.
    */
   async triggerOnWorkspaceConfigChange(): Promise<void> {
@@ -840,6 +847,11 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     const configOfDepResolverAspect = workspaceConfig.extensions.findExtension(DependencyResolverAspect.id);
     if (configOfDepResolverAspect) this.dependencyResolver.setConfig(configOfDepResolverAspect.config as any);
     this.dependencyResolver.clearCache();
+
+    const onWorkspaceConfigChangeEntries = this.onWorkspaceConfigChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
+    await mapSeries(onWorkspaceConfigChangeEntries, async ([, onWorkspaceConfigFunc]) => {
+      await onWorkspaceConfigFunc();
+    });
   }
 
   getState(id: ComponentID, hash: string) {
