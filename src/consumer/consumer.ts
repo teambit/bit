@@ -32,7 +32,6 @@ import {
 import BitMap from './bit-map/bit-map';
 import { NextVersion } from './bit-map/component-map';
 import Component from './component';
-import { ComponentStatus, ComponentStatusLoader, ComponentStatusResult } from './component-ops/component-status-loader';
 import ComponentLoader, { ComponentLoadOptions, LoadManyResult } from './component/component-loader';
 import { Dependencies } from './component/dependencies';
 import PackageJsonFile from './component/package-json-file';
@@ -74,7 +73,6 @@ export default class Consumer {
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
   packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
   componentLoader: ComponentLoader;
-  componentStatusLoader: ComponentStatusLoader;
   packageJson: any;
   public onCacheClear: Array<() => void | Promise<void>> = [];
   constructor({
@@ -94,7 +92,6 @@ export default class Consumer {
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
     this.componentLoader = ComponentLoader.getInstance(this);
-    this.componentStatusLoader = new ComponentStatusLoader(this);
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
   async setBitMap() {
@@ -128,7 +125,6 @@ export default class Consumer {
 
   clearOneComponentCache(id: ComponentID) {
     this.componentLoader.clearOneComponentCache(id);
-    this.componentStatusLoader.clearOneComponentCache(id);
   }
 
   getTmpFolder(fullPath = false): PathOsBased {
@@ -391,14 +387,6 @@ export default class Consumer {
     version.files = R.sortBy(R.prop('relativePath'), version.files);
     componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
     return JSON.stringify(version.files) !== JSON.stringify(componentFromModel.files);
-  }
-
-  async getManyComponentsStatuses(ids: ComponentID[]): Promise<ComponentStatusResult[]> {
-    return this.componentStatusLoader.getManyComponentsStatuses(ids);
-  }
-
-  async getComponentStatusById(id: ComponentID): Promise<ComponentStatus> {
-    return this.componentStatusLoader.getComponentStatusById(id);
   }
 
   updateNextVersionOnBitmap(componentsToTag: Component[], preRelease?: string) {
