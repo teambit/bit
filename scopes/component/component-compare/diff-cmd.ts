@@ -5,7 +5,7 @@ import { DiffResults, outputDiffResults } from '@teambit/legacy/dist/consumer/co
 import { ComponentCompareMain } from './component-compare.main.runtime';
 
 export class DiffCmd implements Command {
-  name = 'diff [component-pattern] [version] [to_version]';
+  name = 'diff [component-pattern] [version] [to-version]';
   group = 'development';
   description =
     "show the diff between the components' current source files and config, and their latest snapshot or tag";
@@ -20,7 +20,7 @@ export class DiffCmd implements Command {
       description: 'specific version to compare against',
     },
     {
-      name: 'to_version',
+      name: 'to-version',
       description: 'specific version to compare to',
     },
   ];
