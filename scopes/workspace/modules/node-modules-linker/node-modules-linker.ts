@@ -13,13 +13,13 @@ import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
 import getNodeModulesPathOfComponent from '@teambit/legacy/dist/utils/bit/component-node-modules-path';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
-import { changeCodeFromRelativeToModulePaths } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
 import Symlink from '@teambit/legacy/dist/links/symlink';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { Workspace } from '@teambit/workspace';
 import { snapToSemver } from '@teambit/component-package-version';
 import { Component } from '@teambit/component';
 import { PackageJsonTransformer } from './package-json-transformer';
+import { changeCodeFromRelativeToModulePaths } from './codemod-components';
 
 type LinkDetail = { from: string; to: string };
 export type NodeModulesLinksResult = {
@@ -234,7 +234,7 @@ export async function linkToNodeModulesWithCodemod(
 ) {
   let codemodResults;
   if (changeRelativeToModulePaths) {
-    codemodResults = await changeCodeFromRelativeToModulePaths(workspace.consumer, bitIds);
+    codemodResults = await changeCodeFromRelativeToModulePaths(workspace, bitIds);
   }
   const linksResults = await linkToNodeModulesByIds(workspace, bitIds);
   return { linksResults, codemodResults };
