@@ -299,21 +299,5 @@ describe('bit diff command', function () {
         expect(output).to.have.string(`+${barFooV2}`);
       });
     });
-    describe('diff between two versions with multiple ids (not supported)', () => {
-      it('should throw an error', () => {
-        const output = helper.general.runWithTryCatch('bit diff bar/foo bar/foo2 0.0.1 0.0.2');
-        expect(output).to.have.string(
-          'bit diff [id] [version] [to_version] syntax was used, however, 4 arguments were given instead of 3'
-        );
-      });
-    });
-    describe('diff of a certain version with multiple ids (not supported)', () => {
-      it('should throw an error', () => {
-        const output = helper.general.runWithTryCatch('bit diff bar/foo bar/foo2 0.0.1');
-        expect(output).to.have.string(
-          'bit diff [id] [version] syntax was used, however, 3 arguments were given instead of 2'
-        );
-      });
-    });
   });
 });

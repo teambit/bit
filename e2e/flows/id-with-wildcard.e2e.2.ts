@@ -281,7 +281,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
           const diffFunc = () => helper.command.diff('"none/*"');
-          const error = new NoIdMatchWildcard(['none/*']);
+          const error = new NoIdMatchPattern('none/*');
           helper.general.expectToThrow(diffFunc, error);
         });
       });
