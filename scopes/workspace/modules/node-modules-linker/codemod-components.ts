@@ -39,10 +39,10 @@ export async function changeCodeFromRelativeToModulePaths(
   return codemodResults.filter((c) => c.changedFiles.length || c.warnings);
 }
 
-async function reloadComponents(workspace: Workspace, bitIds: ComponentID[]) {
-  await workspace.clearCache();
-  if (!bitIds.length) return;
-  const components = await loadComponents(workspace, bitIds);
+async function reloadComponents(workspace: Workspace, compIds: ComponentID[]) {
+  workspace.clearAllComponentsCache();
+  if (!compIds.length) return;
+  const components = await loadComponents(workspace, compIds);
   const componentsWithRelativeIssues = components.filter(
     (c) => c.state.issues && c.state.issues.getIssue(IssuesClasses.RelativeComponentsAuthored)
   );
