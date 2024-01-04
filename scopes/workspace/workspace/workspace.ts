@@ -447,8 +447,8 @@ export class Workspace implements ComponentFactory {
    * list all modified components in the workspace.
    */
   async modified(loadOpts?: ComponentLoadOptions): Promise<Component[]> {
-    const allComps = await this.list(undefined, loadOpts);
-    const modifiedIncludeNulls = await mapSeries(allComps, async (component) => {
+    const { components } = await this.listWithInvalid(loadOpts);
+    const modifiedIncludeNulls = await mapSeries(components, async (component) => {
       const modified = await this.isModified(component);
       return modified ? component : null;
     });
