@@ -1,4 +1,4 @@
-import { ComponentStatus as LegacyComponentStatus } from '@teambit/legacy/dist/consumer/component-ops/component-status-loader';
+import { ComponentStatusLegacy } from './component-status-loader';
 
 export type ModifyInfo = {
   hasModifiedFiles: boolean;
@@ -49,7 +49,7 @@ export class ComponentStatus {
     readonly nested?: boolean
   ) {}
 
-  static fromLegacy(status: LegacyComponentStatus, hasModifiedDependencies: boolean, isOutdated: boolean) {
+  static fromLegacy(status: ComponentStatusLegacy, hasModifiedDependencies: boolean, isOutdated: boolean) {
     const modify: ModifyInfo = {
       hasModifiedFiles: !!status.modified,
       hasModifiedDependencies,
