@@ -39,7 +39,6 @@ export default class ComponentsList {
   _fromObjectsIds: ComponentID[];
   _modelComponents: ModelComponent[];
   _invalidComponents: InvalidComponent[];
-  _modifiedComponents: Component[];
   _removedComponents: Component[];
   // @ts-ignore
   private _mergePendingComponents: DivergedComponent[];
@@ -75,30 +74,6 @@ export default class ComponentsList {
 
   async getComponentsFromFS(loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     return this.getFromFileSystem(loadOpts);
-  }
-
-  /**
-   * Components that are in the model (either, tagged from a local scope or imported), and were
-   * changed in the file system
-   *
-   * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
-   */
-  async listModifiedComponents(load = false, loadOpts?: ComponentLoadOptions): Promise<Array<ComponentID | Component>> {
-    if (!this._modifiedComponents) {
-      const fileSystemComponents = await this.getComponentsFromFS(loadOpts);
-      // const unmergedComponents = this.listDuringMergeStateComponents();
-      const componentStatuses = await this.consumer.getManyComponentsStatuses(
-        fileSystemComponents.map((f) => f.componentId)
-      );
-      this._modifiedComponents = fileSystemComponents.filter((component) => {
-        const status = componentStatuses.find((s) => s.id.isEqual(component.componentId));
-        if (!status)
-          throw new Error(`listModifiedComponents unable to find status for ${component.componentId.toString()}`);
-        return status.status.modified;
-      });
-    }
-    if (load) return this._modifiedComponents;
-    return this._modifiedComponents.map((component) => component.componentId);
   }
 
   async listOutdatedComponents(loadOpts?: ComponentLoadOptions): Promise<OutdatedComponent[]> {
@@ -230,20 +205,6 @@ export default class ComponentsList {
     return ComponentIdList.fromArray(unmergedComponents.map((u) => ComponentID.fromObject(u.id)));
   }
 
-  async newModifiedAndAutoTaggedComponents(): Promise<Component[]> {
-    const [newComponents, modifiedComponents] = await Promise.all([
-      this.listNewComponents(true),
-      this.listModifiedComponents(true),
-    ]);
-
-    const autoTagPending: Component[] = await this.listAutoTagPendingComponents();
-
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const components: Component[] = [...newComponents, ...modifiedComponents, ...autoTagPending];
-
-    return Promise.all(components);
-  }
-
   async idsFromObjects(): Promise<ComponentIdList> {
     const fromObjects = await this.getFromObjects();
     return new ComponentIdList(...fromObjects);
@@ -321,16 +282,6 @@ export default class ComponentsList {
   async listExportPendingComponents(laneObj: Lane | null): Promise<ModelComponent[]> {
     const exportPendingComponentsIds: ComponentIdList = await this.listExportPendingComponentsIds(laneObj);
     return Promise.all(exportPendingComponentsIds.map((id) => this.scope.getModelComponent(id)));
-  }
-
-  async listAutoTagPendingComponents(): Promise<Component[]> {
-    const modifiedComponents = (await this.listModifiedComponents()) as ComponentID[];
-    const newComponents = (await this.listNewComponents()) as ComponentIdList;
-    if (!modifiedComponents || !modifiedComponents.length) return [];
-    const autoTagPending = await this.consumer.listComponentsForAutoTagging(
-      ComponentIdList.fromArray(modifiedComponents)
-    );
-    return autoTagPending.filter((autoTagComp) => !newComponents.has(autoTagComp.componentId));
   }
 
   idsFromBitMap(): ComponentIdList {

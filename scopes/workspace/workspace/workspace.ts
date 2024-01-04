@@ -103,6 +103,11 @@ import { MergeConflictFile } from './merge-conflict-file';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { CompFiles } from './workspace-component/comp-files';
 import { Filter } from './filter';
+import {
+  ComponentStatusLegacy,
+  ComponentStatusLoader,
+  ComponentStatusResult,
+} from './workspace-component/component-status-loader';
 
 export type EjectConfResult = {
   configPath: string;
@@ -146,6 +151,7 @@ export class Workspace implements ComponentFactory {
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
   componentLoader: WorkspaceComponentLoader;
+  private componentStatusLoader: ComponentStatusLoader;
   bitMap: BitMap;
   /**
    * Indicate that we are now running installation process
@@ -246,6 +252,7 @@ export class Workspace implements ComponentFactory {
     );
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
     this.filter = new Filter(this);
+    this.componentStatusLoader = new ComponentStatusLoader(this);
   }
 
   private validateConfig() {
@@ -328,12 +335,21 @@ export class Workspace implements ComponentFactory {
     return this.config.icon;
   }
 
-  async hasModifiedDependencies(component: Component) {
+  async listAutoTagPendingComponentIds(): Promise<ComponentID[]> {
     const componentsList = new ComponentsList(this.consumer);
-    const listAutoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
-    const isAutoTag = listAutoTagPendingComponents.find((consumerComponent) =>
-      consumerComponent.id.isEqualWithoutVersion(component.id)
+    const modifiedComponents = (await this.modified()).map((c) => c.id);
+    const newComponents = (await componentsList.listNewComponents()) as ComponentIdList;
+    if (!modifiedComponents || !modifiedComponents.length) return [];
+    const autoTagPending = await this.consumer.listComponentsForAutoTagging(
+      ComponentIdList.fromArray(modifiedComponents)
     );
+    const comps = autoTagPending.filter((autoTagComp) => !newComponents.has(autoTagComp.componentId));
+    return comps.map((c) => c.id);
+  }
+
+  async hasModifiedDependencies(component: Component) {
+    const listAutoTagPendingComponents = await this.listAutoTagPendingComponentIds();
+    const isAutoTag = listAutoTagPendingComponents.find((id) => id.isEqualWithoutVersion(component.id));
     if (isAutoTag) return true;
     return false;
   }
@@ -349,7 +365,7 @@ export class Workspace implements ComponentFactory {
    * provides status of all components in the workspace.
    */
   async getComponentStatus(component: Component): Promise<ComponentStatus> {
-    const status = await this.consumer.getComponentStatusById(component.id);
+    const status = await this.getComponentStatusById(component.id);
     const hasModifiedDependencies = await this.hasModifiedDependencies(component);
     return ComponentStatus.fromLegacy(status, hasModifiedDependencies, component.isOutdated());
   }
@@ -438,9 +454,9 @@ export class Workspace implements ComponentFactory {
   /**
    * list all modified components in the workspace.
    */
-  async modified(): Promise<Component[]> {
-    const allComps = await this.list();
-    const modifiedIncludeNulls = await mapSeries(allComps, async (component) => {
+  async modified(loadOpts?: ComponentLoadOptions): Promise<Component[]> {
+    const { components } = await this.listWithInvalid(loadOpts);
+    const modifiedIncludeNulls = await mapSeries(components, async (component) => {
       const modified = await this.isModified(component);
       return modified ? component : null;
     });
@@ -731,6 +747,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.logger.debug('clearing the workspace and scope caches');
     delete this._cachedListIds;
     this.componentLoader.clearCache();
+    this.componentStatusLoader.clearCache();
     await this.scope.clearCache();
     this.componentList = new ComponentsList(this.consumer);
     this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized.clear();
@@ -739,11 +756,13 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   clearAllComponentsCache() {
     this.componentLoader.clearCache();
     this.consumer.componentLoader.clearComponentsCache();
+    this.componentStatusLoader.clearCache();
     this.componentList = new ComponentsList(this.consumer);
   }
 
   clearComponentCache(id: ComponentID) {
     this.componentLoader.clearComponentCache(id);
+    this.componentStatusLoader.clearOneComponentCache(id);
     this.consumer.clearOneComponentCache(id);
     this.componentList = new ComponentsList(this.consumer);
   }
@@ -1340,7 +1359,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     }
     const consumerComp = component.state._consumer as ConsumerComponent;
     if (typeof consumerComp._isModified === 'boolean') return consumerComp._isModified;
-    const componentStatus = await this.consumer.getComponentStatusById(component.id);
+    const componentStatus = await this.getComponentStatusById(component.id);
     return componentStatus.modified === true;
   }
 
@@ -2013,6 +2032,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       return policy.toLegacyAutoDetectOverrides();
     }
     return undefined;
+  }
+
+  async getManyComponentsStatuses(ids: ComponentID[]): Promise<ComponentStatusResult[]> {
+    return this.componentStatusLoader.getManyComponentsStatuses(ids);
+  }
+
+  async getComponentStatusById(id: ComponentID): Promise<ComponentStatusLegacy> {
+    return this.componentStatusLoader.getComponentStatusById(id);
   }
 }
 

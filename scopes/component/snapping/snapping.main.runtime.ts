@@ -1228,7 +1228,7 @@ another option, in case this dependency is not in main yet is to remove all refe
         }
         const componentId = await this.workspace.resolveComponentId(idWithoutVer);
         if (!includeUnmodified) {
-          const componentStatus = await this.workspace.consumer.getComponentStatusById(componentId);
+          const componentStatus = await this.workspace.getComponentStatusById(componentId);
           if (componentStatus.modified === false) return null;
         }
         return componentId.changeVersion(version);
