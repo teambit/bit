@@ -1,13 +1,14 @@
 import path from 'path';
+import { Workspace } from '@teambit/workspace';
 import { IssuesClasses, RelativeComponentsAuthoredEntry } from '@teambit/component-issues';
+import { Component } from '@teambit/component';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Consumer } from '..';
-import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '../../utils';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import replacePackageName from '../../utils/string/replace-package-name';
-import Component from '../component/consumer-component';
-import { SourceFile } from '../component/sources';
-import DataToPersist from '../component/sources/data-to-persist';
+import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/legacy/dist/utils';
+import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import replacePackageName from '@teambit/legacy/dist/utils/string/replace-package-name';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 
 export type CodemodResult = {
   id: ComponentID;
@@ -16,34 +17,34 @@ export type CodemodResult = {
 };
 
 export async function changeCodeFromRelativeToModulePaths(
-  consumer: Consumer,
+  workspace: Workspace,
   bitIds: ComponentID[]
 ): Promise<CodemodResult[]> {
-  const components = await loadComponents(consumer, bitIds);
+  const components = await loadComponents(workspace, bitIds);
   const componentsWithRelativeIssues = components.filter(
-    (c) => c.issues && c.issues.getIssue(IssuesClasses.RelativeComponentsAuthored)
+    (c) => c.state.issues && c.state.issues.getIssue(IssuesClasses.RelativeComponentsAuthored)
   );
   const dataToPersist = new DataToPersist();
   const codemodResults = await Promise.all(
     componentsWithRelativeIssues.map(async (component) => {
-      const { files, warnings } = await codemodComponent(consumer, component);
+      const { files, warnings } = await codemodComponent(workspace, component);
       dataToPersist.addManyFiles(files);
       return { id: component.id, changedFiles: files.map((f) => f.relative), warnings };
     })
   );
   await dataToPersist.persistAllToFS();
   const idsToReload = codemodResults.filter((c) => !c.warnings || c.warnings.length === 0).map((c) => c.id);
-  await reloadComponents(consumer, idsToReload);
+  await reloadComponents(workspace, idsToReload);
 
   return codemodResults.filter((c) => c.changedFiles.length || c.warnings);
 }
 
-async function reloadComponents(consumer: Consumer, bitIds: ComponentID[]) {
-  await consumer.clearCache();
+async function reloadComponents(workspace: Workspace, bitIds: ComponentID[]) {
+  await workspace.clearCache();
   if (!bitIds.length) return;
-  const components = await loadComponents(consumer, bitIds);
+  const components = await loadComponents(workspace, bitIds);
   const componentsWithRelativeIssues = components.filter(
-    (c) => c.issues && c.issues.getIssue(IssuesClasses.RelativeComponentsAuthored)
+    (c) => c.state.issues && c.state.issues.getIssue(IssuesClasses.RelativeComponentsAuthored)
   );
   if (componentsWithRelativeIssues.length) {
     const failedComps = componentsWithRelativeIssues.map((c) => c.id.toString()).join(', ');
@@ -51,23 +52,23 @@ async function reloadComponents(consumer: Consumer, bitIds: ComponentID[]) {
   }
 }
 
-async function loadComponents(consumer: Consumer, bitIds: ComponentID[]): Promise<Component[]> {
-  const componentsIds = bitIds.length ? ComponentIdList.fromArray(bitIds) : consumer.bitmapIdsFromCurrentLane;
-  const { components } = await consumer.loadComponents(componentsIds);
+async function loadComponents(workspace: Workspace, bitIds: ComponentID[]): Promise<Component[]> {
+  const componentsIds = bitIds.length ? ComponentIdList.fromArray(bitIds) : await workspace.listIds();
+  const components = await workspace.getMany(componentsIds);
 
   return components;
 }
 
 async function codemodComponent(
-  consumer: Consumer,
+  workspace: Workspace,
   component: Component
 ): Promise<{ files: SourceFile[]; warnings?: string[] }> {
-  const issues = component.issues;
+  const issues = component.state.issues;
   const files: SourceFile[] = [];
   if (!issues || !issues.getIssue(IssuesClasses.RelativeComponentsAuthored)) return { files };
   const warnings: string[] = [];
   await Promise.all(
-    component.files.map(async (file: SourceFile) => {
+    component.filesystem.files.map(async (file: SourceFile) => {
       const relativeInstances = issues.getIssue(IssuesClasses.RelativeComponentsAuthored)?.data[
         pathNormalizeToLinux(file.relative)
       ];
@@ -78,12 +79,13 @@ async function codemodComponent(
       await Promise.all(
         relativeInstances.map(async (relativeEntry: RelativeComponentsAuthoredEntry) => {
           const id = relativeEntry.componentId;
-          const requiredComponent = await consumer.loadComponent(id);
-          const packageName = componentIdToPackageName({ ...requiredComponent, id });
+          const requiredComponent = await workspace.get(id);
+          const consumerComp = requiredComponent.state._consumer as ConsumerComponent;
+          const packageName = componentIdToPackageName({ ...consumerComp, id });
           const cssFamily = ['.css', '.scss', '.less', '.sass'];
           const isCss = cssFamily.includes(file.extname);
           const packageNameSupportCss = isCss ? `~${packageName}` : packageName;
-          const stringToReplace = getNameWithoutInternalPath(consumer, relativeEntry);
+          const stringToReplace = getNameWithoutInternalPath(workspace, relativeEntry);
           // @todo: the "dist" should be replaced by the compiler dist-dir.
           // newFileString = replacePackageName(newFileString, stringToReplace, packageNameSupportCss, 'dist');
           newFileString = replacePackageName(newFileString, stringToReplace, packageNameSupportCss);
@@ -110,9 +112,9 @@ async function codemodComponent(
  * eventually, only this string is replaced by the new package-name and the internal-path part
  * remains intact. ('../workspace/workspace.ui' => '@bit/workspace/workspace.ui').
  */
-function getNameWithoutInternalPath(consumer: Consumer, relativeEntry: RelativeComponentsAuthoredEntry): string {
+function getNameWithoutInternalPath(workspace: Workspace, relativeEntry: RelativeComponentsAuthoredEntry): string {
   const importSource = relativeEntry.importSource;
-  const componentMap = consumer.bitMap.getComponentIfExist(relativeEntry.componentId);
+  const componentMap = workspace.consumer.bitMap.getComponentIfExist(relativeEntry.componentId);
   if (!componentMap) return importSource;
   const rootDir = componentMap.rootDir;
   if (!rootDir) return importSource;
