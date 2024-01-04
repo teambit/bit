@@ -715,7 +715,7 @@ jobs:
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values darwin --values darwin &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
-            pnpm install
+            pnpm add @teambit/bit
       - run:
           name: compress bit for macOS x64
           command: >
@@ -789,7 +789,7 @@ jobs:
             echo "prefer-symlinked-executables=false" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values win32 --values win32 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
-            pnpm install
+            pnpm add @teambit/bit
       - run:
           name: compress bit for Windows x64
           command: >
