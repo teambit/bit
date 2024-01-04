@@ -610,6 +610,7 @@ jobs:
       - run: sleep 300;
 
   setup_bit_version:
+    <<: *defaults
     steps:
       - run:
           name: print bit version
@@ -622,6 +623,7 @@ jobs:
           command: mkdir bit-${BIT_VERSION}
 
   setup_pnpm:
+    <<: *defaults
     steps:
       - run:
           name: Install pnpm
@@ -631,6 +633,7 @@ jobs:
             echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
 
   compress_bit:
+    <<: *defaults
     steps:
       - run:
           name: Compress Bit
