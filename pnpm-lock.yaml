@@ -1163,6 +1163,9 @@ importers:
       array-difference:
         specifier: 0.0.2
         version: 0.0.2
+      assert:
+        specifier: 2.0.0
+        version: 2.0.0
       async-mutex:
         specifier: 0.3.1
         version: 0.3.1
@@ -1766,6 +1769,9 @@ importers:
       prompt:
         specifier: 1.1.0
         version: 1.1.0
+      punycode:
+        specifier: 2.1.1
+        version: 2.1.1
       puppeteer:
         specifier: 13.7.0
         version: 13.7.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
@@ -1913,6 +1919,9 @@ importers:
       string-format:
         specifier: 0.5.0
         version: 0.5.0
+      string_decoder:
+        specifier: 1.3.0
+        version: 1.3.0
       stringify-package:
         specifier: 1.0.1
         version: 1.0.1
@@ -1982,6 +1991,9 @@ importers:
       unist-util-visit:
         specifier: 2.0.3
         version: 2.0.3
+      url:
+        specifier: 0.11.2
+        version: 0.11.2
       url-join:
         specifier: 4.0.1
         version: 4.0.1
@@ -1991,6 +2003,9 @@ importers:
       utf-8-validate:
         specifier: 5.0.5
         version: 5.0.5
+      util:
+        specifier: 0.12.3
+        version: 0.12.3
       v8-compile-cache:
         specifier: 2.3.0
         version: 2.3.0
@@ -2031,8 +2046,8 @@ importers:
         specifier: 4.15.0
         version: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.84.1)
       webpack-manifest-plugin:
-        specifier: 4.0.2
-        version: 4.0.2(webpack@5.84.1)
+        specifier: 5.0.0
+        version: 5.0.0(webpack@5.84.1)
       webpack-merge:
         specifier: 5.8.0
         version: 5.8.0
@@ -18317,8 +18332,8 @@ importers:
         specifier: 5.84.1
         version: 5.84.1(esbuild@0.14.29)
       webpack-manifest-plugin:
-        specifier: 4.0.2
-        version: 4.0.2(webpack@5.84.1)
+        specifier: 5.0.0
+        version: 5.0.0(webpack@5.84.1)
       webpack-merge:
         specifier: 5.8.0
         version: 5.8.0
@@ -21039,8 +21054,8 @@ importers:
         specifier: 4.15.0
         version: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.84.1)
       webpack-manifest-plugin:
-        specifier: 4.0.2
-        version: 4.0.2(webpack@5.84.1)
+        specifier: 5.0.0
+        version: 5.0.0(webpack@5.84.1)
       webpack-merge:
         specifier: 5.8.0
         version: 5.8.0
@@ -21295,9 +21310,15 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
+      assert:
+        specifier: 2.0.0
+        version: 2.0.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
+      buffer:
+        specifier: 6.0.3
+        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -21352,6 +21373,9 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
+      punycode:
+        specifier: 2.1.1
+        version: 2.1.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -21373,12 +21397,21 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
+      string_decoder:
+        specifier: 1.3.0
+        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
+      url:
+        specifier: 0.11.2
+        version: 0.11.2
+      util:
+        specifier: 0.12.3
+        version: 0.12.3
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -75017,11 +75050,11 @@ packages:
       - supports-color
       - utf-8-validate
 
-  /webpack-manifest-plugin@4.0.2(webpack@5.84.1):
-    resolution: {integrity: sha512-Ld6j05pRblXAVoX8xdXFDsc/s97cFnR1FOmQawhTSlp6F6aeU1Jia5aqTmDpkueaAz8g9sXpgSOqmEgVAR61Xw==}
+  /webpack-manifest-plugin@5.0.0(webpack@5.84.1):
+    resolution: {integrity: sha512-8RQfMAdc5Uw3QbCQ/CBV/AXqOR8mt03B6GJmRbhWopE8GzRfEpn+k0ZuWywxW+5QZsffhmFDY1J6ohqJo+eMuw==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      webpack: ^4.44.2 || ^5.47.0
+      webpack: ^5.47.0
     dependencies:
       tapable: 2.2.1
       webpack: 5.84.1(esbuild@0.14.29)
@@ -82580,7 +82613,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
       react-router-dom: 6.8.1(react-dom@17.0.2)(react@17.0.2)
       webpack: 5.84.1(esbuild@0.14.29)
-      webpack-manifest-plugin: 4.0.2(webpack@5.84.1)
+      webpack-manifest-plugin: 5.0.0(webpack@5.84.1)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
       - '@babel/core'
@@ -82650,7 +82683,7 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
       react-router-dom: 6.8.1(react-dom@18.2.0)(react@18.2.0)
       webpack: 5.84.1(esbuild@0.14.29)
-      webpack-manifest-plugin: 4.0.2(webpack@5.84.1)
+      webpack-manifest-plugin: 5.0.0(webpack@5.84.1)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
       - '@babel/core'
@@ -84358,7 +84391,7 @@ packages:
       terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
       webpack: 5.84.1(esbuild@0.14.29)
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.84.1)
-      webpack-manifest-plugin: 4.0.2(webpack@5.84.1)
+      webpack-manifest-plugin: 5.0.0(webpack@5.84.1)
       webpack-merge: 5.8.0
       workbox-webpack-plugin: 6.2.4(@types/babel__core@7.20.0)(webpack@5.84.1)
     transitivePeerDependencies:
@@ -84457,7 +84490,7 @@ packages:
       terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
       webpack: 5.84.1(esbuild@0.14.29)
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.84.1)
-      webpack-manifest-plugin: 4.0.2(webpack@5.84.1)
+      webpack-manifest-plugin: 5.0.0(webpack@5.84.1)
       webpack-merge: 5.8.0
       workbox-webpack-plugin: 6.2.4(@types/babel__core@7.20.0)(webpack@5.84.1)
     transitivePeerDependencies:
