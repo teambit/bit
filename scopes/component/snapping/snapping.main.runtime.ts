@@ -1000,6 +1000,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
     component.addVersion(version, source.version, lane, objectRepo, source.previouslyUsedVersion);
     objectRepo.add(component);
+    if (lane) objectRepo.add(lane);
     files.forEach((file) => objectRepo.add(file.file));
     if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
     return { component, version };

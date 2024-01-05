@@ -554,7 +554,7 @@ please either remove the component (bit remove) or remove the lane.`);
    * the merge is needed only when both, local lane and remote lane have the same component with
    * a different head.
    * the different head can be a result of one component is ahead of the other (fast-forward is
-   *  possible), or they both have diverged.
+   * possible), or they both have diverged.
    *
    * 1a) fast-forward case, existing is ahead. existing has snapA => snapB, incoming has snapA.
    * we can just ignore the incoming.
@@ -598,8 +598,8 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
 
     if (existingLane && !existingLaneWithSameId) {
       // the lane id has changed
-      existingLane.scope = lane.scope;
-      existingLane.name = lane.name;
+      existingLane.changeScope(lane.scope);
+      existingLane.changeName(lane.name);
     }
     const mergeResults: MergeResult[] = [];
     const mergeErrors: ComponentNeedsUpdate[] = [];

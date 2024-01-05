@@ -33,7 +33,7 @@ import {
   MessagePerComponent,
   MessagePerComponentFetcher,
 } from '@teambit/legacy/dist/scope/component-ops/message-per-component';
-import { ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
@@ -309,6 +309,7 @@ export async function tagModelComponent({
   // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
   // (it's being deleted in snapping.main.runtime - `_addCompToObjects` method)
   const unmergedComps = workspace ? await workspace.listComponentsDuringMerge() : [];
+  const lane = await legacyScope.getCurrentLaneObject();
   let stagedConfig;
   if (soft) {
     if (!consumer) throw new Error(`unable to soft-tag without consumer`);
@@ -318,7 +319,7 @@ export async function tagModelComponent({
     await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
     if (!build) emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
-    await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer, tagDataPerComp);
+    await addComponentsToScope(snapping, allComponentsToTag, lane, Boolean(build), consumer, tagDataPerComp);
 
     if (workspace) {
       const modelComponents = await Promise.all(
@@ -361,6 +362,11 @@ export async function tagModelComponent({
   let removedComponents: ComponentIdList | undefined;
   if (!soft) {
     removedComponents = await removeDeletedComponentsFromBitmap(allComponentsToTag, workspace);
+    if (lane) {
+      const msgStr = message ? ` (${message})` : '';
+      const laneHistory = await legacyScope.lanes.updateLaneHistory(lane, `snap${msgStr}`);
+      legacyScope.objects.add(laneHistory);
+    }
     await legacyScope.objects.persist();
     await removeMergeConfigFromComponents(unmergedComps, allComponentsToTag, workspace);
     if (workspace) {
@@ -423,14 +429,13 @@ async function removeMergeConfigFromComponents(
 }
 
 async function addComponentsToScope(
-  scope: Scope,
   snapping: SnappingMain,
   components: ConsumerComponent[],
+  lane: Lane | null,
   shouldValidateVersion: boolean,
   consumer?: Consumer,
   tagDataPerComp?: TagDataPerComp[]
 ) {
-  const lane = await scope.getCurrentLaneObject();
   if (consumer) {
     await mapSeries(components, async (component) => {
       await snapping._addCompToObjects({

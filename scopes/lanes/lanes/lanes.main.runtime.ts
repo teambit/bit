@@ -19,7 +19,7 @@ import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
-import { Lane, Version } from '@teambit/legacy/dist/scope/models';
+import { Lane, LaneHistory, Version } from '@teambit/legacy/dist/scope/models';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { ExportAspect, ExportMain } from '@teambit/export';
@@ -36,6 +36,7 @@ import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
+import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -50,6 +51,8 @@ import {
   LaneAddReadmeCmd,
   LaneRemoveReadmeCmd,
   LaneRemoveCompCmd,
+  CatLaneHistoryCmd,
+  LaneHistoryCmd,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
@@ -178,6 +181,17 @@ export class LanesMain {
   async parseLaneId(idStr: string): Promise<LaneId> {
     const scope: LegacyScope = this.scope.legacyScope;
     return scope.lanes.parseLaneIdFromString(idStr);
+  }
+
+  async getLaneHistory(laneId: LaneId): Promise<LaneHistory> {
+    const lane = await this.loadLane(laneId);
+    if (!lane) throw new BitError(`unable to find a lane "${laneId.toString()}"`);
+    const laneHistory = await this.scope.legacyScope.lanes.getOrCreateLaneHistory(lane);
+    return laneHistory;
+  }
+
+  async importLaneHistory(laneId: LaneId) {
+    await this.importer.importLaneObject(laneId, undefined, true);
   }
 
   private async filterSoftRemovedLaneComps(lanes: LaneData[]): Promise<LaneData[]> {
@@ -385,7 +399,7 @@ please create a new lane instead, which will include all components of this lane
       throw new InvalidScopeName(remoteScope);
     }
     const remoteScopeBefore = lane.scope;
-    lane.scope = remoteScope;
+    lane.changeScope(remoteScope);
     const newLaneId = LaneId.from(laneId.name, remoteScope);
     const trackData = {
       localLane: laneNameWithoutScope,
@@ -393,7 +407,9 @@ please create a new lane instead, which will include all components of this lane
       remoteScope,
     };
     this.scope.legacyScope.lanes.trackLane(trackData);
-    await this.scope.legacyScope.lanes.saveLane(lane);
+    await this.scope.legacyScope.lanes.saveLane(lane, {
+      laneHistoryMsg: `change scope from ${remoteScopeBefore} to ${remoteScope}`,
+    });
     this.workspace.consumer.bitMap.setCurrentLane(newLaneId, false);
     await this.workspace.consumer.onDestroy('lane-scope-change');
 
@@ -651,7 +667,7 @@ please create a new lane instead, which will include all components of this lane
     }
 
     lane.setReadmeComponent(undefined);
-    await scope.lanes.saveLane(lane);
+    await scope.lanes.saveLane(lane, { laneHistoryMsg: 'remove readme' });
     await this.workspace.bitMap.write(`lane-remove-readme`);
 
     return { result: true };
@@ -976,7 +992,7 @@ please create a new lane instead, which will include all components of this lane
     }
 
     lane.setReadmeComponent(readmeComponentId);
-    await scope.lanes.saveLane(lane);
+    await scope.lanes.saveLane(lane, { laneHistoryMsg: 'add readme' });
 
     const existingLaneConfig =
       (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
@@ -1169,7 +1185,10 @@ please create a new lane instead, which will include all components of this lane
       new LaneImportCmd(switchCmd),
       new LaneRemoveCompCmd(workspace, lanesMain),
     ];
-    cli.register(laneCmd, switchCmd);
+    if (isFeatureEnabled(SUPPORT_LANE_HISTORY)) {
+      laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
+    }
+    cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));
     cli.registerOnStart(async () => {
       await lanesMain.recreateNewLaneIfDeleted();
     });
