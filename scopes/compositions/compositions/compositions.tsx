@@ -125,14 +125,14 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
                   includesEnvTemplate={component.preview?.includesEnvTemplate}
                   onSelectComposition={(composition) => {
                     if (!currentComposition || !location) return;
+                    const selectedCompositionFromUrl = params['*'];
 
                     const pathSegments = location.pathname.split('/').filter((x) => x);
-                    const lastSegment = pathSegments[pathSegments.length - 1].toLowerCase();
 
-                    if (lastSegment === currentComposition.identifier.toLowerCase()) {
-                      pathSegments[pathSegments.length - 1] = composition.identifier.toLowerCase();
-                    } else {
+                    if (!selectedCompositionFromUrl) {
                       pathSegments.push(composition.identifier.toLowerCase());
+                    } else {
+                      pathSegments[pathSegments.length - 1] = composition.identifier.toLowerCase();
                     }
 
                     const newPath = pathSegments.join('/');
