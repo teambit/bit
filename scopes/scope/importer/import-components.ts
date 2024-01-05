@@ -186,7 +186,7 @@ export default class ImportComponents {
     const versionDependenciesArr = await this._importComponentsObjects(bitIds, {
       lane: this.laneObjects?.[0],
     });
-    if (this.laneObjects && this.options.objectsOnly) {
+    if (this.laneObjects?.length && this.options.objectsOnly) {
       if (this.laneObjects.length > 1) {
         throw new Error(`importSpecificComponents does not support more than one lane`);
       }
