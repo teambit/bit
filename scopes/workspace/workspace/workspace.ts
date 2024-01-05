@@ -85,7 +85,7 @@ import {
   OnComponentRemoveSlot,
   OnRootAspectAdded,
   OnRootAspectAddedSlot,
-} from './workspace.provider';
+} from './workspace.main.runtime';
 import { ComponentLoadOptions, WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
