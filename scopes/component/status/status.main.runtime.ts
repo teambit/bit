@@ -84,7 +84,7 @@ export class StatusMain {
       true,
       loadOpts
     )) as ConsumerComponent[];
-    const modifiedComponents = (await componentsList.listModifiedComponents(true, loadOpts)) as ConsumerComponent[];
+    const modifiedComponents = await this.workspace.modified(loadOpts);
     const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
     await this.addRemovedStagedIfNeeded(stagedComponents);
     const stagedComponentsWithVersions = await pMapSeries(stagedComponents, async (stagedComp) => {
@@ -96,8 +96,7 @@ export class StatusMain {
     });
 
     const unavailableOnMain = await this.workspace.getUnavailableOnMainComponents();
-    const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
-    const autoTagPendingComponentsIds = autoTagPendingComponents.map((component) => component.id);
+    const autoTagPendingComponentsIds = await this.workspace.listAutoTagPendingComponentIds();
     const locallySoftRemoved = await componentsList.listLocallySoftRemoved();
     const remotelySoftRemoved = await componentsList.listRemotelySoftRemoved();
     const importPendingComponents = allInvalidComponents
@@ -128,7 +127,7 @@ export class StatusMain {
     Analytics.setExtraData('new_components', newComponents.length);
     Analytics.setExtraData('staged_components', stagedComponents.length);
     Analytics.setExtraData('num_components_with_missing_dependencies', componentsWithIssues.length);
-    Analytics.setExtraData('autoTagPendingComponents', autoTagPendingComponents.length);
+    Analytics.setExtraData('autoTagPendingComponents', autoTagPendingComponentsIds.length);
     Analytics.setExtraData('deleted', invalidComponents.length);
 
     const convertBitIdToComponentIdsAndSort = async (ids: ComponentID[]) =>

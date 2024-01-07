@@ -2,8 +2,6 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { ComponentID } from '@teambit/component-id';
-import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
-import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import BuilderAspect from '@teambit/builder';
@@ -102,14 +100,19 @@ export class ComponentCompareMain {
     return compareResult;
   }
 
-  async diffByCLIValues(values: string[], verbose: boolean, table: boolean): Promise<any> {
+  async diffByCLIValues(
+    pattern?: string,
+    version?: string,
+    toVersion?: string,
+    { verbose, table }: { verbose?: boolean; table?: boolean } = {}
+  ): Promise<any> {
     if (!this.workspace) throw new OutsideWorkspaceError();
+    const ids = pattern ? await this.workspace.idsByPattern(pattern) : await this.workspace.listTagPendingIds();
     const consumer = this.workspace.consumer;
-    const { bitIds, version, toVersion } = await this.parseValues(values);
-    if (!bitIds || !bitIds.length) {
+    if (!ids.length) {
       return [];
     }
-    const diffResults = await this.componentsDiff(bitIds, version, toVersion, {
+    const diffResults = await this.componentsDiff(ids, version, toVersion, {
       verbose,
       formatDepsAsTable: table,
     });
@@ -270,56 +273,6 @@ export class ComponentCompareMain {
     );
     await updateFieldsDiff(fromVersionComponent, toVersionComponent, diffResult, diffOpts);
     return diffResult;
-  }
-
-  private async parseValues(
-    values: string[]
-  ): Promise<{ bitIds: ComponentID[]; version?: string; toVersion?: string }> {
-    if (!this.workspace) throw new OutsideWorkspaceError();
-    // option #1: bit diff
-    // no arguments
-    if (!values.length) {
-      const componentIds = await this.workspace.listTagPendingIds();
-      return { bitIds: componentIds.map((id) => id) };
-    }
-    const firstValue = values[0];
-    const lastValue = values[values.length - 1];
-    const oneBeforeLastValue = values[values.length - 2];
-    const isLastItemVersion = ComponentID.isValidVersion(lastValue);
-    const isOneBeforeLastItemVersion = ComponentID.isValidVersion(oneBeforeLastValue);
-    // option #2: bit diff [ids...]
-    // all arguments are ids
-    if (!isLastItemVersion) {
-      return { bitIds: this.getBitIdsForDiff(values) };
-    }
-    // option #3: bit diff [id] [version]
-    // last argument is a version, first argument is id
-    if (!isOneBeforeLastItemVersion) {
-      if (values.length !== 2) {
-        throw new BitError(
-          `bit diff [id] [version] syntax was used, however, ${values.length} arguments were given instead of 2`
-        );
-      }
-      return { bitIds: this.getBitIdsForDiff([firstValue]), version: lastValue };
-    }
-    // option #4: bit diff [id] [version] [to_version]
-    // last argument and one before the last are versions, first argument is id
-    if (values.length !== 3) {
-      throw new BitError(
-        `bit diff [id] [version] [to_version] syntax was used, however, ${values.length} arguments were given instead of 3`
-      );
-    }
-    return { bitIds: this.getBitIdsForDiff([firstValue]), version: oneBeforeLastValue, toVersion: lastValue };
-  }
-
-  private getBitIdsForDiff(ids: string[]): ComponentID[] {
-    if (!this.workspace) throw new OutsideWorkspaceError();
-    const consumer = this.workspace.consumer;
-    if (hasWildcard(ids)) {
-      const componentsList = new ComponentsList(consumer);
-      return componentsList.listComponentsByIdsWithWildcard(ids);
-    }
-    return ids.map((id) => consumer.getParsedId(id));
   }
 
   static slots = [];

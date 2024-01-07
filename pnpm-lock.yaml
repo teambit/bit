@@ -1008,8 +1008,8 @@ importers:
         specifier: ^0.0.85
         version: 0.0.85(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.side-bar':
-        specifier: ^0.0.871
-        version: 0.0.871(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.872
+        version: 0.0.872(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.top-bar':
         specifier: ^0.0.514
         version: 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
@@ -1163,9 +1163,6 @@ importers:
       array-difference:
         specifier: 0.0.2
         version: 0.0.2
-      assert:
-        specifier: 2.0.0
-        version: 2.0.0
       async-mutex:
         specifier: 0.3.1
         version: 0.3.1
@@ -1769,9 +1766,6 @@ importers:
       prompt:
         specifier: 1.1.0
         version: 1.1.0
-      punycode:
-        specifier: 2.1.1
-        version: 2.1.1
       puppeteer:
         specifier: 13.7.0
         version: 13.7.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
@@ -1919,9 +1913,6 @@ importers:
       string-format:
         specifier: 0.5.0
         version: 0.5.0
-      string_decoder:
-        specifier: 1.3.0
-        version: 1.3.0
       stringify-package:
         specifier: 1.0.1
         version: 1.0.1
@@ -1991,9 +1982,6 @@ importers:
       unist-util-visit:
         specifier: 2.0.3
         version: 2.0.3
-      url:
-        specifier: 0.11.2
-        version: 0.11.2
       url-join:
         specifier: 4.0.1
         version: 4.0.1
@@ -2003,9 +1991,6 @@ importers:
       utf-8-validate:
         specifier: 5.0.5
         version: 5.0.5
-      util:
-        specifier: 0.12.3
-        version: 0.12.3
       v8-compile-cache:
         specifier: 2.3.0
         version: 2.3.0
@@ -3141,8 +3126,8 @@ importers:
         specifier: 0.0.207
         version: 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.side-bar':
-        specifier: ^0.0.871
-        version: 0.0.871(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.872
+        version: 0.0.872(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.drawer':
         specifier: ^0.0.517
         version: 0.0.517(react-dom@17.0.2)(react@17.0.2)
@@ -11112,6 +11097,9 @@ importers:
       mocha:
         specifier: 10.2.0
         version: 10.2.0
+      p-map-series:
+        specifier: 2.1.0
+        version: 2.1.0
       react:
         specifier: ^18.0.0
         version: 18.2.0
@@ -19780,8 +19768,8 @@ importers:
         specifier: ^0.0.506
         version: 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0)
       '@teambit/ui-foundation.ui.side-bar':
-        specifier: ^0.0.871
-        version: 0.0.871(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^0.0.872
+        version: 0.0.872(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/ui-foundation.ui.top-bar':
         specifier: ^0.0.514
         version: 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0)
@@ -21310,15 +21298,9 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
-      assert:
-        specifier: 2.0.0
-        version: 2.0.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
-      buffer:
-        specifier: 6.0.3
-        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -21373,9 +21355,6 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
-      punycode:
-        specifier: 2.1.1
-        version: 2.1.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -21397,21 +21376,12 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
-      string_decoder:
-        specifier: 1.3.0
-        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
-      url:
-        specifier: 0.11.2
-        version: 0.11.2
-      util:
-        specifier: 0.12.3
-        version: 0.12.3
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -22038,8 +22008,8 @@ importers:
         specifier: ^0.0.506
         version: 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0)
       '@teambit/ui-foundation.ui.side-bar':
-        specifier: ^0.0.871
-        version: 0.0.871(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^0.0.872
+        version: 0.0.872(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/ui-foundation.ui.top-bar':
         specifier: ^0.0.514
         version: 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0)
@@ -50628,8 +50598,8 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /@teambit/ui-foundation.ui.side-bar@0.0.871(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-wh/sBejFjKK2NMqbfOsffWL6Z6yw9v2zO3P3qnVm/6tf9LA7QDVKQqpFu/fzEMzljYWioQ6iP4rN23OMkH6eAQ==}
+  /@teambit/ui-foundation.ui.side-bar@0.0.872(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-VUwRI+qTTCkNttXLpw86w6dqLtW4z3NLWBubIERqi29nkL0w69PFzirpSZM2FIgg1Iap3Bz4QrjnjEv4jnCrgA==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -50662,8 +50632,8 @@ packages:
       - '@types/react'
     dev: false
 
-  /@teambit/ui-foundation.ui.side-bar@0.0.871(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@17.0.2):
-    resolution: {integrity: sha512-wh/sBejFjKK2NMqbfOsffWL6Z6yw9v2zO3P3qnVm/6tf9LA7QDVKQqpFu/fzEMzljYWioQ6iP4rN23OMkH6eAQ==}
+  /@teambit/ui-foundation.ui.side-bar@0.0.872(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@17.0.2):
+    resolution: {integrity: sha512-VUwRI+qTTCkNttXLpw86w6dqLtW4z3NLWBubIERqi29nkL0w69PFzirpSZM2FIgg1Iap3Bz4QrjnjEv4jnCrgA==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -50696,8 +50666,8 @@ packages:
       - '@types/react'
     dev: false
 
-  /@teambit/ui-foundation.ui.side-bar@0.0.871(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-wh/sBejFjKK2NMqbfOsffWL6Z6yw9v2zO3P3qnVm/6tf9LA7QDVKQqpFu/fzEMzljYWioQ6iP4rN23OMkH6eAQ==}
+  /@teambit/ui-foundation.ui.side-bar@0.0.872(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-VUwRI+qTTCkNttXLpw86w6dqLtW4z3NLWBubIERqi29nkL0w69PFzirpSZM2FIgg1Iap3Bz4QrjnjEv4jnCrgA==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -76691,7 +76661,7 @@ packages:
       '@teambit/harmony': 0.4.6
       '@teambit/lanes.hooks.use-lanes': 0.0.254(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model': 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.side-bar': 0.0.871(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.side-bar': 0.0.872(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.drawer': 0.0.517(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
@@ -76722,7 +76692,7 @@ packages:
       '@teambit/harmony': 0.4.6
       '@teambit/lanes.hooks.use-lanes': 0.0.254(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/lanes.ui.models.lanes-model': 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@18.2.0)(react@18.2.0)
-      '@teambit/ui-foundation.ui.side-bar': 0.0.871(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)
+      '@teambit/ui-foundation.ui.side-bar': 0.0.872(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/ui-foundation.ui.tree.drawer': 0.0.517(react-dom@18.2.0)(react@18.2.0)
       classnames: 2.2.6
       core-js: 3.13.0
@@ -77951,6 +77921,7 @@ packages:
       ink: 3.2.0(@types/react@17.0.74)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
       lodash: 4.17.21
       mocha: 10.2.0
+      p-map-series: 2.1.0
       react: 17.0.2
       react-dom: 18.2.0(react@17.0.2)
       react-router-dom: 6.8.1(react-dom@18.2.0)(react@17.0.2)
@@ -77979,6 +77950,7 @@ packages:
       ink: 3.2.0(@types/react@17.0.74)(bufferutil@4.0.3)(react@18.2.0)(utf-8-validate@5.0.5)
       lodash: 4.17.21
       mocha: 10.2.0
+      p-map-series: 2.1.0
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       react-router-dom: 6.8.1(react-dom@18.2.0)(react@18.2.0)
@@ -83585,7 +83557,7 @@ packages:
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.502(react-dom@18.2.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.menu': 0.0.502(react-dom@18.2.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@17.0.2)
-      '@teambit/ui-foundation.ui.side-bar': 0.0.871(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@17.0.2)
+      '@teambit/ui-foundation.ui.side-bar': 0.0.872(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.top-bar': 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.drawer': 0.0.517(react-dom@18.2.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.dropdown': 0.0.141(react-dom@18.2.0)(react@17.0.2)
@@ -83659,7 +83631,7 @@ packages:
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.502(react-dom@18.2.0)(react@18.2.0)
       '@teambit/ui-foundation.ui.menu': 0.0.502(react-dom@18.2.0)(react@18.2.0)
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0)
-      '@teambit/ui-foundation.ui.side-bar': 0.0.871(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)
+      '@teambit/ui-foundation.ui.side-bar': 0.0.872(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/ui-foundation.ui.top-bar': 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0)
       '@teambit/ui-foundation.ui.tree.drawer': 0.0.517(react-dom@18.2.0)(react@18.2.0)
       '@teambit/ui-foundation.ui.use-box.dropdown': 0.0.141(react-dom@18.2.0)(react@18.2.0)
@@ -85089,7 +85061,7 @@ packages:
       '@teambit/ui-foundation.ui.menu': 0.0.502(react-dom@18.2.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.notifications.notification-context': 0.0.501(react-dom@18.2.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@17.0.2)
-      '@teambit/ui-foundation.ui.side-bar': 0.0.871(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@17.0.2)
+      '@teambit/ui-foundation.ui.side-bar': 0.0.872(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.top-bar': 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.drawer': 0.0.517(react-dom@18.2.0)(react@17.0.2)
       '@teambit/workspace.ui.empty-workspace': 0.0.508(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@17.0.2)
@@ -85167,7 +85139,7 @@ packages:
       '@teambit/ui-foundation.ui.menu': 0.0.502(react-dom@18.2.0)(react@18.2.0)
       '@teambit/ui-foundation.ui.notifications.notification-context': 0.0.501(react-dom@18.2.0)(react@18.2.0)
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0)
-      '@teambit/ui-foundation.ui.side-bar': 0.0.871(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)
+      '@teambit/ui-foundation.ui.side-bar': 0.0.872(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)
       '@teambit/ui-foundation.ui.top-bar': 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react-router-dom@6.8.1)(react@18.2.0)
       '@teambit/ui-foundation.ui.tree.drawer': 0.0.517(react-dom@18.2.0)(react@18.2.0)
       '@teambit/workspace.ui.empty-workspace': 0.0.508(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@18.2.0)(react@18.2.0)

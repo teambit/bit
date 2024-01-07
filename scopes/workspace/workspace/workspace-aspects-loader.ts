@@ -30,7 +30,12 @@ import { ConfigMain } from '@teambit/config';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ShouldLoadFunc } from './build-graph-from-fs';
 import type { Workspace } from './workspace';
-import { OnAspectsResolve, OnAspectsResolveSlot, OnRootAspectAdded, OnRootAspectAddedSlot } from './workspace.provider';
+import {
+  OnAspectsResolve,
+  OnAspectsResolveSlot,
+  OnRootAspectAdded,
+  OnRootAspectAddedSlot,
+} from './workspace.main.runtime';
 import { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
 
 export type GetConfiguredUserAspectsPackagesOptions = {
