@@ -498,7 +498,7 @@ jobs:
           # We skip the compile here as we want to compile separatly and see the compile output
           command: cd bit && bbit install --skip-compile
 
-      - run: cd bit && cat node_modules/@teambit/component/dist/ui/menu/index.js
+      # - run: cd bit && cat node_modules/@teambit/component/dist/ui/menu/index.js
       - run: cd bit && npm run link-bit-legacy
       # - run: cd bit && bbit compile
 
