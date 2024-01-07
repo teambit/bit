@@ -48,6 +48,7 @@ function createPreBundleConfig(outputDir: string, entryFile: string) {
     },
     output: {
       path: outputDir,
+      publicPath: '/',
       chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
       filename: 'static/js/[name].[contenthash:8].js',
       library: {

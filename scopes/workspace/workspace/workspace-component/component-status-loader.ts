@@ -1,17 +1,18 @@
 import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { Consumer } from '..';
-import { LATEST } from '../../constants';
-import { ModelComponent } from '../../scope/models';
-import { MissingBitMapComponent } from '../bit-map/exceptions';
-import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
-import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
-import MissingFilesFromComponent from '../component/exceptions/missing-files-from-component';
-import ComponentOutOfSync from '../exceptions/component-out-of-sync';
-import { VERSION_ZERO } from '../../scope/models/model-component';
+import { VERSION_ZERO } from '@teambit/legacy/dist/scope/models/model-component';
+import { Consumer } from '@teambit/legacy/dist/consumer';
+import { LATEST } from '@teambit/legacy/dist/constants';
+import { ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
+import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
+import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
+import MissingFilesFromComponent from '@teambit/legacy/dist/consumer/component/exceptions/missing-files-from-component';
+import ComponentOutOfSync from '@teambit/legacy/dist/consumer/exceptions/component-out-of-sync';
+import { Workspace } from '..';
 
-export type ComponentStatus = {
+export type ComponentStatusLegacy = {
   modified: boolean;
   newlyCreated: boolean;
   deleted: boolean;
@@ -20,11 +21,15 @@ export type ComponentStatus = {
   missingFromScope: boolean;
 };
 
-export type ComponentStatusResult = { id: ComponentID; status: ComponentStatus };
+export type ComponentStatusResult = { id: ComponentID; status: ComponentStatusLegacy };
 
 export class ComponentStatusLoader {
   private _componentsStatusCache: Record<string, any> = {}; // cache loaded components
-  constructor(private consumer: Consumer) {}
+  constructor(private workspace: Workspace) {}
+
+  get consumer(): Consumer {
+    return this.workspace.consumer;
+  }
 
   async getManyComponentsStatuses(ids: ComponentID[]): Promise<ComponentStatusResult[]> {
     const results: ComponentStatusResult[] = [];
@@ -47,7 +52,7 @@ export class ComponentStatusLoader {
    *
    * The result is cached per ID and can be called several times with no penalties.
    */
-  async getComponentStatusById(id: ComponentID): Promise<ComponentStatus> {
+  async getComponentStatusById(id: ComponentID): Promise<ComponentStatusLegacy> {
     if (!this._componentsStatusCache[id.toString()]) {
       this._componentsStatusCache[id.toString()] = await this.getStatus(id);
     }
@@ -56,7 +61,7 @@ export class ComponentStatusLoader {
 
   private async getStatus(id: ComponentID) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const status: ComponentStatus = {};
+    const status: ComponentStatusLegacy = {};
     const componentFromModel: ModelComponent | undefined = await this.consumer.scope.getModelComponentIfExist(id);
     let componentFromFileSystem;
     try {
@@ -122,5 +127,9 @@ export class ComponentStatusLoader {
 
   clearOneComponentCache(id: ComponentID) {
     delete this._componentsStatusCache[id.toString()];
+  }
+
+  clearCache() {
+    this._componentsStatusCache = {};
   }
 }

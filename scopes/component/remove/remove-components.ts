@@ -119,7 +119,7 @@ async function removeLocal(
   if (!force) {
     await pMapSeries(bitIds, async (id) => {
       try {
-        const componentStatus = await consumer.getComponentStatusById(id);
+        const componentStatus = await workspace.getComponentStatusById(id);
         if (componentStatus.modified) modifiedComponents.push(id);
         else nonModifiedComponents.push(id);
       } catch (err: any) {

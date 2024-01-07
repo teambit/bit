@@ -585,7 +585,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     // doesn't have the model objects. in that case, calling getComponentStatusById() may return an error as it relies
     // on the model objects when there are dependencies
     if (this.options.override || this.options.objectsOnly || this.options.merge || this.options.trackOnly) return;
-    const componentsStatuses = await this.consumer.getManyComponentsStatuses(ids);
+    const componentsStatuses = await this.workspace.getManyComponentsStatuses(ids);
     const modifiedComponents = componentsStatuses
       .filter(({ status }) => status.modified || status.newlyCreated)
       .map((c) => c.id);
@@ -617,7 +617,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
   }
 
   async _getMergeStatus(component: Component): Promise<ComponentMergeStatus> {
-    const componentStatus = await this.consumer.getComponentStatusById(component.id);
+    const componentStatus = await this.workspace.getComponentStatusById(component.id);
     const mergeStatus: ComponentMergeStatus = { component, mergeResults: null };
     if (!componentStatus.modified) return mergeStatus;
     const componentModel = await this.consumer.scope.getModelComponent(component.id);
