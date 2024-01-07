@@ -115,7 +115,9 @@ export class Component implements IComponent {
     return this.state.aspects.get(id)?.serialize();
   }
 
-  async getLogs(filter?: { type?: string; offset?: number; limit?: number; head?: string; sort?: string }): Promise<ComponentLog[]> {
+  async getLogs(
+    filter?: { type?: string; offset?: number; limit?: number; head?: string; sort?: string }
+  ): Promise<ComponentLog[]> {
     const allLogs = await this.factory.getLogs(this.id, false, filter?.head);
 
     if (!filter) return allLogs;
