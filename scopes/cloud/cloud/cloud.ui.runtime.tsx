@@ -2,10 +2,12 @@ import React from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { flatten } from 'lodash';
 import { SubMenu } from '@teambit/design.controls.menu';
+import { useThemePicker, useNextTheme } from '@teambit/base-react.themes.theme-switcher';
 import { Slot } from '@teambit/harmony';
 import { UserBar, UserBarItem, UserBarItemSlot, UserBarSection, UserBarSectionSlot } from '@teambit/cloud.ui.user-bar';
 import LanesAspect, { LanesUI } from '@teambit/lanes';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
+import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { CloudAspect } from './cloud.aspect';
 
 export class CloudUI {
@@ -42,12 +44,12 @@ export class CloudUI {
 
   static runtime = UIRuntime;
 
-  static dependencies = [WorkspaceAspect, LanesAspect];
+  static dependencies = [WorkspaceAspect, LanesAspect, ComponentAspect];
 
   static slots = [Slot.withType<UserBarItem[]>(), Slot.withType<UserBarSection[]>()];
 
   static async provider(
-    [workspace, lanes]: [WorkspaceUI, LanesUI],
+    [workspace, lanes, component]: [WorkspaceUI, LanesUI, ComponentUI],
     _,
     [userBarItemSlot, userBarSectionSlot]: [UserBarItemSlot, UserBarSectionSlot]
   ) {
@@ -114,12 +116,46 @@ export class CloudUI {
           );
         },
       },
+      {
+        category: 'DocsSupportAndFeedback',
+        component: function ThemePicker() {
+          const next = useNextTheme();
+          const { currentIdx } = useThemePicker();
+          return (
+            <SubMenu
+              item={{
+                label: 'Theme',
+                icon: 'lightmode',
+                children: [
+                  {
+                    label: 'Light',
+                    icon: currentIdx === 0 ? 'checkmark' : '',
+                    onClick: () => {
+                      if (currentIdx === 0) return;
+                      next();
+                    },
+                  },
+                  {
+                    label: 'Dark',
+                    icon: currentIdx === 1 ? 'checkmark' : '',
+                    onClick: () => {
+                      if (currentIdx === 1) return;
+                      next();
+                    },
+                  },
+                ],
+              }}
+            />
+          );
+        },
+      },
     ]);
     const userBarItems = cloudUI.listUserBarItems();
     const userBarSections = cloudUI.listUserBarSections();
     const CloudUserBar = () => <UserBar sections={userBarSections} items={userBarItems} />;
     workspace.registerMenuWidget([CloudUserBar]);
     lanes.registerMenuWidget(CloudUserBar);
+    component.registerWidget({ children: <CloudUserBar />, active: false }, 1000);
     return cloudUI;
   }
 }
