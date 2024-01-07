@@ -469,7 +469,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.19-v1
+          key: core-aspect-env-v0.0.19-v2
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
@@ -492,16 +492,17 @@ jobs:
           bin_name: "bbit"
       - run: bbit
       - save_cache:
-          key: core-aspect-env-v0.0.19-v1
-          paths:
-            - /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088
-      - run:
-          name: bbit install
-          command: cd bit && bbit install
-      - save_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
+      - run:
+          name: bbit install
+          command: cd bit && bbit install
+      - run: ls -la /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088
+      - save_cache:
+          key: core-aspect-env-v0.0.19-v2
+          paths:
+            - /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088
       - run: cd bit && npm run link-bit-legacy
       # - run: cd bit && bbit compile
 
@@ -541,7 +542,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.19-v1
+          key: core-aspect-env-v0.0.19-v2
       # - update_ssh_agent
       # temporary, check if we can remove it
       - run: cd bit && bit cc
@@ -577,7 +578,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.19-v1
+          key: core-aspect-env-v0.0.19-v2
       - bit_config:
           env: "hub"
       - restore_cache:
@@ -888,7 +889,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.19-v1
+          key: core-aspect-env-v0.0.19-v2
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
