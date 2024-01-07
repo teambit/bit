@@ -1,6 +1,7 @@
 import { ComponentID } from '@teambit/component';
 import gql from 'graphql-tag';
 import { latestVersions } from '@teambit/legacy/dist/api/scope';
+import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { ScopeMain } from './scope.main.runtime';
 
 export function scopeSchema(scopeMain: ScopeMain) {
@@ -96,7 +97,7 @@ export function scopeSchema(scopeMain: ScopeMain) {
           return latestVersions(scope.path, ids);
         },
 
-        getLogs: async (scope: ScopeMain, { id }: { id: string }) => {
+        getLogs: async (scope: ScopeMain, { id }: { id: string }): Promise<ComponentLog[]> => {
           return scope.getLogs(ComponentID.fromString(id));
         },
 
