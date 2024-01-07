@@ -468,6 +468,8 @@ jobs:
           at: ./
       - restore_cache:
           key: bitsrc-registry10
+      - restore_cache:
+          key: core-aspect-env-v0.0.19-v1
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
@@ -490,14 +492,16 @@ jobs:
           bin_name: "bbit"
       - run: bbit
       - save_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: core-aspect-env-v0.0.19-v1
           paths:
-            - /home/circleci/.bvm
-      - run: cd bit && bbit capsule list
+            - /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088
       - run:
           name: bbit install
           command: cd bit && bbit install
-
+      - save_cache:
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+          paths:
+            - /home/circleci/.bvm
       - run: cd bit && npm run link-bit-legacy
       # - run: cd bit && bbit compile
 
@@ -536,6 +540,8 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
+      - restore_cache:
+          key: core-aspect-env-v0.0.19-v1
       # - update_ssh_agent
       # temporary, check if we can remove it
       - run: cd bit && bit cc
@@ -570,6 +576,8 @@ jobs:
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+      - restore_cache:
+          key: core-aspect-env-v0.0.19-v1
       - bit_config:
           env: "hub"
       - restore_cache:
@@ -879,6 +887,8 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
+      - restore_cache:
+          key: core-aspect-env-v0.0.19-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
