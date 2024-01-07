@@ -495,10 +495,9 @@ jobs:
             - /home/circleci/.bvm
       - run:
           name: bbit install
-          command: cd bit && bbit install
+          # We skip the compile here as we want to compile separatly and see the compile output
+          command: cd bit && bbit install --skip-compile
 
-      - run: cd bit && cat node_modules/@teambit/component/dist/ui/menu/index.js
-      - run: cd bit && bbit compile
       - run: cd bit && cat node_modules/@teambit/component/dist/ui/menu/index.js
       - run: cd bit && npm run link-bit-legacy
       # - run: cd bit && bbit compile
@@ -514,6 +513,10 @@ jobs:
       - run:
           name: 'Build bit-legacy types'
           command: 'cd bit && npm run build:types'
+      - run: cd bit && bbit compile --log
+      - run: cd bit && cat node_modules/@teambit/component/dist/ui/menu/index.js
+      - run: cd bit && bbit compile --log
+      - run: cd bit && cat node_modules/@teambit/component/dist/ui/menu/index.js
       - persist_to_workspace:
           root: .
           paths:
