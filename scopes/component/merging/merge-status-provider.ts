@@ -234,7 +234,7 @@ other:   ${otherLaneHead.toString()}`);
     }
 
     const isModified = async (): Promise<undefined | 'code' | 'config'> => {
-      const componentModificationStatus = await consumer.getComponentStatusById(currentComponent.id);
+      const componentModificationStatus = await this.workspace.getComponentStatusById(currentComponent.id);
       if (!componentModificationStatus.modified) return undefined;
       if (!existingBitMapId) return undefined;
       const baseComponent = await modelComponent.loadVersion(

@@ -21,7 +21,6 @@ export default class Doctor implements LegacyCommand {
     ['s', 'save [filePath]', 'save diagnoses to a file'],
     ['a', 'archive [filePath]', 'archive the workspace including diagnosis info'],
   ] as CommandOptions;
-  migration = false;
 
   action(
     [diagnosisName]: string[],

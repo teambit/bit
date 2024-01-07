@@ -175,7 +175,7 @@ export class CheckoutMain {
       .map((c) => c.id.changeVersion(undefined));
 
     if (componentIdsToRemove.length) {
-      await this.remove.removeLocallyByIds(componentIdsToRemove, { force: true });
+      await this.remove.removeLocallyByIds(componentIdsToRemove, { force: true, reasonForRemoval: 'checkout' });
     }
 
     return {

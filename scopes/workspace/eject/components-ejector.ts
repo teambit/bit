@@ -100,7 +100,7 @@ export class ComponentsEjector {
       await Promise.all(
         hubExportedComponents.map(async (id) => {
           try {
-            const componentStatus = await this.consumer.getComponentStatusById(id);
+            const componentStatus = await this.workspace.getComponentStatusById(id);
             if (componentStatus.modified) this.failedComponents.modifiedComponents.push(id);
             else if (componentStatus.staged) this.failedComponents.stagedComponents.push(id);
             else this.idsToEject.push(id);

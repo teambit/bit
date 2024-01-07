@@ -15,6 +15,7 @@ import { EnvsAspect } from '@teambit/envs';
 import type { EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain, UIRoot } from '@teambit/ui';
+import { CacheAspect, CacheMain } from '@teambit/cache';
 import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
@@ -61,6 +62,9 @@ import { ComponentPreviewRoute } from './component-preview.route';
 import { previewSchema } from './preview.graphql';
 import { PreviewAssetsRoute } from './preview-assets.route';
 import { PreviewService } from './preview.service';
+import { PUBLIC_DIR, RUNTIME_NAME, buildPreBundlePreview, generateBundlePreviewEntry } from './pre-bundle';
+import { BUNDLE_DIR, PreBundlePreviewTask } from './pre-bundle.task';
+import { createBundleHash, getBundlePath, readBundleHash } from './pre-bundle-utils';
 
 const noopResult = {
   results: [],
@@ -178,6 +182,8 @@ export class PreviewMain {
     private previewSlot: PreviewDefinitionRegistry,
 
     private ui: UiMain,
+
+    private cache: CacheMain,
 
     private envs: EnvsMain,
 
@@ -676,10 +682,45 @@ export class PreviewMain {
       this.executionRefs.set(ctxId, new ExecutionRef(context));
     });
 
-    const previewRuntime = await this.writePreviewRuntime(context);
+    const previewRuntime = await this.writePreviewEntry(context);
     const linkFiles = await this.updateLinkFiles(context.components, context);
 
     return [...linkFiles, previewRuntime];
+  }
+
+  private async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
+    const { rebuild, skipUiBuild } = this.ui.runtimeOptions;
+
+    const [name, uiRoot] = this.getUi();
+    const cacheKey = `${uiRoot.path}|${RUNTIME_NAME}`;
+    const currentBundleHash = await createBundleHash(uiRoot, RUNTIME_NAME);
+    const preBundleHash = readBundleHash(PreviewAspect.id, BUNDLE_DIR, '');
+    const workspaceBundleDir = join(uiRoot.path, PUBLIC_DIR);
+    const lastBundleHash = await this.cache.get(cacheKey);
+
+    let bundlePath = '';
+
+    // ensure the pre-bundle is ready
+    if (!rebuild && !existsSync(workspaceBundleDir) && (currentBundleHash === preBundleHash || skipUiBuild)) {
+      // use pre-bundle
+      bundlePath = getBundlePath(PreviewAspect.id, BUNDLE_DIR, '') as string;
+    } else if (!rebuild && existsSync(workspaceBundleDir) && (currentBundleHash === lastBundleHash || skipUiBuild)) {
+      // use workspace bundle
+      bundlePath = workspaceBundleDir;
+    } else {
+      // do build
+      const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
+      const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
+
+      await buildPreBundlePreview(filteredAspects);
+      bundlePath = workspaceBundleDir;
+      await this.cache.set(cacheKey, currentBundleHash);
+    }
+
+    // prepare the runtime entry
+    const previewRuntime = await generateBundlePreviewEntry(name, bundlePath, this.harmony.config.toObject());
+
+    return previewRuntime;
   }
 
   private updateLinkFiles(components: Component[] = [], context: ExecutionContext) {
@@ -876,6 +917,7 @@ export class PreviewMain {
     BuilderAspect,
     ComponentAspect,
     UIAspect,
+    CacheAspect,
     EnvsAspect,
     WorkspaceAspect,
     PkgAspect,
@@ -900,6 +942,7 @@ export class PreviewMain {
       builder,
       componentExtension,
       uiMain,
+      cache,
       envs,
       workspace,
       pkg,
@@ -915,6 +958,7 @@ export class PreviewMain {
       BuilderMain,
       ComponentMain,
       UiMain,
+      CacheMain,
       EnvsMain,
       Workspace | undefined,
       PkgMain,
@@ -936,6 +980,7 @@ export class PreviewMain {
       harmony,
       previewSlot,
       uiMain,
+      cache,
       envs,
       componentExtension,
       pkg,
@@ -969,6 +1014,7 @@ export class PreviewMain {
       builder.registerBuildTasks([
         new EnvPreviewTemplateTask(preview, envs, aspectLoader, dependencyResolver, logger),
         new PreviewTask(bundler, preview, dependencyResolver, logger),
+        new PreBundlePreviewTask(uiMain, logger),
       ]);
 
     if (workspace) {

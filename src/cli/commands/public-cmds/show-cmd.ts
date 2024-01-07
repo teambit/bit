@@ -25,7 +25,6 @@ export default class Show implements LegacyCommand {
     ['', 'legacy', ''],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   skipWorkspace = true;
   remoteOp = true;
 
