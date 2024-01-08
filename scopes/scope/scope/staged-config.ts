@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Logger } from '@teambit/logger';
 
@@ -8,6 +8,7 @@ const STAGED_CONFIG_DIR = 'staged-config';
 
 type Config = Record<string, any> | undefined;
 type ComponentConfig = { id: ComponentID; config: Config };
+type ComponentConfigObj = { id: ComponentIdObj; config: Config };
 
 export class StagedConfig {
   hasChanged = false;
@@ -30,7 +31,7 @@ export class StagedConfig {
     return new StagedConfig(filePath, componentsConfig, logger);
   }
 
-  toObject() {
+  toObject(): ComponentConfigObj[] {
     return this.componentsConfig.map(({ id, config }) => ({ id: id.toObject(), config }));
   }
 

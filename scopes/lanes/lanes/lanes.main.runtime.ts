@@ -118,7 +118,7 @@ export type LaneDiffStatus = {
 
 export type MarkRemoveOnLaneResult = { removedFromWs: ComponentID[]; markedRemoved: ComponentID[] };
 
-type CreateLaneResult = {
+export type CreateLaneResult = {
   laneId: LaneId;
   hash: string;
   alias?: string;
