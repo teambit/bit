@@ -545,6 +545,9 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
           key: core-aspect-env-v0.0.19-v2
       # - update_ssh_agent
@@ -552,6 +555,8 @@ jobs:
       - run: ls -la /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088/node_modules/@teambit
       - run: ls -la /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088/node_modules/@teambit/workspace
       - run: ls -la /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088/node_modules/@teambit/builder
+      - run: ls -la /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088/node_modules/@teambit/builder/
+      - run: ls -la /home/circleci/.bvm/versions/1.6.21
       - run: cd bit && bit cc
       - run:
           name: 'bit status'
