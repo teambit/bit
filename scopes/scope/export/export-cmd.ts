@@ -4,7 +4,7 @@ import { ejectTemplate } from '@teambit/eject';
 import { WILDCARD_HELP, COMPONENT_PATTERN_HELP, getCloudDomain } from '@teambit/legacy/dist/constants';
 import chalk from 'chalk';
 import { isEmpty } from 'lodash';
-import { ExportMain } from './export.main.runtime';
+import { ExportMain, ExportResult } from './export.main.runtime';
 
 export class ExportCmd implements Command {
   name = 'export [component-patterns...]';
@@ -167,7 +167,7 @@ export class ExportCmd implements Command {
       ignoreMissingArtifacts = false,
       resume,
     }: any
-  ) {
+  ): Promise<ExportResult> {
     const results = await this.exportMain.export({
       ids,
       eject,
