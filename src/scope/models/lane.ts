@@ -149,9 +149,9 @@ export default class Lane extends BitObject {
   addComponent(component: LaneComponent) {
     const existsComponent = this.getComponent(component.id);
     if (existsComponent) {
+      if (!existsComponent.head.isEqual(component.head)) this.hasChanged = true;
       existsComponent.id = component.id;
       existsComponent.head = component.head;
-      if (!existsComponent.head.isEqual(component.head)) this.hasChanged = true;
     } else {
       logger.debug(`Lane.addComponent, adding component ${component.id.toString()} to lane ${this.id()}`);
       this.components.push(component);

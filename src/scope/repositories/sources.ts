@@ -665,7 +665,8 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
         return;
       }
       if (divergeResults.isTargetAhead()) {
-        existingComponent.head = component.head;
+        if (!existingLane) throw new Error(`mergeLane, existingLane must be set if target is ahead`);
+        existingLane.addComponent({ id: component.id, head: component.head });
         mergeResults.push({
           mergedComponent: modelComponent,
           mergedVersions: divergeResults.snapsOnTargetOnly.map((h) => h.toString()),
