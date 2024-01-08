@@ -93,10 +93,24 @@ describe('recovery after component/scope deletion', function () {
           expect(comp3).to.be.undefined;
         });
         describe('the indirect dependency exists as cache inside the dependent scope', () => {
-          describe('bit tag', () => {
+          describe('bit tag without --rebuild-deps-graph', () => {
             let tagOutput;
             before(() => {
               tagOutput = helper.command.tagWithoutBuild('comp1', '--force');
+            });
+            it('should succeed', () => {
+              expect(tagOutput).to.have.string('1 component(s) tagged');
+            });
+            it('should not bring the missing dep from the dependent', () => {
+              const scope = helper.command.catScope(true);
+              const comp3 = scope.find((item) => item.name === 'comp3');
+              expect(comp3).to.be.undefined;
+            });
+          });
+          describe('bit tag with --rebuild-deps-graph', () => {
+            let tagOutput;
+            before(() => {
+              tagOutput = helper.command.tagWithoutBuild('comp1', '--force --rebuild-deps-graph');
             });
             it('should succeed', () => {
               expect(tagOutput).to.have.string('1 component(s) tagged');
@@ -168,11 +182,20 @@ describe('recovery after component/scope deletion', function () {
               expect(comp3).to.be.undefined;
             });
           });
-          describe('bit tag', () => {
+          describe('bit tag --rebuild-deps-graph', () => {
             it('should throw an error about missing dependencies', () => {
-              expect(() => helper.command.tagWithoutBuild('comp1', '--force')).to.throw(
+              expect(() => helper.command.tagWithoutBuild('comp1', '--force --rebuild-deps-graph')).to.throw(
                 'has the following dependencies missing'
               );
+            });
+          });
+          // discussed this with Ran. in the past we used to throw. now that we reuse the deps-graph from the Version objects,
+          // we don't go to the remote, so we don't know whether the dependency is missing or not.
+          // it's ok to not throw because the user already failed in `bit install` due to the missing package.
+          // and when the installation fails, bit-tag fails as well.
+          describe('bit tag without --rebuild-deps-graph', () => {
+            it('should succeed', () => {
+              expect(() => helper.command.tagWithoutBuild('comp1', '--force')).to.not.throw();
             });
           });
         });
@@ -201,10 +224,24 @@ describe('recovery after component/scope deletion', function () {
           expect(comp3).to.be.undefined;
         });
         describe('the indirect dependency exists as cache inside the dependent scope', () => {
-          describe('bit tag', () => {
+          describe('bit tag without --rebuild-deps-graph', () => {
             let tagOutput;
             before(() => {
               tagOutput = helper.command.tagWithoutBuild('comp1', '--force');
+            });
+            it('should succeed', () => {
+              expect(tagOutput).to.have.string('1 component(s) tagged');
+            });
+            it('should not bring the missing dep from the dependent', () => {
+              const scope = helper.command.catScope(true);
+              const comp3 = scope.find((item) => item.name === 'comp3');
+              expect(comp3).to.be.undefined;
+            });
+          });
+          describe('bit tag with --rebuild-deps-graph', () => {
+            let tagOutput;
+            before(() => {
+              tagOutput = helper.command.tagWithoutBuild('comp1', '--force --rebuild-deps-graph');
             });
             it('should succeed', () => {
               expect(tagOutput).to.have.string('1 component(s) tagged');
@@ -250,11 +287,20 @@ describe('recovery after component/scope deletion', function () {
               expect(comp3).to.be.undefined;
             });
           });
-          describe('bit tag', () => {
+          describe('bit tag --rebuild-deps-graph', () => {
             it('should throw an error about missing dependencies', () => {
-              expect(() => helper.command.tagWithoutBuild('comp1', '--force')).to.throw(
+              expect(() => helper.command.tagWithoutBuild('comp1', '--force --rebuild-deps-graph')).to.throw(
                 'has the following dependencies missing'
               );
+            });
+          });
+          // discussed this with Ran. in the past we used to throw. now that we reuse the deps-graph from the Version objects,
+          // we don't go to the remote, so we don't know whether the dependency is missing or not.
+          // it's ok to not throw because the user already failed in `bit install` due to the missing package.
+          // and when the installation fails, bit-tag fails as well.
+          describe('bit tag without --rebuild-deps-graph', () => {
+            it('should succeed', () => {
+              expect(() => helper.command.tagWithoutBuild('comp1', '--force')).to.not.throw();
             });
           });
         });
@@ -334,13 +380,14 @@ describe('recovery after component/scope deletion', function () {
               expect(importOutput).to.have.string(`missing dependencies: ${remote2Name}/comp3`);
             });
           });
-          describe('bit tag', () => {
+          // again, without this flag, it's ok to not throw because the user already failed in `bit install` due to the missing package.
+          describe('bit tag --rebuild-deps-graph', () => {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(scopeWithMissingDep);
               helper.command.importAllComponents();
             });
             it('should throw ComponentNotFound error because it is a direct dependency', () => {
-              const cmd = () => helper.command.tagWithoutBuild('comp2', '--force');
+              const cmd = () => helper.command.tagWithoutBuild('comp2', '--rebuild-deps-graph --force');
               const err = new ComponentNotFound(`${remote2Name}/comp3@0.0.1`);
               helper.general.expectToThrow(cmd, err);
             });
