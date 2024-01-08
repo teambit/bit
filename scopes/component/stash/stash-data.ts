@@ -1,14 +1,19 @@
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { Workspace } from '@teambit/workspace';
 
 export type StashCompData = { id: ComponentID; hash: Ref };
+export type StashCompDataWithIdObj = { id: ComponentIdObj; hash: string };
 export type StashMetadata = { message?: string };
+export type StashDataObj = {
+  metadata: StashMetadata;
+  stashCompsData: StashCompDataWithIdObj[];
+}
 
 export class StashData {
   constructor(readonly metadata: StashMetadata, readonly stashCompsData: StashCompData[]) {}
 
-  toObject() {
+  toObject(): StashDataObj {
     return {
       metadata: this.metadata,
       stashCompsData: this.stashCompsData.map(({ id, hash }) => ({
