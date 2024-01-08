@@ -282,6 +282,11 @@ export interface DependencyResolverWorkspaceConfig {
    * If true, staleness checks for cached data will be bypassed, but missing data will be requested from the server.
    */
   preferOffline?: boolean;
+
+  /**
+   * When true, components in capsules are symlinked into their own node_modules.
+   */
+  capsuleSelfReference?: boolean;
 }
 
 export interface DependencyResolverVariantConfig {
