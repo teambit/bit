@@ -470,10 +470,6 @@ jobs:
           key: bitsrc-registry10
       - restore_cache:
           key: core-aspect-env-v0.0.19-v2
-      - run: ls -la /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088/node_modules/@teambit
-      - run: ls -la /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088/node_modules/@teambit/workspace
-      - run: ls -la /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088/node_modules/@teambit/builder
-
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
@@ -502,7 +498,6 @@ jobs:
       - run:
           name: bbit install
           command: cd bit && bbit install
-      - run: ls -la /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088
       - save_cache:
           key: core-aspect-env-v0.0.19-v2
           paths:
@@ -552,11 +547,6 @@ jobs:
           key: core-aspect-env-v0.0.19-v2
       # - update_ssh_agent
       # temporary, check if we can remove it
-      - run: ls -la /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088/node_modules/@teambit
-      - run: ls -la /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088/node_modules/@teambit/workspace
-      - run: ls -la /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088/node_modules/@teambit/builder
-      - run: ls -la /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088/node_modules/@teambit/builder/
-      - run: ls -la /home/circleci/.bvm/versions/1.6.21
       - run: cd bit && bit cc
       - run:
           name: 'bit status'
