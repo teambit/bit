@@ -716,23 +716,10 @@ there are matching among unmodified components thought. consider using --unmodif
     }
 
     const flattenedEdgesGetter = new FlattenedEdgesGetter(this.scope, components, this.logger, lane || undefined);
-    const graphIds = await flattenedEdgesGetter.buildGraph();
+    await flattenedEdgesGetter.buildGraph();
 
     components.forEach((component) => {
-      const graphFromIds = graphIds.successorsSubgraph(component.id.toString());
-      const edgesFromGraph = graphFromIds.edges.map((edge) => {
-        return {
-          source: ComponentID.fromString(edge.sourceId),
-          target: ComponentID.fromString(edge.targetId),
-          type: edge.attr as DepEdgeType,
-        };
-      });
-
-      const flattenedFromGraphIncludeItself = graphFromIds.nodes.map((node) => node.attr);
-      const flattenedFromGraph = flattenedFromGraphIncludeItself.filter((id) => !id.isEqual(component.id));
-
-      component.flattenedDependencies = ComponentIdList.fromArray(flattenedFromGraph);
-      component.flattenedEdges = edgesFromGraph;
+      flattenedEdgesGetter.populateFlattenedAndEdgesForComp(component);
     });
   }
 
