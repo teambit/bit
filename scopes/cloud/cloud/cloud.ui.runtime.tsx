@@ -154,8 +154,10 @@ export class CloudUI {
     const userBarSections = cloudUI.listUserBarSections();
     const CloudUserBar = () => <UserBar sections={userBarSections} items={userBarItems} />;
     workspace.registerMenuWidget([CloudUserBar]);
-    lanes.registerMenuWidget(CloudUserBar);
-    component.registerWidget({ children: <CloudUserBar />, active: false }, 1000);
+    if (workspace) {
+      lanes.registerMenuWidget(CloudUserBar);
+      component.registerRightSideMenuItem({ item: <CloudUserBar />, order: 100 });
+    }
     return cloudUI;
   }
 }
