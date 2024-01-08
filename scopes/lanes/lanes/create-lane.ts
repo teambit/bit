@@ -5,11 +5,11 @@ import { ScopeMain } from '@teambit/scope';
 // import { ComponentIdList } from '@teambit/component-id';
 import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
 import { isSnap } from '@teambit/component-version';
-import { getBitCloudUser } from '@teambit/snapping';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { Workspace } from '@teambit/workspace';
 import { compact } from 'lodash';
+import { getBitCloudUser } from '@teambit/legacy/dist/utils/bit/get-cloud-user';
 
 const MAX_LANE_NAME_LENGTH = 800;
 

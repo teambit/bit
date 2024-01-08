@@ -1,26 +1,18 @@
 import mapSeries from 'p-map-series';
-import fetch from 'node-fetch';
 import R from 'ramda';
 import { isEmpty } from 'lodash';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 import { BitError } from '@teambit/bit-error';
-import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import {
-  BuildStatus,
-  CFG_USER_EMAIL_KEY,
-  CFG_USER_NAME_KEY,
-  CFG_USER_TOKEN_KEY,
-  getCloudDomain,
-  Extensions,
-} from '@teambit/legacy/dist/constants';
+import { BuildStatus, Extensions } from '@teambit/legacy/dist/constants';
 import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/component-schema';
 import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
+import { getBasicLog } from '@teambit/legacy/dist/utils/bit/basic-log';
 import { Component } from '@teambit/component';
 import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import logger from '@teambit/legacy/dist/logger/logger';
@@ -519,64 +511,12 @@ async function addLogToComponents(
   });
 }
 
-export async function getBasicLog(): Promise<Log> {
-  const username = (await getBitCloudUsername()) || (await globalConfig.get(CFG_USER_NAME_KEY));
-  const email = await globalConfig.get(CFG_USER_EMAIL_KEY);
-  return {
-    username,
-    email,
-    message: '',
-    date: Date.now().toString(),
-  };
-}
-
-export async function getBitCloudUsername(): Promise<string | undefined> {
-  const token = await globalConfig.get(CFG_USER_TOKEN_KEY);
-  if (!token) return '';
-  try {
-    const res = await fetch(`https://api.${getCloudDomain()}/user`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    const object = await res.json();
-    const user = object.payload;
-    const username = user.username;
-    return username;
-  } catch (error) {
-    return undefined;
-  }
-}
-
 export type BitCloudUser = {
   username?: string;
   name?: string;
   displayName?: string;
   profileImage?: string;
 };
-
-export async function getBitCloudUser(): Promise<BitCloudUser | undefined> {
-  const token = await globalConfig.get(CFG_USER_TOKEN_KEY);
-  if (!token) return undefined;
-
-  try {
-    const res = await fetch(`https://api.${getCloudDomain()}/user`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    const object = await res.json();
-    const user = object.payload;
-
-    return {
-      ...user,
-    };
-  } catch (error) {
-    return undefined;
-  }
-}
 
 function setCurrentSchema(components: ConsumerComponent[]) {
   components.forEach((component) => {
