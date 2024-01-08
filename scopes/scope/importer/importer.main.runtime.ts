@@ -276,6 +276,7 @@ export class ImporterMain {
     if (persistIfNotExists) {
       const exists = await legacyScope.loadLane(laneId);
       if (!exists) {
+        laneObject.hasChanged = true;
         await legacyScope.lanes.saveLane(laneObject, { saveLaneHistory: false });
       }
     }
