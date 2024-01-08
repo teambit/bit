@@ -81,6 +81,16 @@ type ExportParams = {
   forkLaneNewScope?: boolean;
 };
 
+export interface ExportResult {
+  nonExistOnBitMap: ComponentID[];
+  removedIds: ComponentIdList;
+  missingScope: ComponentID[];
+  componentsIds: ComponentID[];
+  exportedLanes: Lane[];
+  rippleJobs: string[];
+  ejectResults: EjectResults | undefined;
+}
+
 export class ExportMain {
   constructor(
     private workspace: Workspace,
@@ -90,11 +100,11 @@ export class ExportMain {
     private eject: EjectMain
   ) {}
 
-  async export(params: ExportParams = {}) {
+  async export(params: ExportParams = {}): Promise<ExportResult> {
     HooksManagerInstance?.triggerHook(PRE_EXPORT_HOOK, params);
     const { nonExistOnBitMap, missingScope, exported, removedIds, exportedLanes, rippleJobs } =
       await this.exportComponents(params);
-    let ejectResults;
+    let ejectResults: EjectResults | undefined;
     await this.workspace.clearCache(); // needed when one process executes multiple commands, such as in "bit test" or "bit cli"
     if (params.eject) ejectResults = await this.ejectExportedComponents(exported);
     const exportResults = {
