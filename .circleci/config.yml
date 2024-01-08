@@ -470,6 +470,9 @@ jobs:
           key: bitsrc-registry10
       - restore_cache:
           key: core-aspect-env-v0.0.19-v2
+      - run: ls -la /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088/node_modules/@teambit
+      - run: ls -la /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088/node_modules/@teambit/workspace
+
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
