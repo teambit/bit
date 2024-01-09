@@ -118,8 +118,7 @@ export class ComponentsEjector {
   }
 
   async loadComponentsToEject() {
-    // TODO: check if we really need the { loadExtensions: true } here
-    const { components } = await this.consumer.loadComponents(this.idsToEject, undefined, { loadExtensions: true });
+    const { components } = await this.consumer.loadComponents(this.idsToEject);
     this.componentsToEject = components;
   }
 

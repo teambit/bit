@@ -274,6 +274,10 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       component.buildStatus = buildStatus;
       await this.snapping._enrichComp(component);
     });
+    if (this.laneObj) {
+      const laneHistory = await this.scope.legacyScope.lanes.updateLaneHistory(this.laneObj, 'update-dependencies');
+      this.scope.legacyScope.objects.add(laneHistory);
+    }
     await this.scope.legacyScope.objects.persist();
   }
 
