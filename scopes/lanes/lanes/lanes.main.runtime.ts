@@ -469,8 +469,8 @@ please create a new lane instead, which will include all components of this lane
     });
   }
 
-  async importLaneObject(laneId: LaneId, persistIfNotExists = true): Promise<Lane> {
-    return this.importer.importLaneObject(laneId, persistIfNotExists);
+  async importLaneObject(laneId: LaneId, persistIfNotExists = true, includeLaneHistory = false): Promise<Lane> {
+    return this.importer.importLaneObject(laneId, persistIfNotExists, includeLaneHistory);
   }
 
   /**

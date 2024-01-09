@@ -267,9 +267,9 @@ export class ImporterMain {
    * see `sources.mergeLane()` for export and `import-components._saveLaneDataIfNeeded()` for import.
    * in this case, because we only bring the lane object and not the components, it's not easy to do the merge.
    */
-  async importLaneObject(laneId: LaneId, persistIfNotExists = true, includeVersionHistory = false): Promise<Lane> {
+  async importLaneObject(laneId: LaneId, persistIfNotExists = true, includeLaneHistory = false): Promise<Lane> {
     const legacyScope = this.scope.legacyScope;
-    const results = await legacyScope.scopeImporter.importLanes([laneId], includeVersionHistory);
+    const results = await legacyScope.scopeImporter.importLanes([laneId], includeLaneHistory);
     const laneObject = results[0];
     if (!laneObject) throw new LaneNotFound(laneId.scope, laneId.name);
 

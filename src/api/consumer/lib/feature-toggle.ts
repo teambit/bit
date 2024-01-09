@@ -36,6 +36,11 @@ class FeatureToggle {
     if (this.features) this.features.push(featureName);
     else this.features = [featureName];
   }
+  public removeFeature(featureName: string) {
+    this.setFeatures();
+    if (!this.features) return;
+    this.features = this.features.filter((f) => f !== featureName);
+  }
 }
 
 const featureToggle = new FeatureToggle();
@@ -45,6 +50,9 @@ export function isFeatureEnabled(featureName: string): boolean {
 }
 
 export function addFeature(featureName: string) {
+  featureToggle.addFeature(featureName);
+}
+export function removeFeature(featureName: string) {
   featureToggle.addFeature(featureName);
 }
 
