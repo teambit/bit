@@ -1,6 +1,6 @@
-import { FETCH_OPTIONS } from '../api/scope/lib/fetch';
+import { ComponentID } from '@teambit/component-id';
+import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '../api/scope/lib/fetch';
 import { PushOptions } from '../api/scope/lib/put';
-import { BitId } from '../bit-id';
 import { ListScopeResult } from '../consumer/component/components-list';
 import Component from '../consumer/component/consumer-component';
 import logger from '../logger/logger';
@@ -13,6 +13,7 @@ import { connect } from '../scope/network';
 import { Network } from '../scope/network/network';
 import { DEFAULT_READ_STRATEGIES, SSHConnectionStrategyName } from '../scope/network/ssh/ssh';
 import { ObjectItemsStream, ObjectList } from '../scope/objects/object-list';
+import RemovedObjects from '../scope/removed-components';
 import { cleanBang, isBitUrl } from '../utils';
 import { InvalidRemote } from './exceptions';
 
@@ -59,14 +60,14 @@ export default class Remote {
   }
 
   show(
-    bitId: BitId,
+    bitId: ComponentID,
     strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
   ): Promise<Component | null | undefined> {
     return this.connect(strategiesNames).then((network) => network.show(bitId));
   }
 
   graph(
-    bitId?: BitId,
+    bitId?: ComponentID,
     strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
   ): Promise<DependencyGraph> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -79,11 +80,12 @@ export default class Remote {
     context?: Record<string, any>,
     strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
   ): Promise<ObjectItemsStream> {
+    fetchOptions.fetchSchema = CURRENT_FETCH_SCHEMA;
     return this.connect(strategiesNames).then((network) => network.fetch(ids, fetchOptions, context));
   }
 
   latestVersions(
-    bitIds: BitId[],
+    bitIds: ComponentID[],
     strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
   ): Promise<string[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -111,17 +113,17 @@ export default class Remote {
     force: boolean,
     context: Record<string, any> | null | undefined,
     idsAreLanes = false
-  ): Promise<Record<string, any>> {
+  ): Promise<RemovedObjects> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.connect().then((network) => network.deleteMany(ids, force, context, idsAreLanes));
   }
-  log(id: BitId): Promise<ComponentLog[]> {
+  log(id: ComponentID): Promise<ComponentLog[]> {
     return this.connect().then((network) => network.log(id));
   }
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]> {
     return this.connect().then((network) => network.listLanes(name, mergeData));
   }
-  async action<Options, Result>(name: string, options?: Options): Promise<Result> {
+  async action<Options extends Record<string, any>, Result>(name: string, options: Options): Promise<Result> {
     const network = await this.connect();
     logger.debug(`[-] Running action ${name} on a remote ${this.name}, options: ${JSON.stringify(options)}`);
     const results: Result = await network.action(name, options);

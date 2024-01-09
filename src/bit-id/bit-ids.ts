@@ -1,9 +1,9 @@
 import R from 'ramda';
+import { forEach } from 'lodash';
 
 import BitId, { BitIdStr } from '../bit-id/bit-id';
 import { LATEST_BIT_VERSION } from '../constants';
-import forEach from '../utils/object/foreach';
-import getLatestVersionNumber from '../utils/resolveLatestVersion';
+// import getLatestVersionNumber from '../utils/resolveLatestVersion';
 
 export default class BitIds extends Array<BitId> {
   serialize(): string[] {
@@ -18,9 +18,9 @@ export default class BitIds extends Array<BitId> {
    * @returns {BitId} - The bit id found in the array (with actual version)
    * @memberof BitIds
    */
-  resolveVersion(idWithLatest: BitId) {
-    return getLatestVersionNumber(this, idWithLatest);
-  }
+  // resolveVersion(idWithLatest: BitId) {
+  //   return getLatestVersionNumber(this, idWithLatest);
+  // }
 
   has(bitId: BitId): boolean {
     return Boolean(this.search(bitId));
@@ -122,6 +122,27 @@ export default class BitIds extends Array<BitId> {
     return this.map((id) => id.toString()).join(', ');
   }
 
+  // removeMultipleVersionsKeepLatest(): BitId[] {
+  //   const grouped = this.toGroupByIdWithoutVersion();
+  //   const latestVersions = Object.keys(grouped).map((key) => {
+  //     const ids = grouped[key];
+  //     if (ids.length === 1) return ids[0];
+  //     const latest = getLatestVersionNumber(ids, ids[0].changeVersion(LATEST_BIT_VERSION));
+  //     return latest;
+  //   });
+
+  //   return latestVersions;
+  // }
+
+  toGroupByIdWithoutVersion(): { [idStrWithoutVer: string]: BitIds } {
+    return this.reduce((acc, current) => {
+      const idStrWithoutVer = current.toStringWithoutVersion();
+      if (acc[idStrWithoutVer]) acc[idStrWithoutVer].push(current);
+      else acc[idStrWithoutVer] = new BitIds(current);
+      return acc;
+    }, {});
+  }
+
   toGroupByScopeName(idsWithDefaultScope: BitIds): { [scopeName: string]: BitIds } {
     return this.reduce((acc, current) => {
       const getScopeName = () => {
@@ -168,9 +189,11 @@ export default class BitIds extends Array<BitId> {
     return new BitIds(...array);
   }
 
-  static fromArray(bitIds: BitId[]): BitIds {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new BitIds(...bitIds);
+  static fromArray(ids: BitId[]): BitIds {
+    // don't do `new BitIds(...ids);`, it'll throw "Maximum call stack size exceeded" for large number if ids.
+    const bitIds = new BitIds();
+    ids.forEach((id) => bitIds.push(id));
+    return bitIds;
   }
 
   static uniqFromArray(bitIds: BitId[]): BitIds {
@@ -189,12 +212,11 @@ ${found.map((id) => id.toString()).join('\n')}`);
   }
 
   toVersionLatest(): BitIds {
-    return BitIds.fromArray(this.map((id) => id.changeVersion(LATEST_BIT_VERSION)));
+    return BitIds.uniqFromArray(this.map((id) => id.changeVersion(LATEST_BIT_VERSION)));
   }
 
   clone(): BitIds {
     const cloneIds = this.map((id) => id.clone());
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new BitIds(...cloneIds);
   }
 }

@@ -13,6 +13,7 @@ export interface PreviewType {
    */
   render(
     componentId: ComponentID,
+    envId: string,
     linkedModules: PreviewModule<any>,
     includedPreviews: string[],
     renderingContext: RenderingContext

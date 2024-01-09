@@ -33,7 +33,7 @@ export class DependencyNameRefactorCmd implements Command {
 export class RefactorCmd implements Command {
   name = 'refactor <sub-command>';
   alias = '';
-  description = 'EXPERIMENTAL. source code refactoring / codemod';
+  description = 'source code refactoring / codemod';
   options = [];
   group = 'development';
   commands: Command[] = [];

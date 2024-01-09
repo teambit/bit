@@ -60,7 +60,7 @@ export default function (isEnvProduction = false): Configuration {
 
   return {
     // TODO: make the dev tool according to shouldUseSourceMap and isEnvProduction
-    // devtool: 'inline-source-map',
+    // devtool: 'eval-cheap-module-source-map',
     resolve: {
       // These are the reasonable defaults supported by the Node ecosystem.
       // We also include JSX as a common component filename extension to support
@@ -132,8 +132,7 @@ export default function (isEnvProduction = false): Configuration {
               options: {
                 babelrc: false,
                 configFile: false,
-                customize: require.resolve('babel-preset-react-app/webpack-overrides'),
-                presets: [require.resolve('@babel/preset-react')],
+                presets: [require.resolve('@babel/preset-env'), require.resolve('@babel/preset-react')],
                 // This is a feature of `babel-loader` for webpack (not Babel itself).
                 // It enables caching results in ./node_modules/.cache/babel-loader/
                 // directory for faster rebuilds.
@@ -143,29 +142,6 @@ export default function (isEnvProduction = false): Configuration {
                 compact: isEnvProduction,
               },
             },
-            // Process any JS outside of the app with Babel.
-            // Unlike the application JS, we only compile the standard ES features.
-            // Probably not needed in our use case
-            // {
-            //   test: /\.(js|mjs)$/,
-            //   exclude: /@babel(?:\/|\\{1,2})runtime/,
-            //   loader: require.resolve('babel-loader'),
-            //   options: {
-            //     babelrc: false,
-            //     configFile: false,
-            //     compact: false,
-            //     presets: [[require.resolve('babel-preset-react-app/dependencies'), { helpers: true }]],
-            //     cacheDirectory: true,
-            //     // See #6846 for context on why cacheCompression is disabled
-            //     cacheCompression: false,
-
-            //     // Babel sourcemaps are needed for debugging into node_modules
-            //     // code.  Without the options below, debuggers like VSCode
-            //     // show incorrect code and set breakpoints on the wrong lines.
-            //     sourceMaps: shouldUseSourceMap,
-            //     inputSourceMap: shouldUseSourceMap,
-            //   },
-            // },
             // MDX support (move to the mdx aspect and extend from there)
             {
               test: /\.mdx?$/,
@@ -176,7 +152,7 @@ export default function (isEnvProduction = false): Configuration {
                   options: {
                     babelrc: false,
                     configFile: false,
-                    presets: [require.resolve('@babel/preset-react'), require.resolve('@babel/preset-env')],
+                    presets: [require.resolve('@babel/preset-env'), require.resolve('@babel/preset-react')],
                   },
                 },
                 {

@@ -1,4 +1,4 @@
-import getConfig from '@pnpm/config';
+import { getConfig } from '@pnpm/config';
 
 export async function readConfig(dir?: string) {
   const pnpmConfig = await getConfig({

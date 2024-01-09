@@ -1,7 +1,7 @@
 /* eslint no-console: 0 */
 import { addUser, REGISTRY_MOCK_PORT, start as startRegistryMock } from '@pnpm/registry-mock';
 import { ChildProcess } from 'child_process';
-import fetch from '@pnpm/fetch';
+import { fetch } from '@pnpm/fetch';
 import execa from 'execa';
 import * as path from 'path';
 
@@ -118,19 +118,6 @@ export default class NpmCiRegistry {
   }
 
   /**
-   * ensures that the bindingPrefix of all components is `@ci`, so it'll be possible to publish
-   * them later on into @ci scope of Verdaccio registry
-   */
-  setCiScopeInBitJson() {
-    if (this.helper.general.isHarmonyProject()) {
-      throw new Error('Harmony does not need this. remove this call please');
-    }
-    const bitJson = this.helper.bitJson.read();
-    bitJson.bindingPrefix = '@ci';
-    this.helper.bitJson.write(bitJson);
-  }
-
-  /**
    * when using bitsrc, on export, a component is automatically pushed to @bit registry.
    * here, we don't have this privilege. instead, the following needs to be done to save the
    * component in the registry.
@@ -231,5 +218,9 @@ module.exports = (scopeName) => {
     if (!packageJson.name.startsWith('@ci')) {
       throw new Error('expect package.json name to start with "@ci" in order to publish it to @ci scope');
     }
+  }
+
+  getRegistryUrl() {
+    return this.ciRegistry;
   }
 }

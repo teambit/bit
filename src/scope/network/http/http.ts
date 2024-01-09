@@ -1,15 +1,16 @@
 import { ClientError, gql, GraphQLClient } from 'graphql-request';
-import fetch, { Response } from 'node-fetch';
+import fetch, { Response } from 'cross-fetch';
+import retry from 'async-retry';
 import readLine from 'readline';
 import HttpAgent from 'agentkeepalive';
-
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpProxyAgent } from 'http-proxy-agent';
+import { LaneId } from '@teambit/lane-id';
 import { getAgent, AgentOptions } from '@teambit/toolbox.network.agent';
 import { Network } from '../network';
 import { getHarmonyVersion } from '../../../bootstrap';
-import { BitId, BitIds } from '../../../bit-id';
 import Component from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import DependencyGraph from '../../graph/scope-graph';
@@ -41,6 +42,8 @@ import {
   CFG_NETWORK_CERT,
   CFG_NETWORK_KEY,
   CFG_NETWORK_STRICT_SSL,
+  CENTRAL_BIT_HUB_URL_IMPORTER,
+  CENTRAL_BIT_HUB_URL_IMPORTER_V2,
 } from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
@@ -52,11 +55,25 @@ import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
 import loader from '../../../cli/loader';
 import { UnexpectedNetworkError } from '../exceptions';
+import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '../../../api/consumer/lib/feature-toggle';
 
 export enum Verb {
   WRITE = 'write',
   READ = 'read',
 }
+
+export type ExportOrigin = 'export' | 'sign' | 'update-dependencies' | 'lane-merge' | 'tag';
+
+export type PushCentralOptions = {
+  origin: ExportOrigin;
+  signComponents?: string[]; // relevant for bit-sign.
+  idsHashMaps?: { [hash: string]: string }; // relevant for bit-sign. keys are the component hash, values are component-ids as strings
+
+  /**
+   * @deprecated prefer using "origin"
+   */
+  sign?: boolean;
+};
 
 export type ProxyConfig = {
   httpProxy?: string;
@@ -132,9 +149,9 @@ export class Http implements Network {
     // Reading strictSSL from both network.strict-ssl and network.strict_ssl for backward compatibility.
     const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj['network.strict_ssl'] ?? obj[CFG_PROXY_STRICT_SSL];
     const networkConfig = {
-      fetchRetries: obj[CFG_FETCH_RETRIES] ?? 2,
+      fetchRetries: obj[CFG_FETCH_RETRIES] ?? 5,
       fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR] ?? 10,
-      fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT] ?? 10000,
+      fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT] ?? 1000,
       fetchRetryMaxtimeout: obj[CFG_FETCH_RETRY_MAXTIMEOUT] ?? 60000,
       fetchTimeout: obj[CFG_FETCH_TIMEOUT] ?? 60000,
       localAddress: obj[CFG_LOCAL_ADDRESS],
@@ -147,10 +164,14 @@ export class Http implements Network {
       key: obj[CFG_NETWORK_KEY] ?? obj[CFG_PROXY_KEY],
     };
     logger.debug(
-      `the next network configuration is used in network.http: ${{
-        ...networkConfig,
-        key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
-      }}`
+      `the next network configuration is used in network.http: ${JSON.stringify(
+        {
+          ...networkConfig,
+          key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
+        },
+        null,
+        2
+      )}`
     );
     return networkConfig;
   }
@@ -183,7 +204,12 @@ export class Http implements Network {
     };
   }
 
-  async deleteMany(ids: string[], force: boolean, context: Record<string, any>, idsAreLanes: boolean) {
+  async deleteMany(
+    ids: string[],
+    force: boolean,
+    context: Record<string, any>,
+    idsAreLanes: boolean
+  ): Promise<RemovedObjects> {
     const route = 'api/scope/delete';
     logger.debug(`Http.delete, url: ${this.url}/${route}`);
     const body = JSON.stringify({
@@ -222,12 +248,13 @@ export class Http implements Network {
 
   async pushToCentralHub(
     objectList: ObjectList,
-    options: Record<string, any> = {}
+    options: PushCentralOptions
   ): Promise<{
     successIds: string[];
     failedScopes: string[];
     exportId: string;
     errors: { [scopeName: string]: string };
+    metadata?: { jobs?: string[] };
   }> {
     const route = 'api/put';
     logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
@@ -242,6 +269,7 @@ export class Http implements Network {
       `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
     );
 
+    // @ts-ignore TODO: need to fix this
     const results = await this.readPutCentralStream(res.body);
     if (!results.data) throw new Error(`HTTP results are missing "data" property`);
     if (results.data.isError) {
@@ -249,6 +277,46 @@ export class Http implements Network {
     }
     await this.throwForNonOkStatus(res);
     return results.data;
+  }
+
+  async deleteViaCentralHub(
+    ids: string[],
+    options: { force?: boolean; idsAreLanes?: boolean } = {}
+  ): Promise<RemovedObjects[]> {
+    const route = 'api/delete';
+    logger.debug(
+      `Http.deleteViaCentralHub, started. url: ${this.url}/${route}. total ids ${ids.length}. options ${JSON.stringify(
+        options,
+        null,
+        2
+      )}`
+    );
+    const idsPerType = {
+      componentIds: options.idsAreLanes ? undefined : ids,
+      laneIds: options.idsAreLanes ? ids : undefined,
+    };
+    const opts = this.addAgentIfExist({
+      method: 'post',
+      body: JSON.stringify(idsPerType),
+      headers: this.getHeaders({
+        'Content-Type': 'application/json',
+        'delete-options': JSON.stringify(options),
+        'x-verb': Verb.WRITE,
+      }),
+    });
+    const res = await fetch(`${this.url}/${route}`, opts);
+    logger.debug(
+      `Http.deleteViaCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
+    );
+
+    // @ts-ignore TODO: need to fix this
+    const results = await this.readPutCentralStream(res.body);
+    if (!results.data) throw new Error(`HTTP results are missing "data" property`);
+    if (results.data.isError) {
+      throw new UnexpectedNetworkError(results.message);
+    }
+    await this.throwForNonOkStatus(res);
+    return [RemovedObjects.fromObjects(results.data)];
   }
 
   async action<Options, Result>(name: string, options: Options): Promise<Result> {
@@ -272,21 +340,52 @@ export class Http implements Network {
 
   async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectItemsStream> {
     const route = 'api/scope/fetch';
-    const scopeData = `scopeName: ${this.scopeName}, url: ${this.url}/${route}`;
+    const getImporterUrl = () => {
+      if (this.url.startsWith('http:') || this.url.includes('//localhost')) return undefined; // it's a local scope
+      if (isFeatureEnabled(CLOUD_IMPORTER)) return CENTRAL_BIT_HUB_URL_IMPORTER;
+      if (isFeatureEnabled(CLOUD_IMPORTER_V2)) return CENTRAL_BIT_HUB_URL_IMPORTER_V2;
+      return undefined;
+    };
+    const importerUrl = getImporterUrl();
+    const urlToFetch = importerUrl ? `${importerUrl}/${this.scopeName}` : `${this.url}/${route}`;
+    // generate a random number of 6 digits to be used as the request ID, so it'll be easier to debug with the remote.
+    const requestId = Math.floor(Math.random() * 1000000);
+    const scopeData = `scopeName: ${this.scopeName}, url: ${urlToFetch}. requestId: ${requestId}`;
     logger.debug(`Http.fetch, ${scopeData}`);
     const body = JSON.stringify({
       ids,
       fetchOptions,
     });
-    const headers = this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': Verb.READ });
+    const headers = this.getHeaders({
+      'Content-Type': 'application/json',
+      'x-verb': Verb.READ,
+      'x-bit-request-id': requestId.toString(),
+    });
     const opts = this.addAgentIfExist({
       method: 'post',
       body,
       headers,
     });
-    const res = await fetch(`${this.url}/${route}`, opts);
+
+    const res = await retry(
+      async () => {
+        const retiedRes = await fetch(urlToFetch, opts);
+        return retiedRes;
+      },
+      {
+        retries: this.networkConfig?.fetchRetries,
+        factor: this.networkConfig?.fetchRetryFactor,
+        minTimeout: this.networkConfig?.fetchRetryMintimeout,
+        maxTimeout: this.networkConfig?.fetchRetryMaxtimeout,
+        onRetry: (e: any) => {
+          logger.debug(`failed to fetch import with error: ${e?.message || ''}`);
+        },
+      }
+    );
+    // const res = await fetch(urlToFetch, opts);
     logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
+    // @ts-ignore TODO: need to fix this
     const objectListReadable = ObjectList.fromTarToObjectStream(res.body);
 
     return objectListReadable;
@@ -321,7 +420,11 @@ export class Http implements Network {
     throw err;
   }
 
-  private async graphClientRequest(query: string, verb: string = Verb.READ, variables?: Record<string, any>) {
+  private async graphClientRequest(
+    query: string,
+    verb: string = Verb.READ,
+    variables?: Record<string, any>
+  ): Promise<any> {
     logger.debug(`http.graphClientRequest, scope "${this.scopeName}", url "${this.url}", query ${query}`);
     try {
       this.graphClient.setHeader('x-verb', verb);
@@ -379,40 +482,19 @@ export class Http implements Network {
       }
     `;
 
-    const LIST_LEGACY = gql`
-      query list($namespaces: String) {
-        scope {
-          _legacyList(namespaces: $namespaces) {
-            id
-            deprecated
-          }
-        }
-      }
-    `;
+    const data = await this.graphClientRequest(LIST_HARMONY, Verb.READ, {
+      namespaces: namespacesUsingWildcards ? [namespacesUsingWildcards] : undefined,
+    });
 
-    try {
-      const data = await this.graphClientRequest(LIST_HARMONY, Verb.READ, {
-        namespaces: namespacesUsingWildcards ? [namespacesUsingWildcards] : undefined,
-      });
+    data.scope.components.forEach((comp) => {
+      comp.id = ComponentID.fromObject(comp.id);
+      comp.deprecated = comp.deprecation.isDeprecate;
+    });
 
-      data.scope.components.forEach((comp) => {
-        comp.id = BitId.parse(comp.id);
-        comp.deprecated = comp.deprecation.isDeprecate;
-      });
-
-      return data.scope.components;
-    } catch (e) {
-      const data = await this.graphClientRequest(LIST_LEGACY, Verb.READ, {
-        namespaces: namespacesUsingWildcards,
-      });
-      data.scope._legacyList.forEach((comp) => {
-        comp.id = BitId.parse(comp.id);
-      });
-      return data.scope._legacyList;
-    }
+    return data.scope.components;
   }
 
-  async show(bitId: BitId): Promise<Component | null | undefined> {
+  async show(bitId: ComponentID): Promise<Component | null | undefined> {
     const SHOW_COMPONENT = gql`
       query showLegacy($id: String!) {
         scope {
@@ -427,7 +509,7 @@ export class Http implements Network {
     return Component.fromString(data.scope._getLegacy);
   }
 
-  async log(id: BitId): Promise<ComponentLog[]> {
+  async log(id: ComponentID): Promise<ComponentLog[]> {
     const GET_LOG_QUERY = gql`
       query getLogs($id: String!) {
         scope {
@@ -450,7 +532,7 @@ export class Http implements Network {
     return data.scope.getLogs;
   }
 
-  async latestVersions(bitIds: BitIds): Promise<string[]> {
+  async latestVersions(bitIds: ComponentIdList): Promise<string[]> {
     const GET_LATEST_VERSIONS = gql`
       query getLatestVersions($ids: [String]!) {
         scope {
@@ -466,7 +548,7 @@ export class Http implements Network {
     return data.scope._legacyLatestVersions;
   }
 
-  async graph(bitId?: BitId): Promise<DependencyGraph> {
+  async graph(bitId?: ComponentID): Promise<DependencyGraph> {
     const GRAPH_QUERY = gql`
       query graph($ids: [String], $filter: String) {
         graph(ids: $ids, filter: $filter) {
@@ -493,7 +575,7 @@ export class Http implements Network {
       ids: bitId ? [bitId.toString()] : [],
     });
 
-    const nodes = graph.nodes.map((node) => ({ idStr: node.id, bitId: new BitId(node.component.id) }));
+    const nodes = graph.nodes.map((node) => ({ idStr: node.id, bitId: ComponentID.fromObject(node.component.id) }));
     const edges = graph.edges.map((edge) => ({
       src: edge.sourceId,
       target: edge.targetId,
@@ -503,30 +585,35 @@ export class Http implements Network {
     return new DependencyGraph(oldGraph);
   }
 
-  async listLanes(): Promise<LaneData[]> {
+  async listLanes(id?: string): Promise<LaneData[]> {
     const LIST_LANES = gql`
-      query Lanes {
+      query Lanes($ids: [String!]) {
         lanes {
-          list {
+          list(ids: $ids) {
             id {
               name
               scope
             }
-            components {
-              id {
-                name
-                scope
-                version
-              }
+            components: laneComponentIds {
+              name
+              scope
+              version
             }
           }
         }
       }
     `;
 
-    const res = await this.graphClientRequest(LIST_LANES, Verb.READ);
+    const res = await this.graphClientRequest(LIST_LANES, Verb.READ, { ids: id ? [id] : [] });
 
-    return res.lanes.list;
+    return res.lanes.list.map((lane) => ({
+      ...lane,
+      id: LaneId.from(lane.id.name, lane.id.scope),
+      components: lane.components.map((laneCompId) => ({
+        id: ComponentID.fromObject(laneCompId),
+        head: laneCompId.version,
+      })),
+    }));
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {

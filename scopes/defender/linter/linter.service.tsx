@@ -1,24 +1,37 @@
 import React from 'react';
 import { defaults } from 'lodash';
-import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
+import { EnvService, ExecutionContext, EnvDefinition, ServiceTransformationMap, EnvContext, Env } from '@teambit/envs';
 import { Text, Newline } from 'ink';
+import { Workspace } from '@teambit/workspace';
 import highlight from 'cli-highlight';
+import { Component, ComponentMap } from '@teambit/component';
 import { Linter, LintResults } from './linter';
 import { LinterContext, LinterOptions } from './linter-context';
 import { LinterConfig } from './linter.main.runtime';
 
+type LinterTransformationMap = ServiceTransformationMap & {
+  getLinter: () => Linter;
+};
+
 export class LinterService implements EnvService<LintResults> {
   name = 'linter';
 
-  constructor(private linterConfig: LinterConfig, private rootDir?: string) {}
+  constructor(private linterConfig: LinterConfig, private workspace: Workspace) {}
 
   async run(context: ExecutionContext, options: LinterOptions): Promise<LintResults> {
     const mergedOpts = this.optionsWithDefaults(options);
     const linterContext = this.mergeContext(mergedOpts, context);
-    const linter: Linter = context.env.getLinter(linterContext);
+    const linter: Linter = this.getLinter(context, options);
 
     const results = await linter.lint(linterContext);
     return results;
+  }
+
+  getLinter(context: ExecutionContext, options: LinterOptions): Linter {
+    const mergedOpts = this.optionsWithDefaults(options);
+    const linterContext = this.mergeContext(mergedOpts, context);
+    const linter: Linter = context.env.getLinter(linterContext);
+    return linter;
   }
 
   private optionsWithDefaults(options: LinterOptions): LinterOptions {
@@ -26,18 +39,28 @@ export class LinterService implements EnvService<LintResults> {
   }
 
   private mergeContext(options: LinterOptions, context?: ExecutionContext): LinterContext {
+    const componentsDirMap = context?.components
+      ? this.getComponentsDirectory(context.components)
+      : ComponentMap.create<string>([]);
     const linterContext: LinterContext = Object.assign(
       {},
       {
-        rootDir: this.rootDir,
+        rootDir: this.workspace?.path,
         quiet: false,
         extensionFormats: options.extensionFormats,
         fixTypes: options.fixTypes,
         fix: options.fix,
+        componentsDirMap,
       },
       context
     );
     return linterContext;
+  }
+
+  private getComponentsDirectory(components: Component[]): ComponentMap<string> {
+    return ComponentMap.as<string>(components, (component) =>
+      this.workspace.componentDir(component.id, undefined, { relative: true })
+    );
   }
 
   render(env: EnvDefinition) {
@@ -58,6 +81,14 @@ export class LinterService implements EnvService<LintResults> {
         <Newline />
       </Text>
     );
+  }
+
+  transform(env: Env, context: EnvContext): LinterTransformationMap | undefined {
+    // Old env
+    if (!env?.linter) return undefined;
+    return {
+      getLinter: () => env.linter()(context),
+    };
   }
 
   getDescriptor(env: EnvDefinition) {

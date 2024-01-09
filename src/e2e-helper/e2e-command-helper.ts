@@ -1,12 +1,13 @@
 import { expect } from 'chai';
 import chalk from 'chalk';
+import execa from 'execa';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import childProcess, { StdioOptions } from 'child_process';
 import rightpad from 'pad-right';
 import * as path from 'path';
 import tar from 'tar';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
-import { BUILD_ON_CI, ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
+import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
 import { Extensions, NOTHING_TO_SNAP_MSG } from '../constants';
 import runInteractive, { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
@@ -14,6 +15,10 @@ import { removeChalkCharacters } from '../utils';
 import ScopesData from './e2e-scopes';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
+// The default value of maxBuffer is 1024*1024, which is not enough for some of the tests.
+// If a command has a lot of output, it will throw this error:
+// Error: spawnSync /bin/sh ENOBUFS
+const EXEC_SYNC_MAX_BUFFER = 1024 * 1024 * 10; // 10MB
 
 /**
  * to enable a feature for Helper instance, in the e2e-test file add `helper.command.setFeatures('your-feature');`
@@ -57,9 +62,39 @@ export default class CommandHelper {
       ? childProcess
           .spawnSync(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, stdio, shell: true })
           .output.toString()
-      : childProcess.execSync(cmdWithFeatures, { cwd, stdio });
+      : childProcess.execSync(cmdWithFeatures, { cwd, stdio, maxBuffer: EXEC_SYNC_MAX_BUFFER });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
+  }
+
+  async runWithKill(
+    cmd: string,
+    cwd: string = this.scopes.localPath,
+    timeout = 10000,
+    overrideFeatures?: string
+  ): Promise<string> {
+    if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
+    const isBitCommand = cmd.startsWith('bit ');
+    if (isBitCommand) cmd = cmd.replace('bit', this.bitBin);
+    const featuresTogglePrefix = isBitCommand ? this._getFeatureToggleCmdPrefix(overrideFeatures) : '';
+    const cmdWithFeatures = featuresTogglePrefix + cmd;
+    if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmdWithFeatures); // eslint-disable-line no-console
+    const subprocess = execa(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, shell: true });
+    subprocess.stdout?.pipe(process.stdout);
+    setTimeout(() => {
+      subprocess.cancel();
+    }, timeout);
+
+    try {
+      const { stdout } = await subprocess;
+      return stdout;
+    } catch (error: any) {
+      if (error.isCanceled) {
+        // This is fine, it was canceled by us, we want to see the outputs
+        return error.stdout;
+      }
+      return error.stderr;
+    }
   }
 
   _getFeatureToggleCmdPrefix(overrideFeatures?: string): string {
@@ -108,8 +143,8 @@ export default class CommandHelper {
     return JSON.parse(result);
   }
 
-  catObject(hash: string, parse = false) {
-    const result = this.runCmd(`bit cat-object ${hash}`);
+  catObject(hash: string, parse = false, cwd?: string) {
+    const result = this.runCmd(`bit cat-object ${hash}`, cwd);
     if (!parse) return result;
     return JSON.parse(result);
   }
@@ -120,6 +155,10 @@ export default class CommandHelper {
   }
   catLane(id: string, cwd?: string): Record<string, any> {
     const result = this.runCmd(`bit cat-lane ${id}`, cwd);
+    return JSON.parse(result);
+  }
+  catVersionHistory(id: string, cwd?: string): Record<string, any> {
+    const result = this.runCmd(`bit cat-version-history ${id} --json`, cwd);
     return JSON.parse(result);
   }
   add(dir: string, flag = '') {
@@ -155,11 +194,24 @@ export default class CommandHelper {
   delConfig(configName: string) {
     return this.runCmd(`bit config del ${configName}`);
   }
+  /**
+   * careful! this changes the config globally and will affect all e2e-tests.
+   * try to avoid. if not possible, make sure to call `delConfig` in the `after` hook
+   */
   setConfig(configName: string, configVal: string) {
     return this.runCmd(`bit config set ${configName} ${configVal}`);
   }
   setScope(scopeName: string, component: string) {
     return this.runCmd(`bit scope set ${scopeName} ${component}`);
+  }
+  renameScope(oldScope: string, newScope: string, flags = '') {
+    return this.runCmd(`bit scope rename ${oldScope} ${newScope} ${flags}`);
+  }
+  renameScopeOwner(oldScope: string, newScope: string, flags = '') {
+    return this.runCmd(`bit scope rename-owner ${oldScope} ${newScope} ${flags}`);
+  }
+  envs() {
+    return this.runCmd(`bit envs`);
   }
   setEnv(compId: string, envId: string) {
     return this.runCmd(`bit envs set ${compId} ${envId}`);
@@ -182,6 +234,18 @@ export default class CommandHelper {
   }
   removeComponent(id: string, flags = '') {
     return this.runCmd(`bit remove ${id} --silent ${flags}`);
+  }
+  softRemoveComponent(id: string, flags = '') {
+    return this.runCmd(`bit delete ${id} --silent ${flags}`);
+  }
+  removeComponentFromRemote(id: string, flags = '') {
+    return this.runCmd(`bit delete ${id} --silent --hard ${flags}`);
+  }
+  softRemoveOnLane(id: string, flags = '') {
+    return this.runCmd(`bit delete ${id} --silent --lane ${flags}`);
+  }
+  recover(id: string, flags = '') {
+    return this.runCmd(`bit recover ${id} ${flags}`);
   }
   deprecateComponent(id: string, flags = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
@@ -210,8 +274,14 @@ export default class CommandHelper {
   dependenciesSet(pattern: string, pkg: string, flags = '') {
     return this.runCmd(`bit dependencies set ${pattern} ${pkg} ${flags}`);
   }
+  dependenciesUnset(pattern: string, pkg: string, flags = '') {
+    return this.runCmd(`bit dependencies unset ${pattern} ${pkg} ${flags}`);
+  }
   dependenciesRemove(pattern: string, pkg: string, flags = '') {
     return this.runCmd(`bit dependencies remove ${pattern} ${pkg} ${flags}`);
+  }
+  dependenciesUsage(depName: string) {
+    return this.runCmd(`bit dependencies usage ${depName}`);
   }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
@@ -227,12 +297,12 @@ export default class CommandHelper {
     return result;
   }
   tagAllWithoutBuild(options = '') {
-    const result = this.runCmd(`bit tag ${options}`, undefined, undefined, BUILD_ON_CI);
+    const result = this.runCmd(`bit tag ${options}`);
     expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
   tagWithoutBuild(id = '', options = '') {
-    const result = this.runCmd(`bit tag ${id} ${options}`, undefined, undefined, BUILD_ON_CI);
+    const result = this.runCmd(`bit tag ${id} ${options}`);
     expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
@@ -246,38 +316,38 @@ export default class CommandHelper {
   }
   tagIncludeUnmodifiedWithoutBuild(version = '', options = '') {
     const ver = version ? `--ver ${version}` : '';
-    return this.runCmd(`bit tag --unmodified ${ver} ${options}`, undefined, undefined, BUILD_ON_CI);
+    return this.runCmd(`bit tag --unmodified ${ver} ${options}`);
   }
   softTag(options = '') {
     return this.runCmd(`bit tag --soft ${options}`);
   }
   persistTag(options = '') {
-    return this.runCmd(`bit tag --persist ${options}`);
+    return this.runCmd(`bit tag --persist ${options} --build`);
   }
   persistTagWithoutBuild(options = '') {
-    return this.runCmd(`bit tag --persist ${options}`, undefined, undefined, BUILD_ON_CI);
+    return this.runCmd(`bit tag --persist ${options}`);
   }
   snapComponent(id: string, tagMsg = 'snap-message', options = '') {
-    return this.runCmd(`bit snap ${id} -m ${tagMsg} ${options}`);
+    return this.runCmd(`bit snap ${id} -m ${tagMsg} ${options} --build`);
   }
   snapComponentWithoutBuild(id: string, options = '') {
-    return this.runCmd(`bit snap ${id} ${options}`, undefined, undefined, BUILD_ON_CI);
+    return this.runCmd(`bit snap ${id} ${options}`);
   }
   snapAllComponents(options = '', assertSnapped = true) {
-    const result = this.runCmd(`bit snap -a ${options} `);
+    const result = this.runCmd(`bit snap -a ${options} --build`);
     if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
     return result;
   }
   snapAllComponentsWithoutBuild(options = '', assertSnapped = true) {
-    const result = this.runCmd(`bit snap -a ${options} `, undefined, undefined, BUILD_ON_CI);
+    const result = this.runCmd(`bit snap -a ${options} `);
     if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
     return result;
   }
   createLane(laneName = 'dev', options = '') {
     return this.runCmd(`bit lane create ${laneName} ${options}`);
   }
-  changeLaneScope(laneName: string, newScope: string) {
-    return this.runCmd(`bit lane change-scope ${laneName} ${newScope}`);
+  changeLaneScope(newScope: string) {
+    return this.runCmd(`bit lane change-scope ${newScope}`);
   }
   clearCache() {
     return this.runCmd('bit clear-cache');
@@ -319,6 +389,10 @@ export default class CommandHelper {
     const results = this.runCmd(`bit lane list --remote ${this.scopes.remote} ${options} --json`);
     return JSON.parse(results);
   }
+  listRemoteLanes(options = '') {
+    const results = this.runCmd(`bit lane list --remote ${this.scopes.remote} ${options}`);
+    return results;
+  }
   diffLane(args = '', onScope = false) {
     const cwd = onScope ? this.scopes.remotePath : this.scopes.localPath;
     const output = this.runCmd(`bit lane diff ${args}`, cwd);
@@ -337,21 +411,21 @@ export default class CommandHelper {
     const component = lane.components.find((c) => c.id.name === componentName);
     return component.head;
   }
-  getArtifacts(id: string) {
-    const comp = this.catComponent(`${id}@latest`);
+  getArtifacts(id: string, cwd?: string) {
+    const comp = this.catComponent(`${id}@latest`, cwd);
     const builderExt = comp.extensions.find((ext) => ext.name === 'teambit.pipelines/builder');
     if (!builderExt) throw new Error(`unable to find builder data for ${id}`);
     const artifacts = builderExt.data.artifacts;
     if (!artifacts) throw new Error(`unable to find artifacts data for ${id}`);
     return artifacts;
   }
-  untag(id: string, head = false, flag = '') {
+  reset(id: string, head = false, flag = '') {
     return this.runCmd(`bit reset ${id} ${head ? '--head' : ''} ${flag}`);
   }
-  untagAll(options = '') {
+  resetAll(options = '') {
     return this.runCmd(`bit reset ${options} --all`);
   }
-  untagSoft(id: string) {
+  resetSoft(id: string) {
     return this.runCmd(`bit reset ${id} --soft`);
   }
   exportIds(ids: string, flags = '', assert = true) {
@@ -382,6 +456,9 @@ export default class CommandHelper {
   importComponent(id: string, flags = '') {
     return this.runCmd(`bit import ${this.scopes.remote}/${id} ${flags}`);
   }
+  importComponentWithoutInstall(id: string, flags = '') {
+    return this.runCmd(`bit import ${this.scopes.remote}/${id} ${flags} --skip-dependency-installation`);
+  }
   import(value = '') {
     return this.runCmd(`bit import ${value}`);
   }
@@ -394,18 +471,18 @@ export default class CommandHelper {
   fetchRemoteLane(id: string) {
     return this.runCmd(`bit fetch ${this.scopes.remote}${LANE_REMOTE_DELIMITER}${id} --lanes`);
   }
-  fetchAllLanes() {
-    return this.runCmd(`bit fetch --lanes`);
+  fetchAllLanes(flags = '') {
+    return this.runCmd(`bit fetch --lanes ${flags}`);
   }
   fetchAllComponents() {
     return this.runCmd(`bit fetch --components`);
   }
-  renameLane(oldName: string, newName: string) {
-    return this.runCmd(`bit lane rename ${oldName} ${newName}`);
+  renameLane(newName: string) {
+    return this.runCmd(`bit lane rename ${newName}`);
   }
-  importManyComponents(ids: string[]) {
+  importManyComponents(ids: string[], flag = '') {
     const idsWithRemote = ids.map((id) => `${this.scopes.remote}/${id}`);
-    return this.runCmd(`bit import ${idsWithRemote.join(' ')}`);
+    return this.runCmd(`bit import ${idsWithRemote.join(' ')} ${flag}`);
   }
 
   importComponentWithOptions(id = 'bar/foo.js', options: Record<string, any>) {
@@ -458,13 +535,6 @@ export default class CommandHelper {
     return this.runCmd(`bit build ${id} ${flags}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
   }
 
-  buildComponentWithOptions(id = '', options: Record<string, any>, cwd: string = this.scopes.localPath) {
-    const value = Object.keys(options)
-      .map((key) => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.runCmd(`bit build ${id} ${value}`, cwd);
-  }
-
   test(flags = '', getStderrAsPartOfTheOutput = false) {
     return this.runCmd(`bit test ${flags}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
   }
@@ -477,20 +547,25 @@ export default class CommandHelper {
     return this.testComponent(undefined, '--junit junit.xml');
   }
 
-  testComponentWithOptions(id = '', options: Record<string, any>, cwd: string = this.scopes.localPath) {
-    const value = Object.keys(options)
-      .map((key) => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.runCmd(`bit test ${id} ${value}`, cwd);
-  }
-
   status(flags = '') {
     return this.runCmd(`bit status ${flags}`);
   }
 
-  statusJson(cwd = this.scopes.localPath) {
-    const status = this.runCmd('bit status --json', cwd);
+  statusJson(cwd = this.scopes.localPath, flags = ''): Record<string, any> {
+    const status = this.runCmd(`bit status --json ${flags}`, cwd);
     return JSON.parse(status);
+  }
+
+  revert(pattern: string, to: string, flags = '') {
+    return this.runCmd(`bit revert ${pattern} ${to} ${flags}`);
+  }
+
+  stash() {
+    return this.runCmd('bit stash');
+  }
+
+  stashLoad() {
+    return this.runCmd('bit stash load');
   }
 
   isDeprecated(compName: string): boolean {
@@ -505,10 +580,14 @@ export default class CommandHelper {
       .map((id) => (stripScopeName ? id.replace(`${this.scopes.remote}/`, '') : id));
   }
 
-  expectStatusToBeClean(exclude: string[] = []) {
+  expectStatusToBeClean(exclude: string[] = [], excludeComponentsWithIssuesSection = true) {
+    if (excludeComponentsWithIssuesSection) {
+      exclude.push('componentsWithIssues');
+    }
     const statusJson = this.statusJson();
     Object.keys(statusJson).forEach((key) => {
       if (exclude.includes(key)) return;
+      if (key === 'currentLaneId' || key === 'forkedLaneId') return;
       expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
     });
   }
@@ -570,6 +649,21 @@ export default class CommandHelper {
     return show.find((_) => _.title === 'configuration').json.find((_) => _.id === aspectId);
   }
 
+  showDependenciesData(compId: string): Array<{ id: string; version: string; packageName: string }> {
+    const showConfig = this.showAspectConfig(compId, Extensions.dependencyResolver);
+    return showConfig.data.dependencies;
+  }
+
+  getCompDepsIdsFromData(compId: string): string[] {
+    const aspectConf = this.showAspectConfig(compId, Extensions.dependencyResolver);
+    return aspectConf.data.dependencies.map((dep) => dep.id);
+  }
+
+  showComponentParsedHarmonyByTitle(compId: string, title: string) {
+    const show = this.showComponentParsedHarmony(compId);
+    return show.find((_) => _.title === title).json;
+  }
+
   getComponentFiles(id: string): string[] {
     const output = this.runCmd(`bit show ${id} --json`);
     const comp = JSON.parse(output);
@@ -590,8 +684,11 @@ export default class CommandHelper {
   checkout(values: string) {
     return this.runCmd(`bit checkout ${values}`);
   }
-  checkoutHead(values = '') {
-    return this.runCmd(`bit checkout head ${values}`);
+  checkoutHead(values = '', flags = '') {
+    return this.runCmd(`bit checkout head ${values} ${flags}`);
+  }
+  checkoutLatest(values = '') {
+    return this.runCmd(`bit checkout latest ${values}`);
   }
   checkoutReset(values = '') {
     return this.runCmd(`bit checkout reset ${values}`);
@@ -611,13 +708,32 @@ export default class CommandHelper {
     return this.runCmd(`bit merge ${values}`);
   }
   mergeLane(laneName: string, options = '') {
+    if (!laneName.includes('/')) laneName = `${this.scopes.remote}/${laneName}`;
+    return this.runCmd(`bit lane merge ${laneName} ${options} --build`);
+  }
+  mergeLaneWithoutBuild(laneName: string, options = '') {
+    if (!laneName.includes('/')) laneName = `${this.scopes.remote}/${laneName}`;
     return this.runCmd(`bit lane merge ${laneName} ${options}`);
+  }
+  mergeAbortLane(options = '') {
+    return this.runCmd(`bit lane merge-abort ${options} --silent`);
   }
   mergeLaneFromScope(cwd: string, laneName: string, options = '') {
     return this.runCmd(`bit _merge-lane ${laneName} ${options}`, cwd);
   }
-  tagFromScope(cwd: string, ids: string, options = '') {
-    return this.runCmd(`bit _tag ${ids} ${options} -m msg`, cwd);
+  tagFromScope(cwd: string, data: Record<string, any>, options = '') {
+    return this.runCmd(`bit _tag '${JSON.stringify(data)}' ${options}`, cwd);
+  }
+  snapFromScope(cwd: string, data: Record<string, any>, options = '') {
+    data.forEach((dataItem) => {
+      if (!dataItem.files) return;
+      dataItem.files.forEach((file) => {
+        if (file.content) {
+          file.content = Buffer.from(file.content).toString('base64');
+        }
+      });
+    });
+    return this.runCmd(`bit _snap '${JSON.stringify(data)}' ${options}`, cwd);
   }
   diff(id = '') {
     const output = this.runCmd(`bit diff ${id}`);
@@ -636,8 +752,8 @@ export default class CommandHelper {
   runTask(taskName: string) {
     return this.runCmd(`bit run ${taskName}`);
   }
-  create(templateName: string, componentName: string, flags = '') {
-    return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`);
+  create(templateName: string, componentName: string, flags = '', cwd = this.scopes.localPath) {
+    return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`, cwd);
   }
   new(templateName: string, flags = '', workspaceName = 'my-workspace', cwd = this.scopes.localPath) {
     return this.runCmd(`bit new ${templateName} ${workspaceName} ${flags}`, cwd);
@@ -648,9 +764,9 @@ export default class CommandHelper {
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
   }
-  install(packages = '', options?: Record<string, any>) {
+  install(packages = '', options?: Record<string, any>, cwd = this.scopes.localPath) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit install ${packages} ${parsedOpts}`);
+    return this.runCmd(`bit install ${packages} ${parsedOpts}`, cwd);
   }
   update(flags?: string) {
     return this.runCmd(`bit update ${flags || ''}`);
@@ -721,7 +837,9 @@ export default class CommandHelper {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit eject-conf ${id} ${parsedOpts}`);
   }
-
+  runAction(actionName: string, remote: string, options: Record<string, any>) {
+    return this.runCmd(`bit run-action ${actionName} ${remote} '${JSON.stringify(options)}'`);
+  }
   compile(id = '', options?: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit compile ${id} ${parsedOpts}`);

@@ -28,7 +28,7 @@ const port = process.env.WDS_SOCKET_PORT;
 //   '@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils'
 // );
 
-const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', sep, `${sep}public`);
+const publicUrlOrPath = getPublicUrlOrPath(true, sep, `${sep}public`);
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -50,16 +50,13 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
   // Host
   const host = process.env.HOST || 'localhost';
 
-  // Required for babel-preset-react-app
-  process.env.NODE_ENV = 'development';
-
   return {
     // Environment mode
     mode: 'development',
     // improves HMR - assume node_modules might change
     snapshot: { managedPaths: [] },
 
-    devtool: 'inline-source-map',
+    devtool: 'eval-cheap-module-source-map',
 
     // Entry point of app
     entry: {
@@ -96,6 +93,7 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
     },
 
     devServer: {
+      open: true,
       allowedHosts: 'all',
 
       static: [
@@ -136,27 +134,29 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         },
       },
 
-      onBeforeSetupMiddleware(wds) {
-        const { app } = wds;
+      setupMiddlewares: (middlewares, devServer) => {
+        if (!devServer) {
+          throw new Error('webpack-dev-server is not defined');
+        }
+
         // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
         // middlewares before `redirectServedPath` otherwise will not have any effect
         // This lets us fetch source contents from webpack for the error overlay
-        // @ts-ignore @types/wds mismatch
-        app.use(evalSourceMapMiddleware(wds));
-        // This lets us open files from the runtime error overlay.
-        app.use(errorOverlayMiddleware());
-      },
-
-      onAfterSetupMiddleware({ app }) {
-        // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
-        app.use(redirectServedPath(publicUrlOrPath));
-
-        // This service worker file is effectively a 'no-op' that will reset any
-        // previous service worker registered for the same host:port combination.
-        // We do this in development to avoid hitting the production cache if
-        // it used the same host and port.
-        // https://github.com/facebook/create-react-app/issues/2272#issuecomment-302832432
-        app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
+        middlewares.push(
+          // @ts-ignore @types/wds mismatch
+          evalSourceMapMiddleware(devServer),
+          // This lets us open files from the runtime error overlay.
+          errorOverlayMiddleware(),
+          // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
+          redirectServedPath(publicUrlOrPath),
+          // This service worker file is effectively a 'no-op' that will reset any
+          // previous service worker registered for the same host:port combination.
+          // We do this in development to avoid hitting the production cache if
+          // it used the same host and port.
+          // https://github.com/facebook/create-react-app/issues/2272#issuecomment-302832432
+          noopServiceWorkerMiddleware(publicUrlOrPath)
+        );
+        return middlewares;
       },
 
       devMiddleware: {
@@ -174,6 +174,7 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
       // for React Native Web.
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
       alias: {
+        'react/jsx-runtime': require.resolve('react/jsx-runtime'),
         react: require.resolve('react'),
         'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
@@ -219,9 +220,24 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
               options: {
                 configFile: false,
                 babelrc: false,
+                sourceType: 'unambiguous',
                 presets: [
-                  // Preset includes JSX, TypeScript, and some ESnext features
-                  require.resolve('babel-preset-react-app'),
+                  [
+                    require.resolve('@babel/preset-env'),
+                    {
+                      // Exclude transforms that make all code slower
+                      exclude: ['transform-typeof-symbol'],
+                    },
+                  ],
+                  [
+                    require.resolve('@babel/preset-react'),
+                    {
+                      development: true,
+                      // Will use the native built-in instead of trying to polyfill
+                      // behavior for any plugins that require one. This option will be removed in Babel 8.
+                      useBuiltIns: true,
+                    },
+                  ],
                 ],
                 plugins: [require.resolve('react-refresh/babel')],
               },
@@ -314,6 +330,13 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         {
           test: stylesRegexps.cssNoModulesRegex,
           use: [require.resolve('style-loader'), require.resolve('css-loader')],
+        },
+        {
+          test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
+          type: 'asset',
+          generator: {
+            filename: 'static/fonts/[hash][ext][query]',
+          },
         },
       ],
     },

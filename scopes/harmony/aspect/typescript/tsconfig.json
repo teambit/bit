@@ -4,7 +4,7 @@
       "es2019", "DOM", "ES6" ,"DOM.Iterable", "ScriptHost"
     ],
     "target": "es2015",
-    "module": "commonjs",
+    "module": "CommonJS",
     "jsx": "react",
     "composite": true,
     "emitDeclarationOnly": true,
@@ -20,11 +20,16 @@
     "strict": true,
     "moduleResolution": "node",
     "noImplicitAny": false,
-    "rootDir": ".",
     "preserveConstEnums": true,
     "resolveJsonModule": true
   },
   "exclude": [
-    "dist"
+    "dist",
+    "esm.mjs",
+    "package.json"
+  ],
+  "include": [
+    "**/*",
+    "**/*.json"
   ]
 }

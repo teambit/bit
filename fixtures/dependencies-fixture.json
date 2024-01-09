@@ -10,14 +10,9 @@
                       "mainFile": {
                           "isDefault": false,
                           "name": "isString"
-                      },
-                      "linkFile": {
-                          "isDefault": true,
-                          "name": "isString"
                       }
                   }
               ],
-              "isCustomResolveUsed": true,
               "importSource": "utils"
           }
       ]

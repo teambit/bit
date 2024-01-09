@@ -5,7 +5,7 @@ import { Workspace } from '../workspace';
 
 export class EnvsSetCmd implements Command {
   name = 'set <component-pattern> <env>';
-  description = 'Sets one or more components with a development environment (env)';
+  description = 'Assigns one or more components a development environment (env)';
   arguments = [
     {
       name: 'component-pattern',
@@ -14,21 +14,22 @@ export class EnvsSetCmd implements Command {
     {
       name: 'env',
       description:
-        "the env's component id (include version for non-core envs. e.g, `teambit.community/envs/community-react@1.95.13`)",
+        "the env's component id (include version if not latest, e.g `teambit.community/envs/community-react@1.95.13`)",
     },
   ];
   examples = [
     {
-      cmd: 'set ui/button teambit.react/react',
-      description: "configures 'ui/button' to use the 'teambit.react/react' env",
+      cmd: 'set ui/button teambit.react/react-env',
+      description: "configures 'ui/button' to use the latest version of the 'teambit.react/react-env' env",
     },
     {
       cmd: 'set ui/button teambit.community/envs/community-mdx@1.95.16',
-      description: "configures 'ui/button' to use the (non-core) 'teambit.community/envs/community-mdx@1.95.16' env",
+      description: "configures 'ui/button' to use the 'teambit.community/envs/community-mdx@1.95.16' env",
     },
     {
-      cmd: 'set "ui/**" teambit.react/react',
-      description: "configures all components that have the 'ui' namespace to use the teambit.react/react env",
+      cmd: 'set "ui/**" teambit.react/react-env',
+      description:
+        "configures all components that have the 'ui' namespace to use the latest version of the teambit.react/react-env env",
     },
   ];
   options = [];
@@ -40,7 +41,7 @@ export class EnvsSetCmd implements Command {
     const envId = await this.workspace.resolveComponentId(env);
     const componentIds = await this.workspace.idsByPattern(pattern);
     await this.workspace.setEnvToComponents(envId, componentIds);
-    return `added ${chalk.bold(envId.toString())} env to the following component(s):
+    return `assigned ${chalk.bold(envId.toString())} env to the following component(s):
 ${componentIds.map((compId) => compId.toString()).join('\n')}`;
   }
 }

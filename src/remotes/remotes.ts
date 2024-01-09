@@ -1,13 +1,15 @@
 import { groupBy, prop } from 'ramda';
+import { forEach } from 'lodash';
+import { ComponentID } from '@teambit/component-id';
+import { BitError } from '@teambit/bit-error';
 import pMap from 'p-map';
-import { FETCH_OPTIONS } from '../api/scope/lib/fetch';
-import { BitId } from '../bit-id';
+import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '../api/scope/lib/fetch';
 import GlobalRemotes from '../global-config/global-remotes';
 import logger from '../logger/logger';
 import { ScopeNotFound } from '../scope/exceptions';
 import DependencyGraph from '../scope/graph/scope-graph';
 import Scope from '../scope/scope';
-import { flatten, forEach, prependBang } from '../utils';
+import { prependBang } from '../utils';
 import { PrimaryOverloaded } from './exceptions';
 import Remote from './remote';
 import remoteResolver from './remote-resolver/remote-resolver';
@@ -48,7 +50,8 @@ export default class Remotes extends Map<string, Remote> {
   ): Promise<{ [remoteName: string]: ObjectItemsStream }> {
     const fetchOptions: FETCH_OPTIONS = {
       type: 'component',
-      withoutDependencies: true,
+      fetchSchema: CURRENT_FETCH_SCHEMA,
+      withoutDependencies: true, // backward compatibility. not needed for remotes > 0.0.900
       includeArtifacts: false,
       allowExternal: false,
       ...options,
@@ -105,7 +108,7 @@ ${failedScopesErr.join('\n')}`);
     return objectsStreamPerRemote;
   }
 
-  async latestVersions(ids: BitId[], thisScope: Scope): Promise<BitId[]> {
+  async latestVersions(ids: ComponentID[], thisScope: Scope): Promise<ComponentID[]> {
     const groupedIds = this._groupByScopeName(ids);
 
     const promises = Object.entries(groupedIds).map(([scopeName, scopeIds]) =>
@@ -113,8 +116,8 @@ ${failedScopesErr.join('\n')}`);
     );
 
     const components = await Promise.all(promises);
-    const flattenComponents = flatten(components);
-    return flattenComponents.map((componentId) => BitId.parse(componentId, true));
+    const flattenComponents = components.flat();
+    return flattenComponents.map((componentId) => ComponentID.fromString(componentId));
   }
 
   /**
@@ -123,7 +126,7 @@ ${failedScopesErr.join('\n')}`);
    * entire scope graph. however, when asking for multiple ids in the same scope, which is more
    * likely to happen, it'll harm the performance.
    */
-  async scopeGraphs(ids: BitId[], thisScope: Scope): Promise<DependencyGraph[]> {
+  async scopeGraphs(ids: ComponentID[], thisScope: Scope): Promise<DependencyGraph[]> {
     const groupedIds = this._groupByScopeName(ids);
     const graphsP = Object.keys(groupedIds).map(async (scopeName) => {
       const remote = await this.resolve(scopeName, thisScope);
@@ -134,9 +137,9 @@ ${failedScopesErr.join('\n')}`);
     return Promise.all(graphsP);
   }
 
-  _groupByScopeName(ids: BitId[]) {
+  _groupByScopeName(ids: ComponentID[]) {
     const byScope = groupBy(prop('scope'));
-    return byScope(ids) as { [scopeName: string]: BitId[] };
+    return byScope(ids) as { [scopeName: string]: ComponentID[] };
   }
 
   toPlainObject() {
@@ -149,6 +152,15 @@ ${failedScopesErr.join('\n')}`);
     });
 
     return object;
+  }
+
+  shouldGoToCentralHub(scopes: string[]): boolean {
+    const hubRemotes = scopes.filter((scopeName) => this.isHub(scopeName));
+    if (!hubRemotes.length) return false;
+    if (hubRemotes.length === scopes.length) return true; // all are hub
+    throw new BitError(
+      `some of your components are configured to work with a local scope and some to the bit.cloud hub. this is not supported`
+    );
   }
 
   static async getScopeRemote(scopeName: string): Promise<Remote> {

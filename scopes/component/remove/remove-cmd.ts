@@ -1,18 +1,17 @@
 import chalk from 'chalk';
-import yn from 'yn';
+import yesno from 'yesno';
 import { Command, CommandOptions } from '@teambit/cli';
+import { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
-import { removePrompt } from '@teambit/legacy/dist/prompts';
-import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
-import RemovedLocalObjects from '@teambit/legacy/dist/scope/removed-local-objects';
-import loader from '@teambit/legacy/dist/cli/loader';
-import paintRemoved from '@teambit/legacy/dist/cli/templates/remove-template';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { RemovedLocalObjects } from './removed-local-objects';
 import { RemoveMain } from './remove.main.runtime';
+import { removeTemplate } from './remove-template';
 
 export class RemoveCmd implements Command {
   name = 'remove <component-pattern>';
-  description = 'remove component(s) from the workspace, or a remote scope';
+  description = 'remove component(s) from the local workspace';
+  extendedDescription = `to mark components as deleted on the remote scope, use "bit delete".`;
   arguments = [
     {
       name: 'component-pattern',
@@ -20,98 +19,66 @@ export class RemoveCmd implements Command {
     },
   ];
   group = 'collaborate';
-  helpUrl = 'components/removing-components';
+  helpUrl = 'reference/components/removing-components';
   skipWorkspace = true;
   alias = 'rm';
   options = [
-    ['', 'soft', 'EXPERIMENTAL. mark the component as deleted. after tag/snap and export the remote will be updated'],
-    [
-      'r',
-      'remote',
-      'remove a component completely from a remote scope (Careful! this is a permanent change. prefer --soft and tag+export)',
-    ],
-    ['', 'from-lane', 'revert to main if exists on currently checked out lane, otherwise, remove it'],
     ['t', 'track', 'keep tracking component in .bitmap (default = false), helps transform a tagged-component to new'],
-    ['d', 'delete-files', 'DEPRECATED (this is now the default). delete local component files'],
     ['', 'keep-files', 'keep component files (just untrack the component)'],
     [
       'f',
       'force',
-      'removes the component from the scope, even if used as a dependency. WARNING: components that depend on this component will corrupt',
+      'removes the component from the scope, even if used as a dependency. WARNING: you will need to fix the components that depend on this component',
     ],
     ['s', 'silent', 'skip confirmation'],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   remoteOp = true;
 
-  constructor(private remove: RemoveMain) {}
+  constructor(private remove: RemoveMain, private workspace?: Workspace) {}
 
   async report(
     [componentsPattern]: [string],
     {
-      soft = false,
       force = false,
-      remote = false,
-      fromLane = false,
       track = false,
-      deleteFiles = false,
       silent = false,
       keepFiles = false,
     }: {
-      force: boolean;
-      remote: boolean;
-      track: boolean;
-      fromLane: boolean;
-      deleteFiles: boolean;
-      silent: boolean;
-      keepFiles: boolean;
-      soft: boolean;
+      force?: boolean;
+      track?: boolean;
+      silent?: boolean;
+      keepFiles?: boolean;
     }
   ) {
-    if (soft) {
-      if (remote)
-        throw new BitError(
-          `error: --remote and --soft cannot be used together. soft delete can only be done locally, after tag/snap and export it updates the remote`
-        );
-      if (track) throw new BitError(`error: please use either --soft or --track, not both`);
-      if (keepFiles) throw new BitError(`error: please use either --soft or --keep-files, not both`);
-      if (fromLane) throw new BitError(`error: please use either --soft or --from-lane, not both`);
-      const removedCompIds = await this.remove.softRemove(componentsPattern);
-      return `${chalk.green('successfully soft-removed the following components:')}
-${removedCompIds.join('\n')}
-
-${chalk.bold('to update the remote, please tag/snap and then export')}`;
-    }
-
-    if (deleteFiles) {
-      loader.stop();
-      // eslint-disable-next-line no-console
-      console.warn(
-        chalk.yellow(
-          '--delete-files flag is deprecated. by default the files are deleted, unless --keep-files was provided'
-        )
-      );
-    }
     if (!silent) {
-      const willDeleteFiles = !remote && !keepFiles;
-      const removePromptResult = await removePrompt(willDeleteFiles, remote)();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (!yn(removePromptResult.shouldRemove)) {
-        throw new BitError('the operation has been canceled');
-      }
+      await this.removePrompt(!keepFiles);
     }
     const {
       localResult,
-      remoteResult = [],
     }: {
       localResult: RemovedLocalObjects;
-      remoteResult: RemovedObjects[];
-    } = await this.remove.remove({ componentsPattern, remote, force, track, deleteFiles: !keepFiles, fromLane });
+    } = await this.remove.remove({ componentsPattern, force, track, deleteFiles: !keepFiles });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return paintRemoved(localResult, false) + this.paintArray(remoteResult);
+    const localMessage = removeTemplate(localResult, false);
+    // if (localMessage !== '')
+    //   localMessage +=
+    //     '. Note: these components were not deleted from the remote - if you want to delete components run "bit delete"\n';
+    return localMessage;
   }
-  paintArray(removedObjectsArray: RemovedObjects[]) {
-    return removedObjectsArray.map((item) => paintRemoved(item, true));
+
+  private async removePrompt(deleteFiles?: boolean) {
+    this.remove.logger.clearStatusLine();
+    const filesDeletionStr = deleteFiles
+      ? ' and the files will be deleted from the filesystem (can be avoided by entering --keep-files)'
+      : '';
+    const ok = await yesno({
+      question: `this command will remove the component/s only from your local workspace. if your intent is to delete the component/s also from the remote scope, refer to "bit delete".
+the component(s) will be untracked${filesDeletionStr}.
+${chalk.bold('Would you like to proceed? [yes(y)/no(n)]')}`,
+    });
+    if (!ok) {
+      throw new BitError('the operation has been canceled');
+    }
   }
 }

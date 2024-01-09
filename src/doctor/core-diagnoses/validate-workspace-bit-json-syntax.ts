@@ -11,11 +11,11 @@ export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
     const bitJsonPath = R.path(['data', 'bitJsonPath'], bareResult);
-    return `invalid bit.json: ${bitJsonPath} is not a valid JSON file.`;
+    return `invalid workspace.jsonc: ${bitJsonPath} is not a valid JSON file.`;
   }
 
   _formatManualTreat() {
-    return 'manually fix the bit.json or consider running bit init --reset to recreate the file';
+    return 'manually fix the workspace.jsonc or consider running bit init --reset to recreate the file';
   }
 
   // TODO: support configuration from package.json
@@ -23,7 +23,7 @@ export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
     const consumer = await loadConsumer();
     const consumerPath = consumer.getPath();
     try {
-      await WorkspaceConfig.loadIfExist(consumerPath);
+      await WorkspaceConfig.loadIfExist(consumerPath, consumer.scope.path);
       return {
         valid: true,
       };

@@ -34,7 +34,49 @@
   cursor: pointer;
   color: var(--bit-text-color-light, #6c707c);
 }
+.sectionTitleContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.expandCollapse {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+
+  img {
+    border-radius: 8px;
+    width: 16px;
+    &:hover {
+      background-color: var(--bit-border-color-lightest, #ededed);
+    }
+  }
+}
+.copyMessage {
+  position: unset;
+  transform: unset;
+  display: flex;
+}
+
+.toolbar {
+  flex-direction: row;
+  display: flex;
+  align-items: flex-start;
+}
+.copyIcon {
+  display: flex;
+  font-size: var(--bit-p-xs);
+}
+.copyButton {
+  cursor: pointer;
+  box-sizing: border-box;
+  border: none;
+  background-color: var(--bit-bg-color-highlight);
+  color: var(--bit-accent-color);
+  outline: none;
+}
 .sectionTitle {
+  display: flex;
   margin-bottom: 16px;
   font-weight: bold;
   font-size: var(--bit-p-xs);
@@ -49,7 +91,7 @@
     margin-bottom: 24px;
   }
   > div {
-    overflow-x: scroll;
+    overflow-x: auto;
     padding: 16px;
   }
 }

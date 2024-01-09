@@ -1,7 +1,6 @@
 import { ExecutionContext } from '@teambit/envs';
-import { FormatterServiceOptions } from './formatter.service';
 
-export type FormatterOptions = {};
-export interface FormatterContext extends ExecutionContext, FormatterOptions, FormatterServiceOptions {}
+export type FormatterOptions = { check?: boolean };
+export interface FormatterContext extends ExecutionContext, FormatterOptions {}
 // export interface FormatterContext extends ExecutionContext {}
 // export type FormatterContext = ExecutionContext;

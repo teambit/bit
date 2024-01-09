@@ -1,30 +1,53 @@
-import { SchemaNode, Module, UnresolvedSchema } from '@teambit/semantics.entities.semantic-schema';
+import {
+  SchemaNode,
+  ModuleSchema,
+  UnresolvedSchema,
+  UnImplementedSchema,
+} from '@teambit/semantics.entities.semantic-schema';
 import ts, {
   Node,
   SyntaxKind,
   ExportDeclaration as ExportDeclarationNode,
   NamedExports,
   NamespaceExport,
+  ExportSpecifier,
 } from 'typescript';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
 
-export class ExportDeclaration implements SchemaTransformer {
+export class ExportDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === SyntaxKind.ExportDeclaration;
   }
 
   async getIdentifiers(exportDec: ExportDeclarationNode, context: SchemaExtractorContext) {
+    // e.g. `export { button1, button2 } as Composition from './button';
+    const rawSourceFilePath = exportDec.moduleSpecifier?.getText();
+
+    // strip off quotes ''
+    const sourceFilePath = rawSourceFilePath && rawSourceFilePath.substring(1, rawSourceFilePath?.length - 1);
+
     if (exportDec.exportClause?.kind === ts.SyntaxKind.NamedExports) {
-      exportDec.exportClause as NamedExports;
       return exportDec.exportClause.elements.map((elm) => {
-        return new ExportIdentifier(elm.name.getText(), elm.getSourceFile().fileName);
+        const alias = (elm.propertyName && elm.name.getText()) || undefined;
+        const id = elm.propertyName?.getText() || elm.name.getText();
+        const fileName = elm.getSourceFile().fileName;
+
+        return new ExportIdentifier(id, fileName, alias, sourceFilePath);
       });
     }
 
+    //  e.g. `export * as Composition from './button';
     if (exportDec.exportClause?.kind === ts.SyntaxKind.NamespaceExport) {
-      return [new ExportIdentifier(exportDec.exportClause.name.getText(), exportDec.getSourceFile().fileName)];
+      return [
+        new ExportIdentifier(
+          exportDec.exportClause.name.getText(),
+          exportDec.getSourceFile().fileName,
+          undefined,
+          sourceFilePath
+        ),
+      ];
     }
 
     if (exportDec.moduleSpecifier) {
@@ -44,8 +67,13 @@ export class ExportDeclaration implements SchemaTransformer {
         throw new Error(`fatal: no specifier`);
       }
       const sourceFile = await context.getSourceFileFromNode(specifier);
+      // export * from 'webpack', export-all from a package
       if (!sourceFile) {
-        throw new Error(`unable to find the source-file`);
+        return new UnImplementedSchema(
+          context.getLocation(exportDec),
+          exportDec.getText(),
+          SyntaxKind[SyntaxKind.ExportDeclaration]
+        );
       }
       return context.computeSchema(sourceFile);
     }
@@ -53,7 +81,7 @@ export class ExportDeclaration implements SchemaTransformer {
     // e.g. `export { button1, button2 } as Composition from './button';
     if (exportClause.kind === SyntaxKind.NamedExports) {
       const schemas = await namedExport(exportClause, context);
-      return new Module(context.getLocation(exportDec), schemas);
+      return new ModuleSchema(context.getLocation(exportDec), schemas, []);
     }
     // e.g. `export * as Composition from './button';
     if (exportClause.kind === SyntaxKind.NamespaceExport) {
@@ -65,33 +93,53 @@ export class ExportDeclaration implements SchemaTransformer {
   }
 }
 
+function isSameNode(nodeA: Node, nodeB: Node): boolean {
+  return nodeA.kind === nodeB.kind && nodeA.pos === nodeB.pos && nodeA.end === nodeB.end;
+}
+
 async function namedExport(exportClause: NamedExports, context: SchemaExtractorContext): Promise<SchemaNode[]> {
   const schemas = await Promise.all(
     exportClause.elements.map(async (element) => {
-      const definitionInfo = await context.definitionInfo(element);
-      if (!definitionInfo) {
-        // happens for example when the main index.ts file exports variable from an mdx file.
-        // tsserver is unable to get the definition node because it doesn't know to parse mdx files.
-        return new UnresolvedSchema(context.getLocation(element.name), element.name.getText());
-      }
-      const definitionNode = await context.definition(definitionInfo);
-      if (!definitionNode) {
-        return context.getTypeRefForExternalNode(element);
-      }
-      if (definitionNode.parent.kind === SyntaxKind.ExportSpecifier) {
-        // the definition node is the same node as element.name. tsserver wasn't able to find the source for it
-        // normally, "bit install" should fix it. another option is to open vscode and look for errors.
-        throw new Error(`error: tsserver is unable to locate the identifier "${element.name.getText()}" at ${context.getLocationAsString(
-          element.name
-        )}.
-make sure "bit status" is clean and there are no errors about missing packages/links.
-also, make sure the tsconfig.json in the root has the "jsx" setting defined.`);
-      }
-      return context.computeSchema(definitionNode.parent);
+      return exportSpecifierToSchemaNode(element, context);
     })
   );
 
   return schemas;
+}
+
+async function exportSpecifierToSchemaNode(element: ExportSpecifier, context: SchemaExtractorContext) {
+  try {
+    const definitionInfo = await context.definitionInfo(element);
+    if (!definitionInfo) {
+      // happens for example when the main index.ts file exports variable from an mdx file.
+      // tsserver is unable to get the definition node because it doesn't know to parse mdx files.
+      return new UnresolvedSchema(context.getLocation(element.name), element.name.getText());
+    }
+
+    const definitionNode = await context.definition(definitionInfo);
+
+    if (!definitionNode) {
+      return await context.resolveType(element, element.name.getText(), false);
+    }
+
+    // if it is reexported from another export
+    if (isSameNode(element, definitionNode.parent)) {
+      // the definition node is the same node as element.name. tsserver wasn't able to find the source for it
+      // normally, "bit install" should fix it. another option is to open vscode and look for errors.
+      throw new Error(`error: tsserver is unable to locate the identifier "${element.name.getText()}" at ${context.getLocationAsString(
+        element.name
+      )}.
+make sure "bit status" is clean and there are no errors about missing packages/links.
+also, make sure the tsconfig.json in the root has the "jsx" setting defined.`);
+    }
+
+    if (definitionNode.parent.kind === SyntaxKind.ExportSpecifier)
+      return exportSpecifierToSchemaNode(definitionNode.parent as ExportSpecifier, context);
+
+    return await context.computeSchema(definitionNode.parent);
+  } catch (e) {
+    return new UnresolvedSchema(context.getLocation(element.name), element.name.getText());
+  }
 }
 
 async function namespaceExport(
@@ -110,7 +158,7 @@ async function namespaceExport(
     return context.getTypeRefForExternalPath(namespace, filePath, context.getLocation(exportDec));
   }
   const result = await context.computeSchema(sourceFile);
-  if (!(result instanceof Module)) {
+  if (!(result instanceof ModuleSchema)) {
     throw new Error(`expect result to be instance of Module`);
   }
   result.namespace = namespace;

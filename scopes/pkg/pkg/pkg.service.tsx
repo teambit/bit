@@ -1,12 +1,25 @@
 import React from 'react';
 import { Text, Newline } from 'ink';
-import { EnvService, EnvDefinition } from '@teambit/envs';
+import {
+  EnvService,
+  EnvDefinition,
+  Env,
+  EnvContext,
+  ServiceTransformationMap,
+  GetNpmIgnoreContext,
+} from '@teambit/envs';
 import highlight from 'cli-highlight';
+import { PackageJsonProps } from './pkg.main.runtime';
 
 export type PkgDescriptor = {
   id: string;
   displayName: string;
   config?: string;
+};
+
+type PkgTransformationMap = ServiceTransformationMap & {
+  getPackageJsonProps: () => PackageJsonProps;
+  getNpmIgnore: (npmIgnoreContext?: GetNpmIgnoreContext) => string[];
 };
 
 export class PkgService implements EnvService<{}, PkgDescriptor> {
@@ -25,6 +38,18 @@ export class PkgService implements EnvService<{}, PkgDescriptor> {
         <Newline />
       </Text>
     );
+  }
+
+  transform(env: Env, context: EnvContext): PkgTransformationMap | undefined {
+    // Old env
+    if (!env?.package) return undefined;
+    const packageGenerator = env.package()(context);
+
+    return {
+      getPackageJsonProps: () => packageGenerator.packageJsonProps,
+      // TODO: somehow handle context here? used in the aspect env
+      getNpmIgnore: () => packageGenerator.npmIgnore,
+    };
   }
 
   getDescriptor(env: EnvDefinition): PkgDescriptor | undefined {

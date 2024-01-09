@@ -15,9 +15,7 @@ describe('buildTree', () => {
       componentDir: '.',
       workspacePath: __dirname,
       filePaths,
-      bindingPrefix: '@bit',
       visited,
-      resolveModulesConfig: undefined,
     };
     it('when no files are passed should return an empty tree', async () => {
       const results = await buildTree.getDependencyTree(dependencyTreeParams);
@@ -126,8 +124,6 @@ describe('buildTree', () => {
           expect(results.tree[file].files).to.be.an('array').and.have.lengthOf(1);
           const indexDep = results.tree[file].files[0];
           expect(indexDep.file).to.equal('fixtures/build-tree/tree-shaking-cycle/index.js');
-          expect(indexDep).to.not.have.property('isLink');
-          expect(indexDep).to.not.have.property('linkDependencies');
         });
       });
     });

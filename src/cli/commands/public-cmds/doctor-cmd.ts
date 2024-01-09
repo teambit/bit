@@ -19,17 +19,19 @@ export default class Doctor implements LegacyCommand {
     ['j', 'json', 'return diagnoses in json format'],
     ['', 'list', 'list all available diagnoses'],
     ['s', 'save [filePath]', 'save diagnoses to a file'],
+    ['a', 'archive [filePath]', 'archive the workspace including diagnosis info'],
   ] as CommandOptions;
-  migration = false;
 
   action(
     [diagnosisName]: string[],
     {
       list = false,
       save,
+      archive,
     }: {
       list?: boolean;
       save?: string;
+      archive?: string;
     }
   ): Promise<DoctorRunAllResults | Diagnosis[] | DoctorRunOneResult> {
     if (list) {
@@ -38,13 +40,16 @@ export default class Doctor implements LegacyCommand {
     let filePath = save;
     // Happen when used --save without specify the location
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (save === true) {
+    if (save === true || archive === true) {
       filePath = '.';
     }
-    if (diagnosisName) {
-      return runOne({ diagnosisName, filePath });
+    if (typeof archive === 'string') {
+      filePath = archive;
     }
-    return runAll({ filePath });
+    if (diagnosisName) {
+      return runOne({ diagnosisName, filePath, archiveWorkspace: Boolean(archive) });
+    }
+    return runAll({ filePath, archiveWorkspace: Boolean(archive) });
   }
 
   report(res: DoctorRunAllResults | Diagnosis[], args: any, flags: Record<string, any>): string {

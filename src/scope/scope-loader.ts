@@ -6,16 +6,11 @@ import Scope from './scope';
 
 export default function loadScope(currentPath?: string | null | undefined, useCache = true): Promise<Scope> {
   if (!currentPath) currentPath = process.cwd();
-  try {
-    return Scope.load(path.resolve(resolveHomePath(currentPath)), useCache);
-  } catch (err: any) {
-    return Promise.reject(err);
-  }
+  return Scope.load(path.resolve(resolveHomePath(currentPath)), useCache);
 }
 
 export async function loadScopeIfExist(
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  currentPath?: string | null | undefined = process.cwd(),
+  currentPath: string | null | undefined = process.cwd(),
   useCache = true
 ): Promise<Scope | undefined> {
   try {

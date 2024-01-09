@@ -23,8 +23,6 @@ describe('babel compiler', function () {
       let distDir;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.addDefaultScope();
-        helper.bitJsonc.disablePreview();
 
         // add a new env that compiles with Babel
         helper.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
@@ -36,7 +34,7 @@ describe('babel compiler', function () {
             dependencies: {
               '@babel/runtime': '^7.12.0',
               '@babel/core': '7.11.6',
-              '@babel/preset-env': '7.11.5',
+              '@babel/preset-env': '7.22.15',
             },
           },
         });
@@ -45,7 +43,7 @@ describe('babel compiler', function () {
 
         helper.fs.outputFile('bar/foo.js', 'export function sayHello() { console.log("hello"); }; sayHello();');
         helper.command.addComponent('bar');
-        helper.extensions.addExtensionToVariant('bar', `my-scope/${EXTENSIONS_BASE_FOLDER}`);
+        helper.extensions.addExtensionToVariant('bar', `${helper.scopes.remote}/${EXTENSIONS_BASE_FOLDER}`);
         helper.command.compile();
         distDir = path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}/bar/dist`);
       });

@@ -17,7 +17,7 @@ export class WebpackBitReporterPlugin {
     this.devServerID = options.devServerID;
   }
 
-  apply(compiler: Compiler) {
+  apply(compiler: Compiler | any) {
     // "Called before a new compilation is created."
     compiler.hooks.compile.tap(PLUGIN_NAME, () => {
       const event = new WebpackCompilationStartedEvent(Date.now(), { devServerID: this.devServerID });

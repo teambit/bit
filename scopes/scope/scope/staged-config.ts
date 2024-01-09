@@ -1,18 +1,20 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
+import { Logger } from '@teambit/logger';
 
 const STAGED_CONFIG_DIR = 'staged-config';
 
 type Config = Record<string, any> | undefined;
 type ComponentConfig = { id: ComponentID; config: Config };
+type ComponentConfigObj = { id: ComponentIdObj; config: Config };
 
 export class StagedConfig {
   hasChanged = false;
-  constructor(private filePath: string, private componentsConfig: ComponentConfig[]) {}
+  constructor(readonly filePath: string, private componentsConfig: ComponentConfig[], private logger: Logger) {}
 
-  static async load(scopePath: string, laneId?: LaneId): Promise<StagedConfig> {
+  static async load(scopePath: string, logger: Logger, laneId?: LaneId): Promise<StagedConfig> {
     const lanePath = laneId ? path.join(laneId.scope, laneId.name) : DEFAULT_LANE;
     const filePath = path.join(scopePath, STAGED_CONFIG_DIR, `${lanePath}.json`);
     let componentsConfig: ComponentConfig[] = [];
@@ -26,10 +28,10 @@ export class StagedConfig {
         throw err;
       }
     }
-    return new StagedConfig(filePath, componentsConfig);
+    return new StagedConfig(filePath, componentsConfig, logger);
   }
 
-  toObject() {
+  toObject(): ComponentConfigObj[] {
     return this.componentsConfig.map(({ id, config }) => ({ id: id.toObject(), config }));
   }
 
@@ -46,6 +48,16 @@ export class StagedConfig {
     return this.componentsConfig;
   }
 
+  isEmpty() {
+    return this.componentsConfig.length === 0;
+  }
+
+  async deleteFile() {
+    this.logger.debug(`staged-config, deleting ${this.filePath}`);
+    await fs.remove(this.filePath);
+    this.componentsConfig = [];
+  }
+
   addComponentConfig(id: ComponentID, config: Config) {
     const exists = this.componentsConfig.find((c) => c.id.isEqual(id, { ignoreVersion: true }));
     if (exists) {
@@ -57,7 +69,12 @@ export class StagedConfig {
   }
 
   removeComponentConfig(id: ComponentID) {
+    const componentsConfigLengthBefore = this.componentsConfig.length;
     this.componentsConfig = this.componentsConfig.filter((c) => !c.id.isEqual(id, { ignoreVersion: true }));
-    this.hasChanged = true;
+    if (this.componentsConfig.length === componentsConfigLengthBefore) {
+      this.logger.debug(`removeComponentConfig: unable to find ${id.toString()}`);
+    } else {
+      this.hasChanged = true;
+    }
   }
 }

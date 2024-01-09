@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
 import fsNative from 'fs';
+import { BitError } from '@teambit/bit-error';
 import * as path from 'path';
 import { IS_WINDOWS } from '../../constants';
-import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import { PathOsBased } from '../path';
 
@@ -16,8 +16,16 @@ export default function createSymlinkOrCopy(
   destPath: PathOsBased,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentId?: string | null | undefined = '',
-  avoidHardLink = false
+  avoidHardLink = false,
+  skipIfSymlinkValid = false
 ) {
+  if (skipIfSymlinkValid && fs.existsSync(destPath)) {
+    const realDestination = fs.realpathSync(destPath);
+    if (realDestination === srcPath || linkPointsToPath(destPath, srcPath)) {
+      logger.trace(`createSymlinkOrCopy, skip creating symlink, it already exists on ${destPath}`);
+      return;
+    }
+  }
   logger.trace(`createSymlinkOrCopy, deleting ${destPath}`);
   fs.removeSync(destPath); // in case a symlink already generated or when linking a component, when a component has been moved
   fs.ensureDirSync(path.dirname(destPath));
@@ -30,7 +38,7 @@ export default function createSymlinkOrCopy(
   } catch (err: any) {
     const winMsg = IS_WINDOWS ? ' (or maybe copy)' : '';
     const errorHeader = componentId ? `failed to link a component ${componentId}` : 'failed to generate a symlink';
-    throw new ShowDoctorError(`${errorHeader}.
+    throw new BitError(`${errorHeader}.
 Symlink${winMsg} from: ${srcPath}, to: ${destPath} was failed.
 Please use "--log=trace" flag to get more info about the error.
 Original error: ${err}`);
@@ -111,4 +119,14 @@ Original error: ${err}`);
       }
     }
   }
+}
+
+function linkPointsToPath(linkPath: string, expectedPath: string) {
+  let actualPath!: string;
+  try {
+    actualPath = fs.readlinkSync(linkPath);
+  } catch {
+    return false;
+  }
+  return actualPath === expectedPath;
 }

@@ -14,6 +14,12 @@ export function previewSchema(previewExtension: PreviewMain) {
         isScaling: Boolean
         includesEnvTemplate: Boolean
         legacyHeader: Boolean
+        """
+        @deprecated use onlyOverview
+        """
+        skipIncludes: Boolean
+        onlyOverview: Boolean
+        useNameParam: Boolean
       }
 
       extend type Component {
@@ -36,6 +42,15 @@ export function previewSchema(previewExtension: PreviewMain) {
         },
         legacyHeader: ({ component }) => {
           return previewExtension.isLegacyHeader(component);
+        },
+        onlyOverview: ({ component }) => {
+          return previewExtension.getOnlyOverview(component);
+        },
+        useNameParam: ({ component }) => {
+          return previewExtension.getUseNameParam(component);
+        },
+        skipIncludes: ({ component }) => {
+          return previewExtension.isSupportSkipIncludes(component);
         },
       },
     },

@@ -22,7 +22,6 @@ describe('import lanes', function () {
     let laneHash: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       appOutput = helper.fixtures.populateComponents();
       helper.command.createLane('dev');
       helper.command.snapAllComponents();
@@ -83,9 +82,14 @@ describe('import lanes', function () {
       });
       it('bit lane should show the checked out lane as the active one', () => {
         const lanes = helper.command.listLanes();
-        expect(lanes).to.have.string('current lane - dev');
+        expect(lanes).to.have.string(`current lane - ${helper.scopes.remote}/dev`);
       });
       it('.bitmap should save the component as belong to the lane', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.isAvailableOnCurrentLane).to.be.true;
+        expect(bitMap.comp2.isAvailableOnCurrentLane).to.be.true;
+      });
+      it('.bitmap should set the onLanesOnly for forward compatibility', () => {
         const bitMap = helper.bitMap.read();
         expect(bitMap.comp1.onLanesOnly).to.be.true;
         expect(bitMap.comp2.onLanesOnly).to.be.true;
@@ -104,6 +108,11 @@ describe('import lanes', function () {
         });
         it('should switch successfully', () => {
           helper.command.expectCurrentLaneToBe(DEFAULT_LANE);
+        });
+        it('should set the isAvailableOnCurrentLane to false', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap.comp1.isAvailableOnCurrentLane).to.be.false;
+          expect(bitMap.comp2.isAvailableOnCurrentLane).to.be.false;
         });
       });
     });

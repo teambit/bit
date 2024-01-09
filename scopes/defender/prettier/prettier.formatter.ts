@@ -9,6 +9,7 @@ import {
 import PrettierLib, { Options as PrettierModuleOptions } from 'prettier';
 import mapSeries from 'p-map-series';
 import { Logger } from '@teambit/logger';
+import { ExecutionContext } from '@teambit/envs';
 // import { PrettierOptions } from './prettier.main.runtime';
 
 export class PrettierFormatter implements Formatter {
@@ -23,6 +24,7 @@ export class PrettierFormatter implements Formatter {
     private prettierModule = PrettierLib
   ) {}
 
+  id = 'prettier-formatter';
   displayName = 'Prettier';
 
   displayConfig() {
@@ -32,11 +34,32 @@ export class PrettierFormatter implements Formatter {
   async format(context: FormatterContext): Promise<FormatResults> {
     return this.run(context);
   }
+
+  async formatSnippet(snippet: string, filePath?: string): Promise<string> {
+    let parser;
+
+    if (filePath) {
+      const ext = filePath.split('.').pop();
+      const supportInfo = this.prettierModule.getSupportInfo();
+      const language = supportInfo.languages.find((lang) => lang.extensions && lang.extensions.includes(`.${ext}`));
+
+      if (language) {
+        parser = language.parsers[0];
+      }
+    }
+
+    parser = parser || 'babel';
+
+    const optsWithFilePath = Object.assign({}, this.options, { filepath: filePath, parser });
+
+    return this.prettierModule.format(snippet, optsWithFilePath);
+  }
+
   async check(context: FormatterContext): Promise<FormatResults> {
     return this.run(context);
   }
 
-  private async run(context: FormatterContext): Promise<FormatResults> {
+  private async run(context: FormatterContext & ExecutionContext): Promise<FormatResults> {
     const check = !!context.check;
     const longProcessLogger = this.logger.createLongProcessLogger('formatting components', context.components.length);
     const resultsP = mapSeries(context.components, async (component): Promise<ComponentFormatResult> => {

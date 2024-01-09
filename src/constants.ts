@@ -1,21 +1,21 @@
 import cliSpinners from 'cli-spinners';
-import os from 'os';
 import * as path from 'path';
 import format from 'string-format';
+import { homedir, platform } from 'os';
 
 import { PathOsBased } from './utils/path';
+import { getSync } from './api/consumer/lib/global-config';
 
-const userHome = require('user-home');
 const packageFile = require('../package.json');
 
-export const IS_WINDOWS = os.platform() === 'win32';
+export const IS_WINDOWS = platform() === 'win32';
 
 function getDirectory(): PathOsBased {
   if (process.platform === 'win32' && process.env.LOCALAPPDATA) {
     return path.join(process.env.LOCALAPPDATA, 'Bit');
   }
 
-  return path.join(userHome, '.bit');
+  return path.join(homedir(), '.bit');
 }
 
 export const CACHE_GLOBALS_ENV = 'BIT_GLOBALS_DIR';
@@ -26,11 +26,37 @@ function getCacheDirectory(): PathOsBased {
     return fromEnvVar;
   }
   if (process.platform === 'darwin' || process.platform === 'linux') {
-    return path.join(userHome, 'Library', 'Caches', 'Bit');
+    return path.join(homedir(), 'Library', 'Caches', 'Bit');
   }
 
   return getDirectory();
 }
+
+/**
+ * cache root directory
+ */
+export const CACHE_ROOT = getCacheDirectory();
+
+/**
+ * global config directories
+ */
+export const GLOBAL_CONFIG: PathOsBased = path.join(CACHE_ROOT, 'config');
+
+export const GLOBAL_LOGS: PathOsBased = path.join(CACHE_ROOT, 'logs');
+
+export const GLOBAL_SCOPE: PathOsBased = path.join(CACHE_ROOT, 'scope');
+
+export const GLOBALS_DEFAULT_CAPSULES = path.join(CACHE_ROOT, 'capsules');
+
+export const GLOBAL_CONFIG_FILE = 'config.json';
+
+export const GLOBAL_REMOTES = 'global-remotes.json';
+
+export const BIT_HIDDEN_DIR = '.bit';
+
+export const BIT_GIT_DIR = 'bit';
+
+export const DOT_GIT_DIR = '.git';
 
 export const BIT_USAGE = '[--version] [--help] <command> [<args>]';
 
@@ -56,9 +82,24 @@ export const REPO_NAME = 'teambit/bit';
 
 export const DEFAULT_INDEX_NAME = 'index';
 
-export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass'];
+export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'cjs', 'mjs', 'mts', 'cts', 'css', 'scss', 'less', 'sass'];
 
-export const SUPPORTED_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx', '.css', '.scss', '.less', '.sass', '.vue', '.styl'];
+export const SUPPORTED_EXTENSIONS = [
+  '.js',
+  '.ts',
+  '.jsx',
+  '.tsx',
+  '.css',
+  '.scss',
+  '.less',
+  '.sass',
+  '.vue',
+  '.styl',
+  '.cjs',
+  '.mjs',
+  '.mts',
+  '.cts',
+];
 
 export const NO_PLUGIN_TYPE = 'none';
 
@@ -84,13 +125,7 @@ export const NODE_PATH_COMPONENT_SEPARATOR = '.';
 
 export const DEFAULT_COMPONENTS_DIR_PATH = `${BITS_DIRNAME}/{name}`;
 
-export const DEFAULT_DIR_DEPENDENCIES = '.dependencies';
-
-export const DEFAULT_DEPENDENCIES_DIR_PATH = `${BITS_DIRNAME}/${DEFAULT_DIR_DEPENDENCIES}`;
-
 export const COMPONENT_DIR = 'COMPONENT_DIR';
-
-export const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
 export const DEFAULT_SEPARATOR = '/';
 
@@ -110,12 +145,6 @@ export const SPACE_DELIMITER = ' ';
 
 export const VERSION_DELIMITER = '@';
 
-export const DEPENDENCIES_DIR = 'dependencies';
-
-export const DEFAULT_REMOTES = {};
-
-export const DEFAULT_DEPENDENCIES = {};
-
 export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.dots : cliSpinners.dots12;
 
 /**
@@ -123,47 +152,77 @@ export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.dots : cliSpinners.dots12;
  */
 
 /**
- * @deprecated use 'BASE_CLOUD_DOMAIN' or 'BASE_COMMUNITY_DOMAIN'
+ * @deprecated use 'getCloudDomain()' or 'BASE_COMMUNITY_DOMAIN'
  */
 export const BASE_WEB_DOMAIN = 'bit.dev';
 
-export const BASE_CLOUD_DOMAIN = 'bit.cloud';
+export const CFG_CLOUD_DOMAIN_KEY = 'cloud_domain';
 
-export const BASE_COMMUNITY_DOMAIN = 'bit.dev';
+export const DEFAULT_CLOUD_DOMAIN = 'bit.cloud';
+let resolvedCloudDomain;
+export const getCloudDomain = (): string => {
+  if (resolvedCloudDomain) return resolvedCloudDomain;
+  resolvedCloudDomain = getSync(CFG_CLOUD_DOMAIN_KEY) || DEFAULT_CLOUD_DOMAIN;
+  return resolvedCloudDomain;
+};
+
+export const BASE_COMMUNITY_DOMAIN = 'https://bit.dev';
 
 export const PREVIOUSLY_BASE_WEB_DOMAIN = 'bitsrc.io';
 
-export const DEFAULT_HUB_DOMAIN = `hub.${BASE_CLOUD_DOMAIN}`;
+export const DEFAULT_HUB_DOMAIN = `hub.${getCloudDomain()}`;
 
-export const SYMPHONY_URL = `symphony.${BASE_CLOUD_DOMAIN}`;
+export const CFG_SYMPHONY_URL_KEY = 'symphony_url';
 
-export const SYMPHONY_GRAPHQL = `http://${SYMPHONY_URL}/graphql`;
+let resolvedSymphonyUrl;
+export const getSymphonyUrl = (): string => {
+  if (resolvedSymphonyUrl) return resolvedSymphonyUrl;
+  resolvedSymphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || `api.v2.${getCloudDomain()}`;
+  return resolvedSymphonyUrl;
+};
 
-export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/docs`;
+export const CFG_CLOUD_DOMAIN_LOGIN_KEY = 'cloud_domain_login';
+
+export const CFG_WATCH_USE_POLLING = 'watch_use_polling';
+export const CFG_WATCH_USE_FS_EVENTS = 'watch_use_fsevents';
+
+export const CFG_FORCE_LOCAL_BUILD = 'force_local_build';
+
+export const getLoginUrl = (domain?: string): string => {
+  const finalDomain = domain || getSync(CFG_CLOUD_DOMAIN_LOGIN_KEY) || getCloudDomain();
+  const url = `https://${finalDomain}/bit-login`;
+  return url;
+};
+
+export const SYMPHONY_GRAPHQL = `https://${getSymphonyUrl()}/graphql`;
+
+export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/`;
 
 export const BASE_LEGACY_DOCS_DOMAIN = `legacy-docs.${BASE_COMMUNITY_DOMAIN}/docs`;
 
-export const DEFAULT_HUB_LOGIN = `https://${BASE_CLOUD_DOMAIN}/bit-login`;
+export const DEFAULT_ANALYTICS_DOMAIN = `https://analytics.${getCloudDomain()}/`;
 
-export const DEFAULT_ANALYTICS_DOMAIN = `https://analytics.${BASE_CLOUD_DOMAIN}/`;
+export const SEARCH_DOMAIN = `api.${getCloudDomain()}`;
 
-export const SEARCH_DOMAIN = `api.${BASE_CLOUD_DOMAIN}`;
+export const RELEASE_SERVER = `https://api.${getCloudDomain()}/release`;
 
-export const RELEASE_SERVER = `https://api.${BASE_CLOUD_DOMAIN}/release`;
-
-export const DEFAULT_REGISTRY_URL = `https://node.bit.cloud`;
+export const DEFAULT_REGISTRY_URL = `https://node.${getCloudDomain()}`;
 
 export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_WEB_DOMAIN}`;
 
-export const CENTRAL_BIT_HUB_URL = `https://${SYMPHONY_URL}/exporter`;
+export const CENTRAL_BIT_HUB_URL = `https://${getSymphonyUrl()}/exporter`;
 
-export const CENTRAL_BIT_HUB_NAME = 'bit.cloud';
+// export const CENTRAL_BIT_HUB_URL_IMPORTER = `http://localhost:5001/importer/api/fetch`;
+export const CENTRAL_BIT_HUB_URL_IMPORTER = `https://${getSymphonyUrl()}/importer/api/fetch`;
+export const CENTRAL_BIT_HUB_URL_IMPORTER_V2 = `https://api.v2.bit.cloud/importer/api/fetch`;
+
+export const CENTRAL_BIT_HUB_NAME = getCloudDomain();
 
 // END URLS
 
 export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
 
-export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
+export const DEFAULT_SSH_KEY_FILE = `${homedir()}/.ssh/id_rsa`;
 
 export const DEFAULT_BIT_ENV = 'production';
 
@@ -171,7 +230,16 @@ export const DEFAULT_BIT_ENV = 'production';
 // https://github.com/mscdex/ssh2/issues/142
 export const DEFAULT_SSH_READY_TIMEOUT = 99999;
 
+export const MergeConfigFilename = 'merge-conflict';
+
+/**
+ * use the .gitignore syntax. (not minimatch).
+ * if you want to ignore only from component's root-dir, use `IGNORE_ROOT_ONLY_LIST` constant.
+ */
 export const IGNORE_LIST = [
+  '**/.env',
+  '**/.env.local',
+  '**/.env.**.local',
   '**/.bit.map.json',
   '**/.bitmap',
   '**/.gitignore',
@@ -182,17 +250,22 @@ export const IGNORE_LIST = [
   '**/package-lock.json',
   '**/yarn.lock',
   '**/LICENSE',
-  '*/tsconfig.json',
 ];
+
+/**
+ * these files are ignored only if they exist in the component's rootDir.
+ * avoid adding any wildcards or magic characters. specify the filename only.
+ */
+export const IGNORE_ROOT_ONLY_LIST = ['tsconfig.json', '.eslintrc.json', '.prettierrc.cjs'];
 
 export const AUTO_GENERATED_STAMP = 'BIT-AUTO-GENERATED';
 export const AUTO_GENERATED_MSG = `/* THIS IS A ${AUTO_GENERATED_STAMP} FILE. DO NOT EDIT THIS FILE DIRECTLY. */\n\n`;
 export const BITMAP_PREFIX_MESSAGE = `/**
  * The Bitmap file is an auto generated file used by Bit to track all your Bit components. It maps the component to a folder in your file system.
  * This file should be committed to VCS(version control).
- * Components are listed using their component ID (https://${BASE_DOCS_DOMAIN}/components/component-id).
+ * Components are listed using their component ID (${BASE_DOCS_DOMAIN}reference/components/component-id).
  * If you want to delete components you can use the "bit remove <component-id>" command.
- * See the docs (https://${BASE_DOCS_DOMAIN}/components/removing-components) for more information, or use "bit remove --help".
+ * See the docs (${BASE_DOCS_DOMAIN}reference/components/removing-components) for more information, or use "bit remove --help".
  */\n\n`;
 
 export const BIT_DESCRIPTION =
@@ -218,10 +291,6 @@ export const CFG_REGISTRY_URL_KEY = 'registry';
 export const CFG_SSH_KEY_FILE_KEY = 'ssh_key_file';
 
 export const CFG_HUB_DOMAIN_KEY = 'hub_domain';
-
-export const CFG_SYMPHONY_URL_KEY = 'symphony_url';
-
-export const CFG_HUB_LOGIN_KEY = 'hub_domain_login';
 
 export const CFG_ANALYTICS_DOMAIN_KEY = 'analytics_domain';
 
@@ -271,6 +340,41 @@ export const CFG_FEATURE_TOGGLE = 'features';
 export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
 export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
+
+export const CFG_ISOLATED_SCOPE_CAPSULES = 'isolated_scope_capsules';
+
+/**
+ * Name of the directory where the capsules for building components are stored
+ * This is used for the components capsules for bit build / tag / snap / sign
+ * This directory is relative to the capsules root directory
+ */
+export const CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR = 'capsules_build_components_base_dir';
+
+/**
+ * Name of the directory where the capsules for aspects for regular scope are stored
+ * This directory is relative to the capsules root directory
+ */
+export const CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR = 'capsules_scopes_aspects_base_dir';
+/**
+ * Name of the directory where the capsules for aspects for the global scope are stored
+ * This directory is relative to the capsules root directory
+ */
+export const CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR = 'capsules_global_scope_aspects_base_dir';
+
+/**
+ * Name of the directory where the dated (temp) capsules for aspects for regular scope are stored
+ * This directory is relative to the capsules root directory
+ */
+export const CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR = 'capsules_scopes_aspects_dated_dir';
+
+export const CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS = 'default_resolve_envs_from_roots';
+
+/**
+ * whether to generate non existing capsules for scope aspects in a temp dated dir
+ */
+export const CFG_USE_DATED_CAPSULES = 'use_dated_capsules';
+
+export const CFG_CACHE_LOCK_ONLY_CAPSULES = 'cache_lock_only_capsules';
 
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';
@@ -376,32 +480,6 @@ export const HOOKS_NAMES = [
 ];
 
 /**
- * cache root directory
- */
-export const CACHE_ROOT = getCacheDirectory();
-
-/**
- * global config directories
- */
-export const GLOBAL_CONFIG: PathOsBased = path.join(CACHE_ROOT, 'config');
-
-export const GLOBAL_LOGS: PathOsBased = path.join(CACHE_ROOT, 'logs');
-
-export const GLOBAL_SCOPE: PathOsBased = path.join(CACHE_ROOT, 'scope');
-
-export const GLOBALS_DEFAULT_CAPSULES = path.join(CACHE_ROOT, 'capsules');
-
-export const GLOBAL_CONFIG_FILE = 'config.json';
-
-export const GLOBAL_REMOTES = 'global-remotes.json';
-
-export const BIT_HIDDEN_DIR = '.bit';
-
-export const BIT_GIT_DIR = 'bit';
-
-export const DOT_GIT_DIR = '.git';
-
-/**
  * bit registry default URL.
  */
 export const BIT_REGISTRY = '';
@@ -458,8 +536,6 @@ export const MANUALLY_REMOVE_ENVIRONMENT = '-';
 
 export const MANUALLY_ADD_DEPENDENCY = '+';
 
-export const OVERRIDE_FILE_PREFIX = 'file://';
-
 export const OVERRIDE_COMPONENT_PREFIX = '@bit/';
 
 export const ACCEPTABLE_NPM_VERSIONS = '>=5.0.0';
@@ -475,14 +551,14 @@ export const WILDCARD_HELP = (command: string) =>
 
 export const PATTERN_HELP = (command: string) =>
   `you can use a \`<pattern>\` for multiple component ids, such as \`bit ${command} "org.scope/utils/**"\`.
-use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
-always wrap the pattern with quotes to avoid collision with shell commands.
+use comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'
+always wrap the pattern with single quotes to avoid collision with shell commands.
 use \`bit pattern --help\` to understand patterns better and \`bit pattern <pattern>\` to validate the pattern.
 `;
 
 export const COMPONENT_PATTERN_HELP = `component name, component id, or component pattern. use component pattern to select multiple components.
-use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
-wrap the pattern with quotes`;
+wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button".
+use \`bit pattern --help\` to understand patterns better and \`bit pattern <pattern>\` to validate the pattern.`;
 
 export const CURRENT_UPSTREAM = 'current';
 
@@ -495,7 +571,7 @@ export const PREVIOUS_DEFAULT_LANE = 'master';
 export const statusInvalidComponentsMsg = 'invalid components';
 export const statusFailureMsg = 'issues found';
 export const statusWorkspaceIsCleanMsg =
-  'nothing to tag or export (use "bit add <file...>" to track files or directories as components)';
+  'nothing to tag or export (use "bit create <template> <component>" to generate a new component)';
 
 // todo: move the following two lines to the watch extension once its e2e moved to the extension dir
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
@@ -527,3 +603,7 @@ export enum BuildStatus {
 }
 
 export const SOURCE_DIR_SYMLINK_TO_NM = '_src'; // symlink from node_modules to the workspace sources files
+
+export const FILE_CHANGES_CHECKOUT_MSG = 'components with file changes';
+
+export const VERSION_CHANGED_BIT_ID_TO_COMP_ID = '1.2.10';

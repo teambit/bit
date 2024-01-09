@@ -4,6 +4,9 @@ import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
 import { ReactMain } from '@teambit/react';
 import { Tester } from '@teambit/tester';
 import { BuildTask } from '@teambit/builder';
+import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
+import { SchemaExtractor } from '@teambit/schema';
+import { TsConfigSourceFile } from 'typescript';
 
 export const NodeEnvType = 'node';
 
@@ -21,7 +24,7 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
         '@types/jest': '26.0.20',
         '@types/node': '12.20.4',
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
-        '@babel/runtime': '7.12.18',
+        '@babel/runtime': '7.20.0',
       },
     };
   }
@@ -52,13 +55,21 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
 
   getPreviewConfig() {
     return {
-      strategyName: 'component',
+      strategyName: COMPONENT_PREVIEW_STRATEGY_NAME as PreviewStrategyName,
       splitComponentBundle: false,
     };
   }
 
   getPackageJsonProps() {
     return this.tsAspect.getCjsPackageJsonProps();
+  }
+
+  getSchemaExtractor(tsconfig: TsConfigSourceFile, tsserverPath?: string, contextPath?: string): SchemaExtractor {
+    return this.tsAspect.createSchemaExtractor(
+      this.reactAspect.reactEnv.getTsConfig(tsconfig),
+      tsserverPath,
+      contextPath
+    );
   }
 
   async __getDescriptor() {

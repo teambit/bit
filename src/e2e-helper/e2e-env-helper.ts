@@ -1,14 +1,21 @@
 import fs from 'fs-extra';
 import * as path from 'path';
+import { getRootComponentDir } from '@teambit/bit-roots';
 
 import { generateRandomStr } from '../utils';
 import CommandHelper from './e2e-command-helper';
 import ExtensionsHelper from './e2e-extensions-helper';
-import FixtureHelper from './e2e-fixtures-helper';
+import FixtureHelper, { GenerateEnvJsoncOptions } from './e2e-fixtures-helper';
 import FsHelper from './e2e-fs-helper';
 import { ensureAndWriteJson } from './e2e-helper';
 import ScopeHelper from './e2e-scope-helper';
 import ScopesData from './e2e-scopes';
+
+type SetCustomEnvOpts = {
+  skipInstall?: boolean;
+  skipCompile?: boolean;
+  skipLink?: boolean;
+};
 
 export default class EnvHelper {
   command: CommandHelper;
@@ -44,6 +51,14 @@ export default class EnvHelper {
       this.createCompiler();
     }
     return this.command.runCmd(`bit import ${id} --compiler`);
+  }
+
+  rootCompDirDep(envName: string, depComponentName: string) {
+    return path.join(this.rootCompDir(envName), 'node_modules', `@${this.scopes.remote}/${depComponentName}`);
+  }
+
+  rootCompDir(envName: string) {
+    return getRootComponentDir(this.scopes.localPath, envName);
   }
 
   importTypescriptCompiler(version = '3.0.0') {
@@ -214,9 +229,9 @@ export default class EnvHelper {
         dependencies: {
           '@babel/runtime': '^7.8.4',
           '@babel/core': '7.11.6',
-          '@babel/preset-env': '7.11.5',
-          '@babel/preset-typescript': '7.10.4',
-          '@babel/plugin-proposal-class-properties': '7.10.4',
+          '@babel/preset-env': '7.23.2',
+          '@babel/preset-typescript': '7.22.15',
+          '@babel/plugin-transform-class-properties': '7.22.5',
         },
       },
     });
@@ -225,13 +240,40 @@ export default class EnvHelper {
     return EXTENSIONS_BASE_FOLDER;
   }
 
-  setCustomEnv(extensionsBaseFolder = 'node-env'): string {
+  setCustomEnv(extensionsBaseFolder = 'node-env', options: SetCustomEnvOpts = {}): string {
     this.fixtures.copyFixtureExtensions(extensionsBaseFolder);
     this.command.addComponent(extensionsBaseFolder);
     this.extensions.addExtensionToVariant(extensionsBaseFolder, 'teambit.envs/env');
+    if (!options.skipLink) this.command.link();
+    if (!options.skipInstall) this.command.install();
+    if (!options.skipCompile) this.command.compile();
+    return extensionsBaseFolder;
+  }
+
+  /**
+   * This will generate env in the new format (using the *.bit-env.* plugin)
+   * @param extensionsBaseFolder
+   * @returns
+   */
+  setCustomNewEnv(
+    extensionsBaseFolder = 'react-based-env',
+    basePackages: string[] = ['@teambit/react.react-env'],
+    envJsoncOptions: GenerateEnvJsoncOptions,
+    runInstall = true,
+    targetFolder?: string,
+    id?: string
+  ): string {
+    const addOptions = id ? { i: id } : {};
+    this.fixtures.copyFixtureExtensions(extensionsBaseFolder, undefined, targetFolder);
+    this.command.addComponent(targetFolder || extensionsBaseFolder, addOptions);
+    this.fixtures.generateEnvJsoncFile(targetFolder || extensionsBaseFolder, envJsoncOptions);
+    this.extensions.addExtensionToVariant(targetFolder || extensionsBaseFolder, 'teambit.envs/env');
+    this.command.setEnv(id || extensionsBaseFolder, 'teambit.envs/env');
     this.command.link();
-    this.command.install();
-    this.command.compile();
+    if (runInstall) {
+      this.command.install(basePackages.join(' '));
+    }
+    // this.command.compile();
     return extensionsBaseFolder;
   }
 

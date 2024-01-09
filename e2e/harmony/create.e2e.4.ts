@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import { OutsideWorkspaceError } from '@teambit/workspace';
 import path from 'path';
 import os from 'os';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -16,14 +17,15 @@ describe('create extension', function () {
   });
   describe('when running outside the workspace', () => {
     it('should throw ConsumerNotFound error', () => {
-      expect(() => helper.command.runCmd('bit create aspect my-aspect', os.tmpdir())).to.throw('workspace not found');
+      const cmd = () => helper.command.runCmd('bit create aspect my-aspect', os.tmpdir());
+      const error = new OutsideWorkspaceError();
+      helper.general.expectToThrow(cmd, error);
     });
   });
   describe('with --namespace flag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
-      helper.command.create('aspect', 'my-aspect', '--namespace ui');
+      helper.command.create('bit-aspect', 'my-aspect', '--namespace ui');
     });
     it('should create the directories properly', () => {
       const compRootDir = path.join(helper.scopes.localPath, helper.scopes.remote, 'ui/my-aspect');
@@ -40,8 +42,7 @@ describe('create extension', function () {
   describe('name with namespace as part of the name', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
-      helper.command.create('aspect', 'ui/my-aspect');
+      helper.command.create('bit-aspect', 'ui/my-aspect');
     });
     it('should create the directories properly', () => {
       const compRootDir = path.join(helper.scopes.localPath, helper.scopes.remote, 'ui/my-aspect');
@@ -58,8 +59,7 @@ describe('create extension', function () {
   describe('name with namespace as part of the name and namespace flag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
-      helper.command.create('aspect', 'ui/my-aspect', '--namespace another/level');
+      helper.command.create('bit-aspect', 'ui/my-aspect', '--namespace another/level');
     });
     it('should create the directories properly', () => {
       const compRootDir = path.join(helper.scopes.localPath, helper.scopes.remote, 'another/level/ui/my-aspect');
@@ -76,11 +76,10 @@ describe('create extension', function () {
   describe('when a component already exist on that dir', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
-      helper.command.create('aspect', 'my-aspect');
+      helper.command.create('bit-aspect', 'my-aspect');
     });
     it('should throw an error', () => {
-      expect(() => helper.command.create('aspect', 'my-aspect')).to.throw('this path already exist');
+      expect(() => helper.command.create('bit-aspect', 'my-aspect')).to.throw('this path already exist');
 
       // make sure the dir still exists and the rollback mechanism did not delete it.
       const compRootDir = path.join(helper.scopes.localPath, helper.scopes.remote, 'my-aspect');
@@ -90,8 +89,7 @@ describe('create extension', function () {
   describe('when an error is thrown during the add/track phase', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
-      expect(() => helper.command.create('aspect', 'myAspect')).to.throw(
+      expect(() => helper.command.create('bit-aspect', 'myAspect')).to.throw(
         'component names can only contain alphanumeric, lowercase characters'
       );
     });
@@ -103,17 +101,16 @@ describe('create extension', function () {
   describe('with an invalid scope-name', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
     });
     it('should throw InvalidScopeName error', () => {
-      expect(() => helper.command.create('aspect', 'my-aspect', '--scope ui/')).to.throw('"ui/" is invalid');
+      expect(() => helper.command.create('bit-aspect', 'my-aspect', '--scope ui/')).to.throw('"ui/" is invalid');
     });
   });
   describe('with --scope flag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
       helper.bitJsonc.addDefaultScope('my-scope');
-      helper.command.create('aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
+      helper.command.create('bit-aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
     });
     it('should add the component to the .bitmap file with a new defaultScope prop', () => {
       const bitMap = helper.bitMap.read();
@@ -142,9 +139,8 @@ describe('create extension', function () {
   describe('with env defined inside the aspect-template different than the variants', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
-      helper.command.create('aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
+      helper.command.create('bit-aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
     });
     it('should set the env according to the variant', () => {
       const show = helper.command.showComponentParsedHarmony('my-aspect');
@@ -155,13 +151,27 @@ describe('create extension', function () {
   describe('with env defined inside the aspect-template when there is no variant', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
-      helper.command.create('aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
+      helper.command.create('bit-aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
     });
     it('should set the env according to the template env', () => {
       const show = helper.command.showComponentParsedHarmony('my-aspect');
       const env = show.find((item) => item.title === 'env');
       expect(env.json).to.equal('teambit.harmony/aspect');
+    });
+  });
+  describe('from an inner dir', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fs.createNewDirectoryInLocalWorkspace('inner-dir');
+    });
+    it('should not throw', () => {
+      const cmd = helper.command.create(
+        'bit-aspect',
+        'my-aspect',
+        undefined,
+        path.join(helper.scopes.localPath, 'inner-dir')
+      );
+      expect(() => cmd).to.not.throw();
     });
   });
 });

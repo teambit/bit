@@ -9,18 +9,19 @@ the setup process is more involving than expected because we write bit using bit
 
 ### installation
 
-- make sure you have `bit` installed via `bvm` (see [instructions](https://harmony-docs.bit.dev/getting-started/installing-bit/)), then run:
+- make sure you have `bit` installed via `bvm` (see [instructions](https://bit.dev/docs/quick-start/#install){:target="\_blank" rel="noopener"}), then run:
 
 ```bash
-  $ npm run full-setup:bit
+  npm run full-setup
 ```
 
 the script does the following:
 
-1. runs `bit install` to install all dependencies
-2. runs `bit compile` to compile all components in the workspace (Harmony code).
-3. compiles bit-legacy code (by `npm run build`).
-4. generates the d.ts files for the bit-legacy code (by `npm run build:types`).
+1. runs `bit install` to install all dependencies.
+2. runs `npm run link-bit-legacy` to create a symlink for the bit-legacy package.
+3. runs `bit compile` to compile all components in the workspace (Harmony code).
+4. compiles bit-legacy code (by `npm run build`).
+5. generates the d.ts files for the bit-legacy code (by `npm run build:types`).
 
 install command globally and link (in order to use the "bit-dev" command globally and always use the
 latest development build)

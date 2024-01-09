@@ -21,8 +21,6 @@ describe('multiple compilers - babel and typescript', function () {
       let distDir;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.addDefaultScope();
-        helper.bitJsonc.disablePreview();
 
         // add a new env that compiles with Babel
         const envName = helper.env.setBabelWithTsHarmony();
@@ -33,7 +31,7 @@ describe('multiple compilers - babel and typescript', function () {
           'export function sayHello(name: string) { console.log(`hello ${name}`); }; sayHello("David");'
         );
         helper.command.addComponent('bar');
-        helper.extensions.addExtensionToVariant('bar', `my-scope/${envName}`);
+        helper.extensions.addExtensionToVariant('bar', `${helper.scopes.remote}/${envName}`);
         helper.command.compile();
         distDir = path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}/bar/dist`);
       });
@@ -89,23 +87,21 @@ describe('multiple compilers - babel and typescript', function () {
     let buildOutput;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.disablePreview();
-      helper.bitJsonc.addDefaultScope();
       helper.fixtures.populateComponentsTS(4);
       const babelEnv = helper.env.setBabelWithTsHarmony();
-      helper.extensions.addExtensionToVariant('comp1', `my-scope/${babelEnv}`);
+      helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/${babelEnv}`);
       helper.extensions.addExtensionToVariant('comp2', 'teambit.harmony/node');
-      helper.extensions.addExtensionToVariant('comp3', `my-scope/${babelEnv}`);
+      helper.extensions.addExtensionToVariant('comp3', `${helper.scopes.remote}/${babelEnv}`);
       helper.extensions.addExtensionToVariant('comp4', 'teambit.harmony/node');
       helper.command.compile();
       buildOutput = helper.command.build();
     });
     it('should successfully build', () => {
-      expect(buildOutput).to.have.string('the build has been completed');
+      expect(buildOutput).to.have.string('build succeeded');
     });
     it('should indicate that pre-build and post-build were running', () => {
-      expect(buildOutput).to.have.string('executing pre-build for all tasks');
-      expect(buildOutput).to.have.string('executing post-build for all tasks');
+      expect(buildOutput).to.have.string('running pre-build for all tasks');
+      expect(buildOutput).to.have.string('running post-build for all tasks');
     });
     it('should write .npmignore with TS entries even when getCompiler() is Babel', () => {
       const comp1Capsule = helper.command.getCapsuleOfComponent('comp1');

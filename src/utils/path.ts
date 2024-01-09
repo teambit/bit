@@ -15,8 +15,8 @@ export type PathAbsolute = string;
 export function pathJoinLinux(...paths): PathLinux {
   return normalize(path.join(...paths));
 }
-export function pathNormalizeToLinux(pathToNormalize?: PathOsBased): PathLinux {
-  return pathToNormalize ? normalize(pathToNormalize) : pathToNormalize;
+export function pathNormalizeToLinux(pathToNormalize: PathOsBased = ''): PathLinux {
+  return normalize(pathToNormalize);
 }
 export function pathRelativeLinux(from: PathOsBased, to: PathOsBased): PathLinux {
   return normalize(path.relative(from, to));
@@ -34,4 +34,12 @@ export function getPathRelativeRegardlessCWD(from: PathOsBasedRelative, to: Path
   const toLinux = pathNormalizeToLinux(to);
   // change them to absolute so path.relative won't consider the cwd
   return pathRelativeLinux(`/${fromLinux}`, `/${toLinux}`);
+}
+
+/**
+ * e.g. given `a/b/index.js` return `a/b/index`.
+ */
+export function removeFileExtension(filePath: string): string {
+  const parsedPath = path.parse(filePath);
+  return path.join(parsedPath.dir, parsedPath.name);
 }

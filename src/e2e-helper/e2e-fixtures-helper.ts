@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import fs from 'fs-extra';
+import { capitalize } from 'lodash';
 import * as path from 'path';
 import tar from 'tar';
 
@@ -10,6 +11,11 @@ import NpmHelper from './e2e-npm-helper';
 import PackageJsonHelper from './e2e-package-json-helper';
 import ScopeHelper from './e2e-scope-helper';
 import ScopesData from './e2e-scopes';
+
+export type GenerateEnvJsoncOptions = {
+  policy?: Record<string, any>;
+  patterns?: Record<string, string[]>;
+};
 
 export default class FixtureHelper {
   fs: FsHelper;
@@ -96,9 +102,9 @@ export default class FixtureHelper {
     fs.copySync(sourceDir, dest);
   }
 
-  copyFixtureExtensions(dir = '', cwd: string = this.scopes.localPath) {
+  copyFixtureExtensions(dir = '', cwd: string = this.scopes.localPath, targetFolder?: string) {
     const sourceDir = path.join(this.getFixturesDir(), 'extensions', dir);
-    const target = path.join(cwd, dir);
+    const target = path.join(cwd, targetFolder || dir);
     fs.copySync(sourceDir, target);
   }
 
@@ -222,10 +228,10 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
    * @returns {string}
    * @memberof FixtureHelper
    */
-  populateExtensions(numOfExtensions = 3): void {
+  populateExtensions(numOfExtensions = 3, printNameInProvider = false): void {
     const aspectImp = (index) => {
       return `
-      import { Aspect } from '@teambit/bit';
+      import { Aspect } from '@teambit/harmony';
 
       export const Ext${index}Aspect = Aspect.create({
         id: 'my-scope/ext${index}',
@@ -237,6 +243,16 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
       `;
     };
     const mainImp = (index) => {
+      let provider = `static async provider(_deps, config) {
+        return new Ext${index}Main(config);
+      }`;
+      if (printNameInProvider) {
+        provider = `static async provider(_deps, config) {
+          const extMain = new Ext${index}Main(config);
+          extMain.printName();
+          return extMain;
+        }`;
+      }
       return `
       import { MainRuntime } from '@teambit/cli';
       import { Ext${index}Aspect } from './ext${index}.aspect';
@@ -245,15 +261,12 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
         static runtime: any = MainRuntime;
         static dependencies: any = [];
 
-
         constructor(public config: any) {}
 
         printName() {
           console.log('ext ${index}');
         }
-        static async provider(_deps, config) {
-          return new Ext${index}Main(config);
-        }
+        ${provider}
       }
       export default Ext${index}Main;
       Ext${index}Aspect.addRuntime(Ext${index}Main);
@@ -373,5 +386,55 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
       file: compressedFile,
       cwd: destDir,
     });
+  }
+
+  generateEnvJsoncFile(componentDir: string, options: GenerateEnvJsoncOptions = {}) {
+    const envJsoncFile = path.join(componentDir, 'env.jsonc');
+    const defaultPatterns = {
+      compositions: ['**/*.composition.*', '**/*.preview.*'],
+      docs: ['**/*.docs.*'],
+      tests: ['**/*.spec.*', '**/*.test.*'],
+    };
+    const envJsoncFileContentJson = {
+      policy: options.policy || {},
+      patterns: options.patterns || defaultPatterns,
+    };
+    this.fs.outputFile(envJsoncFile, JSON.stringify(envJsoncFileContentJson, null, 2));
+  }
+
+  populateEnvMainRuntime(
+    filePathRelativeToLocalScope: string,
+    { envName, dependencies }: { envName: string; dependencies: any }
+  ): void {
+    const capitalizedEnvName = capitalize(envName);
+    return this.fs.outputFile(
+      filePathRelativeToLocalScope,
+      `
+import { MainRuntime } from '@teambit/cli';
+import { ReactAspect, ReactMain } from '@teambit/react';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { ${capitalizedEnvName}Aspect } from './${envName}.aspect';
+
+export class ${capitalizedEnvName}Main {
+  static slots = [];
+
+  static dependencies = [ReactAspect, EnvsAspect];
+
+  static runtime = MainRuntime;
+
+  static async provider([react, envs]: [ReactMain, EnvsMain]) {
+    const templatesReactEnv = envs.compose(react.reactEnv, [
+      envs.override({
+        getDependencies: () => (${JSON.stringify(dependencies)}),
+      })
+    ]);
+    envs.registerEnv(templatesReactEnv);
+    return new ${capitalizedEnvName}Main();
+  }
+}
+
+${capitalizedEnvName}Aspect.addRuntime(${capitalizedEnvName}Main);
+`
+    );
   }
 }

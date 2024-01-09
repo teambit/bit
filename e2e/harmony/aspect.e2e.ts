@@ -1,4 +1,4 @@
-import { UNABLE_TO_LOAD_EXTENSION } from '@teambit/aspect-loader/constants';
+import { UNABLE_TO_LOAD_EXTENSION } from '@teambit/aspect-loader';
 import chai, { expect } from 'chai';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -17,7 +17,6 @@ describe('aspect', function () {
   describe('run bit aspect set then generate component.json', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.setAspect('comp1', Extensions.forking, { configKey: 'configVal' });
       helper.command.ejectConf('comp1');
@@ -42,8 +41,8 @@ describe('aspect', function () {
   });
   describe('aspect loading failures', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.command.create('aspect', 'my-aspect');
+      helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
+      helper.command.create('bit-aspect', 'my-aspect');
       helper.bitJsonc.addKeyVal('my-scope/my-aspect', {});
     });
     it('commands with loaders should show a descriptive error', () => {
@@ -65,8 +64,7 @@ describe('aspect', function () {
     let output: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
-      helper.command.create('aspect', 'my-aspect');
+      helper.command.create('bit-aspect', 'my-aspect');
       helper.command.compile();
       helper.command.install();
       helper.command.tagAllWithoutBuild();
@@ -100,12 +98,39 @@ describe('aspect', function () {
       expect(show).to.have.string(`${helper.scopes.remote}/my-aspect@0.0.2`);
       expect(show).not.to.have.string(`${helper.scopes.remote}/my-aspect@0.0.1`);
     });
+    it('running the same command again, should not show a message that no component is using this aspect', () => {
+      const secondRun = helper.command.updateAspect(`${helper.scopes.remote}/my-aspect`);
+      expect(secondRun).to.have.string('are already up to date');
+      expect(secondRun).to.not.have.string('unable to find any component');
+    });
     it('bit tag should save only the updated aspect and not the old one', () => {
       helper.command.importComponent('my-aspect'); // otherwise, the tag will try to get it as a package
       helper.command.tagAllComponents();
       const cmp = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, undefined, false);
       expect(cmp).to.have.string(`${helper.scopes.remote}/my-aspect@0.0.2`);
       expect(cmp).not.to.have.string(`${helper.scopes.remote}/my-aspect@0.0.1`);
+    });
+  });
+  describe('bit aspect unset command', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.create('bit-aspect', 'my-aspect');
+      helper.command.compile();
+      helper.command.install();
+      helper.command.tagAllWithoutBuild();
+      helper.fixtures.populateComponents(1);
+      helper.command.setAspect('comp1', `${helper.scopes.remote}/my-aspect`);
+      helper.command.tagWithoutBuild('comp1');
+      helper.command.export();
+    });
+    describe('without specifying the aspect version', () => {
+      before(() => {
+        helper.command.unsetAspect('comp1', `${helper.scopes.remote}/my-aspect`);
+      });
+      it('should unset the aspect', () => {
+        const aspect = helper.command.showAspectConfig('comp1', `${helper.scopes.remote}/my-aspect@0.0.1`);
+        expect(aspect).to.be.undefined;
+      });
     });
   });
 });

@@ -28,7 +28,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     const outputPath = this.getOutputPath(context);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
     const htmlConfig = this.generateHtmlConfig({ dev: context.dev });
-    const peers = await this.dependencyResolver.getPeerDependenciesListFromEnv(context.env);
+    const peers = await this.dependencyResolver.getPreviewHostDependenciesFromEnv(context.envDefinition.env);
 
     return [
       {
@@ -127,7 +127,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
       const link = this.preview.writeLink(
         previewDef.prefix,
         paths,
-        previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined,
+        { default: template || 'undefined' },
         outputPath,
         false
       );

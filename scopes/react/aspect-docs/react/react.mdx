@@ -1,4 +1,4 @@
-The built-in [React Component Development Environment](https://bit.dev/teambit/react/react) is a concrete composition of the [Env Aspect](https://bit.dev/teambit/envs/envs). It compose different tools and configs that fit practices implemented in [Create React App](https://create-react-app.dev). Use it when getting started with React components with Bit and later as a base for any future customization of your React-based workflow.
+The built-in [React Component Development Environment](https://bit.cloud/teambit/react/react) is a concrete composition of the [Env Aspect](https://bit.cloud/teambit/envs/envs). It compose different tools and configs that fit practices implemented in [Create React App](https://create-react-app.cloud). Use it when getting started with React components with Bit and later as a base for any future customization of your React-based workflow.
 
 ## Use React environment
 
@@ -33,26 +33,26 @@ bit create <template name> [components...]
 
 ## Runtime (framework) dependencies
 
-As with many Frontend frameworks React requires a singleton instance in your app's runtime. When building reuseable components that means setting `react` and `react-dom` as `peerDependencies`, thus allowing the consuming app to determine the runtime version. Bit's base React environment implements this via the **Dependencies** service which is used to override [dependency-resolver](https://bit.dev/teambit/dependencies/dependency-resolver) and set your preferred dependencies.
+As with many Frontend frameworks React requires a singleton instance in your app's runtime. When building reuseable components that means setting `react` and `react-dom` as `peerDependencies`, thus allowing the consuming app to determine the runtime version. Bit's base React environment implements this via the **Dependencies** service which is used to override [dependency-resolver](https://bit.cloud/teambit/dependencies/dependency-resolver) and set your preferred dependencies.
 It is recommended for you to extend the base React environment and define a semantic version rule and range to fit your current tech stack and guidelines for reuseable React components.
 
 ## Development services
 
 React, like all other Bit Environments must implement a set of Service Handlers. Each service corresponds to a specific tool or stage in the component life-cycle, with a default config as set by the base React environment:
 
-| Service              | Aspect                                                      | Base Configuration                                                                                                                 |
-| -------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Compilation          | [TypeScript](https://bit.dev/teambit/typescript/typescript) | [tsconfig.json](https://bit.dev/teambit/react/react/~code/typescript/tsconfig.json)                                                |
-| Testing              | **Jest**                                                    | [jest.config.js](https://bit.dev/teambit/react/react/~code/jest/jest.config.js)                                                    |
-| Linting              | **ESLint**                                                  | [eslintrc.ts](https://bit.dev/teambit/react/react/~code/eslint/eslintrc.ts)                                                        |
-| DevServer            | **Webpack**                                                 | [webpack.config.preview.dev.ts](https://bit.dev/teambit/react/react/~code/webpack/webpack.config.preview.dev.ts)                   |
-| Preview (simulation) | **Webpack**                                                 | [webpack.config.preview.ts](https://bit.dev/teambit/react/react/~code/webpack/webpack.config.preview.ts)                           |
-| Package              | **PKG**                                                     | Base `package.json` props from [TypeScript Aspect](https://bit.dev/teambit/typescript/typescript/~code/typescript.main.runtime.ts) |
-| Bundling             | **Webpack**                                                 | [webpack.config.preview.ts](https://bit.dev/teambit/react/react/~code/webpack/webpack.config.preview.ts)                           |
-| Documentation        | _Core implementation_                                       | [Docs template](https://bit.dev/teambit/react/react/~code/docs/index.tsx)                                                          |
-| Build pipeline       | [Builder](https://bit.dev/teambit/pipelines/builder)        | [Build pipeline](https://bit.dev/teambit/react/react/~code/react.env.ts)                                                           |
-| Dependencies         | _Core implementation_                                       | [Env-dependencies](https://bit.dev/teambit/react/react/~code/react.env.ts)                                                         |
-| Component Generator  | [Generator](https://bit.dev/teambit/generator/generator)    | [example template](https://bit.dev/teambit/react/react/~code/templates/react-component.ts)                                         |
+| Service              | Aspect                                                        | Base Configuration                                                                                                                   |
+| -------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Compilation          | [TypeScript](https://bit.cloud/teambit/typescript/typescript) | [tsconfig.json](https://bit.cloud/teambit/react/react/~code/typescript/tsconfig.json)                                                |
+| Testing              | **Jest**                                                      | [jest.config.js](https://bit.cloud/teambit/react/react/~code/jest/jest.config.js)                                                    |
+| Linting              | **ESLint**                                                    | [eslintrc.ts](https://bit.cloud/teambit/react/react/~code/eslint/eslintrc.ts)                                                        |
+| DevServer            | **Webpack**                                                   | [webpack.config.preview.cloud.ts](https://bit.cloud/teambit/react/react/~code/webpack/webpack.config.preview.cloud.ts)               |
+| Preview (simulation) | **Webpack**                                                   | [webpack.config.preview.ts](https://bit.cloud/teambit/react/react/~code/webpack/webpack.config.preview.ts)                           |
+| Package              | **PKG**                                                       | Base `package.json` props from [TypeScript Aspect](https://bit.cloud/teambit/typescript/typescript/~code/typescript.main.runtime.ts) |
+| Bundling             | **Webpack**                                                   | [webpack.config.preview.ts](https://bit.cloud/teambit/react/react/~code/webpack/webpack.config.preview.ts)                           |
+| Documentation        | _Core implementation_                                         | [Docs template](https://bit.cloud/teambit/react/react/~code/docs/index.tsx)                                                          |
+| Build pipeline       | [Builder](https://bit.cloud/teambit/pipelines/builder)        | [Build pipeline](https://bit.cloud/teambit/react/react/~code/react.env.ts)                                                           |
+| Dependencies         | _Core implementation_                                         | [Env-dependencies](https://bit.cloud/teambit/react/react/~code/react.env.ts)                                                         |
+| Component Generator  | [Generator](https://bit.cloud/teambit/generator/generator)    | [example template](https://bit.cloud/teambit/react/react/~code/templates/react-component.ts)                                         |
 
 ## Customize environment
 
@@ -235,7 +235,7 @@ Use these APIs to customize the base React environment default configuration wit
 #### `overrideTsConfig(tsconfig: TsConfigSourceFile): EnvTransformer`
 
 Merges the environment's default TypeScript configuration with the contents of your [typescript configuration file](https://www.typescriptlang.org/handbook/tsconfig-json.html).
-This config affects the transpilation carried out when rendering components on the local dev UI. To override the config used when building components, use `overrideBuildTsConfig` below.
+This config affects the transpilation carried out when rendering components on the local cloud UI. To override the config used when building components, use `overrideBuildTsConfig` below.
 
 ```ts
 // ...
@@ -291,7 +291,7 @@ export class ReactExtension {
 #### `overrideDevServerConfig(config: Configuration): EnvTransformer`
 
 Merges the Webpack configuration for the 'DevServer' environment service, with the contents of your [webpack configuration file](https://webpack.js.org/configuration/).
-This configuration is used for building and rendering your components in the local dev server.
+This configuration is used for building and rendering your components in the local cloud server.
 
 ```ts
 // ...
@@ -347,7 +347,7 @@ export class CustomReact {
 #### `overrideDependencies(dependencyPolicy: DependenciesPolicy): EnvTransformer`
 
 This method receives a dependency-policy object and merges it with the environment's default dependency policy for components using this environment.
-Each key-value pair in a dependency-policy object signifies the package and the version to be used. Use also the `-` and `+` notation to signify a module should moved between dependency types (dev, peer or standard).
+Each key-value pair in a dependency-policy object signifies the package and the version to be used. Use also the `-` and `+` notation to signify a module should moved between dependency types (cloud, peer or standard).
 
 ```ts
 // ...
@@ -355,7 +355,7 @@ const newDependencies = {
   dependencies: {
     react: '-',
   },
-  devDependencies: {
+  cloudDependencies: {
     '@types/jest': '~26.0.9',
   },
   peerDependencies: {

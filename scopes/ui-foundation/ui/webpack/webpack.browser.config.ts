@@ -5,30 +5,29 @@ import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { merge } from 'webpack-merge';
 import { fallbacksProvidePluginConfig } from '@teambit/webpack';
-
 import { html } from './html';
 import createBaseConfig from './webpack.base.config';
 
 export default function createWebpackConfig(
-  workspaceDir: string,
+  outputDir: string,
   entryFiles: string[],
   title: string,
   publicDir: string
 ): Configuration {
-  const baseConfig = createBaseConfig(workspaceDir, entryFiles);
-  const browserConfig = createBrowserConfig(workspaceDir, title, publicDir);
-
+  const baseConfig = createBaseConfig(outputDir, entryFiles);
+  const browserConfig = createBrowserConfig(outputDir, title, publicDir);
+  // @ts-ignore that's an issue because of different types/webpack version
   const combined = merge(baseConfig, browserConfig);
-
+  // @ts-ignore that's an issue because of different types/webpack version
   return combined;
 }
 
-function createBrowserConfig(workspaceDir: string, title: string, publicDir: string) {
+function createBrowserConfig(outputDir: string, title: string, publicDir: string) {
   const browserConfig: Configuration = {
-    // target: 'web', // already default
-
     output: {
-      path: path.resolve(workspaceDir, publicDir),
+      path: path.resolve(outputDir, publicDir),
+      filename: 'static/js/[name].[contenthash:8].js',
+      chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
       // webpack uses `publicPath` to determine where the app is being served from.
       // It requires a trailing slash, or the file assets will get an incorrect path.
       // We inferred the "public path" (such as / or /my-project) from homepage.
@@ -41,6 +40,9 @@ function createBrowserConfig(workspaceDir: string, title: string, publicDir: str
         // This is only used in production mode
         new TerserPlugin({
           terserOptions: {
+            // this ensures the Class Names for all Schema Classes is not minimized
+            // so that schemaObjToClass can match the correct Class Name during runtime
+            keep_classnames: new RegExp('.*(Schema)$'),
             parse: {
               // We want terser to parse ecma 8 code. However, we don't want it
               // to apply any minification steps that turns valid ecma 5 code
@@ -119,6 +121,7 @@ function createBrowserConfig(workspaceDir: string, title: string, publicDir: str
           minifyURLs: true,
         },
       }),
+
       new ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
     ],
   };

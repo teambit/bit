@@ -1,7 +1,8 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { APISchema, UnknownSchema } from '@teambit/semantics.entities.semantic-schema';
-import { loadAspect } from '@teambit/harmony.testing.load-aspect';
+import TrackerAspect, { TrackerMain } from '@teambit/tracker';
+import { loadAspect, loadManyAspects } from '@teambit/harmony.testing.load-aspect';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { ComponentID } from '@teambit/component-id';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
@@ -18,7 +19,7 @@ describe('SchemaAspect', function () {
     // eslint-disable-next-line no-console
     console.log('workspace created at ', workspacePath);
     schema = await loadAspect(SchemaAspect, workspacePath);
-  });
+  }, 30000);
   afterAll(async () => {
     await destroyWorkspace(workspaceData);
   });
@@ -29,14 +30,16 @@ describe('SchemaAspect', function () {
       const compDir = path.join(workspacePath, 'button');
       const src = path.join(getMockDir(), 'button');
       await fs.copy(src, compDir);
-      workspace = await loadAspect(WorkspaceAspect, workspacePath);
-      await workspace.track({ rootDir: compDir, defaultScope: 'org.scope' });
+      const harmony = await loadManyAspects([WorkspaceAspect, SchemaAspect, TrackerAspect], workspacePath);
+      workspace = harmony.get<Workspace>(WorkspaceAspect.id);
+      const tracker = harmony.get<TrackerMain>(TrackerAspect.id);
+      await tracker.track({ rootDir: compDir, defaultScope: 'org.scope' });
       await workspace.bitMap.write();
-      schema = await loadAspect(SchemaAspect, workspacePath);
+      schema = harmony.get<SchemaMain>(SchemaAspect.id);
       const compId = await workspace.resolveComponentId('button');
       const comp = await workspace.get(compId);
-      apiSchema = await schema.getSchema(comp);
-    });
+      apiSchema = await schema.getSchema(comp, true);
+    }, 30000);
     it('should be able to generate JSON object with all schemas', async () => {
       const results = apiSchema.toObject();
       const expectedJsonPath = path.join(getMockDir(), 'button-schemas.json');
@@ -52,8 +55,8 @@ describe('SchemaAspect', function () {
       const jsonPath = path.join(getMockDir(), 'button-schemas.json');
       const json = fs.readJsonSync(jsonPath);
       const apiSchema = schema.getSchemaFromObject(json);
-      expect(apiSchema instanceof APISchema).toBeTruthy();
-      expect(apiSchema.componentId instanceof ComponentID).toBeTruthy();
+      expect(apiSchema instanceof APISchema).toEqual(true);
+      expect(apiSchema.componentId.constructor.name).toEqual(ComponentID.name);
       // @ts-ignore it exists on Jest. for some reason ts assumes this is Jasmine.
       expect(apiSchema.toObject()).toMatchObject(json);
     });
@@ -61,8 +64,8 @@ describe('SchemaAspect', function () {
       const jsonPath = path.join(getMockDir(), 'button-old-schema.json');
       const json = fs.readJsonSync(jsonPath);
       const apiSchema = schema.getSchemaFromObject(json);
-      expect(apiSchema instanceof APISchema).toBeTruthy();
-      expect(apiSchema.module.exports[0] instanceof UnknownSchema).toBeTruthy();
+      expect(apiSchema instanceof APISchema).toEqual(true);
+      expect(apiSchema.module.exports[0] instanceof UnknownSchema).toEqual(true);
       // @ts-ignore
       expect(apiSchema.module.exports[0].location).toMatchObject({ file: 'index.ts', line: 21, character: 14 });
     });

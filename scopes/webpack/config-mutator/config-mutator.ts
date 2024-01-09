@@ -2,6 +2,9 @@ import { isObject, omit } from 'lodash';
 import { Configuration, ResolveOptions, RuleSetRule } from 'webpack';
 import { merge, mergeWithCustomize, mergeWithRules, CustomizeRule } from 'webpack-merge';
 import { ICustomizeOptions } from 'webpack-merge/dist/types';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import { inject } from '@teambit/html.modules.inject-html-element';
+import type { InjectedHtmlElement as CustomHtmlElement } from '@teambit/html.modules.inject-html-element';
 
 export * from 'webpack-merge';
 
@@ -37,7 +40,7 @@ const defaultMergeOpts: MergeOpts = {
 };
 
 export class WebpackConfigMutator {
-  constructor(public raw: Configuration) {}
+  constructor(public raw: Configuration | any) {}
 
   clone(): WebpackConfigMutator {
     return new WebpackConfigMutator(merge({}, this.raw));
@@ -97,7 +100,7 @@ export class WebpackConfigMutator {
    * @param opts
    * @returns
    */
-  addModuleRule(rule: RuleSetRule, opts: AddToArrayOpts = {}): WebpackConfigMutator {
+  addModuleRule(rule: RuleSetRule | any, opts: AddToArrayOpts = {}): WebpackConfigMutator {
     if (!this.raw.module) {
       this.raw.module = {};
     }
@@ -115,7 +118,7 @@ export class WebpackConfigMutator {
    * @param opts
    * @returns
    */
-  addModuleRules(rules: RuleSetRule[], opts: AddToArrayOpts = {}): WebpackConfigMutator {
+  addModuleRules(rules: RuleSetRule[] | any[], opts: AddToArrayOpts = {}): WebpackConfigMutator {
     rules.forEach((rule) => this.addModuleRule(rule, opts));
     return this;
   }
@@ -125,7 +128,7 @@ export class WebpackConfigMutator {
    * @param opts
    * @returns
    */
-  addRuleToOneOf(rule: RuleSetRule, opts: AddToArrayOpts = {}): WebpackConfigMutator {
+  addRuleToOneOf(rule: RuleSetRule | any, opts: AddToArrayOpts = {}): WebpackConfigMutator {
     if (!this.raw.module) {
       this.raw.module = {};
     }
@@ -133,11 +136,12 @@ export class WebpackConfigMutator {
       this.raw.module.rules = [];
     }
     // @ts-ignore
-    if (!this.raw.module.rules.find((r) => !!r.oneOf)) {
+    const moduleWithOneOf = this.raw.module.rules.find((r) => !!(r as RuleSetRule).oneOf);
+    if (!moduleWithOneOf) {
       this.raw.module.rules.unshift({ oneOf: [] });
     }
 
-    addToArray(this.raw.module.rules.find((r) => !!(r as RuleSetRule).oneOf) as RuleSetRule[], rule, opts);
+    addToArray(moduleWithOneOf.oneOf, rule, opts);
     return this;
   }
 
@@ -209,7 +213,7 @@ export class WebpackConfigMutator {
    * @param resolve
    * @returns
    */
-  addResolve(resolve: ResolveOptions): WebpackConfigMutator {
+  addResolve(resolve: ResolveOptions | any): WebpackConfigMutator {
     if (!this.raw.resolve) {
       this.raw.resolve = {};
     }
@@ -223,7 +227,7 @@ export class WebpackConfigMutator {
    * @param externalDeps
    * @returns
    */
-  addExternals(externalDeps: Configuration['externals']): WebpackConfigMutator {
+  addExternals(externalDeps: Configuration['externals'] | any): WebpackConfigMutator {
     if (!externalDeps) return this;
     let externals = this.raw.externals;
     if (!externals) {
@@ -253,7 +257,7 @@ export class WebpackConfigMutator {
    * @param configs
    * @param opts
    */
-  merge(config: Configuration | Configuration[], opts?: MergeOpts): WebpackConfigMutator {
+  merge(config: Configuration | Configuration[] | any, opts?: MergeOpts): WebpackConfigMutator {
     const configs = Array.isArray(config) ? config : [config];
     const concreteOpts = Object.assign({}, defaultMergeOpts, opts || {});
     const { firstConfig, configs: otherConfigs } = getConfigsToMerge(this.raw, configs, concreteOpts.rawConfigPosition);
@@ -269,7 +273,11 @@ export class WebpackConfigMutator {
    * @param opts
    * @returns
    */
-  mergeWithCustomize(configs: Configuration[], customizes: ICustomizeOptions, opts: MergeOpts): WebpackConfigMutator {
+  mergeWithCustomize(
+    configs: Configuration[] | any,
+    customizes: ICustomizeOptions,
+    opts: MergeOpts
+  ): WebpackConfigMutator {
     const concreteOpts = Object.assign({}, defaultMergeOpts, opts);
     const { firstConfig, configs: otherConfigs } = getConfigsToMerge(this.raw, configs, concreteOpts.rawConfigPosition);
     const merged = mergeWithCustomize(customizes)(firstConfig, ...otherConfigs);
@@ -284,20 +292,117 @@ export class WebpackConfigMutator {
    * @param opts
    * @returns
    */
-  mergeWithRules(configs: Configuration[], rules: Rules, opts: MergeOpts): WebpackConfigMutator {
+  mergeWithRules(configs: Configuration[] | any, rules: Rules | any, opts: MergeOpts): WebpackConfigMutator | any {
     const concreteOpts = Object.assign({}, defaultMergeOpts, opts);
     const { firstConfig, configs: otherConfigs } = getConfigsToMerge(this.raw, configs, concreteOpts.rawConfigPosition);
     const merged = mergeWithRules(rules)(firstConfig, ...otherConfigs);
     this.raw = merged;
     return this;
   }
+
+  /**
+   * Add PostCSS plugins
+   * @param plugins
+   * @returns
+   * @example
+   * addPostCssPlugins([require('tailwindcss')]);
+   */
+  addPostCssPlugins(plugins: Array<any>): WebpackConfigMutator {
+    this.raw.module?.rules?.forEach((rule: any) => {
+      if (rule.use) processUseArray(rule.use, plugins);
+      if (rule.oneOf) rule.oneOf.forEach((oneOfRule) => processUseArray(oneOfRule.use, plugins));
+    });
+
+    return this;
+  }
+
+  /**
+   * Add a custom element to the html template
+   * @param element
+   * @returns
+   * @example
+   * addElementToHtmlTemplate({ parent: 'head', position: 'append', tag: 'script', attributes: { src: 'https://cdn.com/script.js', async: true } });
+   * addElementToHtmlTemplate({ parent: 'body', position: 'prepend', tag: 'script', content: 'console.log("hello world")' });
+   */
+  addElementToHtmlTemplate(element: CustomHtmlElement) {
+    if (!this.raw.plugins) {
+      this.raw.plugins = [];
+    }
+
+    const htmlPlugins = this.raw?.plugins?.filter(
+      (plugin) => plugin.constructor.name === 'HtmlWebpackPlugin'
+    ) as HtmlWebpackPlugin[];
+
+    if (htmlPlugins) {
+      // iterate over all html plugins and add the scripts to the html
+      htmlPlugins.forEach((htmlPlugin) => {
+        const htmlContent =
+          typeof htmlPlugin.userOptions?.templateContent === 'function'
+            ? (htmlPlugin.userOptions?.templateContent({}) as string)
+            : (htmlPlugin.userOptions?.templateContent as string);
+
+        const newHtmlContent = inject(htmlContent, element);
+
+        htmlPlugin.userOptions.templateContent = newHtmlContent;
+      });
+    }
+
+    return this;
+  }
+
+  /**
+   * Remove a custom element from the html template
+   * @param element
+   * @returns
+   * @example
+   * removeElementFromHtmlTemplate('<script>console.log("hello")</script>');
+   * removeElementFromHtmlTemplate('<script src="https://example.com/script.js"></script>');
+   */
+  removeElementFromHtmlTemplate(element: string) {
+    if (!this.raw.plugins) {
+      this.raw.plugins = [];
+    }
+
+    const htmlPlugin = this.raw?.plugins?.find(
+      (plugin) => plugin.constructor.name === 'HtmlWebpackPlugin'
+    ) as HtmlWebpackPlugin;
+
+    if (htmlPlugin) {
+      const htmlContent =
+        typeof htmlPlugin.userOptions?.templateContent === 'function'
+          ? htmlPlugin.userOptions?.templateContent({})
+          : htmlPlugin.userOptions.templateContent;
+
+      htmlPlugin.userOptions.templateContent = (htmlContent as string).replace(element, '');
+
+      this.raw.plugins = this.raw.plugins.map((plugin) => {
+        if (plugin.constructor.name === 'HtmlWebpackPlugin') {
+          return htmlPlugin;
+        }
+        return plugin;
+      });
+    }
+    return this;
+  }
+}
+
+function processUseArray(useArray: any[], plugins: any[]) {
+  if (!useArray) return;
+
+  useArray.forEach((use: any) => {
+    if (!use.loader || !use.loader.includes('postcss-loader')) return;
+    if (!use.options.postcssOptions) return;
+
+    use.options.postcssOptions.plugins = use.options.postcssOptions.plugins || [];
+    use.options.postcssOptions.plugins.unshift(...plugins);
+  });
 }
 
 function getConfigsToMerge(
-  originalConfig: Configuration,
-  configs: Configuration[],
+  originalConfig: Configuration | any,
+  configs: Configuration[] | any,
   originalPosition: ArrayPosition
-): { firstConfig: Configuration; configs: Configuration[] } {
+): { firstConfig: Configuration | any; configs: Configuration[] | any } {
   let firstConfig = originalConfig;
   if (originalPosition === 'append') {
     firstConfig = configs.shift() || {};

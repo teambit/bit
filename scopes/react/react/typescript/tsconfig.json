@@ -12,7 +12,9 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "outDir": "./dist"
   },
   "exclude": [
     "dist",

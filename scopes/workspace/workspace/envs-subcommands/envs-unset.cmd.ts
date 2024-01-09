@@ -1,5 +1,5 @@
 import { Command } from '@teambit/cli';
-import { PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { PATTERN_HELP, COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import chalk from 'chalk';
 import { Workspace } from '../workspace';
 
@@ -9,15 +9,14 @@ export class EnvsUnsetCmd implements Command {
   arguments = [
     {
       name: 'component-pattern',
-      description:
-        'component name, component id, or component pattern. use component pattern to select multiple components. \nuse comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"\nwrap the pattern with quotes',
+      description: COMPONENT_PATTERN_HELP,
     },
   ];
   options = [];
   group = 'development';
-  extendedDescription = `keep in mind that this doesn't remove envs that are set in the variants.
+  extendedDescription = `keep in mind that this doesn't remove envs that are set via variants.
 in only removes envs that appear in the .bitmap file, which were previously configured via "bit env set".
-the purpose of this command is to remove the specific settings and let the the variants in workspace.jsonc to control the env.
+the purpose of this command is to reset previously assigned envs to either allow variants configure the env or use the base node env.
 ${PATTERN_HELP('env unset')}`;
 
   constructor(private workspace: Workspace) {}
@@ -26,9 +25,9 @@ ${PATTERN_HELP('env unset')}`;
     const componentIds = await this.workspace.idsByPattern(pattern);
     const { changed } = await this.workspace.unsetEnvFromComponents(componentIds);
     if (!changed.length) {
-      return chalk.yellow(`unable to find any component matching the pattern with env configured in the .bitmap file`);
+      return chalk.yellow(`unable to find components matching the pattern with env configured in the .bitmap file`);
     }
-    return `successfully removed env from the following component(s):
+    return `successfully removed .bitmap env configuration from the following component(s):
 ${changed.map((id) => id.toString()).join('\n')}`;
   }
 }

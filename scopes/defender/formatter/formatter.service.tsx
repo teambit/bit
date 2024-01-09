@@ -1,35 +1,42 @@
 import { defaults } from 'lodash';
 import React from 'react';
-import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
+import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import { Text, Newline } from 'ink';
 import highlight from 'cli-highlight';
 import { Formatter, FormatResults } from './formatter';
 import { FormatterContext, FormatterOptions } from './formatter-context';
 import { FormatterConfig } from './formatter.main.runtime';
 
-export type FormatterServiceOptions = FormatterOptions & {
-  check?: boolean;
+type FormatterTransformationMap = ServiceTransformationMap & {
+  getFormatter: () => Formatter;
 };
-
 export class FormatterService implements EnvService<FormatResults> {
   name = 'formatter';
 
   constructor(private formatterConfig: FormatterConfig) {}
 
-  async run(context: ExecutionContext, options: FormatterServiceOptions): Promise<FormatResults> {
+  async run(context: ExecutionContext, options: FormatterOptions): Promise<FormatResults> {
     const mergedOpts = this.optionsWithDefaults(options);
     const formatterContext: FormatterContext = this.mergeContext(mergedOpts, context);
-    const formatter: Formatter = context.env.getFormatter(formatterContext);
+    const formatter = this.getFormatter(context, options);
 
     const results = options.check ? await formatter.check(formatterContext) : await formatter.format(formatterContext);
     return results;
   }
 
-  private optionsWithDefaults(options: FormatterServiceOptions): FormatterServiceOptions {
+  getFormatter(context: ExecutionContext, options: FormatterOptions): Formatter {
+    const mergedOpts = this.optionsWithDefaults(options);
+    const formatterContext: FormatterContext = this.mergeContext(mergedOpts, context);
+    const formatter: Formatter = context.env.getFormatter(formatterContext);
+
+    return formatter;
+  }
+
+  private optionsWithDefaults(options: FormatterOptions): FormatterOptions {
     return defaults(options, this.formatterConfig);
   }
 
-  private mergeContext(options: FormatterServiceOptions, context?: ExecutionContext): FormatterContext {
+  private mergeContext(options: FormatterOptions, context?: ExecutionContext): FormatterContext {
     const formatterContext: FormatterContext = Object.assign({}, options, context);
     return formatterContext;
   }
@@ -52,6 +59,14 @@ export class FormatterService implements EnvService<FormatResults> {
         <Newline />
       </Text>
     );
+  }
+
+  transform(env: Env, context: EnvContext): FormatterTransformationMap | undefined {
+    // Old env
+    if (!env?.formatter) return undefined;
+    return {
+      getFormatter: () => env.formatter()(context),
+    };
   }
 
   getDescriptor(env: EnvDefinition) {

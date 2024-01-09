@@ -41,6 +41,7 @@ export type JsonLintResults = {
 export class LintCmd implements Command {
   name = 'lint [component...]';
   description = 'lint components in the development workspace';
+  helpUrl = 'reference/linting/linter-overview';
   group = 'development';
   options = [
     ['c', 'changed', 'lint only new and modified components'],

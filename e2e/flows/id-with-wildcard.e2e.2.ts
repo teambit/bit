@@ -17,7 +17,6 @@ describe('component id with wildcard', function () {
     let scopeAfterAdd;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fs.createFile('utils/is/string', 'string.js');
       helper.fs.createFile('utils/is/type', 'type.js');
       helper.fs.createFile('utils/fs/read', 'read.js');
@@ -94,7 +93,7 @@ describe('component id with wildcard', function () {
       });
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
-          const removeFunc = () => helper.command.removeComponent(`${helper.scopes.remote}/none/* --remote`);
+          const removeFunc = () => helper.command.removeComponentFromRemote(`${helper.scopes.remote}/none/*`);
           const error = new NoIdMatchWildcard([`${helper.scopes.remote}/none/*`]);
           helper.general.expectToThrow(removeFunc, error);
         });
@@ -102,7 +101,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.removeComponent(`${helper.scopes.remote}/utils/fs/* --remote`);
+          output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/utils/fs/*`);
         });
         it('should indicate the removed components', () => {
           expect(output).to.have.string('utils/fs/read');
@@ -133,7 +132,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.removeComponent(`${helper.scopes.remote}/utils/fs/* --remote`);
+          output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/utils/fs/*`);
         });
         it('should indicate the removed components', () => {
           expect(output).to.have.string('utils/fs/read');
@@ -201,7 +200,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.untag('"*/is/*"');
+          output = helper.command.reset('"*/is/*"');
         });
         it('should indicate the untagged components', () => {
           expect(output).to.have.string('2 component(s) were untagged');
@@ -237,9 +236,8 @@ describe('component id with wildcard', function () {
         before(() => {
           output = helper.command.checkout('0.0.1 "utils/is/*"');
         });
-        it('should indicate the checked out components', () => {
-          expect(output).to.have.string('utils/is/string');
-          expect(output).to.have.string('utils/is/type');
+        it('should indicate the number of checked out components', () => {
+          expect(output).to.have.string('successfully switched 2 components');
         });
         it('should checkout only the matched components', () => {
           const bitMap = helper.bitMap.read();
@@ -264,29 +262,6 @@ describe('component id with wildcard', function () {
         const status = helper.command.statusJson();
         expect(status.stagedComponents).to.have.lengthOf(5);
       });
-      describe('when wildcard does not match any component', () => {
-        it('should throw an error saying the wildcard does not match any id', () => {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          const mergeFunc = () => helper.command.mergeVersion('0.0.1 "none/*"');
-          const error = new NoIdMatchWildcard(['none/*']);
-          helper.general.expectToThrow(mergeFunc, error);
-        });
-      });
-      describe('when wildcard match some of the components', () => {
-        let output;
-        before(() => {
-          output = helper.command.mergeVersion('0.0.1', '"utils/is/*"');
-        });
-        it('should indicate the merged components', () => {
-          expect(output).to.have.string('utils/is/string');
-          expect(output).to.have.string('utils/is/type');
-        });
-        it('should not merge the unmatched components', () => {
-          expect(output).to.not.have.string('utils/fs/read');
-          expect(output).to.not.have.string('utils/fs/write');
-          expect(output).to.not.have.string('bar/foo');
-        });
-      });
     });
     describe('diff with wildcard', () => {
       before(() => {
@@ -306,7 +281,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
           const diffFunc = () => helper.command.diff('"none/*"');
-          const error = new NoIdMatchWildcard(['none/*']);
+          const error = new NoIdMatchPattern('none/*');
           helper.general.expectToThrow(diffFunc, error);
         });
       });

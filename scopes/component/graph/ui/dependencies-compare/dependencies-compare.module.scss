@@ -2,7 +2,9 @@ $d30: #878c9a;
 $b70: #0d2de3;
 
 .page {
-  margin-top: 16px; // not exported
+  margin-top: 16px;
+  // this is temporary until we get ride of this graph compare for deps and align it with cloud
+  height: 50vh;
 }
 
 .loader {

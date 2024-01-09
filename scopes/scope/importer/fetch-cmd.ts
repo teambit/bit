@@ -1,7 +1,6 @@
 import chalk from 'chalk';
-import R from 'ramda';
 import { Command, CommandOptions } from '@teambit/cli';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ComponentID } from '@teambit/component-id';
 import { FileStatus } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import { ImporterMain } from './importer.main.runtime';
 import { ImportDetails, ImportStatus } from './import-components';
@@ -16,9 +15,10 @@ export class FetchCmd implements Command {
     [
       'l',
       'lanes',
-      'EXPERIMENTAL. fetch component objects from lanes. note, it does not save the remote lanes objects locally, only the refs',
+      'fetch component objects from lanes. note, it does not save the remote lanes objects locally, only the refs',
     ],
     ['c', 'components', 'fetch components'],
+    ['', 'all-history', 'for each component, fetch all its versions. by default, only the latest version is fetched'],
     ['j', 'json', 'return the output as JSON'],
     [
       '',
@@ -37,30 +37,34 @@ export class FetchCmd implements Command {
       components = false,
       json = false,
       fromOriginalScope = false,
+      allHistory = false,
     }: {
       lanes?: boolean;
       components?: boolean;
       json?: boolean;
       fromOriginalScope?: boolean;
+      allHistory?: boolean;
     }
   ) {
-    const { dependencies, importDetails } = await this.importer.fetch(ids, lanes, components, fromOriginalScope);
+    const { importedIds, importDetails } = await this.importer.fetch(
+      ids,
+      lanes,
+      components,
+      fromOriginalScope,
+      allHistory
+    );
     if (json) {
       return JSON.stringify({ importDetails }, null, 4);
     }
-    if (dependencies && !R.isEmpty(dependencies)) {
-      const componentsObj = dependencies.map(R.prop('component'));
+    if (importedIds.length) {
       const title =
-        componentsObj.length === 1
+        importedIds.length === 1
           ? 'successfully fetched one component'
-          : `successfully fetched ${componentsObj.length} components`;
-      const componentDependencies = componentsObj.map((component) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const details = importDetails.find((c) => c.id === component.id.toStringWithoutVersion());
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        if (!details) throw new Error(`missing details of component ${component.id.toString()}`);
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        return formatPlainComponentItemWithVersions(component, details);
+          : `successfully fetched ${importedIds.length} components`;
+      const componentDependencies = importedIds.map((id) => {
+        const details = importDetails.find((c) => c.id === id.toStringWithoutVersion());
+        if (!details) throw new Error(`missing details for component ${id.toString()}`);
+        return formatPlainComponentItemWithVersions(id, details);
       });
       const componentDependenciesOutput = [chalk.green(title)].concat(componentDependencies).join('\n');
 
@@ -70,12 +74,11 @@ export class FetchCmd implements Command {
   }
 }
 
-function formatPlainComponentItemWithVersions(component: Component, importDetails: ImportDetails) {
+function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails: ImportDetails) {
   const status: ImportStatus = importDetails.status;
-  const id = component.id.toStringWithoutVersion();
+  const id = bitId.toStringWithoutVersion();
   const versions = importDetails.versions.length ? `new versions: ${importDetails.versions.join(', ')}` : '';
-  // $FlowFixMe component.version should be set here
-  const usedVersion = status === 'added' ? `, currently used version ${component.version}` : '';
+  const usedVersion = status === 'added' ? `, currently used version ${bitId.version}` : '';
   const getConflictMessage = () => {
     if (!importDetails.filesStatus) return '';
     const conflictedFiles = Object.keys(importDetails.filesStatus) // $FlowFixMe file is set

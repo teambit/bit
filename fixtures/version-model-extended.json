@@ -8,29 +8,6 @@
         }
     ],
     "mainFile": "bar/foo.ts",
-    "dists": [
-        {
-            "file": "0b0c7e05f0012fce0e5e936452b3961c685c0253",
-            "relativePath": "bar/foo.js.map",
-            "name": "foo.js.map"
-        },
-        {
-            "file": "9397b9882b1be6d02c0d6848ac9a32965f1c8805",
-            "relativePath": "bar/foo.js",
-            "name": "foo.js",
-            "test": false
-        }
-    ],
-    "compiler": {
-        "name": "bit.envs/compilers/react-typescript@0.0.5",
-        "config": {},
-        "files": [
-            {
-                "name": ".babelrc",
-                "file": "65b62ef50ad0df5809a3a019e077057d6578a388"
-            }
-        ]
-    },
     "bindingPrefix": "@bit",
     "log": {
         "message": "tag-message",
@@ -42,7 +19,7 @@
     "docs": [],
     "dependencies": [
         {
-            "id": "23th85mi-remote/utils/is-string@0.0.1",
+            "id": { "scope": "23th85mi-remote", "name": "/utils/is-string", "version": "0.0.1" },
             "relativePaths": [
                 {
                     "sourceRelativePath": "utils/is-string.ts",
@@ -61,13 +38,11 @@
     ],
     "devDependencies": [],
     "flattenedDependencies": [
-        "23th85mi-remote/utils/is-type@0.0.1",
-        "23th85mi-remote/utils/is-string@0.0.1"
+        { "scope": "23th85mi-remote", "name": "utils/is-type", "version": "0.0.1" },
+        { "scope": "23th85mi-remote", "name": "utils/is-string", "version": "0.0.1" }
     ],
     "flattenedDevDependencies": [],
     "packageDependencies": {},
     "devPackageDependencies": {},
-    "peerPackageDependencies": {},
-    "compilerPackageDependencies": {},
-    "testerPackageDependencies": {}
+    "peerPackageDependencies": {}
 }

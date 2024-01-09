@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
+
 import React, { ReactNode } from 'react';
 import classnames from 'classnames';
 import type { FallbackProps } from 'react-error-boundary';

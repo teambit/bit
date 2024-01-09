@@ -13,8 +13,9 @@ export type { DocReader } from './doc-reader';
 export type { Docs, Example } from './docs';
 export { defaultDocs } from './docs';
 
-export type { TitleBadgeSlot, TitleBadge } from './overview';
-export { Overview, BadgePosition } from './overview';
+export type { TitleBadgeSlot, TitleBadge, OverviewOptionsSlot, OverviewOptions } from './overview';
+export { BadgePosition } from './overview';
+export { Overview } from './overview';
 
 export { DocsAspect };
 export default DocsAspect;

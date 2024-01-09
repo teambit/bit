@@ -13,16 +13,13 @@ import { GLOBAL_GROUP, STANDARD_GROUP, YargsAdapter } from './yargs-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
 
 export class CLIParser {
-  constructor(
-    private commands: Command[],
-    private groups: GroupsType,
-    public parser = yargs,
-    private docsDomain: string
-  ) {}
+  public parser = yargs;
+  constructor(private commands: Command[], private groups: GroupsType) {}
 
   async parse(args = process.argv.slice(2)) {
     this.throwForNonExistsCommand(args[0]);
     logger.debug(`[+] CLI-INPUT: ${args.join(' ')}`);
+    logger.writeCommandHistoryStart();
     yargs(args);
     yargs.help(false);
     this.configureParser();
@@ -50,8 +47,9 @@ export class CLIParser {
   private setHelpMiddleware() {
     yargs.middleware((argv) => {
       if (argv._.length === 0 && argv.help) {
+        const shouldShowInternalCommands = Boolean(argv.internal);
         // this is the main help page
-        this.printHelp();
+        this.printHelp(shouldShowInternalCommands);
         process.exit(0);
       }
       if (argv.help) {
@@ -109,8 +107,8 @@ export class CLIParser {
     });
   }
 
-  private printHelp() {
-    const help = formatHelp(this.commands, this.groups, this.docsDomain);
+  private printHelp(shouldShowInternalCommands = false) {
+    const help = formatHelp(this.commands, this.groups, shouldShowInternalCommands);
     // eslint-disable-next-line no-console
     console.log(help);
   }

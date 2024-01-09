@@ -20,7 +20,6 @@ describe('import functionality on Harmony', function () {
     let scopeWithoutOwner: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       helper.fixtures.populateComponentsTS(3);
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -69,7 +68,7 @@ describe('import functionality on Harmony', function () {
           helper.command.importComponent('comp1');
         });
         it('should not save the dependencies as components', () => {
-          helper.bitMap.expectToHaveIdHarmony('comp1', '0.0.1', helper.scopes.remote);
+          helper.bitMap.expectToHaveId('comp1', '0.0.1', helper.scopes.remote);
           const bitMap = helper.bitMap.readComponentsMapOnly();
           expect(bitMap).not.to.have.property(`comp2`);
           expect(bitMap).not.to.have.property(`comp3`);
@@ -127,7 +126,6 @@ describe('import functionality on Harmony', function () {
   describe('tag, export, clean scope objects, tag and export', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
       helper.command.export();
@@ -145,7 +143,6 @@ describe('import functionality on Harmony', function () {
     let afterFirstExport: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, undefined, ' v2');
@@ -170,7 +167,6 @@ describe('import functionality on Harmony', function () {
     let scopeBeforeImport: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fs.outputFile('foo/index.js');
       helper.fs.outputFile('bar/index.js');
       helper.command.addComponent('foo');
@@ -199,8 +195,9 @@ describe('import functionality on Harmony', function () {
         helper.scopeHelper.getClonedLocalScope(scopeBeforeImport);
         helper.command.importComponent('foo');
       });
-      it('should throw when importing the child', () => {
-        expect(() => helper.command.importComponent('foo/bar')).to.throw('unable to add');
+      it('should not throw when importing the child and should increment its base-path and preserve the suffix', () => {
+        expect(() => helper.command.importComponent('foo/bar')).to.not.throw();
+        expect(path.join(helper.scopes.localPath, helper.scopes.remoteWithoutOwner, 'foo_1/bar')).to.be.a.directory();
       });
     });
     describe('import the child dir first and then the parent', () => {
@@ -208,8 +205,9 @@ describe('import functionality on Harmony', function () {
         helper.scopeHelper.getClonedLocalScope(scopeBeforeImport);
         helper.command.importComponent('foo/bar');
       });
-      it('should throw when importing the child', () => {
-        expect(() => helper.command.importComponent('foo -O')).to.throw('unable to add');
+      it('should not throw when importing the parent and should increment the path', () => {
+        expect(() => helper.command.importComponent('foo -O')).to.not.throw('unable to add');
+        expect(path.join(helper.scopes.localPath, helper.scopes.remoteWithoutOwner, 'foo_1')).to.be.a.directory();
       });
     });
   });
@@ -219,7 +217,6 @@ describe('import functionality on Harmony', function () {
       let scopeWithoutOwner: string;
       before(async () => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
         scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
         helper.fixtures.populateComponents(3);
         npmCiRegistry = new NpmCiRegistry(helper);
@@ -250,7 +247,7 @@ describe('import functionality on Harmony', function () {
           helper.command.importComponent('comp1');
         });
         it('should import the component with the pre-release correctly', () => {
-          helper.bitMap.expectToHaveIdHarmony('comp1', '0.0.1-beta.0', helper.scopes.remote);
+          helper.bitMap.expectToHaveId('comp1', '0.0.1-beta.0', helper.scopes.remote);
         });
         // previously, it threw an error: "error: version 0.0.1.0 is not a valid semantic version. learn more: https://semver.org"
         it('bit status should be clean with no errors', () => {
@@ -263,7 +260,6 @@ describe('import functionality on Harmony', function () {
     let beforeImport: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -289,14 +285,13 @@ describe('import functionality on Harmony', function () {
   describe('importing a component with @types dependency when current workspace does not have it', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fs.outputFile('bar/foo.ts', `import cors from 'cors'; console.log(cors);`);
       helper.command.add('bar');
       helper.command.install('cors@2.8.5 @types/cors@2.8.10');
 
       // intermediate step, make sure the types are saved in the
       const show = helper.command.showComponentParsed('bar');
-      expect(show.devPackageDependencies).to.include({ '@types/cors': '2.8.10' });
+      expect(show.devPackageDependencies).to.include({ '@types/cors': '^2.8.10' });
 
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -310,7 +305,29 @@ describe('import functionality on Harmony', function () {
     });
     it('bit show should show the typed dependency', () => {
       const show = helper.command.showComponentParsed('bar');
-      expect(show.devPackageDependencies).to.include({ '@types/cors': '2.8.10' });
+      expect(show.devPackageDependencies).to.include({ '@types/cors': '^2.8.10' });
+    });
+  });
+  describe('with --track-only flag', () => {
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      const emptyBitMap = helper.bitMap.read();
+      helper.command.importComponent('*');
+      helper.fs.writeFile(`${helper.scopes.remote}/comp1/file`, 'hello');
+      helper.bitMap.write(emptyBitMap);
+
+      helper.command.importComponent('*', '--track-only');
+    });
+    it('should only add the entries to the .bitmap without writing files', () => {
+      helper.bitMap.expectToHaveId('comp1');
+      expect(path.join(helper.scopes.localPath, `${helper.scopes.remote}/comp1/file`)).to.be.a.file();
     });
   });
 });

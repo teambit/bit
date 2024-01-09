@@ -4,6 +4,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { ReactRouterUI } from '@teambit/react-router';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { ServerRenderer, BrowserRenderer } from '@teambit/react.rendering.ssr';
+import { SSRBrowserProvider } from '@teambit/ui-foundation.ui.hooks.use-user-agent';
 import type { SsrSession, RenderPlugin, ContextProps } from '@teambit/react.rendering.ssr';
 
 import React, { ReactNode, ComponentType } from 'react';
@@ -66,8 +67,10 @@ export class UiUI {
     const reactSsr = new ServerRenderer(lifecyclePlugins);
     const fullHtml = await reactSsr.render(
       <ClientContext>
-        {hudItems}
-        {routes}
+        <SSRBrowserProvider value={ssrContent.browser}>
+          {hudItems}
+          {routes}
+        </SSRBrowserProvider>
       </ClientContext>,
       ssrContent
     );

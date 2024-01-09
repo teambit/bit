@@ -7,7 +7,7 @@ import { SchemaName } from '../../consumer/component/component-schema';
 import Version from '../../scope/models/version';
 
 const getVersionWithDepsFixture = () => {
-  return Version.parse(JSON.stringify(R.clone(versionWithDepsFixture)), '');
+  return Version.parse(JSON.stringify(R.clone(versionWithDepsFixture)), '12c830ed25854dc731b58e014c6b4960ccb59092');
 };
 
 describe('Version', () => {
@@ -195,7 +195,7 @@ describe('Version', () => {
     });
     it('should throw when a flattenDependency is invalid', () => {
       version.flattenedDependencies = [1234];
-      expect(validateFunc).to.throw('expected to be BitId, got number');
+      expect(validateFunc).to.throw('expected to be ComponentID, got number');
     });
     it('should throw when a flattenDependency does not have a version', () => {
       version.flattenedDependencies[0] = version.flattenedDependencies[0].changeVersion(null);

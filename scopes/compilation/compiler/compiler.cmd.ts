@@ -22,6 +22,7 @@ export class CompileCmd implements Command {
   componentsStatus: ComponentsStatus[] = [];
   name = 'compile [component-names...]';
   description = 'compile components in the workspace';
+  helpUrl = 'reference/compiling/compiler-overview';
   arguments = [
     {
       name: 'component-names...',

@@ -16,7 +16,7 @@ export default class Untag implements LegacyCommand {
     },
   ];
   group: Group = 'development';
-  extendedDescription = `https://${BASE_DOCS_DOMAIN}/components/tags#undoing-a-tag
+  extendedDescription = `${BASE_DOCS_DOMAIN}components/tags#undoing-a-tag
 ${WILDCARD_HELP('untag')}`;
   alias = '';
   opts = [
@@ -29,7 +29,6 @@ ${WILDCARD_HELP('untag')}`;
     ],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   private = true;
 
   action(): any {

@@ -1,13 +1,13 @@
 import { Writable } from 'stream';
-import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { BitObject, Repository } from '../objects';
 import logger from '../../logger/logger';
-import { ModelComponentMerger } from '../component-ops/model-components-merger';
-import { Lane, ModelComponent } from '../models';
-import { SourceRepository } from '../repositories';
+import { Lane, ModelComponent, Version, VersionHistory } from '../models';
 import { ObjectItem } from '../objects/object-list';
 import { WriteObjectsQueue } from './write-objects-queue';
-import { WriteComponentsQueue } from './write-components-queue';
+import { ComponentsPerRemote } from '../component-ops/multiple-component-merger';
+
+const TIMEOUT_MINUTES_WARNING = 3;
+const TIMEOUT_MINUTES_EXIT = 30;
 
 /**
  * first, write all immutable objects, such as files/sources/versions into the filesystem, as they arrive.
@@ -19,14 +19,26 @@ import { WriteComponentsQueue } from './write-components-queue';
  * remotes are processed. see @writeManyObjectListToModel.
  */
 export class ObjectsWritable extends Writable {
+  private timeoutId: NodeJS.Timeout;
+  private intervalCounter = 0;
   constructor(
     private repo: Repository,
-    private sources: SourceRepository,
     private remoteName: string,
     private objectsQueue: WriteObjectsQueue,
-    private componentsQueue: WriteComponentsQueue
+    private componentsPerRemote: ComponentsPerRemote
   ) {
     super({ objectMode: true });
+    if (!this.componentsPerRemote[remoteName]) this.componentsPerRemote[remoteName] = [];
+    this.timeoutId = setInterval(() => {
+      this.intervalCounter += 1;
+      const timeLapsedInMinutes = this.intervalCounter * TIMEOUT_MINUTES_WARNING;
+      const msg = `fetching from ${remoteName} takes more than ${timeLapsedInMinutes} minutes. make sure the remote is responsive`;
+      logger.warn(msg);
+      logger.console(`\n${msg}`, 'warn', 'yellow');
+      if (timeLapsedInMinutes > TIMEOUT_MINUTES_EXIT) {
+        throw new Error(`fetching from ${remoteName} takes more than ${TIMEOUT_MINUTES_EXIT} minutes. exiting...`);
+      }
+    }, TIMEOUT_MINUTES_WARNING * 60 * 1000);
   }
   async _write(obj: ObjectItem, _, callback: Function) {
     logger.trace('ObjectsWritable.write', obj.ref);
@@ -37,8 +49,14 @@ export class ObjectsWritable extends Writable {
       await this.writeObjectToFs(obj);
       return callback();
     } catch (err: any) {
+      logger.error(`found an issue during write of ${obj.ref.toString()}`, err);
       return callback(err);
     }
+  }
+
+  async _final(callback) {
+    clearInterval(this.timeoutId);
+    callback();
   }
 
   private async writeObjectToFs(obj: ObjectItem) {
@@ -47,7 +65,15 @@ export class ObjectsWritable extends Writable {
       throw new Error('ObjectsWritable does not support lanes');
     }
     if (bitObject instanceof ModelComponent) {
-      await this.componentsQueue.addComponent(bitObject.id(), () => this.writeComponentObject(bitObject));
+      this.addComponentToComponentsPerRemote(bitObject);
+    } else if (bitObject instanceof VersionHistory) {
+      // technically it's mutable, but it's ok to have it in the same queue with high concurrency because the merge is
+      // simple enough and can't interrupt others
+      await this.objectsQueue.addImmutableObject(obj.ref.toString(), () => this.mergeVersionHistory(bitObject));
+    } else if (bitObject instanceof Version) {
+      // technically it's mutable, but it's ok to have it in the same queue with high concurrency because the merge is
+      // simple enough and can't interrupt others
+      await this.objectsQueue.addImmutableObject(obj.ref.toString(), () => this.mergeVersionObject(bitObject));
     } else {
       await this.objectsQueue.addImmutableObject(obj.ref.toString(), () => this.writeImmutableObject(bitObject));
     }
@@ -57,8 +83,7 @@ export class ObjectsWritable extends Writable {
     await this.repo.writeObjectsToTheFS([bitObject]);
   }
 
-  private async writeComponentObject(modelComponent: ModelComponent) {
-    const component = await this.mergeModelComponent(modelComponent, this.remoteName);
+  private addComponentToComponentsPerRemote(component: ModelComponent) {
     const componentIsPersistPendingAlready = this.repo.objects[component.hash().toString()];
     if (componentIsPersistPendingAlready) {
       // this happens during tag/snap, when all objects are waiting in the repo.objects and only once the tag/snap is
@@ -66,25 +91,23 @@ export class ObjectsWritable extends Writable {
       // components objects during the tag/snap.
       return;
     }
-    await this.repo.writeObjectsToTheFS([component]);
-    await this.repo.remoteLanes.addEntriesFromModelComponents(LaneId.from(DEFAULT_LANE, this.remoteName), [component]);
+    this.componentsPerRemote[this.remoteName].push(component);
   }
 
-  /**
-   * merge the imported component with the existing component in the local scope.
-   * when importing a component, save the remote head into the remote main ref file.
-   * unless this component arrived as a cache of the dependent, which its head might be wrong
-   */
-  private async mergeModelComponent(incomingComp: ModelComponent, remoteName: string): Promise<ModelComponent> {
-    const isIncomingFromOrigin = remoteName === incomingComp.scope;
-    const existingComp = await this.sources._findComponent(incomingComp);
-    if (!existingComp || (existingComp && incomingComp.isEqual(existingComp))) {
-      if (isIncomingFromOrigin) incomingComp.remoteHead = incomingComp.head;
-      return incomingComp;
+  private async mergeVersionHistory(versionHistory: VersionHistory) {
+    const existingVersionHistory = (await this.repo.load(versionHistory.hash())) as VersionHistory | undefined;
+    if (existingVersionHistory) {
+      existingVersionHistory.merge(versionHistory);
+      await this.repo.writeObjectsToTheFS([existingVersionHistory]);
+    } else {
+      await this.repo.writeObjectsToTheFS([versionHistory]);
     }
-    const modelComponentMerger = new ModelComponentMerger(existingComp, incomingComp, true, isIncomingFromOrigin);
-    const { mergedComponent } = await modelComponentMerger.merge();
-    if (isIncomingFromOrigin) mergedComponent.remoteHead = incomingComp.head;
-    return mergedComponent;
+  }
+
+  private async mergeVersionObject(version: Version) {
+    const existingVersion = (await this.repo.load(version.hash())) as Version | undefined;
+    const isExistingNewer = existingVersion && existingVersion.lastModified() > version.lastModified();
+    if (isExistingNewer) return;
+    await this.repo.writeObjectsToTheFS([version]);
   }
 }

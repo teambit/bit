@@ -17,7 +17,7 @@ import { WebpackBitReporterPlugin } from '../plugins/webpack-bit-reporter-plugin
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
 
-const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
+const publicUrlOrPath = getPublicUrlOrPath(true, '/', '/public');
 
 export function configFactory(
   devServerID: string,
@@ -25,14 +25,12 @@ export function configFactory(
   entryFiles: string[],
   publicRoot: string,
   publicPath: string,
+  componentPathsRegExps: RegExp[],
   pubsub: PubsubMain,
   title?: string,
   favicon?: string
 ): WebpackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
-
-  // Required for babel-preset-react-app
-  process.env.NODE_ENV = 'development';
 
   const publicDirectory = `${publicRoot}/${publicPath}`;
 
@@ -40,7 +38,7 @@ export function configFactory(
     // Environment mode
     mode: 'development',
 
-    devtool: 'inline-source-map',
+    devtool: 'eval-cheap-module-source-map',
 
     // Entry point of app
     entry: entryFiles.map((filePath) => resolveWorkspacePath(filePath)),
@@ -72,6 +70,7 @@ export function configFactory(
 
     stats: {
       errorDetails: true,
+      logging: 'error',
     },
 
     devServer: {
@@ -107,29 +106,32 @@ export function configFactory(
 
       client: {
         overlay: false,
+        logging: 'error',
       },
 
-      onBeforeSetupMiddleware(wds) {
-        const { app } = wds;
+      setupMiddlewares: (middlewares, devServer) => {
+        if (!devServer) {
+          throw new Error('webpack-dev-server is not defined');
+        }
+
         // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
         // middlewares before `redirectServedPath` otherwise will not have any effect
         // This lets us fetch source contents from webpack for the error overlay
-        // @ts-ignore - @types/WDS mismatch - 3.11.6 vs 4.0.3
-        app.use(evalSourceMapMiddleware(wds));
-        // This lets us open files from the runtime error overlay.
-        app.use(errorOverlayMiddleware());
-      },
-
-      onAfterSetupMiddleware({ app }) {
-        // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
-        app.use(redirectServedPath(publicUrlOrPath));
-
-        // This service worker file is effectively a 'no-op' that will reset any
-        // previous service worker registered for the same host:port combination.
-        // We do this in development to avoid hitting the production cache if
-        // it used the same host and port.
-        // https://github.com/facebook/create-react-app/issues/2272#issuecomment-302832432
-        app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
+        middlewares.push(
+          // @ts-ignore @types/wds mismatch
+          evalSourceMapMiddleware(devServer),
+          // This lets us open files from the runtime error overlay.
+          errorOverlayMiddleware(),
+          // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
+          redirectServedPath(publicUrlOrPath),
+          // This service worker file is effectively a 'no-op' that will reset any
+          // previous service worker registered for the same host:port combination.
+          // We do this in development to avoid hitting the production cache if
+          // it used the same host and port.
+          // https://github.com/facebook/create-react-app/issues/2272#issuecomment-302832432
+          noopServiceWorkerMiddleware(publicUrlOrPath)
+        );
+        return middlewares;
       },
 
       devMiddleware: {
@@ -157,5 +159,13 @@ export function configFactory(
         options: { pubsub, devServerID },
       }),
     ],
+
+    snapshot: {
+      ...(componentPathsRegExps && componentPathsRegExps.length > 0 ? { managedPaths: componentPathsRegExps } : {}),
+    },
+
+    watchOptions: {
+      poll: true,
+    },
   };
 }

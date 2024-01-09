@@ -4,27 +4,30 @@ import R from 'ramda';
 import { isEmpty } from 'lodash';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
+import { BitError } from '@teambit/bit-error';
 import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import { Scope } from '@teambit/legacy/dist/scope';
-import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import {
   BuildStatus,
   CFG_USER_EMAIL_KEY,
   CFG_USER_NAME_KEY,
   CFG_USER_TOKEN_KEY,
-  BASE_CLOUD_DOMAIN,
+  getCloudDomain,
   Extensions,
 } from '@teambit/legacy/dist/constants';
 import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/component-schema';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
-import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
+import { Component } from '@teambit/component';
+import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { sha1 } from '@teambit/legacy/dist/utils';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
-import { BuilderMain } from '@teambit/builder';
+import { BuilderMain, OnTagOpts } from '@teambit/builder';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
 import {
   MessagePerComponent,
@@ -32,33 +35,40 @@ import {
 } from '@teambit/legacy/dist/scope/component-ops/message-per-component';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ScopeMain } from '@teambit/scope';
+import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
-import { SnappingMain } from './snapping.main.runtime';
+import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 
-export type onTagIdTransformer = (id: BitId) => BitId | null;
+export type onTagIdTransformer = (id: ComponentID) => ComponentID | null;
 
-export type BasicTagParams = {
+export type BasicTagSnapParams = {
   message: string;
-  ignoreNewestVersion?: boolean;
   skipTests?: boolean;
-  skipAutoTag?: boolean;
   build?: boolean;
+  ignoreBuildErrors?: boolean;
+  rebuildDepsGraph?: boolean;
+};
+
+export type BasicTagParams = BasicTagSnapParams & {
+  ignoreNewestVersion?: boolean;
+  skipAutoTag?: boolean;
   soft?: boolean;
   persist: boolean;
   disableTagAndSnapPipelines?: boolean;
-  forceDeploy?: boolean;
   preReleaseId?: string;
   editor?: string;
   unmodified?: boolean;
 };
 
-function updateDependenciesVersions(componentsToTag: Component[], dependencyResolver: DependencyResolverMain): void {
-  const getNewDependencyVersion = (id: BitId): BitId | null => {
+function updateDependenciesVersions(
+  componentsToTag: ConsumerComponent[],
+  dependencyResolver: DependencyResolverMain
+): void {
+  const getNewDependencyVersion = (id: ComponentID): ComponentID | null => {
     const foundDependency = componentsToTag.find((component) => component.id.isEqualWithoutVersion(id));
     return foundDependency ? id.changeVersion(foundDependency.version) : null;
   };
-  const changeExtensionsVersion = (component: Component): void => {
+  const changeExtensionsVersion = (component: ConsumerComponent): void => {
     component.extensions.forEach((ext) => {
       if (ext.extensionId) {
         const newDepId = getNewDependencyVersion(ext.extensionId);
@@ -78,56 +88,79 @@ function updateDependenciesVersions(componentsToTag: Component[], dependencyReso
   });
 }
 
-function setHashes(componentsToTag: Component[]): void {
+function setHashes(componentsToTag: ConsumerComponent[]): void {
   componentsToTag.forEach((componentToTag) => {
-    componentToTag.version = sha1(v4());
+    componentToTag.setNewVersion(sha1(v4()));
   });
 }
 
 async function setFutureVersions(
-  componentsToTag: Component[],
+  componentsToTag: ConsumerComponent[],
   scope: Scope,
   releaseType: ReleaseType | undefined,
   exactVersion: string | null | undefined,
   persist: boolean,
-  autoTagIds: BitIds,
-  ids: BitIds,
+  autoTagIds: ComponentIdList,
+  ids: ComponentIdList,
   incrementBy?: number,
-  preRelease?: string,
-  soft?: boolean
+  preReleaseId?: string,
+  soft?: boolean,
+  tagDataPerComp?: TagDataPerComp[]
 ): Promise<void> {
+  const isPreReleaseLike = releaseType
+    ? ['prerelease', 'premajor', 'preminor', 'prepatch'].includes(releaseType)
+    : false;
   await Promise.all(
     componentsToTag.map(async (componentToTag) => {
       const isAutoTag = autoTagIds.hasWithoutVersion(componentToTag.id);
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const nextVersion = componentToTag.componentMap?.nextVersion?.version;
-      componentToTag.previouslyUsedVersion = componentToTag.version;
-      if (nextVersion && persist) {
-        const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
-        componentToTag.version = modelComponent.getVersionToAdd(
-          exactVersionOrReleaseType.releaseType,
-          exactVersionOrReleaseType.exactVersion,
-          undefined,
-          componentToTag.componentMap?.nextVersion?.preRelease
-        );
-      } else if (isAutoTag) {
-        // auto-tag always bumped as patch
-        componentToTag.version = soft
-          ? 'patch'
-          : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preRelease);
-      } else {
+      const getNewVersion = (): string => {
+        if (tagDataPerComp) {
+          const tagData = tagDataPerComp.find((t) => t.componentId.isEqualWithoutVersion(componentToTag.id));
+          if (!tagData) throw new Error(`tag-data is missing for ${componentToTag.id.toStringWithoutVersion()}`);
+          if (!tagData.versionToTag)
+            throw new Error(`tag-data.TagResults is missing for ${componentToTag.id.toStringWithoutVersion()}`);
+          const exactVersionOrReleaseType = getValidVersionOrReleaseType(tagData.versionToTag);
+          return modelComponent.getVersionToAdd(
+            exactVersionOrReleaseType.releaseType,
+            exactVersionOrReleaseType.exactVersion,
+            incrementBy,
+            tagData.prereleaseId
+          );
+        }
+        if (nextVersion && persist) {
+          const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
+          return modelComponent.getVersionToAdd(
+            exactVersionOrReleaseType.releaseType,
+            exactVersionOrReleaseType.exactVersion,
+            undefined,
+            componentToTag.componentMap?.nextVersion?.preRelease
+          );
+        }
+        if (isAutoTag) {
+          // auto-tag always bumped as patch unless it's pre-release
+          if (isPreReleaseLike) {
+            return soft
+              ? (releaseType as string)
+              : modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preReleaseId);
+          }
+          return soft ? 'patch' : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preReleaseId);
+        }
         const versionByEnteredId = getVersionByEnteredId(ids, componentToTag, modelComponent);
-        componentToTag.version = soft
-          ? versionByEnteredId || exactVersion || releaseType
-          : versionByEnteredId || modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preRelease);
-      }
+        return soft
+          ? versionByEnteredId || exactVersion || (releaseType as string)
+          : versionByEnteredId || modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preReleaseId);
+      };
+      const newVersion = getNewVersion();
+      componentToTag.setNewVersion(newVersion);
     })
   );
 }
 
 function getVersionByEnteredId(
-  enteredIds: BitIds,
-  component: Component,
+  enteredIds: ComponentIdList,
+  component: ConsumerComponent,
   modelComponent: ModelComponent
 ): string | undefined {
   const enteredId = enteredIds.searchWithoutVersion(component.id);
@@ -148,6 +181,8 @@ export async function tagModelComponent({
   builder,
   consumerComponents,
   ids,
+  tagDataPerComp,
+  populateArtifactsFrom,
   message,
   editor,
   exactVersion,
@@ -161,27 +196,36 @@ export async function tagModelComponent({
   persist,
   isSnap = false,
   disableTagAndSnapPipelines,
-  forceDeploy,
+  ignoreBuildErrors,
+  rebuildDepsGraph,
   incrementBy,
   packageManagerConfigRootDir,
   dependencyResolver,
+  copyLogFromPreviousSnap = false,
+  exitOnFirstFailedTask = false,
 }: {
   workspace?: Workspace;
   scope: ScopeMain;
   snapping: SnappingMain;
   builder: BuilderMain;
-  consumerComponents: Component[];
-  ids: BitIds;
+  consumerComponents: ConsumerComponent[];
+  ids: ComponentIdList;
+  tagDataPerComp?: TagDataPerComp[];
+  populateArtifactsFrom?: ComponentID[];
+  copyLogFromPreviousSnap?: boolean;
   exactVersion?: string | null | undefined;
   releaseType?: ReleaseType;
   incrementBy?: number;
   isSnap?: boolean;
   packageManagerConfigRootDir?: string;
   dependencyResolver: DependencyResolverMain;
+  exitOnFirstFailedTask?: boolean;
 } & BasicTagParams): Promise<{
-  taggedComponents: Component[];
+  taggedComponents: ConsumerComponent[];
   autoTaggedResults: AutoTagResult[];
   publishedPackages: string[];
+  stagedConfig?: StagedConfig;
+  removedComponents?: ComponentIdList;
 }> {
   const consumer = workspace?.consumer;
   const legacyScope = scope.legacyScope;
@@ -193,20 +237,25 @@ export async function tagModelComponent({
     // Store it in a map so we can take it easily from the sorted array which contain only the id
     consumerComponentsIdsMap[componentIdString] = consumerComponent;
   });
-  const componentsToTag: Component[] = R.values(consumerComponentsIdsMap); // consumerComponents unique
-  const idsToTag = BitIds.fromArray(componentsToTag.map((c) => c.id));
+  const componentsToTag: ConsumerComponent[] = R.values(consumerComponentsIdsMap); // consumerComponents unique
+  const idsToTag = ComponentIdList.fromArray(componentsToTag.map((c) => c.id));
   // ids without versions are new. it's impossible that tagged (and not-modified) components has
   // them as dependencies.
   const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
   const autoTagData =
-    skipAutoTag || !consumer ? [] : await getAutoTagInfo(consumer, BitIds.fromArray(idsToTriggerAutoTag));
+    skipAutoTag || !consumer ? [] : await getAutoTagInfo(consumer, ComponentIdList.fromArray(idsToTriggerAutoTag));
   const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
   const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
-  const autoTagIds = BitIds.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
+  const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
   const allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
 
   const messagesFromEditorFetcher = new MessagePerComponentFetcher(idsToTag, autoTagIds);
-  const messagePerId = editor ? await messagesFromEditorFetcher.getMessagesFromEditor(legacyScope.tmp, editor) : [];
+  const getMessagePerId = async () => {
+    if (editor) return messagesFromEditorFetcher.getMessagesFromEditor(legacyScope.tmp, editor);
+    if (tagDataPerComp) return tagDataPerComp.map((t) => ({ id: t.componentId, msg: t.message || message }));
+    return [];
+  };
+  const messagePerId = await getMessagePerId();
 
   // check for each one of the components whether it is using an old version
   if (!ignoreNewestVersion && !isSnap) {
@@ -214,9 +263,9 @@ export async function tagModelComponent({
       if (component.componentFromModel) {
         // otherwise it's a new component, so this check is irrelevant
         const modelComponent = await legacyScope.getModelComponentIfExist(component.id);
-        if (!modelComponent) throw new ShowDoctorError(`component ${component.id} was not found in the model`);
+        if (!modelComponent) throw new BitError(`component ${component.id} was not found in the model`);
         if (!modelComponent.listVersions().length) return null; // no versions yet, no issues.
-        const latest = modelComponent.latest();
+        const latest = modelComponent.getHeadRegardlessOfLaneAsTagOrHash();
         if (latest !== component.version) {
           return {
             componentId: component.id.toStringWithoutVersion(),
@@ -236,6 +285,7 @@ export async function tagModelComponent({
   }
 
   logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially persist all components');
+  setCurrentSchema(allComponentsToTag);
   // go through all components and find the future versions for them
   isSnap
     ? setHashes(allComponentsToTag)
@@ -249,70 +299,136 @@ export async function tagModelComponent({
         ids,
         incrementBy,
         preReleaseId,
-        soft
+        soft,
+        tagDataPerComp
       );
-  setCurrentSchema(allComponentsToTag);
   // go through all dependencies and update their versions
   updateDependenciesVersions(allComponentsToTag, dependencyResolver);
 
-  await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId);
-
+  await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId, copyLogFromPreviousSnap);
+  // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
+  // (it's being deleted in snapping.main.runtime - `_addCompToObjects` method)
+  const unmergedComps = workspace ? await workspace.listComponentsDuringMerge() : [];
+  let stagedConfig;
   if (soft) {
     if (!consumer) throw new Error(`unable to soft-tag without consumer`);
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
-    await snapping._addFlattenedDependenciesToComponents(legacyScope, allComponentsToTag);
-    emptyBuilderData(allComponentsToTag);
+    await snapping._addFlattenedDependenciesToComponents(allComponentsToTag, rebuildDepsGraph);
+    await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
+    if (!build) emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
-    await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer);
-    if (workspace) await updateComponentsVersions(workspace, allComponentsToTag);
+    await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer, tagDataPerComp);
+
+    if (workspace) {
+      const modelComponents = await Promise.all(
+        allComponentsToTag.map((c) => {
+          return c.modelComponent || legacyScope.getModelComponent(c.id);
+        })
+      );
+      stagedConfig = await updateComponentsVersions(workspace, modelComponents);
+    }
   }
 
   const publishedPackages: string[] = [];
+  let harmonyComps: Component[] = [];
   if (build) {
-    const onTagOpts = { disableTagAndSnapPipelines, throwOnError: true, forceDeploy, skipTests, isSnap };
+    const onTagOpts: OnTagOpts = {
+      disableTagAndSnapPipelines,
+      throwOnError: true,
+      forceDeploy: ignoreBuildErrors,
+      isSnap,
+      populateArtifactsFrom,
+    };
     const seedersOnly = !workspace; // if tag from scope, build only the given components
     const isolateOptions = { packageManagerConfigRootDir, seedersOnly };
+    const builderOptions = { exitOnFirstFailedTask, skipTests };
 
-    await scope.reloadAspectsWithNewVersion(allComponentsToTag);
-    const harmonyComps = await (workspace || scope).getManyByLegacy(allComponentsToTag);
-    const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions);
-    const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
+    const componentsToBuild = allComponentsToTag.filter((c) => !c.isRemoved());
+    if (componentsToBuild.length) {
+      await scope.reloadAspectsWithNewVersion(componentsToBuild);
+      harmonyComps = await (workspace || scope).getManyByLegacy(componentsToBuild);
+      const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions, builderOptions);
+      const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
 
-    snapping._updateComponentsByTagResult(allComponentsToTag, buildResult);
-    publishedPackages.push(...snapping._getPublishedPackages(allComponentsToTag));
-    addBuildStatus(allComponentsToTag, BuildStatus.Succeed);
-    await mapSeries(allComponentsToTag, (consumerComponent) => snapping._enrichComp(consumerComponent));
+      snapping._updateComponentsByTagResult(componentsToBuild, buildResult);
+      publishedPackages.push(...snapping._getPublishedPackages(componentsToBuild));
+      addBuildStatus(componentsToBuild, BuildStatus.Succeed);
+      await mapSeries(componentsToBuild, (consumerComponent) => snapping._enrichComp(consumerComponent));
+    }
   }
 
+  let removedComponents: ComponentIdList | undefined;
   if (!soft) {
-    await removeDeletedComponentsFromBitmap(allComponentsToTag, workspace);
+    removedComponents = await removeDeletedComponentsFromBitmap(allComponentsToTag, workspace);
     await legacyScope.objects.persist();
+    await removeMergeConfigFromComponents(unmergedComps, allComponentsToTag, workspace);
+    if (workspace) {
+      await linkToNodeModulesByComponents(
+        harmonyComps.length ? harmonyComps : await workspace.scope.getManyByLegacy(allComponentsToTag),
+        workspace
+      );
+    }
   }
 
-  return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages };
+  return {
+    taggedComponents: componentsToTag,
+    autoTaggedResults: autoTagData,
+    publishedPackages,
+    stagedConfig,
+    removedComponents,
+  };
 }
 
-async function removeDeletedComponentsFromBitmap(comps: Component[], workspace?: Workspace) {
+async function removeDeletedComponentsFromBitmap(
+  comps: ConsumerComponent[],
+  workspace?: Workspace
+): Promise<ComponentIdList | undefined> {
   if (!workspace) {
+    return undefined;
+  }
+  const removedComps = comps.filter((comp) => comp.isRemoved());
+  if (!removedComps.length) return undefined;
+  const compBitIdsToRemove = ComponentIdList.fromArray(removedComps.map((c) => c.id));
+  await deleteComponentsFiles(workspace.consumer, compBitIdsToRemove);
+  await workspace.consumer.cleanFromBitMap(compBitIdsToRemove);
+
+  return compBitIdsToRemove;
+}
+
+async function removeMergeConfigFromComponents(
+  unmergedComps: ComponentID[],
+  components: ConsumerComponent[],
+  workspace?: Workspace
+) {
+  if (!workspace || !unmergedComps.length) {
     return;
   }
-  await Promise.all(
-    comps.map(async (comp) => {
-      if (comp.removed) {
-        const compId = await workspace.resolveComponentId(comp.id);
-        workspace.bitMap.removeComponent(compId);
-      }
-    })
-  );
+  const configMergeFile = workspace.getConflictMergeFile();
+
+  unmergedComps.forEach((compId) => {
+    const isNowSnapped = components.find((c) => c.id.isEqualWithoutVersion(compId));
+    if (isNowSnapped) {
+      configMergeFile.removeConflict(compId.toStringWithoutVersion());
+    }
+  });
+  const currentlyUnmerged = workspace ? await workspace.listComponentsDuringMerge() : [];
+  if (configMergeFile.hasConflict() && currentlyUnmerged.length) {
+    // it's possible that "workspace" section is still there. but if all "unmerged" are now merged,
+    // then, it's safe to delete the file.
+    await configMergeFile.write();
+  } else {
+    await configMergeFile.delete();
+  }
 }
 
 async function addComponentsToScope(
   scope: Scope,
   snapping: SnappingMain,
-  components: Component[],
+  components: ConsumerComponent[],
   shouldValidateVersion: boolean,
-  consumer?: Consumer
+  consumer?: Consumer,
+  tagDataPerComp?: TagDataPerComp[]
 ) {
   const lane = await scope.getCurrentLaneObject();
   if (consumer) {
@@ -326,36 +442,61 @@ async function addComponentsToScope(
     });
   } else {
     await mapSeries(components, async (component) => {
-      await snapping._addCompFromScopeToObjects(component, lane);
+      const results = await snapping._addCompFromScopeToObjects(component, lane);
+
+      // in case "tagData.isNew", the version object has "parents" that should not be there.
+      // they got created as a workaround to generate a new component from the scope without having a workspace.
+      const tagData = tagDataPerComp?.find((t) => t.componentId.isEqualWithoutVersion(component.id));
+      if (tagData?.isNew) results.version.removeAllParents();
     });
   }
 }
 
-function emptyBuilderData(components: Component[]) {
+/**
+ * otherwise, tagging without build will have the old build data of the previous snap/tag.
+ * in case we currently build, it's ok to leave the data as is, because it'll be overridden anyway.
+ */
+function emptyBuilderData(components: ConsumerComponent[]) {
   components.forEach((component) => {
+    component.extensions = component.extensions.clone();
     const existingBuilder = component.extensions.findCoreExtension(Extensions.builder);
     if (existingBuilder) existingBuilder.data = {};
   });
 }
 
 async function addLogToComponents(
-  components: Component[],
-  autoTagComps: Component[],
+  components: ConsumerComponent[],
+  autoTagComps: ConsumerComponent[],
   persist: boolean,
   message: string,
-  messagePerComponent: MessagePerComponent[]
+  messagePerComponent: MessagePerComponent[],
+  copyLogFromPreviousSnap = false
 ) {
-  const username = await globalConfig.get(CFG_USER_NAME_KEY);
-  const bitCloudUsername = await getBitCloudUsername();
-  const email = await globalConfig.get(CFG_USER_EMAIL_KEY);
-  const getLog = (component: Component): Log => {
+  // @ts-ignore this happens when running `bit tag -m ""`.
+  if (message === true) {
+    message = '';
+  }
+  const basicLog = await getBasicLog();
+  const getLog = (component: ConsumerComponent): Log => {
     const nextVersion = persist ? component.componentMap?.nextVersion : null;
     const msgFromEditor = messagePerComponent.find((item) => item.id.isEqualWithoutVersion(component.id))?.msg;
+    if (copyLogFromPreviousSnap) {
+      const currentLog = component.log;
+      if (!currentLog) {
+        throw new Error(
+          `addLogToComponents is set  copyLogFromPreviousSnap: true, but it is unable to find log in the previous snap`
+        );
+      }
+      currentLog.message = msgFromEditor || message || currentLog.message;
+      currentLog.date = basicLog.date;
+      return currentLog;
+    }
+
     return {
-      username: nextVersion?.username || bitCloudUsername || username,
-      email: nextVersion?.email || email,
+      username: nextVersion?.username || basicLog.username,
+      email: nextVersion?.email || basicLog.email,
       message: nextVersion?.message || msgFromEditor || message,
-      date: Date.now().toString(),
+      date: basicLog.date,
     };
   };
 
@@ -373,11 +514,22 @@ async function addLogToComponents(
   });
 }
 
-async function getBitCloudUsername(): Promise<string | undefined> {
+export async function getBasicLog(): Promise<Log> {
+  const username = (await getBitCloudUsername()) || (await globalConfig.get(CFG_USER_NAME_KEY));
+  const email = await globalConfig.get(CFG_USER_EMAIL_KEY);
+  return {
+    username,
+    email,
+    message: '',
+    date: Date.now().toString(),
+  };
+}
+
+export async function getBitCloudUsername(): Promise<string | undefined> {
   const token = await globalConfig.get(CFG_USER_TOKEN_KEY);
   if (!token) return '';
   try {
-    const res = await fetch(`https://api.${BASE_CLOUD_DOMAIN}/user`, {
+    const res = await fetch(`https://api.${getCloudDomain()}/user`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -392,13 +544,42 @@ async function getBitCloudUsername(): Promise<string | undefined> {
   }
 }
 
-function setCurrentSchema(components: Component[]) {
+export type BitCloudUser = {
+  username?: string;
+  name?: string;
+  displayName?: string;
+  profileImage?: string;
+};
+
+export async function getBitCloudUser(): Promise<BitCloudUser | undefined> {
+  const token = await globalConfig.get(CFG_USER_TOKEN_KEY);
+  if (!token) return undefined;
+
+  try {
+    const res = await fetch(`https://api.${getCloudDomain()}/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    const object = await res.json();
+    const user = object.payload;
+
+    return {
+      ...user,
+    };
+  } catch (error) {
+    return undefined;
+  }
+}
+
+function setCurrentSchema(components: ConsumerComponent[]) {
   components.forEach((component) => {
     component.schema = CURRENT_SCHEMA;
   });
 }
 
-function addBuildStatus(components: Component[], buildStatus: BuildStatus) {
+function addBuildStatus(components: ConsumerComponent[], buildStatus: BuildStatus) {
   components.forEach((component) => {
     component.buildStatus = buildStatus;
   });
@@ -406,13 +587,16 @@ function addBuildStatus(components: Component[], buildStatus: BuildStatus) {
 
 export async function updateComponentsVersions(
   workspace: Workspace,
-  components: Array<ModelComponent | Component>,
+  components: Array<ModelComponent>,
   isTag = true
-): Promise<any> {
+): Promise<StagedConfig> {
   const consumer = workspace.consumer;
   const currentLane = consumer.getCurrentLaneId();
   const stagedConfig = await workspace.scope.getStagedConfig();
-  const isAvailableOnMain = async (component: ModelComponent | Component, id: BitId): Promise<boolean> => {
+  const isAvailableOnMain = async (
+    component: ModelComponent | ConsumerComponent,
+    id: ComponentID
+  ): Promise<boolean> => {
     if (currentLane.isDefault()) {
       return true;
     }
@@ -425,15 +609,12 @@ export async function updateComponentsVersions(
     return modelComponent.hasHead();
   };
 
-  const updateVersions = async (unknownComponent: ModelComponent | Component) => {
-    const id: BitId =
-      unknownComponent instanceof ModelComponent
-        ? unknownComponent.toBitIdWithLatestVersionAllowNull()
-        : unknownComponent.id;
-    consumer.bitMap.updateComponentId(id);
-    const availableOnMain = await isAvailableOnMain(unknownComponent, id);
+  const updateVersions = async (modelComponent: ModelComponent) => {
+    const id: ComponentID = modelComponent.toBitIdWithLatestVersionAllowNull();
+    consumer.bitMap.updateComponentId(id, undefined, undefined, true);
+    const availableOnMain = await isAvailableOnMain(modelComponent, id);
     if (!availableOnMain) {
-      consumer.bitMap.setComponentProp(id, 'onLanesOnly', true);
+      consumer.bitMap.setOnLanesOnly(id, true);
     }
     const componentMap = consumer.bitMap.getComponent(id);
     const compId = await workspace.resolveComponentId(id);
@@ -442,6 +623,9 @@ export async function updateComponentsVersions(
       const config = componentMap.config;
       stagedConfig.addComponentConfig(compId, config);
       consumer.bitMap.removeConfig(id);
+      const hash = modelComponent.getRef(id.version as string);
+      if (!hash) throw new Error(`updateComponentsVersions: unable to find a hash for ${id.toString()}`);
+      workspace.scope.legacyScope.stagedSnaps.addSnap(hash?.toString());
     } else if (!componentMap.config) {
       componentMap.config = stagedConfig.getConfigPerId(compId);
     }
@@ -451,5 +635,7 @@ export async function updateComponentsVersions(
   // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is
   // trying to get the dependencies of comp1 using its package.json.
   await mapSeries(components, updateVersions);
-  await stagedConfig.write();
+  await workspace.scope.legacyScope.stagedSnaps.write();
+
+  return stagedConfig;
 }

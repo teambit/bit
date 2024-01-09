@@ -1,8 +1,12 @@
-import { ComponentTemplate, WorkspaceTemplate } from '@teambit/generator';
-import { reactNativeEnvTemplate } from './templates/react-native-env';
-import { reactNativeComponent } from './templates/react-native-component';
-import { reactWorkspaceTemplate } from './templates/react-workspace';
+import { ComponentTemplate } from '@teambit/generator';
+import {
+  ReactNativeComponentTemplate,
+  ReactNativeJSComponentTemplate,
+  ReactNativeEnvTemplate,
+} from '@teambit/react.generator.react-native-templates';
 
-export const componentTemplates: ComponentTemplate[] = [reactNativeEnvTemplate, reactNativeComponent];
-
-export const workspaceTemplates: WorkspaceTemplate[] = [reactWorkspaceTemplate];
+export const componentTemplates: ComponentTemplate[] = [
+  new ReactNativeComponentTemplate(),
+  new ReactNativeJSComponentTemplate(),
+  new ReactNativeEnvTemplate(),
+];

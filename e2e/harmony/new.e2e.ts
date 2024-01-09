@@ -21,21 +21,22 @@ describe('new command', function () {
   describe('export a workspace-template aspect', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
       helper.scopeHelper.reInitLocalScope();
-      helper.bitJsonc.setupDefault();
       helper.scopeHelper.addRemoteScope(undefined, undefined, true);
-      helper.command.create('starter', 'workspace-example');
+      helper.command.create('standalone-starter', 'react');
       helper.bitJsonc.addToVariant('*', 'teambit.harmony/aspect', {});
       helper.command.install();
 
-      const starterPath = path.join(helper.scopes.remote, 'workspace-example/workspace-example.starter.ts');
+      const starterPath = path.join(helper.scopes.remote, 'react/react.starter.ts');
       const starterContent = helper.fs.readFile(starterPath);
-      const updatedIndex = starterContent.replace('teambit.react/templates/ui/text', `${helper.scopes.remote}/comp1`);
+      const updatedIndex = starterContent.replace(
+        'teambit.community/component-showcase',
+        `${helper.scopes.remote}/comp1`
+      );
       helper.fs.outputFile(starterPath, updatedIndex);
 
       helper.command.tagAllComponents();
@@ -43,15 +44,15 @@ describe('new command', function () {
 
       helper.scopeHelper.cleanLocalScope(); // it deletes all content without bit-init
       helper.scopeHelper.addRemoteScope(undefined, undefined, true);
-      helper.command.new('template-example', `--aspect ${helper.scopes.remote}/workspace-example`);
+      helper.command.new('react-workspace', `--aspect ${helper.scopes.remote}/react`);
     });
     after(() => {
       helper.scopeHelper.removeRemoteScope(undefined, true);
     });
-    it('should generate a new workspace, import components and add them as new with no issues', () => {
+    it('should generate a new workspace, import components and add with no issues', () => {
       const wsPath = path.join(helper.scopes.localPath, 'my-workspace');
-      const status = helper.command.statusJson(wsPath);
-      expect(status.newComponents).to.have.lengthOf(1);
+      const list = JSON.parse(helper.command.runCmd(`bit list --json`, wsPath));
+      expect(list).to.have.lengthOf(1);
       helper.command.expectStatusToNotHaveIssues(wsPath);
     });
     it('should not add env dependencies to the workspace.jsonc', () => {
@@ -68,12 +69,12 @@ describe('new command', function () {
       helper.scopeHelper.reInitLocalScope();
     });
     it('should throw an error', () => {
-      expect(() => helper.command.new('react')).to.throw();
+      expect(() => helper.command.new('react', '--aspect teambit.react/react-env')).to.throw();
     });
   });
   describe('creating a new react workspace', () => {
     before(() => {
-      helper.scopeHelper.newLocalScope('react');
+      helper.scopeHelper.newLocalScope('react', '--aspect teambit.react/react-env');
     });
     it('bit status should be clean', () => {
       helper.command.expectStatusToNotHaveIssues();

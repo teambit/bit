@@ -1,6 +1,6 @@
 import path from 'path';
 import chai, { expect } from 'chai';
-import * as modulesYaml from '@pnpm/modules-yaml';
+import { readModulesManifest } from '@pnpm/modules-yaml';
 
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
@@ -19,7 +19,6 @@ chai.use(require('chai-string'));
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -51,6 +50,8 @@ chai.use(require('chai-string'));
         helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
         helper.scopeHelper.addRemoteScope();
         helper.bitJsonc.setupDefault();
+        helper.bitJsonc.addKeyValToWorkspace('resolveAspectsFromNodeModules', false);
+        helper.bitJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', false);
         helper.fixtures.populateComponents(1);
         helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
         helper.capsules.removeScopeAspectCapsules();
@@ -58,7 +59,11 @@ chai.use(require('chai-string'));
       });
       it('packageExtensions is taken into account when running install in the capsule', () => {
         const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-        expect(path.join(scopeAspectsCapsulesRootDir, 'node_modules/is-positive')).to.be.a.path();
+        const isPositivePath = path.join(
+          scopeAspectsCapsulesRootDir,
+          `${helper.scopes.remote}_node-env-1@0.0.1/node_modules/is-positive`
+        );
+        expect(isPositivePath).to.be.a.path();
       });
     });
     describe('using pnpm', () => {
@@ -78,7 +83,9 @@ chai.use(require('chai-string'));
       });
       it('workspace .npmrc is taken into account when running install in the capsule', async () => {
         const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-        const modulesState = await modulesYaml.read(path.join(scopeAspectsCapsulesRootDir, 'node_modules'));
+        const modulesState = await readModulesManifest(
+          path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-1@0.0.1/node_modules`)
+        );
         expect(modulesState?.hoistPattern?.[0]).to.eq('foo');
       });
     });

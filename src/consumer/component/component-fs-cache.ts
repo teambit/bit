@@ -4,12 +4,14 @@ import fs from 'fs-extra';
 import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '../../api/consumer/lib/feature-toggle';
 import { PathOsBasedAbsolute } from '../../utils/path';
 import type { ComponentMapFile } from '../bit-map/component-map';
+import logger from '../../logger/logger';
 
 const WORKSPACE_CACHE = 'cache';
 const COMPONENTS_CACHE = 'components';
 const LAST_TRACK = 'last-track';
 const DOCS = 'docs';
 const DEPS = 'deps';
+const VERSIONS = 'versions';
 const FILE_PATHS = 'file-paths';
 
 export class ComponentFsCache {
@@ -70,6 +72,15 @@ export class ComponentFsCache {
     return cacache.ls(this.getCachePath(DEPS));
   }
 
+  async getVersionsDataFromCache(idStr: string): Promise<{ timestamp: number; data: string } | null> {
+    return this.getStringDataFromCache(idStr, VERSIONS);
+  }
+
+  async saveVersionsDataInCache(idStr: string, versions: string) {
+    const metadata = { timestamp: Date.now() };
+    await this.saveDataInCache(idStr, VERSIONS, versions, metadata);
+  }
+
   private async saveStringDataInCache(key: string, cacheName: string, data: any) {
     const dataBuffer = Buffer.from(JSON.stringify(data));
     const metadata = { timestamp: Date.now() };
@@ -79,7 +90,11 @@ export class ComponentFsCache {
   private async saveDataInCache(key: string, cacheName: string, data: any, metadata?: any) {
     if (this.isNoFsCacheFeatureEnabled) return;
     const cachePath = this.getCachePath(cacheName);
-    await cacache.put(cachePath, key, data, { metadata });
+    try {
+      await cacache.put(cachePath, key, data, { metadata });
+    } catch (err) {
+      logger.error(`failed caching ${key} in ${cachePath}`, err);
+    }
   }
 
   private async getStringDataFromCache(

@@ -1,14 +1,11 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
-import semver from 'semver';
-import { partition } from 'lodash';
+import { compact } from 'lodash';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
-import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
-import loader from '../cli/loader';
-import { BEFORE_MIGRATION } from '../cli/loader/loader-messages';
 import {
   BIT_GIT_DIR,
   BIT_HIDDEN_DIR,
@@ -17,16 +14,13 @@ import {
   DOT_GIT_DIR,
   LATEST,
 } from '../constants';
-import GeneralError from '../error/general-error';
 import logger from '../logger/logger';
-import { ComponentWithDependencies, Scope } from '../scope';
+import { Scope } from '../scope';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
-import ScopeComponentsImporter from '../scope/component-ops/scope-components-importer';
 import { ComponentNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
-import { pathNormalizeToLinux, sortObject } from '../utils';
-import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
-import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
+import { generateRandomStr, sortObject } from '../utils';
+import { composeComponentPath } from '../utils/bit/compose-component-path';
 import {
   PathAbsolute,
   PathLinuxRelative,
@@ -35,10 +29,9 @@ import {
   PathOsBasedRelative,
   PathRelative,
 } from '../utils/path';
-import BitMap, { CURRENT_BITMAP_SCHEMA } from './bit-map/bit-map';
+import BitMap from './bit-map/bit-map';
 import { NextVersion } from './bit-map/component-map';
 import Component from './component';
-import { ComponentStatus, ComponentStatusLoader, ComponentStatusResult } from './component-ops/component-status-loader';
 import ComponentLoader, { ComponentLoadOptions, LoadManyResult } from './component/component-loader';
 import { Dependencies } from './component/dependencies';
 import PackageJsonFile from './component/package-json-file';
@@ -47,9 +40,8 @@ import WorkspaceConfig, { WorkspaceConfigProps } from './config/workspace-config
 import { getConsumerInfo } from './consumer-locator';
 import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound } from './exceptions';
-import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
-import migratonManifest from './migrations/consumer-migrator-manifest';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
+import { NoHeadNoVersion } from '../scope/exceptions/no-head-no-version';
 
 type ConsumerProps = {
   projectPath: string;
@@ -60,6 +52,9 @@ type ConsumerProps = {
   addedGitHooks?: string[] | undefined;
   existingGitHooks: string[] | undefined;
 };
+
+const BITMAP_HISTORY_DIR_NAME = 'bitmap-history';
+const BITMAP_HISTORY_METADATA_FILE_NAME = 'bitmap-history-metadata.txt';
 
 /**
  * @todo: change the class name to Workspace
@@ -78,9 +73,8 @@ export default class Consumer {
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
   packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
   componentLoader: ComponentLoader;
-  componentStatusLoader: ComponentStatusLoader;
   packageJson: any;
-  public onCacheClear: Array<() => void> = [];
+  public onCacheClear: Array<() => void | Promise<void>> = [];
   constructor({
     projectPath,
     config,
@@ -98,7 +92,6 @@ export default class Consumer {
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
     this.componentLoader = ComponentLoader.getInstance(this);
-    this.componentStatusLoader = new ComponentStatusLoader(this);
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
   async setBitMap() {
@@ -108,7 +101,7 @@ export default class Consumer {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get dirStructure(): DirStructure {
     if (!this._dirStructure) {
-      this._dirStructure = new DirStructure(this.config.componentsDefaultDirectory, this.config._dependenciesDirectory);
+      this._dirStructure = new DirStructure(this.config.componentsDefaultDirectory);
     }
     return this._dirStructure;
   }
@@ -117,23 +110,21 @@ export default class Consumer {
     return this.componentLoader.componentFsCache;
   }
 
-  get bitmapIdsFromCurrentLane(): BitIds {
+  get bitmapIdsFromCurrentLane(): ComponentIdList {
     return this.bitMap.getAllIdsAvailableOnLane();
   }
 
-  get bitmapIdsFromCurrentLaneIncludeRemoved(): BitIds {
-    const idsFromBitMap = this.bitMap.getAllIdsAvailableOnLane();
-    const removedIds = this.bitMap.getRemoved();
-    return BitIds.fromArray([...idsFromBitMap, ...removedIds]);
+  get bitmapIdsFromCurrentLaneIncludeRemoved(): ComponentIdList {
+    return this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
   }
 
-  get bitMapIdsFromAllLanes(): BitIds {
-    return this.bitMap.getAllBitIdsFromAllLanes();
-  }
-
-  clearCache() {
+  async clearCache() {
     this.componentLoader.clearComponentsCache();
-    this.onCacheClear.forEach((func) => func());
+    await Promise.all(this.onCacheClear.map((func) => func()));
+  }
+
+  clearOneComponentCache(id: ComponentID) {
+    this.componentLoader.clearOneComponentCache(id);
   }
 
   getTmpFolder(fullPath = false): PathOsBased {
@@ -143,8 +134,12 @@ export default class Consumer {
     return path.join(this.getPath(), BIT_WORKSPACE_TMP_DIRNAME);
   }
 
+  getCurrentLaneIdIfExist() {
+    return this.bitMap.laneId;
+  }
+
   getCurrentLaneId(): LaneId {
-    return this.bitMap.laneId || this.getDefaultLaneId();
+    return this.getCurrentLaneIdIfExist() || this.getDefaultLaneId();
   }
 
   getDefaultLaneId() {
@@ -172,7 +167,6 @@ export default class Consumer {
 
   setCurrentLane(laneId: LaneId, exported = true) {
     this.bitMap.setCurrentLane(laneId, exported);
-    this.scope.setCurrentLaneId(laneId);
   }
 
   async cleanTmpFolder() {
@@ -183,48 +177,6 @@ export default class Consumer {
       return fs.remove(tmpPath);
     }
     return undefined;
-  }
-
-  /**
-   * Running migration process for consumer to update the stores (.bit.map.json) to the current version
-   *
-   * @param {any} verbose - print debug logs
-   * @returns {Object} - wether the process run and wether it succeeded
-   * @memberof Consumer
-   */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async migrate(verbose): Record<string, any> {
-    // Check version of stores (bitmap / bitjson) to check if we need to run migrate
-    // If migration is needed add loader - loader.start(BEFORE_MIGRATION);
-    // bitmap migrate
-    if (verbose) console.log('running migration process for consumer'); // eslint-disable-line
-    const bitmapSchema = this.bitMap.schema;
-    if (semver.gte(bitmapSchema, CURRENT_BITMAP_SCHEMA)) {
-      logger.trace('bit.map version is up to date');
-      return {
-        run: false,
-      };
-    }
-    loader.start(BEFORE_MIGRATION);
-    logger.debugAndAddBreadCrumb(
-      'consumer.migrate',
-      `start consumer migration. bitmapSchema ${bitmapSchema}, current schema ${CURRENT_BITMAP_SCHEMA}`
-    );
-
-    const result: ConsumerMigrationResult = await migrate(bitmapSchema, migratonManifest, this.bitMap, verbose);
-    result.bitMap.schema = CURRENT_BITMAP_SCHEMA;
-    // mark the bitmap as changed to make sure it persist to FS
-    result.bitMap.markAsChanged();
-    // Update the version of the bitmap instance of the consumer (to prevent duplicate migration)
-    this.bitMap.schema = result.bitMap.schema;
-    await result.bitMap.write();
-
-    loader.stop();
-
-    return {
-      run: true,
-      success: true,
-    };
   }
 
   async write(): Promise<Consumer> {
@@ -248,14 +200,14 @@ export default class Consumer {
     return path.relative(this.getPath(), absolutePath);
   }
 
-  getParsedId(id: BitIdStr, useVersionFromBitmap = false, searchWithoutScopeInProvidedId = false): BitId {
+  getParsedId(id: BitIdStr, useVersionFromBitmap = false, searchWithoutScopeInProvidedId = false): ComponentID {
     if (id.startsWith('@')) {
       throw new UnexpectedPackageName(id);
     }
-    // @ts-ignore (we know it will never be undefined since it pass throw=true)
-    const bitId: BitId = this.bitMap.getExistingBitId(id, true, searchWithoutScopeInProvidedId);
+
+    const bitId = this.bitMap.getExistingBitId(id, true, searchWithoutScopeInProvidedId) as ComponentID;
     if (!useVersionFromBitmap) {
-      const version = BitId.getVersionOnlyFromString(id);
+      const version = ComponentID.getVersionFromString(id);
       return bitId.changeVersion(version || LATEST);
     }
     return bitId;
@@ -265,11 +217,11 @@ export default class Consumer {
     id: BitIdStr,
     useVersionFromBitmap = false,
     searchWithoutScopeInProvidedId = false
-  ): BitId | undefined {
-    const bitId: BitId | undefined = this.bitMap.getExistingBitId(id, false, searchWithoutScopeInProvidedId);
+  ): ComponentID | undefined {
+    const bitId: ComponentID | undefined = this.bitMap.getExistingBitId(id, false, searchWithoutScopeInProvidedId);
     if (!bitId) return undefined;
     if (!useVersionFromBitmap) {
-      const version = BitId.getVersionOnlyFromString(id);
+      const version = ComponentID.getVersionFromString(id);
       return bitId.changeVersion(version || LATEST);
     }
     return bitId;
@@ -278,7 +230,7 @@ export default class Consumer {
   /**
    * throws a ComponentNotFound exception if not found in the model
    */
-  async loadComponentFromModel(id: BitId): Promise<Component> {
+  async loadComponentFromModel(id: ComponentID): Promise<Component> {
     if (!id.version) throw new TypeError('consumer.loadComponentFromModel, version is missing from the id');
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
 
@@ -289,15 +241,15 @@ export default class Consumer {
    * return a component only when it's stored locally.
    * don't go to any remote server and don't throw an exception if the component is not there.
    */
-  async loadComponentFromModelIfExist(id: BitId): Promise<Component | undefined> {
+  async loadComponentFromModelIfExist(id: ComponentID): Promise<Component | undefined> {
     if (!id.version) return undefined;
     return this.loadComponentFromModel(id).catch((err) => {
-      if (err instanceof ComponentNotFound) return undefined;
+      if (err instanceof ComponentNotFound || err instanceof NoHeadNoVersion) return undefined;
       throw err;
     });
   }
 
-  async loadAllVersionsOfComponentFromModel(id: BitId): Promise<Component[]> {
+  async loadAllVersionsOfComponentFromModel(id: ComponentID): Promise<Component[]> {
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
     const componentsP = modelComponent.listVersions().map(async (versionNum) => {
       return modelComponent.toConsumerComponent(versionNum, this.scope.name, this.scope.objects);
@@ -305,56 +257,42 @@ export default class Consumer {
     return Promise.all(componentsP);
   }
 
-  /**
-   * For legacy, it loads all the dependencies. For Harmony, it's not needed.
-   */
-  async loadComponentWithDependenciesFromModel(id: BitId, throwIfNotExist = true): Promise<ComponentWithDependencies> {
-    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
+  async loadComponentFromModelImportIfNeeded(id: ComponentID, throwIfNotExist = true): Promise<Component> {
+    const scopeComponentsImporter = this.scope.scopeImporter;
     const getModelComponent = async (): Promise<ModelComponent> => {
       if (throwIfNotExist) return this.scope.getModelComponent(id);
       const modelComponent = await this.scope.getModelComponentIfExist(id);
       if (modelComponent) return modelComponent;
-      await scopeComponentsImporter.importMany({ ids: new BitIds(id) });
+      await scopeComponentsImporter.importMany({
+        ids: new ComponentIdList(id),
+        reason: `because this component (${id.toString()}) was missing from the local scope`,
+      });
       return this.scope.getModelComponent(id);
     };
     const modelComponent = await getModelComponent();
     if (!id.version) {
-      throw new TypeError('consumer.loadComponentWithDependenciesFromModel, version is missing from the id');
+      throw new TypeError('consumer.loadComponentFromModelImportIfNeeded, version is missing from the id');
     }
 
     const compVersion = modelComponent.toComponentVersion(id.version);
     const consumerComp = await compVersion.toConsumer(this.scope.objects);
-    return new ComponentWithDependencies({
-      component: consumerComp,
-      dependencies: [],
-      devDependencies: [],
-      extensionDependencies: [],
-    });
+    return consumerComp;
   }
 
-  async loadComponent(id: BitId, loadOpts?: ComponentLoadOptions): Promise<Component> {
-    const { components } = await this.loadComponents(BitIds.fromArray([id]), true, loadOpts);
+  async loadComponent(id: ComponentID, loadOpts?: ComponentLoadOptions): Promise<Component> {
+    const { components } = await this.loadComponents(ComponentIdList.fromArray([id]), true, loadOpts);
     return components[0];
   }
 
-  async loadComponents(ids: BitIds, throwOnFailure = true, loadOpts?: ComponentLoadOptions): Promise<LoadManyResult> {
+  async loadComponents(
+    ids: ComponentIdList,
+    throwOnFailure = true,
+    loadOpts?: ComponentLoadOptions
+  ): Promise<LoadManyResult> {
     return this.componentLoader.loadMany(ids, throwOnFailure, loadOpts);
   }
 
-  async shouldDependenciesSavedAsComponents(bitIds: BitId[], saveDependenciesAsComponents?: boolean) {
-    if (saveDependenciesAsComponents === undefined) {
-      saveDependenciesAsComponents = this.config._saveDependenciesAsComponents;
-    }
-    const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
-      return {
-        id: bitId, // if it doesn't go to the hub, it can't import dependencies as packages
-        saveDependenciesAsComponents: false,
-      };
-    });
-    return shouldDependenciesSavedAsComponents;
-  }
-
-  async listComponentsForAutoTagging(modifiedComponents: BitIds): Promise<Component[]> {
+  async listComponentsForAutoTagging(modifiedComponents: ComponentIdList): Promise<Component[]> {
     return getAutoTagPending(this, modifiedComponents);
   }
 
@@ -451,14 +389,6 @@ export default class Consumer {
     return JSON.stringify(version.files) !== JSON.stringify(componentFromModel.files);
   }
 
-  async getManyComponentsStatuses(ids: BitId[]): Promise<ComponentStatusResult[]> {
-    return this.componentStatusLoader.getManyComponentsStatuses(ids);
-  }
-
-  async getComponentStatusById(id: BitId): Promise<ComponentStatus> {
-    return this.componentStatusLoader.getComponentStatusById(id);
-  }
-
   updateNextVersionOnBitmap(componentsToTag: Component[], preRelease?: string) {
     componentsToTag.forEach((compToTag) => {
       const log = compToTag.log;
@@ -478,62 +408,17 @@ export default class Consumer {
     if (componentsToTag.length) this.bitMap.markAsChanged();
   }
 
-  getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {
-    const { packageName } = this.splitPackagePathToNameAndFile(requirePath);
-    return packageNameToComponentId(this, packageName, bindingPrefix);
-  }
-
-  /**
-   * e.g.
-   * input: @bit/my-scope.my-name/internal-path.js
-   * output: { packageName: '@bit/my-scope', internalPath: 'internal-path.js' }
-   */
-  splitPackagePathToNameAndFile(packagePath: string): { packageName: string; internalPath: string } {
-    const packagePathWithoutNM = this.stripNodeModulesFromPackagePath(packagePath);
-    const packageSplitBySlash = packagePathWithoutNM.split('/');
-    const isScopedPackage = packagePathWithoutNM.startsWith('@');
-    const packageName = isScopedPackage
-      ? `${packageSplitBySlash.shift()}/${packageSplitBySlash.shift()}`
-      : (packageSplitBySlash.shift() as string);
-
-    const internalPath = packageSplitBySlash.join('/');
-
-    return { packageName, internalPath };
-  }
-
-  private stripNodeModulesFromPackagePath(requirePath: string): string {
-    requirePath = pathNormalizeToLinux(requirePath);
-    const prefix = requirePath.includes('node_modules') ? 'node_modules/' : '';
-    const withoutPrefix = prefix ? requirePath.slice(requirePath.indexOf(prefix) + prefix.length) : requirePath;
-    if (!withoutPrefix.includes('/') && withoutPrefix.startsWith('@')) {
-      throw new GeneralError(
-        'getComponentIdFromNodeModulesPath expects the path to have at least one slash for the scoped package, such as @bit/'
-      );
-    }
-    return withoutPrefix;
-  }
-
-  composeRelativeComponentPath(bitId: BitId): PathLinuxRelative {
+  composeRelativeComponentPath(bitId: ComponentID): PathLinuxRelative {
     const { componentsDefaultDirectory } = this.dirStructure;
 
     return composeComponentPath(bitId, componentsDefaultDirectory);
   }
 
-  composeComponentPath(bitId: BitId): PathOsBasedAbsolute {
+  composeComponentPath(bitId: ComponentID): PathOsBasedAbsolute {
     const addToPath = [this.getPath(), this.composeRelativeComponentPath(bitId)];
     logger.debug(`component dir path: ${addToPath.join('/')}`);
     Analytics.addBreadCrumb('composeComponentPath', `component dir path: ${Analytics.hashData(addToPath.join('/'))}`);
     return path.join(...addToPath);
-  }
-
-  composeRelativeDependencyPath(bitId: BitId): PathOsBased {
-    const dependenciesDir = this.dirStructure.dependenciesDirStructure;
-    return composeDependencyPath(bitId, dependenciesDir);
-  }
-
-  composeDependencyPath(bitId: BitId): PathOsBased {
-    const relativeDependencyPath = this.composeRelativeDependencyPath(bitId);
-    return path.join(this.getPath(), relativeDependencyPath);
   }
 
   static create(
@@ -560,11 +445,11 @@ export default class Consumer {
   ): Promise<Consumer> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
     let existingGitHooks;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const scopeP = Scope.ensure(resolvedScopePath);
-
-    const configP = WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
-    const [scope, config] = await Promise.all([scopeP, configP]);
+    // avoid using the default scope-name `path.basename(process.cwd())` when generated from the workspace.
+    // otherwise, components with the same scope-name will get ComponentNotFound on import
+    const scopeName = `${path.basename(process.cwd())}-local-${generateRandomStr()}`;
+    const scope = await Scope.ensure(resolvedScopePath, scopeName);
+    const config = await WorkspaceConfig.ensure(projectPath, scope.path, standAlone, workspaceConfigProps);
     const consumer = new Consumer({
       projectPath,
       created: true,
@@ -577,14 +462,14 @@ export default class Consumer {
   }
 
   /**
-   * if resetHard, delete consumer-files: bitMap and bit.json and also the local scope (.bit dir).
+   * if resetHard, delete consumer-files: bitMap and workspace.jsonc and also the local scope (.bit dir).
    * otherwise, delete the consumer-files only when they are corrupted
    */
   static async reset(projectPath: PathOsBasedAbsolute, resetHard: boolean, noGit = false): Promise<void> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
     BitMap.reset(projectPath, resetHard);
     const scopeP = Scope.reset(resolvedScopePath, resetHard);
-    const configP = WorkspaceConfig.reset(projectPath, resetHard);
+    const configP = WorkspaceConfig.reset(projectPath, resolvedScopePath, resetHard);
     const packageJsonP = PackageJsonFile.reset(projectPath);
     await Promise.all([scopeP, configP, packageJsonP]);
   }
@@ -594,15 +479,12 @@ export default class Consumer {
     await Scope.reset(this.scope.path, true);
   }
 
-  static locateProjectScope(projectPath: string) {
-    if (fs.existsSync(path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR))) {
-      return path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR);
-    }
-    if (fs.existsSync(path.join(projectPath, BIT_HIDDEN_DIR))) {
-      return path.join(projectPath, BIT_HIDDEN_DIR);
-    }
-    return undefined;
+  async resetLaneNew() {
+    this.bitMap.resetLaneComponentsToNew();
+    this.bitMap.laneId = undefined;
+    await Scope.reset(this.scope.path, true);
   }
+
   static async load(currentPath: PathOsBasedAbsolute): Promise<Consumer> {
     const consumerInfo = await getConsumerInfo(currentPath);
     if (!consumerInfo) {
@@ -619,9 +501,9 @@ export default class Consumer {
       consumer = await Consumer.create(consumerInfo.path);
       await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
     }
-    const config = consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path);
-    const scopePath = Consumer.locateProjectScope(consumerInfo.path);
-    const scope = await Scope.load(scopePath as string);
+    const scope = consumer?.scope || (await Scope.load(consumerInfo.path));
+    const config =
+      consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path, scope.path);
     consumer = new Consumer({
       projectPath: consumerInfo.path,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -629,7 +511,9 @@ export default class Consumer {
       scope,
     });
     await consumer.setBitMap();
-    scope.setCurrentLaneId(consumer.bitMap.laneId);
+    scope.currentLaneIdFunc = consumer.getCurrentLaneIdIfExist.bind(consumer);
+    scope.notExportedIdsFunc = consumer.getNotExportedIds.bind(consumer);
+    logger.commandHistoryBasePath = scope.getPath();
     return consumer;
   }
 
@@ -646,35 +530,23 @@ export default class Consumer {
     return this.config.isLegacy;
   }
 
-  /**
-   * clean up removed components from bitmap
-   * @param {BitIds} componentsToRemoveFromFs - delete component that are used by other components.
-   */
-  async cleanFromBitMap(componentsToRemoveFromFs: BitIds) {
-    logger.debug(`consumer.cleanFromBitMap, cleaning ${componentsToRemoveFromFs.toString()} from .bitmap`);
-    this.bitMap.removeComponents(componentsToRemoveFromFs);
+  getNotExportedIds(): ComponentIdList {
+    return ComponentIdList.fromArray(this.bitmapIdsFromCurrentLane.filter((id) => !id.hasScope()));
   }
 
-  async cleanOrRevertFromBitMapWhenOnLane(ids: BitIds) {
-    logger.debug(`consumer.cleanFromBitMapWhenOnLane, cleaning ${ids.toString()} from`);
-    const [idsOnLane, idsOnMain] = partition(ids, (id) => {
-      const componentMap = this.bitMap.getComponent(id, { ignoreVersion: true });
-      return componentMap.onLanesOnly;
-    });
-    if (idsOnLane.length) {
-      await this.cleanFromBitMap(BitIds.fromArray(idsOnLane));
-    }
-    await Promise.all(
-      idsOnMain.map(async (id) => {
-        const modelComp = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
-        let updatedId = id.changeScope(undefined).changeVersion(undefined);
-        if (modelComp) {
-          const head = modelComp.getHeadAsTagIfExist();
-          if (head) updatedId = id.changeVersion(head);
-        }
-        this.bitMap.updateComponentId(updatedId, false, true);
-      })
-    );
+  /**
+   * whether a component was not exported yet. (new).
+   */
+  isExported(id: ComponentID) {
+    return id.hasScope() && !this.getNotExportedIds().hasWithoutVersion(id);
+  }
+
+  /**
+   * clean up removed components from bitmap
+   */
+  async cleanFromBitMap(componentsToRemoveFromFs: ComponentID[]) {
+    logger.debug(`consumer.cleanFromBitMap, cleaning ${componentsToRemoveFromFs.length} comps from .bitmap`);
+    this.bitMap.removeComponents(componentsToRemoveFromFs);
   }
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
@@ -700,66 +572,90 @@ export default class Consumer {
     await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
   }
 
-  async getIdsOfDefaultLane(): Promise<BitIds> {
-    const ids = this.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
-    const bitIds = await Promise.all(
+  async getIdsOfDefaultLane(): Promise<ComponentIdList> {
+    const ids = this.bitMap.getAllBitIds();
+    const componentIds = await Promise.all(
       ids.map(async (id) => {
         if (!id.hasVersion()) return id;
         const modelComponent = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
-        if (modelComponent) {
-          const head = modelComponent.getHeadAsTagIfExist();
-          if (head) {
-            return id.changeVersion(head);
-          }
-          throw new Error(`model-component on main should have head. the head on ${id.toString()} is missing`);
+        if (!modelComponent) {
+          throw new Error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing, please run bit-import`);
         }
-        if (!id.hasVersion()) {
-          return id;
+        const head = modelComponent.getHeadAsTagIfExist();
+        if (head) {
+          return id.changeVersion(head);
         }
-        throw new Error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing, please run bit-import`);
+        return undefined;
       })
     );
-    return BitIds.fromArray(bitIds);
+    return ComponentIdList.fromArray(compact(componentIds));
   }
 
-  async getAuthoredAndImportedDependentsIdsOf(components: Component[]): Promise<BitIds> {
-    const authoredAndImportedComponents = this.bitMap.getAllIdsAvailableOnLane();
-    const componentsIds = BitIds.fromArray(components.map((c) => c.id));
-    return this.scope.findDirectDependentComponents(authoredAndImportedComponents, componentsIds);
-  }
-
-  async writeBitMap() {
-    await this.backupBitMap();
+  async writeBitMap(reasonForChange?: string) {
+    await this.backupBitMap(reasonForChange);
     await this.bitMap.write();
   }
 
-  private async backupBitMap() {
+  getBitmapHistoryDir(): PathOsBasedAbsolute {
+    return path.join(this.scope.path, BITMAP_HISTORY_DIR_NAME);
+  }
+
+  getBitmapHistoryMetadataPath() {
+    return path.join(this.scope.path, BITMAP_HISTORY_METADATA_FILE_NAME);
+  }
+
+  async getParsedBitmapHistoryMetadata(): Promise<{ [fileId: string]: string }> {
+    return getParsedHistoryMetadata(this.getBitmapHistoryMetadataPath());
+  }
+
+  private async backupBitMap(reasonForBitmapChange?: string) {
     if (!this.bitMap.hasChanged) return;
     try {
-      const baseDir = path.join(this.scope.path, 'bitmap-history');
+      const baseDir = this.getBitmapHistoryDir();
       await fs.ensureDir(baseDir);
-      const backupPath = path.join(baseDir, `.bitmap-${this.currentDateAndTimeToFileName()}`);
+      const fileId = currentDateAndTimeToFileName();
+      const backupPath = path.join(baseDir, `.bitmap-${fileId}`);
       await fs.copyFile(this.bitMap.mapPath, backupPath);
-    } catch (err) {
-      // it's nice to have. don't kill the process if something goes wrong.
+      const metadataFile = this.getBitmapHistoryMetadataPath();
+      await fs.appendFile(metadataFile, `${fileId} ${reasonForBitmapChange || ''}\n`);
+    } catch (err: any) {
+      if (err.code === 'ENOENT') return; // no such file or directory, meaning the .bitmap file doesn't exist (yet)
+      // it's a nice to have feature. don't kill the process if something goes wrong.
       logger.error(`failed to backup bitmap`, err);
     }
   }
 
-  private currentDateAndTimeToFileName() {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const seconds = date.getSeconds();
-    return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`;
-  }
-
-  async onDestroy() {
+  async onDestroy(reasonForBitmapChange?: string) {
     await this.cleanTmpFolder();
     await this.scope.scopeJson.writeIfChanged(this.scope.path);
-    await this.writeBitMap();
+    await this.writeBitMap(reasonForBitmapChange);
   }
+}
+
+export function currentDateAndTimeToFileName() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const seconds = date.getSeconds();
+  return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`;
+}
+
+export async function getParsedHistoryMetadata(metadataPath: string): Promise<{ [fileId: string]: string }> {
+  let fileContent: string | undefined;
+  try {
+    fileContent = await fs.readFile(metadataPath, 'utf-8');
+  } catch (err: any) {
+    if (err.code === 'ENOENT') return {}; // no such file or directory, meaning the history-metadata file doesn't exist (yet)
+  }
+  const lines = fileContent?.split('\n') || [];
+  const metadata = {};
+  lines.forEach((line) => {
+    const [fileId, ...reason] = line.split(' ');
+    if (!fileId) return;
+    metadata[fileId] = reason.join(' ');
+  });
+  return metadata;
 }

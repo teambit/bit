@@ -30,10 +30,10 @@ const whitelist = [
   'type-coverage',
   '@yarnpkg/plugin-pack',
   'graceful-fs', // might be used as a peer by other stuff
-  'browserslist', // check with Uri if needed.
   'mz', // needs to check what happens if gets removed.
   'npm', // needed for e2e tests
   'cross-env', // needed for e2e tests on Windows
+  '@typescript-eslint/typescript-estree', // required for @typescript-eslint/parser in .eslintrc.js
 ];
 used.push(...whitelist);
 unused = unused.filter((dep) => !whitelist.includes(dep));

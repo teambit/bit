@@ -20,7 +20,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
   }
 
   /**
-   * overrides the super class to eliminate non-seeders components
+   * @deprecate use graph.getGraphIds().findCycles()
    */
   findCycles(graph?: this): string[][] {
     const cycles = super.findCycles(graph);
@@ -84,7 +84,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     for (const node of this.nodes) {
       const comp = node.attr;
       const compKey = node.id;
-      const compFullName = comp.id._legacy.toStringWithoutVersion();
+      const compFullName = comp.id.toStringWithoutVersion();
       if (!versionMap.has(compFullName)) {
         versionMap.set(compFullName, {
           allVersionNodes: [compKey],

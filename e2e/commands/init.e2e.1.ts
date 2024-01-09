@@ -143,24 +143,19 @@ describe('run bit init', function () {
       });
     });
   });
-  describe('an existing environment with model and with modified bitMap and bitJson', () => {
+  describe('an existing environment with model and with modified bitMap', () => {
     let localScope;
     let bitMap;
-    let bitJson;
     let localConsumerFiles;
+    const filter = (file: string) => !file.includes('bitmap-history') && !file.includes('workspace-config-history');
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir(); // this modifies bitMap
       helper.command.tagAllWithoutBuild(); // this creates objects in .bit dir
 
-      // modify bit.json
-      bitJson = helper.bitJson.read();
-      bitJson.packageManager = 'yarn';
-      helper.bitJson.write(bitJson);
-
       bitMap = helper.bitMap.read();
-      localConsumerFiles = helper.fs.getConsumerFiles('*', true).filter((file) => !file.includes('bitmap-history'));
+      localConsumerFiles = helper.fs.getConsumerFiles('*', true).filter(filter);
       localScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('bit init', () => {
@@ -172,13 +167,8 @@ describe('run bit init', function () {
         expect(currentBitMap).to.be.deep.equal(bitMap);
         expect(currentBitMap).to.have.property('bar/foo');
       });
-      it('should not change bit.json file', () => {
-        const currentBitJson = helper.bitJson.read();
-        expect(currentBitJson).to.be.deep.equal(bitJson);
-        expect(currentBitJson.packageManager).to.be.equal('yarn');
-      });
       it('should not change .bit directory', () => {
-        const currentFiles = helper.fs.getConsumerFiles('*', true).filter((file) => !file.includes('bitmap-history'));
+        const currentFiles = helper.fs.getConsumerFiles('*', true).filter(filter);
         expect(currentFiles).to.be.deep.equal(localConsumerFiles);
       });
     });
@@ -192,13 +182,8 @@ describe('run bit init', function () {
         expect(currentBitMap).to.be.deep.equal(bitMap);
         expect(currentBitMap).to.have.property('bar/foo');
       });
-      it('should not change bit.json file', () => {
-        const currentBitJson = helper.bitJson.read();
-        expect(currentBitJson).to.be.deep.equal(bitJson);
-        expect(currentBitJson.packageManager).to.be.equal('yarn');
-      });
       it('should not change .bit directory', () => {
-        const currentFiles = helper.fs.getConsumerFiles('*', true).filter((file) => !file.includes('bitmap-history'));
+        const currentFiles = helper.fs.getConsumerFiles('*', true).filter(filter);
         expect(currentFiles).to.be.deep.equal(localConsumerFiles);
       });
     });
@@ -211,11 +196,6 @@ describe('run bit init', function () {
         const currentBitMap = helper.bitMap.read();
         expect(currentBitMap).to.not.be.deep.equal(bitMap);
         expect(currentBitMap).to.not.have.property('bar/foo@0.0.1');
-      });
-      it('should recreate the bit.json file', () => {
-        const currentBitJson = helper.bitJson.read();
-        expect(currentBitJson).to.not.be.deep.equal(bitJson);
-        expect(currentBitJson.packageManager).to.not.be.equal('yarn');
       });
       it('should recreate .bit directory', () => {
         const currentFiles = helper.fs.getConsumerFiles('*', true);
@@ -255,11 +235,11 @@ describe('run bit init', function () {
         helper.npm.initNpm();
         helper.command.runCmd('bit init --standalone');
       });
-      it('should not write the bit.json content into the package.json file', () => {
+      it('should not write the "bit" prop into the package.json file', () => {
         const packageJson = helper.packageJson.read();
         expect(packageJson).to.not.have.property('bit');
       });
-      it('should create bit.json file', () => {
+      it('should create workspace.jsonc file', () => {
         expect(path.join(helper.scopes.localPath, 'workspace.jsonc')).to.be.a.file();
       });
     });

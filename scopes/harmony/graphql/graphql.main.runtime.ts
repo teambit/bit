@@ -1,4 +1,5 @@
-import { mergeSchemas } from 'graphql-tools';
+import { mergeSchemas } from '@graphql-tools/schema';
+import NoIntrospection from 'graphql-disable-introspection';
 import { GraphQLModule } from '@graphql-modules/core';
 import { MainRuntime } from '@teambit/cli';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
@@ -26,6 +27,7 @@ export type GraphQLConfig = {
   port: number;
   subscriptionsPortRange: number[];
   subscriptionsPath: string;
+  disableCors?: boolean;
 };
 
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
@@ -38,6 +40,7 @@ export type GraphQLServerOptions = {
   schemaSlot?: SchemaSlot;
   app?: Express;
   graphiql?: boolean;
+  disableIntrospection?: boolean;
   remoteSchemas?: GraphQLServer[];
   subscriptionsPortRange?: number[];
   onWsConnect?: Function;
@@ -103,7 +106,7 @@ export class GraphqlMain {
   }
 
   async createServer(options: GraphQLServerOptions) {
-    const { graphiql = true } = options;
+    const { graphiql = true, disableIntrospection } = options;
     const localSchema = this.createRootModule(options.schemaSlot);
     const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
     const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
@@ -113,15 +116,17 @@ export class GraphqlMain {
 
     // TODO: @guy please consider to refactor to express extension.
     const app = options.app || express();
-    app.use(
-      // @ts-ignore todo: it's not clear what's the issue.
-      cors({
-        origin(origin, callback) {
-          callback(null, true);
-        },
-        credentials: true,
-      })
-    );
+    if (!this.config.disableCors) {
+      app.use(
+        // @ts-ignore todo: it's not clear what's the issue.
+        cors({
+          origin(origin, callback) {
+            callback(null, true);
+          },
+          credentials: true,
+        })
+      );
+    }
 
     app.use(
       '/graphql',
@@ -140,6 +145,7 @@ export class GraphqlMain {
         schema,
         rootValue: request,
         graphiql,
+        validationRules: disableIntrospection ? [NoIntrospection] : undefined,
       }))
     );
 
@@ -300,6 +306,7 @@ export class GraphqlMain {
   static defaultConfig = {
     port: 4000,
     subscriptionsPortRange: [2000, 2100],
+    disableCors: false,
     subscriptionsPath: '/subscriptions',
   };
 

@@ -1,7 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
 import { ConfigAspect } from '@teambit/config';
 import type { ConfigMain } from '@teambit/config';
-import ConsumerOverrides from '@teambit/legacy/dist/consumer/config/consumer-overrides';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
 import { assign } from 'comment-json';
@@ -31,10 +30,7 @@ export class VariantsMain {
   static runtime = MainRuntime;
   static dependencies = [ConfigAspect];
 
-  _loadedLegacy: ConsumerOverrides;
-
   constructor(private patterns: Patterns, private configAspect: ConfigMain) {
-    this._loadedLegacy = ConsumerOverrides.load(this.patterns);
     this.validateConfig();
   }
 
@@ -48,14 +44,6 @@ export class VariantsMain {
 
   raw(): Patterns {
     return this.patterns;
-  }
-
-  /**
-   * Get all the patterns defined in the variants section of the workspace as the legacy ConsumerOverrides format
-   */
-  legacy(): ConsumerOverrides {
-    // return ConsumerOverrides.load(this.patterns);
-    return this._loadedLegacy;
   }
 
   /**

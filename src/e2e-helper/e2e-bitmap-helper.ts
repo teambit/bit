@@ -67,6 +67,7 @@ export default class BitMapHelper {
       'bar/foo': {
         scope: '',
         version: '',
+        defaultScope: 'my-scope',
         mainFile: 'bar/foo.js',
         rootDir: 'bar',
       },
@@ -87,10 +88,14 @@ export default class BitMapHelper {
     return `Files in bitmap file: ${filesStr}`;
   }
 
-  expectToHaveIdHarmony(name: string, version?: string, scope?: string) {
+  expectToHaveId(name: string, version?: string, scope?: string) {
     const bitMap = this.read();
     expect(bitMap).to.have.property(name);
     if (scope) expect(bitMap[name].scope).to.equal(scope);
     if (version) expect(bitMap[name].version).to.equal(version);
+  }
+  expectNotToHaveId(name: string) {
+    const bitMap = this.read();
+    expect(bitMap).to.not.have.property(name);
   }
 }

@@ -20,11 +20,15 @@ export type PackageManagerInstallOptions = {
 
   copyPeerToRuntimeOnComponents?: boolean;
 
+  excludeLinksFromLockfile?: boolean;
+
   installPeersFromEnvs?: boolean;
 
   dependencyFilterFn?: DepsFilterFn;
 
   overrides?: Record<string, string>;
+
+  lockfileOnly?: boolean;
 
   nodeLinker?: 'hoisted' | 'isolated';
 
@@ -47,6 +51,57 @@ export type PackageManagerInstallOptions = {
   nodeVersion?: string;
 
   peerDependencyRules?: PeerDependencyRules;
+
+  includeOptionalDeps?: boolean;
+
+  updateAll?: boolean;
+
+  hidePackageManagerOutput?: boolean;
+
+  pruneNodeModules?: boolean;
+
+  hasRootComponents?: boolean;
+
+  neverBuiltDependencies?: string[];
+
+  preferOffline?: boolean;
+
+  nmSelfReferences?: boolean;
+
+  /**
+   * e.g. when running `bit install` through the web or the IDE, not from the CLI.
+   */
+  optimizeReportForNonTerminal?: boolean;
+
+  /**
+   * Sets the frequency of updating the progress output in milliseconds.
+   * E.g., if this is set to 1000, then the progress will be updated every second.
+   */
+  throttleProgress?: number;
+
+  hideProgressPrefix?: boolean;
+
+  hideLifecycleOutput?: boolean;
+
+  /**
+   * Do installation using lockfile only. Ignore the component manifests.
+   */
+  ignorePackageManifest?: boolean;
+
+  /**
+   * When enabled, installation by the package manager will be skipped
+   * but all the options will be calculated and the rebuild function will be returned.
+   * We use this option for a performance optimization in Ripple CI.
+   */
+  dryRun?: boolean;
+
+  dedupeInjectedDeps?: boolean;
+
+  /**
+   * When this is set to true, pnpm will hoist workspace packages to node_modules/.pnpm/node_modules.
+   * This is something we need in capsules.
+   */
+  hoistWorkspacePackages?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -54,6 +109,7 @@ export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstall
 export type ResolvedPackageVersion = {
   packageName: string;
   version: string | null;
+  wantedRange?: string;
   isSemver: boolean;
   resolvedVia?: string;
 };
@@ -74,10 +130,19 @@ export interface InstallationContext {
 
 export interface PackageManager {
   /**
+   * Name of the package manager
+   */
+  name: string;
+  /**
    * install dependencies
    * @param componentDirectoryMap
    */
-  install(context: InstallationContext, options: PackageManagerInstallOptions): Promise<void>;
+  install(
+    context: InstallationContext,
+    options: PackageManagerInstallOptions
+  ): Promise<{ dependenciesChanged: boolean }>;
+
+  pruneModules?(rootDir: string): Promise<void>;
 
   resolveRemoteVersion(
     packageName: string,
@@ -97,4 +162,19 @@ export interface PackageManager {
   getProxyConfig?(): Promise<ProxyConfig>;
 
   getNetworkConfig?(): Promise<NetworkConfig>;
+
+  /**
+   * Specify if the package manager can be run with deduping on existing worksapce (which already contains root dependencies)
+   * again, with a different context.
+   * If the package manager is not capable of doing so, we want to disable the deduping.
+   */
+  supportsDedupingOnExistingRoot?: () => boolean;
+
+  /**
+   * Returns "dependencies" entries for ".bit_roots".
+   * These entries tell the package manager from where to the local components should be installed.
+   */
+  getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string>;
+
+  findUsages?(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string>;
 }

@@ -1,0 +1,19 @@
+.compositionGallerySkeleton {
+  color: var(--border-medium-color, #ededed);
+  background-color: var(--background-color, #ffffff);
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 20px;
+}
+.title {
+  margin-bottom: 20px;
+}
+.compositionGalleryGrid {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  overflow-x: auto;
+  gap: 24px;
+  padding-bottom: 12px;
+  overscroll-behavior-x: contain;
+}

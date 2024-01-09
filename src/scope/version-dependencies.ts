@@ -1,4 +1,4 @@
-import { BitId, BitIds } from '../bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import ComponentWithDependencies from './component-dependencies';
 import ComponentVersion from './component-version';
 import { DependenciesNotFound } from './exceptions/dependencies-not-found';
@@ -13,11 +13,11 @@ export default class VersionDependencies {
     return this.dependencies;
   }
 
-  get allDependenciesIds(): BitIds {
-    return BitIds.fromArray(this.dependencies.map((dep) => dep.id));
+  get allDependenciesIds(): ComponentIdList {
+    return ComponentIdList.fromArray(this.dependencies.map((dep) => dep.toComponentId()));
   }
 
-  getMissingDependencies(): BitId[] {
+  getMissingDependencies(): ComponentID[] {
     const allDepsIds = this.allDependenciesIds;
     return this.version.flattenedDependencies.filter((id) => !allDepsIds.has(id));
   }
@@ -50,7 +50,7 @@ export default class VersionDependencies {
 export async function multipleVersionDependenciesToConsumer(
   versionDependencies: VersionDependencies[],
   repo: Repository
-): Promise<ComponentWithDependencies[]> {
+): Promise<ConsumerComponent[]> {
   const flattenedCompVer: { [id: string]: ComponentVersion } = {};
   const flattenedConsumerComp: { [id: string]: ConsumerComponent } = {};
 
@@ -66,13 +66,7 @@ export async function multipleVersionDependenciesToConsumer(
       flattenedConsumerComp[idStr] = await flattenedCompVer[idStr].toConsumer(repo);
     })
   );
-  return versionDependencies.map((verDep) => {
-    return new ComponentWithDependencies({
-      component: flattenedConsumerComp[verDep.component.id.toString()] as ConsumerComponent,
-      dependencies: verDep.dependencies.map((d) => flattenedConsumerComp[d.id.toString()]),
-      devDependencies: [],
-      extensionDependencies: [],
-      missingDependencies: verDep.getMissingDependencies(),
-    });
-  });
+  return versionDependencies.map(
+    (verDep) => flattenedConsumerComp[verDep.component.id.toString()] as ConsumerComponent
+  );
 }

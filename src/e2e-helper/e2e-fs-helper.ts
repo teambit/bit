@@ -1,11 +1,13 @@
 import fs from 'fs-extra';
+import chai, { expect } from 'chai';
 import glob from 'glob';
 import * as path from 'path';
-
 import * as fixtures from '../../src/fixtures/fixtures';
 import { generateRandomStr } from '../utils';
 import { ensureAndWriteJson } from './e2e-helper';
 import ScopesData from './e2e-scopes';
+
+chai.use(require('chai-fs'));
 
 export default class FsHelper {
   scopes: ScopesData;
@@ -57,6 +59,16 @@ export default class FsHelper {
     return fs.existsSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope));
   }
 
+  expectDirToExist(filePathRelativeToLocalScope: string): void {
+    expect(path.join(this.scopes.localPath, filePathRelativeToLocalScope)).to.be.a.directory();
+  }
+  expectFileToExist(filePathRelativeToLocalScope: string): void {
+    expect(path.join(this.scopes.localPath, filePathRelativeToLocalScope)).to.be.a.file();
+  }
+  expectPathNotToExist(filePathRelativeToLocalScope: string): void {
+    expect(path.join(this.scopes.localPath, filePathRelativeToLocalScope)).to.not.be.a.path();
+  }
+
   outputFile(filePathRelativeToLocalScope: string, data = ''): void {
     return fs.outputFileSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope), data);
   }
@@ -67,6 +79,7 @@ export default class FsHelper {
 
   prependFile(filePathRelativeToLocalScope: string, data = '\n'): void {
     const filePath = path.join(this.scopes.localPath, filePathRelativeToLocalScope);
+    if (!fs.existsSync(filePath)) return fs.writeFileSync(filePath, data);
     const content = fs.readFileSync(filePath).toString();
     return fs.writeFileSync(filePath, `${data}${content}`);
   }

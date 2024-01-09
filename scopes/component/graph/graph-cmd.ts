@@ -3,13 +3,14 @@ import os from 'os';
 import * as path from 'path';
 import GraphLib from 'graphlib';
 import { Command, CommandOptions } from '@teambit/cli';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { generateRandomStr } from '@teambit/legacy/dist/utils';
 import VisualDependencyGraph from '@teambit/legacy/dist/scope/graph/vizgraph';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
+import { ComponentMain } from '@teambit/component';
 
 type GraphOpt = {
   image?: string;
@@ -21,11 +22,12 @@ type GraphOpt = {
 
 export class GraphCmd implements Command {
   name = 'graph [id]';
-  description = 'EXPERIMENTAL. generate an image file with the dependencies graph';
+  description = "generate an image file with the workspace components' dependencies graph";
+  extendedDescription: 'black arrow is a runtime dependency. red arrow is either dev or peer';
   group = 'discover';
   alias = '';
   options = [
-    ['i', 'image <image>', 'image path. use one of the following extensions: [gif, png, svg, pdf]'],
+    ['i', 'image <image>', 'image path and format. use one of the following extensions: [gif, png, svg, pdf]'],
     ['r', 'remote [remoteName]', 'remote name (name is optional, leave empty when id is specified)'],
     ['', 'all-versions', 'enter all components versions into the graph, not only latest'],
     [
@@ -36,6 +38,8 @@ export class GraphCmd implements Command {
     ['j', 'json', 'json format'],
   ] as CommandOptions;
   remoteOp = true;
+
+  constructor(private componentAspect: ComponentMain) {}
 
   async report([id]: [string], { remote, allVersions, layout, image }: GraphOpt): Promise<string> {
     const consumer = await loadConsumerIfExist();
@@ -48,16 +52,6 @@ export class GraphCmd implements Command {
     if (layout) config.layout = layout;
     const visualDependencyGraph = await VisualDependencyGraph.loadFromGraphlib(graph, config);
 
-    const getBitId = (): BitId | undefined => {
-      if (!id) return undefined;
-      if (remote) return BitId.parse(id, true); // user used --remote so we know it has a scope
-      return consumer?.getParsedId(id);
-    };
-    const bitId = getBitId();
-
-    if (bitId) {
-      visualDependencyGraph.highlightId(bitId);
-    }
     image = image || path.join(os.tmpdir(), `${generateRandomStr()}.png`);
     const result = await visualDependencyGraph.image(image);
 
@@ -71,9 +65,9 @@ export class GraphCmd implements Command {
     allVersions?: boolean
   ): Promise<GraphLib.Graph> {
     if (!consumer && !remote) throw new ConsumerNotFound();
-    const getBitId = (): BitId | undefined => {
+    const getBitId = (): ComponentID | undefined => {
       if (!id) return undefined;
-      if (remote) return BitId.parse(id, true); // user used --remote so we know it has a scope
+      if (remote) return ComponentID.fromString(id); // user used --remote so we know it has a scope
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return consumer.getParsedId(id);
     };

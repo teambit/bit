@@ -1,15 +1,16 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
+import { compact } from 'lodash';
 import tar from 'tar';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import defaultErrorHandler from '../cli/default-error-handler';
-import { BIT_HIDDEN_DIR, BIT_VERSION, REMOTE_REFS_DIR, WORKSPACE_JSONC } from '../constants';
+import { BIT_HIDDEN_DIR, BIT_VERSION, MergeConfigFilename, REMOTE_REFS_DIR, WORKSPACE_JSONC } from '../constants';
 import { generateRandomStr, removeChalkCharacters } from '../utils';
 import CommandHelper from './e2e-command-helper';
 import { ensureAndWriteJson } from './e2e-helper';
 import NpmHelper from './e2e-npm-helper';
-import ScopesData from './e2e-scopes';
+import ScopesData, { DEFAULT_OWNER } from './e2e-scopes';
 
 export default class GeneralHelper {
   scopes: ScopesData;
@@ -53,8 +54,9 @@ export default class GeneralHelper {
     const hash = comp3.hash;
     return this.getHashPathOfObject(hash);
   }
-  getHashPathOfObject(hash: string) {
-    return path.join(hash.slice(0, 2), hash.slice(2));
+  getHashPathOfObject(hash: string, relativeToWorkspace = false) {
+    const objectPath = path.join(hash.slice(0, 2), hash.slice(2));
+    return relativeToWorkspace ? path.join('.bit/objects', objectPath) : objectPath;
   }
   installAndGetTypeScriptCompilerDir(): string {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -77,7 +79,7 @@ export default class GeneralHelper {
   runWithTryCatch(cmd: string, cwd: string = this.scopes.localPath, overrideFeatures?: string): string {
     let output: string;
     try {
-      output = this.command.runCmd(cmd, cwd, undefined, overrideFeatures);
+      output = this.command.runCmd(cmd, cwd, undefined, overrideFeatures, true);
     } catch (err: any) {
       output = err.toString() + err.stdout.toString();
     }
@@ -123,7 +125,58 @@ export default class GeneralHelper {
     return component.extensions.find((e) => e.name === extName);
   }
 
+  getStagedConfigPath(laneName = 'main') {
+    return path.join(this.scopes.localPath, '.bit', 'staged-config', `${laneName}.json`);
+  }
+
   getStagedConfig(laneName = 'main') {
-    return fs.readJSONSync(path.join(this.scopes.localPath, '.bit', 'staged-config', `${laneName}.json`));
+    return fs.readJSONSync(this.getStagedConfigPath(laneName));
+  }
+
+  getPackageNameByCompName(compName: string) {
+    return `@${DEFAULT_OWNER}/${this.scopes.remoteWithoutOwner}.${compName.replaceAll('/', '.')}`;
+  }
+
+  getConfigMergePath() {
+    return path.join(this.scopes.localPath, MergeConfigFilename);
+  }
+
+  fixMergeConfigConflict(strategy: 'ours' | 'theirs') {
+    const filePath = this.getConfigMergePath();
+    const fileContent = fs.readFileSync(filePath).toString();
+    const toRemove = strategy === 'ours' ? '>>>>>>>' : '<<<<<<<';
+    const toKeep = strategy === 'ours' ? '<<<<<<<' : '>>>>>>>';
+    let shouldBeRemoving = false;
+    let shouldKeep = false;
+    const lines = fileContent.split('\n').map((line) => {
+      if (line.startsWith(toRemove)) {
+        if (shouldBeRemoving) {
+          shouldBeRemoving = false;
+        } else {
+          shouldBeRemoving = true;
+        }
+        return '';
+      }
+      if (line.startsWith('=======')) {
+        if (shouldKeep) {
+          shouldKeep = false;
+          shouldBeRemoving = true;
+        } else {
+          shouldKeep = true;
+          shouldBeRemoving = false;
+        }
+        return '';
+      }
+      if (line.startsWith(toKeep)) {
+        if (shouldKeep) {
+          shouldKeep = false;
+        } else {
+          shouldKeep = true;
+        }
+        return '';
+      }
+      return shouldBeRemoving ? '' : line;
+    });
+    fs.writeFileSync(filePath, compact(lines).join('\n'));
   }
 }

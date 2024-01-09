@@ -3,6 +3,8 @@
   top: 130px;
   left: 50%;
   transform: translate(-50%, 0);
+  max-height: calc(100% - 150px);
+  overflow: auto;
 
   width: 643px;
   max-width: 90%;

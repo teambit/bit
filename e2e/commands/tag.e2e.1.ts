@@ -42,7 +42,7 @@ describe('bit tag command', function () {
     let output;
     describe('tag specific component', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
         helper.fs.createFile('components/patch', 'patch.js');
         helper.fs.createFile('components/minor', 'minor.js');
         helper.fs.createFile('components/major', 'major.js');
@@ -112,7 +112,7 @@ describe('bit tag command', function () {
       it('Should throw error when the version already exists', () => {
         helper.command.tagWithoutBuild('components/exact --ver 5.5.5', '-f');
         const tagWithExisting = () => helper.command.tagWithoutBuild('components/exact --ver 5.5.5', '-f');
-        const error = new VersionAlreadyExists('5.5.5', 'components/exact');
+        const error = new VersionAlreadyExists('5.5.5', 'my-scope/components/exact');
         helper.general.expectToThrow(tagWithExisting, error);
       });
     });
@@ -166,6 +166,16 @@ describe('bit tag command', function () {
     });
     it('should show a descriptive error message', () => {
       expect(output).to.have.string('this dependency was not included in the tag command');
+    });
+  });
+  describe('tag with an empty string', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(1, false);
+    });
+    // previously it was throwing `expected log.message to be string, got boolean`.
+    it('should not throw an error', () => {
+      expect(() => helper.command.tagAllWithoutBuild('-m ""')).to.not.throw();
     });
   });
 });

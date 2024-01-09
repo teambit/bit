@@ -20,5 +20,5 @@ export function getMaxSizeForComponents(): number {
 }
 
 export function getMaxSizeForObjects(): number {
-  return getNumberFromConfig(CFG_CACHE_MAX_ITEMS_OBJECTS) || 10000;
+  return getNumberFromConfig(CFG_CACHE_MAX_ITEMS_OBJECTS) || 5000;
 }

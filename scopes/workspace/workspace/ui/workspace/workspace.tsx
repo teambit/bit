@@ -11,12 +11,13 @@ import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { TopBar } from '@teambit/ui-foundation.ui.top-bar';
+import classNames from 'classnames';
 
 import { useWorkspace } from './use-workspace';
 import { WorkspaceOverview } from './workspace-overview';
 import { WorkspaceProvider } from './workspace-provider';
 import styles from './workspace.module.scss';
-import WorkspaceUI from '../../workspace.ui.runtime';
+import { WorkspaceUI } from '../../workspace.ui.runtime';
 
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
@@ -49,12 +50,12 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
       <div className={styles.workspaceWrapper}>
         <TopBar
           className={styles.topbar}
-          Corner={() => <Corner name={workspace.name} icon={workspace.icon} />}
+          Corner={() => <Corner className={styles.corner} name={workspace.name} icon={workspace.icon} />}
           menu={menuSlot}
         />
 
         <SplitPane className={styles.main} size={264} layout={sidebarOpenness}>
-          <Pane className={styles.sidebar}>{sidebar}</Pane>
+          <Pane className={classNames(styles.sidebar, !isSidebarOpen && styles.closed)}>{sidebar}</Pane>
           <HoverSplitter className={styles.splitter}>
             <Collapser
               isOpen={isSidebarOpen}

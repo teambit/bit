@@ -58,40 +58,39 @@ export class EnvPreviewTemplateTask implements BuildTask {
     const htmlConfig = previewDefs.map((previewModule) => generateHtmlConfig(previewModule, { dev: context.dev }));
     const originalSeedersIds = context.capsuleNetwork.originalSeedersCapsules.map((c) => c.component.id.toString());
     const grouped: TargetsGroupMap = {};
-    await Promise.all(
-      context.components.map(async (component) => {
-        // Do not run over other components in the graph. it make the process much longer with no need
-        if (originalSeedersIds && originalSeedersIds.length && !originalSeedersIds.includes(component.id.toString())) {
-          return undefined;
-        }
-        const envDef = this.envs.getEnvFromComponent(component);
-        if (!envDef) return undefined;
-        const env = envDef.env;
-        const bundlingStrategy = this.preview.getBundlingStrategy(envDef.env);
-        if (bundlingStrategy.name === 'env') {
-          return undefined;
-        }
-        const target = await this.getEnvTargetFromComponent(context, component, envDef, htmlConfig);
-        if (!target) return undefined;
-        const shouldUseDefaultBundler = this.shouldUseDefaultBundler(envDef);
-        let envToGetBundler = this.envs.getEnvsEnvDefinition().env;
-        let groupEnvId = 'default';
-        if (!shouldUseDefaultBundler) {
-          envToGetBundler = env;
-          groupEnvId = envDef.id;
-        }
-        if (!grouped[groupEnvId]) {
-          grouped[groupEnvId] = {
-            env,
-            envToGetBundler,
-            targets: [target],
-          };
-        } else {
-          grouped[groupEnvId].targets.push(target);
-        }
+    // avoid running them with `Promise.all` because getEnv methods do import/isolate which can't be in parallel.
+    await mapSeries(context.components, async (component) => {
+      // Do not run over other components in the graph. it make the process much longer with no need
+      if (originalSeedersIds && originalSeedersIds.length && !originalSeedersIds.includes(component.id.toString())) {
         return undefined;
-      })
-    );
+      }
+      const envDef = this.envs.getEnvFromComponent(component);
+      if (!envDef) return undefined;
+      const env = envDef.env;
+      const bundlingStrategy = this.preview.getBundlingStrategy(envDef.env);
+      if (bundlingStrategy.name === 'env') {
+        return undefined;
+      }
+      const target = await this.getEnvTargetFromComponent(context, component, envDef, htmlConfig);
+      if (!target) return undefined;
+      const shouldUseDefaultBundler = this.shouldUseDefaultBundler(envDef);
+      let envToGetBundler = this.envs.getEnvsEnvDefinition().env;
+      let groupEnvId = 'default';
+      if (!shouldUseDefaultBundler) {
+        envToGetBundler = env;
+        groupEnvId = envDef.id;
+      }
+      if (!grouped[groupEnvId]) {
+        grouped[groupEnvId] = {
+          env,
+          envToGetBundler,
+          targets: [target],
+        };
+      } else {
+        grouped[groupEnvId].targets.push(target);
+      }
+      return undefined;
+    });
     if (isEmpty(grouped)) {
       return { componentsResults: [] };
     }
@@ -107,8 +106,10 @@ export class EnvPreviewTemplateTask implements BuildTask {
       metaData: {
         initiator: `${GENERATE_ENV_TEMPLATE_TASK_NAME} task`,
         envId: context.id,
+        isEnvTemplate: true,
       },
     });
+
     const bundlerResults = await mapSeries(Object.entries(groups), async ([, targetsGroup]) => {
       bundlerContext.targets = targetsGroup.targets;
       const bundler: Bundler = await targetsGroup.envToGetBundler.getTemplateBundler(bundlerContext);
@@ -133,10 +134,9 @@ export class EnvPreviewTemplateTask implements BuildTask {
     envDef: EnvDefinition,
     htmlConfig: BundlerHtmlConfig[]
   ): Promise<Target | undefined> {
-    const env = envDef.env;
     const envPreviewConfig = this.preview.getEnvPreviewConfig(envDef.env);
 
-    const peers = await this.dependencyResolver.getPeerDependenciesListFromEnv(env);
+    const peers = await this.dependencyResolver.getPreviewHostDependenciesFromEnv(envDef.env);
     // const module = await this.getPreviewModule(envComponent);
     // const entries = Object.keys(module).map((key) => module.exposes[key]);
     const capsule = context.capsuleNetwork.graphCapsules.getCapsule(envComponent.id);
@@ -156,6 +156,8 @@ export class EnvPreviewTemplateTask implements BuildTask {
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
     const resolvedEnvAspects = await this.preview.resolveAspects(MainRuntime.name, [envComponent.id], undefined, {
       requestedOnly: true,
+      // required to support envs that are plguins (.bit-env files)
+      filterByRuntime: false,
     });
     const resolvedEnv = resolvedEnvAspects[0];
     const hostRootDir = resolvedEnv?.aspectPath;
@@ -193,7 +195,13 @@ export class EnvPreviewTemplateTask implements BuildTask {
   }) {
     const previewModules = await this.getPreviewModules(envDef);
     const previewEntries = previewModules.map(({ name, path, ...rest }) => {
-      const linkFile = this.preview.writeLink(name, ComponentMap.create([]), path, workDir, splitComponentBundle);
+      const linkFile = this.preview.writeLink(
+        name,
+        ComponentMap.create([]),
+        { default: path },
+        workDir,
+        splitComponentBundle
+      );
 
       return { name, path, ...rest, entry: linkFile };
     });
@@ -240,7 +248,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
           if (!def.renderTemplatePathByEnv) return undefined;
           return {
             name: def.prefix,
-            path: await def.renderTemplatePathByEnv(envDef.env),
+            path: (await def.renderTemplatePathByEnv(envDef.env)) || '',
             include: def.include,
           };
         })

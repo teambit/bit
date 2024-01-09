@@ -1,5 +1,6 @@
 import arrayDifference from 'array-difference';
 import chalk from 'chalk';
+import { ComponentIdList } from '@teambit/component-id';
 import Table from 'cli-table';
 import normalize from 'normalize-path';
 import diff from 'object-diff';
@@ -8,8 +9,8 @@ import { compact } from 'lodash';
 import { lt, gt } from 'semver';
 import Component from '../component/consumer-component';
 import { ExtensionDataList } from '../config';
-import { DiffOptions, FieldsDiff } from './components-diff';
-import { BitIds } from '../../bit-id';
+import { DiffOptions, FieldsDiff, getOneFileDiff } from './components-diff';
+import { saveIntoOsTmp } from '../../utils/fs/save-into-os-tmp';
 
 type ConfigDiff = {
   fieldName: string;
@@ -61,9 +62,9 @@ export function componentToPrintableForDiff(component: Component): Record<string
   const peerPackageDependencies = [].concat(parsePackages(allPeerPackages)).filter((x) => x);
   const overrides = component.overrides.componentOverridesData;
 
-  obj.id = component.id.toStringWithoutScope();
-  obj.language = lang || null;
-  obj.bindingPrefix = bindingPrefix || null;
+  obj.id = component.id._legacy.toStringWithoutScope();
+  obj.language = lang;
+  obj.bindingPrefix = bindingPrefix;
   obj.mainFile = mainFile ? normalize(mainFile) : null;
   obj.dependencies = dependencies
     .toStringOfIds()
@@ -134,11 +135,11 @@ function componentToPrintableForDiffCommand(component: Component, verbose = fals
   return comp;
 }
 
-export function diffBetweenComponentsObjects(
+export async function diffBetweenComponentsObjects(
   componentLeft: Component,
   componentRight: Component,
   { verbose, formatDepsAsTable }: DiffOptions
-): FieldsDiff[] | undefined {
+): Promise<FieldsDiff[] | undefined> {
   const printableLeft = componentToPrintableForDiffCommand(componentLeft, verbose);
   const printableRight = componentToPrintableForDiffCommand(componentRight, verbose);
   const leftVersion = componentLeft.version;
@@ -280,8 +281,8 @@ export function diffBetweenComponentsObjects(
   };
 
   const componentDependenciesOutput = (fieldName: string): string | null => {
-    const dependenciesLeft: BitIds = componentLeft.depsIdsGroupedByType[fieldName];
-    const dependenciesRight: BitIds = componentRight.depsIdsGroupedByType[fieldName];
+    const dependenciesLeft: ComponentIdList = componentLeft.depsIdsGroupedByType[fieldName];
+    const dependenciesRight: ComponentIdList = componentRight.depsIdsGroupedByType[fieldName];
     if (R.isEmpty(dependenciesLeft) && R.isEmpty(dependenciesRight)) return null;
     const diffsLeft = dependenciesLeft.reduce<DepDiff[]>((acc, dependencyLeft) => {
       const dependencyRight = dependenciesRight.searchWithoutVersion(dependencyLeft);
@@ -326,12 +327,10 @@ export function diffBetweenComponentsObjects(
     return depsDiff;
   };
 
-  const fieldsEnvsConfigOutput = getEnvsConfigOutput(componentLeft, componentRight);
-  const extensionsConfigOutput = getExtensionsConfigOutput(componentLeft, componentRight);
+  const extensionsConfigOutput = await getExtensionsConfigOutput(componentLeft, componentRight);
 
   const allDiffs = [
     ...fieldsDiffOutput,
-    ...fieldsEnvsConfigOutput,
     ...extensionsConfigOutput,
     ...dependenciesRelativePathsOutput(),
     ...getAllDepsOutput(),
@@ -340,20 +339,7 @@ export function diffBetweenComponentsObjects(
   return R.isEmpty(allDiffs) ? undefined : allDiffs;
 }
 
-function getEnvsConfigOutput(componentLeft: Component, componentRight: Component): Array<ConfigDiff> {
-  const envs = ['compiler', 'tester'];
-  const fieldsEnvsConfigOutput = envs.map((env: string) => {
-    const leftConfig = componentLeft[env] && componentLeft[env].dynamicConfig ? componentLeft[env].dynamicConfig : {};
-    const rightConfig =
-      componentRight[env] && componentRight[env].dynamicConfig ? componentRight[env].dynamicConfig : {};
-    if (JSON.stringify(leftConfig) === JSON.stringify(rightConfig)) return undefined;
-    const fieldName = `${env} configuration`;
-    return configsOutput(fieldName, leftConfig, rightConfig, componentLeft.version, componentRight.version);
-  });
-  return compact(fieldsEnvsConfigOutput);
-}
-
-function getExtensionsConfigOutput(componentLeft: Component, componentRight: Component): Array<ConfigDiff> {
+async function getExtensionsConfigOutput(componentLeft: Component, componentRight: Component): Promise<ConfigDiff[]> {
   const leftExtensionsConfigs = componentLeft.extensions.sortById().toConfigObject();
   const rightExtensionsConfigs = componentRight.extensions.sortById().toConfigObject();
   const leftExtensionsIds = Object.keys(leftExtensionsConfigs);
@@ -363,12 +349,14 @@ function getExtensionsConfigOutput(componentLeft: Component, componentRight: Com
   // const onlyOnOneIds = R.symmetricDifference(leftExtensionsIds, rightExtensionsIds);
   const allIds = R.union(leftExtensionsIds, rightExtensionsIds);
 
-  const allIdsOutput = allIds.map((extId) => {
-    const leftConfig = leftExtensionsConfigs[extId];
-    const rightConfig = rightExtensionsConfigs[extId];
-    const fieldName = `${extId} configuration`;
-    return configsOutput(fieldName, leftConfig, rightConfig, componentLeft.version, componentRight.version);
-  });
+  const allIdsOutput = await Promise.all(
+    allIds.map((extId) => {
+      const leftConfig = leftExtensionsConfigs[extId];
+      const rightConfig = rightExtensionsConfigs[extId];
+      const fieldName = `${extId} configuration`;
+      return configsOutput(fieldName, leftConfig, rightConfig, componentLeft.version, componentRight.version);
+    })
+  );
 
   return compact(allIdsOutput);
 }
@@ -396,25 +384,27 @@ function titleRight(field: string, leftVersion?: string, rightVersion?: string):
   return `+++ ${prettifyFieldName(field)} (${rightLabel})\n`;
 }
 
-function configsOutput(
+async function configsOutput(
   fieldName: string,
   leftConfig?: Record<string, any>,
   rightConfig?: Record<string, any>,
   leftVersion?: string,
   rightVersion?: string
-): ConfigDiff | undefined {
+): Promise<ConfigDiff | undefined> {
   if (!leftConfig && !rightConfig) return undefined;
   if (leftConfig && rightConfig && JSON.stringify(leftConfig) === JSON.stringify(rightConfig)) return undefined;
-  const title =
-    titleLeft(fieldName, leftVersion, rightVersion) + chalk.bold(titleRight(fieldName, leftVersion, rightVersion));
-  const getValue = (left: boolean, fieldValue?: Record<string, any>) => {
-    if (fieldValue === undefined || R.isEmpty(fieldValue)) return '';
-    const sign = left ? '-' : '+';
-    const jsonOutput = JSON.stringify(fieldValue, null, `${sign} `);
-    return `${jsonOutput}\n`;
-  };
-  const value = chalk.red(getValue(true, leftConfig)) + chalk.green(getValue(false, rightConfig));
 
-  const diffOutput = title + value;
+  const getConfigAsFilePath = async (config?: Record<string, any>) => {
+    const str = config ? JSON.stringify(config, undefined, 2) : '';
+    return saveIntoOsTmp(str);
+  };
+
+  const fileAPath = await getConfigAsFilePath(leftConfig);
+  const fileBPath = await getConfigAsFilePath(rightConfig);
+  const fileALabel = labelLeft(leftVersion, rightVersion) || '';
+  const fileBLabel = chalk.bold(labelRight(leftVersion, rightVersion) || '');
+
+  const diffOutput = await getOneFileDiff(fileAPath, fileBPath, fileALabel, fileBLabel, fieldName, true);
+
   return { fieldName, diffOutput };
 }

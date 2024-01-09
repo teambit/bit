@@ -1,6 +1,6 @@
 import { resolve, join } from 'path';
 import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
-import { propogateUntil as propagateUntil } from '@teambit/legacy/dist/utils';
+import { findScopePath } from '@teambit/legacy/dist/utils';
 import { readdirSync } from 'fs';
 import { Harmony, Aspect } from '@teambit/harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
@@ -11,11 +11,10 @@ import { NodeAspect } from '@teambit/node';
 import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
-import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
-import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
+import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
-import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
+import DependenciesAspect from '@teambit/dependencies';
 
 function getPackageName(aspect: any, id: ComponentID) {
   return `@teambit/${id.name}`;
@@ -28,6 +27,19 @@ function getPackageName(aspect: any, id: ComponentID) {
  * otherwise, it'll show an error "TypeError: Cannot read property 'runtime' of undefined".
  */
 export async function loadAspect<T>(targetAspect: Aspect, cwd = process.cwd(), runtime = 'main'): Promise<T> {
+  const harmony = await loadManyAspects([targetAspect], cwd, runtime);
+  return harmony.get(targetAspect.id);
+}
+
+/**
+ * returns an instance of Harmony. with this instance, you can get any aspect you loaded.
+ * e.g. `const workspace = harmony.get<Workspace>(WorkspaceAspect.id);`
+ */
+export async function loadManyAspects(
+  targetAspects: Aspect[],
+  cwd = process.cwd(),
+  runtime = 'main'
+): Promise<Harmony> {
   clearGlobalsIfNeeded();
   const config = await getConfig(cwd);
   const configMap = config.toObject();
@@ -37,19 +49,19 @@ export async function loadAspect<T>(targetAspect: Aspect, cwd = process.cwd(), r
 
   // CLIAspect is needed for register the main runtime. NodeAspect is needed to get the default env if nothing
   // was configured. If it's not loaded here, it'll throw an error later that there is no node-env.
-  const harmony = await Harmony.load([CLIAspect, NodeAspect, targetAspect], runtime, configMap);
+  // DependenciesAspect is needed to make ComponentLoader.loadDeps hook works.
+  const harmony = await Harmony.load([CLIAspect, DependenciesAspect, NodeAspect, ...targetAspects], runtime, configMap);
 
   await harmony.run(async (aspect, runtimeDef) => {
     const id = ComponentID.fromString(aspect.id);
-    const packageName = getPackageName(aspect, id);
-    const mainFilePath = require.resolve(packageName);
+    const mainFilePath = getMainFilePath(aspect, id);
     const packagePath = resolve(join(mainFilePath, '..'));
     const files = readdirSync(packagePath);
     const runtimePath = files.find((path) => path.includes(`.${runtimeDef.name}.runtime.js`));
     if (!runtimePath) throw new Error(`could not find runtime '${runtimeDef.name}' for aspect ID '${aspect.id}'`);
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const runtimeC = require(join(packagePath, runtimePath));
-    if (aspect.manifest._runtimes.length === 0 || aspect.id === targetAspect.id) {
+    if (aspect.manifest._runtimes.length === 0 || targetAspects.includes(aspect.id)) {
       // core-aspects running outside of bit-bin repo end up here. they don't have runtime.
       // this makes sure to load them from the path were they're imported
       if (!runtimeC.default) {
@@ -60,12 +72,24 @@ go to the aspect-main file and add a new line with "export default YourAspectMai
     }
   });
 
-  return harmony.get(targetAspect.id);
+  return harmony;
+}
+
+function getMainFilePath(aspect: any, id: ComponentID) {
+  let packageName = getPackageName(aspect, id);
+  try {
+    // try core aspects
+    return require.resolve(packageName);
+  } catch (err) {
+    // fallback to a naive way of converting componentId to pkg-name. (it won't work when the component has special pkg name settings)
+    packageName = `@${id.scope.replace('.', '/')}.${id.fullName.replaceAll('/', '.')}`;
+    return require.resolve(packageName);
+  }
 }
 
 export async function getConfig(cwd = process.cwd()) {
   const consumerInfo = await getConsumerInfo(cwd);
-  const scopePath = propagateUntil(cwd);
+  const scopePath = findScopePath(cwd);
   const globalConfigOpts = {
     name: '.bitrc.jsonc',
   };
@@ -94,13 +118,10 @@ function clearGlobalsIfNeeded() {
   delete loadConsumer.cache;
   ComponentLoader.onComponentLoadSubscribers = [];
   ComponentOverrides.componentOverridesLoadingRegistry = {};
-  ComponentConfig.componentConfigLegacyLoadingRegistry = {};
   ComponentConfig.componentConfigLoadingRegistry = {};
   PackageJsonTransformer.packageJsonTransformersRegistry = [];
   // @ts-ignore
-  DependencyResolver.getWorkspacePolicy = undefined;
-  // @ts-ignore
-  ManyComponentsWriter.externalInstaller = {};
+  ComponentLoader.loadDeps = undefined;
   ExtensionDataList.coreExtensionsNames = new Map();
   // @ts-ignore
   WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;

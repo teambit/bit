@@ -7,12 +7,27 @@ import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
+import EnvsAspect from '@teambit/envs';
+import { getPathStatIfExist } from '@teambit/legacy/dist/utils/fs/last-modified';
+import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+
+export type MergeOptions = {
+  mergeStrategy?: 'theirs' | 'ours' | 'manual';
+};
 /**
  * consider extracting to a new component.
  * (pro: making Workspace aspect smaller. con: it's an implementation details of the workspace)
  */
 export class BitMap {
   constructor(private legacyBitMap: LegacyBitMap, private consumer: Consumer) {}
+
+  mergeBitmaps(bitmapContent: string, otherBitmapContent: string, opts: MergeOptions = {}): string {
+    return LegacyBitMap.mergeContent(bitmapContent, otherBitmapContent, opts);
+  }
+
+  getPath(): PathOsBasedAbsolute {
+    return this.legacyBitMap.mapPath;
+  }
 
   /**
    * adds component config to the .bitmap file.
@@ -26,7 +41,7 @@ export class BitMap {
     shouldMergeConfig = false
   ): boolean {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     const currentConfig = (bitMapEntry.config ||= {})[aspectId];
     if (isEqual(currentConfig, config)) {
       return false; // no changes
@@ -51,9 +66,28 @@ export class BitMap {
     return true; // changes have been made
   }
 
+  updateDefaultScope(oldScope: string, newScope: string) {
+    const changedId: ComponentID[] = [];
+    this.legacyBitMap.components.forEach((componentMap) => {
+      // only new components (not snapped/tagged) can be changed
+      if (componentMap.defaultScope === oldScope && !componentMap.id.hasVersion()) {
+        componentMap.defaultScope = newScope;
+        changedId.push(componentMap.id);
+      }
+    });
+    if (changedId.length) {
+      this.legacyBitMap.markAsChanged();
+    }
+    return changedId;
+  }
+
+  markAsChanged() {
+    this.legacyBitMap.markAsChanged();
+  }
+
   removeComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist: boolean): boolean {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     const currentConfig = (bitMapEntry.config ||= {})[aspectId];
     if (currentConfig) {
       delete bitMapEntry.config[aspectId];
@@ -70,7 +104,7 @@ export class BitMap {
   }
 
   removeEntireConfig(id: ComponentID): boolean {
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     if (!bitMapEntry.config) return false;
     delete bitMapEntry.config;
     this.legacyBitMap.markAsChanged();
@@ -78,13 +112,13 @@ export class BitMap {
   }
 
   setEntireConfig(id: ComponentID, config: Record<string, any>) {
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     bitMapEntry.config = config;
     this.legacyBitMap.markAsChanged();
   }
 
   removeDefaultScope(id: ComponentID) {
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     if (bitMapEntry.defaultScope) {
       delete bitMapEntry.defaultScope;
       this.legacyBitMap.markAsChanged();
@@ -92,26 +126,31 @@ export class BitMap {
   }
 
   setDefaultScope(id: ComponentID, defaultScope: string) {
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     bitMapEntry.defaultScope = defaultScope;
+    bitMapEntry.id = bitMapEntry.id.changeDefaultScope(defaultScope);
     this.legacyBitMap.markAsChanged();
   }
 
   /**
    * write .bitmap object to the filesystem
+   * optionally pass a reason for the change to be saved in the local scope `bitmap-history-metadata.txt` file.
    */
-  async write() {
-    await this.consumer.writeBitMap();
+  async write(reasonForChange?: string) {
+    await this.consumer.writeBitMap(reasonForChange);
   }
 
   /**
    * get the data saved in the .bitmap file for this component-id.
+   * throws if not found
+   * @see this.getBitmapEntryIfExist
    */
-  getBitmapEntry(
-    id: ComponentID,
-    { ignoreVersion, ignoreScopeAndVersion }: GetBitMapComponentOptions = {}
-  ): ComponentMap {
-    return this.legacyBitMap.getComponent(id._legacy, { ignoreVersion, ignoreScopeAndVersion });
+  getBitmapEntry(id: ComponentID, { ignoreVersion }: GetBitMapComponentOptions = {}): ComponentMap {
+    return this.legacyBitMap.getComponent(id, { ignoreVersion });
+  }
+
+  getBitmapEntryIfExist(id: ComponentID, { ignoreVersion }: GetBitMapComponentOptions = {}): ComponentMap | undefined {
+    return this.legacyBitMap.getComponentIfExist(id, { ignoreVersion });
   }
 
   getAspectIdFromConfig(
@@ -154,16 +193,41 @@ export class BitMap {
     }
     if (sourceId.fullName !== targetId.fullName) {
       this.legacyBitMap.removeComponent(bitMapEntry.id);
-      bitMapEntry.id = targetId._legacy;
+      bitMapEntry.id = targetId;
       this.legacyBitMap.setComponent(bitMapEntry.id, bitMapEntry);
     }
     if (sourceId.scope !== targetId.scope) {
-      this.setDefaultScope(targetId, targetId.scope);
+      this.setDefaultScope(sourceId, targetId.scope);
     }
   }
 
+  /**
+   * helpful when reaming an aspect and this aspect is used in the config of other components.
+   */
+  renameAspectInConfig(sourceId: ComponentID, targetId: ComponentID) {
+    this.legacyBitMap.components.forEach((componentMap) => {
+      const config = componentMap.config;
+      if (!config) return;
+      Object.keys(config).forEach((aspectId) => {
+        if (aspectId === sourceId.toString()) {
+          config[targetId.toString()] = config[aspectId];
+          delete config[aspectId];
+          this.markAsChanged();
+        }
+        if (aspectId === EnvsAspect.id) {
+          const envConfig = config[aspectId];
+          if (envConfig !== REMOVE_EXTENSION_SPECIAL_SIGN && envConfig.env === sourceId.toString()) {
+            envConfig.env = targetId.toString();
+            this.markAsChanged();
+          }
+        }
+      });
+      componentMap.config = config;
+    });
+  }
+
   removeComponent(id: ComponentID) {
-    this.legacyBitMap.removeComponent(id._legacy);
+    this.legacyBitMap.removeComponent(id);
   }
 
   /**
@@ -174,10 +238,40 @@ export class BitMap {
     return this.legacyBitMap.isLaneExported ? this.legacyBitMap.laneId : undefined;
   }
 
+  makeComponentsAvailableOnMain(ids: ComponentID[]) {
+    ids.forEach((id) => {
+      const componentMap = this.getBitmapEntry(id);
+      componentMap.isAvailableOnCurrentLane = true;
+      delete componentMap.onLanesOnly;
+    });
+    this.legacyBitMap.markAsChanged();
+  }
+
   /**
    * whether .bitmap file has changed in-memory
    */
   hasChanged(): boolean {
     return this.legacyBitMap.hasChanged;
+  }
+
+  takeSnapshot(): ComponentMap[] {
+    return this.legacyBitMap.components.map((comp) => comp.clone());
+  }
+
+  restoreFromSnapshot(componentMaps: ComponentMap[]) {
+    this.legacyBitMap.components = componentMaps;
+    this.legacyBitMap._invalidateCache();
+  }
+
+  /**
+   * .bitmap file could be changed by other sources (e.g. manually or by "git pull") not only by bit.
+   * this method returns the timestamp when the .bitmap has changed through bit. (e.g. as part of snap/tag/export/merge
+   * process)
+   */
+  async getLastModifiedBitmapThroughBit(): Promise<number | undefined> {
+    const bitmapHistoryDir = this.consumer.getBitmapHistoryDir();
+    const stat = await getPathStatIfExist(bitmapHistoryDir);
+    if (!stat) return undefined;
+    return stat.mtimeMs;
   }
 }

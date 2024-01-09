@@ -16,7 +16,6 @@ describe('write-tsconfig command', function () {
   describe('multiple components, most using one env', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponentsTS();
       helper.command.setEnv('comp3', 'teambit.harmony/aspect');
       helper.command.writeTsconfig();
@@ -35,7 +34,6 @@ describe('write-tsconfig command', function () {
     let dryRunResults: Record<string, any>;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponentsTS();
       envName = helper.env.setCustomEnv();
       helper.command.setEnv('comp3', envName);
@@ -46,11 +44,9 @@ describe('write-tsconfig command', function () {
     });
     it('should group the envs with the same tsconfig', () => {
       expect(dryRunResults).to.have.lengthOf(2);
-      expect(dryRunResults[1].envIds).to.have.lengthOf(2);
-      expect(dryRunResults[1].envIds).to.deep.equal([
-        `${helper.scopes.remote}/node-env`,
-        `${helper.scopes.remote}/node-env2`,
-      ]);
+      const envIds = dryRunResults[1].envIds;
+      expect(envIds).to.have.lengthOf(2);
+      expect(envIds.sort()).to.deep.equal([`${helper.scopes.remote}/node-env`, `${helper.scopes.remote}/node-env2`]);
     });
   });
   describe('adding tsconfig.json manually in an inner directory', () => {
@@ -61,7 +57,7 @@ describe('write-tsconfig command', function () {
     });
     it('should not be ignored', () => {
       const files = helper.command.getComponentFiles('comp1');
-      expect(files).to.include('inner/tsconfig.json');
+      expect(files).to.include(path.join('inner', 'tsconfig.json'));
     });
   });
 });

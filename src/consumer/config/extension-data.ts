@@ -1,7 +1,7 @@
 /* eslint-disable max-classes-per-file */
 import R from 'ramda';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { compact, isEmpty, cloneDeep } from 'lodash';
-import { BitId, BitIds } from '../../bit-id';
 import { sortObject } from '../../utils';
 import {
   convertBuildArtifactsFromModelObject,
@@ -9,7 +9,6 @@ import {
   reStructureBuildArtifacts,
 } from '../component/sources/artifact-files';
 
-const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
 type ExtensionConfig = { [extName: string]: any } | RemoveExtensionSpecialSign;
 type ConfigOnlyEntry = {
   id: string;
@@ -24,14 +23,17 @@ export const INTERNAL_CONFIG_FIELDS = ['__specific'];
 export class ExtensionDataEntry {
   constructor(
     public legacyId?: string,
-    public extensionId?: BitId,
+    public extensionId?: ComponentID,
     public name?: string,
     public rawConfig: ExtensionConfig = {},
     public data: { [key: string]: any } = {},
-    public newExtensionId: any = undefined
+    /**
+     * @deprecated use extensionId instead (it's the same)
+     */
+    public newExtensionId?: ComponentID
   ) {}
 
-  get id(): string | BitId {
+  get id(): string | ComponentID {
     if (this.extensionId) return this.extensionId;
     if (this.name) return this.name;
     if (this.legacyId) return this.legacyId;
@@ -103,6 +105,7 @@ export class ExtensionDataEntry {
 
 export class ExtensionDataList extends Array<ExtensionDataEntry> {
   static coreExtensionsNames: Map<string, string> = new Map();
+  static toModelObjectsHook: ((extDataList: ExtensionDataList) => void)[] = [];
   static registerCoreExtensionName(name: string) {
     ExtensionDataList.coreExtensionsNames.set(name, '');
   }
@@ -120,12 +123,16 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   /**
    * returns only new 3rd party extension ids, not core, nor legacy.
    */
-  get extensionsBitIds(): BitIds {
-    const bitIds = this.filter((entry) => entry.extensionId).map((entry) => entry.extensionId) as BitId[];
-    return BitIds.fromArray(bitIds);
+  get extensionsBitIds(): ComponentIdList {
+    const bitIds = this.filter((entry) => entry.extensionId).map((entry) => entry.extensionId) as ComponentID[];
+    return ComponentIdList.fromArray(bitIds);
   }
 
   toModelObjects() {
+    // call the hook before "clone". otherwise, some classes are loosing their structure and become plain objects
+    ExtensionDataList.toModelObjectsHook.forEach((hook) => {
+      hook(this);
+    });
     const extensionsClone = this.clone();
     extensionsClone.forEach((ext) => {
       if (ext.extensionId) {
@@ -145,19 +152,13 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     return extensionDataList;
   }
 
-  findExtension(extensionId: string, ignoreVersion = false, ignoreScope = false): ExtensionDataEntry | undefined {
+  findExtension(extensionId: string, ignoreVersion = false): ExtensionDataEntry | undefined {
     if (ExtensionDataList.coreExtensionsNames.has(extensionId)) {
       return this.findCoreExtension(extensionId);
     }
     return this.find((extEntry) => {
-      if (ignoreVersion && ignoreScope) {
-        return extEntry.extensionId?.toStringWithoutScopeAndVersion() === extensionId;
-      }
       if (ignoreVersion) {
         return extEntry.extensionId?.toStringWithoutVersion() === extensionId;
-      }
-      if (ignoreScope) {
-        return extEntry.extensionId?.toStringWithoutScope() === extensionId;
       }
       return extEntry.stringId === extensionId;
     });
@@ -167,7 +168,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     return this.find((extEntry) => extEntry.name === extensionId);
   }
 
-  remove(id: BitId) {
+  remove(id: ComponentID) {
     return ExtensionDataList.fromArray(
       this.filter((entry) => {
         return entry.stringId !== id.toString() && entry.stringId !== id.toStringWithoutVersion();
@@ -231,7 +232,10 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   }
 
   static fromConfigObject(obj: { [extensionId: string]: any } = {}): ExtensionDataList {
-    const arr = Object.keys(obj).map((extensionId) => configEntryToDataEntry(extensionId, obj[extensionId]));
+    const arr = Object.keys(obj)
+      // We don't want to store extensions with the file protocol because they are bounded to a specific machine.
+      .filter((extensionId) => !extensionId.startsWith('file:'))
+      .map((extensionId) => configEntryToDataEntry(extensionId, obj[extensionId]));
     return this.fromArray(arr);
   }
 
@@ -257,30 +261,43 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
    * @returns {ExtensionDataList}
    * @memberof ExtensionDataList
    */
-  static mergeConfigs(list: ExtensionDataList[]): ExtensionDataList {
+  static mergeConfigs(list: ExtensionDataList[], ignoreVersion = true): ExtensionDataList {
     if (list.length === 1) {
       return list[0];
     }
+
+    const mergeReducer = getMergeReducer(ignoreVersion);
 
     const merged = list.reduce(mergeReducer, new ExtensionDataList());
     return ExtensionDataList.fromArray(merged);
   }
 }
 
-function ignoreVersionPredicate(extensionEntry1: ExtensionDataEntry, extensionEntry2: ExtensionDataEntry) {
-  if (extensionEntry1.extensionId && extensionEntry2.extensionId) {
-    return extensionEntry1.extensionId.isEqualWithoutVersion(extensionEntry2.extensionId);
-  }
-  if (extensionEntry1.name && extensionEntry2.name) {
-    return extensionEntry1.name === extensionEntry2.name;
-  }
-  return false;
+function getMergeReducer(ignoreVersion = true) {
+  const predicate = getCompareExtPredicate(ignoreVersion);
+  const mergeReducer = (accumulator, currentValue) => R.unionWith(predicate, accumulator, currentValue);
+  return mergeReducer;
+}
+
+export function getCompareExtPredicate(ignoreVersion = true) {
+  return (extensionEntry1: ExtensionDataEntry, extensionEntry2: ExtensionDataEntry) => {
+    if (extensionEntry1.extensionId && extensionEntry2.extensionId) {
+      if (ignoreVersion) {
+        return extensionEntry1.extensionId.isEqualWithoutVersion(extensionEntry2.extensionId);
+      }
+      return extensionEntry1.extensionId.isEqual(extensionEntry2.extensionId);
+    }
+    if (extensionEntry1.name && extensionEntry2.name) {
+      return extensionEntry1.name === extensionEntry2.name;
+    }
+    return false;
+  };
 }
 
 export function configEntryToDataEntry(extensionId: string, config: any): ExtensionDataEntry {
   const isCore = ExtensionDataList.coreExtensionsNames.has(extensionId);
   if (!isCore) {
-    const parsedId = BitId.parse(extensionId, true);
+    const parsedId = ComponentID.fromString(extensionId);
     return new ExtensionDataEntry(undefined, parsedId, undefined, config, undefined);
   }
   return new ExtensionDataEntry(undefined, undefined, extensionId, config, undefined);

@@ -44,10 +44,10 @@ describe('bit diff command', function () {
       helper.fixtures.createComponentBarFoo(barFooV1);
       helper.fixtures.addComponentBarFooAsDir();
     });
-    it('before tagging it should indicate that there is no diff for that component', () => {
+    it('diff should show that all files were added', () => {
       const output = helper.command.diff('bar/foo');
-      expect(output).to.have.string(noDiffMessage);
-      expect(output).to.have.string('bar/foo');
+      expect(output).to.not.have.string(noDiffMessage);
+      expect(output).to.have.string(`+module.exports = function foo() { return 'got foo'; };`);
     });
     describe('after the component was tagged', () => {
       before(() => {
@@ -119,19 +119,19 @@ describe('bit diff command', function () {
         output = helper.command.diff();
       });
       it('should show diff for all modified components', () => {
-        expect(output).to.have.string('bar/foo');
-        expect(output).to.have.string('utils/is-type');
+        expect(output).to.have.string(`showing diff for ${helper.scopes.remote}/bar/foo`);
+        expect(output).to.have.string(`showing diff for ${helper.scopes.remote}/utils/is-type`);
         expect(output).to.have.string(barFooV1);
         expect(output).to.have.string(barFooV2);
       });
       it('should not show non modified components', () => {
-        expect(output).to.not.have.string('utils/is-string');
+        expect(output).to.not.have.string(`showing diff for ${helper.scopes.remote}/utils/is-string`);
       });
     });
     describe('running bit diff with multiple ids', () => {
       let output;
       before(() => {
-        output = helper.command.diff('utils/is-type utils/is-string');
+        output = helper.command.diff('"utils/is-type, utils/is-string"');
       });
       it('should not show diff for non modified components', () => {
         expect(output).to.not.have.string(fixtures.isString);
@@ -266,7 +266,7 @@ describe('bit diff command', function () {
     });
     describe('diff between a non-exist version and current version', () => {
       it('should throw an VersionNotFound error', () => {
-        const error = new VersionNotFound('1.0.6', 'bar/foo');
+        const error = new VersionNotFound('1.0.6', `${helper.scopes.remote}/bar/foo`);
         const diffFunc = () => helper.command.diff('bar/foo 1.0.6');
         helper.general.expectToThrow(diffFunc, error);
       });
@@ -297,22 +297,6 @@ describe('bit diff command', function () {
       it('should show the second version with leading + (plus sign)', () => {
         expect(output).to.have.string(`+++ ${barFooFile} (0.0.2)`);
         expect(output).to.have.string(`+${barFooV2}`);
-      });
-    });
-    describe('diff between two versions with multiple ids (not supported)', () => {
-      it('should throw an error', () => {
-        const output = helper.general.runWithTryCatch('bit diff bar/foo bar/foo2 0.0.1 0.0.2');
-        expect(output).to.have.string(
-          'bit diff [id] [version] [to_version] syntax was used, however, 4 arguments were given instead of 3'
-        );
-      });
-    });
-    describe('diff of a certain version with multiple ids (not supported)', () => {
-      it('should throw an error', () => {
-        const output = helper.general.runWithTryCatch('bit diff bar/foo bar/foo2 0.0.1');
-        expect(output).to.have.string(
-          'bit diff [id] [version] syntax was used, however, 3 arguments were given instead of 2'
-        );
       });
     });
   });

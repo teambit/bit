@@ -1,8 +1,7 @@
-import { BitId, BitIds } from '../bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import ConsumerComponent from '../consumer/component';
 import ModelComponent from './models/model-component';
 import Version from './models/version';
-import { Ref } from './objects';
 import Repository from './objects/repository';
 
 export default class ComponentVersion {
@@ -22,20 +21,20 @@ export default class ComponentVersion {
     return this.component.loadVersion(this.version, repository, throws);
   }
 
-  flattenedDependencies(repository: Repository): Promise<BitIds> {
+  async flattenedDependencies(repository: Repository): Promise<ComponentIdList> {
     return this.getVersion(repository).then((version) => version.flattenedDependencies);
   }
 
-  toId(): BitId {
-    return new BitId({
+  toComponentId(): ComponentID {
+    return ComponentID.fromObject({
       scope: this.component.scope,
       name: this.component.name,
       version: this.version,
     });
   }
 
-  get id(): BitId {
-    return this.toId();
+  get id(): ComponentID {
+    return this.toComponentId();
   }
 
   toConsumer(repo: Repository): Promise<ConsumerComponent> {
@@ -43,9 +42,3 @@ export default class ComponentVersion {
     return this.component.toConsumerComponent(this.version, this.component.scope, repo);
   }
 }
-
-export type CollectObjectsOpts = {
-  collectParents: boolean;
-  collectParentsUntil?: Ref | null; // stop traversing when this hash found. helps to import only the delta.
-  collectArtifacts: boolean;
-};

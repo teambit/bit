@@ -73,8 +73,10 @@ export class Network {
         if (originalSeedersCapsules.getCapsule(seederCapsule.component.id)) {
           return seederCapsule;
         }
-        const isModified = await seederCapsule.component.isModified();
-        return isModified ? seederCapsule : null;
+        const capsuleUsePreviouslySavedDists = await CapsuleList.capsuleUsePreviouslySavedDists(
+          seederCapsule.component
+        );
+        return capsuleUsePreviouslySavedDists ? null : seederCapsule;
       })
     );
     return CapsuleList.fromArray(compact(capsules));
