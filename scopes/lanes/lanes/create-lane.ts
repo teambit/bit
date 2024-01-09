@@ -63,7 +63,8 @@ export async function createLane(
   const dataToPopulate = await getDataToPopulateLaneObjectIfNeeded();
   newLane.setLaneComponents(dataToPopulate);
 
-  await consumer.scope.lanes.saveLane(newLane);
+  const laneHistoryMsg = remoteLane ? `fork lane "${remoteLane.name}"` : 'new lane';
+  await consumer.scope.lanes.saveLane(newLane, { laneHistoryMsg });
 
   return newLane;
 }
@@ -75,7 +76,7 @@ export async function createLaneInScope(laneName: string, scope: ScopeMain): Pro
   }
   throwForInvalidLaneName(laneName);
   const newLane = Lane.create(laneName, scope.name);
-  await scope.legacyScope.lanes.saveLane(newLane);
+  await scope.legacyScope.lanes.saveLane(newLane, { laneHistoryMsg: 'new lane (created from scope)' });
   return newLane;
 }
 

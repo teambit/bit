@@ -144,12 +144,9 @@ export default class ImportComponents {
       lane,
     });
 
-    // merge the lane objects
-    const mergeAllLanesResults = await pMapSeries(this.laneObjects, (laneObject) =>
-      this.scope.sources.mergeLane(laneObject, true)
-    );
-    const mergedLanes = mergeAllLanesResults.map((result) => result.mergeLane);
-    await Promise.all(mergedLanes.map((mergedLane) => this.scope.lanes.saveLane(mergedLane)));
+    if (lane) {
+      await this.mergeAndSaveLaneObject();
+    }
 
     return this.returnCompleteResults(beforeImportVersions, versionDependenciesArr);
   }
@@ -189,13 +186,11 @@ export default class ImportComponents {
     const versionDependenciesArr = await this._importComponentsObjects(bitIds, {
       lane: this.laneObjects?.[0],
     });
-    if (this.laneObjects && this.options.objectsOnly) {
-      // merge the lane objects
-      const mergeAllLanesResults = await pMapSeries(this.laneObjects, (laneObject) =>
-        this.scope.sources.mergeLane(laneObject, true)
-      );
-      const mergedLanes = mergeAllLanesResults.map((result) => result.mergeLane);
-      await Promise.all(mergedLanes.map((mergedLane) => this.scope.lanes.saveLane(mergedLane)));
+    if (this.laneObjects?.length && this.options.objectsOnly) {
+      if (this.laneObjects.length > 1) {
+        throw new Error(`importSpecificComponents does not support more than one lane`);
+      }
+      await this.mergeAndSaveLaneObject();
     }
     let writtenComponents: Component[] = [];
     let componentWriterResults: ComponentWriterResults | undefined;
@@ -216,6 +211,17 @@ export default class ImportComponents {
       writtenComponents,
       componentWriterResults
     );
+  }
+
+  private async mergeAndSaveLaneObject() {
+    const lane = this.laneObjects[0];
+    const mergeLaneResults = await this.scope.sources.mergeLane(lane, true);
+    const mergedLane = mergeLaneResults.mergeLane;
+    const isRemoteLaneEqualsToMergedLane = lane.isEqual(mergedLane);
+    await this.scope.lanes.saveLane(mergedLane, {
+      saveLaneHistory: !isRemoteLaneEqualsToMergedLane,
+      laneHistoryMsg: 'import (merge from remote)',
+    });
   }
 
   private async _filterComponentsByFilters(components: Component[]): Promise<Component[]> {
@@ -738,7 +744,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     if (!currentLane) {
       return; // user on main
     }
-    const idsFromRemoteLanes = ComponentIdList.fromArray(this.laneObjects.flatMap((lane) => lane.toBitIds()));
+    const idsFromRemoteLanes = ComponentIdList.fromArray(this.laneObjects.flatMap((lane) => lane.toComponentIds()));
     await Promise.all(
       components.map(async (comp) => {
         const existOnRemoteLane = idsFromRemoteLanes.has(comp.id);
@@ -752,7 +758,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
         currentLane.addComponent({ id: comp.id, head: ref });
       })
     );
-    await this.scope.lanes.saveLane(currentLane);
+    await this.scope.lanes.saveLane(currentLane, { laneHistoryMsg: 'import components' });
   }
 
   async _writeToFileSystem(components: Component[]): Promise<ComponentWriterResults> {

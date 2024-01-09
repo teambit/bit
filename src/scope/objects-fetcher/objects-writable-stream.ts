@@ -1,7 +1,7 @@
 import { Writable } from 'stream';
 import { BitObject, Repository } from '../objects';
 import logger from '../../logger/logger';
-import { Lane, ModelComponent, Version, VersionHistory } from '../models';
+import { Lane, LaneHistory, ModelComponent, Version, VersionHistory } from '../models';
 import { ObjectItem } from '../objects/object-list';
 import { WriteObjectsQueue } from './write-objects-queue';
 import { ComponentsPerRemote } from '../component-ops/multiple-component-merger';
@@ -70,6 +70,10 @@ export class ObjectsWritable extends Writable {
       // technically it's mutable, but it's ok to have it in the same queue with high concurrency because the merge is
       // simple enough and can't interrupt others
       await this.objectsQueue.addImmutableObject(obj.ref.toString(), () => this.mergeVersionHistory(bitObject));
+    } else if (bitObject instanceof LaneHistory) {
+      // technically it's mutable, but it's ok to have it in the same queue with high concurrency because the merge is
+      // simple enough and can't interrupt others
+      await this.objectsQueue.addImmutableObject(obj.ref.toString(), () => this.mergeLaneHistory(bitObject));
     } else if (bitObject instanceof Version) {
       // technically it's mutable, but it's ok to have it in the same queue with high concurrency because the merge is
       // simple enough and can't interrupt others
@@ -101,6 +105,16 @@ export class ObjectsWritable extends Writable {
       await this.repo.writeObjectsToTheFS([existingVersionHistory]);
     } else {
       await this.repo.writeObjectsToTheFS([versionHistory]);
+    }
+  }
+
+  private async mergeLaneHistory(laneHistory: LaneHistory) {
+    const existingLaneHistory = (await this.repo.load(laneHistory.hash())) as LaneHistory | undefined;
+    if (existingLaneHistory) {
+      existingLaneHistory.merge(laneHistory);
+      await this.repo.writeObjectsToTheFS([existingLaneHistory]);
+    } else {
+      await this.repo.writeObjectsToTheFS([laneHistory]);
     }
   }
 
