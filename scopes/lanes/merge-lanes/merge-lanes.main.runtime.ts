@@ -10,7 +10,7 @@ import MergingAspect, {
   ApplyVersionResults,
 } from '@teambit/merging';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { getBasicLog } from '@teambit/snapping';
+import { getBasicLog } from '@teambit/legacy/dist/utils/bit/basic-log';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
 import pMapSeries from 'p-map-series';
@@ -241,7 +241,7 @@ export class MergeLanesMain {
 
     if (!keepReadme && otherLane && otherLane.readmeComponent && mergedSuccessfully) {
       const readmeComponentId = otherLane.readmeComponent.id.changeVersion(otherLane.readmeComponent?.head?.hash);
-      deleteResults = await this.remove.removeLocallyByIds([readmeComponentId]);
+      deleteResults = await this.remove.removeLocallyByIds([readmeComponentId], { reasonForRemoval: 'lane-merge' });
     } else if (otherLane && !otherLane.readmeComponent) {
       deleteResults = { readmeResult: '' };
     }

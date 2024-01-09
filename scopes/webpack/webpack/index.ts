@@ -6,7 +6,7 @@ export type {
   GlobalWebpackConfigTransformContext,
   WebpackConfigDevServerTransformer,
 } from './webpack.main.runtime';
-export { runTransformersWithContext } from './webpack.main.runtime';
+export { runTransformersWithContext } from './run-transformer';
 export { WebpackAspect } from './webpack.aspect';
 export { WebpackDevServer } from './webpack.dev-server';
 export { WebpackBundler } from './webpack.bundler';

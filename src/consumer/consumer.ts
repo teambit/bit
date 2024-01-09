@@ -1,14 +1,11 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
-import semver from 'semver';
 import { compact } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
 import { BitIdStr } from '../bit-id/bit-id';
-import loader from '../cli/loader';
-import { BEFORE_MIGRATION } from '../cli/loader/loader-messages';
 import {
   BIT_GIT_DIR,
   BIT_HIDDEN_DIR,
@@ -23,7 +20,7 @@ import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
 import { generateRandomStr, sortObject } from '../utils';
-import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
+import { composeComponentPath } from '../utils/bit/compose-component-path';
 import {
   PathAbsolute,
   PathLinuxRelative,
@@ -32,10 +29,9 @@ import {
   PathOsBasedRelative,
   PathRelative,
 } from '../utils/path';
-import BitMap, { CURRENT_BITMAP_SCHEMA } from './bit-map/bit-map';
+import BitMap from './bit-map/bit-map';
 import { NextVersion } from './bit-map/component-map';
 import Component from './component';
-import { ComponentStatus, ComponentStatusLoader, ComponentStatusResult } from './component-ops/component-status-loader';
 import ComponentLoader, { ComponentLoadOptions, LoadManyResult } from './component/component-loader';
 import { Dependencies } from './component/dependencies';
 import PackageJsonFile from './component/package-json-file';
@@ -44,8 +40,6 @@ import WorkspaceConfig, { WorkspaceConfigProps } from './config/workspace-config
 import { getConsumerInfo } from './consumer-locator';
 import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound } from './exceptions';
-import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
-import migratonManifest from './migrations/consumer-migrator-manifest';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
 import { NoHeadNoVersion } from '../scope/exceptions/no-head-no-version';
 
@@ -79,7 +73,6 @@ export default class Consumer {
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
   packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
   componentLoader: ComponentLoader;
-  componentStatusLoader: ComponentStatusLoader;
   packageJson: any;
   public onCacheClear: Array<() => void | Promise<void>> = [];
   constructor({
@@ -99,7 +92,6 @@ export default class Consumer {
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
     this.componentLoader = ComponentLoader.getInstance(this);
-    this.componentStatusLoader = new ComponentStatusLoader(this);
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
   async setBitMap() {
@@ -109,7 +101,7 @@ export default class Consumer {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get dirStructure(): DirStructure {
     if (!this._dirStructure) {
-      this._dirStructure = new DirStructure(this.config.componentsDefaultDirectory, this.config._dependenciesDirectory);
+      this._dirStructure = new DirStructure(this.config.componentsDefaultDirectory);
     }
     return this._dirStructure;
   }
@@ -133,7 +125,6 @@ export default class Consumer {
 
   clearOneComponentCache(id: ComponentID) {
     this.componentLoader.clearOneComponentCache(id);
-    this.componentStatusLoader.clearOneComponentCache(id);
   }
 
   getTmpFolder(fullPath = false): PathOsBased {
@@ -186,48 +177,6 @@ export default class Consumer {
       return fs.remove(tmpPath);
     }
     return undefined;
-  }
-
-  /**
-   * Running migration process for consumer to update the stores (.bit.map.json) to the current version
-   *
-   * @param {any} verbose - print debug logs
-   * @returns {Object} - wether the process run and wether it succeeded
-   * @memberof Consumer
-   */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async migrate(verbose): Record<string, any> {
-    // Check version of stores (bitmap / bitjson) to check if we need to run migrate
-    // If migration is needed add loader - loader.start(BEFORE_MIGRATION);
-    // bitmap migrate
-    if (verbose) console.log('running migration process for consumer'); // eslint-disable-line
-    const bitmapSchema = this.bitMap.schema;
-    if (semver.gte(bitmapSchema, CURRENT_BITMAP_SCHEMA)) {
-      logger.trace('bit.map version is up to date');
-      return {
-        run: false,
-      };
-    }
-    loader.start(BEFORE_MIGRATION);
-    logger.debugAndAddBreadCrumb(
-      'consumer.migrate',
-      `start consumer migration. bitmapSchema ${bitmapSchema}, current schema ${CURRENT_BITMAP_SCHEMA}`
-    );
-
-    const result: ConsumerMigrationResult = await migrate(bitmapSchema, migratonManifest, this.bitMap, verbose);
-    result.bitMap.schema = CURRENT_BITMAP_SCHEMA;
-    // mark the bitmap as changed to make sure it persist to FS
-    result.bitMap.markAsChanged();
-    // Update the version of the bitmap instance of the consumer (to prevent duplicate migration)
-    this.bitMap.schema = result.bitMap.schema;
-    await result.bitMap.write();
-
-    loader.stop();
-
-    return {
-      run: true,
-      success: true,
-    };
   }
 
   async write(): Promise<Consumer> {
@@ -440,14 +389,6 @@ export default class Consumer {
     return JSON.stringify(version.files) !== JSON.stringify(componentFromModel.files);
   }
 
-  async getManyComponentsStatuses(ids: ComponentID[]): Promise<ComponentStatusResult[]> {
-    return this.componentStatusLoader.getManyComponentsStatuses(ids);
-  }
-
-  async getComponentStatusById(id: ComponentID): Promise<ComponentStatus> {
-    return this.componentStatusLoader.getComponentStatusById(id);
-  }
-
   updateNextVersionOnBitmap(componentsToTag: Component[], preRelease?: string) {
     componentsToTag.forEach((compToTag) => {
       const log = compToTag.log;
@@ -478,16 +419,6 @@ export default class Consumer {
     logger.debug(`component dir path: ${addToPath.join('/')}`);
     Analytics.addBreadCrumb('composeComponentPath', `component dir path: ${Analytics.hashData(addToPath.join('/'))}`);
     return path.join(...addToPath);
-  }
-
-  composeRelativeDependencyPath(bitId: ComponentID): PathOsBased {
-    const dependenciesDir = this.dirStructure.dependenciesDirStructure;
-    return composeDependencyPath(bitId, dependenciesDir);
-  }
-
-  composeDependencyPath(bitId: ComponentID): PathOsBased {
-    const relativeDependencyPath = this.composeRelativeDependencyPath(bitId);
-    return path.join(this.getPath(), relativeDependencyPath);
   }
 
   static create(

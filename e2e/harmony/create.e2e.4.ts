@@ -159,4 +159,19 @@ describe('create extension', function () {
       expect(env.json).to.equal('teambit.harmony/aspect');
     });
   });
+  describe('from an inner dir', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fs.createNewDirectoryInLocalWorkspace('inner-dir');
+    });
+    it('should not throw', () => {
+      const cmd = helper.command.create(
+        'bit-aspect',
+        'my-aspect',
+        undefined,
+        path.join(helper.scopes.localPath, 'inner-dir')
+      );
+      expect(() => cmd).to.not.throw();
+    });
+  });
 });

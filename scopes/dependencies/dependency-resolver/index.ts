@@ -14,11 +14,13 @@ export type {
   ResolvedPackageVersion,
 } from './package-manager';
 export type {
-  DependencyResolverMain,
   DependencyResolverWorkspaceConfig,
+  NodeLinker,
+} from './dependency-resolver-workspace-config';
+export type {
+  DependencyResolverMain,
   DependencyResolverVariantConfig,
   MergedOutdatedPkg,
-  NodeLinker,
 } from './dependency-resolver.main.runtime';
 export { NPM_REGISTRY, BIT_CLOUD_REGISTRY } from './dependency-resolver.main.runtime';
 export type {

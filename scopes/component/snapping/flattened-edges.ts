@@ -7,6 +7,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DepEdge } from '@teambit/legacy/dist/scope/models/version';
 import { Logger } from '@teambit/logger';
 import { pMapPool } from '@teambit/legacy/dist/utils/promise-with-concurrent';
+import { BitError } from '@teambit/bit-error';
 
 /**
  * the goal of this class is to determine the graph dependencies of a given set of components with minimal effort.
@@ -86,6 +87,24 @@ export class FlattenedEdgesGetter {
     );
     await this.addComponentsWithMissingFlattenedEdges();
     return this.graph;
+  }
+
+  populateFlattenedAndEdgesForComp(component: ConsumerComponent) {
+    const graphFromIds = this.graph.successorsSubgraph(component.id.toString());
+    const edgesFromGraph = graphFromIds.edges.map((edge) => {
+      return {
+        source: ComponentID.fromString(edge.sourceId),
+        target: ComponentID.fromString(edge.targetId),
+        type: edge.attr as DepEdgeType,
+      };
+    });
+
+    const flattenedFromGraphIncludeItself = graphFromIds.nodes.map((node) => node.attr);
+    const flattenedFromGraph = flattenedFromGraphIncludeItself.filter((id) => !id.isEqual(component.id));
+    flattenedFromGraph.forEach((dep) => throwWhenDepNotIncluded(component.id, dep));
+
+    component.flattenedDependencies = ComponentIdList.fromArray(flattenedFromGraph);
+    component.flattenedEdges = edgesFromGraph;
   }
 
   private async importMissingAndAddToGraph() {
@@ -185,5 +204,12 @@ ${missingEdges.map((e) => e.toString()).join('\n')}`);
       this.graph.setNode(new Node(dep.id.toString(), dep.id));
       this.graph.setEdge(new Edge(compId.toString(), dep.id.toString(), label));
     });
+  }
+}
+
+function throwWhenDepNotIncluded(componentId: ComponentID, dependencyId: ComponentID) {
+  if (!dependencyId.hasScope() && !dependencyId.hasVersion()) {
+    throw new BitError(`fatal: "${componentId.toString()}" has a dependency "${dependencyId.toString()}".
+this dependency was not included in the tag command.`);
   }
 }

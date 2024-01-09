@@ -4,8 +4,8 @@ import { ComponentID } from '@teambit/component-id';
 import { Scope } from '..';
 import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
 import logger from '../../logger/logger';
-import { Lane } from '../models';
-import { Repository } from '../objects';
+import { Lane, LaneHistory } from '../models';
+import { BitObject, Repository } from '../objects';
 import { IndexType, LaneItem } from '../objects/scope-index';
 import { ScopeJson, TrackLane } from '../scope-json';
 import { Log } from '../models/lane';
@@ -38,8 +38,33 @@ export default class Lanes {
     return lane;
   }
 
-  async saveLane(laneObject: Lane) {
-    await this.objects.writeObjectsToTheFS([laneObject]);
+  async getOrCreateLaneHistory(laneObject: Lane): Promise<LaneHistory> {
+    const emptyLaneHistory = LaneHistory.fromLaneObject(laneObject);
+    const existingLaneHistory = (await this.objects.load(emptyLaneHistory.hash(), false)) as LaneHistory;
+    return existingLaneHistory || emptyLaneHistory;
+  }
+
+  async updateLaneHistory(laneObject: Lane, laneHistoryMsg?: string) {
+    const laneHistory = await this.getOrCreateLaneHistory(laneObject);
+    await laneHistory.addHistory(laneObject, laneHistoryMsg);
+    return laneHistory;
+  }
+
+  async saveLane(
+    laneObject: Lane,
+    { saveLaneHistory = true, laneHistoryMsg }: { saveLaneHistory?: boolean; laneHistoryMsg?: string }
+  ) {
+    if (!laneObject.hasChanged) {
+      logger.debug(`lanes, saveLane, no need to save the lane "${laneObject.name}" as it has not changed`);
+      return;
+    }
+    const objectsToSave: BitObject[] = [laneObject];
+    if (saveLaneHistory) {
+      const laneHistory = await this.updateLaneHistory(laneObject, laneHistoryMsg);
+      objectsToSave.push(laneHistory);
+    }
+    await this.objects.writeObjectsToTheFS(objectsToSave);
+    laneObject.hasChanged = false;
   }
 
   async renameLane(lane: Lane, newName: string) {
@@ -59,8 +84,8 @@ export default class Lanes {
     }
 
     // change the lane object
-    lane.name = newName;
-    await this.saveLane(lane);
+    lane.changeName(newName);
+    await this.saveLane(lane, { laneHistoryMsg: `rename lane from "${oldName}" to "${newName}"` });
   }
 
   getAliasByLaneId(laneId: LaneId): string | null {

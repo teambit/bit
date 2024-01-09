@@ -106,7 +106,6 @@ export class ImportCmd implements Command {
     ['', 'include-deprecated', 'when importing with patterns, include deprecated components (default to exclude them)'],
   ] as CommandOptions;
   loader = true;
-  migration = true;
   remoteOp = true;
   _packageManagerArgs: string[]; // gets populated by yargs-adapter.handler().
 

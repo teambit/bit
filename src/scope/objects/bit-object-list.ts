@@ -1,5 +1,5 @@
 import { BitObject } from '.';
-import { ExportMetadata, Lane, ModelComponent, Version, VersionHistory } from '../models';
+import { ExportMetadata, Lane, LaneHistory, ModelComponent, Version, VersionHistory } from '../models';
 
 export class BitObjectList {
   constructor(private objects: BitObject[]) {}
@@ -18,6 +18,10 @@ export class BitObjectList {
 
   getVersionHistories(): VersionHistory[] {
     return this.objects.filter((object) => object instanceof VersionHistory) as VersionHistory[];
+  }
+
+  getLaneHistories(): LaneHistory[] {
+    return this.objects.filter((object) => object instanceof LaneHistory) as LaneHistory[];
   }
 
   getAll(): BitObject[] {

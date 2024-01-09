@@ -444,12 +444,19 @@ export default class ScopeComponentsImporter {
     return includeNonExported ? id.isLocal(this.scope.name) : this.scope.isLocal(id);
   }
 
-  async importLanes(remoteLaneIds: LaneId[]): Promise<Lane[]> {
+  async importLanes(remoteLaneIds: LaneId[], includeLaneHistory = false): Promise<Lane[]> {
     const remotes = await getScopeRemotes(this.scope);
-    const objectsStreamPerRemote = await remotes.fetch(groupByScopeName(remoteLaneIds), this.scope, { type: 'lane' });
+    const objectsStreamPerRemote = await remotes.fetch(groupByScopeName(remoteLaneIds), this.scope, {
+      type: 'lane',
+      includeLaneHistory,
+    });
     const bitObjects = await this.multipleStreamsToBitObjects(objectsStreamPerRemote);
     const lanes = bitObjects.getLanes();
     await Promise.all(lanes.map((lane) => this.repo.remoteLanes.syncWithLaneObject(lane.scope as string, lane)));
+    if (includeLaneHistory) {
+      const laneHistories = bitObjects.getLaneHistories();
+      await this.scope.objects.writeObjectsToTheFS(laneHistories);
+    }
     return lanes;
   }
 

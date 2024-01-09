@@ -95,14 +95,14 @@ function createAddRuntime(aspectDefs: AspectDefinition[], runtime: string) {
     .join('\n');
 }
 
-function createImports(aspectDefs: AspectDefinition[]) {
+export function createImports(aspectDefs: AspectDefinition[]) {
   const defs = aspectDefs.filter((def) => def.runtimePath);
 
   return `${getImportStatements(aspectDefs, 'aspectFilePath', 'Aspect')}
 ${getImportStatements(defs, 'runtimePath', 'Runtime')}`;
 }
 
-function createHarmonyImports(harmonyPackage = '@teambit/harmony') {
+export function createHarmonyImports(harmonyPackage = '@teambit/harmony') {
   return `import { Harmony, Slot } from '${harmonyPackage}';`;
 }
 
@@ -133,11 +133,11 @@ function getImportStatements(aspectDefs: AspectDefinition[], pathProp: string, s
     .join('\n');
 }
 
-function getIdentifiers(aspectDefs: AspectDefinition[], suffix: string): string[] {
+export function getIdentifiers(aspectDefs: AspectDefinition[], suffix: string): string[] {
   return aspectDefs.map((aspectDef) => `${getIdentifier(aspectDef, suffix)}`);
 }
 
-function getIdSetters(defs: AspectDefinition[], suffix: string, ignoreVersion?: boolean) {
+export function getIdSetters(defs: AspectDefinition[], suffix: string, ignoreVersion?: boolean) {
   return defs
     .map((def) => {
       if (!def.getId) return undefined;

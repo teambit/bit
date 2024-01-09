@@ -211,7 +211,7 @@ other:   ${otherLaneHead.toString()}`);
       return { ...componentStatus, componentFromModel: componentOnOther, divergeData };
     }
     const getCurrentComponent = () => {
-      if (existingBitMapId) return consumer.loadComponent(existingBitMapId, { loadExtensions: true });
+      if (existingBitMapId) return consumer.loadComponent(existingBitMapId);
       return consumer.scope.getConsumerComponent(currentId);
     };
     const currentComponent = await getCurrentComponent();
@@ -234,7 +234,7 @@ other:   ${otherLaneHead.toString()}`);
     }
 
     const isModified = async (): Promise<undefined | 'code' | 'config'> => {
-      const componentModificationStatus = await consumer.getComponentStatusById(currentComponent.id);
+      const componentModificationStatus = await this.workspace.getComponentStatusById(currentComponent.id);
       if (!componentModificationStatus.modified) return undefined;
       if (!existingBitMapId) return undefined;
       const baseComponent = await modelComponent.loadVersion(

@@ -1,4 +1,3 @@
-import pMap from 'p-map';
 import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import * as path from 'path';
@@ -18,6 +17,7 @@ import ComponentMap from '../bit-map/component-map';
 import { VERSION_ZERO } from '../../scope/models/model-component';
 import loader from '../../cli/loader';
 import { concurrentComponentsLimit } from '../../utils/concurrency';
+import { pMapPool } from '../../utils/promise-with-concurrent';
 
 export type ComponentLoadOptions = {
   loadDocs?: boolean;
@@ -120,6 +120,10 @@ export default class ComponentLoader {
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loading consumer-components from the file-system, ids: {ids}', {
       ids: ids.toString(),
     });
+    const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
+      { loadExtensions: true, executeLoadSlot: true },
+      loadOpts || {}
+    );
     const alreadyLoadedComponents: Component[] = [];
     const idsToProcess: ComponentID[] = [];
     const invalidComponents: InvalidComponent[] = [];
@@ -145,14 +149,20 @@ export default class ComponentLoader {
       { idsStr: alreadyLoadedComponents.map((c) => c.id.toString()).join(', ') }
     );
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents, removedComponents };
-    const storeInCache = loadOpts?.storeInCache ?? true;
+    const storeInCache = loadOptsWithDefaults?.storeInCache ?? true;
     const allComponents: Component[] = [];
     // await mapSeries(idsToProcess, async (id: BitId) => {
     // await Promise.all(
-    await pMap(
+    await pMapPool(
       idsToProcess,
       async (id: ComponentID) => {
-        const component = await this.loadOne(id, throwOnFailure, invalidComponents, removedComponents, loadOpts);
+        const component = await this.loadOne(
+          id,
+          throwOnFailure,
+          invalidComponents,
+          removedComponents,
+          loadOptsWithDefaults
+        );
         if (component) {
           if (storeInCache) {
             this.componentsCache.set(component.id.toString(), component);

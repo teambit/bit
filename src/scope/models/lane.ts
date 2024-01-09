@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { cloneDeep, pickBy } from 'lodash';
+import { cloneDeep, isEqual, pickBy } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { isSnap } from '@teambit/component-version';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
@@ -37,6 +37,7 @@ export default class Lane extends BitObject {
   forkedFrom?: LaneId;
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
   isNew = false; // doesn't get saved in the object. only needed for in-memory instance
+  hasChanged = false; // doesn't get saved in the object. only needed for in-memory instance
   constructor(props: LaneProps) {
     super();
     if (!props.name) throw new TypeError('Lane constructor expects to get a name parameter');
@@ -56,6 +57,14 @@ export default class Lane extends BitObject {
       throw new Error('hash is missing from a Lane object');
     }
     return new Ref(this._hash);
+  }
+  changeName(name: string) {
+    this.name = name;
+    this.hasChanged = true;
+  }
+  changeScope(scope: string) {
+    this.scope = scope;
+    this.hasChanged = true;
   }
   refs(): Ref[] {
     return this.components.map((c) => c.head);
@@ -104,7 +113,10 @@ export default class Lane extends BitObject {
       email: bitCloudUser?.email || globalConfig.getSync(CFG_USER_EMAIL_KEY),
       profileImage: bitCloudUser?.profileImage,
     };
-    return new Lane({ name, scope, hash: sha1(v4()), log, forkedFrom });
+    const lane = new Lane({ name, scope, hash: sha1(v4()), log, forkedFrom });
+    lane.isNew = true;
+    lane.hasChanged = true;
+    return lane;
   }
   static parse(contents: string, hash: string): Lane {
     const laneObject = JSON.parse(contents);
@@ -137,17 +149,20 @@ export default class Lane extends BitObject {
   addComponent(component: LaneComponent) {
     const existsComponent = this.getComponent(component.id);
     if (existsComponent) {
+      if (!existsComponent.head.isEqual(component.head)) this.hasChanged = true;
       existsComponent.id = component.id;
       existsComponent.head = component.head;
     } else {
       logger.debug(`Lane.addComponent, adding component ${component.id.toString()} to lane ${this.id()}`);
       this.components.push(component);
+      this.hasChanged = true;
     }
   }
   removeComponent(id: ComponentID): boolean {
     const existsComponent = this.getComponent(id);
     if (!existsComponent) return false;
     this.components = this.components.filter((c) => !c.id.isEqualWithoutVersion(id));
+    this.hasChanged = true;
     return true;
   }
   getComponent(id: ComponentID): LaneComponent | undefined {
@@ -162,10 +177,13 @@ export default class Lane extends BitObject {
     // this gets called when adding lane-components from other lanes/remotes, so it's better to
     // clone the objects to not change the original data.
     this.components = laneComponents.map((c) => ({ id: c.id.clone(), head: c.head.clone() }));
+    this.hasChanged = true;
   }
   setReadmeComponent(id?: ComponentID) {
+    const previousReadme = this.readmeComponent;
     if (!id) {
       this.readmeComponent = undefined;
+      if (previousReadme) this.hasChanged = true;
       return;
     }
     const readmeComponent = this.getComponent(id);
@@ -173,6 +191,13 @@ export default class Lane extends BitObject {
       this.readmeComponent = { id, head: null };
     } else {
       this.readmeComponent = readmeComponent;
+    }
+    if (
+      !previousReadme ||
+      !previousReadme.id.isEqual(id) ||
+      previousReadme.head?.toString() !== this.readmeComponent.head?.toString()
+    ) {
+      this.hasChanged = true;
     }
   }
 
@@ -198,7 +223,13 @@ export default class Lane extends BitObject {
     );
     return { merged, unmerged };
   }
+  /**
+   * @deprecated use toComponentIds instead
+   */
   toBitIds(): ComponentIdList {
+    return this.toComponentIds();
+  }
+  toComponentIds(): ComponentIdList {
     return ComponentIdList.fromArray(this.components.map((c) => c.id.changeVersion(c.head.toString())));
   }
   toLaneId() {
@@ -234,6 +265,12 @@ export default class Lane extends BitObject {
     if (this.name === PREVIOUS_DEFAULT_LANE) {
       throw new GeneralError(`${message}, this name is reserved as the old default lane`);
     }
+  }
+  isEqual(lane: Lane): boolean {
+    if (this.id() !== lane.id()) return false;
+    const thisComponents = this.toComponentIds().toStringArray().sort();
+    const otherComponents = lane.toComponentIds().toStringArray().sort();
+    return isEqual(thisComponents, otherComponents);
   }
   clone() {
     return new Lane({

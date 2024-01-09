@@ -98,7 +98,7 @@ export class ImporterMain {
    * given a lane object, load all components by their head on the lane, find the artifacts refs and import them from
    * the lane scope
    */
-  async importHeadArtifactsFromLane(lane: Lane, ids: ComponentID[] = lane.toBitIds(), throwIfMissing = false) {
+  async importHeadArtifactsFromLane(lane: Lane, ids: ComponentID[] = lane.toComponentIds(), throwIfMissing = false) {
     const laneComps = await this.scope.legacyScope.getManyConsumerComponents(ids);
     try {
       await importAllArtifacts(this.scope.legacyScope, laneComps, lane);
@@ -146,14 +146,18 @@ export class ImporterMain {
    * once done, merge the lane object and save it as well.
    */
   async fetchLaneComponents(lane: Lane) {
-    const ids = lane.toBitIds();
+    const ids = lane.toComponentIds();
     await this.scope.legacyScope.scopeImporter.importMany({
       ids,
       lane,
       reason: `for fetching lane ${lane.id()}`,
     });
     const { mergeLane } = await this.scope.legacyScope.sources.mergeLane(lane, true);
-    await this.scope.legacyScope.lanes.saveLane(mergeLane);
+    const isRemoteLaneEqualsToMergedLane = lane.isEqual(mergeLane);
+    await this.scope.legacyScope.lanes.saveLane(mergeLane, {
+      saveLaneHistory: !isRemoteLaneEqualsToMergedLane,
+      laneHistoryMsg: 'fetch (merge from remote)',
+    });
   }
 
   async fetch(ids: string[], lanes: boolean, components: boolean, fromOriginalScope: boolean, allHistory = false) {
@@ -263,20 +267,27 @@ export class ImporterMain {
    * see `sources.mergeLane()` for export and `import-components._saveLaneDataIfNeeded()` for import.
    * in this case, because we only bring the lane object and not the components, it's not easy to do the merge.
    */
-  async importLaneObject(laneId: LaneId, persistIfNotExists = true): Promise<Lane> {
+  async importLaneObject(laneId: LaneId, persistIfNotExists = true, includeVersionHistory = false): Promise<Lane> {
     const legacyScope = this.scope.legacyScope;
-    const results = await legacyScope.scopeImporter.importLanes([laneId]);
+    const results = await legacyScope.scopeImporter.importLanes([laneId], includeVersionHistory);
     const laneObject = results[0];
     if (!laneObject) throw new LaneNotFound(laneId.scope, laneId.name);
 
     if (persistIfNotExists) {
       const exists = await legacyScope.loadLane(laneId);
       if (!exists) {
-        await legacyScope.lanes.saveLane(laneObject);
+        laneObject.hasChanged = true;
+        await legacyScope.lanes.saveLane(laneObject, { saveLaneHistory: false });
       }
     }
 
     return laneObject;
+  }
+
+  async importObjectsByHashes(hashes: string[], scope: string, reason?: string) {
+    const groupByScope = { [scope]: hashes };
+    const results = await this.scope.legacyScope.scopeImporter.importManyObjects(groupByScope, reason);
+    return results;
   }
 
   private async removeFromWorkspaceConfig(component: ConsumerComponent[]) {

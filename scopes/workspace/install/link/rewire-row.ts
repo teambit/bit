@@ -1,4 +1,4 @@
-import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
+import { CodemodResult } from '@teambit/workspace.modules.node-modules-linker';
 import chalk from 'chalk';
 
 type RewireRowProps = {

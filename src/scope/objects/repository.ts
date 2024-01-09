@@ -448,6 +448,7 @@ export default class Repository {
   }
 
   add(object: BitObject | null | undefined): Repository {
+    // console.trace(`repository: adding object ${object?.hash().toString()}`);
     if (!object) return this;
     // leave the following commented log message, it is very useful for debugging but too verbose when not needed.
     // logger.debug(`repository: adding object ${object.hash().toString()} which consist of the following id: ${object.id()}`);
