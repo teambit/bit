@@ -14,7 +14,7 @@ import {
   ObjectsReadableGenerator,
 } from '../../../scope/objects/objects-readable-generator';
 import { LaneNotFound } from './exceptions/lane-not-found';
-import { Lane } from '../../../scope/models';
+import { Lane, LaneHistory } from '../../../scope/models';
 
 /**
  * 'component-delta' is not supported anymore in fetchSchema of 0.0.3 and above.
@@ -60,6 +60,11 @@ export type FETCH_OPTIONS = {
    * this is an optimization for the most commonly used case of "bit import", where most components are up-to-date.
    */
   returnNothingIfGivenVersionExists?: boolean;
+
+  /**
+   * relevant when type is "lane". in case the remote has the lane-history object, it'll be returned as well.
+   */
+  includeLaneHistory?: boolean;
 
   fetchSchema: string;
 };
@@ -340,8 +345,16 @@ async function fetchByType(
       lanesToFetch.forEach((laneToFetch) => {
         laneToFetch.scope = scope.name;
       });
+      const lanesHistory: LaneHistory[] = [];
+      if (fetchOptions.includeLaneHistory) {
+        const laneHistoryPromises = lanesToFetch.map(async (laneToFetch) => {
+          const laneHistory = await scope.lanes.getOrCreateLaneHistory(laneToFetch);
+          return laneHistory;
+        });
+        lanesHistory.push(...(await Promise.all(laneHistoryPromises)));
+      }
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      objectsReadableGenerator.pushLanes(lanesToFetch);
+      objectsReadableGenerator.pushLanes(lanesToFetch, lanesHistory);
       break;
     }
     case 'object': {

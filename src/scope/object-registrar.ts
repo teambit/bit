@@ -1,7 +1,17 @@
-import { Lane, ModelComponent, ScopeMeta, Source, Symlink, Version, ExportMetadata, VersionHistory } from './models';
+import {
+  Lane,
+  ModelComponent,
+  ScopeMeta,
+  Source,
+  Symlink,
+  Version,
+  ExportMetadata,
+  VersionHistory,
+  LaneHistory,
+} from './models';
 
 export default function types() {
-  return [Source, ModelComponent, Version, ScopeMeta, Symlink, Lane, ExportMetadata, VersionHistory];
+  return [Source, ModelComponent, Version, ScopeMeta, Symlink, Lane, ExportMetadata, VersionHistory, LaneHistory];
 }
 
 // it's possible to define the return type as `{ [typeName: string]: Types[0] }`. not sure if it makes sense
