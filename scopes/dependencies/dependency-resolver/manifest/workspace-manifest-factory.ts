@@ -2,12 +2,11 @@ import { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-load
 import { IssuesClasses } from '@teambit/component-issues';
 import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { fromPairs, pickBy, mapValues, uniq, difference } from 'lodash';
+import { fromPairs, pickBy, mapValues, uniq, difference, intersection } from 'lodash';
 import { SemVer } from 'semver';
 import pMapSeries from 'p-map-series';
 import { snapToSemver } from '@teambit/component-package-version';
 import { BitError } from '@teambit/bit-error';
-import { intersection } from 'lodash';
 import { ComponentDependency, DependencyList, PackageName } from '../dependencies';
 import { VariantPolicy, WorkspacePolicy, EnvPolicy } from '../policy';
 import { DependencyResolverMain } from '../dependency-resolver.main.runtime';
