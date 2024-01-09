@@ -496,7 +496,7 @@ export class WorkspaceComponentLoader {
     // await this.getConsumerComponent(id, loadOpts)
     const componentsP = pMap(
       allLegacyComponents,
-      (legacyComponent) => {
+      (legacyComponent: ConsumerComponent) => {
         // const componentsP = Promise.all(
         //   allLegacyComponents.map(async (legacyComponent) => {
         let id = idsIndex[legacyComponent.id.toString()];

@@ -252,6 +252,54 @@ it is useful e.g. when having multiple lanes with the same name, but with differ
   }
 }
 
+export class CatLaneHistoryCmd implements Command {
+  name = 'cat-lane-history <lane-name>';
+  description = 'cat lane-history object by lane-name';
+  private = true;
+  alias = 'clh';
+  options = [] as CommandOptions;
+  loader = true;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([laneName]: [string]): Promise<string> {
+    const laneId = await this.lanes.parseLaneId(laneName);
+    const laneHistory = await this.lanes.getLaneHistory(laneId);
+    return JSON.stringify(laneHistory.toObject(), null, 2);
+  }
+}
+
+export class LaneHistoryCmd implements Command {
+  name = 'history <lane-name> [id]';
+  description = 'EXPERIMENTAL. show lane history';
+  alias = '';
+  options = [] as CommandOptions;
+  loader = true;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([laneName, id]: [string, string]): Promise<string> {
+    const laneId = await this.lanes.parseLaneId(laneName);
+    await this.lanes.importLaneHistory(laneId);
+    const laneHistory = await this.lanes.getLaneHistory(laneId);
+    const history = laneHistory.getHistory();
+    if (id) {
+      const historyItem = history[id];
+      if (!historyItem) throw new Error(`history id ${id} was not found`);
+      const date = new Date(parseInt(historyItem.log.date)).toLocaleString();
+      const message = historyItem.log.message;
+      return `${id} ${date} ${historyItem.log.username} ${message}\n\n${historyItem.components.join('\n')}`;
+    }
+    const items = Object.keys(history).map((uuid) => {
+      const historyItem = history[uuid];
+      const date = new Date(parseInt(historyItem.log.date)).toLocaleString();
+      const message = historyItem.log.message;
+      return `${uuid} ${date} ${historyItem.log.username} ${message}`;
+    });
+    return items.join('\n');
+  }
+}
+
 export class LaneChangeScopeCmd implements Command {
   name = 'change-scope <remote-scope-name>';
   description = `changes the remote scope of a lane`;

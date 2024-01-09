@@ -278,7 +278,7 @@ export function applyVersionReport(components: ApplyVersionResult[], addName = t
             component.filesStatus[file] === FileStatus.manual
               ? chalk.white('automatic merge failed. please fix conflicts manually and then run "bit install"')
               : '';
-          return `${tab}${component.filesStatus[file]} ${chalk.bold(file)} ${note}`;
+          return `${tab}${String(component.filesStatus[file])} ${chalk.bold(file)} ${note}`;
         })
       ).join('\n');
       if (!files) return null;
@@ -300,7 +300,7 @@ export function conflictSummaryReport(components: ApplyVersionResult[]): string 
       const files = compact(
         Object.keys(component.filesStatus).map((file) => {
           if (component.filesStatus[file] === FileStatus.manual) {
-            return `${tab}${component.filesStatus[file]} ${chalk.bold(file)}`;
+            return `${tab}${String(component.filesStatus[file])} ${chalk.bold(file)}`;
           }
           return null;
         })
