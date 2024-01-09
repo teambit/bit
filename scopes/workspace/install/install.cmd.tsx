@@ -53,7 +53,7 @@ export default class InstallCmd implements Command {
     ['', 'skip-import', 'do not import bit objects post installation'],
     ['', 'skip-compile', 'do not compile components'],
     ['', 'skip-write-config-files', 'do not write config files (such as eslint, tsconfig, prettier, etc...)'],
-    ['', 'add-missing-deps', 'install all missing dependencies'],
+    ['a', 'add-missing-deps', 'install all missing dependencies'],
     ['', 'add-missing-peers', 'install all missing peer dependencies'],
     [
       '',
