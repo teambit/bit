@@ -19,6 +19,9 @@ export default class WorkspaceJsoncHelper {
     }
     return {};
   }
+  readRaw() {
+    return fs.readFileSync(composePath(this.scopes.localPath)).toString();
+  }
   write(workspaceJsonc: Record<string, any>, bitJsoncDir: string = this.scopes.localPath) {
     const bitJsoncPath = composePath(bitJsoncDir);
     const content = stringify(workspaceJsonc, null, 2);

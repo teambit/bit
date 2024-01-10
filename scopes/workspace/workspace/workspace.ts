@@ -1309,6 +1309,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.aspectsMerger.getDepsDataOfMergeConfig(id);
   }
 
+  /**
+   * @deprecated
+   * the workspace.jsonc conflicts are not written to the config-merge file anymore.
+   * see https://github.com/teambit/bit/pull/8393 for more details.
+   */
   getWorkspaceJsonConflictFromMergeConfig(): { data?: Record<string, any>; conflict: boolean } {
     const configMergeFile = this.getConflictMergeFile();
     let data: Record<string, any> | undefined;
@@ -1327,6 +1332,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   getWorkspaceIssues(): Error[] {
     const errors: Error[] = [];
+
+    // since PR #8393, the workspace.jsonc conflicts are not written to the config-merge file anymore.
+    // @todo remove this in the future. (maybe Q2 of 2024).
     const configMergeFile = this.getConflictMergeFile();
     try {
       configMergeFile.getConflictParsed('WORKSPACE');

@@ -1,5 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
+import tempy from 'tempy';
+import fs from 'fs-extra';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
@@ -44,10 +46,11 @@ import {
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
 import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
+import mergeFiles, { MergeFileParams } from '@teambit/legacy/dist/utils/merge-files';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
-import { ConfigMergeResult } from './config-merge-result';
+import { ConfigMergeResult, parseVersionLineWithConflict } from './config-merge-result';
 import { MergeStatusProvider, MergeStatusProviderOptions } from './merge-status-provider';
 
 type ResolveUnrelatedData = {
@@ -57,6 +60,8 @@ type ResolveUnrelatedData = {
   unrelatedLaneId: LaneId;
 };
 type PkgEntry = { name: string; version: string; force: boolean };
+
+const WS_DEPS_FIELDS = ['dependencies', 'peerDependencies'];
 
 export type WorkspaceDepsUpdates = { [pkgName: string]: [string, string] }; // from => to
 export type WorkspaceDepsConflicts = Record<WorkspacePolicyConfigKeysNames, Array<{ name: string; version: string }>>; // the pkg value is in a format of CONFLICT::OURS::THEIRS
@@ -106,6 +111,8 @@ export type ApplyVersionResults = {
   installationError?: Error; // in case the package manager failed, it won't throw, instead, it'll return error here
   compilationError?: Error; // in case the compiler failed, it won't throw, instead, it'll return error here
   workspaceDepsUpdates?: WorkspaceDepsUpdates; // in case workspace.jsonc has been updated with dependencies versions
+  workspaceDepsConflicts?: WorkspaceDepsConflicts; // in case workspace.jsonc has conflicts
+  workspaceConflictError?: Error; // in case workspace.jsonc has conflicts and we failed to write the conflicts to the file
 };
 
 export class MergingMain {
@@ -252,7 +259,11 @@ export class MergingMain {
       allConfigMerge
     );
 
-    await this.generateConfigMergeConflictFileForAll(allConfigMerge, workspaceDepsConflicts);
+    let workspaceConflictError: Error | undefined;
+    if (workspaceDepsConflicts) {
+      workspaceConflictError = await this.writeWorkspaceJsoncWithConflictsGracefully(workspaceDepsConflicts);
+    }
+    await this.generateConfigMergeConflictFileForAll(allConfigMerge);
 
     if (currentLane) consumer.scope.objects.add(currentLane);
 
@@ -314,25 +325,15 @@ export class MergingMain {
       removedComponents: [...componentIdsToRemove, ...(mergeSnapResults?.removedComponents || [])],
       mergeSnapResults,
       mergeSnapError,
+      workspaceConflictError,
+      workspaceDepsConflicts,
       leftUnresolvedConflicts,
       workspaceDepsUpdates,
     };
   }
 
-  private async generateConfigMergeConflictFileForAll(
-    allConfigMerge: ConfigMergeResult[],
-    workspaceDepsConflicts?: WorkspaceDepsConflicts
-  ) {
+  private async generateConfigMergeConflictFileForAll(allConfigMerge: ConfigMergeResult[]) {
     const configMergeFile = this.workspace.getConflictMergeFile();
-    if (workspaceDepsConflicts) {
-      const workspaceConflict = new ConfigMergeResult('WORKSPACE', 'ours', 'theirs', [
-        {
-          id: DependencyResolverAspect.id,
-          conflict: workspaceDepsConflicts,
-        },
-      ]);
-      allConfigMerge.unshift(workspaceConflict);
-    }
     allConfigMerge.forEach((configMerge) => {
       const conflict = configMerge.generateMergeConflictFile();
       if (!conflict) return;
@@ -341,6 +342,75 @@ export class MergingMain {
     if (configMergeFile.hasConflict()) {
       await configMergeFile.write();
     }
+  }
+
+  async writeWorkspaceJsoncWithConflictsGracefully(
+    workspaceDepsConflicts: WorkspaceDepsConflicts
+  ): Promise<Error | undefined> {
+    try {
+      await this.writeWorkspaceJsoncWithConflicts(workspaceDepsConflicts);
+      return undefined;
+    } catch (err: any) {
+      this.logger.error(`unable to write workspace.jsonc with conflicts`, err);
+      const errTitle = `unable to write workspace.jsonc with conflicts, due to an error: "${err.message}".
+see the conflicts below and edit your workspace.jsonc as you see fit.`;
+      const conflictsStr = WS_DEPS_FIELDS.map((depField) => {
+        if (!workspaceDepsConflicts[depField]) return [];
+        return workspaceDepsConflicts[depField].map(({ name, version }) => {
+          const { currentVal, otherVal } = parseVersionLineWithConflict(version);
+          return `(${depField}) ${name}: ours: ${currentVal}, theirs: ${otherVal}`;
+        });
+      })
+        .flat()
+        .join('\n');
+      return new BitError(`${errTitle}\n${conflictsStr}`);
+    }
+  }
+
+  private async writeWorkspaceJsoncWithConflicts(workspaceDepsConflicts: WorkspaceDepsConflicts) {
+    const wsConfig = this.config.workspaceConfig;
+    if (!wsConfig) throw new Error(`unable to get workspace config`);
+    const wsJsoncPath = wsConfig.path;
+    const wsJsoncOriginalContent = await fs.readFile(wsJsoncPath, 'utf8');
+    let wsJsoncContent = wsJsoncOriginalContent;
+    WS_DEPS_FIELDS.forEach((depField) => {
+      if (!workspaceDepsConflicts[depField]) return;
+      workspaceDepsConflicts[depField].forEach(({ name, version }) => {
+        const { currentVal, otherVal } = parseVersionLineWithConflict(version);
+        // e.g. "@ci/8oypmb6p-remote.bar.foo": "^0.0.3"
+        const originalDep = `"${name}": "${currentVal}"`;
+        if (!wsJsoncContent.includes(originalDep)) {
+          throw new Error(`unable to find the dependency ${originalDep} in the workspace.jsonc`);
+        }
+        wsJsoncContent = wsJsoncContent.replace(originalDep, `"${name}": "${otherVal}"`);
+      });
+    });
+
+    const baseFilePath = await tempy.write('');
+    const otherFilePath = await tempy.write(wsJsoncContent);
+    const mergeFilesParams: MergeFileParams = {
+      filePath: wsJsoncPath,
+      currentFile: {
+        label: 'ours',
+        path: wsJsoncPath,
+      },
+      baseFile: {
+        path: baseFilePath,
+      },
+      otherFile: {
+        label: 'theirs',
+        path: otherFilePath,
+      },
+    };
+    const mergeResult = await mergeFiles(mergeFilesParams);
+    const conflictFile = mergeResult.conflict;
+    if (!conflictFile) {
+      this.logger.debug(`original content:\n${wsJsoncOriginalContent}`);
+      this.logger.debug(`new content:\n${wsJsoncContent}`);
+      throw new Error('unable to generate conflict from the workspace.jsonc file. see debug.log for the file content');
+    }
+    await wsConfig.backupConfigFile('before writing conflicts');
+    await fs.writeFile(wsJsoncPath, conflictFile);
   }
 
   private async updateWorkspaceJsoncWithDepsIfNeeded(
@@ -426,7 +496,6 @@ export class MergingMain {
     });
 
     // calculate the workspace.json conflicts
-    const WS_DEPS_FIELDS = ['dependencies', 'peerDependencies'];
     const workspaceJsonConflicts = { dependencies: [], peerDependencies: [] };
     const conflictPackagesToRemoveFromConfigMerge: string[] = [];
     conflictedPackages.forEach((pkgName) => {
