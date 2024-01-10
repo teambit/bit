@@ -20,13 +20,10 @@ export type CheckoutProps = {
   latestVersion?: boolean;
   promptMergeOptions?: boolean;
   mergeStrategy?: MergeStrategy | null;
-  verbose?: boolean;
   skipNpmInstall?: boolean;
-  ignorePackageJson?: boolean;
   writeConfig?: boolean;
   reset?: boolean; // remove local changes. if set, the version is undefined.
   all?: boolean; // checkout all ids
-  ignoreDist?: boolean;
   isLane?: boolean;
 };
 
