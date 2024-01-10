@@ -5,11 +5,11 @@ import { ScopeMain } from '@teambit/scope';
 // import { ComponentIdList } from '@teambit/component-id';
 import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
 import { isSnap } from '@teambit/component-version';
-import { getBitCloudUser } from '@teambit/snapping';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { Workspace } from '@teambit/workspace';
 import { compact } from 'lodash';
+import { getBitCloudUser } from '@teambit/legacy/dist/utils/bit/get-cloud-user';
 
 const MAX_LANE_NAME_LENGTH = 800;
 
@@ -63,7 +63,8 @@ export async function createLane(
   const dataToPopulate = await getDataToPopulateLaneObjectIfNeeded();
   newLane.setLaneComponents(dataToPopulate);
 
-  await consumer.scope.lanes.saveLane(newLane);
+  const laneHistoryMsg = remoteLane ? `fork lane "${remoteLane.name}"` : 'new lane';
+  await consumer.scope.lanes.saveLane(newLane, { laneHistoryMsg });
 
   return newLane;
 }
@@ -75,7 +76,7 @@ export async function createLaneInScope(laneName: string, scope: ScopeMain): Pro
   }
   throwForInvalidLaneName(laneName);
   const newLane = Lane.create(laneName, scope.name);
-  await scope.legacyScope.lanes.saveLane(newLane);
+  await scope.legacyScope.lanes.saveLane(newLane, { laneHistoryMsg: 'new lane (created from scope)' });
   return newLane;
 }
 

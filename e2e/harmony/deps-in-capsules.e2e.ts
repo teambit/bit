@@ -42,6 +42,7 @@ chai.use(require('chai-string'));
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
+      helper.extensions.bitJsonc.addKeyValToDependencyResolver('capsuleSelfReference', true);
       helper.scopeHelper.addRemoteScope();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
@@ -79,6 +80,7 @@ chai.use(require('chai-string'));
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
+      helper.extensions.bitJsonc.addKeyValToDependencyResolver('capsuleSelfReference', true);
       helper.scopeHelper.addRemoteScope();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);

@@ -332,10 +332,7 @@ export class CheckoutMain {
     let existingBitMapId = consumer.bitMap.getComponentIdIfExist(id, { ignoreVersion: true });
     const getComponent = async () => {
       try {
-        // TODO: check if we really need the { loadExtensions: true } here
-        const results = await consumer.loadComponents(ComponentIdList.fromArray([id]), undefined, {
-          loadExtensions: true,
-        });
+        const results = await consumer.loadComponents(ComponentIdList.fromArray([id]));
         if (results.components[0]) return results.components[0];
         if (checkoutProps.includeLocallyDeleted && results.removedComponents[0]) {
           return results.removedComponents[0];
