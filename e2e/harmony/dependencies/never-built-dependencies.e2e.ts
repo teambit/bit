@@ -18,7 +18,7 @@ chai.use(require('chai-fs'));
       await npmCiRegistry.init();
 
       helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
         '@pnpm.e2e/pre-and-postinstall-scripts-example',
       ]);
       helper.command.install('@pnpm.e2e/pre-and-postinstall-scripts-example');
@@ -57,7 +57,7 @@ chai.use(require('chai-fs'));
       await npmCiRegistry.init();
 
       helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
         '@pnpm.e2e/pre-and-postinstall-scripts-example',
       ]);
       helper.command.install('@pnpm.e2e/pre-and-postinstall-scripts-example');

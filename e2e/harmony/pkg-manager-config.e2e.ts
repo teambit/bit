@@ -47,7 +47,7 @@ chai.use(require('chai-string'));
             },
           },
         });
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
         helper.scopeHelper.addRemoteScope();
         helper.workspaceJsonc.setupDefault();
         helper.workspaceJsonc.addKeyValToWorkspace('resolveAspectsFromNodeModules', false);
@@ -73,7 +73,7 @@ chai.use(require('chai-string'));
             'hoist-pattern[]': 'foo',
           },
         });
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
         helper.scopeHelper.addRemoteScope();
         helper.workspaceJsonc.setupDefault();
         helper.fixtures.populateComponents(1);

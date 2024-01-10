@@ -193,8 +193,8 @@ describe('custom env', function () {
       }
 
       helper.scopeHelper.addRemoteScope();
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-      helper.extensions.bitJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', true);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.extensions.workspaceJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', true);
       helper.fixtures.populateComponents(1);
       helper.command.setEnv('comp1', envId);
       helper.command.install();

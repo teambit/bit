@@ -41,8 +41,8 @@ chai.use(require('chai-string'));
     let nodeEnv2CapsuleDir: string;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('capsuleSelfReference', true);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('capsuleSelfReference', true);
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
@@ -79,8 +79,8 @@ chai.use(require('chai-string'));
     let nodeEnv2CapsuleDir: string;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('capsuleSelfReference', true);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('capsuleSelfReference', true);
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
@@ -115,8 +115,8 @@ chai.use(require('chai-string'));
   describe('using Yarn with isolatedCapsules set to false', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('isolatedCapsules', false);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('isolatedCapsules', false);
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.setupDefault();
       helper.fixtures.populateComponents(2);

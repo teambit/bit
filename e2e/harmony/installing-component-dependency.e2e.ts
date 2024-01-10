@@ -28,7 +28,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
     helper.command.export();
 
     helper.scopeHelper.reInitLocalScope();
-    helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+    helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
     helper.scopeHelper.addRemoteScope();
     helper.workspaceJsonc.setupDefault();
     helper.command.import(`${helper.scopes.remote}/comp1`);

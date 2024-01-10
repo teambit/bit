@@ -74,7 +74,7 @@ describe('update command', function () {
       let configFile;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.extensions.bitJsonc.addPolicyToDependencyResolver({
+        helper.extensions.workspaceJsonc.addPolicyToDependencyResolver({
           dependencies: {
             'is-odd': '1.0.0',
             'is-negative': '1.0.0',
@@ -126,7 +126,7 @@ describe('update command', function () {
     describe('policies added by deps set. savePrefix is present', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('savePrefix', '^');
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('savePrefix', '^');
         helper.fixtures.populateComponents(1);
         helper.command.dependenciesSet('comp1', 'is-negative@1.0.0');
         helper.command.update('--yes');
@@ -155,7 +155,7 @@ describe('update command', function () {
 const isOdd = require("is-odd");
 const isPositive = require("is-positive");`
       );
-      helper.extensions.bitJsonc.addPolicyToDependencyResolver({
+      helper.extensions.workspaceJsonc.addPolicyToDependencyResolver({
         dependencies: {
           'is-positive': '1.0.0',
         },
@@ -188,10 +188,10 @@ const isPositive = require("is-positive");`
     describe('with save prefix specified', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+        helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
         helper.scopeHelper.addRemoteScope();
         helper.workspaceJsonc.setupDefault();
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('savePrefix', '^');
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('savePrefix', '^');
         helper.command.import(`${helper.scopes.remote}/comp1`);
         helper.command.update('--yes --latest');
         configFile = helper.workspaceJsonc.read(helper.scopes.localPath);
@@ -224,7 +224,7 @@ const isPositive = require("is-positive");`
     describe('with save prefix not specified', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+        helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
         helper.scopeHelper.addRemoteScope();
         helper.workspaceJsonc.setupDefault();
         helper.command.import(`${helper.scopes.remote}/comp1`);
