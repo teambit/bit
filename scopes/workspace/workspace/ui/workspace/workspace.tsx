@@ -54,7 +54,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
           menu={menuSlot}
         />
 
-        <SplitPane className={styles.main} size={250} layout={sidebarOpenness}>
+        <SplitPane className={styles.main} size={246} layout={sidebarOpenness}>
           <Pane className={classNames(styles.sidebar, styles.sidebarDarkColors, !isSidebarOpen && styles.closed)}>
             {sidebar}
           </Pane>

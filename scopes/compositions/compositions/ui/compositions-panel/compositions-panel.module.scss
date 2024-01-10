@@ -6,9 +6,10 @@
   height: 40px;
   font-size: var(--bit-p-xs);
   transition: all 300ms ease-in-out;
+  color: var(--on-background-color);
 
   &:hover {
-    background-color: var(--bit-border-color-lightest, #ededed);
+    background-color: var(--border-medium-color, #ededed);
     // border-radius: 8px;
     transition: background-color 300ms ease-in-out;
     .right {
