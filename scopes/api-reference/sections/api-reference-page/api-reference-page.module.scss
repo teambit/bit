@@ -1,5 +1,4 @@
 @import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
-$panelBg: #fafafa;
 
 .apiRefPageContainer {
   height: 100%;
@@ -27,7 +26,7 @@ $panelBg: #fafafa;
 }
 .right {
   position: relative;
-  background: $panelBg;
+  background: var(--background-color);
   overflow-y: auto;
   // this is to fix the right panel when it gets too big or too small
   min-width: 200px;
