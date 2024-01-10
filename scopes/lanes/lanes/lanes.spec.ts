@@ -228,26 +228,52 @@ describe('LanesAspect', function () {
       expect(Object.keys(history).length).toEqual(1);
     });
     it('should add a record to LaneHistory when snapping', async () => {
-      const results = await snapping.snap({ pattern: 'comp1', build: false });
+      const results = await snapping.snap({ pattern: 'comp1', build: false, message: 'first snap' });
       const laneHistory = await lanes.getLaneHistory(laneId);
       const history = laneHistory.getHistory();
       expect(Object.keys(history).length).toEqual(2);
       const snapHistory = history[Object.keys(history)[1]];
-      expect(snapHistory.log.message).toEqual('snap');
+      expect(snapHistory.log.message).toEqual('snap (first snap)');
       expect(snapHistory.components.length).toEqual(1);
       expect(snapHistory.components[0]).toEqual(results?.snappedComponents[0].id.toString() as string);
     });
-    it('should not add a record when importing', async () => {
-      const exporter: ExportMain = await loadAspect(ExportAspect, workspaceData.workspacePath);
-      await exporter.export();
+    describe('import to another workspace', () => {
+      let newWorkspace: WorkspaceData;
+      beforeAll(async () => {
+        // make another snap to check to test the checkout later.
+        await snapping.snap({ pattern: 'comp1', build: false, message: 'second snap' });
+        const laneHistory = await lanes.getLaneHistory(laneId);
+        const history = laneHistory.getHistory();
+        expect(Object.keys(history).length).toEqual(3);
 
-      const newWorkspace = mockWorkspace({ bareScopeName: workspaceData.remoteScopeName });
+        const exporter: ExportMain = await loadAspect(ExportAspect, workspaceData.workspacePath);
+        const exportResults = await exporter.export();
+        expect(exportResults.componentsIds.length).toEqual(1);
+        expect(exportResults.exportedLanes.length).toEqual(1);
 
-      lanes = await loadAspect(LanesAspect, newWorkspace.workspacePath);
-      await lanes.importLaneObject(laneId, true, true);
-      const laneHistory = await lanes.getLaneHistory(laneId);
-      const history = laneHistory.getHistory();
-      expect(Object.keys(history).length).toEqual(2);
+        newWorkspace = mockWorkspace({ bareScopeName: workspaceData.remoteScopeName });
+
+        lanes = await loadAspect(LanesAspect, newWorkspace.workspacePath);
+        await lanes.switchLanes(laneId.toString(), { skipDependencyInstallation: true, getAll: true });
+        await lanes.importLaneObject(laneId, true, true);
+      }, 30000);
+      afterAll(async () => {
+        await destroyWorkspace(newWorkspace);
+      });
+      it('should not add a record to the lane-history', async () => {
+        const laneHistory = await lanes.getLaneHistory(laneId);
+        const history = laneHistory.getHistory();
+        expect(Object.keys(history).length).toEqual(3);
+      });
+      it('should be able to checkout to a previous state of the lane', async () => {
+        const laneHistory = await lanes.getLaneHistory(laneId);
+        const history = laneHistory.getHistory();
+        const snapHistoryId = Object.keys(history).find((key) => history[key].log.message?.includes('first snap'));
+        if (!snapHistoryId) throw new Error('unable to find snap history of the first snap');
+        const results = await lanes.checkoutHistory(snapHistoryId, { skipDependencyInstallation: true });
+        expect(results.components?.length).toEqual(1);
+        expect(results.failedComponents?.length).toEqual(0);
+      });
     });
   });
 });
