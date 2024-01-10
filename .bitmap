@@ -1500,6 +1500,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-compare"
     },
+    "ui/component-compare/component-compare": {
+        "name": "ui/component-compare/component-compare",
+        "scope": "teambit.component",
+        "version": "0.0.172",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/component-compare"
+    },
     "ui/component-drawer": {
         "name": "ui/component-drawer",
         "scope": "teambit.component",
