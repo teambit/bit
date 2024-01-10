@@ -89,7 +89,7 @@ describe('dependency-resolver extension', function () {
           helper.fs.outputFile('utils/is-type.js', fixtures.isType);
           helper.command.addComponent('utils', { i: 'utils/is-type' });
           // important! don't disable the preview.
-          helper.bitJsonc.addDefaultScope();
+          helper.workspaceJsonc.addDefaultScope();
           const envName = helper.env.setCustomEnv('env-add-dependencies');
           const envId = `${helper.scopes.remote}/${envName}`;
           helper.extensions.addExtensionToVariant('*', envId);
@@ -225,8 +225,8 @@ describe('dependency-resolver extension', function () {
     describe('using Yarn as a package manager', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/yarn');
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('overrides', {
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/yarn');
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('overrides', {
           'is-odd': '1.0.0',
           'glob@^7.1.3': '6.0.4',
           'inflight>once': '1.3.0',
@@ -260,8 +260,8 @@ describe('dependency-resolver extension', function () {
     describe('using pnpm as a package manager', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/pnpm');
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('overrides', {
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/pnpm');
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('overrides', {
           'is-odd': '1.0.0',
           'glob@^7.1.3': '6.0.4',
           'inflight>once': '1.3.0',

@@ -165,14 +165,14 @@ describe('update-dependencies command', function () {
       const secondRemote = helper.scopeHelper.getNewBareScope(undefined, true);
       secondRemotePath = secondRemote.scopePath;
       secondRemoteName = secondRemote.scopeName;
-      helper.bitJsonc.addDefaultScope(secondRemoteName);
+      helper.workspaceJsonc.addDefaultScope(secondRemoteName);
       helper.scopeHelper.addRemoteScope(secondRemotePath);
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
       // lane's scope
-      helper.bitJsonc.addDefaultScope();
+      helper.workspaceJsonc.addDefaultScope();
       helper.command.createLane();
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCiInPackageJsonHarmony();

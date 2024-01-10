@@ -32,7 +32,7 @@ describe('workspace config', function () {
             [`@${helper.scopes.remote}/foo`]: '0.0.1',
           },
         };
-        helper.bitJsonc.setPolicyToVariant('bar', policy);
+        helper.workspaceJsonc.setPolicyToVariant('bar', policy);
       });
       it('bit diff should show the tagged dependency version vs the version from overrides', () => {
         const diff = helper.command.diff('bar --verbose');
@@ -79,7 +79,7 @@ describe('workspace config', function () {
                 [`@${helper.scopes.remote}/utils.foo.foo1`]: '-',
               },
             };
-            helper.bitJsonc.setPolicyToVariant('bar', policy);
+            helper.workspaceJsonc.setPolicyToVariant('bar', policy);
             showBar = helper.command.showComponentParsed('bar');
           });
           it('should not add the removed dependency to the component', () => {
@@ -96,7 +96,7 @@ describe('workspace config', function () {
                 [`@${helper.scopes.remote}/utils.foo.foo1`]: '+',
               },
             };
-            helper.bitJsonc.setPolicyToVariant('bar', policy);
+            helper.workspaceJsonc.setPolicyToVariant('bar', policy);
           });
           // todo: make a decision about the desired behavior. see #2061
           it.skip('should not show the component twice as dependency and as devDependencies', () => {
@@ -126,7 +126,7 @@ describe('workspace config', function () {
               'non-exist-package': '-',
             },
           };
-          helper.bitJsonc.setPolicyToVariant('bar', policy);
+          helper.workspaceJsonc.setPolicyToVariant('bar', policy);
         });
         it('bit status should not show the component as missing packages', () => {
           const status = helper.command.status();
@@ -147,7 +147,7 @@ describe('workspace config', function () {
               'existing-package': '-',
             },
           };
-          helper.bitJsonc.setPolicyToVariant('bar', policy);
+          helper.workspaceJsonc.setPolicyToVariant('bar', policy);
           showBar = helper.command.showComponentParsed('bar');
         });
         it('should ignore the specified package but keep other packages intact', () => {
@@ -178,7 +178,7 @@ describe('workspace config', function () {
               'existing-package': '-',
             },
           };
-          helper.bitJsonc.setPolicyToVariant('bar', policy);
+          helper.workspaceJsonc.setPolicyToVariant('bar', policy);
           showBar = helper.command.showComponentParsed('bar');
         });
         it('should ignore the specified package but keep other packages intact', () => {
@@ -213,7 +213,7 @@ describe('workspace config', function () {
               chai: '-',
             },
           };
-          helper.bitJsonc.setPolicyToVariant('bar', policy);
+          helper.workspaceJsonc.setPolicyToVariant('bar', policy);
           showBar = helper.command.showComponentParsed('bar/foo');
         });
         it('should ignore the specified peer package', () => {
@@ -250,7 +250,7 @@ describe('workspace config', function () {
             [`@${helper.scopes.remote}/utils.foo.foo2`]: '-',
           },
         };
-        helper.bitJsonc.setPolicyToVariant('bar', policy);
+        helper.workspaceJsonc.setPolicyToVariant('bar', policy);
       });
       describe('tagging the component', () => {
         let output;
@@ -328,7 +328,7 @@ describe('workspace config', function () {
               chai: '+',
             },
           };
-          helper.bitJsonc.setPolicyToVariant('bar', policy);
+          helper.workspaceJsonc.setPolicyToVariant('bar', policy);
           showBar = helper.command.showComponentParsed('bar/foo');
         });
         it('should ignore the specified package from dependencies', () => {
@@ -360,7 +360,7 @@ describe('workspace config', function () {
               chai: '2.2.0',
             },
           };
-          helper.bitJsonc.setPolicyToVariant('bar', policy);
+          helper.workspaceJsonc.setPolicyToVariant('bar', policy);
           showBar = helper.command.showComponentParsed('bar/foo');
         });
         it('should add the specified package to peerDependencies', () => {
@@ -383,7 +383,7 @@ describe('workspace config', function () {
               chai: '+',
             },
           };
-          helper.bitJsonc.setPolicyToVariant('bar', policy);
+          helper.workspaceJsonc.setPolicyToVariant('bar', policy);
         });
         // See similar test in show.e2e - component with overrides data
         it('should not show the package in dependencies', () => {

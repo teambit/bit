@@ -98,13 +98,13 @@ describe('import functionality on Harmony', function () {
           npmCiRegistry.setResolver();
 
           // as an intermediate step, make sure the package is listed in the workspace config.
-          const workspaceConf = helper.bitJsonc.getPolicyFromDependencyResolver();
+          const workspaceConf = helper.workspaceJsonc.getPolicyFromDependencyResolver();
           expect(workspaceConf.dependencies).to.have.property(comp1Pkg);
 
           helper.command.importComponent('comp1');
         });
         it('should remove the package from workspace.jsonc', () => {
-          const workspaceConf = helper.bitJsonc.getPolicyFromDependencyResolver();
+          const workspaceConf = helper.workspaceJsonc.getPolicyFromDependencyResolver();
           expect(workspaceConf.dependencies).to.be.empty;
         });
       });
@@ -268,17 +268,17 @@ describe('import functionality on Harmony', function () {
       beforeImport = helper.scopeHelper.cloneLocalScope();
     });
     it('should import with no errors when defaultDirectory has "{owner}" placeholder', () => {
-      helper.bitJsonc.setComponentsDir('{owner}/{name}');
+      helper.workspaceJsonc.setComponentsDir('{owner}/{name}');
       expect(() => helper.command.importComponent('comp1')).to.not.throw();
     });
     it('should import with no errors when defaultDirectory has "{scope-id}" placeholder', () => {
       helper.scopeHelper.getClonedLocalScope(beforeImport);
-      helper.bitJsonc.setComponentsDir('{scopeId}/{name}');
+      helper.workspaceJsonc.setComponentsDir('{scopeId}/{name}');
       expect(() => helper.command.importComponent('comp1')).to.not.throw();
     });
     it('should throw an error when the placeholder is not supported', () => {
       helper.scopeHelper.getClonedLocalScope(beforeImport);
-      helper.bitJsonc.setComponentsDir('{hello}/{name}');
+      helper.workspaceJsonc.setComponentsDir('{hello}/{name}');
       expect(() => helper.command.importComponent('comp1')).to.throw();
     });
   });

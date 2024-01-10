@@ -58,7 +58,7 @@ describe('bit deprecate and undeprecate commands', function () {
         });
         describe('testing some config-merge', () => {
           before(() => {
-            helper.bitJsonc.setVariant(undefined, 'comp2', {
+            helper.workspaceJsonc.setVariant(undefined, 'comp2', {
               'teambit.component/deprecation': { someRandomData: true },
             });
           });
