@@ -1500,6 +1500,20 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-compare"
     },
+    "ui/component-compare/component-compare": {
+        "name": "ui/component-compare/component-compare",
+        "scope": "teambit.component",
+        "version": "0.0.172",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/component-compare"
+    },
+    "ui/component-compare/version-picker": {
+        "name": "ui/component-compare/version-picker",
+        "scope": "teambit.component",
+        "version": "0.0.171",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/version-picker"
+    },
     "ui/component-drawer": {
         "name": "ui/component-drawer",
         "scope": "teambit.component",
@@ -1633,12 +1647,26 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs"
     },
+    "ui/test-compare": {
+        "name": "ui/test-compare",
+        "scope": "teambit.defender",
+        "version": "0.0.255",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/test-compare"
+    },
     "ui/user-bar": {
         "name": "ui/user-bar",
         "scope": "teambit.cloud",
         "version": "0.0.3",
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/ui/user-bar"
+    },
+    "ui/version-dropdown": {
+        "name": "ui/version-dropdown",
+        "scope": "teambit.component",
+        "version": "0.0.853",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/version-dropdown"
     },
     "ui/workspace-component-card": {
         "name": "ui/workspace-component-card",
