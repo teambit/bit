@@ -54,8 +54,8 @@ export type ImportOptions = {
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
   saveInLane?: boolean; // save the imported component on the current lane (won't be available on main)
   lanes?: {
-    laneIds: LaneId[];
-    lanes: Lane[]; // it can be an empty array when a lane is a local lane and doesn't exist on the remote
+    laneId: LaneId;
+    remoteLane?: Lane; // it can be an empty array when a lane is a local lane and doesn't exist on the remote
   };
   allHistory?: boolean;
   fetchDeps?: boolean; // by default, if a component was tagged with > 0.0.900, it has the flattened-deps-graph in the object
@@ -94,7 +94,7 @@ export default class ImportComponents {
   consumer: Consumer;
   scope: Scope;
   mergeStatus: { [id: string]: FilesStatus };
-  private laneObjects: Lane[];
+  private remoteLane: Lane | undefined;
   private divergeData: Array<ModelComponent> = [];
   constructor(
     private workspace: Workspace,
@@ -105,7 +105,7 @@ export default class ImportComponents {
   ) {
     this.consumer = this.workspace.consumer;
     this.scope = this.consumer.scope;
-    this.laneObjects = this.options.lanes ? (this.options.lanes.lanes as Lane[]) : [];
+    this.remoteLane = this.options.lanes?.remoteLane;
   }
 
   async importComponents(): Promise<ImportResult> {
@@ -131,10 +131,7 @@ export default class ImportComponents {
     if (!this.options.objectsOnly) {
       throw new Error(`importObjectsOnLane should have objectsOnly=true`);
     }
-    if (this.laneObjects.length > 1) {
-      throw new Error(`importObjectsOnLane does not support more than one lane`);
-    }
-    const lane = this.laneObjects.length ? this.laneObjects[0] : undefined;
+    const lane = this.remoteLane;
     const bitIds: ComponentIdList = await this.getBitIds();
     lane
       ? logger.debug(`importObjectsOnLane, Lane: ${lane.id()}, Ids: ${bitIds.toString()}`)
@@ -145,7 +142,7 @@ export default class ImportComponents {
     });
 
     if (lane) {
-      await this.mergeAndSaveLaneObject();
+      await this.mergeAndSaveLaneObject(lane);
     }
 
     return this.returnCompleteResults(beforeImportVersions, versionDependenciesArr);
@@ -184,13 +181,10 @@ export default class ImportComponents {
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
     const versionDependenciesArr = await this._importComponentsObjects(bitIds, {
-      lane: this.laneObjects?.[0],
+      lane: this.remoteLane,
     });
-    if (this.laneObjects?.length && this.options.objectsOnly) {
-      if (this.laneObjects.length > 1) {
-        throw new Error(`importSpecificComponents does not support more than one lane`);
-      }
-      await this.mergeAndSaveLaneObject();
+    if (this.remoteLane && this.options.objectsOnly) {
+      await this.mergeAndSaveLaneObject(this.remoteLane);
     }
     let writtenComponents: Component[] = [];
     let componentWriterResults: ComponentWriterResults | undefined;
@@ -213,8 +207,7 @@ export default class ImportComponents {
     );
   }
 
-  private async mergeAndSaveLaneObject() {
-    const lane = this.laneObjects[0];
+  private async mergeAndSaveLaneObject(lane: Lane) {
     const mergeLaneResults = await this.scope.sources.mergeLane(lane, true);
     const mergedLane = mergeLaneResults.mergeLane;
     const isRemoteLaneEqualsToMergedLane = lane.isEqual(mergedLane);
@@ -283,9 +276,7 @@ export default class ImportComponents {
   private async throwForComponentsFromAnotherLane(bitIds: ComponentID[]) {
     if (this.options.objectsOnly) return;
     const currentLaneId = this.workspace.getCurrentLaneId();
-    const currentRemoteLane = currentLaneId
-      ? this.options.lanes?.lanes.find((l) => l.toLaneId().isEqual(currentLaneId))
-      : undefined;
+    const currentRemoteLane = this.remoteLane?.toLaneId().isEqual(currentLaneId) ? this.remoteLane : undefined;
     const currentLane = await this.workspace.getCurrentLaneObject();
     const idsFromAnotherLane: ComponentID[] = [];
     if (currentRemoteLane) {
@@ -375,7 +366,7 @@ if you need this specific snap, find the lane this snap is belong to, then run "
     if (!this.options.lanes) {
       throw new Error(`getBitIdsForLanes: this.options.lanes must be set`);
     }
-    const bitIdsFromLane = ComponentIdList.fromArray(this.laneObjects.flatMap((lane) => lane.toBitIds()));
+    const bitIdsFromLane = this.remoteLane?.toComponentIds() || new ComponentIdList();
 
     if (!this.options.ids.length) {
       const bitMapIds = this.consumer.bitMap.getAllBitIds();
@@ -404,7 +395,7 @@ if you need this specific snap, find the lane this snap is belong to, then run "
       const existingOnLanes = idsFromRemote.filter((id) => bitIdsFromLane.hasWithoutVersion(id));
       if (!existingOnLanes.length) {
         throw new BitError(`the id with the the wildcard "${idStr}" has been parsed to multiple component ids.
-however, none of them existing on the lane "${this.laneObjects.map((l) => l.name).join(', ')}"
+however, none of them existing on the lane "${this.remoteLane?.id()}".
 in case you intend to import these components from main, please run the following:
 bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`);
       }
@@ -744,7 +735,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     if (!currentLane) {
       return; // user on main
     }
-    const idsFromRemoteLanes = ComponentIdList.fromArray(this.laneObjects.flatMap((lane) => lane.toComponentIds()));
+    const idsFromRemoteLanes = this.remoteLane?.toComponentIds() || new ComponentIdList();
     await Promise.all(
       components.map(async (comp) => {
         const existOnRemoteLane = idsFromRemoteLanes.has(comp.id);
