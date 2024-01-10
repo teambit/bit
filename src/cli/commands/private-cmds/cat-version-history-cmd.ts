@@ -8,7 +8,7 @@ const colorPerEdgeType = {
 };
 
 export class CatVersionHistoryCmd implements LegacyCommand {
-  name = 'cat-version-history [id]';
+  name = 'cat-version-history <id>';
   description = 'cat version-history object by component-id';
   private = true;
   alias = 'cvh';

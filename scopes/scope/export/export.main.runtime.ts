@@ -30,12 +30,13 @@ import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/work
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { LaneReadmeComponent } from '@teambit/legacy/dist/scope/models/lane';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
-import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
+import { ObjectItem, ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { EjectAspect, EjectMain, EjectResults } from '@teambit/eject';
+import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { ExportOrigin } from '@teambit/legacy/dist/scope/network/http/http';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
@@ -400,6 +401,14 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         return compact(refsToExportPerComponent);
       };
 
+      const bitObjectToObjectItem = async (obj: BitObject): Promise<ObjectItem> => {
+        return {
+          ref: obj.hash(),
+          buffer: await obj.compress(),
+          type: obj.getType(),
+        };
+      };
+
       const processModelComponent = async ({
         modelComponent,
         refs,
@@ -423,11 +432,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         const componentBuffer = await modelComponent.compress();
         const componentData = { ref: modelComponent.hash(), buffer: componentBuffer, type: modelComponent.getType() };
         const objectsBuffer = await Promise.all(
-          componentAndObject.objects.map(async (obj) => ({
-            ref: obj.hash(),
-            buffer: await obj.compress(),
-            type: obj.getType(),
-          }))
+          componentAndObject.objects.map(async (obj) => bitObjectToObjectItem(obj))
         );
         const allObjectsData = [componentData, ...objectsBuffer];
         objectListPerName[modelComponent.name] = new ObjectList(allObjectsData);
@@ -438,16 +443,12 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
       await mapSeries(refsToExportPerComponent, processModelComponent);
       if (lane) {
-        // lane.components.forEach((c) => {
-        //   const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(c.id);
-        //   c.id = c.id.hasScope() ? c.id : c.id.changeScope(idWithFutureScope?.scope || lane.scope);
-        // });
-        // if (lane.readmeComponent) {
-        //   lane.readmeComponent.id = lane.readmeComponent.id.hasScope()
-        //     ? lane.readmeComponent.id
-        //     : lane.readmeComponent.id.changeScope(lane.scope);
-        // }
-        const laneData = { ref: lane.hash(), buffer: await lane.compress() };
+        if (isFeatureEnabled(SUPPORT_LANE_HISTORY)) {
+          const laneHistory = await this.workspace.scope.legacyScope.lanes.getOrCreateLaneHistory(lane);
+          const laneHistoryData = await bitObjectToObjectItem(laneHistory);
+          objectList.addIfNotExist([laneHistoryData]);
+        }
+        const laneData = await bitObjectToObjectItem(lane);
         objectList.addIfNotExist([laneData]);
       }
 
@@ -815,8 +816,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     loader.start(BEFORE_EXPORT); // show single export
     const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
     // load the components for fixing any out-of-sync issues.
-    // TODO: check if we really need the load extensions here
-    await consumer.loadComponents(ComponentIdList.fromArray(parsedIds), undefined, { loadExtensions: true });
+    await consumer.loadComponents(ComponentIdList.fromArray(parsedIds));
 
     return filterNonScopeIfNeeded(ComponentIdList.fromArray(parsedIds));
   }

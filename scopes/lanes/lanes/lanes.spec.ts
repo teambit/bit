@@ -1,6 +1,8 @@
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
 import { ExportAspect, ExportMain } from '@teambit/export';
+import { LaneId } from '@teambit/lane-id';
+import { SUPPORT_LANE_HISTORY, addFeature, removeFeature } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
@@ -196,6 +198,56 @@ describe('LanesAspect', function () {
       }
       expect(error).toBeInstanceOf(Error);
       expect(error?.message).toMatch(/unable to restore lane/);
+    });
+  });
+
+  describe('lane history', () => {
+    let lanes: LanesMain;
+    let workspaceData: WorkspaceData;
+    let snapping: SnappingMain;
+    let laneId: LaneId;
+    beforeAll(async () => {
+      addFeature(SUPPORT_LANE_HISTORY);
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      await mockComponents(workspacePath);
+      lanes = await loadAspect(LanesAspect, workspacePath);
+      await lanes.createLane('stage');
+      snapping = await loadAspect(SnappingAspect, workspacePath);
+      const currentLaneId = lanes.getCurrentLaneId();
+      if (!currentLaneId) throw new Error('unable to get the current lane-id');
+      laneId = currentLaneId;
+    }, 30000);
+    afterAll(async () => {
+      removeFeature(SUPPORT_LANE_HISTORY);
+      await destroyWorkspace(workspaceData);
+    });
+    it('should create lane history object when creating a new lane', async () => {
+      const laneHistory = await lanes.getLaneHistory(laneId);
+      const history = laneHistory.getHistory();
+      expect(Object.keys(history).length).toEqual(1);
+    });
+    it('should add a record to LaneHistory when snapping', async () => {
+      const results = await snapping.snap({ pattern: 'comp1', build: false });
+      const laneHistory = await lanes.getLaneHistory(laneId);
+      const history = laneHistory.getHistory();
+      expect(Object.keys(history).length).toEqual(2);
+      const snapHistory = history[Object.keys(history)[1]];
+      expect(snapHistory.log.message).toEqual('snap');
+      expect(snapHistory.components.length).toEqual(1);
+      expect(snapHistory.components[0]).toEqual(results?.snappedComponents[0].id.toString() as string);
+    });
+    it('should not add a record when importing', async () => {
+      const exporter: ExportMain = await loadAspect(ExportAspect, workspaceData.workspacePath);
+      await exporter.export();
+
+      const newWorkspace = mockWorkspace({ bareScopeName: workspaceData.remoteScopeName });
+
+      lanes = await loadAspect(LanesAspect, newWorkspace.workspacePath);
+      await lanes.importLaneObject(laneId, true, true);
+      const laneHistory = await lanes.getLaneHistory(laneId);
+      const history = laneHistory.getHistory();
+      expect(Object.keys(history).length).toEqual(2);
     });
   });
 });
