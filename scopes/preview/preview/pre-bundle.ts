@@ -1,7 +1,12 @@
 import { join, resolve } from 'path';
 import fs, { existsSync, outputFileSync, readJsonSync } from 'fs-extra';
 import { AspectDefinition } from '@teambit/aspect-loader';
-import { createHarmonyImports, createImports, getIdSetters, getIdentifiers } from '@teambit/ui';
+import {
+  createHarmonyImports,
+  createImports,
+  getIdSetters,
+  getIdentifiers,
+} from '@teambit/harmony.modules.harmony-root-generator';
 import { sha1 } from '@teambit/legacy/dist/utils';
 import webpack from 'webpack';
 import { promisify } from 'util';

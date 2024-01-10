@@ -905,6 +905,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/modules/generate-style-loaders"
     },
+    "modules/harmony-root-generator": {
+        "name": "modules/harmony-root-generator",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "components/modules/harmony-root-generator",
+        "config": {
+            "teambit.harmony/node": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/node"
+            }
+        }
+    },
     "modules/match-pattern": {
         "name": "modules/match-pattern",
         "scope": "teambit.workspace",
