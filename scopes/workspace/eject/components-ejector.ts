@@ -29,6 +29,7 @@ export type EjectResults = {
 export type EjectOptions = {
   force?: boolean; // eject although a component is modified/staged
   keepFiles?: boolean; // keep component files on the workspace
+  skipDependencyInstallation?: boolean; // skip installing the dependencies
 };
 
 type FailedComponents = {
@@ -131,6 +132,7 @@ export class ComponentsEjector {
   }
 
   async installPackages() {
+    if (this.ejectOptions.skipDependencyInstallation) return;
     this.logger.setStatusLine('Eject: installing packages using the package-manager');
     const packages = this.getPackagesToInstall();
     await this.install.install(packages);
