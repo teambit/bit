@@ -16,7 +16,7 @@ describe('installing with non-default nodeLinker', function () {
     describe(`setting nodeLinker to "hoisted"`, () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
         helper.command.install('is-positive');
       });
       it('should create a hoisted node_modules', function () {
@@ -27,7 +27,7 @@ describe('installing with non-default nodeLinker', function () {
     describe(`setting nodeLinker to "isolated"`, () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('nodeLinker', 'isolated');
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('nodeLinker', 'isolated');
         helper.command.install('is-positive');
       });
       it('should create a hoisted node_modules', function () {
@@ -40,8 +40,8 @@ describe('installing with non-default nodeLinker', function () {
     describe(`setting nodeLinker to "hoisted"`, () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
         helper.command.install('is-positive');
       });
       it('should create a hoisted node_modules', function () {
@@ -52,8 +52,8 @@ describe('installing with non-default nodeLinker', function () {
     describe.skip(`setting nodeLinker to "isolated"`, () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('nodeLinker', 'isolated');
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('nodeLinker', 'isolated');
         helper.command.install('is-positive');
       });
       it('should create node_modules', function () {

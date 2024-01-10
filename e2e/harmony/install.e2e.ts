@@ -50,7 +50,7 @@ describe('install command', function () {
     let output;
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
+      helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       envName = helper.env.setCustomEnv('env-add-dependencies', { skipCompile: true, skipInstall: true });
       envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(1, undefined, undefined, false);
@@ -108,7 +108,7 @@ describe('install generator configured envs', function () {
     const generatorConfig = {
       envs: ['teambit.react/react-env', 'teambit.react/react'],
     };
-    helper.extensions.bitJsonc.addKeyVal('teambit.generator/generator', generatorConfig);
+    helper.extensions.workspaceJsonc.addKeyVal('teambit.generator/generator', generatorConfig);
     await helper.command.install();
   });
   after(() => {
@@ -128,7 +128,7 @@ describe('install generator configured envs', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
@@ -156,7 +156,7 @@ describe('install generator configured envs', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
@@ -189,57 +189,69 @@ describe('install generator configured envs', function () {
 describe('install new dependencies', function () {
   this.timeout(0);
   let helper: Helper;
-  let bitJsonc;
+  let workspaceJsonc;
   describe('using pnpm', () => {
     before(() => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
+      helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       helper.command.install('is-positive@~1.0.0 is-odd@1.0.0 is-even@1 is-negative');
-      bitJsonc = helper.bitJsonc.read();
+      workspaceJsonc = helper.workspaceJsonc.read();
     });
     after(() => {
       helper.scopeHelper.destroy();
     });
     it('should add new dependency preserving the ~ prefix', () => {
-      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal(
+      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal(
         '~1.0.0'
       );
     });
     it('should add new dependency with ^ prefix if the dependency was installed by specifying the exact version', () => {
-      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal('^1.0.0');
+      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal(
+        '^1.0.0'
+      );
     });
     it('should add new dependency with ^ prefix if the dependency was installed by specifying a range not using ~', () => {
-      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-even']).to.equal('^1.0.0');
+      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-even']).to.equal(
+        '^1.0.0'
+      );
     });
     it('should add new dependency with ^ prefix by default', () => {
-      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative'][0]).to.equal('^');
+      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative'][0]).to.equal(
+        '^'
+      );
     });
   });
   describe('using yarn', () => {
     before(() => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/yarn');
+      helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
       helper.command.install('is-positive@~1.0.0 is-odd@1.0.0 is-even@1 is-negative');
-      bitJsonc = helper.bitJsonc.read();
+      workspaceJsonc = helper.workspaceJsonc.read();
     });
     after(() => {
       helper.scopeHelper.destroy();
     });
     it('should add new dependency preserving the ~ prefix', () => {
-      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal(
+      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal(
         '~1.0.0'
       );
     });
     it('should add new dependency with ^ prefix if the dependency was installed by specifying the exact version', () => {
-      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal('^1.0.0');
+      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal(
+        '^1.0.0'
+      );
     });
     it('should add new dependency with ^ prefix if the dependency was installed by specifying a range not using ~', () => {
-      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-even']).to.equal('^1.0.0');
+      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-even']).to.equal(
+        '^1.0.0'
+      );
     });
     it('should add new dependency with ^ prefix by default', () => {
-      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative'][0]).to.equal('^');
+      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative'][0]).to.equal(
+        '^'
+      );
     });
   });
 });
@@ -247,39 +259,43 @@ describe('install new dependencies', function () {
 describe('named install', function () {
   this.timeout(0);
   let helper: Helper;
-  let bitJsonc;
+  let workspaceJsonc;
   before(() => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
+    helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
     helper.command.install('is-positive@1.0.0');
     helper.command.install('is-positive');
-    bitJsonc = helper.bitJsonc.read();
+    workspaceJsonc = helper.workspaceJsonc.read();
   });
   after(() => {
     helper.scopeHelper.destroy();
   });
   it('should override already existing dependency with the latest version', () => {
-    expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal('^3.1.0');
+    expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal(
+      '^3.1.0'
+    );
   });
 });
 
 describe('install with --lockfile-only', function () {
   this.timeout(0);
   let helper: Helper;
-  let bitJsonc;
+  let workspaceJsonc;
   before(() => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
+    helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
     helper.command.install('is-positive@1.0.0 --lockfile-only');
-    bitJsonc = helper.bitJsonc.read();
+    workspaceJsonc = helper.workspaceJsonc.read();
   });
   after(() => {
     helper.scopeHelper.destroy();
   });
   it('should update workspace.jsonc', () => {
-    expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal('^1.0.0');
+    expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal(
+      '^1.0.0'
+    );
   });
   it('should create pnpm-lock.yaml', () => {
     expect(fs.existsSync(path.join(helper.fixtures.scopes.localPath, 'pnpm-lock.yaml'))).to.equal(true);

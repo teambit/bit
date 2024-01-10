@@ -22,7 +22,7 @@ chai.use(require('chai-fs'));
   describe(`using pnpm as a package manager`, () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope({ registry: npmCiRegistry.ciRegistry });
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
       helper.command.install('has-foo100-peer@1.0.0 has-foo101-peer@1.0.0 abc@1.0.0');
       helper.command.install('--add-missing-peers');
     });
@@ -36,25 +36,25 @@ chai.use(require('chai-fs'));
     });
     it('should add the missing peer dependencies to workspace.jsonc', () => {
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-a');
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-b');
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-c');
     });
     it('should not add the missing peer dependencies that have conflicting versions to workspace.jsonc', () => {
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).not.to.have.property('foo');
     });
   });
   describe('installing new packages and missing peer dependencies at the same time', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope({ registry: npmCiRegistry.ciRegistry });
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
       helper.command.install('abc@1.0.0 --add-missing-peers');
     });
     it('should install the new package', () => {
@@ -67,20 +67,20 @@ chai.use(require('chai-fs'));
     });
     it('should add the missing peer dependencies to workspace.jsonc', () => {
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-a');
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-b');
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-c');
     });
   });
   describe(`using Yarn as a package manager`, () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope({ registry: npmCiRegistry.ciRegistry });
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
       helper.command.install('has-foo100-peer@1.0.0 has-foo101-peer@1.0.0 abc@1.0.0');
       helper.command.install('--add-missing-peers');
     });
@@ -94,18 +94,18 @@ chai.use(require('chai-fs'));
     });
     it('should add the missing peer dependencies to workspace.jsonc', () => {
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-a');
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-b');
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-c');
     });
     it('should not add the missing peer dependencies that have conflicting versions to workspace.jsonc', () => {
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).not.to.have.property('foo');
     });
   });

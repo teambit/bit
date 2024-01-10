@@ -10,7 +10,7 @@ describe('pnpm install with default settings', function () {
   before(async () => {
     helper = new Helper();
     helper.scopeHelper.reInitLocalScope();
-    helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
+    helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
     helper.command.install('is-positive');
     modulesState = await readModulesManifest(path.join(helper.fixtures.scopes.localPath, 'node_modules'));
   });

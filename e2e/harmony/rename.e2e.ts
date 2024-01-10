@@ -148,7 +148,7 @@ describe('bit rename command', function () {
   describe('wrong rename with scope-name inside the name', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.addDefaultScope('owner.scope');
+      helper.workspaceJsonc.addDefaultScope('owner.scope');
       helper.fixtures.populateComponents(1);
     });
     // previously, it was letting renaming, but afterwards, after any command, it was throwing InvalidName because the
@@ -160,7 +160,7 @@ describe('bit rename command', function () {
   describe('rename scope-name without refactoring', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.addDefaultScope('owner.scope');
+      helper.workspaceJsonc.addDefaultScope('owner.scope');
       helper.fixtures.populateComponents(2);
       helper.command.rename('comp2', 'comp2', '--scope owner2.scope2');
     });
@@ -171,7 +171,7 @@ describe('bit rename command', function () {
   describe('rename scope-name with refactoring', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.addDefaultScope('owner.scope');
+      helper.workspaceJsonc.addDefaultScope('owner.scope');
       helper.fixtures.populateComponents(2);
       helper.command.rename('comp2', 'comp2', '--scope owner2.scope2 --refactor');
     });

@@ -905,6 +905,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/modules/generate-style-loaders"
     },
+    "modules/harmony-root-generator": {
+        "name": "modules/harmony-root-generator",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "components/modules/harmony-root-generator",
+        "config": {
+            "teambit.harmony/node": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/node"
+            }
+        }
+    },
     "modules/match-pattern": {
         "name": "modules/match-pattern",
         "scope": "teambit.workspace",
@@ -1499,6 +1513,13 @@
         "version": "0.0.286",
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-compare"
+    },
+    "ui/component-compare/component-compare": {
+        "name": "ui/component-compare/component-compare",
+        "scope": "teambit.component",
+        "version": "0.0.172",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/component-compare"
     },
     "ui/component-drawer": {
         "name": "ui/component-drawer",

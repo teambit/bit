@@ -13,7 +13,7 @@ describe('workspace config (workspace.jsonc)', function () {
   describe('adding a non-component key', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.addKeyVal('non-comp', {});
+      helper.workspaceJsonc.addKeyVal('non-comp', {});
     });
     it('any command should throw a descriptive error', () => {
       expect(() => helper.command.status()).to.throw(
@@ -25,7 +25,7 @@ describe('workspace config (workspace.jsonc)', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(1);
-      helper.bitJsonc.addToVariant('*', 'teambit.harmony/non-exist', {});
+      helper.workspaceJsonc.addToVariant('*', 'teambit.harmony/non-exist', {});
     });
     it('any command should throw a ComponentNotFound error with specific suggestions for the workspace.jsonc file', () => {
       expect(() => helper.command.status()).to.throw(`your workspace.jsonc has this component-id set`);

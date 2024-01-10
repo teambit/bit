@@ -171,7 +171,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.bitJsonc.addDefaultScope('some-scope');
+      helper.workspaceJsonc.addDefaultScope('some-scope');
       helper.command.createLane('lane-b');
     });
     it('should set the scope-name to be the same as the original lane', () => {

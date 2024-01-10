@@ -148,7 +148,7 @@ describe('merge lanes', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.bitJsonc.setupDefault();
+        helper.workspaceJsonc.setupDefault();
         helper.command.createLane('dev');
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
@@ -586,7 +586,7 @@ describe('merge lanes', function () {
       helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
       helper.command.createLane();
-      helper.bitJsonc.addDefaultScope(originRemote);
+      helper.workspaceJsonc.addDefaultScope(originRemote);
       helper.fixtures.populateComponents(1, false, 'on-lane');
       helper.command.snapAllComponentsWithoutBuild();
       laneScopeHead = helper.command.getHeadOfLane('dev', 'comp1');
@@ -596,7 +596,7 @@ describe('merge lanes', function () {
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope(scopePath);
-      helper.bitJsonc.addDefaultScope(originRemote);
+      helper.workspaceJsonc.addDefaultScope(originRemote);
       helper.fixtures.populateComponents(1, false, 'on-origin');
       helper.command.tagAllWithoutBuild();
       mainHead = helper.command.getHead('comp1');
@@ -804,7 +804,7 @@ describe('merge lanes', function () {
       helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
       helper.command.createLane('lane-a');
-      helper.bitJsonc.addDefaultScope(originRemote);
+      helper.workspaceJsonc.addDefaultScope(originRemote);
       helper.fixtures.populateComponents(1, false, 'on-lane');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
@@ -1375,7 +1375,7 @@ describe('merge lanes', function () {
       helper.command.export();
       const mainWs = helper.scopeHelper.cloneLocalScope();
 
-      helper.bitJsonc.addDefaultScope(anotherRemote);
+      helper.workspaceJsonc.addDefaultScope(anotherRemote);
       helper.command.createLane('lane-a');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();

@@ -489,7 +489,7 @@ describe('bit remove command', function () {
       helper.command.removeComponent('my-aspect');
     });
     it('should remove the id from the root of workspace.jsonc', () => {
-      const ws = helper.bitJsonc.read();
+      const ws = helper.workspaceJsonc.read();
       expect(ws).to.not.have.property(`${helper.scopes.remote}/my-aspect`);
     });
   });

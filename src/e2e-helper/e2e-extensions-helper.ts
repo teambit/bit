@@ -1,4 +1,4 @@
-import BitJsoncHelper from './e2e-bit-jsonc-helper';
+import WorkspaceJsoncHelper from './e2e-workspace-jsonc-helper';
 import CommandHelper from './e2e-command-helper';
 import FixtureHelper from './e2e-fixtures-helper';
 import FsHelper from './e2e-fs-helper';
@@ -8,36 +8,36 @@ import ScopesData from './e2e-scopes';
 export default class ExtensionsHelper {
   scopes: ScopesData;
   command: CommandHelper;
-  bitJsonc: BitJsoncHelper;
+  workspaceJsonc: WorkspaceJsoncHelper;
   scopeHelper: ScopeHelper;
   fixtures: FixtureHelper;
   fs: FsHelper;
   constructor(
     scopes: ScopesData,
     command: CommandHelper,
-    bitJsonc: BitJsoncHelper,
+    workspaceJsonc: WorkspaceJsoncHelper,
     scopeHelper: ScopeHelper,
     fixtures: FixtureHelper,
     fsHelper: FsHelper
   ) {
     this.scopes = scopes;
     this.command = command;
-    this.bitJsonc = bitJsonc;
+    this.workspaceJsonc = workspaceJsonc;
     this.scopeHelper = scopeHelper;
     this.fixtures = fixtures;
     this.fs = fsHelper;
   }
 
   addExtensionToWorkspace(extName: string, extConfig = {}) {
-    this.bitJsonc.addKeyVal(extName, extConfig);
+    this.workspaceJsonc.addKeyVal(extName, extConfig);
   }
 
   addExtensionToVariant(variant: string, extName: string, extConfig = {}, replaceExisting = false) {
-    this.bitJsonc.addToVariant(variant, extName, extConfig, replaceExisting);
+    this.workspaceJsonc.addToVariant(variant, extName, extConfig, replaceExisting);
   }
 
   removeAllExtensionsFromVariant(variant: string) {
-    this.bitJsonc.setVariant(this.scopes.localPath, variant, {});
+    this.workspaceJsonc.setVariant(this.scopes.localPath, variant, {});
   }
 
   /**

@@ -592,9 +592,6 @@ please create a new lane instead, which will include all components of this lane
     const checkoutProps = {
       mergeStrategy,
       skipNpmInstall: skipDependencyInstallation,
-      verbose: false, // not relevant in Harmony
-      ignorePackageJson: true, // not relevant in Harmony
-      ignoreDist: true, // not relevant in Harmony
       isLane: true,
       promptMergeOptions: false,
       writeConfig: false,
