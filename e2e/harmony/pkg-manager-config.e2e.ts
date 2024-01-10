@@ -19,7 +19,7 @@ chai.use(require('chai-string'));
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -32,7 +32,7 @@ chai.use(require('chai-string'));
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
     });
     describe('using Yarn', () => {
       before(() => {
@@ -49,9 +49,9 @@ chai.use(require('chai-string'));
         });
         helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
         helper.scopeHelper.addRemoteScope();
-        helper.bitJsonc.setupDefault();
-        helper.bitJsonc.addKeyValToWorkspace('resolveAspectsFromNodeModules', false);
-        helper.bitJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', false);
+        helper.workspaceJsonc.setupDefault();
+        helper.workspaceJsonc.addKeyValToWorkspace('resolveAspectsFromNodeModules', false);
+        helper.workspaceJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', false);
         helper.fixtures.populateComponents(1);
         helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
         helper.capsules.removeScopeAspectCapsules();
@@ -75,7 +75,7 @@ chai.use(require('chai-string'));
         });
         helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
         helper.scopeHelper.addRemoteScope();
-        helper.bitJsonc.setupDefault();
+        helper.workspaceJsonc.setupDefault();
         helper.fixtures.populateComponents(1);
         helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
         helper.capsules.removeScopeAspectCapsules();

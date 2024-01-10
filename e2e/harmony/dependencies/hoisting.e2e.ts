@@ -18,7 +18,7 @@ describe('pnpm with hoisted node linker, when there is a dependency that has the
         name: 'once',
       },
     });
-    helper.bitJsonc.addKeyValToDependencyResolver('policy', {
+    helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
       dependencies: {
         'map-limit': '0.0.1', // this dependency has "once" in dependencies
       },

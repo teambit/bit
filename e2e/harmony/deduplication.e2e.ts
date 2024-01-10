@@ -41,7 +41,7 @@ chai.use(require('chai-fs'));
       // A new version of comp2 is created
       helper.scopeHelper.reInitLocalScope();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
-      helper.bitJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
+      helper.workspaceJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent(`comp2`);
       helper.fs.outputFile(`${scopeWithoutOwner}/comp2/foo.js`, '');
@@ -51,7 +51,7 @@ chai.use(require('chai-fs'));
       // comp1 is imported and the newest version of comp2 is installed
       helper.scopeHelper.reInitLocalScope();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
-      helper.bitJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
+      helper.workspaceJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent(`comp1`);
       helper.command.install(`@ci/${randomStr}.comp2@0.0.2`);
@@ -113,7 +113,7 @@ const get = require("lodash.get");`
       // comp4 is created with lodash.get@^4.4.0 in its dependencies
       helper.scopeHelper.reInitLocalScope();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
-      helper.bitJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
+      helper.workspaceJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
       helper.scopeHelper.addRemoteScope();
       helper.command.install('lodash.get@^4.4.0');
       helper.fs.outputFile('comp4/comp4.js', 'const get = require("lodash.get");');
@@ -124,7 +124,7 @@ const get = require("lodash.get");`
       // Releasing 2 new versions of comp-dep
       helper.scopeHelper.reInitLocalScope();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
-      helper.bitJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
+      helper.workspaceJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent(`comp-dep`);
       helper.fs.outputFile(`${scopeWithoutOwner}/comp-dep/foo.js`, '');
@@ -137,7 +137,7 @@ const get = require("lodash.get");`
       // Creating a new component that has comp-dep@0.0.2 in dependencies
       helper.scopeHelper.reInitLocalScope();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
-      helper.bitJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
+      helper.workspaceJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
       helper.scopeHelper.addRemoteScope();
       helper.fs.outputFile('comp5/comp5.js', `const comp = require("@ci/${randomStr}.comp-dep");`);
       helper.command.addComponent('comp5');
@@ -148,7 +148,7 @@ const get = require("lodash.get");`
       // Importing comp1,2,3,4,5 and installing comp-dep@0.0.3 as a dependency
       helper.scopeHelper.reInitLocalScope();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
-      helper.bitJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
+      helper.workspaceJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent(`comp1`);
       helper.command.importComponent(`comp2`);

@@ -18,7 +18,7 @@ describe('app command', function () {
       helper.command.create('express-server', 'my-app', '--env teambit.harmony/node');
       helper.command.compile();
       helper.command.install();
-      helper.bitJsonc.addKeyVal('my-scope/my-app', {});
+      helper.workspaceJsonc.addKeyVal('my-scope/my-app', {});
     });
     // previously, it was supporting only app-name
     // TODO: temporary skip this test, the run with kill is hanging on CI, need to resolve it

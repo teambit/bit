@@ -19,7 +19,7 @@ describe('dependencies', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();

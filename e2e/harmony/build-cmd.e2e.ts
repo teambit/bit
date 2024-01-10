@@ -28,7 +28,7 @@ describe('build command', function () {
       helper.env.setCustomEnv('custom-react-env');
       const importStatement = `import { MyMdx } from '@${helper.scopes.remote}/my-mdx';\n`;
       helper.fs.prependFile(path.join('custom-react-env/custom-react-env.docs.mdx'), importStatement);
-      helper.bitJsonc.setVariant(undefined, `${helper.scopes.remote}/my-mdx`, { 'teambit.mdx/mdx': {} });
+      helper.workspaceJsonc.setVariant(undefined, `${helper.scopes.remote}/my-mdx`, { 'teambit.mdx/mdx': {} });
       helper.command.link();
       helper.command.compile();
       helper.command.install('react');
@@ -70,7 +70,7 @@ describe('build command', function () {
       helper.env.setCustomEnv();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('node-env/node-env.extension.ts', getNodeEnvExtension());
-      helper.bitJsonc.setVariant(undefined, 'comp1', { 'my-scope/node-env': {} });
+      helper.workspaceJsonc.setVariant(undefined, 'comp1', { 'my-scope/node-env': {} });
       helper.command.compile();
       helper.command.install();
     });

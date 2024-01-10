@@ -38,9 +38,9 @@ describe('loadBit()', function () {
 
   it('should throw when defaultScope is invalid', async () => {
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    const bitJsonc = helper.bitJsonc.read();
+    const bitJsonc = helper.workspaceJsonc.read();
     bitJsonc['teambit.workspace/workspace'].defaultScope = 'hi/';
-    helper.bitJsonc.write(bitJsonc);
+    helper.workspaceJsonc.write(bitJsonc);
     let error: Error;
     try {
       await loadBit(helper.scopes.localPath);

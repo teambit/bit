@@ -85,7 +85,7 @@ export class List extends React.Component {
             '@types/ninja': '-',
           },
         };
-        helper.bitJsonc.setPolicyToVariant('bar', policy);
+        helper.workspaceJsonc.setPolicyToVariant('bar', policy);
       });
       it('should not show the @types package anymore', () => {
         const show = helper.command.showComponentParsed();

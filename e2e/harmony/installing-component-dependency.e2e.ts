@@ -12,7 +12,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+    helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();
     npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -30,7 +30,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
     helper.scopeHelper.reInitLocalScope();
     helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
     helper.scopeHelper.addRemoteScope();
-    helper.bitJsonc.setupDefault();
+    helper.workspaceJsonc.setupDefault();
     helper.command.import(`${helper.scopes.remote}/comp1`);
   });
   it('should install the version of the component dependency from the model, when it is not in the workspace policies', () => {

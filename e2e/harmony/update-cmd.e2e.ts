@@ -40,7 +40,7 @@ describe('update command', function () {
         helper.componentJson.write(componentJson, 'comp2');
         helper.command.install('is-positive@1.0.0');
         helper.command.update('--yes --latest');
-        configFile = helper.bitJsonc.read(helper.scopes.localPath);
+        configFile = helper.workspaceJsonc.read(helper.scopes.localPath);
         componentJson = helper.componentJson.read('comp2');
       });
       it('should update the version range', function () {
@@ -83,7 +83,7 @@ describe('update command', function () {
         });
         helper.command.install();
         helper.command.update('--yes is-posit* --latest');
-        configFile = helper.bitJsonc.read(helper.scopes.localPath);
+        configFile = helper.workspaceJsonc.read(helper.scopes.localPath);
       });
       it('should update the version range of the selected package', function () {
         expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).not.to.equal(
@@ -143,7 +143,7 @@ describe('update command', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -190,11 +190,11 @@ const isPositive = require("is-positive");`
         helper.scopeHelper.reInitLocalScope();
         helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
         helper.scopeHelper.addRemoteScope();
-        helper.bitJsonc.setupDefault();
+        helper.workspaceJsonc.setupDefault();
         helper.extensions.bitJsonc.addKeyValToDependencyResolver('savePrefix', '^');
         helper.command.import(`${helper.scopes.remote}/comp1`);
         helper.command.update('--yes --latest');
-        configFile = helper.bitJsonc.read(helper.scopes.localPath);
+        configFile = helper.workspaceJsonc.read(helper.scopes.localPath);
       });
       it('should add an updated version of the dependency from the model to the workspace policies', function () {
         expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal(
@@ -226,10 +226,10 @@ const isPositive = require("is-positive");`
         helper.scopeHelper.reInitLocalScope();
         helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
         helper.scopeHelper.addRemoteScope();
-        helper.bitJsonc.setupDefault();
+        helper.workspaceJsonc.setupDefault();
         helper.command.import(`${helper.scopes.remote}/comp1`);
         helper.command.update('--yes --latest');
-        configFile = helper.bitJsonc.read(helper.scopes.localPath);
+        configFile = helper.workspaceJsonc.read(helper.scopes.localPath);
       });
       it('should add an updated version of the dependency from the model to the bitmap', function () {
         const bitMap = helper.bitMap.read();
@@ -257,7 +257,7 @@ const isPositive = require("is-positive");`
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -292,7 +292,7 @@ const isPositive = require("is-positive");`
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -312,7 +312,7 @@ const isPositive = require("is-positive");`
         `const comp1 = require("@ci/${helper.scopes.remoteWithoutOwner}.comp1");`
       );
       helper.command.addComponent('comp1new');
-      helper.bitJsonc.addKeyValToDependencyResolver('policy', {
+      helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
         dependencies: {
           [`@ci/${helper.scopes.remoteWithoutOwner}.comp1`]: '0.0.1',
         },
@@ -327,7 +327,7 @@ const isPositive = require("is-positive");`
       helper.command.import(`${helper.scopes.remote}/comp1@0.0.1`);
       helper.command.import(`${helper.scopes.remote}/comp1new@0.0.1`);
       helper.command.update('--yes --latest');
-      configFile = helper.bitJsonc.read(helper.scopes.localPath);
+      configFile = helper.workspaceJsonc.read(helper.scopes.localPath);
     });
     after(() => {
       npmCiRegistry.destroy();

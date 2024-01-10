@@ -105,7 +105,7 @@ export function comp() {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -133,7 +133,7 @@ export function comp() {
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
       helper.command.create('react', 'comp1', '--env teambit.react/react');
       helper.command.create('react', 'comp2', '--env teambit.react/react');
       helper.command.setEnv('comp1', `${helper.scopes.remote}/custom-react/env1`);

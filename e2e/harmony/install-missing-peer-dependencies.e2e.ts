@@ -36,18 +36,18 @@ chai.use(require('chai-fs'));
     });
     it('should add the missing peer dependencies to workspace.jsonc', () => {
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-a');
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-b');
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-c');
     });
     it('should not add the missing peer dependencies that have conflicting versions to workspace.jsonc', () => {
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).not.to.have.property('foo');
     });
   });
@@ -67,13 +67,13 @@ chai.use(require('chai-fs'));
     });
     it('should add the missing peer dependencies to workspace.jsonc', () => {
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-a');
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-b');
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-c');
     });
   });
@@ -94,18 +94,18 @@ chai.use(require('chai-fs'));
     });
     it('should add the missing peer dependencies to workspace.jsonc', () => {
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-a');
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-b');
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).to.have.property('peer-c');
     });
     it('should not add the missing peer dependencies that have conflicting versions to workspace.jsonc', () => {
       expect(
-        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+        helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).not.to.have.property('foo');
     });
   });

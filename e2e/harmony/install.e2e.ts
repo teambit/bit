@@ -50,7 +50,7 @@ describe('install command', function () {
     let output;
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
+      helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       envName = helper.env.setCustomEnv('env-add-dependencies', { skipCompile: true, skipInstall: true });
       envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(1, undefined, undefined, false);
@@ -128,7 +128,7 @@ describe('install generator configured envs', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
@@ -156,7 +156,7 @@ describe('install generator configured envs', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
@@ -196,7 +196,7 @@ describe('install new dependencies', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
       helper.command.install('is-positive@~1.0.0 is-odd@1.0.0 is-even@1 is-negative');
-      bitJsonc = helper.bitJsonc.read();
+      bitJsonc = helper.workspaceJsonc.read();
     });
     after(() => {
       helper.scopeHelper.destroy();
@@ -222,7 +222,7 @@ describe('install new dependencies', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/yarn');
       helper.command.install('is-positive@~1.0.0 is-odd@1.0.0 is-even@1 is-negative');
-      bitJsonc = helper.bitJsonc.read();
+      bitJsonc = helper.workspaceJsonc.read();
     });
     after(() => {
       helper.scopeHelper.destroy();
@@ -254,7 +254,7 @@ describe('named install', function () {
     helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
     helper.command.install('is-positive@1.0.0');
     helper.command.install('is-positive');
-    bitJsonc = helper.bitJsonc.read();
+    bitJsonc = helper.workspaceJsonc.read();
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -273,7 +273,7 @@ describe('install with --lockfile-only', function () {
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
     helper.command.install('is-positive@1.0.0 --lockfile-only');
-    bitJsonc = helper.bitJsonc.read();
+    bitJsonc = helper.workspaceJsonc.read();
   });
   after(() => {
     helper.scopeHelper.destroy();

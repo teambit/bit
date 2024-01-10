@@ -17,7 +17,7 @@ describe('bit remote command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.reInitRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
       helper.command.runCmd(`bit remote add file://${helper.scopes.remotePath} --global`);
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();

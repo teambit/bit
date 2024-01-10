@@ -89,7 +89,7 @@ describe('dependency-resolver extension', function () {
           helper.fs.outputFile('utils/is-type.js', fixtures.isType);
           helper.command.addComponent('utils', { i: 'utils/is-type' });
           // important! don't disable the preview.
-          helper.bitJsonc.addDefaultScope();
+          helper.workspaceJsonc.addDefaultScope();
           const envName = helper.env.setCustomEnv('env-add-dependencies');
           const envId = `${helper.scopes.remote}/${envName}`;
           helper.extensions.addExtensionToVariant('*', envId);
