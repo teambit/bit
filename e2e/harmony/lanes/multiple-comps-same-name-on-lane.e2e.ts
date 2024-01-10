@@ -25,7 +25,7 @@ describe('lane with multiple components with the same name but different scope-n
     helper.scopeHelper.addRemoteScope(scopePath);
     helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
     helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
-    helper.bitJsonc.addDefaultScope(scopeName);
+    helper.workspaceJsonc.addDefaultScope(scopeName);
     helper.fixtures.populateComponents(1);
     helper.command.snapAllComponentsWithoutBuild();
     helper.command.export();

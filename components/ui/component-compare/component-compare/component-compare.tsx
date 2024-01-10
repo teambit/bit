@@ -380,7 +380,7 @@ function deriveChangeType(
   }
 
   const changed: ChangeType[] = [];
-  const DEPS_FIELD = ['dependencies', 'devDependencies', 'extensionDependencies'];
+  const DEPS_FIELD = ['dependencies', 'devDependencies', 'extensionDependencies', 'packageDependencies'];
 
   if (testCompareDataByName?.size) {
     changed.push(ChangeType.TESTS);

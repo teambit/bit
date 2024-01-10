@@ -19,7 +19,7 @@ export function mockWorkspace(opts: { bareScopeName?: string } = {}): WorkspaceD
   } else {
     legacyHelper.scopeHelper.setNewLocalAndRemoteScopes();
   }
-  legacyHelper.bitJsonc.setupDefault();
+  legacyHelper.workspaceJsonc.setupDefault();
 
   return {
     workspacePath: legacyHelper.scopes.localPath,

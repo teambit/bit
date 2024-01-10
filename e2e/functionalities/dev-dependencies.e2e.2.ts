@@ -21,7 +21,7 @@ describe('dev-dependencies functionality', function () {
         helper.fixtures.populateComponents();
         helper.fs.outputFile('comp1/foo.spec.js', 'require("chai");');
         helper.npm.addFakeNpmPackage('chai', '4.1.2');
-        helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: 'chai@4.1.2' });
+        helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: 'chai@4.1.2' });
         helper.command.tagAllWithoutBuild();
         comp1 = helper.command.catComponent('comp1@0.0.1');
       });
@@ -61,7 +61,7 @@ describe('dev-dependencies functionality', function () {
         helper.fs.outputFile('comp1/foo.spec.js', `require("chai"); require('@${helper.scopes.remote}/comp2');`);
         helper.fs.outputFile('comp1/index.js', '');
         helper.npm.addFakeNpmPackage('chai', '4.1.2');
-        helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: 'chai@4.1.2' });
+        helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: 'chai@4.1.2' });
         helper.command.tagAllWithoutBuild();
         comp1 = helper.command.catComponent('comp1@0.0.1');
       });

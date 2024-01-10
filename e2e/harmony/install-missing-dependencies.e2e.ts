@@ -39,9 +39,8 @@ describe('install missing dependencies', function () {
     expect(path.join(helper.fixtures.scopes.localPath, 'node_modules/is-even')).to.be.a.path();
   });
   it('should add the missing peer dependencies to workspace.jsonc', () => {
-    expect(Object.keys(helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.dependencies)).to.eql([
-      'is-even',
-      'is-odd',
-    ]);
+    expect(
+      Object.keys(helper.workspaceJsonc.read()['teambit.dependencies/dependency-resolver'].policy.dependencies)
+    ).to.eql(['is-even', 'is-odd']);
   });
 });

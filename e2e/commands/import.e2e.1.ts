@@ -244,7 +244,7 @@ describe('bit import', function () {
         let output;
         before(() => {
           helper.scopeHelper.reInitLocalScope();
-          helper.bitJsonc.setComponentsDir('{scope}/-{name}-');
+          helper.workspaceJsonc.setComponentsDir('{scope}/-{name}-');
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('global/simple');
           output = helper.command.importComponent('global/simple');
@@ -268,7 +268,7 @@ describe('bit import', function () {
         let output;
         before(() => {
           helper.scopeHelper.reInitLocalScope();
-          helper.bitJsonc.setComponentsDir('{non-exist-param}/{name}');
+          helper.workspaceJsonc.setComponentsDir('{non-exist-param}/{name}');
           helper.scopeHelper.addRemoteScope();
           output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/global/simple`);
         });

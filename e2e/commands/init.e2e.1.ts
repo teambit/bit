@@ -135,7 +135,7 @@ describe('run bit init', function () {
     describe('when workspace.jsonc file is invalid', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.bitJsonc.corrupt();
+        helper.workspaceJsonc.corrupt();
       });
       it('bit status should throw an exception InvalidBitJson', () => {
         const statusCmd = () => helper.command.runCmd('bit status');

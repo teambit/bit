@@ -13,12 +13,12 @@ chai.use(require('chai-fs'));
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
       helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
         '@pnpm.e2e/pre-and-postinstall-scripts-example',
       ]);
       helper.command.install('@pnpm.e2e/pre-and-postinstall-scripts-example');
@@ -52,12 +52,12 @@ chai.use(require('chai-fs'));
           unsafeHttpWhitelist: ['localhost'],
         },
       });
-      helper.bitJsonc.setPackageManager(`teambit.dependencies/yarn`);
+      helper.workspaceJsonc.setPackageManager(`teambit.dependencies/yarn`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
       helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
         '@pnpm.e2e/pre-and-postinstall-scripts-example',
       ]);
       helper.command.install('@pnpm.e2e/pre-and-postinstall-scripts-example');

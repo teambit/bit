@@ -155,7 +155,7 @@ export default class NpmCiRegistry {
         },
       },
     };
-    this.helper.bitJsonc.addToVariant('*', 'teambit.pkg/pkg', pkg);
+    this.helper.workspaceJsonc.addToVariant('*', 'teambit.pkg/pkg', pkg);
   }
 
   configureCustomNameInPackageJsonHarmony(name: string) {
@@ -167,7 +167,7 @@ export default class NpmCiRegistry {
         },
       },
     };
-    this.helper.bitJsonc.addToVariant('*', 'teambit.pkg/pkg', pkg);
+    this.helper.workspaceJsonc.addToVariant('*', 'teambit.pkg/pkg', pkg);
   }
 
   installPackage(pkgName: string) {

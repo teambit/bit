@@ -47,13 +47,13 @@ export class ImporterMain {
     if (this.workspace.consumer.isOnLane()) {
       const currentRemoteLane = await this.workspace.getCurrentRemoteLane();
       if (currentRemoteLane) {
-        importOptions.lanes = { laneIds: [currentRemoteLane.toLaneId()], lanes: [currentRemoteLane] };
+        importOptions.lanes = { laneId: currentRemoteLane.toLaneId(), remoteLane: currentRemoteLane };
       } else if (!importOptions.ids.length) {
         // this is probably a local lane that was never exported.
         // although no need to fetch from the lane, still, the import is needed for main (which are available on this
         // local lane)
         const currentLaneId = this.workspace.getCurrentLaneId();
-        importOptions.lanes = { laneIds: [currentLaneId], lanes: [] };
+        importOptions.lanes = { laneId: currentLaneId };
       }
     }
     const importComponents = new ImportComponents(
@@ -121,7 +121,7 @@ export class ImporterMain {
     };
     const currentRemoteLane = await this.workspace.getCurrentRemoteLane();
     if (currentRemoteLane) {
-      importOptions.lanes = { laneIds: [currentRemoteLane.toLaneId()], lanes: [currentRemoteLane] };
+      importOptions.lanes = { laneId: currentRemoteLane.toLaneId(), remoteLane: currentRemoteLane };
     }
     const importComponents = new ImportComponents(
       this.workspace,
@@ -245,7 +245,7 @@ export class ImporterMain {
       : { importedIds: [], importDetails: [], importedDeps: [] };
     const resultsPerLane = await pMapSeries(lanes, async (lane) => {
       this.logger.setStatusLine(`fetching lane ${lane.name}`);
-      options.lanes = { laneIds: [lane.toLaneId()], lanes: [lane] };
+      options.lanes = { laneId: lane.toLaneId(), remoteLane: lane };
       options.isLaneFromRemote = true;
       const results = await this.importObjects(options);
       this.logger.consoleSuccess();

@@ -74,7 +74,7 @@ describe('export functionality on Harmony', function () {
       helper.fs.outputFile('bar1/foo1.js', `require('@${anotherRemote}/bar2');`);
       helper.fs.outputFile('bar2/foo2.js', `require('@${helper.scopes.remote}/bar1');`);
       helper.command.addComponent('bar1');
-      helper.bitJsonc.addToVariant('bar2', 'defaultScope', anotherRemote);
+      helper.workspaceJsonc.addToVariant('bar2', 'defaultScope', anotherRemote);
       helper.command.addComponent('bar2');
       helper.command.linkAndRewire();
       helper.command.compile();
@@ -148,8 +148,8 @@ describe('export functionality on Harmony', function () {
 
         helper.fs.outputFile('bar1/foo1.js', `require('@${remote2Name}/bar2');`);
         helper.fs.outputFile('bar2/foo2.js', `require('@${remote1Name}/bar1');`);
-        helper.bitJsonc.addToVariant('bar1', 'defaultScope', remote1Name);
-        helper.bitJsonc.addToVariant('bar2', 'defaultScope', remote2Name);
+        helper.workspaceJsonc.addToVariant('bar1', 'defaultScope', remote1Name);
+        helper.workspaceJsonc.addToVariant('bar2', 'defaultScope', remote2Name);
         helper.command.addComponent('bar1');
         helper.command.addComponent('bar2');
         helper.command.linkAndRewire();
