@@ -835,6 +835,7 @@ export class ScopeMain implements ComponentFactory {
    * @param id component ID.
    */
   async resolveComponentId(id: string | BitId | ComponentID): Promise<ComponentID> {
+    if (id instanceof ComponentID) return id;
     if (id instanceof BitId) return this.resolveComponentIdFromBitId(id);
     const idStr = id.toString();
     const component = await this.legacyScope.loadModelComponentByIdStr(idStr);
