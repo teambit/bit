@@ -293,9 +293,7 @@ describe('dependency-resolver extension', function () {
     });
   });
   describe('hoist patterns', function () {
-    let helper: Helper;
     let modulesState: Modules | null;
-    this.timeout(0);
     before(async () => {
       helper = new Helper();
       helper.scopeHelper.reInitLocalScope();
