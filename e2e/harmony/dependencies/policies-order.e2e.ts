@@ -25,7 +25,7 @@ describe('policies order', function () {
         },
       });
       helper.extensions.addExtensionToVariant('custom-react', 'teambit.envs/env', {});
-      helper.bitJsonc.addKeyValToDependencyResolver('policy', {
+      helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
         dependencies: {
           'is-positive': '1.0.0',
         },

@@ -203,7 +203,7 @@ describe('bit lane command', function () {
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
       helper.command.importComponent('comp1');
       helper.command.switchRemoteLane('dev');
       helper.command.switchLocalLane('main');

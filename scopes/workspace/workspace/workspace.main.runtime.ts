@@ -186,6 +186,10 @@ export class WorkspaceMain {
       return policyFromPackageJson;
     };
 
+    /**
+     * @deprecated
+     * see workspace.getWorkspaceJsonConflictFromMergeConfig
+     */
     const getWorkspacePolicyFromMergeConfig = () => {
       const wsConfigMerge = workspace.getWorkspaceJsonConflictFromMergeConfig();
       const policy = wsConfigMerge.data?.[DependencyResolverAspect.id]?.policy || {};

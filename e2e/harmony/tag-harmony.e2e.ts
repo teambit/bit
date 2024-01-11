@@ -283,7 +283,7 @@ describe('tag components on Harmony', function () {
     let afterFirstTag: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       afterFirstTag = helper.scopeHelper.cloneLocalScope();
@@ -332,7 +332,7 @@ describe('tag components on Harmony', function () {
     let tagOutput: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
       tagOutput = helper.command.tagAllWithoutBuild('--increment prerelease --prerelease-id dev');
     });
@@ -365,7 +365,7 @@ describe('tag components on Harmony', function () {
     let tagOutput: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
       tagOutput = helper.command.softTag('--all --pre-release dev');
     });

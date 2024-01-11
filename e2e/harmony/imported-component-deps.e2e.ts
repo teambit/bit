@@ -15,7 +15,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -36,9 +36,9 @@ const isPositive = require('is-positive');
       helper.command.export();
 
       helper.scopeHelper.reInitLocalScope();
-      helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
       helper.command.import(`${helper.scopes.remote}/comp1`);
       helper.command.import(`${helper.scopes.remote}/comp2`);
     });
@@ -81,8 +81,8 @@ const isPositive = require('is-positive');
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
-      helper.bitJsonc.addKeyValToDependencyResolver('policy', {
+      helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
         peerDependencies: {
           'is-positive': '1.0.0',
         },
@@ -98,9 +98,9 @@ const isPositive = require('is-positive');
       helper.command.export();
 
       helper.scopeHelper.reInitLocalScope();
-      helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
       helper.command.import(`${helper.scopes.remote}/comp1`);
     });
     it('should install component dependencies from their respective models to the imported components', () => {

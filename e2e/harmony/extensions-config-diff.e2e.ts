@@ -15,7 +15,7 @@ describe('extensions config diff', function () {
   before(() => {
     helper = new Helper();
     helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
-    helper.bitJsonc.disablePreview();
+    helper.workspaceJsonc.disablePreview();
     helper.fixtures.populateExtensions(4);
     helper.fixtures.createComponentBarFoo();
     helper.fixtures.addComponentBarFooAsDir();

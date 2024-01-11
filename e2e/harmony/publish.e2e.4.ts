@@ -23,7 +23,7 @@ describe('publish functionality', function () {
     let scopeWithoutOwner: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       appOutput = helper.fixtures.populateComponentsTS(3);
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -161,7 +161,7 @@ describe('publish functionality', function () {
         },
         avoidPublishToNPM: true,
       };
-      helper.bitJsonc.addToVariant('*', 'teambit.pkg/pkg', pkg);
+      helper.workspaceJsonc.addToVariant('*', 'teambit.pkg/pkg', pkg);
     });
     it('should not publish to npm', () => {
       // if it was publishing, it would failed with an error:

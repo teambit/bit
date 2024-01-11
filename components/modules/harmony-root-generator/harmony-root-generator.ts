@@ -1,15 +1,13 @@
-import { AspectDefinition } from '@teambit/aspect-loader';
+import type { AspectDefinition } from '@teambit/aspect-loader';
 import { ComponentID } from '@teambit/component-id';
 import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compatible-path';
 import { camelCase } from 'lodash';
 import { parse } from 'path';
 
-import { UIAspect } from './ui.aspect';
-
 export async function createRoot(
   aspectDefs: AspectDefinition[],
   rootExtensionName?: string,
-  rootAspect = UIAspect.id,
+  rootAspect = 'teambit.ui-foundation/ui',
   runtime = 'ui',
   config = {},
   ignoreVersion?: boolean,

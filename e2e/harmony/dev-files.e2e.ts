@@ -22,7 +22,7 @@ describe('dev files', function () {
     const COMP_NAME = 'custom-dev-files';
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager();
       envName = helper.env.setCustomEnv(ENV_NAME);
       envId = `${helper.scopes.remote}/${envName}`;
       // helper.fixtures.createComponentBarFoo();

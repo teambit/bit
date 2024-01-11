@@ -6,7 +6,7 @@ import { WORKSPACE_JSONC } from '../constants';
 import ScopesData from './e2e-scopes';
 
 // TODO: improve this by combine into a base class shared between this and e2e-bit-json-helper
-export default class BitJsoncHelper {
+export default class WorkspaceJsoncHelper {
   scopes: ScopesData;
   constructor(scopes: ScopesData) {
     this.scopes = scopes;
@@ -19,18 +19,21 @@ export default class BitJsoncHelper {
     }
     return {};
   }
-  write(bitJsonc: Record<string, any>, bitJsoncDir: string = this.scopes.localPath) {
+  readRaw() {
+    return fs.readFileSync(composePath(this.scopes.localPath)).toString();
+  }
+  write(workspaceJsonc: Record<string, any>, bitJsoncDir: string = this.scopes.localPath) {
     const bitJsoncPath = composePath(bitJsoncDir);
-    const content = stringify(bitJsonc, null, 2);
+    const content = stringify(workspaceJsonc, null, 2);
     return fs.writeFileSync(bitJsoncPath, content);
   }
   addKeyVal(key: string, val: any, bitJsoncDir: string = this.scopes.localPath) {
-    const bitJsonc = this.read(bitJsoncDir);
+    const workspaceJsonc = this.read(bitJsoncDir);
     // Using this to keep the comments
     const obj = {
       [key]: val,
     };
-    const updated = assign(bitJsonc, obj);
+    const updated = assign(workspaceJsonc, obj);
     this.write(updated, bitJsoncDir);
   }
 
@@ -41,8 +44,8 @@ export default class BitJsoncHelper {
     replaceExisting = false,
     bitJsoncDir: string = this.scopes.localPath
   ) {
-    const bitJsonc = this.read(bitJsoncDir);
-    const variants = bitJsonc['teambit.workspace/variants'] || {};
+    const workspaceJsonc = this.read(bitJsoncDir);
+    const variants = workspaceJsonc['teambit.workspace/variants'] || {};
     const newVariant = replaceExisting ? {} : variants[variant] ?? {};
     assign(newVariant, { [key]: val });
     this.setVariant(bitJsoncDir, variant, newVariant);
@@ -56,8 +59,8 @@ export default class BitJsoncHelper {
    * @param config
    */
   setVariant(bitJsoncDir: string = this.scopes.localPath, variant: string, config: any) {
-    const bitJsonc = this.read(bitJsoncDir);
-    const variants = bitJsonc['teambit.workspace/variants'] || {};
+    const workspaceJsonc = this.read(bitJsoncDir);
+    const variants = workspaceJsonc['teambit.workspace/variants'] || {};
     const newVariant = config;
     assign(variants, { [variant]: newVariant });
     this.addKeyVal('teambit.workspace/variants', variants, bitJsoncDir);
@@ -73,22 +76,22 @@ export default class BitJsoncHelper {
   }
 
   addKeyValToWorkspace(key: string, val: any, bitJsoncDir: string = this.scopes.localPath) {
-    const bitJsonc = this.read(bitJsoncDir);
-    const workspace = bitJsonc['teambit.workspace/workspace'];
+    const workspaceJsonc = this.read(bitJsoncDir);
+    const workspace = workspaceJsonc['teambit.workspace/workspace'];
     assign(workspace, { [key]: val });
     this.addKeyVal('teambit.workspace/workspace', workspace, bitJsoncDir);
   }
 
   addKeyValToDependencyResolver(key: string, val: any, bitJsoncDir: string = this.scopes.localPath) {
-    const bitJsonc = this.read(bitJsoncDir);
-    const depResolver = bitJsonc['teambit.dependencies/dependency-resolver'];
+    const workspaceJsonc = this.read(bitJsoncDir);
+    const depResolver = workspaceJsonc['teambit.dependencies/dependency-resolver'];
     assign(depResolver, { [key]: val });
     this.addKeyVal('teambit.dependencies/dependency-resolver', depResolver, bitJsoncDir);
   }
 
   getPolicyFromDependencyResolver() {
-    const bitJsonc = this.read();
-    const depResolver = bitJsonc['teambit.dependencies/dependency-resolver'];
+    const workspaceJsonc = this.read();
+    const depResolver = workspaceJsonc['teambit.dependencies/dependency-resolver'];
     return depResolver.policy;
   }
 
@@ -102,8 +105,8 @@ export default class BitJsoncHelper {
     this.addKeyValToWorkspace('defaultScope', scope);
   }
   getDefaultScope() {
-    const bitJsonc = this.read();
-    const workspace = bitJsonc['teambit.workspace/workspace'];
+    const workspaceJsonc = this.read();
+    const workspace = workspaceJsonc['teambit.workspace/workspace'];
     return workspace.defaultScope;
   }
 

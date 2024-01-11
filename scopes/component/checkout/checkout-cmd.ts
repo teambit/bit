@@ -184,7 +184,8 @@ export function checkoutOutput(
     const title = `\n\nfiles with conflicts summary\n`;
     const suggestion = `\n\nfix the conflicts above manually and then run "bit install".
 once ready, snap/tag the components to persist the changes`;
-    return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
+    const conflictSummary = conflictSummaryReport(components);
+    return chalk.underline(title) + conflictSummary.conflictStr + chalk.yellow(suggestion);
   };
   const getSuccessfulOutput = () => {
     if (!components || !components.length) return '';

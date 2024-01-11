@@ -37,7 +37,7 @@ describe('custom env', function () {
     let envName;
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
+      helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       envName = helper.env.setCustomEnv(undefined, { skipCompile: true, skipInstall: true });
       envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(1, undefined, undefined, false);
@@ -65,7 +65,7 @@ describe('custom env', function () {
     let envName;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager();
       envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(3);
@@ -120,7 +120,7 @@ describe('custom env', function () {
   describe('change an env after tag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager();
       const envName = helper.env.setCustomEnv();
       const envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(3);
@@ -138,7 +138,7 @@ describe('custom env', function () {
     let envId;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager();
       const envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(1, false);
@@ -164,11 +164,11 @@ describe('custom env', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
+      helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
       envName = helper.env.setCustomNewEnv(undefined, undefined, {
         policy: {
           peers: [
@@ -193,8 +193,8 @@ describe('custom env', function () {
       }
 
       helper.scopeHelper.addRemoteScope();
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-      helper.extensions.bitJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', true);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.extensions.workspaceJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', true);
       helper.fixtures.populateComponents(1);
       helper.command.setEnv('comp1', envId);
       helper.command.install();
@@ -230,7 +230,7 @@ describe('custom env', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -243,7 +243,7 @@ describe('custom env', function () {
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
     });
     after(() => {
       npmCiRegistry.destroy();
@@ -349,7 +349,7 @@ describe('custom env', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.bitJsonc.setupDefault();
+        helper.workspaceJsonc.setupDefault();
         helper.fixtures.populateComponents(1);
         helper.extensions.addExtensionToVariant('*', `${envId}@0.0.1`);
         helper.command.status(); // populate capsules.
@@ -370,7 +370,7 @@ describe('custom env', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.bitJsonc.setupDefault();
+        helper.workspaceJsonc.setupDefault();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', 'teambit.mdx/mdx');
         helper.command.tagAllWithoutBuild();
