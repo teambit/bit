@@ -32,7 +32,9 @@ export type CheckoutProps = {
   latest?: boolean;
   main?: boolean; // relevant for "revert" only
   promptMergeOptions?: boolean;
-  mergeStrategy?: MergeStrategy | null;
+  mergeStrategy?: MergeStrategy | null; // strategy to use in case of conflicts
+  forceOurs?: boolean; // regardless of conflicts, use ours
+  forceTheirs?: boolean; // regardless of conflicts, use theirs
   verbose?: boolean;
   skipNpmInstall?: boolean;
   reset?: boolean; // remove local changes. if set, the version is undefined.
@@ -326,7 +328,17 @@ export class CheckoutMain {
     checkoutProps: CheckoutProps
   ): Promise<ComponentStatusBeforeMergeAttempt> {
     const consumer = this.workspace.consumer;
-    const { version, head: headVersion, reset, revert, main, latest: latestVersion, versionPerId } = checkoutProps;
+    const {
+      version,
+      head: headVersion,
+      reset,
+      revert,
+      main,
+      latest: latestVersion,
+      versionPerId,
+      forceOurs,
+      forceTheirs,
+    } = checkoutProps;
     const repo = consumer.scope.objects;
 
     let existingBitMapId = consumer.bitMap.getComponentIdIfExist(id, { ignoreVersion: true });
@@ -434,7 +446,7 @@ export class CheckoutMain {
 
     const newId = id.changeVersion(newVersion);
 
-    if (reset || !isModified || revert || !currentlyUsedVersion) {
+    if (reset || !isModified || revert || !currentlyUsedVersion || forceTheirs || forceOurs) {
       // if the component is not modified, no need to try merge the files, they will be written later on according to the
       // checked out version. same thing when no version is specified, it'll be reset to the model-version later.
 
