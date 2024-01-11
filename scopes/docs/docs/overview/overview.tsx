@@ -62,7 +62,8 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
 
   const overviewPropsValues = overviewProps && overviewProps();
 
-  const themeParams = current?.themeName ? `theme=${current?.themeName}` : '';
+  // TODO - enable when preview hight calculation is fixed. currently dark mode has a white section at the bottom.
+  // const themeParams = current?.themeName ? `theme=${current?.themeName}` : '';
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { onLoad, style, ...rest } = previewProps || {};
@@ -106,7 +107,7 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
             onLoad={onPreviewLoad}
             previewName="overview"
             pubsub={true}
-            queryParams={[iframeQueryParams, themeParams, overviewPropsValues?.queryParams || '']}
+            queryParams={[iframeQueryParams, /* themeParams, */ overviewPropsValues?.queryParams || '']}
             viewport={null}
             fullContentHeight
             disableScroll={true}
