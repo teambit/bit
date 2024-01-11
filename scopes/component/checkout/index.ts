@@ -12,10 +12,5 @@ export {
   throwForFailures,
 } from './checkout-version';
 
-export type {
-  CheckoutProps as CheckoutPropsLegacy,
-  ComponentStatus,
-  ComponentStatusBase,
-  ApplyVersionWithComps,
-} from './checkout-version';
+export type { ComponentStatus, ComponentStatusBase, ApplyVersionWithComps } from './checkout-version';
 export { checkoutOutput } from './checkout-cmd';

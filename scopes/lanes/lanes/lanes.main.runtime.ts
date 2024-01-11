@@ -594,7 +594,6 @@ please create a new lane instead, which will include all components of this lane
       skipNpmInstall: skipDependencyInstallation,
       isLane: true,
       promptMergeOptions: false,
-      writeConfig: false,
       reset: false,
       all: false,
     };
