@@ -487,7 +487,7 @@ export class ApplyOverrides {
   }
 
   private async applyAutoDetectedPeersFromEnvOnEnvItSelf(): Promise<void> {
-    const envPolicy = await this.depsResolver.getEnvPolicyFromEnvLegacyId(this.component.id, this.component.files);
+    const envPolicy = await this.depsResolver.getEnvPolicyFromEnvId(this.component.id, this.component.files);
     if (!envPolicy) return;
     const envPolicyManifest = envPolicy.selfPolicy.toVersionManifest();
 

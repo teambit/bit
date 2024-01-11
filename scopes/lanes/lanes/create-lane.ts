@@ -37,7 +37,7 @@ export async function createLane(
     const workspaceIds = consumer.bitMap.getAllBitIds();
     const laneComponentWithBitmapHead = await Promise.all(
       laneComponents.map(async ({ id, head }) => {
-        const compId = await workspace.resolveComponentId(id.changeVersion(head.toString()));
+        const compId = id.changeVersion(head.toString());
         const isRemoved = await workspace.scope.isComponentRemoved(compId);
         if (isRemoved) return null;
         const bitmapHead = workspaceIds.searchWithoutVersion(id);

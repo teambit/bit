@@ -950,18 +950,21 @@ export class DependencyResolverMain {
   }
 
   async getEnvPolicyFromEnvId(id: ComponentID, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
-    return this.getEnvPolicyFromEnvLegacyId(id, legacyFiles);
-  }
-
-  async getEnvPolicyFromEnvLegacyId(id: ComponentID, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
     const fromFile = await this.getEnvPolicyFromFile(id.toString(), legacyFiles);
     if (fromFile) return fromFile;
-    const envDef = await this.envs.getEnvDefinitionByLegacyId(id);
+    const envDef = this.envs.getEnvDefinitionById(id);
     if (!envDef) return undefined;
     const env = envDef.env;
     return this.getComponentEnvPolicyFromEnv(env, {
       envId: id.toStringWithoutVersion(),
     });
+  }
+
+  /**
+   * @deprecated use getEnvPolicyFromEnvId instead (it's the same)
+   */
+  async getEnvPolicyFromEnvLegacyId(id: ComponentID, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
+    return this.getEnvPolicyFromEnvId(id, legacyFiles);
   }
 
   async getComponentEnvPolicy(component: Component): Promise<EnvPolicy> {
@@ -1090,7 +1093,7 @@ export class DependencyResolverMain {
    * So policies installed only locally for the env, not to any components that use the env.
    */
   async getPoliciesFromEnvForItself(id: ComponentID, legacyFiles?: SourceFile[]): Promise<VariantPolicy | undefined> {
-    const envPolicy = await this.getEnvPolicyFromEnvLegacyId(id, legacyFiles);
+    const envPolicy = await this.getEnvPolicyFromEnvId(id, legacyFiles);
     return envPolicy?.selfPolicy;
   }
 

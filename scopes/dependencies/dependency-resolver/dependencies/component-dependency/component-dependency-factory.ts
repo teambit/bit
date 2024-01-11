@@ -78,7 +78,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
     let packageName = legacyDep.packageName || '';
     if (!packageName) {
       const host = this.componentAspect.getHost();
-      const id = await host.resolveComponentId(legacyDep.id);
+      const id = legacyDep.id;
       const depComponent = await host.getLegacyMinimal(id);
       if (depComponent) {
         packageName = componentIdToPackageName(depComponent);
@@ -104,7 +104,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
       return undefined;
     }
     const host = this.componentAspect.getHost();
-    const id = await host.resolveComponentId(extension.extensionId);
+    const id = extension.extensionId;
     const extComponent = await host.get(id);
     let packageName = '';
     if (extComponent) {
