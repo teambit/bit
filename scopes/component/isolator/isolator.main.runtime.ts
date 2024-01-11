@@ -786,6 +786,7 @@ export class IsolatorMain {
       installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
       nmSelfReferences: this.dependencyResolver.config.capsuleSelfReference,
       overrides: this.dependencyResolver.config.capsulesOverrides || this.dependencyResolver.config.overrides,
+      hoistPatterns: this.dependencyResolver.config.hoistPatterns,
       rootComponentsForCapsules: this.dependencyResolver.isolatedCapsules(),
       useNesting: isolateInstallOptions.useNesting,
       keepExistingModulesDir: this.dependencyResolver.isolatedCapsules(),
