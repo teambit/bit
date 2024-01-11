@@ -13,19 +13,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
 import { ApplyVersionResult, FilesStatus } from '@teambit/merging';
-
-export type CheckoutProps = {
-  version?: string; // if reset is true, the version is undefined
-  ids?: ComponentID[];
-  latestVersion?: boolean;
-  promptMergeOptions?: boolean;
-  mergeStrategy?: MergeStrategy | null;
-  skipNpmInstall?: boolean;
-  writeConfig?: boolean;
-  reset?: boolean; // remove local changes. if set, the version is undefined.
-  all?: boolean; // checkout all ids
-  isLane?: boolean;
-};
+import { CheckoutProps } from './checkout.main.runtime';
 
 export type ComponentStatusBase = {
   currentComponent?: ConsumerComponent;
