@@ -136,7 +136,11 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
   }
 }
 
-export function checkoutOutput(checkoutResults: ApplyVersionResults, checkoutProps: CheckoutProps) {
+export function checkoutOutput(
+  checkoutResults: ApplyVersionResults,
+  checkoutProps: CheckoutProps,
+  alternativeTitle?: string
+) {
   const {
     components,
     version,
@@ -180,20 +184,24 @@ export function checkoutOutput(checkoutResults: ApplyVersionResults, checkoutPro
     const title = `\n\nfiles with conflicts summary\n`;
     const suggestion = `\n\nfix the conflicts above manually and then run "bit install".
 once ready, snap/tag the components to persist the changes`;
-    return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
+    const conflictSummary = conflictSummaryReport(components);
+    return chalk.underline(title) + conflictSummary.conflictStr + chalk.yellow(suggestion);
   };
   const getSuccessfulOutput = () => {
-    const switchedOrReverted = revert ? 'reverted' : 'switched';
     if (!components || !components.length) return '';
+    const newLine = '\n';
+    const switchedOrReverted = revert ? 'reverted' : 'switched';
     if (components.length === 1) {
       const component = components[0];
       const componentName = reset ? component.id.toString() : component.id.toStringWithoutVersion();
       if (reset) return `successfully reset ${chalk.bold(componentName)}\n`;
-      const title = `successfully ${switchedOrReverted} ${chalk.bold(componentName)} to version ${chalk.bold(
-        // @ts-ignore version is defined when !reset
-        head || latest ? component.id.version : version
-      )}\n`;
-      return chalk.bold(title) + applyVersionReport(components, false);
+      const title =
+        alternativeTitle ||
+        `successfully ${switchedOrReverted} ${chalk.bold(componentName)} to version ${chalk.bold(
+          // @ts-ignore version is defined when !reset
+          head || latest ? component.id.version : version
+        )}`;
+      return chalk.bold(title) + newLine + applyVersionReport(components, false);
     }
     if (reset) {
       const title = 'successfully reset the following components\n\n';
@@ -208,9 +216,10 @@ once ready, snap/tag the components to persist the changes`;
       return `version ${chalk.bold(version)}`;
     };
     const versionOutput = getVerOutput();
-    const title = `successfully ${switchedOrReverted} ${components.length} components to ${versionOutput}\n`;
+    const title =
+      alternativeTitle || `successfully ${switchedOrReverted} ${components.length} components to ${versionOutput}`;
     const showVersion = head || reset;
-    return chalk.bold(title) + applyVersionReport(components, true, showVersion);
+    return chalk.bold(title) + newLine + applyVersionReport(components, true, showVersion);
   };
   const getNewOnLaneOutput = () => {
     if (!newFromLane?.length) return '';

@@ -53,6 +53,8 @@ import {
   LaneRemoveCompCmd,
   CatLaneHistoryCmd,
   LaneHistoryCmd,
+  LaneCheckoutCmd,
+  LaneCheckoutOpts,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
@@ -190,7 +192,31 @@ export class LanesMain {
     return laneHistory;
   }
 
+  async checkoutHistory(historyId: string, options?: LaneCheckoutOpts) {
+    const laneId = this.getCurrentLaneId();
+    if (!laneId || laneId.isDefault()) {
+      throw new BitError(`unable to checkout history "${historyId}" while on main`);
+    }
+    await this.importLaneHistory(laneId);
+    const laneHistory = await this.getLaneHistory(laneId);
+    const history = laneHistory.getHistory();
+    const historyItem = history[historyId];
+    if (!historyItem) {
+      throw new BitError(`unable to find history "${historyId}" in lane "${laneId.toString()}"`);
+    }
+    const ids = historyItem.components.map((id) => ComponentID.fromString(id));
+    const results = await this.checkout.checkout({
+      ids: ids.map((id) => id.changeVersion(undefined)),
+      versionPerId: ids,
+      allowAddingComponentsFromScope: true,
+      skipNpmInstall: options?.skipDependencyInstallation,
+    });
+    return results;
+  }
+
   async importLaneHistory(laneId: LaneId) {
+    const existingLane = await this.loadLane(laneId);
+    if (existingLane?.isNew) return;
     await this.importer.importLaneObject(laneId, undefined, true);
   }
 
@@ -469,8 +495,8 @@ please create a new lane instead, which will include all components of this lane
     });
   }
 
-  async importLaneObject(laneId: LaneId, persistIfNotExists = true): Promise<Lane> {
-    return this.importer.importLaneObject(laneId, persistIfNotExists);
+  async importLaneObject(laneId: LaneId, persistIfNotExists = true, includeLaneHistory = false): Promise<Lane> {
+    return this.importer.importLaneObject(laneId, persistIfNotExists, includeLaneHistory);
   }
 
   /**
@@ -566,9 +592,6 @@ please create a new lane instead, which will include all components of this lane
     const checkoutProps = {
       mergeStrategy,
       skipNpmInstall: skipDependencyInstallation,
-      verbose: false, // not relevant in Harmony
-      ignorePackageJson: true, // not relevant in Harmony
-      ignoreDist: true, // not relevant in Harmony
       isLane: true,
       promptMergeOptions: false,
       writeConfig: false,
@@ -1187,6 +1210,7 @@ please create a new lane instead, which will include all components of this lane
     ];
     if (isFeatureEnabled(SUPPORT_LANE_HISTORY)) {
       laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
+      laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
     }
     cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));
     cli.registerOnStart(async () => {

@@ -109,7 +109,7 @@ describe('create extension', function () {
   describe('with --scope flag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
-      helper.bitJsonc.addDefaultScope('my-scope');
+      helper.workspaceJsonc.addDefaultScope('my-scope');
       helper.command.create('bit-aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
     });
     it('should add the component to the .bitmap file with a new defaultScope prop', () => {

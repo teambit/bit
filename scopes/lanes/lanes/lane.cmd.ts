@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import yn from 'yn';
 import { ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
+import { checkoutOutput } from '@teambit/checkout';
 import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
 import { LaneData, serializeLaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
@@ -266,6 +267,28 @@ export class CatLaneHistoryCmd implements Command {
     const laneId = await this.lanes.parseLaneId(laneName);
     const laneHistory = await this.lanes.getLaneHistory(laneId);
     return JSON.stringify(laneHistory.toObject(), null, 2);
+  }
+}
+
+export type LaneCheckoutOpts = { skipDependencyInstallation?: boolean };
+
+export class LaneCheckoutCmd implements Command {
+  name = 'checkout <history-id>';
+  description = 'checkout to a previous history of the current lane';
+  arguments = [
+    { name: 'history-id', description: 'the history-id to checkout to. run "bit lane history" to list the ids' },
+  ];
+  alias = '';
+  options = [
+    ['x', 'skip-dependency-installation', 'do not install dependencies of the checked out components'],
+  ] as CommandOptions;
+  loader = true;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([historyId]: [string], opts: LaneCheckoutOpts): Promise<string> {
+    const result = await this.lanes.checkoutHistory(historyId, opts);
+    return checkoutOutput(result, {}, `successfully checked out according to history-id: ${historyId}`);
   }
 }
 

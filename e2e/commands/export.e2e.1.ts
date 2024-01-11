@@ -147,7 +147,7 @@ describe('bit export command', function () {
       helper.scopeHelper.addRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
       helper.command.tagAllComponents();
       scopeBeforeExport = helper.scopeHelper.cloneLocalScope();
     });

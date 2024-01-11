@@ -28,7 +28,7 @@ describe('new command', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope(undefined, undefined, true);
       helper.command.create('standalone-starter', 'react');
-      helper.bitJsonc.addToVariant('*', 'teambit.harmony/aspect', {});
+      helper.workspaceJsonc.addToVariant('*', 'teambit.harmony/aspect', {});
       helper.command.install();
 
       const starterPath = path.join(helper.scopes.remote, 'react/react.starter.ts');
@@ -57,7 +57,7 @@ describe('new command', function () {
     });
     it('should not add env dependencies to the workspace.jsonc', () => {
       const wsPath = path.join(helper.scopes.localPath, 'my-workspace');
-      const configFile = helper.bitJsonc.read(wsPath);
+      const configFile = helper.workspaceJsonc.read(wsPath);
       const dependencies = configFile['teambit.dependencies/dependency-resolver'].policy.dependencies;
       expect(dependencies).to.not.have.property('@babel/runtime');
       expect(dependencies).to.not.have.property('@types/jest');

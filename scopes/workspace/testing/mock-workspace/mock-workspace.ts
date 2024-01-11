@@ -10,10 +10,16 @@ export type WorkspaceData = { workspacePath: string; remoteScopePath: string; re
  * such as `bit export`.
  * call `destroyWorkspace()` once the tests completed to keep the filesystem clean.
  */
-export function mockWorkspace(): WorkspaceData {
+export function mockWorkspace(opts: { bareScopeName?: string } = {}): WorkspaceData {
   const legacyHelper = new LegacyHelper();
-  legacyHelper.scopeHelper.setNewLocalAndRemoteScopes();
-  legacyHelper.bitJsonc.setupDefault();
+  if (opts.bareScopeName) {
+    legacyHelper.scopeHelper.reInitLocalScope();
+    legacyHelper.scopes.setRemoteScope(undefined, undefined, opts.bareScopeName);
+    legacyHelper.scopeHelper.addRemoteScope();
+  } else {
+    legacyHelper.scopeHelper.setNewLocalAndRemoteScopes();
+  }
+  legacyHelper.workspaceJsonc.setupDefault();
 
   return {
     workspacePath: legacyHelper.scopes.localPath,

@@ -304,13 +304,13 @@ describe('merge config scenarios', function () {
 
       helper.command.createLane();
       helper.npm.addFakeNpmPackage('ramda', '0.0.20');
-      helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: { ramda: '0.0.20' } });
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { ramda: '0.0.20' } });
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
       helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
       helper.npm.addFakeNpmPackage('ramda', '0.0.21');
-      helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: { ramda: '0.0.21' } });
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { ramda: '0.0.21' } });
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
@@ -507,14 +507,14 @@ describe('merge config scenarios', function () {
             helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
           });
           it('should change workspace.jsonc with the updated dependency', () => {
-            const policy = helper.bitJsonc.getPolicyFromDependencyResolver();
+            const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
             expect(policy.dependencies[barPkgName]).to.equal('0.0.2');
           });
         });
         describe('when the dep is not in the workspace.jsonc', () => {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(beforeMerges);
-            helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: {} });
+            helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: {} });
             helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
           });
           it('should auto-update the dependency according to the lane, because only there it was changed', () => {
@@ -552,55 +552,26 @@ describe('merge config scenarios', function () {
           before(() => {
             helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
           });
-          it('should not change workspace.jsonc with the lane version', () => {
-            const policy = helper.bitJsonc.getPolicyFromDependencyResolver();
-            expect(policy.dependencies[barPkgName]).to.equal('^0.0.3');
-          });
-          it('should show the versions as a workspace conflict in the merge-conflict file', () => {
+          it('should not write config-merge file', () => {
             const conflictFile = helper.general.getConfigMergePath();
-            const conflictFileContent = fs.readFileSync(conflictFile).toString();
-            expect(conflictFileContent).to.have.string('WORKSPACE');
-            expect(conflictFileContent).to.have.string('0.0.2');
-            expect(conflictFileContent).to.have.string('^0.0.3');
+            expect(conflictFile).to.not.be.a.path();
           });
-          it('should block the tag until the conflicts are resolved', () => {
-            expect(() => helper.command.snapAllComponentsWithoutBuild()).to.throw(
-              'the workspace has the following issues'
-            );
+          it('should show the versions as conflicted in workspace.jsonc file', () => {
+            const wsJsonc = helper.workspaceJsonc.readRaw();
+            expect(wsJsonc).to.have.string(`<<<<<<< ours
+        "${barPkgName}": "^0.0.3"
+=======
+        "${barPkgName}": "0.0.2"
+>>>>>>> theirs`);
           });
-          it('bit status should show it as a workspace issue', () => {
-            const status = helper.command.statusJson();
-            expect(status.workspaceIssues).to.have.lengthOf(1);
-          });
-          describe('resolving the conflict as theirs', () => {
-            before(() => {
-              helper.general.fixMergeConfigConflict('theirs');
-            });
-            it('should install the version from the merge-config file and not from the workspace.jsonc file', () => {
-              helper.command.install();
-              const deps = helper.command.getCompDepsIdsFromData('comp1');
-              expect(deps).to.include(`${barCompName}@0.0.2`);
-              expect(deps).to.not.include(`${barCompName}@0.0.3`);
-            });
-            it('bit status should not show a workspace issue anymore', () => {
-              const status = helper.command.statusJson();
-              expect(status.workspaceIssues).to.have.lengthOf(0);
-            });
-            describe('snapping all', () => {
-              before(() => {
-                helper.command.snapAllComponentsWithoutBuild();
-              });
-              it('should delete the config-merge file although it has the Workspace section', () => {
-                const conflictFile = helper.general.getConfigMergePath();
-                expect(conflictFile).to.not.be.a.path();
-              });
-            });
+          it('should throw for any command until the conflicts are resolved', () => {
+            expect(() => helper.command.status()).to.throw('please fix the conflicts in workspace.jsonc to continue');
           });
         });
         describe('when the dep is not in the workspace.jsonc', () => {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(afterExport);
-            helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: {} });
+            helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: {} });
             helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
           });
           it('bit status should not show a workspace issue', () => {

@@ -43,7 +43,7 @@ describe('aspect', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
       helper.command.create('bit-aspect', 'my-aspect');
-      helper.bitJsonc.addKeyVal('my-scope/my-aspect', {});
+      helper.workspaceJsonc.addKeyVal('my-scope/my-aspect', {});
     });
     it('commands with loaders should show a descriptive error', () => {
       const output = helper.command.status();

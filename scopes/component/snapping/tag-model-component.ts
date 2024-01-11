@@ -369,6 +369,9 @@ export async function tagModelComponent({
     }
   }
 
+  // clear all objects. otherwise, ModelComponent has the wrong divergeData
+  legacyScope.objects.clearObjectsFromCache();
+
   return {
     taggedComponents: componentsToTag,
     autoTaggedResults: autoTagData,

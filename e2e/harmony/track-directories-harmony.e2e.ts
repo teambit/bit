@@ -153,7 +153,7 @@ describe('track directories functionality', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.scopeHelper.addRemoteScope();
-        helper.bitJsonc.setupDefault();
+        helper.workspaceJsonc.setupDefault();
         helper.command.tagAllComponents();
         helper.command.export();
         helper.command.importComponent('utils/bar');

@@ -47,7 +47,7 @@ describe('eject command on Harmony', function () {
         expect(ejectOutput).to.have.string(successEjectMessage);
       });
       it('should save the component in workspace.jsonc', () => {
-        const workspaceJson = helper.bitJsonc.read();
+        const workspaceJson = helper.workspaceJsonc.read();
         expect(workspaceJson['teambit.dependencies/dependency-resolver'].policy.dependencies).to.have.property(
           `@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`
         );
@@ -82,7 +82,7 @@ describe('eject command on Harmony', function () {
         expect(ejectOutput).to.have.string(successEjectMessage);
       });
       it('should save the component in workspace.jsonc', () => {
-        const workspaceJson = helper.bitJsonc.read();
+        const workspaceJson = helper.workspaceJsonc.read();
         expect(workspaceJson['teambit.dependencies/dependency-resolver'].policy.dependencies).to.have.property(
           `@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`
         );

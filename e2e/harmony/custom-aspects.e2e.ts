@@ -25,7 +25,7 @@ describe('custom aspects', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -48,7 +48,7 @@ describe('custom aspects', function () {
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
 
       helper.command.install(`@ci/${helper.scopes.remoteWithoutOwner}.main-aspect`);
 
@@ -86,7 +86,7 @@ describe('custom aspects', function () {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager();
       helper.fixtures.populateExtensions(2, true);
       helper.extensions.addExtensionToVariant('extensions', 'teambit.harmony/aspect');
       helper.command.create('bit-aspect', 'main-aspect');
@@ -149,7 +149,7 @@ describe('custom aspects', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -161,7 +161,7 @@ describe('custom aspects', function () {
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
     });
     after(() => {
       npmCiRegistry.destroy();
@@ -172,7 +172,7 @@ describe('custom aspects', function () {
         helper.command.use(aspectId);
       });
       it('should save the aspect in the workspace.jsonc with a version', () => {
-        const workspaceJson = helper.bitJsonc.read();
+        const workspaceJson = helper.workspaceJsonc.read();
         expect(workspaceJson).to.have.property(`${helper.scopes.remote}/my-aspect@0.0.1`);
       });
     });
