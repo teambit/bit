@@ -189,8 +189,8 @@ importers:
         specifier: 0.0.3
         version: 0.0.3(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.constants.storage':
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -739,7 +739,7 @@ importers:
         version: 2.0.14(@testing-library/react@12.1.5)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/explorer.ui.component-card':
         specifier: ^0.0.30
-        version: 0.0.30(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+        version: 0.0.30(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.gallery.base-component-card':
         specifier: 0.0.503
         version: 0.0.503(react-dom@17.0.2)(react@17.0.2)
@@ -2446,8 +2446,8 @@ importers:
         specifier: 4.4.6
         version: 4.4.6(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-editor':
         specifier: ^0.0.8
         version: 0.0.8(react-dom@17.0.2)(react@17.0.2)
@@ -2655,8 +2655,8 @@ importers:
   components/renderers/react:
     dependencies:
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       classnames:
         specifier: 2.2.6
         version: 2.2.6
@@ -2698,8 +2698,8 @@ importers:
   components/renderers/schema-nodes-index:
     dependencies:
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.surfaces.menu.item':
         specifier: 0.0.354
         version: 0.0.354(react-dom@17.0.2)(react@17.0.2)
@@ -3006,8 +3006,8 @@ importers:
         specifier: 4.4.6
         version: 4.4.6(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.graph.tree.tree-context':
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -3133,8 +3133,8 @@ importers:
   components/ui/component-compare/component-compare:
     dependencies:
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.loaders.skeleton':
         specifier: 1.0.1
         version: 1.0.1(react-dom@17.0.2)(react@17.0.2)
@@ -3341,7 +3341,7 @@ importers:
         version: 0.0.361(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.component-card':
         specifier: ^0.0.30
-        version: 0.0.30(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+        version: 0.0.30(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-grid':
         specifier: 0.0.496
         version: 0.0.496(react-dom@17.0.2)(react@17.0.2)
@@ -3408,7 +3408,7 @@ importers:
     dependencies:
       '@teambit/explorer.ui.component-card':
         specifier: ^0.0.30
-        version: 0.0.30(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+        version: 0.0.30(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/scopes.scope-id':
         specifier: ^0.0.7
         version: 0.0.7
@@ -3969,7 +3969,7 @@ importers:
         version: file:scopes/defender/jest(@types/react@17.0.74)(jest@27.5.1)(react@17.0.2)
       '@teambit/lanes':
         specifier: workspace:*
-        version: file:scopes/lanes/lanes(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:scopes/lanes/lanes(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/lanes.entities.lane-diff':
         specifier: workspace:*
         version: file:scopes/lanes/entities/lane-diff(@teambit/legacy@node_modules+@teambit+legacy)
@@ -3981,7 +3981,7 @@ importers:
         version: file:scopes/lanes/diff(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.lane-overview':
         specifier: workspace:*
-        version: file:components/ui/lane-overview(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:components/ui/lane-overview(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/linter':
         specifier: workspace:*
         version: file:scopes/defender/linter(@types/react@17.0.74)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -4140,7 +4140,7 @@ importers:
         version: file:scopes/semantics/schema(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react@17.0.2)
       '@teambit/scope':
         specifier: workspace:*
-        version: file:scopes/scope/scope(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:scopes/scope/scope(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
@@ -4278,7 +4278,7 @@ importers:
         version: file:scopes/harmony/worker(@types/react@17.0.74)(react@17.0.2)
       '@teambit/workspace':
         specifier: workspace:*
-        version: file:scopes/workspace/workspace(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:scopes/workspace/workspace(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/workspace-config-files':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-config-files
@@ -4296,7 +4296,7 @@ importers:
         version: file:scopes/workspace/testing/mock-workspace
       '@teambit/workspace.ui.workspace-component-card':
         specifier: workspace:*
-        version: file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/yarn(@testing-library/react@12.1.5)(@types/react@17.0.74)(@yarnpkg/plugin-pack@3.2.0)(react@17.0.2)
@@ -5250,7 +5250,7 @@ importers:
         version: file:scopes/defender/jest(@types/react@17.0.74)(jest@27.5.1)(react@17.0.2)
       '@teambit/lanes':
         specifier: workspace:*
-        version: file:scopes/lanes/lanes(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:scopes/lanes/lanes(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/lanes.entities.lane-diff':
         specifier: workspace:*
         version: file:scopes/lanes/entities/lane-diff(@teambit/legacy@node_modules+@teambit+legacy)
@@ -5262,7 +5262,7 @@ importers:
         version: file:scopes/lanes/diff(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.lane-overview':
         specifier: workspace:*
-        version: file:components/ui/lane-overview(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:components/ui/lane-overview(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/linter':
         specifier: workspace:*
         version: file:scopes/defender/linter(@types/react@17.0.74)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -5424,7 +5424,7 @@ importers:
         version: file:scopes/semantics/schema(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react@17.0.2)
       '@teambit/scope':
         specifier: workspace:*
-        version: file:scopes/scope/scope(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:scopes/scope/scope(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
@@ -5562,7 +5562,7 @@ importers:
         version: file:scopes/harmony/worker(@types/react@17.0.74)(react@17.0.2)
       '@teambit/workspace':
         specifier: workspace:*
-        version: file:scopes/workspace/workspace(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:scopes/workspace/workspace(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/workspace-config-files':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-config-files
@@ -5580,7 +5580,7 @@ importers:
         version: file:scopes/workspace/testing/mock-workspace
       '@teambit/workspace.ui.workspace-component-card':
         specifier: workspace:*
-        version: file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/yarn(@testing-library/react@12.1.5)(@types/react@17.0.74)(@yarnpkg/plugin-pack@3.2.0)(react@17.0.2)
@@ -6543,7 +6543,7 @@ importers:
         version: file:scopes/defender/jest(@types/react@17.0.74)(jest@27.5.1)(react@17.0.2)
       '@teambit/lanes':
         specifier: workspace:*
-        version: file:scopes/lanes/lanes(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:scopes/lanes/lanes(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/lanes.entities.lane-diff':
         specifier: workspace:*
         version: file:scopes/lanes/entities/lane-diff(@teambit/legacy@node_modules+@teambit+legacy)
@@ -6555,7 +6555,7 @@ importers:
         version: file:scopes/lanes/diff(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.lane-overview':
         specifier: workspace:*
-        version: file:components/ui/lane-overview(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:components/ui/lane-overview(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/linter':
         specifier: workspace:*
         version: file:scopes/defender/linter(@types/react@17.0.74)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -6714,7 +6714,7 @@ importers:
         version: file:scopes/semantics/schema(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react@17.0.2)
       '@teambit/scope':
         specifier: workspace:*
-        version: file:scopes/scope/scope(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:scopes/scope/scope(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
@@ -6852,7 +6852,7 @@ importers:
         version: file:scopes/harmony/worker(@types/react@17.0.74)(react@17.0.2)
       '@teambit/workspace':
         specifier: workspace:*
-        version: file:scopes/workspace/workspace(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:scopes/workspace/workspace(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/workspace-config-files':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-config-files
@@ -6870,7 +6870,7 @@ importers:
         version: file:scopes/workspace/testing/mock-workspace
       '@teambit/workspace.ui.workspace-component-card':
         specifier: workspace:*
-        version: file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/yarn(@testing-library/react@12.1.5)(@types/react@17.0.74)(@yarnpkg/plugin-pack@3.2.0)(react@17.0.2)
@@ -7812,7 +7812,7 @@ importers:
         version: file:scopes/defender/jest(@types/react@17.0.74)(jest@27.5.1)(react@17.0.2)
       '@teambit/lanes':
         specifier: workspace:*
-        version: file:scopes/lanes/lanes(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:scopes/lanes/lanes(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/lanes.entities.lane-diff':
         specifier: workspace:*
         version: file:scopes/lanes/entities/lane-diff(@teambit/legacy@node_modules+@teambit+legacy)
@@ -7824,7 +7824,7 @@ importers:
         version: file:scopes/lanes/diff(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.lane-overview':
         specifier: workspace:*
-        version: file:components/ui/lane-overview(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:components/ui/lane-overview(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/linter':
         specifier: workspace:*
         version: file:scopes/defender/linter(@types/react@17.0.74)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -7983,7 +7983,7 @@ importers:
         version: file:scopes/semantics/schema(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react@17.0.2)
       '@teambit/scope':
         specifier: workspace:*
-        version: file:scopes/scope/scope(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:scopes/scope/scope(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
@@ -8121,7 +8121,7 @@ importers:
         version: file:scopes/harmony/worker(@types/react@17.0.74)(react@17.0.2)
       '@teambit/workspace':
         specifier: workspace:*
-        version: file:scopes/workspace/workspace(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:scopes/workspace/workspace(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/workspace-config-files':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-config-files
@@ -8139,7 +8139,7 @@ importers:
         version: file:scopes/workspace/testing/mock-workspace
       '@teambit/workspace.ui.workspace-component-card':
         specifier: workspace:*
-        version: file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/yarn(@testing-library/react@12.1.5)(@types/react@17.0.74)(@yarnpkg/plugin-pack@3.2.0)(react@17.0.2)
@@ -9087,7 +9087,7 @@ importers:
         version: file:scopes/defender/jest(@types/react@17.0.74)(jest@27.5.1)(react@17.0.2)
       '@teambit/lanes':
         specifier: workspace:*
-        version: file:scopes/lanes/lanes(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:scopes/lanes/lanes(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/lanes.entities.lane-diff':
         specifier: workspace:*
         version: file:scopes/lanes/entities/lane-diff(@teambit/legacy@node_modules+@teambit+legacy)
@@ -9099,7 +9099,7 @@ importers:
         version: file:scopes/lanes/diff(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.lane-overview':
         specifier: workspace:*
-        version: file:components/ui/lane-overview(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:components/ui/lane-overview(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/linter':
         specifier: workspace:*
         version: file:scopes/defender/linter(@types/react@17.0.74)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -9258,7 +9258,7 @@ importers:
         version: file:scopes/semantics/schema(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react@17.0.2)
       '@teambit/scope':
         specifier: workspace:*
-        version: file:scopes/scope/scope(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:scopes/scope/scope(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
@@ -9396,7 +9396,7 @@ importers:
         version: file:scopes/harmony/worker(@types/react@17.0.74)(react@17.0.2)
       '@teambit/workspace':
         specifier: workspace:*
-        version: file:scopes/workspace/workspace(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
+        version: file:scopes/workspace/workspace(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/workspace-config-files':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-config-files
@@ -9414,7 +9414,7 @@ importers:
         version: file:scopes/workspace/testing/mock-workspace
       '@teambit/workspace.ui.workspace-component-card':
         specifier: workspace:*
-        version: file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/yarn(@testing-library/react@12.1.5)(@types/react@17.0.74)(@yarnpkg/plugin-pack@3.2.0)(react@17.0.2)
@@ -10073,8 +10073,8 @@ importers:
   scopes/api-reference/hooks/use-api-ref-url:
     dependencies:
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query':
         specifier: ^0.0.501
         version: 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
@@ -10187,8 +10187,8 @@ importers:
   scopes/api-reference/overview/api-reference-table-of-contents:
     dependencies:
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       classnames:
         specifier: 2.2.6
         version: 2.2.6
@@ -10261,8 +10261,8 @@ importers:
   scopes/api-reference/renderers/grouped-schema-nodes-overview-summary:
     dependencies:
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.table-heading-row':
         specifier: 4.0.11
         version: 4.0.11(react-dom@17.0.2)(react@17.0.2)
@@ -10470,8 +10470,8 @@ importers:
   scopes/api-reference/renderers/type-ref:
     dependencies:
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
@@ -10516,8 +10516,8 @@ importers:
   scopes/api-reference/sections/api-reference-page:
     dependencies:
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter':
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -11741,8 +11741,8 @@ importers:
         specifier: 0.0.5
         version: 0.0.5
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.layout.breakpoints':
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -13759,8 +13759,8 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter':
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -13939,8 +13939,8 @@ importers:
   scopes/compositions/panels/composition-gallery:
     dependencies:
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.loaders.skeleton':
         specifier: 1.0.1
         version: 1.0.1(react-dom@17.0.2)(react@17.0.2)
@@ -16326,8 +16326,8 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
@@ -19875,7 +19875,7 @@ importers:
         version: 0.0.15(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.component-card':
         specifier: ^0.0.30
-        version: 0.0.30(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+        version: 0.0.30(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-grid':
         specifier: 0.0.496
         version: 0.0.496(react-dom@17.0.2)(react@17.0.2)
@@ -20162,8 +20162,8 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -20930,8 +20930,8 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/base-react.navigation.link':
-        specifier: 2.0.31
-        version: 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -21467,15 +21467,9 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
-      assert:
-        specifier: ^2.1.0
-        version: 2.1.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
-      buffer:
-        specifier: 6.0.3
-        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -21530,9 +21524,6 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
-      punycode:
-        specifier: ^2.3.1
-        version: 2.3.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -21554,21 +21545,12 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
-      string_decoder:
-        specifier: ^1.3.0
-        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
-      url:
-        specifier: ^0.11.3
-        version: 0.11.3
-      util:
-        specifier: ^0.12.5
-        version: 0.12.5
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -22142,7 +22124,7 @@ importers:
         version: 0.0.15(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.component-card':
         specifier: ^0.0.30
-        version: 0.0.30(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+        version: 0.0.30(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-grid':
         specifier: 0.0.496
         version: 0.0.496(react-dom@17.0.2)(react@17.0.2)
@@ -28357,7 +28339,7 @@ packages:
     resolution: {integrity: sha512-0w5OvTCehnGOGcyylKZ0AExFpBDE/s0VZyUIz8chAWmPpSngeP9BJX3eIWVi49p9WWry2DBTwIDP3pdvc1T9zw==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/error': 5.0.2
       '@pnpm/logger': 5.0.0
@@ -30900,7 +30882,7 @@ packages:
     dev: false
 
   /@teambit/base-ui.routing.compare-url@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-57vlN0+yBZFGsX5JLo237OQ3Bu8eeJ+vEVbeQuioJsuvS0zEhI8EyobYssEfyaCMsbpDpbpL6HkfSvuQB0Vtmw==, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.compare-url/-/base-ui.routing.compare-url-1.0.0.tgz}
+    resolution: {integrity: sha512-57vlN0+yBZFGsX5JLo237OQ3Bu8eeJ+vEVbeQuioJsuvS0zEhI8EyobYssEfyaCMsbpDpbpL6HkfSvuQB0Vtmw==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -30911,7 +30893,7 @@ packages:
       url-parse: 1.5.1
 
   /@teambit/base-ui.routing.compare-url@1.0.0(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-57vlN0+yBZFGsX5JLo237OQ3Bu8eeJ+vEVbeQuioJsuvS0zEhI8EyobYssEfyaCMsbpDpbpL6HkfSvuQB0Vtmw==, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.compare-url/-/base-ui.routing.compare-url-1.0.0.tgz}
+    resolution: {integrity: sha512-57vlN0+yBZFGsX5JLo237OQ3Bu8eeJ+vEVbeQuioJsuvS0zEhI8EyobYssEfyaCMsbpDpbpL6HkfSvuQB0Vtmw==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -36976,14 +36958,14 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/explorer.ui.component-card@0.0.30(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/explorer.ui.component-card@0.0.30(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-e/nZkKGqTMDl7k7EOM/bLjrH/fEw1nLZwf2q/N+Jx6Rz79/U9U3pn3VxNSwVQxNqn+hwQU+vAOHxKeEZrFvAdw==}
     peerDependencies:
       '@teambit/base-react.navigation.link': ^2.0.29
       '@testing-library/react': ^12.1.5
       react: ^18.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-descriptor': 0.0.382(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.427
       '@teambit/design.ui.tooltip': 0.0.362(react-dom@17.0.2)(react@17.0.2)
@@ -59384,6 +59366,7 @@ packages:
     dependencies:
       envify: 3.4.1
       fbjs: 0.6.1
+    bundledDependencies: false
 
   /react@17.0.2:
     resolution: {integrity: sha512-gnhPt75i/dq/z3/6q/0asP78D0u592D5L1pd7M8P+dck6Fu/jJeL6iVVK23fptSUZj8Vjf++7wXA8UNclGQcbA==}
@@ -64828,6 +64811,7 @@ packages:
     name: '@teambit/harmony.modules.harmony-root-generator'
     dependencies:
       '@teambit/component-id': 1.2.0
+      '@teambit/toolbox.path.to-windows-compatible-path': file:scopes/toolbox/path/to-windows-compatible-path
       lodash: 4.17.21
     dev: false
 
@@ -64846,7 +64830,7 @@ packages:
       '@teambit/api-reference.models.api-reference-model': file:components/models/api-reference-model(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.schema-nodes-index': file:components/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.utils.code-editor-options': file:components/utils/code-editor-options
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-editor': 0.0.8(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.heading': 4.1.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
@@ -64961,7 +64945,7 @@ packages:
       '@teambit/api-reference.models.api-node-renderer': file:components/models/api-node-renderer(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.api-node-details': file:components/renderers/api-node-details(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/api-reference.renderers.parameter': file:scopes/api-reference/renderers/parameter(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       classnames: 2.2.6
       core-js: 3.13.0
@@ -64983,7 +64967,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/api-reference.renderers.schema-node-member-summary': file:scopes/api-reference/renderers/schema-node-member-summary(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.surfaces.menu.item': 0.0.354(react-dom@17.0.2)(react@17.0.2)
       '@teambit/docs.ui.hooks.use-element-on-fold': 1.96.5(react@17.0.2)
       classnames: 2.2.6
@@ -65137,7 +65121,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@monaco-editor/react': 4.4.6(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.graph.tree.tree-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.loaders.skeleton': 1.0.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -65184,7 +65168,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.loaders.skeleton': 1.0.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component.ui.component-compare.context': 0.0.117(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component.ui.component-compare.hooks.use-component-compare': 0.0.113(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -65258,7 +65242,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:components/ui/lane-overview(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2):
+  file:components/ui/lane-overview(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2):
     resolution: {directory: components/ui/lane-overview, type: directory}
     id: file:components/ui/lane-overview
     name: '@teambit/lanes.ui.lane-overview'
@@ -65269,7 +65253,7 @@ packages:
       '@teambit/cloud.hooks.use-cloud-scopes': file:scopes/cloud/hooks/use-cloud-scopes(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 1.2.0
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/explorer.ui.component-card': 0.0.30(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.ui.component-card': 0.0.30(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
       '@teambit/lanes.hooks.use-lane-components': file:components/hooks/use-lane-components(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -65280,7 +65264,7 @@ packages:
       '@teambit/scopes.scope-id': 0.0.7
       '@teambit/ui-foundation.ui.empty-component-gallery': 0.0.508(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
-      '@teambit/workspace.ui.workspace-component-card': file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/workspace.ui.workspace-component-card': file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       lodash.flatten: 4.4.0
       react: 17.0.2
@@ -65294,7 +65278,7 @@ packages:
       - react-router-dom
     dev: false
 
-  file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
+  file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: components/ui/workspace-component-card, type: directory}
     id: file:components/ui/workspace-component-card
     name: '@teambit/workspace.ui.workspace-component-card'
@@ -65303,7 +65287,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/component-descriptor': file:scopes/component/component-descriptor
-      '@teambit/explorer.ui.component-card': 0.0.30(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.ui.component-card': 0.0.30(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/scopes.scope-id': 0.0.7
       '@teambit/workspace.ui.load-preview': 0.0.504(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
@@ -65449,7 +65433,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
@@ -65500,7 +65484,7 @@ packages:
     dependencies:
       '@teambit/api-reference.models.api-reference-model': file:components/models/api-reference-model(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.utils.sort-api-nodes': file:components/utils/sort-api-nodes(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       classnames: 2.2.6
       react: 17.0.2
@@ -65548,7 +65532,7 @@ packages:
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme': file:scopes/api-reference/utils/custom-prism-syntax-highlighter-theme
       '@teambit/api-reference.utils.group-schema-node-by-signature': file:components/utils/group-schema-node-by-signature
       '@teambit/api-reference.utils.schema-node-signature-transform': file:components/utils/schema-node-signature-transform
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@17.0.2)(react@17.0.2)
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       classnames: 2.2.6
@@ -65652,7 +65636,7 @@ packages:
       '@teambit/api-reference.models.api-node-renderer': file:components/models/api-node-renderer(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.api-node-details': file:components/renderers/api-node-details(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/api-reference.utils.copy-schema-node': file:components/utils/copy-schema-node
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 1.2.0
       '@teambit/component.modules.component-url': file:scopes/component/component-url(react-dom@17.0.2)(react@17.0.2)
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
@@ -65679,7 +65663,7 @@ packages:
       '@teambit/api-reference.hooks.use-api': file:scopes/api-reference/hooks/use-api(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.hooks.use-api-ref-url': file:scopes/api-reference/hooks/use-api-ref-url(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.utils.sort-api-nodes': file:components/utils/sort-api-nodes(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component.modules.component-url': file:scopes/component/component-url(react-dom@17.0.2)(react@17.0.2)
@@ -66214,7 +66198,7 @@ packages:
       '@apollo/client': 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/any-fs': 0.0.5
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.layout.breakpoints': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error': 0.0.404
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
@@ -66977,7 +66961,7 @@ packages:
       react-router-dom: ^6.8.1
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(react-dom@17.0.2)(react@17.0.2)
@@ -67049,7 +67033,7 @@ packages:
     peerDependencies:
       react: 17.0.2
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.loaders.skeleton': 1.0.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/composition-card': file:scopes/compositions/composition-card(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.elements.icon': 1.0.5(react-dom@17.0.2)(react@17.0.2)
@@ -67984,7 +67968,7 @@ packages:
     dependencies:
       '@apollo/client': 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(@types/react@17.0.74)(react@17.0.2)
       '@teambit/component-id': 1.2.0
       '@teambit/design.ui.brand.logo': 1.96.2(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
@@ -68458,7 +68442,7 @@ packages:
       - '@teambit/legacy'
     dev: false
 
-  file:scopes/lanes/lanes(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2):
+  file:scopes/lanes/lanes(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2):
     resolution: {directory: scopes/lanes/lanes, type: directory}
     id: file:scopes/lanes/lanes
     name: '@teambit/lanes'
@@ -68482,7 +68466,7 @@ packages:
       '@teambit/lanes.modules.diff': file:scopes/lanes/diff(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.compare.lane-compare': 0.0.170(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare-page': 0.0.152(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
-      '@teambit/lanes.ui.lane-overview': file:components/ui/lane-overview(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+      '@teambit/lanes.ui.lane-overview': file:components/ui/lane-overview(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/lanes.ui.menus.lanes-overview-menu': 0.0.10(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/lanes.ui.menus.use-lanes-menu': 0.0.207(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model': 0.0.210(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -68807,6 +68791,7 @@ packages:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
       '@teambit/harmony': 0.4.6
+      '@teambit/harmony.modules.harmony-root-generator': file:components/modules/harmony-root-generator
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/preview.aspect-docs.preview': file:scopes/preview/aspect-docs/preview(react-dom@17.0.2)(react@17.0.2)
       '@teambit/preview.cli.preview-server-status': file:scopes/preview/cli/preview-server-status(@types/react@17.0.74)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -69425,7 +69410,7 @@ packages:
       '@teambit/component-id': 1.2.0
     dev: false
 
-  file:scopes/scope/scope(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2):
+  file:scopes/scope/scope(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2):
     resolution: {directory: scopes/scope/scope, type: directory}
     id: file:scopes/scope/scope
     name: '@teambit/scope'
@@ -69451,7 +69436,7 @@ packages:
       '@teambit/design.ui.surfaces.menu.link-item': 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tree': 0.0.15(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/explorer.ui.component-card': 0.0.30(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.ui.component-card': 0.0.30(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@17.0.2)(react@17.0.2)
       '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
@@ -69568,7 +69553,7 @@ packages:
       react: ^17.0.0 || ^18.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/defender.prettier.config-mutator': file:scopes/defender/prettier-config-mutator
       '@teambit/harmony': 0.4.6
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -69864,7 +69849,7 @@ packages:
       react-router-dom: ^6.8.1
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/base-react.navigation.link': 2.0.31(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.1(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
@@ -69930,6 +69915,7 @@ packages:
       '@teambit/design.themes.theme-toggler': 0.1.3(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
+      '@teambit/harmony.modules.harmony-root-generator': file:components/modules/harmony-root-generator
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.rendering.ssr': 0.0.3(react-dom@17.0.2)(react@17.0.2)
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
@@ -70338,7 +70324,7 @@ packages:
       react-router-dom: 6.8.1(react-dom@17.0.2)(react@17.0.2)
     dev: false
 
-  file:scopes/workspace/workspace(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2):
+  file:scopes/workspace/workspace(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-router-dom@6.8.1)(react@17.0.2):
     resolution: {directory: scopes/workspace/workspace, type: directory}
     id: file:scopes/workspace/workspace
     name: '@teambit/workspace'
@@ -70369,7 +70355,7 @@ packages:
       '@teambit/design.ui.surfaces.menu.link-item': 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tree': 0.0.15(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/explorer.ui.component-card': 0.0.30(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.ui.component-card': 0.0.30(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@17.0.2)(react@17.0.2)
       '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
@@ -70398,7 +70384,7 @@ packages:
       '@teambit/workspace.modules.match-pattern': file:scopes/workspace/modules/match-pattern
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/workspace.ui.empty-workspace': 0.0.508(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/workspace.ui.workspace-component-card': file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.31)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/workspace.ui.workspace-component-card': file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@types/react': 17.0.74
       '@types/react-dom': 17.0.25
       chalk: 2.4.2

@@ -1094,7 +1094,7 @@ export class IsolatorMain {
       await Promise.all(promises);
       return manifest;
     };
-    const deps = await this.dependencyResolver.getDependencies(component);
+    const deps = this.dependencyResolver.getDependencies(component);
     const manifest = await getComponentDepsManifest(deps);
 
     // component.packageJsonFile is not available here. we don't mutate the component object for capsules.

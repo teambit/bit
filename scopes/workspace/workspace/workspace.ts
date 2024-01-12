@@ -12,7 +12,6 @@ import {
   ComponentMain,
   Component,
   ComponentFactory,
-  AspectList,
   InvalidComponent,
   ResolveAspectsOptions,
 } from '@teambit/component';
@@ -946,21 +945,6 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   /**
-   * see component-aspect, createAspectListFromLegacy() method for a context why this is needed.
-   */
-  private async resolveScopeAspectListIds(aspectListFromScope: AspectList): Promise<AspectList> {
-    const resolvedList = await aspectListFromScope.pmap(async (entry) => {
-      if (entry.id.scope !== this.scope.name) {
-        return entry;
-      }
-      const newId = await this.resolveComponentId(entry.id.fullName);
-      const newEntry = new AspectEntry(newId, entry.legacy);
-      return newEntry;
-    });
-    return resolvedList;
-  }
-
-  /**
    * @deprecated use `this.idsByPattern` instead for consistency. also, it supports negation and list of patterns.
    *
    * load components into the workspace through a variants pattern.
@@ -1062,7 +1046,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     return mapSeries(components, async (component) => {
-      const id = await this.resolveComponentId(component.id);
+      const id = component.id;
       return this.get(id, component, true, true, loadOpts);
     });
   }
@@ -1517,7 +1501,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const linuxPath = pathNormalizeToLinux(relativePath);
     const bitId = this.consumer.bitMap.getComponentIdByPath(linuxPath);
     if (bitId) {
-      return this.resolveComponentId(bitId);
+      return bitId;
     }
     return undefined;
   }
@@ -1690,6 +1674,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (id instanceof BitId && id.hasScope() && id.hasVersion()) {
       // an optimization to make it faster when BitId is passed
       return ComponentID.fromLegacy(id);
+    }
+    if (id instanceof ComponentID && id.hasVersion()) {
+      return id;
     }
     const getDefaultScope = async (bitId: ComponentID, bitMapOptions?: GetBitMapComponentOptions) => {
       if (bitId.scope) {

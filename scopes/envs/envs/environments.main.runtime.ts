@@ -839,12 +839,6 @@ export class EnvsMain {
     return envDef;
   }
 
-  async getEnvDefinitionByLegacyId(id: ComponentID): Promise<EnvDefinition | undefined> {
-    const host = this.componentMain.getHost();
-    const newId = await host.resolveComponentId(id);
-    return this.getEnvDefinitionById(newId);
-  }
-
   public getEnvDefinitionByStringId(envId: string): EnvDefinition | undefined {
     const env = this.envSlot.get(envId);
     if (env) {

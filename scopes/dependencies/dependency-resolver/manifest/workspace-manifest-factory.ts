@@ -147,7 +147,7 @@ export class WorkspaceManifestFactory {
     const packageNames = components.map((component) => this.dependencyResolver.getPackageName(component));
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
-      let depList = await this.dependencyResolver.getDependencies(component, { includeHidden: true });
+      let depList = this.dependencyResolver.getDependencies(component, { includeHidden: true });
       const additionalDeps = {};
       if (referenceLocalPackages) {
         const coreAspectIds = this.aspectLoader.getCoreAspectIds();

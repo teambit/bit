@@ -11,9 +11,9 @@ import {
 } from '@teambit/legacy/dist/constants';
 import { FileStatus, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { GlobalConfigMain } from '@teambit/global-config';
+import { ConfigMergeResult } from '@teambit/config-merger';
 import { BitError } from '@teambit/bit-error';
 import { ApplyVersionResults, MergingMain, ApplyVersionResult } from './merging.main.runtime';
-import { ConfigMergeResult } from './config-merge-result';
 
 export class MergeCmd implements Command {
   name = 'merge [ids...]';
