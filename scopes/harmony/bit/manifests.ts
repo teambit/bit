@@ -100,6 +100,7 @@ import { WatcherAspect } from '@teambit/watcher';
 import { StashAspect } from '@teambit/stash';
 import { GitAspect } from '@teambit/git';
 import { IpcEventsAspect } from '@teambit/ipc-events';
+import { ConfigMergerAspect } from '@teambit/config-merger';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -204,6 +205,7 @@ export const manifestsMap = {
   [StashAspect.id]: StashAspect,
   [GitAspect.id]: GitAspect,
   [IpcEventsAspect.id]: IpcEventsAspect,
+  [ConfigMergerAspect.id]: ConfigMergerAspect,
 };
 
 export function isCoreAspect(id: string) {
