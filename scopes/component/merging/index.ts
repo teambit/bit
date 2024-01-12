@@ -17,6 +17,5 @@ export type {
   FilesStatus,
   FailedComponents,
 } from './merging.main.runtime';
-export { ConfigMergeResult } from './config-merge-result';
 export default MergingAspect;
 export { MergingAspect };

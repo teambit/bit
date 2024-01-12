@@ -14,7 +14,7 @@ import { compact } from 'lodash';
 import threeWayMerge from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
-import { ConfigMerger } from './config-merger';
+import { ComponentConfigMerger } from '@teambit/config-merger';
 import { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } from './merging.main.runtime';
 
 export type MergeStatusProviderOptions = {
@@ -118,7 +118,7 @@ other:   ${otherLaneHead.toString()}`);
       otherLaneName === currentLaneName ? 'incoming' : otherLaneName
     })`;
     const workspaceIds = await this.workspace.listIds();
-    const configMerger = new ConfigMerger(
+    const configMerger = new ComponentConfigMerger(
       id.toStringWithoutVersion(),
       workspaceIds,
       this.otherLane,

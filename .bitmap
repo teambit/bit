@@ -429,6 +429,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/config"
     },
+    "config-merger": {
+        "name": "config-merger",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/config-merger",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
+    },
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
