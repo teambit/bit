@@ -12,7 +12,6 @@ import {
   ComponentMain,
   Component,
   ComponentFactory,
-  AspectList,
   InvalidComponent,
   ResolveAspectsOptions,
 } from '@teambit/component';
