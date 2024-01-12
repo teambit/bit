@@ -3,12 +3,7 @@ import path from 'path';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { LanesAspect, LanesMain } from '@teambit/lanes';
-import MergingAspect, {
-  MergingMain,
-  ComponentMergeStatus,
-  ConfigMergeResult,
-  ApplyVersionResults,
-} from '@teambit/merging';
+import MergingAspect, { MergingMain, ComponentMergeStatus, ApplyVersionResults } from '@teambit/merging';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { getBasicLog } from '@teambit/legacy/dist/utils/bit/basic-log';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -20,6 +15,7 @@ import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
+import { ConfigMergeResult } from '@teambit/config-merger';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import CheckoutAspect, { CheckoutMain, CheckoutProps, throwForFailures } from '@teambit/checkout';
