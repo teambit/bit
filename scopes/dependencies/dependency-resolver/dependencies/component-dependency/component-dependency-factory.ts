@@ -11,14 +11,6 @@ import { DependencyLifecycleType } from '../dependency';
 import { DependencyFactory } from '../dependency-factory';
 import { DependencyList } from '../dependency-list';
 
-// TODO: think about where is the right place to put this
-// export class ComponentDependencyFactory implements DependencyFactory<ComponentDependency, SerializedComponentDependency> {
-//   parse(serialized: SerializedComponentDependency) {
-//     const id = ComponentID.fromObject(serialized.componentId);
-//     return new ComponentDependency(id, serialized.id, serialized.version, serialized.type, serialized.lifecycle as DependencyLifecycleType);
-//   }
-// }
-
 export class ComponentDependencyFactory implements DependencyFactory {
   type: string;
 
@@ -28,9 +20,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
 
   // TODO: solve this generics issue and remove the ts-ignore
   // @ts-ignore
-  async parse<ComponentDependency, S extends SerializedComponentDependency>(
-    serialized: S
-  ): Promise<ComponentDependency> {
+  parse<ComponentDependency, S extends SerializedComponentDependency>(serialized: S): ComponentDependency {
     let id;
 
     if (serialized.componentId instanceof ComponentID) {
