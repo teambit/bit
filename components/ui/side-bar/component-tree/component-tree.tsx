@@ -28,7 +28,7 @@ export function ComponentTree({
   const { pathname = '/' } = useLocation() || {};
   // override default splat from location when viewing a lane component
   const laneCompUrl = pathname.split(LanesModel.baseLaneComponentRoute.concat('/'))[1];
-  const idFromLocation = useIdFromLocation(laneCompUrl);
+  const idFromLocation = useIdFromLocation(laneCompUrl, true);
   const activeComponent = useMemo(() => {
     const active = components.find((x) => {
       return idFromLocation && (idFromLocation === x.id.fullName || idFromLocation === x.id.toStringWithoutVersion());

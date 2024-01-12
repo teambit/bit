@@ -131,14 +131,19 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
     const compIdStr = component.id.toStringWithoutVersion();
     const compIdName = component.id.fullName;
     const componentScope = component.id.scope;
+    const locationIncludesLaneId = location.pathname.includes(LanesModel.lanesPrefix);
 
     const sanitizedHref = (href.startsWith('/') ? href.substring(1) : href).split('?')[0];
+
     // if you are in a workspace, the componentId might not have a scopeId, if you are viewing
     // a component on the checked out lane
     const viewingCheckedOutLaneComp =
       lanesModel?.currentLane && lanesModel.currentLane.id.toString() === lanesModel?.viewedLane?.id.toString();
 
-    if (lanesModel?.viewedLane?.id.isDefault() || viewingMainCompOnLane || viewingCheckedOutLaneComp) {
+    if (
+      !locationIncludesLaneId &&
+      (lanesModel?.viewedLane?.id.isDefault() || viewingMainCompOnLane || viewingCheckedOutLaneComp)
+    ) {
       // split out any sub routes if exist
       const compUrl = pathname.split('/~')[0];
       // may or may not contain scope

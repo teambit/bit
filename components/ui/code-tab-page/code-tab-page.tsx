@@ -16,7 +16,6 @@ import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import { TreeNode } from '@teambit/design.ui.tree';
-import { affix } from '@teambit/base-ui.utils.string.affix';
 import {
   useComponentArtifactFileContent,
   useComponentArtifacts,

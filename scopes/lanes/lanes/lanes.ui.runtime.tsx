@@ -32,7 +32,7 @@ import styles from './lanes.ui.module.scss';
 export type LaneCompareProps = Partial<DefaultLaneCompareProps>;
 export type LaneProviderIgnoreSlot = SlotRegistry<IgnoreDerivingFromUrl>;
 export function useComponentFilters() {
-  const idFromLocation = useIdFromLocation();
+  const idFromLocation = useIdFromLocation(undefined, true);
   const { lanesModel, loading } = useLanes();
   const laneFromUrl = useViewedLaneFromUrl();
   const laneComponentId =
@@ -55,7 +55,7 @@ export function useComponentFilters() {
 }
 
 export function useLaneComponentIdFromUrl(): ComponentID | undefined | null {
-  const idFromLocation = useIdFromLocation();
+  const idFromLocation = useIdFromLocation(undefined, true);
   const { lanesModel, loading } = useLanes();
   const laneFromUrl = useViewedLaneFromUrl();
   const query = useQuery();

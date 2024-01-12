@@ -1,5 +1,5 @@
 import React, { useEffect, ReactNode, useMemo } from 'react';
-import { RouteProps, useSearchParams } from 'react-router-dom';
+import { RouteProps } from 'react-router-dom';
 import flatten from 'lodash.flatten';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SlotRegistry } from '@teambit/harmony';
@@ -49,9 +49,8 @@ export function Component({
   path,
   useComponentFilters,
 }: ComponentProps) {
-  const [searchParams] = useSearchParams();
-  const scopeFromQueryParams = searchParams.get('scope');
   const idFromLocation = useIdFromLocation();
+  const componentIdStrWithScopeFromLocation = useIdFromLocation(undefined, true);
   const _componentIdStr = getComponentIdStr(componentIdStr);
   const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
   const resolvedComponentIdStr = path || idFromLocation;
@@ -75,7 +74,7 @@ export function Component({
 
   const { component, componentDescriptor, error } = useComponentQuery(
     host,
-    componentId?.toString() || (!scopeFromQueryParams ? idFromLocation : `${scopeFromQueryParams}/${idFromLocation}`),
+    componentId?.toString() || componentIdStrWithScopeFromLocation,
     useComponentOptions
   );
 
