@@ -667,6 +667,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/hooks/use-lane-components"
     },
+    "hooks/use-lanes": {
+        "name": "hooks/use-lanes",
+        "scope": "teambit.lanes",
+        "version": "0.0.257",
+        "mainFile": "index.ts",
+        "rootDir": "components/hooks/use-lanes"
+    },
     "hooks/use-logout": {
         "name": "hooks/use-logout",
         "scope": "teambit.cloud",
@@ -1507,6 +1514,27 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-compare"
     },
+    "ui/code-tab-page": {
+        "name": "ui/code-tab-page",
+        "scope": "teambit.code",
+        "version": "0.0.633",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/code-tab-page"
+    },
+    "ui/compare/lane-compare-page": {
+        "name": "ui/compare/lane-compare-page",
+        "scope": "teambit.lanes",
+        "version": "0.0.152",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/compare/lane-compare-page"
+    },
+    "ui/component-compare/changelog": {
+        "name": "ui/component-compare/changelog",
+        "scope": "teambit.component",
+        "version": "0.0.172",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/changelog"
+    },
     "ui/component-compare/component-compare": {
         "name": "ui/component-compare/component-compare",
         "scope": "teambit.component",
@@ -1520,6 +1548,34 @@
         "version": "0.0.388",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-drawer"
+    },
+    "ui/component-filters/component-filter-context": {
+        "name": "ui/component-filters/component-filter-context",
+        "scope": "teambit.component",
+        "version": "0.0.217",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-filters/component-filter-context"
+    },
+    "ui/component-filters/deprecate-filter": {
+        "name": "ui/component-filters/deprecate-filter",
+        "scope": "teambit.component",
+        "version": "0.0.215",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-filters/deprecate-filter"
+    },
+    "ui/component-filters/env-filter": {
+        "name": "ui/component-filters/env-filter",
+        "scope": "teambit.component",
+        "version": "0.0.221",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-filters/env-filter"
+    },
+    "ui/component-filters/show-main-filter": {
+        "name": "ui/component-filters/show-main-filter",
+        "scope": "teambit.component",
+        "version": "0.0.208",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-filters/show-main-filter"
     },
     "ui/component-preview": {
         "name": "ui/component-preview",
@@ -1612,6 +1668,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/hooks/scope-context"
     },
+    "ui/inputs/lane-selector": {
+        "name": "ui/inputs/lane-selector",
+        "scope": "teambit.lanes",
+        "version": "0.0.214",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/inputs/lane-selector_1"
+    },
     "ui/lane-overview": {
         "name": "ui/lane-overview",
         "scope": "teambit.lanes",
@@ -1633,6 +1696,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/ui/login"
     },
+    "ui/models/lanes-model": {
+        "name": "ui/models/lanes-model",
+        "scope": "teambit.lanes",
+        "version": "0.0.211",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/models/lanes-model"
+    },
+    "ui/navigation/lane-switcher": {
+        "name": "ui/navigation/lane-switcher",
+        "scope": "teambit.lanes",
+        "version": "0.0.215",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/navigation/lane-switcher"
+    },
     "ui/preview-placeholder": {
         "name": "ui/preview-placeholder",
         "scope": "teambit.preview",
@@ -1647,12 +1724,26 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs"
     },
+    "ui/side-bar": {
+        "name": "ui/side-bar",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.873",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/side-bar"
+    },
     "ui/user-bar": {
         "name": "ui/user-bar",
         "scope": "teambit.cloud",
         "version": "0.0.3",
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/ui/user-bar"
+    },
+    "ui/version-block": {
+        "name": "ui/version-block",
+        "scope": "teambit.component",
+        "version": "0.0.879",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/version-block"
     },
     "ui/workspace-component-card": {
         "name": "ui/workspace-component-card",

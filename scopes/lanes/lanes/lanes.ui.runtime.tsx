@@ -377,8 +377,8 @@ export class LanesUI {
       componentCompareUI,
       routeSlot,
       navSlot,
-      overviewSlot,
       menuWidgetSlot,
+      overviewSlot,
       laneProviderIgnoreSlot,
       workspace,
       scope
