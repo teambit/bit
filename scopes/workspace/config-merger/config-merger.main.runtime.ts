@@ -253,7 +253,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
   }
 
   static slots = [];
-  static dependencies = [WorkspaceAspect, DependencyResolverAspect, ConfigAspect, LoggerAspect];
+  static dependencies = [WorkspaceAspect, ConfigAspect, LoggerAspect];
   static runtime = MainRuntime;
   static async provider([workspace, config, loggerMain]: [Workspace, ConfigMain, LoggerMain]) {
     const logger = loggerMain.createLogger(ConfigMergerAspect.id);
