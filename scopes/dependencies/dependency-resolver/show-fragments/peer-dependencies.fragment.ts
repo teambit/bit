@@ -6,7 +6,7 @@ export class PeerDependenciesFragment implements ShowFragment {
   constructor(private depResolver: DependencyResolverMain) {}
 
   async renderPeerDependencies(component: Component) {
-    const deps = await this.depResolver.getDependencies(component);
+    const deps = this.depResolver.getDependencies(component);
     return serializeByLifecycle(deps, 'peer');
   }
 

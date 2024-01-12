@@ -336,16 +336,13 @@ export class DependencyResolverMain {
    * Main function to get the dependency list of a given component
    * @param component
    */
-  async getDependencies(
-    component: IComponent,
-    { includeHidden = false }: GetDependenciesOptions = {}
-  ): Promise<DependencyList> {
+  getDependencies(component: IComponent, { includeHidden = false }: GetDependenciesOptions = {}): DependencyList {
     const entry = component.get(DependencyResolverAspect.id);
     if (!entry) {
       return DependencyList.fromArray([]);
     }
     const serializedDependencies: SerializedDependency[] = entry?.data?.dependencies || [];
-    const depList = await this.getDependenciesFromSerializedDependencies(serializedDependencies);
+    const depList = this.getDependenciesFromSerializedDependencies(serializedDependencies);
     if (includeHidden) return depList;
     return depList.filterHidden();
   }
@@ -358,14 +355,12 @@ export class DependencyResolverMain {
     return dependencyList.getComponentDependencies();
   }
 
-  private async getDependenciesFromSerializedDependencies(
-    dependencies: SerializedDependency[]
-  ): Promise<DependencyList> {
+  private getDependenciesFromSerializedDependencies(dependencies: SerializedDependency[]): DependencyList {
     if (!dependencies.length) {
       return DependencyList.fromArray([]);
     }
     const listFactory = this.getDependencyListFactory();
-    const deps = await listFactory.fromSerializedDependencies(dependencies);
+    const deps = listFactory.fromSerializedDependencies(dependencies);
     return deps;
   }
 
