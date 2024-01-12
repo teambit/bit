@@ -150,15 +150,12 @@ export class APIForIDE {
   async getCurrentLaneObject(): Promise<LaneObj | undefined> {
     const currentLane = await this.lanes.getCurrentLane();
     if (!currentLane) return undefined;
-    const components = await Promise.all(
-      currentLane.components.map(async (c) => {
-        const compId = await this.workspace.resolveComponentId(c.id);
-        return {
-          id: compId.toStringWithoutVersion(),
-          head: c.head.toString(),
-        };
-      })
-    );
+    const components = currentLane.components.map((c) => {
+      return {
+        id: c.id.toStringWithoutVersion(),
+        head: c.head.toString(),
+      };
+    });
     return {
       name: currentLane.name,
       scope: currentLane.scope,

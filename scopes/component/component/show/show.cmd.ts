@@ -29,9 +29,8 @@ export class ShowCmd implements Command {
 
   private async getComponent(idStr: string, remote: boolean) {
     if (remote) {
-      const bitId: ComponentID = ComponentID.fromString(idStr); // user used --remote so we know it has a scope
+      const id = ComponentID.fromString(idStr); // user used --remote so we know it has a scope
       const host = this.component.getHost('teambit.scope/scope');
-      const id = await host.resolveComponentId(bitId);
       if (!host.getRemoteComponent) {
         throw new Error('Component Host does not implement getRemoteComponent()');
       }

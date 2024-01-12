@@ -48,6 +48,6 @@ export class StashFiles {
     const filePath = path.join(stashPath, filename);
     const content = await fs.readFile(filePath, 'utf8');
     const data = JSON.parse(content);
-    return StashData.fromObject(data, this.workspace);
+    return StashData.fromObject(data);
   }
 }

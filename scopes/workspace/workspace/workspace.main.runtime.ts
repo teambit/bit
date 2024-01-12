@@ -217,7 +217,7 @@ export class WorkspaceMain {
     LegacyComponentLoader.registerOnComponentLoadSubscriber(
       async (legacyComponent: ConsumerComponent, opts?: ComponentLoadOptions) => {
         if (opts?.originatedFromHarmony) return legacyComponent;
-        const id = await workspace.resolveComponentId(legacyComponent.id);
+        const id = legacyComponent.id;
         const newComponent = await workspace.get(id, legacyComponent, true, true, opts);
         return newComponent.state._consumer;
       }
