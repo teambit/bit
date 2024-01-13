@@ -30,6 +30,7 @@ export interface Dependency {
   id: string;
   version: string;
   type: string;
+  idWithoutVersion: string;
   lifecycle: DependencyLifecycleType;
   source?: DependencySource;
   hidden?: boolean;
