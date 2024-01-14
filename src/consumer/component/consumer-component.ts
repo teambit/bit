@@ -451,9 +451,7 @@ export default class Component {
       bindingPrefix,
       dependencies,
       devDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       peerDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,
