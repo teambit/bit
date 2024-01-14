@@ -561,6 +561,7 @@
     },
     "hoistPatterns": [
       "@babel/core",
+      "@pnpm/network.auth-header",
       "ts-deepmerge"
     ]
   },
