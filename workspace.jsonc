@@ -558,7 +558,11 @@
     "peerDependencyRules": {
       "allowAny": [],
       "ignoreMissing": []
-    }
+    },
+    "hoistPatterns": [
+      "@babel/core",
+      "ts-deepmerge"
+    ]
   },
   "teambit.preview/preview": {
     "bundlingStrategy": "component"

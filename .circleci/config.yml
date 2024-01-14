@@ -468,8 +468,8 @@ jobs:
           at: ./
       - restore_cache:
           key: bitsrc-registry10
-      - restore_cache:
-          key: core-aspect-env-v0.0.19-v8
+      # - restore_cache:
+          # key: core-aspect-env-v0.0.19-v8
       - run: npm -v
       # - run:
       #     name: 'install husky globally'
@@ -541,8 +541,8 @@ jobs:
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
-      - restore_cache:
-          key: core-aspect-env-v0.0.19-v8
+      # - restore_cache:
+          # key: core-aspect-env-v0.0.19-v8
       # - update_ssh_agent
       # temporary, check if we can remove it
       - run: cd bit && bit cc
@@ -577,8 +577,8 @@ jobs:
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
-      - restore_cache:
-          key: core-aspect-env-v0.0.19-v8
+      # - restore_cache:
+          # key: core-aspect-env-v0.0.19-v8
       - bit_config:
           env: "hub"
       - restore_cache:
@@ -888,8 +888,8 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
-      - restore_cache:
-          key: core-aspect-env-v0.0.19-v8
+      # - restore_cache:
+          # key: core-aspect-env-v0.0.19-v8
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
