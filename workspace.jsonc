@@ -562,6 +562,7 @@
     "hoistPatterns": [
       "@babel/core",
       "@pnpm/network.auth-header",
+      "@teambit/code.ui.code-compare",
       "ts-deepmerge"
     ]
   },
