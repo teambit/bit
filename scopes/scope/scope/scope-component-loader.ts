@@ -62,13 +62,12 @@ export class ScopeComponentLoader {
   }
 
   async getFromConsumerComponent(consumerComponent: ConsumerComponent): Promise<Component> {
-    const legacyId = consumerComponent.id;
-    const modelComponent = await this.scope.legacyScope.getModelComponent(legacyId);
+    const id = consumerComponent.id;
+    const modelComponent = await this.scope.legacyScope.getModelComponent(id);
     // :TODO move to head snap once we have it merged, for now using `latest`.
-    const id = await this.scope.resolveComponentId(legacyId);
     const version =
       consumerComponent.pendingVersion ||
-      (await modelComponent.loadVersion(legacyId.version as string, this.scope.legacyScope.objects));
+      (await modelComponent.loadVersion(id.version as string, this.scope.legacyScope.objects));
     const snap = await this.getHeadSnap(modelComponent);
     const state = await this.createStateFromVersion(id, version, consumerComponent);
     const tagMap = this.getTagMap(modelComponent);

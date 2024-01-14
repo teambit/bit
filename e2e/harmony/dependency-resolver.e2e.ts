@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
+import { Modules, readModulesManifest } from '@pnpm/modules-yaml';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -289,6 +290,23 @@ describe('dependency-resolver extension', function () {
           helper.fixtures.fs.readJsonFile('node_modules/.pnpm/inflight@1.0.6/node_modules/once/package.json').version
         ).to.eq('1.3.0');
       });
+    });
+  });
+  describe('hoist patterns', function () {
+    let modulesState: Modules | null;
+    before(async () => {
+      helper = new Helper();
+      helper.scopeHelper.reInitLocalScope();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('hoistPatterns', ['hoist-pattern']);
+      helper.command.install('is-positive');
+      modulesState = await readModulesManifest(path.join(helper.fixtures.scopes.localPath, 'node_modules'));
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('should run pnpm with the specified hoist pattern', () => {
+      expect(modulesState?.hoistPattern).to.deep.eq(['hoist-pattern']);
     });
   });
 });

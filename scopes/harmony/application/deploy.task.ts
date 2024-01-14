@@ -7,6 +7,8 @@ import {
   TaskResults,
   BuiltTaskResult,
   CAPSULE_ARTIFACTS_DIR,
+  ArtifactList,
+  Artifact,
 } from '@teambit/builder';
 import { compact, join } from 'lodash';
 import { Capsule } from '@teambit/isolator';
@@ -31,14 +33,21 @@ export class DeployTask implements BuildTask {
     const originalSeedersIds = context.capsuleNetwork.originalSeedersCapsules.map((c) => c.component.id.toString());
     const { capsuleNetwork } = context;
 
+    const builderData = this.builder.pipelineResultsToBuilderData(context.components, context.previousTasksResults);
+
     const components = await mapSeries(capsuleNetwork.originalSeedersCapsules, async (capsule) => {
       const component = capsule.component;
+      const compBuilderData = builderData.getValueByComponentId(component.id);
+      const artifactsObjects = compBuilderData?.artifacts || [];
+      const artifactsObjectsList = ArtifactList.fromArtifactObjects(artifactsObjects);
       if (originalSeedersIds && originalSeedersIds.length && !originalSeedersIds.includes(component.id.toString())) {
         return undefined;
       }
       const apps = await this.application.loadAppsFromComponent(component, capsule.path);
       if (!apps || !apps.length) return undefined;
-      const appDeployments = await mapSeries(compact(apps), async (app) => this.runForOneApp(app, capsule, context));
+      const appDeployments = await mapSeries(compact(apps), async (app) =>
+        this.runForOneApp(app, capsule, context, artifactsObjectsList)
+      );
       const deploys = compact(appDeployments);
       return { component, deploys };
     });
@@ -67,7 +76,8 @@ export class DeployTask implements BuildTask {
   private async runForOneApp(
     app: Application,
     capsule: Capsule,
-    context: BuildContext
+    context: BuildContext,
+    artifacts: ArtifactList<Artifact>
   ): Promise<ApplicationDeployment | void | undefined> {
     const aspectId = this.application.getAppAspect(app.name);
     if (!aspectId) return undefined;
@@ -81,7 +91,7 @@ export class DeployTask implements BuildTask {
     const buildDeployContexts = metadata.find((ctx) => ctx.name === app.name && ctx.appType === app.applicationType);
     if (!buildDeployContexts) return undefined;
 
-    const artifacts = this.builder.getArtifacts(capsule.component);
+    // const artifacts = this.builder.getArtifacts(capsule.component);
     const appContext = await this.application.createAppBuildContext(capsule.component.id, app.name, capsule.path);
     const artifactsDir = this.getArtifactDirectory();
     const appBuildContext = AppBuildContext.create({

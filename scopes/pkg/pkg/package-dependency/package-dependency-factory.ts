@@ -19,7 +19,7 @@ export class PackageDependencyFactory implements DependencyFactory {
     this.type = TYPE;
   }
 
-  async parse<PackageDependency, S extends SerializedDependency>(serialized: S): Promise<PackageDependency> {
+  parse<PackageDependency, S extends SerializedDependency>(serialized: S): PackageDependency {
     // return new PackageDependency(serialized.id, serialized.version, serialized.type, serialized.lifecycle as DependencyLifecycleType) as unknown as PackageDependency;
     return new PackageDependency(
       serialized.id,

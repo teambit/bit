@@ -101,7 +101,7 @@ export class PnpmPackageManager implements PackageManager {
         dedupeInjectedDeps: installOptions.dedupeInjectedDeps,
         dryRun: installOptions.dryRun,
         overrides: installOptions.overrides,
-        hoistPattern: config.hoistPattern,
+        hoistPattern: installOptions.hoistPatterns ?? config.hoistPattern,
         publicHoistPattern: config.shamefullyHoist
           ? ['*']
           : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],

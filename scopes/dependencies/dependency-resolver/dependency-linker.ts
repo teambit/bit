@@ -245,7 +245,7 @@ export class DependencyLinker {
     const peers = new Set<string>();
     await Promise.all(
       componentDirectoryMap.toArray().map(async ([component]) => {
-        const depList = await this.dependencyResolver.getDependencies(component);
+        const depList = this.dependencyResolver.getDependencies(component);
         const peerList = depList.byLifecycle('peer');
         peerList.forEach((dependency) => {
           if (dependency.getPackageName) {

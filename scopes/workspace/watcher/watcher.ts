@@ -413,14 +413,10 @@ export class Watcher {
   private async setTrackDirs() {
     this.trackDirs = {};
     const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
-    await Promise.all(
-      componentsFromBitMap.map(async (componentMap) => {
-        const bitId = componentMap.id;
-        const rootDir = componentMap.getRootDir();
-        if (!rootDir) throw new Error(`${bitId.toString()} has no rootDir, which is invalid in Harmony`);
-        const componentId = await this.workspace.resolveComponentId(bitId);
-        this.trackDirs[rootDir] = componentId;
-      })
-    );
+    componentsFromBitMap.map(async (componentMap) => {
+      const componentId = componentMap.id;
+      const rootDir = componentMap.getRootDir();
+      this.trackDirs[rootDir] = componentId;
+    });
   }
 }
