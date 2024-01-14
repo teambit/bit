@@ -560,9 +560,8 @@
       "ignoreMissing": []
     },
     "hoistPatterns": [
-      "@babel/core",
-      "@pnpm/network.auth-header",
-      "ts-deepmerge"
+      "*",
+      "!@teambit/envs"
     ],
     "capsuleSelfReference": true
   },
