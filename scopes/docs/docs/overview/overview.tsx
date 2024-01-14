@@ -9,7 +9,7 @@ import { ComponentPreview, ComponentPreviewProps } from '@teambit/preview.ui.com
 // import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { CompositionGallery, CompositionGallerySkeleton } from '@teambit/compositions.panels.composition-gallery';
-import { useThemePicker } from '@teambit/base-react.themes.theme-switcher';
+// import { useThemePicker } from '@teambit/base-react.themes.theme-switcher';
 import { ReadmeSkeleton } from './readme-skeleton';
 import styles from './overview.module.scss';
 
@@ -43,7 +43,7 @@ export type OverviewProps = {
 export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyState, TaggedAPI }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
-  const { current } = useThemePicker();
+  // const { current } = useThemePicker();
   const overviewProps = flatten(overviewOptions.values())[0];
   const showHeader = !component.preview?.legacyHeader;
   const EmptyState = getEmptyState && getEmptyState();
