@@ -471,6 +471,7 @@ jobs:
       - restore_cache:
           key: core-aspect-env-v0.0.19-v9
       - run: echo $BIT_FEATURES
+      - run: node -v
       - run: npm -v
       # - run:
       #     name: 'install husky globally'
