@@ -434,7 +434,13 @@
         "scope": "teambit.workspace",
         "version": "0.0.2",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/config-merger"
+        "rootDir": "scopes/workspace/config-merger",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@0.0.19": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "content/cli-reference": {
         "name": "content/cli-reference",
