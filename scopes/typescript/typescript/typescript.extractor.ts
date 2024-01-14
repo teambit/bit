@@ -143,7 +143,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
   }
 
   private async getComponentDeps(component: Component): Promise<ComponentDependency[]> {
-    const deps = await this.depResolver.getDependencies(component);
+    const deps = this.depResolver.getDependencies(component);
     const componentDeps = deps.getComponentDependencies();
     return componentDeps;
   }

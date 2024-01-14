@@ -115,7 +115,7 @@ export class DependenciesMain {
     const compIds = await this.workspace.idsByPattern(componentPattern);
     const results = await pMapSeries(compIds, async (compId) => {
       const component = await this.workspace.get(compId);
-      const depList = await this.dependencyResolver.getDependencies(component);
+      const depList = this.dependencyResolver.getDependencies(component);
       const getCurrentConfig = async () => {
         const currentConfigFromWorkspace = await this.workspace.getSpecificComponentConfig(
           compId,
@@ -241,7 +241,7 @@ export class DependenciesMain {
     const { missingPackageDependencies, manuallyAddedDependencies, manuallyRemovedDependencies } =
       dependenciesData.overridesDependencies;
 
-    const results = await this.dependencyResolver.getDependencies(component);
+    const results = this.dependencyResolver.getDependencies(component);
     const sources = results.map((dep) => ({ id: dep.id, source: dep.source }));
 
     return {
@@ -265,7 +265,7 @@ export class DependenciesMain {
     let lastVersion = '';
     await pMapSeries(log, async (logItem) => {
       const component = await this.workspace.get(id.changeVersion(logItem.tag || logItem.hash));
-      const depList = await this.dependencyResolver.getDependencies(component);
+      const depList = this.dependencyResolver.getDependencies(component);
       const dependency = depList.findByPkgNameOrCompId(depName);
       if (dependency && dependency.version === lastVersion) {
         return;
@@ -311,7 +311,7 @@ export class DependenciesMain {
     const results = {};
     await Promise.all(
       allComps.map(async (comp) => {
-        const depList = await this.dependencyResolver.getDependencies(comp);
+        const depList = this.dependencyResolver.getDependencies(comp);
         const dependency = depList.findByPkgNameOrCompId(name, version);
         if (dependency) {
           results[comp.id.toString()] = dependency.version;

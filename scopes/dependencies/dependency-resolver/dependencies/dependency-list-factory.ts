@@ -11,14 +11,14 @@ import { DependencyResolverAspect } from '../dependency-resolver.aspect';
 export class DependencyListFactory {
   constructor(private factories: Record<string, DependencyFactory>) {}
 
-  async fromSerializedDependencies(serializedDependencies: SerializedDependency[]): Promise<DependencyList> {
-    const dependencies = await mapSeries(serializedDependencies, async (serializedDependency) => {
+  fromSerializedDependencies(serializedDependencies: SerializedDependency[]): DependencyList {
+    const dependencies = serializedDependencies.map((serializedDependency) => {
       const type = serializedDependency.__type;
       const factory = this.factories[type];
       if (!factory) {
         throw new UnknownDepType(type);
       }
-      const dependency = await factory.parse(serializedDependency);
+      const dependency = factory.parse(serializedDependency);
       return dependency;
     });
     return new DependencyList(dependencies);

@@ -786,6 +786,7 @@ export class IsolatorMain {
       installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
       nmSelfReferences: this.dependencyResolver.config.capsuleSelfReference,
       overrides: this.dependencyResolver.config.capsulesOverrides || this.dependencyResolver.config.overrides,
+      hoistPatterns: this.dependencyResolver.config.hoistPatterns,
       rootComponentsForCapsules: this.dependencyResolver.isolatedCapsules(),
       useNesting: isolateInstallOptions.useNesting,
       keepExistingModulesDir: this.dependencyResolver.isolatedCapsules(),
@@ -1093,7 +1094,7 @@ export class IsolatorMain {
       await Promise.all(promises);
       return manifest;
     };
-    const deps = await this.dependencyResolver.getDependencies(component);
+    const deps = this.dependencyResolver.getDependencies(component);
     const manifest = await getComponentDepsManifest(deps);
 
     // component.packageJsonFile is not available here. we don't mutate the component object for capsules.
