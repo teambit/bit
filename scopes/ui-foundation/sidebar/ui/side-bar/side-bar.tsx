@@ -42,7 +42,7 @@ export function SideBar({ drawerSlot, items = [], overrideDrawerSlot, ...rest }:
 
   return (
     <div {...rest} className={styles.sidebar}>
-      <MenuSection style={{ marginTop: 0 }} items={items} />
+      <MenuSection items={items} />
       {drawers.map((drawer) => {
         if (!drawer || !drawer.name) return null;
         // consider passing collapse all as a prop so each drawer collapses itself
