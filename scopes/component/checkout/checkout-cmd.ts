@@ -44,19 +44,11 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       'interactive-merge',
       'when a component is modified and the merge process found conflicts, display options to resolve them',
     ],
-    ['', 'ours', 'DEPRECATED. use --auto-merge-resolve. In the future, this flag will leave the current code intact'],
-    [
-      '',
-      'theirs',
-      'DEPRECATED. use --auto-merge-resolve. In the future, this flag will override the current code with the incoming code',
-    ],
-    ['', 'manual', 'DEPRECATED. use --auto-merge-resolve'],
     [
       '',
       'auto-merge-resolve <merge-strategy>',
       'in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
     ],
-    ['r', 'reset', 'revert changes that were not snapped/tagged'],
     ['a', 'all', 'all components'],
     [
       'e',
@@ -65,6 +57,8 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
     ],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['x', 'skip-dependency-installation', 'do not auto-install dependencies of the imported components'],
+    ['', 'force-ours', 'regardless of conflicts, ignore theirs changes and keep our local files intact'],
+    ['', 'force-theirs', 'regardless of conflicts, ignore our local changes and use theirs files'],
   ] as CommandOptions;
   loader = true;
 
@@ -74,9 +68,8 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
     [to, componentPattern]: [string, string],
     {
       interactiveMerge = false,
-      ours = false,
-      theirs = false,
-      manual = false,
+      forceOurs,
+      forceTheirs,
       autoMergeResolve,
       all = false,
       workspaceOnly = false,
@@ -85,9 +78,8 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       revert = false,
     }: {
       interactiveMerge?: boolean;
-      ours?: boolean;
-      theirs?: boolean;
-      manual?: boolean;
+      forceOurs?: boolean;
+      forceTheirs?: boolean;
       autoMergeResolve?: MergeStrategy;
       all?: boolean;
       workspaceOnly?: boolean;
@@ -96,10 +88,8 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       revert?: boolean;
     }
   ) {
-    if (ours || theirs || manual) {
-      throw new BitError(
-        'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead.'
-      );
+    if (forceOurs && forceTheirs) {
+      throw new BitError('please use either --force-ours or --force-theirs, not both');
     }
     if (
       autoMergeResolve &&
@@ -121,6 +111,8 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       skipNpmInstall: skipDependencyInstallation,
       workspaceOnly,
       revert,
+      forceOurs,
+      forceTheirs,
     };
     if (to === HEAD) checkoutProps.head = true;
     else if (to === LATEST) checkoutProps.latest = true;
@@ -184,7 +176,8 @@ export function checkoutOutput(
     const title = `\n\nfiles with conflicts summary\n`;
     const suggestion = `\n\nfix the conflicts above manually and then run "bit install".
 once ready, snap/tag the components to persist the changes`;
-    return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
+    const conflictSummary = conflictSummaryReport(components);
+    return chalk.underline(title) + conflictSummary.conflictStr + chalk.yellow(suggestion);
   };
   const getSuccessfulOutput = () => {
     if (!components || !components.length) return '';

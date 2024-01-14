@@ -102,6 +102,13 @@ export type PackageManagerInstallOptions = {
    * This is something we need in capsules.
    */
   hoistWorkspacePackages?: boolean;
+
+  /**
+   * Tells pnpm which packages should be hoisted to node_modules/.pnpm/node_modules.
+   * By default, all packages are hoisted - however, if you know that only some flawed packages have phantom dependencies,
+   * you can use this option to exclusively hoist the phantom dependencies (recommended).
+   */
+  hoistPatterns?: string[];
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

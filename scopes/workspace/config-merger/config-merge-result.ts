@@ -1,6 +1,6 @@
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { compact } from 'lodash';
-import { MergeStrategyResult, conflictIndicator, GenericConfigOrRemoved } from './config-merger';
+import { MergeStrategyResult, conflictIndicator, GenericConfigOrRemoved } from './component-config-merger';
 
 const DEP_RESOLVER_VERSION_INDENTATION = 8;
 const CONFLICT_MARKER_INDENTATION = 7;
@@ -49,7 +49,7 @@ ${this.concatenateConflicts(configMergeFormatted)}
     const mergedConfigSplit = JSON.stringify({ policy: conflict }, undefined, 2).split('\n');
     const conflictLines = mergedConfigSplit.map((line) => {
       if (!line.includes(conflictIndicator)) return line;
-      const [, currentVal, otherVal] = line.split('::');
+      const { currentVal, otherVal } = parseVersionLineWithConflict(line);
       return `${'<'.repeat(CONFLICT_MARKER_INDENTATION)} ${this.currentLabel}
 ${' '.repeat(DEP_RESOLVER_VERSION_INDENTATION)}"version": "${currentVal}",
 =======
@@ -123,4 +123,9 @@ ${'>'.repeat(CONFLICT_MARKER_INDENTATION)} ${this.otherLabel}
     });
     return conflictsWithComma.join('\n');
   }
+}
+
+export function parseVersionLineWithConflict(line: string) {
+  const [, currentVal, otherVal] = line.split('::');
+  return { currentVal, otherVal };
 }

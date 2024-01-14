@@ -267,7 +267,7 @@ export class WorkspaceConfig implements HostConfig {
     }
   }
 
-  private async backupConfigFile(reasonForChange?: string) {
+  async backupConfigFile(reasonForChange?: string) {
     if (!this.scopePath) {
       logger.error(`unable to backup workspace.jsonc file without scope path`);
       return;

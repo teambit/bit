@@ -124,20 +124,6 @@ export class StatusMain {
     const forkedLaneId = currentLane?.forkedFrom;
     const workspaceIssues = this.workspace.getWorkspaceIssues();
 
-    const convertObjToComponentIdsAndSort = async <T>(
-      objectsWithId: Array<T & { id: ComponentID }>
-    ): Promise<Array<T & { id: ComponentID }>> => {
-      const results = await Promise.all(
-        objectsWithId.map(async (obj) => {
-          return {
-            ...obj,
-            id: await this.workspace.resolveComponentId(obj.id),
-          };
-        })
-      );
-      return results.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
-    };
-
     const sortObjectsWithId = <T>(objectsWithId: Array<T & { id: ComponentID }>): Array<T & { id: ComponentID }> => {
       return objectsWithId.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
     };
@@ -146,28 +132,28 @@ export class StatusMain {
     return {
       newComponents: ComponentID.sortIds(newComponents.map((c) => c.id)),
       modifiedComponents: ComponentID.sortIds(modifiedComponents.map((c) => c.id)),
-      stagedComponents: await convertObjToComponentIdsAndSort(stagedComponentsWithVersions),
+      stagedComponents: sortObjectsWithId(stagedComponentsWithVersions),
       componentsWithIssues: sortObjectsWithId(componentsWithIssues.map((c) => ({ id: c.id, issues: c.state.issues }))),
       importPendingComponents, // no need to sort, we use only its length
       autoTagPendingComponents: ComponentID.sortIds(autoTagPendingComponentsIds),
       invalidComponents: sortObjectsWithId(invalidComponents.map((c) => ({ id: c.id, error: c.err }))),
       locallySoftRemoved: ComponentID.sortIds(locallySoftRemoved),
       remotelySoftRemoved: ComponentID.sortIds(remotelySoftRemoved.map((c) => c.id)),
-      outdatedComponents: await convertObjToComponentIdsAndSort(
+      outdatedComponents: sortObjectsWithId(
         outdatedComponents.map((c) => ({
           id: c.id,
           headVersion: c.headVersion,
           latestVersion: c.latestVersion,
         }))
       ),
-      mergePendingComponents: await convertObjToComponentIdsAndSort(
+      mergePendingComponents: sortObjectsWithId(
         mergePendingComponents.map((c) => ({ id: c.id, divergeData: c.diverge }))
       ),
       componentsDuringMergeState: ComponentID.sortIds(idsDuringMergeState),
       softTaggedComponents: ComponentID.sortIds(softTaggedComponents),
       snappedComponents: ComponentID.sortIds(snappedComponents),
-      pendingUpdatesFromMain: await convertObjToComponentIdsAndSort(pendingUpdatesFromMain),
-      updatesFromForked: await convertObjToComponentIdsAndSort(updatesFromForked),
+      pendingUpdatesFromMain: sortObjectsWithId(pendingUpdatesFromMain),
+      updatesFromForked: sortObjectsWithId(updatesFromForked),
       unavailableOnMain,
       currentLaneId,
       forkedLaneId,

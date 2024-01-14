@@ -13,19 +13,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
 import { ApplyVersionResult, FilesStatus } from '@teambit/merging';
-
-export type CheckoutProps = {
-  version?: string; // if reset is true, the version is undefined
-  ids?: ComponentID[];
-  latestVersion?: boolean;
-  promptMergeOptions?: boolean;
-  mergeStrategy?: MergeStrategy | null;
-  skipNpmInstall?: boolean;
-  writeConfig?: boolean;
-  reset?: boolean; // remove local changes. if set, the version is undefined.
-  all?: boolean; // checkout all ids
-  isLane?: boolean;
-};
+import { CheckoutProps } from './checkout.main.runtime';
 
 export type ComponentStatusBase = {
   currentComponent?: ConsumerComponent;
@@ -48,17 +36,21 @@ export type ApplyVersionWithComps = {
 };
 
 /**
- * 1) when the files are modified with conflicts and the strategy is "ours", leave the FS as is
- * and update only bitmap id version. (not the componentMap object).
+ * This function optionally returns "component" object. If it returns, it means it needs to be written to the filesystem.
+ * Otherwise, it means the component is already up to date and no need to write it.
  *
- * 2) when the files are modified with conflicts and the strategy is "theirs", write the component
- * according to id.version.
+ * If no need to change anything (ours), then don't return the component object.
+ * Otherwise, either return the component object as is (if no conflicts or "theirs"), or change the files in this
+ * component object. Later, this component object is written to the filesystem.
+ *
+ * 1) when the files are modified with conflicts and the strategy is "ours", or forceOurs was used, leave the FS as is.
+ *
+ * 2) when the files are modified with conflicts and the strategy is "theirs", or forceTheirs was used, write the
+ * component according to "component" object
  *
  * 3) when files are modified with no conflict or files are modified with conflicts and the
  * strategy is manual, load the component according to id.version and update component.files.
  * applyModifiedVersion() docs explains what files are updated/added.
- *
- * 4) when --reset flag is used, write the component according to the bitmap version
  *
  * Side note:
  * Deleted file => if files are in used version but not in the modified one, no need to delete it. (similar to git).
@@ -73,9 +65,9 @@ export async function applyVersion(
 ): Promise<ApplyVersionWithComps> {
   if (!checkoutProps.isLane && !componentFromFS)
     throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
-  const { mergeStrategy } = checkoutProps;
+  const { mergeStrategy, forceOurs } = checkoutProps;
   let filesStatus = {};
-  if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
+  if ((mergeResults?.hasConflicts && mergeStrategy === MergeOptions.ours) || forceOurs) {
     // even when isLane is true, the mergeResults is possible only when the component is on the filesystem
     // otherwise it's impossible to have conflicts
     if (!componentFromFS) throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
@@ -100,6 +92,9 @@ export async function applyVersion(
     filesStatus = { ...filesStatus, ...modifiedStatus };
     component.files = modifiedFiles;
   }
+
+  // in case of forceTheirs, the mergeResults is undefined, the "component" object is according to "theirs", so it'll work
+  // expected. (later, it writes the component object).
 
   return {
     applyVersionResult: { id, filesStatus },

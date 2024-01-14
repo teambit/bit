@@ -1,5 +1,4 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import semver from 'semver';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
@@ -29,9 +28,8 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
-import { compact, isEmpty } from 'lodash';
+import { compact } from 'lodash';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
-import { DependencyResolverAspect, WorkspacePolicyConfigKeysNames } from '@teambit/dependency-resolver';
 import {
   ApplyVersionWithComps,
   CheckoutAspect,
@@ -41,13 +39,18 @@ import {
   removeFilesIfNeeded,
   updateFileStatus,
 } from '@teambit/checkout';
-import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
 import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
+import {
+  ConfigMergerAspect,
+  ConfigMergerMain,
+  ConfigMergeResult,
+  WorkspaceDepsUpdates,
+  WorkspaceDepsConflicts,
+} from '@teambit/config-merger';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
-import { ConfigMergeResult } from './config-merge-result';
 import { MergeStatusProvider, MergeStatusProviderOptions } from './merge-status-provider';
 
 type ResolveUnrelatedData = {
@@ -56,10 +59,6 @@ type ResolveUnrelatedData = {
   unrelatedHead: Ref;
   unrelatedLaneId: LaneId;
 };
-type PkgEntry = { name: string; version: string; force: boolean };
-
-export type WorkspaceDepsUpdates = { [pkgName: string]: [string, string] }; // from => to
-export type WorkspaceDepsConflicts = Record<WorkspacePolicyConfigKeysNames, Array<{ name: string; version: string }>>; // the pkg value is in a format of CONFLICT::OURS::THEIRS
 
 export type ComponentMergeStatus = ComponentStatusBase & {
   mergeResults?: MergeResultsThreeWay | null;
@@ -106,6 +105,8 @@ export type ApplyVersionResults = {
   installationError?: Error; // in case the package manager failed, it won't throw, instead, it'll return error here
   compilationError?: Error; // in case the compiler failed, it won't throw, instead, it'll return error here
   workspaceDepsUpdates?: WorkspaceDepsUpdates; // in case workspace.jsonc has been updated with dependencies versions
+  workspaceDepsConflicts?: WorkspaceDepsConflicts; // in case workspace.jsonc has conflicts
+  workspaceConflictError?: Error; // in case workspace.jsonc has conflicts and we failed to write the conflicts to the file
 };
 
 export class MergingMain {
@@ -118,7 +119,8 @@ export class MergingMain {
     private componentWriter: ComponentWriterMain,
     private importer: ImporterMain,
     private config: ConfigMain,
-    private remove: RemoveMain
+    private remove: RemoveMain,
+    private configMerger: ConfigMergerMain
   ) {}
 
   async merge(
@@ -248,11 +250,16 @@ export class MergingMain {
 
     const allConfigMerge = compact(succeededComponents.map((c) => c.configMergeResult));
 
-    const { workspaceDepsUpdates, workspaceDepsConflicts } = await this.updateWorkspaceJsoncWithDepsIfNeeded(
-      allConfigMerge
-    );
+    const { workspaceDepsUpdates, workspaceDepsConflicts } =
+      await this.configMerger.updateWorkspaceJsoncWithDepsIfNeeded(allConfigMerge);
 
-    await this.generateConfigMergeConflictFileForAll(allConfigMerge, workspaceDepsConflicts);
+    let workspaceConflictError: Error | undefined;
+    if (workspaceDepsConflicts) {
+      workspaceConflictError = await this.configMerger.writeWorkspaceJsoncWithConflictsGracefully(
+        workspaceDepsConflicts
+      );
+    }
+    await this.configMerger.generateConfigMergeConflictFileForAll(allConfigMerge);
 
     if (currentLane) consumer.scope.objects.add(currentLane);
 
@@ -314,181 +321,10 @@ export class MergingMain {
       removedComponents: [...componentIdsToRemove, ...(mergeSnapResults?.removedComponents || [])],
       mergeSnapResults,
       mergeSnapError,
+      workspaceConflictError,
+      workspaceDepsConflicts,
       leftUnresolvedConflicts,
       workspaceDepsUpdates,
-    };
-  }
-
-  private async generateConfigMergeConflictFileForAll(
-    allConfigMerge: ConfigMergeResult[],
-    workspaceDepsConflicts?: WorkspaceDepsConflicts
-  ) {
-    const configMergeFile = this.workspace.getConflictMergeFile();
-    if (workspaceDepsConflicts) {
-      const workspaceConflict = new ConfigMergeResult('WORKSPACE', 'ours', 'theirs', [
-        {
-          id: DependencyResolverAspect.id,
-          conflict: workspaceDepsConflicts,
-        },
-      ]);
-      allConfigMerge.unshift(workspaceConflict);
-    }
-    allConfigMerge.forEach((configMerge) => {
-      const conflict = configMerge.generateMergeConflictFile();
-      if (!conflict) return;
-      configMergeFile.addConflict(configMerge.compIdStr, conflict);
-    });
-    if (configMergeFile.hasConflict()) {
-      await configMergeFile.write();
-    }
-  }
-
-  private async updateWorkspaceJsoncWithDepsIfNeeded(
-    allConfigMerge: ConfigMergeResult[]
-  ): Promise<{ workspaceDepsUpdates?: WorkspaceDepsUpdates; workspaceDepsConflicts?: WorkspaceDepsConflicts }> {
-    const allResults = allConfigMerge.map((c) => c.getDepsResolverResult());
-
-    // aggregate all dependencies that can be updated (not conflicting)
-    const nonConflictDeps: { [pkgName: string]: string[] } = {};
-    const nonConflictSources: { [pkgName: string]: string[] } = {}; // for logging/debugging purposes
-    allConfigMerge.forEach((configMerge) => {
-      const mergedConfig = configMerge.getDepsResolverResult()?.mergedConfig;
-      if (!mergedConfig || mergedConfig === '-') return;
-      const mergedConfigPolicy = mergedConfig.policy || {};
-      DEPENDENCIES_FIELDS.forEach((depField) => {
-        if (!mergedConfigPolicy[depField]) return;
-        mergedConfigPolicy[depField].forEach((pkg: PkgEntry) => {
-          if (pkg.force) return; // we only care about auto-detected dependencies
-          if (nonConflictDeps[pkg.name]) {
-            if (!nonConflictDeps[pkg.name].includes(pkg.version)) nonConflictDeps[pkg.name].push(pkg.version);
-            nonConflictSources[pkg.name].push(configMerge.compIdStr);
-            return;
-          }
-          nonConflictDeps[pkg.name] = [pkg.version];
-          nonConflictSources[pkg.name] = [configMerge.compIdStr];
-        });
-      });
-    });
-
-    // aggregate all dependencies that have conflicts
-    const conflictDeps: { [pkgName: string]: string[] } = {};
-    const conflictDepsSources: { [pkgName: string]: string[] } = {}; // for logging/debugging purposes
-    allConfigMerge.forEach((configMerge) => {
-      const mergedConfigConflict = configMerge.getDepsResolverResult()?.conflict;
-      if (!mergedConfigConflict) return;
-      DEPENDENCIES_FIELDS.forEach((depField) => {
-        if (!mergedConfigConflict[depField]) return;
-        mergedConfigConflict[depField].forEach((pkg: PkgEntry) => {
-          if (pkg.force) return; // we only care about auto-detected dependencies
-          if (conflictDeps[pkg.name]) {
-            if (!conflictDeps[pkg.name].includes(pkg.version)) conflictDeps[pkg.name].push(pkg.version);
-            conflictDepsSources[pkg.name].push(configMerge.compIdStr);
-            return;
-          }
-          conflictDeps[pkg.name] = [pkg.version];
-          conflictDepsSources[pkg.name] = [configMerge.compIdStr];
-        });
-      });
-    });
-
-    const notConflictedPackages = Object.keys(nonConflictDeps);
-    const conflictedPackages = Object.keys(conflictDeps);
-    if (!notConflictedPackages.length && !conflictedPackages.length) return {};
-
-    const workspaceConfig = this.config.workspaceConfig;
-    if (!workspaceConfig) throw new Error(`updateWorkspaceJsoncWithDepsIfNeeded unable to get workspace config`);
-    const depResolver = workspaceConfig.extensions.findCoreExtension(DependencyResolverAspect.id);
-    const policy = depResolver?.config.policy;
-    if (!policy) {
-      return {};
-    }
-
-    // calculate the workspace.json updates
-    const workspaceJsonUpdates = {};
-    notConflictedPackages.forEach((pkgName) => {
-      if (nonConflictDeps[pkgName].length > 1) {
-        // we only want the deps that the other lane has them in the workspace.json and that all comps use the same dep.
-        return;
-      }
-      DEPENDENCIES_FIELDS.forEach((depField) => {
-        if (!policy[depField]?.[pkgName]) return; // doesn't exists in the workspace.json
-        const currentVer = policy[depField][pkgName];
-        const newVer = nonConflictDeps[pkgName][0];
-        if (currentVer === newVer) return;
-        workspaceJsonUpdates[pkgName] = [currentVer, newVer];
-        policy[depField][pkgName] = newVer;
-        this.logger.debug(
-          `update workspace.jsonc: ${pkgName} from ${currentVer} to ${newVer}. Triggered by: ${nonConflictSources[
-            pkgName
-          ].join(', ')}`
-        );
-      });
-    });
-
-    // calculate the workspace.json conflicts
-    const WS_DEPS_FIELDS = ['dependencies', 'peerDependencies'];
-    const workspaceJsonConflicts = { dependencies: [], peerDependencies: [] };
-    const conflictPackagesToRemoveFromConfigMerge: string[] = [];
-    conflictedPackages.forEach((pkgName) => {
-      if (conflictDeps[pkgName].length > 1) {
-        // we only want the deps that the other lane has them in the workspace.json and that all comps use the same dep.
-        return;
-      }
-      const conflictRaw = conflictDeps[pkgName][0];
-      const [, currentVal, otherVal] = conflictRaw.split('::');
-
-      WS_DEPS_FIELDS.forEach((depField) => {
-        if (!policy[depField]?.[pkgName]) return;
-        const currentVerInWsJson = policy[depField][pkgName];
-        if (!currentVerInWsJson) return;
-        // the version is coming from the workspace.jsonc
-        conflictPackagesToRemoveFromConfigMerge.push(pkgName);
-        if (semver.satisfies(otherVal, currentVerInWsJson)) {
-          // the other version is compatible with the current version in the workspace.json
-          return;
-        }
-        workspaceJsonConflicts[depField].push({
-          name: pkgName,
-          version: conflictRaw.replace(currentVal, currentVerInWsJson),
-          force: false,
-        });
-        conflictPackagesToRemoveFromConfigMerge.push(pkgName);
-        this.logger.debug(
-          `conflict workspace.jsonc: ${pkgName} current: ${currentVerInWsJson}, other: ${otherVal}. Triggered by: ${conflictDepsSources[
-            pkgName
-          ].join(', ')}`
-        );
-      });
-    });
-    WS_DEPS_FIELDS.forEach((depField) => {
-      if (isEmpty(workspaceJsonConflicts[depField])) delete workspaceJsonConflicts[depField];
-    });
-
-    if (conflictPackagesToRemoveFromConfigMerge.length) {
-      allResults.forEach((result) => {
-        if (result?.conflict) {
-          DEPENDENCIES_FIELDS.forEach((depField) => {
-            if (!result.conflict?.[depField]) return;
-            result.conflict[depField] = result.conflict?.[depField].filter(
-              (dep) => !conflictPackagesToRemoveFromConfigMerge.includes(dep.name)
-            );
-            if (!result.conflict[depField].length) delete result.conflict[depField];
-          });
-          if (isEmpty(result.conflict)) result.conflict = undefined;
-        }
-      });
-    }
-
-    if (Object.keys(workspaceJsonUpdates).length) {
-      await workspaceConfig.write({ reasonForChange: 'merge (update dependencies)' });
-    }
-
-    this.logger.debug('final workspace.jsonc updates', workspaceJsonUpdates);
-    this.logger.debug('final workspace.jsonc conflicts', workspaceJsonConflicts);
-
-    return {
-      workspaceDepsUpdates: Object.keys(workspaceJsonUpdates).length ? workspaceJsonUpdates : undefined,
-      workspaceDepsConflicts: Object.keys(workspaceJsonConflicts).length ? workspaceJsonConflicts : undefined,
     };
   }
 
@@ -797,6 +633,7 @@ export class MergingMain {
     ConfigAspect,
     RemoveAspect,
     GlobalConfigAspect,
+    ConfigMergerAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -811,6 +648,7 @@ export class MergingMain {
     config,
     remove,
     globalConfig,
+    configMerger,
   ]: [
     CLIMain,
     Workspace,
@@ -822,7 +660,8 @@ export class MergingMain {
     ImporterMain,
     ConfigMain,
     RemoveMain,
-    GlobalConfigMain
+    GlobalConfigMain,
+    ConfigMergerMain
   ]) {
     const logger = loggerMain.createLogger(MergingAspect.id);
     const merging = new MergingMain(
@@ -834,7 +673,8 @@ export class MergingMain {
       compWriter,
       importer,
       config,
-      remove
+      remove,
+      configMerger
     );
     cli.register(new MergeCmd(merging, globalConfig));
     return merging;

@@ -64,7 +64,7 @@ type MergeStrategyParams = {
  * version. later, when the component is loaded, we split the id and the version and put them in the correct places.
  * see workspace.componentExtension / adjustEnvsOnConfigMerge for more details.
  */
-export class ConfigMerger {
+export class ComponentConfigMerger {
   private currentEnv: EnvData;
   private otherEnv: EnvData;
   private baseEnv?: EnvData;

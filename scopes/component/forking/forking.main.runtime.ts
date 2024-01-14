@@ -253,7 +253,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
   }
 
   private async saveDeps(component: Component) {
-    const workspacePolicyEntries = await this.extractDeps(component);
+    const workspacePolicyEntries = this.extractDeps(component);
     this.dependencyResolver.addToRootPolicy(workspacePolicyEntries, { updateExisting: true });
     await this.dependencyResolver.persistConfig('fork (save deps)');
   }
@@ -268,8 +268,8 @@ the reason is that the refactor changes the components using ${sourceId.toString
     });
   }
 
-  private async extractDeps(component: Component) {
-    const deps = await this.dependencyResolver.getDependencies(component);
+  private extractDeps(component: Component) {
+    const deps = this.dependencyResolver.getDependencies(component);
     const excludePackages = ['@teambit/legacy'];
     const excludeCompIds = this.dependencyResolver.getCompIdsThatShouldNotBeInPolicy();
     return deps

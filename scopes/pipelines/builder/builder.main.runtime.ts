@@ -94,7 +94,7 @@ export class BuilderMain {
     await Promise.all(storeP);
   }
 
-  private pipelineResultsToBuilderData(
+  pipelineResultsToBuilderData(
     components: Component[],
     buildPipelineResults: TaskResults[]
   ): ComponentMap<RawBuilderData> {

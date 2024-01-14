@@ -26,7 +26,6 @@ import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import { Harmony, RuntimeDefinition, Extension } from '@teambit/harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
 import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
-
 import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
 import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { ConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
@@ -44,8 +43,8 @@ import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { findScopePath } from '@teambit/legacy/dist/utils';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
-import { readdir } from 'fs-extra';
-import { resolve } from 'path';
+import { readdir, readFile } from 'fs-extra';
+import { resolve, join } from 'path';
 import { manifestsMap } from './manifests';
 import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
@@ -69,7 +68,7 @@ async function getConfig(cwd = process.cwd()) {
   };
 
   if (consumerInfo) {
-    const config = Config.load('workspace.jsonc', configOpts);
+    const config = await getWsConfig(consumerInfo.path, configOpts);
     return attachVersionsFromBitmap(config, consumerInfo);
   }
 
@@ -78,6 +77,21 @@ async function getConfig(cwd = process.cwd()) {
   }
 
   return Config.loadGlobal(globalConfigOpts);
+}
+
+async function getWsConfig(consumerPath: string, configOpts: ConfigOptions) {
+  try {
+    return Config.load('workspace.jsonc', configOpts);
+  } catch (err: any) {
+    // file is there. otherwise, Config.load wouldn't throw.
+    const wsPath = join(consumerPath, 'workspace.jsonc');
+    const fileContent = await readFile(wsPath, 'utf-8');
+    // if it has conflicts markers, ask the user to fix them
+    if (fileContent.includes('<<<<<<<') || fileContent.includes('>>>>>>>')) {
+      throw new Error(`please fix the conflicts in workspace.jsonc to continue`);
+    }
+    throw err;
+  }
 }
 
 /**

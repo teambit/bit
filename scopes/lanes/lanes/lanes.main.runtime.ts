@@ -594,7 +594,6 @@ please create a new lane instead, which will include all components of this lane
       skipNpmInstall: skipDependencyInstallation,
       isLane: true,
       promptMergeOptions: false,
-      writeConfig: false,
       reset: false,
       all: false,
     };
@@ -632,14 +631,7 @@ please create a new lane instead, which will include all components of this lane
         )
       : laneComponents;
 
-    const host = this.componentAspect.getHost();
-
-    return Promise.all(
-      filteredComponentIds.map((laneComponent) => {
-        const legacyIdWithVersion = laneComponent.id.changeVersion(laneComponent.head);
-        return host.resolveComponentId(legacyIdWithVersion);
-      })
-    );
+    return filteredComponentIds.map((laneComponent) => laneComponent.id.changeVersion(laneComponent.head));
   }
 
   async getLaneReadmeComponent(lane: LaneData): Promise<Component | undefined> {
@@ -647,9 +639,7 @@ please create a new lane instead, which will include all components of this lane
     const laneReadmeComponent = lane.readmeComponent;
     if (!laneReadmeComponent) return undefined;
     const host = this.componentAspect.getHost();
-    const laneReadmeComponentId = await host.resolveComponentId(
-      laneReadmeComponent.id.changeVersion(laneReadmeComponent.head)
-    );
+    const laneReadmeComponentId = laneReadmeComponent.id.changeVersion(laneReadmeComponent.head);
     const readmeComponent = await host.get(laneReadmeComponentId);
     return readmeComponent;
   }
@@ -677,7 +667,7 @@ please create a new lane instead, which will include all components of this lane
       throw new BitError(`there is no readme component added to the lane ${laneName || currentLaneName}`);
     }
 
-    const readmeComponentId = await this.workspace.resolveComponentId(lane.readmeComponent.id);
+    const readmeComponentId = lane.readmeComponent.id;
     const existingLaneConfig =
       (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
 

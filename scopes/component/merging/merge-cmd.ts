@@ -11,9 +11,9 @@ import {
 } from '@teambit/legacy/dist/constants';
 import { FileStatus, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { GlobalConfigMain } from '@teambit/global-config';
+import { ConfigMergeResult } from '@teambit/config-merger';
 import { BitError } from '@teambit/bit-error';
 import { ApplyVersionResults, MergingMain, ApplyVersionResult } from './merging.main.runtime';
-import { ConfigMergeResult } from './config-merge-result';
 
 export class MergeCmd implements Command {
   name = 'merge [ids...]';
@@ -146,6 +146,8 @@ export function mergeReport({
   verbose,
   configMergeResults,
   workspaceDepsUpdates,
+  workspaceDepsConflicts,
+  workspaceConflictError,
 }: ApplyVersionResults & { configMergeResults?: ConfigMergeResult[] }): string {
   const getSuccessOutput = () => {
     if (!components || !components.length) return '';
@@ -157,12 +159,15 @@ export function mergeReport({
     return chalk.bold(title) + fileChangesReport;
   };
 
+  let componentsWithConflicts = 0;
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
     const title = `\n\nfiles with conflicts summary\n`;
     const suggestion = `\n\nmerge process not completed due to the conflicts above. fix conflicts manually and then run "bit install".
 once ready, snap/tag the components to complete the merge.`;
-    return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
+    const conflictSummary = conflictSummaryReport(components);
+    componentsWithConflicts = conflictSummary.conflictedComponents;
+    return chalk.underline(title) + conflictSummary.conflictStr + chalk.yellow(suggestion);
   };
 
   const configMergeWithConflicts = configMergeResults?.filter((c) => c.hasConflicts()) || [];
@@ -217,6 +222,14 @@ ${mergeSnapError.message}
     return `\n${chalk.underline(title)}\n${body}\n\n`;
   };
 
+  const getWorkspaceConflictsOutput = () => {
+    if (!workspaceDepsConflicts && !workspaceConflictError) return '';
+    if (workspaceConflictError) {
+      return `\n${chalk.red(workspaceConflictError.message)}\n\n`;
+    }
+    return chalk.yellow('\nworkspace.jsonc has conflicts, please edit the file and fix them\n\n');
+  };
+
   const getFailureOutput = () => {
     if (!failedComponents || !failedComponents.length) return '';
     const title = '\nmerge skipped for the following component(s)';
@@ -239,6 +252,12 @@ ${mergeSnapError.message}
     const unchangedLegitimately = failedComponents?.filter((f) => f.unchangedLegitimately).length || 0;
     const autoSnapped =
       (mergeSnapResults?.snappedComponents.length || 0) + (mergeSnapResults?.autoSnappedResults.length || 0);
+    const getConflictStr = () => {
+      const comps = componentsWithConflicts ? `${componentsWithConflicts} components` : '';
+      const ws = workspaceDepsConflicts ? 'workspace.jsonc file' : '';
+      const mergeConfig = configMergeWithConflicts.length ? `${MergeConfigFilename} file` : '';
+      return compact([comps, ws, mergeConfig]).join(', ');
+    };
 
     const newLines = '\n\n';
     const title = chalk.bold.underline('Merge Summary');
@@ -246,8 +265,9 @@ ${mergeSnapError.message}
     const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(unchangedLegitimately.toString())}`;
     const autoSnappedStr = `\nTotal Snapped: ${chalk.bold(autoSnapped.toString())}`;
     const removedStr = `\nTotal Removed: ${chalk.bold(removedComponents?.length.toString() || '0')}`;
+    const conflictStr = `\nConflicts: ${chalk.bold(getConflictStr() || 'none')}`;
 
-    return newLines + title + mergedStr + unchangedLegitimatelyStr + autoSnappedStr + removedStr;
+    return newLines + title + mergedStr + unchangedLegitimatelyStr + autoSnappedStr + removedStr + conflictStr;
   };
 
   return (
@@ -257,6 +277,7 @@ ${mergeSnapError.message}
     getSnapsOutput() +
     getWorkspaceDepsOutput() +
     getConfigMergeConflictSummary() +
+    getWorkspaceConflictsOutput() +
     getConflictSummary() +
     getSummary()
   );
@@ -292,24 +313,33 @@ export function applyVersionReport(components: ApplyVersionResult[], addName = t
   return chalk.underline(title) + fileChanges;
 }
 
-export function conflictSummaryReport(components: ApplyVersionResult[]): string {
+export function conflictSummaryReport(components: ApplyVersionResult[]): {
+  conflictedComponents: number;
+  conflictedFiles: number;
+  conflictStr: string;
+} {
   const tab = '\t';
-  return compact(
+  let conflictedComponents = 0;
+  let conflictedFiles = 0;
+  const conflictStr = compact(
     components.map((component: ApplyVersionResult) => {
       const name = component.id.toStringWithoutVersion();
       const files = compact(
         Object.keys(component.filesStatus).map((file) => {
           if (component.filesStatus[file] === FileStatus.manual) {
+            conflictedFiles += 1;
             return `${tab}${String(component.filesStatus[file])} ${chalk.bold(file)}`;
           }
           return null;
         })
       );
       if (!files.length) return null;
-
+      conflictedComponents += 1;
       return `${name}\n${chalk.cyan(files.join('\n'))}`;
     })
   ).join('\n');
+
+  return { conflictedComponents, conflictedFiles, conflictStr };
 }
 
 export function installationErrorOutput(installationError?: Error) {

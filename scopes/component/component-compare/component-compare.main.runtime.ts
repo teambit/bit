@@ -130,7 +130,7 @@ export class ComponentCompareMain {
   }
 
   async getConfigForDiffByCompObject(component: Component) {
-    const depData = await this.depResolver.getDependencies(component);
+    const depData = this.depResolver.getDependencies(component);
     const serializedToString = (dep: SerializedDependency) => {
       const idWithoutVersion = dep.__type === 'package' ? dep.id : dep.id.split('@')[0];
       return `${idWithoutVersion}@${dep.version} (${dep.lifecycle}) ${dep.source ? `(${dep.source})` : ''}`;
