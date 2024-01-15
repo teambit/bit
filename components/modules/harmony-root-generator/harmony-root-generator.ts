@@ -38,7 +38,10 @@ const windowConfig = isBrowser ? window.harmonyAppConfig: undefined;
 const config = JSON.parse('${stringifiedConfig}');
 const mergedConfig = { ...config, ...windowConfig };
 ${idSetters.join('\n')}
-export default function render(...props){
+export default function render(...props) {
+  if (import.meta?.webpackHot) {
+    import.meta?.webpackHot?.accept();
+  }
   return Harmony.load([${identifiers.join(', ')}], '${runtime}', mergedConfig)
     .then((harmony) => {
       return harmony
