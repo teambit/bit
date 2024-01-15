@@ -118,7 +118,7 @@ export class LanesModel {
   static getLaneUrl = (laneId: LaneId, relative?: boolean) =>
     `${relative ? '' : '/'}${LanesModel.lanesPrefix}/${laneId.toString()}`;
 
-  static getLaneComponentUrl = (componentId: ComponentID, laneId: LaneId) => {
+  static getLaneComponentUrl = (componentId: ComponentID, laneId: LaneId, addScopeMetadataInUrl?: boolean) => {
     const isExternalComponent = componentId.scope !== laneId.scope;
     const laneUrl = LanesModel.getLaneUrl(laneId);
     const queryParams = new URLSearchParams();
@@ -127,7 +127,7 @@ export class LanesModel {
       queryParams.set('version', componentId.version);
     }
 
-    queryParams.set('scope', componentId.scope);
+    if (addScopeMetadataInUrl) queryParams.set('scope', componentId.scope);
 
     const urlPath = isExternalComponent
       ? `${laneUrl}${LanesModel.baseLaneComponentRoute}/${componentId.toStringWithoutVersion()}`
@@ -136,7 +136,7 @@ export class LanesModel {
     return `${urlPath}?${queryParams.toString()}`;
   };
 
-  static getMainComponentUrl = (componentId: ComponentID, laneId?: LaneId) => {
+  static getMainComponentUrl = (componentId: ComponentID, laneId?: LaneId, addScopeMetadataInUrl?: boolean) => {
     const componentUrl = componentId.fullName;
     const queryParams = new URLSearchParams();
 
@@ -144,7 +144,7 @@ export class LanesModel {
       queryParams.set(LanesModel.laneUrlParamsKey, laneId.toString());
     }
 
-    queryParams.set('scope', componentId.scope);
+    if (addScopeMetadataInUrl) queryParams.set('scope', componentId.scope);
 
     return `${componentUrl}?${queryParams.toString()}`;
   };
@@ -304,7 +304,7 @@ export class LanesModel {
   defaultLane?: LaneModel;
   lanes: LaneModel[];
 
-  getLaneComponentUrlByVersion = (componentId: ComponentID, laneId?: LaneId) => {
+  getLaneComponentUrlByVersion = (componentId: ComponentID, laneId?: LaneId, addScopeMetadataInUrl?: boolean) => {
     // if there is no version, the component is new and is on main
     // if the component is on the currently checked out lane then remove version
     const defaultLane = this.getDefaultLane();
@@ -314,7 +314,7 @@ export class LanesModel {
       !defaultLane ||
       (laneId && this.currentLane && laneId.isEqual(this.currentLane.id))
     ) {
-      return LanesModel.getMainComponentUrl(componentId);
+      return LanesModel.getMainComponentUrl(componentId, undefined, addScopeMetadataInUrl);
     }
 
     const lane = this.getLanesByComponentId(componentId)?.find((l) => l.id.isEqual(laneId));
@@ -322,11 +322,11 @@ export class LanesModel {
     if (!lane) {
       // return url from main if it exits
       return defaultLane.components.find((c) => c.isEqual(componentId))
-        ? LanesModel.getMainComponentUrl(componentId, laneId)
+        ? LanesModel.getMainComponentUrl(componentId, laneId, addScopeMetadataInUrl)
         : undefined;
     }
-    if (lane.id.isDefault()) return LanesModel.getMainComponentUrl(componentId);
-    return LanesModel.getLaneComponentUrl(componentId, lane.id);
+    if (lane.id.isDefault()) return LanesModel.getMainComponentUrl(componentId, undefined, addScopeMetadataInUrl);
+    return LanesModel.getLaneComponentUrl(componentId, lane.id, addScopeMetadataInUrl);
   };
 
   setViewedLane = (viewedLaneId?: LaneId) => {

@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import { Link, useLocation } from '@teambit/base-react.navigation.link';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';
@@ -63,7 +64,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
     </Link>
   );
 
-  const href = lanesModel?.getLaneComponentUrlByVersion(component.id as any, lanesModel.viewedLane?.id);
+  const href = lanesModel?.getLaneComponentUrlByVersion(component.id as any, lanesModel.viewedLane?.id, !scope.name);
 
   const viewingMainCompOnLane = React.useMemo(() => {
     return (
@@ -159,7 +160,9 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
     const _laneCompUrl = laneCompUrlWithSubRoutes.split('/~')[0] ?? '';
     const laneCompUrl = _laneCompUrl.startsWith('/') ? _laneCompUrl.substring(1) : _laneCompUrl;
 
-    const laneCompIdFromUrl = ComponentID.tryFromString(laneCompUrl);
+    const laneCompIdFromUrl =
+      ComponentID.tryFromString(laneCompUrl) ??
+      (scope.name ? ComponentID.tryFromString(`${scope.name}/${laneCompUrl}`) : undefined);
 
     // viewing lane component from the same scope as the lane on a workspace
     const laneAndCompFromSameScopeOnWs =
