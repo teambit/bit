@@ -160,6 +160,10 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
     const _laneCompUrl = laneCompUrlWithSubRoutes.split('/~')[0] ?? '';
     const laneCompUrl = _laneCompUrl.startsWith('/') ? _laneCompUrl.substring(1) : _laneCompUrl;
 
+    /**
+     * if the laneCompUrl doesn't have the scope as part of it and you are on a bare scope
+     * attach the bare scope to the laneCompUrl and parse it as a ComponentID
+     */
     const laneCompIdFromUrl =
       ComponentID.tryFromString(laneCompUrl) ??
       (scope.name ? ComponentID.tryFromString(`${scope.name}/${laneCompUrl}`) : undefined);
