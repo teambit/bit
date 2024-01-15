@@ -1,0 +1,27 @@
+.versionRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 40px;
+  padding: 0 24px;
+
+  .versionTimestamp {
+    margin-right: 2px;
+  }
+  .versionUserAvatar {
+    padding: 0px 8px;
+  }
+  .laneIcon {
+    padding: 0px 4px;
+  }
+  .version {
+    width: 60%;
+    display: flex;
+    flex-direction: row;
+    align-content: space-between;
+    align-items: center;
+  }
+  .versionName {
+    padding: 0px 8px;
+  }
+}
