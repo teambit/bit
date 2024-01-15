@@ -51,11 +51,14 @@ export class ComponentDependencyFactory implements DependencyFactory {
     const devDeps = await mapSeries(legacyComponent.devDependencies.get(), (dep) =>
       this.transformLegacyComponentDepToSerializedDependency(dep, 'dev')
     );
+    const peerDeps = await mapSeries(legacyComponent.peerDependencies.get(), (dep) =>
+      this.transformLegacyComponentDepToSerializedDependency(dep, 'peer')
+    );
     const extensionDeps = await mapSeries(legacyComponent.extensions, (extension) =>
       this.transformLegacyComponentExtensionToSerializedDependency(extension, 'dev')
     );
     const filteredExtensionDeps: SerializedComponentDependency[] = compact(extensionDeps);
-    const serializedComponentDeps = [...runtimeDeps, ...devDeps, ...filteredExtensionDeps];
+    const serializedComponentDeps = [...runtimeDeps, ...devDeps, ...peerDeps, ...filteredExtensionDeps];
     const componentDeps: ComponentDependency[] = await mapSeries(serializedComponentDeps, (dep) => this.parse(dep));
     const dependencyList = new DependencyList(componentDeps);
     return dependencyList;
