@@ -50,6 +50,7 @@ export function Component({
   useComponentFilters,
 }: ComponentProps) {
   const idFromLocation = useIdFromLocation();
+  const componentIdStrWithScopeFromLocation = useIdFromLocation(undefined, true);
   const _componentIdStr = getComponentIdStr(componentIdStr);
   const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
   const resolvedComponentIdStr = path || idFromLocation;
@@ -73,7 +74,7 @@ export function Component({
 
   const { component, componentDescriptor, error } = useComponentQuery(
     host,
-    componentId?.toString() || idFromLocation,
+    componentId?.toString() || componentIdStrWithScopeFromLocation,
     useComponentOptions
   );
 

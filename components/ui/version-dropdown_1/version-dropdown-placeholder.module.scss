@@ -1,0 +1,49 @@
+.simple,
+.detailed {
+  cursor: pointer;
+  border: 1px solid var(--bit-border-color, #babec9);
+  border-radius: 6px;
+  transition: background-color 300ms ease-in-out;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  user-select: none;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 8px;
+  line-height: 1.2em;
+
+  &:hover {
+    background-color: var(--bit-bg-heavy);
+  }
+
+  &.disabled {
+    cursor: default;
+    background-color: #ededed;
+    > span {
+      display: none;
+    }
+  }
+}
+.versionName {
+  flex-grow: 1;
+  min-width: fit-content;
+}
+
+.commitMessage {
+  flex-grow: 1;
+  max-width: 200px;
+}
+
+.versionUserAvatar {
+  flex: none;
+  margin-right: 5px;
+}
+
+.loader {
+  color: var(--bit-bg-dent, #f6f6f6);
+  > span {
+    padding: 4px;
+  }
+}

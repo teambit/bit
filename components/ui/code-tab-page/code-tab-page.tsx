@@ -1,6 +1,7 @@
 import { ComponentContext } from '@teambit/component';
 import classNames from 'classnames';
 import React, { useContext, useState, HTMLAttributes, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { flatten } from 'lodash';
 import { Label } from '@teambit/documenter.ui.label';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
@@ -15,7 +16,6 @@ import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import { TreeNode } from '@teambit/design.ui.tree';
-import { affix } from '@teambit/base-ui.utils.string.affix';
 import {
   useComponentArtifactFileContent,
   useComponentArtifacts,
@@ -37,6 +37,8 @@ export type CodePageProps = {
 
 export function CodePage({ className, fileIconSlot, host, codeViewClassName }: CodePageProps) {
   const urlParams = useCodeParams();
+  const [searchParams] = useSearchParams();
+  const scopeFromQueryParams = searchParams.get('scope');
   const component = useContext(ComponentContext);
   const { mainFile, fileTree = [], dependencies, devFiles } = useCode(component.id);
   const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString());
@@ -63,6 +65,22 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
   const icon = getFileIcon(fileIconMatchers, currentFile);
   const loadingArtifactFileContent = loading !== undefined ? loading : !!currentFile && !currentArtifact;
+  const getHref = React.useCallback(
+    (node) => {
+      const queryParams = new URLSearchParams();
+
+      if (urlParams.version) {
+        queryParams.set('version', urlParams.version);
+      }
+
+      if (scopeFromQueryParams) {
+        queryParams.set('scope', scopeFromQueryParams);
+      }
+
+      return `${node.id}?${queryParams.toString()}`;
+    },
+    [urlParams.version, scopeFromQueryParams]
+  );
 
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.codePage, className)}>
@@ -93,7 +111,7 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
           dependencies={dependencies}
           fileTree={fileTree}
           widgets={useMemo(() => [generateWidget(mainFile, devFiles)], [mainFile, devFiles])}
-          getHref={useMemo(() => (node) => `${node.id}${affix('?version=', urlParams.version)}`, [urlParams.version])}
+          getHref={getHref}
           getIcon={useMemo(() => generateIcon(fileIconMatchers), fileIconMatchers)}
         />
       </Pane>
