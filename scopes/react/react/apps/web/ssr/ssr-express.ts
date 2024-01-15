@@ -22,7 +22,7 @@ type ExpressSsrOptions = {
   logger?: Logger;
 };
 
-export function createExpressSsr({ name, workdir, port, app, assets, logger }: ExpressSsrOptions) {
+export function createExpressSsr({ name, workdir, port, app, assets, logger }: ExpressSsrOptions): Express.Express {
   const express = Express();
 
   const publicFolder = resolve(workdir, calcOutputPath(name, 'browser'), MAGIC_FOLDER);

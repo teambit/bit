@@ -552,7 +552,12 @@
     "peerDependencyRules": {
       "allowAny": [],
       "ignoreMissing": []
-    }
+    },
+    "hoistPatterns": [
+      "*",
+      "!@teambit/envs"
+    ],
+    "capsuleSelfReference": true
   },
   "teambit.preview/preview": {
     "bundlingStrategy": "component"
