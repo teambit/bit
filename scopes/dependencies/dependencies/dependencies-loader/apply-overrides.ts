@@ -381,6 +381,7 @@ export class ApplyOverrides {
         const peerVersionFromWsPolicy = wsPeer[pkgName];
         const regularVersionFromWsPolicy = wsRegular[pkgName];
         if (peerVersionFromWsPolicy) {
+          dep.versionPolicy = peerVersionFromWsPolicy;
           peerDeps.push(dep);
           // delete this.allDependencies[field][pkgName];
         } else if (regularVersionFromWsPolicy) {

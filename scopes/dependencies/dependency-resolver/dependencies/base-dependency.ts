@@ -10,7 +10,8 @@ export abstract class BaseDependency implements Dependency {
     private _lifecycle: DependencyLifecycleType,
     private _source?: DependencySource,
     private _hidden?: boolean,
-    private _optional?: boolean
+    private _optional?: boolean,
+    private _versionPolicy?: string
   ) {}
 
   get id(): string {
@@ -23,6 +24,10 @@ export abstract class BaseDependency implements Dependency {
 
   get version() {
     return this._version;
+  }
+
+  get versionPolicy() {
+    return this._versionPolicy;
   }
 
   get type() {
@@ -61,6 +66,7 @@ export abstract class BaseDependency implements Dependency {
     return {
       id: this.id,
       version: this.version,
+      versionPolicy: this.versionPolicy,
       __type: this.type,
       lifecycle: this.lifecycle.toString(),
       source: this.source,
