@@ -1507,6 +1507,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/ui/aspect-box"
     },
+    "ui/buttons/collapser": {
+        "name": "ui/buttons/collapser",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.215",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/buttons/collapser"
+    },
     "ui/code-compare": {
         "name": "ui/code-compare",
         "scope": "teambit.code",
@@ -1514,12 +1521,26 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-compare"
     },
+    "ui/code-tab-page": {
+        "name": "ui/code-tab-page",
+        "scope": "teambit.code",
+        "version": "0.0.633",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/code-tab-page"
+    },
     "ui/component-compare/component-compare": {
         "name": "ui/component-compare/component-compare",
         "scope": "teambit.component",
         "version": "0.0.174",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/component-compare"
+    },
+    "ui/component-compare/version-picker": {
+        "name": "ui/component-compare/version-picker",
+        "scope": "teambit.component",
+        "version": "0.0.171",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/version-picker"
     },
     "ui/component-drawer": {
         "name": "ui/component-drawer",
@@ -1654,12 +1675,33 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs"
     },
+    "ui/test-compare": {
+        "name": "ui/test-compare",
+        "scope": "teambit.defender",
+        "version": "0.0.255",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/test-compare"
+    },
+    "ui/tree/drawer": {
+        "name": "ui/tree/drawer",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.517",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/tree/drawer"
+    },
     "ui/user-bar": {
         "name": "ui/user-bar",
         "scope": "teambit.cloud",
         "version": "0.0.3",
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/ui/user-bar"
+    },
+    "ui/version-dropdown": {
+        "name": "ui/version-dropdown",
+        "scope": "teambit.component",
+        "version": "0.0.853",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/version-dropdown"
     },
     "ui/workspace-component-card": {
         "name": "ui/workspace-component-card",

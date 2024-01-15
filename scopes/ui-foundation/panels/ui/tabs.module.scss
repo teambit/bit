@@ -14,7 +14,7 @@
   color: var(--on-background-color, #878c9a); //TODO
   transition: color 300ms ease-in-out;
   &:hover {
-    color: var(--bit-text-color-heavy);
+    color: var(--primary-color);
   }
 
   &.disabled {
@@ -22,8 +22,6 @@
   }
 
   &.active {
-    color: var(--bit-text-color-heavy);
-
     &:before {
       content: '';
       position: absolute;

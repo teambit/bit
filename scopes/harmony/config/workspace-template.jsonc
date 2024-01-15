@@ -17,7 +17,7 @@
     /**
      * set the icon to be shown on the Bit server.
      **/
-    "icon": "https://static.bit.dev/bit-logo.svg",
+    "icon": "https://static.bit.dev/brands/bit-logo-min.png",
 
     /**
      * default directory to place a component during `bit import` and `bit create`.
