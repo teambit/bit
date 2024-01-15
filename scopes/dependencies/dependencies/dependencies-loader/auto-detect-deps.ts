@@ -81,6 +81,7 @@ export class AutoDetectDeps {
     this.allDependencies = {
       dependencies: [],
       devDependencies: [],
+      peerDependencies: [],
     };
     this.allPackagesDependencies = {
       packageDependencies: {},

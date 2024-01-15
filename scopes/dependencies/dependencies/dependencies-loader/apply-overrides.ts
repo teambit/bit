@@ -20,6 +20,7 @@ import { DebugDependencies, FileType } from './auto-detect-deps';
 export type AllDependencies = {
   dependencies: Dependency[];
   devDependencies: Dependency[];
+  peerDependencies: Dependency[];
 };
 
 export type AllPackagesDependencies = {
@@ -354,7 +355,7 @@ export class ApplyOverrides {
     if (!wsPolicy) return;
     const wsPeer = wsPolicy.peerDependencies || {};
     const wsRegular = wsPolicy.dependencies || {};
-    const peerDeps = this.allPackagesDependencies.peerPackageDependencies || {};
+    const peerPackageDeps = this.allPackagesDependencies.peerPackageDependencies || {};
     // we are not iterate component deps since they are resolved from what actually installed
     // the policy used for installation only in that case
     ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
@@ -363,14 +364,46 @@ export class ApplyOverrides {
         const regularVersionFromWsPolicy = wsRegular[pkgName];
         if (peerVersionFromWsPolicy) {
           delete this.allPackagesDependencies[field][pkgName];
-          peerDeps[pkgName] = peerVersionFromWsPolicy;
+          peerPackageDeps[pkgName] = peerVersionFromWsPolicy;
         } else if (regularVersionFromWsPolicy) {
           delete this.allPackagesDependencies.peerPackageDependencies?.[pkgName];
           this.allPackagesDependencies[field][pkgName] = regularVersionFromWsPolicy;
         }
       }, this.allPackagesDependencies[field]);
     });
-    this.allPackagesDependencies.peerPackageDependencies = peerDeps;
+    this.allPackagesDependencies.peerPackageDependencies = peerPackageDeps;
+
+    const peerDeps = this.allDependencies.peerDependencies || {};
+    ['dependencies', 'devDependencies'].forEach((field) => {
+      console.log(this.allDependencies[field]);
+      for (const dep of this.allDependencies[field]) {
+        const pkgName = dep.packageName;
+        const peerVersionFromWsPolicy = wsPeer[pkgName];
+        const regularVersionFromWsPolicy = wsRegular[pkgName];
+        if (peerVersionFromWsPolicy) {
+          peerDeps.push(dep);
+          // delete this.allDependencies[field][pkgName];
+        } else if (regularVersionFromWsPolicy) {
+          // delete this.allDependencies.peerDependencies?.[pkgName];
+          // this.allDependencies[field][pkgName] = regularVersionFromWsPolicy;
+        }
+      }
+      this.allDependencies[field] = this.allDependencies[field].filter(({ packageName }) => !wsPeer[packageName]);
+      // R.forEachObjIndexed((_pkgVal, pkgName) => {
+      // console.log(pkgName)
+      // const peerVersionFromWsPolicy = wsPeer[pkgName];
+      // const regularVersionFromWsPolicy = wsRegular[pkgName];
+      // if (peerVersionFromWsPolicy) {
+      // peerDeps[pkgName] = this.allDependencies[field][pkgName];
+      // delete this.allDependencies[field][pkgName];
+      // } else if (regularVersionFromWsPolicy) {
+      // delete this.allDependencies.peerDependencies?.[pkgName];
+      // // this.allDependencies[field][pkgName] = regularVersionFromWsPolicy;
+      // }
+      // }, this.allDependencies[field]);
+    });
+    console.log('!!', peerDeps);
+    this.allDependencies.peerDependencies = peerDeps;
   }
 
   /**
