@@ -141,7 +141,6 @@ export class PreviewPreview {
   setViewport() {
     const query = this.getQuery();
     const viewPort = this.getParam(query, 'viewport');
-
     if (!viewPort) {
       window.document.body.style.width = '100%';
       return;
