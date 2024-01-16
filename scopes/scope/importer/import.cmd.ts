@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { compact } from 'lodash';
 import R from 'ramda';
-import { installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
+import { installationErrorOutput, compilationErrorOutput, getWorkspaceConfigUpdateOutput } from '@teambit/merging';
 import {
   FileStatus,
   MergeOptions,
@@ -118,6 +118,7 @@ export class ImportCmd implements Command {
       importedDeps,
       installationError,
       compilationError,
+      workspaceConfigUpdateResult,
       missingIds,
       cancellationMessage,
     } = await this.getImportResults(ids, importFlags);
@@ -139,6 +140,16 @@ export class ImportCmd implements Command {
       }
       return formatPlainComponentItemWithVersions(bitId, details);
     });
+    const getWsConfigUpdateLogs = () => {
+      // @TODO: uncomment the line below once UPDATE_DEPS_ON_IMPORT is enabled by default
+      // if (!importFlags.verbose) return '';
+      const logs = workspaceConfigUpdateResult?.logs;
+      if (!logs || !logs.length) return '';
+      const logsStr = logs.join('\n');
+      return `\n${chalk.underline(
+        'verbose logs of workspace config update'
+      )}\n(this is temporarily. once this feature is enabled, use --verbose to see these logs)\n${logsStr}\n\n`;
+    };
     const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date`;
     const summary = `${summaryPrefix}${upToDateStr}`;
     const importOutput = [...compact(importedComponents), chalk.green(summary)].join('\n');
@@ -151,9 +162,11 @@ export class ImportCmd implements Command {
         : '';
 
     const output =
+      getWsConfigUpdateLogs() +
       importOutput +
       importedDepsOutput +
       formatMissingComponents(missingIds) +
+      getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult) +
       installationErrorOutput(installationError) +
       compilationErrorOutput(compilationError);
 

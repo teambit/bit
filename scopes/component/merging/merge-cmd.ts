@@ -11,7 +11,7 @@ import {
 } from '@teambit/legacy/dist/constants';
 import { FileStatus, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { GlobalConfigMain } from '@teambit/global-config';
-import { ConfigMergeResult } from '@teambit/config-merger';
+import { ConfigMergeResult, WorkspaceConfigUpdateResult, WorkspaceDepsUpdates } from '@teambit/config-merger';
 import { BitError } from '@teambit/bit-error';
 import { ApplyVersionResults, MergingMain, ApplyVersionResult } from './merging.main.runtime';
 
@@ -145,9 +145,7 @@ export function mergeReport({
   leftUnresolvedConflicts,
   verbose,
   configMergeResults,
-  workspaceDepsUpdates,
-  workspaceDepsConflicts,
-  workspaceConflictError,
+  workspaceConfigUpdateResult,
 }: ApplyVersionResults & { configMergeResults?: ConfigMergeResult[] }): string {
   const getSuccessOutput = () => {
     if (!components || !components.length) return '';
@@ -208,28 +206,6 @@ ${mergeSnapError.message}
     )}\n(${'components snapped as a result of the merge'})\n${outputComponents(snappedComponents)}\n`;
   };
 
-  const getWorkspaceDepsOutput = () => {
-    if (!workspaceDepsUpdates) return '';
-
-    const title = '\nworkspace.jsonc has been updated with the following dependencies';
-    const body = Object.keys(workspaceDepsUpdates)
-      .map((pkgName) => {
-        const [from, to] = workspaceDepsUpdates[pkgName];
-        return `  ${pkgName}: ${from} => ${to}`;
-      })
-      .join('\n');
-
-    return `\n${chalk.underline(title)}\n${body}\n\n`;
-  };
-
-  const getWorkspaceConflictsOutput = () => {
-    if (!workspaceDepsConflicts && !workspaceConflictError) return '';
-    if (workspaceConflictError) {
-      return `\n${chalk.red(workspaceConflictError.message)}\n\n`;
-    }
-    return chalk.yellow('\nworkspace.jsonc has conflicts, please edit the file and fix them\n\n');
-  };
-
   const getFailureOutput = () => {
     if (!failedComponents || !failedComponents.length) return '';
     const title = '\nmerge skipped for the following component(s)';
@@ -254,7 +230,7 @@ ${mergeSnapError.message}
       (mergeSnapResults?.snappedComponents.length || 0) + (mergeSnapResults?.autoSnappedResults.length || 0);
     const getConflictStr = () => {
       const comps = componentsWithConflicts ? `${componentsWithConflicts} components` : '';
-      const ws = workspaceDepsConflicts ? 'workspace.jsonc file' : '';
+      const ws = workspaceConfigUpdateResult?.workspaceDepsConflicts ? 'workspace.jsonc file' : '';
       const mergeConfig = configMergeWithConflicts.length ? `${MergeConfigFilename} file` : '';
       return compact([comps, ws, mergeConfig]).join(', ');
     };
@@ -275,12 +251,41 @@ ${mergeSnapError.message}
     getFailureOutput() +
     getRemovedOutput(removedComponents) +
     getSnapsOutput() +
-    getWorkspaceDepsOutput() +
     getConfigMergeConflictSummary() +
-    getWorkspaceConflictsOutput() +
+    getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult) +
     getConflictSummary() +
     getSummary()
   );
+}
+
+export function getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult): string {
+  if (!workspaceConfigUpdateResult) return '';
+  const { workspaceConfigConflictWriteError, workspaceDepsConflicts, workspaceDepsUpdates } =
+    workspaceConfigUpdateResult;
+
+  const getWorkspaceConflictsOutput = () => {
+    if (!workspaceDepsConflicts && !workspaceConfigConflictWriteError) return '';
+    if (workspaceConfigConflictWriteError) {
+      return `\n${chalk.red(workspaceConfigConflictWriteError.message)}\n\n`;
+    }
+    return chalk.yellow('\nworkspace.jsonc has conflicts, please edit the file and fix them\n\n');
+  };
+
+  return getWorkspaceDepsOutput(workspaceDepsUpdates) + getWorkspaceConflictsOutput();
+}
+
+function getWorkspaceDepsOutput(workspaceDepsUpdates?: WorkspaceDepsUpdates): string {
+  if (!workspaceDepsUpdates) return '';
+
+  const title = '\nworkspace.jsonc has been updated with the following dependencies';
+  const body = Object.keys(workspaceDepsUpdates)
+    .map((pkgName) => {
+      const [from, to] = workspaceDepsUpdates[pkgName];
+      return `  ${pkgName}: ${from} => ${to}`;
+    })
+    .join('\n');
+
+  return `\n${chalk.underline(title)}\n${body}\n\n`;
 }
 
 /**
