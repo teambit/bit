@@ -37,6 +37,7 @@ import { LATEST_VERSION } from '@teambit/component-version';
 import { EnvsMain } from '@teambit/envs';
 import { compact } from 'lodash';
 import { FilesStatus } from '@teambit/merging';
+import { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -88,6 +89,7 @@ export type ImportResult = {
   cancellationMessage?: string;
   installationError?: Error;
   compilationError?: Error;
+  workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult;
   missingIds?: string[]; // in case the import is configured to not throw when missing
 };
 
@@ -172,6 +174,7 @@ export default class ImportComponents {
       importDetails,
       installationError: componentWriterResults?.installationError,
       compilationError: componentWriterResults?.compilationError,
+      workspaceConfigUpdateResult: componentWriterResults?.workspaceConfigUpdateResult,
       missingIds,
     };
   }

@@ -15,7 +15,7 @@ import { isDir, isDirEmptySync } from '@teambit/legacy/dist/utils';
 import { PathLinuxRelative, pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import ConfigMergerAspect, { ConfigMergerMain } from '@teambit/config-merger';
+import ConfigMergerAspect, { ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import ComponentWriter, { ComponentWriterProps } from './component-writer';
 import { ComponentWriterAspect } from './component-writer.aspect';
@@ -35,7 +35,11 @@ export interface ManyComponentsWriterParams {
   shouldUpdateWorkspaceConfig?: boolean; // whether it should update dependencies policy (or leave conflicts) in workspace.jsonc
 }
 
-export type ComponentWriterResults = { installationError?: Error; compilationError?: Error };
+export type ComponentWriterResults = {
+  installationError?: Error;
+  compilationError?: Error;
+  workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult;
+};
 
 export class ComponentWriterMain {
   constructor(
@@ -60,8 +64,9 @@ export class ComponentWriterMain {
     if (!opts.skipUpdatingBitMap) await this.consumer.writeBitMap(opts.reasonForBitmapChange);
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
+    let workspaceConfigUpdateResult: WorkspaceConfigUpdateResult | undefined;
     if (opts.shouldUpdateWorkspaceConfig) {
-      await this.configMerge.updateDepsInWorkspaceConfig(opts.components);
+      workspaceConfigUpdateResult = await this.configMerge.updateDepsInWorkspaceConfig(opts.components);
     }
     if (!opts.skipDependencyInstallation) {
       installationError = await this.installPackagesGracefully(opts.skipWriteConfigFiles);
@@ -69,7 +74,7 @@ export class ComponentWriterMain {
       compilationError = await this.compileGracefully();
     }
     this.logger.debug('writeMany, completed!');
-    return { installationError, compilationError };
+    return { installationError, compilationError, workspaceConfigUpdateResult };
   }
 
   private async installPackagesGracefully(skipWriteConfigFiles = false): Promise<Error | undefined> {

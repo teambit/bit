@@ -27,6 +27,12 @@ const WS_DEPS_FIELDS = ['dependencies', 'peerDependencies'];
 export type WorkspaceDepsUpdates = { [pkgName: string]: [string, string] }; // from => to
 export type WorkspaceDepsConflicts = Record<WorkspacePolicyConfigKeysNames, Array<{ name: string; version: string }>>; // the pkg value is in a format of CONFLICT::OURS::THEIRS
 
+export type WorkspaceConfigUpdateResult = {
+  workspaceDepsUpdates?: WorkspaceDepsUpdates; // in case workspace.jsonc has been updated with dependencies versions
+  workspaceDepsConflicts?: WorkspaceDepsConflicts; // in case workspace.jsonc has conflicts
+  workspaceConfigConflictWriteError?: Error; // in case workspace.jsonc has conflicts and we failed to write the conflicts to the file
+  logs?: string[]; // verbose details about the updates/conflicts for each one of the deps
+};
 export class ConfigMergerMain {
   constructor(
     private workspace: Workspace,
@@ -265,7 +271,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     };
   }
 
-  async updateDepsInWorkspaceConfig(components: ConsumerComponent[]) {
+  async updateDepsInWorkspaceConfig(components: ConsumerComponent[]): Promise<WorkspaceConfigUpdateResult | undefined> {
     const workspacePolicy = this.depsResolver.getWorkspacePolicyFromConfig();
     const workspacePolicyObj = workspacePolicy.entries.reduce((acc, current) => {
       acc[current.dependencyId] = current.value.version;
@@ -303,7 +309,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     }, {});
 
     if (isEmpty(componentDeps)) {
-      return;
+      return undefined;
     }
 
     const workspaceDepsUpdates: WorkspaceDepsUpdates = {};
@@ -429,9 +435,17 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     this.logger.debug(`final workspace.jsonc conflicts ${JSON.stringify(workspaceDepsConflicts, undefined, 2)}`);
 
     await this.updateWsConfigWithGivenChanges(workspaceDepsUpdates, workspacePolicy);
+    let workspaceConfigConflictWriteError: Error | undefined;
     if (!isEmpty(workspaceDepsConflicts)) {
-      await this.writeWorkspaceJsoncWithConflictsGracefully(workspaceDepsConflicts);
+      workspaceConfigConflictWriteError = await this.writeWorkspaceJsoncWithConflictsGracefully(workspaceDepsConflicts);
     }
+
+    return {
+      workspaceDepsUpdates: isEmpty(workspaceDepsUpdates) ? undefined : workspaceDepsUpdates,
+      workspaceDepsConflicts: isEmpty(workspaceDepsConflicts) ? undefined : workspaceDepsConflicts,
+      workspaceConfigConflictWriteError,
+      logs,
+    };
   }
 
   private async updateWsConfigWithGivenChanges(workspaceDepsUpdates: WorkspaceDepsUpdates, wsPolicy: WorkspacePolicy) {
