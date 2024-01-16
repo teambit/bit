@@ -31,11 +31,11 @@ export type LaneOverviewProps = {
 };
 
 export class LinkPlugin {
-  constructor(private currentLane?: LaneModel) {}
+  constructor(private viewedLane?: LaneModel) {}
 
   link = (id) => {
-    if (!this.currentLane?.id) return id.fullName;
-    return LanesModel.getLaneComponentUrl(id, this.currentLane?.id);
+    if (!this.viewedLane?.id) return LanesModel.getMainComponentUrl(id);
+    return LanesModel.getLaneComponentUrl(id, this.viewedLane?.id);
   };
 }
 
@@ -48,18 +48,13 @@ export function LaneOverview({
   const { lanesModel } = useLanesFromProps();
   const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
-  const currentLane = lanesModel?.viewedLane;
+  const viewedLane = lanesModel?.viewedLane;
 
-  if (!currentLane || !currentLane.id) return null;
-  if (currentLane.components.length === 0) return <EmptyLaneOverview name={currentLane.id.name} />;
+  if (!viewedLane || !viewedLane.id) return null;
+  if (viewedLane.components.length === 0) return <EmptyLaneOverview name={viewedLane.id.name} />;
 
   return (
-    <LaneOverviewWithPreview
-      host={host}
-      currentLane={currentLane}
-      overviewItems={overviewItems}
-      routeSlot={routeSlot}
-    />
+    <LaneOverviewWithPreview host={host} currentLane={viewedLane} overviewItems={overviewItems} routeSlot={routeSlot} />
   );
 }
 

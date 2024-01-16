@@ -1,0 +1,65 @@
+@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
+.collapser {
+  position: absolute;
+  bottom: 8px;
+  z-index: $nav-z-index;
+  cursor: pointer;
+  // transition: right 300ms, left 300ms ease-in-out;
+  &.right {
+    left: 8px;
+    &.open {
+      .circle {
+        > div {
+          transform: rotate(-0.5turn);
+          transform-origin: center;
+        }
+      }
+    }
+  }
+
+  &.left {
+    right: 8px;
+    .circle {
+      > div {
+        transform: rotate(-0.5turn);
+        transform-origin: center;
+      }
+    }
+    &.open {
+      .circle {
+        > div {
+          transform: rotate(0turn);
+          transform-origin: center;
+        }
+      }
+    }
+  }
+}
+
+.circle {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  font-size: 20px;
+  padding: 6px;
+  background-color: rgba(145, 145, 145, 0.2);
+  background-color: var(--border-medium-color, #6c707c);
+
+  border-radius: 5px;
+
+  // TODO - @oded - unify with other shadows. this shadow is different. talk to amir
+  // box-shadow: 0 -1px 1px 0 rgba(0, 0, 0, 0.09), 0 1px 2px 0 rgba(0, 0, 0, 0.23);
+  transition: padding 300ms ease-in-out;
+
+  &:hover {
+    background-color: var(--border-high-color, #6c707c);
+  }
+
+  > div {
+    display: flex;
+    align-items: center;
+    transition: transform 300ms ease-in-out;
+    height: fit-content;
+  }
+}

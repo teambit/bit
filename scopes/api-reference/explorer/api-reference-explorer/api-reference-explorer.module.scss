@@ -4,5 +4,5 @@
   overflow: auto;
   height: 100%;
   font-size: var(--bit-p-xs);
-  border-right: 2px solid #ededed;
+  border-right: 2px solid var(--border-medium-color, #ededed);
 }
