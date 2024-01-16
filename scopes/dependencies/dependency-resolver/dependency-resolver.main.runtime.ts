@@ -347,6 +347,20 @@ export class DependencyResolverMain {
     return depList.filterHidden();
   }
 
+  getDependenciesFromLegacyComponent(
+    component: LegacyComponent,
+    { includeHidden = false }: GetDependenciesOptions = {}
+  ) {
+    const entry = component.extensions.findCoreExtension(DependencyResolverAspect.id);
+    if (!entry) {
+      return DependencyList.fromArray([]);
+    }
+    const serializedDependencies: SerializedDependency[] = entry?.data?.dependencies || [];
+    const depList = this.getDependenciesFromSerializedDependencies(serializedDependencies);
+    if (includeHidden) return depList;
+    return depList.filterHidden();
+  }
+
   /**
    * returns only the dependencies that are bit-components.
    */
@@ -890,10 +904,12 @@ export class DependencyResolverMain {
     return workspacePolicy;
   }
 
-  removeFromRootPolicy(dependencyIds: string[]) {
+  removeFromRootPolicy(dependencyIds: string[]): boolean {
     const workspacePolicy = this.getWorkspacePolicyFromConfig();
     const workspacePolicyUpdated = workspacePolicy.remove(dependencyIds);
-    this.updateConfigPolicy(workspacePolicyUpdated);
+    const isRemoved = workspacePolicyUpdated.entries.length !== workspacePolicy.entries.length;
+    if (isRemoved) this.updateConfigPolicy(workspacePolicyUpdated);
+    return isRemoved;
   }
 
   private updateConfigPolicy(workspacePolicy: WorkspacePolicy) {

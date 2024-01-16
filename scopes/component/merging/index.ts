@@ -8,6 +8,7 @@ export {
   compilationErrorOutput,
   getRemovedOutput,
   getAddedOutput,
+  getWorkspaceConfigUpdateOutput,
 } from './merge-cmd';
 export type {
   MergingMain,
