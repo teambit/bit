@@ -6,10 +6,11 @@ import { typesObj as types } from '../object-registrar';
 import { ObjectItem } from './object-list';
 import Ref from './ref';
 import Repository from './repository';
+import { UnknownObjectType } from '../exceptions/unknown-object-type';
 
 function parse(buffer: Buffer): BitObject {
   const { type, hash, contents } = extractHeaderAndContent(buffer);
-  if (!types[type]) throw new Error(`BitObject: unable to find subclass "${type}"`);
+  if (!types[type]) throw new UnknownObjectType(type);
   return types[type].parse(contents, hash);
 }
 

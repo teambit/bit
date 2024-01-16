@@ -10,8 +10,10 @@ When importing components to a scope, normally, Bit brings all its flattened-dep
 
 - `Component` - has the main data about the component, such as, name, scope-name, head-hash and a list of tags:hashes.
 - `Version` - represents a snap. has the source file hashes, dependencies data, build data, etc.
-- `Source` - source-file/dist-file
-- `Lane` - component ids and their heads of the lane
+- `Source` - source-file/dist-file.
+- `Lane` - component ids and their heads of the lane.
+- `LaneHistory` - aggregation of all changes done to a lane.
+- `ExportMetadata` - deprecated since 0.0.928. (see #6758).
 
 ### Export Process
 

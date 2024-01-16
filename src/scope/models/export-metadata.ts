@@ -9,6 +9,10 @@ type ExportMetadataProps = {
 
 export type ExportVersions = { id: ComponentID; versions: string[]; head: Ref };
 
+/**
+ * @deprecated since 0.0.928 (see #6758). this object is not sent to the remote anymore.
+ * introduced in 0.0.782 (see #5935)
+ */
 export default class ExportMetadata extends BitObject {
   exportVersions: ExportVersions[];
   constructor(props: ExportMetadataProps) {
