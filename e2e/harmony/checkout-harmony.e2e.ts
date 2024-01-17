@@ -283,7 +283,7 @@ describe('bit checkout command', function () {
     describe('using manual strategy', () => {
       let output;
       before(() => {
-        output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--auto-merge-resolve manual');
+        output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--manual');
       });
       it('should indicate that the file has conflicts', () => {
         expect(output).to.have.string(successOutput);
@@ -389,7 +389,7 @@ describe('bit checkout command', function () {
       describe('using manual strategy', () => {
         let output;
         before(() => {
-          output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--auto-merge-resolve manual');
+          output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--manual');
         });
         it('should indicate that a new file was added', () => {
           expect(output).to.have.string(FileStatusWithoutChalk.added);

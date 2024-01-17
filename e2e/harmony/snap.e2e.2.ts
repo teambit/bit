@@ -383,7 +383,7 @@ describe('bit snap command', function () {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.command.importComponent('bar/foo --objects');
-          mergeOutput = helper.command.merge('bar/foo --auto-merge-resolve manual');
+          mergeOutput = helper.command.merge('bar/foo --manual');
           scopeWithConflicts = helper.scopeHelper.cloneLocalScope();
         });
         it('should succeed and indicate that the files were left in a conflict state', () => {
@@ -412,7 +412,7 @@ describe('bit snap command', function () {
           expect(status.mergePendingComponents).to.have.lengthOf(0);
         });
         it('should block checking out the component', () => {
-          expect(() => helper.command.checkoutVersion(firstSnap, 'bar/foo', '--auto-merge-resolve manual')).to.throw(
+          expect(() => helper.command.checkoutVersion(firstSnap, 'bar/foo', '--manual')).to.throw(
             'is in during-merge state'
           );
         });
