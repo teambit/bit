@@ -15,6 +15,12 @@ When importing components to a scope, normally, Bit brings all its flattened-dep
 - `LaneHistory` - aggregation of all changes done to a lane.
 - `ExportMetadata` - deprecated since 0.0.928. (see #6758).
 
+### Write objects to the FS
+
+During export - see `export-scope-components.saveObjects()`.
+During import - see `ObjectsWritable` class.
+If you add a new object and it needs merging, make sure it's properly handled in both of them and also add it to `ObjectList.objectTypesRequireMerge`.
+
 ### Export Process
 
 The main challenge in the export process is to keep the scopes consistent when exporting to multiple scopes. a user can export components belong to different scopes with cycle dependencies between them. For example. scopeA/compA depends on scopeB/compB that depends on scopeA/compA. If we persist the data of scopeA/compA but fail during the persist of scopeB/compA, users that import compA will get the an invalid component as its dependency compB is missing.
