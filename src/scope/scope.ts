@@ -371,7 +371,7 @@ once done, to continue working, please run "bit cc"`
 
     // component is in the lane object but with a different version.
     // we have to figure out whether this version is part of the lane history
-    const component = await this.getModelComponent(id);
+    const component = await this.getModelComponent(id.changeVersion(undefined));
     const laneVersionRef = Ref.from(laneIdWithDifferentVersion.version as string);
     const verHistory = await component.getAndPopulateVersionHistory(this.objects, laneVersionRef);
     const verRef = component.getRef(id.version);
@@ -382,7 +382,7 @@ once done, to continue working, please run "bit cc"`
   async isPartOfMainHistory(id: ComponentID) {
     if (!id.version) throw new Error(`isIdOnMain expects id with version, got ${id.toString()}`);
     if (isTag(id.version)) return true; // tags can be on main only
-    const component = await this.getModelComponent(id);
+    const component = await this.getModelComponent(id.changeVersion(undefined));
     if (!component.head) return false; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
     if (component.head.toString() === id.version) return true; // it's on main
 
