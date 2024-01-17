@@ -79,7 +79,10 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
 
   const currentCompositionFullUrl = toPreviewUrl(component, 'compositions', compositionIdentifierParam);
 
-  const [compositionParams, setCompositionParams] = useState<Record<string, any>>({});
+  const [compositionParams, setCompositionParams] = useState<Record<string, any>>({
+    fullscreen: true,
+  });
+
   const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);
 
   // collapse sidebar when empty, reopen when not
