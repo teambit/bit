@@ -12,7 +12,7 @@ import Dependency from '@teambit/legacy/dist/consumer/component/dependencies/dep
 import OverridesDependencies from './overrides-dependencies';
 import { DebugComponentsDependency, getValidVersion } from './auto-detect-deps';
 
-type DepType = 'dependencies' | 'devDependencies';
+type DepType = 'dependencies' | 'devDependencies' | 'peerDependencies';
 
 export function updateDependenciesVersions(
   depsResolver: DependencyResolverMain,
@@ -28,6 +28,7 @@ export function updateDependenciesVersions(
 
   updateDependencies(component.dependencies, 'dependencies');
   updateDependencies(component.devDependencies, 'devDependencies');
+  updateDependencies(component.peerDependencies, 'peerDependencies');
   if (updateExtensionsVersions) {
     updateExtensions(component.extensions);
   }
