@@ -2,7 +2,7 @@ import { ComponentID } from '@teambit/component';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { uniq } from 'lodash';
 
-export type DepEdgeType = 'prod' | 'dev' | 'ext';
+export type DepEdgeType = 'prod' | 'dev' | 'ext' | 'peer';
 
 type ComponentIdNode = Node<ComponentID>;
 type DependencyEdge = Edge<DepEdgeType>;
