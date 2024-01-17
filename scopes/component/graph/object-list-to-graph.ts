@@ -46,7 +46,8 @@ export async function bitObjectListToGraph(bitObjectsList: BitObjectList): Promi
         if (!versionInfo.version) {
           return;
         }
-        const { dependencies, devDependencies, peerDependencies, extensionDependencies } = versionInfo.version.depsIdsGroupedByType;
+        const { dependencies, devDependencies, peerDependencies, extensionDependencies } =
+          versionInfo.version.depsIdsGroupedByType;
         const addDep = (depId: ComponentID, edge: Dependency) => {
           const depIdStr = depId.toString();
           nodes.push(new Node(depIdStr, depId));
