@@ -151,8 +151,8 @@ export class ImportCmd implements Command {
       )}\n(this is temporarily. once this feature is enabled, use --verbose to see these logs)\n${logsStr}\n\n`;
     };
     const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date`;
-    const summary = `${summaryPrefix}${upToDateStr}`;
-    const importOutput = [...compact(importedComponents), chalk.green(summary)].join('\n');
+    const summary = `\n\n${summaryPrefix}${upToDateStr}`;
+    const importOutput = compact(importedComponents).join('\n');
     const importedDepsOutput =
       importFlags.displayDependencies && importedDeps.length
         ? immutableUnshift(
@@ -168,7 +168,8 @@ export class ImportCmd implements Command {
       formatMissingComponents(missingIds) +
       getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult) +
       installationErrorOutput(installationError) +
-      compilationErrorOutput(compilationError);
+      compilationErrorOutput(compilationError) +
+      chalk.green(summary);
 
     return output;
   }

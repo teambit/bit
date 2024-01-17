@@ -350,17 +350,20 @@ export function conflictSummaryReport(components: ApplyVersionResult[]): {
 export function installationErrorOutput(installationError?: Error) {
   if (!installationError) return '';
   const title = chalk.underline('Installation Error');
-  const subTitle = 'The following error was thrown by the package manager, please fix the issue and run "bit install"';
+  const subTitle = 'The following error was thrown by the package manager:';
   const body = chalk.red(installationError.message);
-  return `\n\n${title}\n${subTitle}\n${body}`;
+  const suggestion =
+    'Use "bit install" to complete the installation, remove the imported components using "bit remove <comp id>" or remove the missing dependencies from their source code';
+  return `\n\n${title}\n${subTitle}\n${body}\n${suggestion}`;
 }
 
 export function compilationErrorOutput(compilationError?: Error) {
   if (!compilationError) return '';
   const title = chalk.underline('Compilation Error');
-  const subTitle = 'The following error was thrown by the compiler, please fix the issue and run "bit compile"';
+  const subTitle = 'The following error was thrown by the compiler';
   const body = chalk.red(compilationError.message);
-  return `\n\n${title}\n${subTitle}\n${body}`;
+  const suggestion = 'Please fix the issue and run "bit compile"';
+  return `\n\n${title}\n${subTitle}\n${body}\n${suggestion}`;
 }
 
 export function getRemovedOutput(removedComponents?: ComponentID[]) {

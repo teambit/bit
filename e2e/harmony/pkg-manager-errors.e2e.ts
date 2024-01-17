@@ -13,8 +13,7 @@ describe('bit checkout command', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  // TODO: @davidfirst @guysaar temporary disabled until we fix it on the registry
-  describe.skip('component with a non-exist package dependency which triggers the package-manager to fail', () => {
+  describe('component with a non-exist package dependency which triggers the package-manager to fail', () => {
     let afterExport: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
