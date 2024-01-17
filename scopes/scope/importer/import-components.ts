@@ -91,6 +91,7 @@ export type ImportResult = {
   compilationError?: Error;
   workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult;
   missingIds?: string[]; // in case the import is configured to not throw when missing
+  lane?: Lane;
 };
 
 export default class ImportComponents {
@@ -176,6 +177,7 @@ export default class ImportComponents {
       compilationError: componentWriterResults?.compilationError,
       workspaceConfigUpdateResult: componentWriterResults?.workspaceConfigUpdateResult,
       missingIds,
+      lane: this.remoteLane,
     };
   }
 

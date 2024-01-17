@@ -163,7 +163,7 @@ export function mergeReport({
   let componentsWithConflicts = 0;
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
-    const title = `\n\nfiles with conflicts summary\n`;
+    const title = `files with conflicts summary\n`;
     const suggestion = `\n\nmerge process not completed due to the conflicts above. fix conflicts manually and then run "bit install".
 once ready, snap/tag the components to complete the merge.`;
     const conflictSummary = conflictSummaryReport(components);
@@ -175,7 +175,7 @@ once ready, snap/tag the components to complete the merge.`;
   const getConfigMergeConflictSummary = () => {
     if (!configMergeWithConflicts.length) return '';
     const comps = configMergeWithConflicts.map((c) => c.compIdStr).join('\n');
-    const title = `\n\ncomponents with config-merge conflicts\n`;
+    const title = `components with config-merge conflicts\n`;
     const suggestion = `\nconflicts were found while trying to merge the config. fix them manually by editing the ${MergeConfigFilename} file in the workspace root.
 once ready, snap/tag the components to complete the merge.`;
     return chalk.underline(title) + comps + chalk.yellow(suggestion);
@@ -183,8 +183,9 @@ once ready, snap/tag the components to complete the merge.`;
 
   const getSnapsOutput = () => {
     if (mergeSnapError) {
-      return `
-${chalk.bold('snapping merged components failed with the following error, please fix the issues and snap manually')}
+      return `${chalk.bold(
+        'snapping merged components failed with the following error, please fix the issues and snap manually'
+      )}
 ${mergeSnapError.message}
 `;
     }
@@ -204,9 +205,9 @@ ${mergeSnapError.message}
         .join('\n');
     };
 
-    return `\n${chalk.underline(
+    return `${chalk.underline(
       'merge-snapped components'
-    )}\n(${'components snapped as a result of the merge'})\n${outputComponents(snappedComponents)}\n`;
+    )}\n(${'components snapped as a result of the merge'})\n${outputComponents(snappedComponents)}`;
   };
 
   const getFailureOutput = () => {
@@ -223,7 +224,7 @@ ${mergeSnapError.message}
       return `${chalk.bold(`\nmerge skipped legitimately for ${failedComponents.length} component(s)`)}
 (use --verbose to list them next time)`;
     }
-    return `\n${chalk.underline(title)}\n${body}\n\n`;
+    return `${chalk.underline(title)}\n${body}`;
   };
 
   const getSummary = () => {
@@ -238,7 +239,6 @@ ${mergeSnapError.message}
       return compact([comps, ws, mergeConfig]).join(', ');
     };
 
-    const newLines = '\n\n';
     const title = chalk.bold.underline('Merge Summary');
     const mergedStr = `\nTotal Merged: ${chalk.bold(merged.toString())}`;
     const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(unchangedLegitimately.toString())}`;
@@ -246,19 +246,19 @@ ${mergeSnapError.message}
     const removedStr = `\nTotal Removed: ${chalk.bold(removedComponents?.length.toString() || '0')}`;
     const conflictStr = `\nConflicts: ${chalk.bold(getConflictStr() || 'none')}`;
 
-    return newLines + title + mergedStr + unchangedLegitimatelyStr + autoSnappedStr + removedStr + conflictStr;
+    return title + mergedStr + unchangedLegitimatelyStr + autoSnappedStr + removedStr + conflictStr;
   };
 
-  return (
-    getSuccessOutput() +
-    getFailureOutput() +
-    getRemovedOutput(removedComponents) +
-    getSnapsOutput() +
-    getConfigMergeConflictSummary() +
-    getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult) +
-    getConflictSummary() +
-    getSummary()
-  );
+  return compact([
+    getSuccessOutput(),
+    getFailureOutput(),
+    getRemovedOutput(removedComponents),
+    getSnapsOutput(),
+    getConfigMergeConflictSummary(),
+    getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult),
+    getConflictSummary(),
+    getSummary(),
+  ]).join('\n\n');
 }
 
 export function getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult): string {
@@ -269,12 +269,12 @@ export function getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult?: Wor
   const getWorkspaceConflictsOutput = () => {
     if (!workspaceDepsConflicts && !workspaceConfigConflictWriteError) return '';
     if (workspaceConfigConflictWriteError) {
-      return `\n${chalk.red(workspaceConfigConflictWriteError.message)}\n\n`;
+      return `${chalk.red(workspaceConfigConflictWriteError.message)}`;
     }
-    return chalk.yellow('\nworkspace.jsonc has conflicts, please edit the file and fix them\n\n');
+    return chalk.yellow('workspace.jsonc has conflicts, please edit the file and fix them');
   };
 
-  return getWorkspaceDepsOutput(workspaceDepsUpdates) + getWorkspaceConflictsOutput();
+  return compact([getWorkspaceDepsOutput(workspaceDepsUpdates), getWorkspaceConflictsOutput()]).join('\n\n');
 }
 
 function getWorkspaceDepsOutput(workspaceDepsUpdates?: WorkspaceDepsUpdates): string {
@@ -288,7 +288,7 @@ function getWorkspaceDepsOutput(workspaceDepsUpdates?: WorkspaceDepsUpdates): st
     })
     .join('\n');
 
-  return `\n${chalk.underline(title)}\n${body}\n\n`;
+  return `${chalk.underline(title)}\n${body}`;
 }
 
 /**
@@ -357,7 +357,7 @@ export function installationErrorOutput(installationError?: Error) {
   const body = chalk.red(installationError.message);
   const suggestion =
     'Use "bit install" to complete the installation, remove the imported components using "bit remove <comp id>" or remove the missing dependencies from their source code';
-  return `\n\n${title}\n${subTitle}\n${body}\n${suggestion}`;
+  return `${title}\n${subTitle}\n${body}\n${suggestion}`;
 }
 
 export function compilationErrorOutput(compilationError?: Error) {
@@ -366,19 +366,19 @@ export function compilationErrorOutput(compilationError?: Error) {
   const subTitle = 'The following error was thrown by the compiler';
   const body = chalk.red(compilationError.message);
   const suggestion = 'Please fix the issue and run "bit compile"';
-  return `\n\n${title}\n${subTitle}\n${body}\n${suggestion}`;
+  return `${title}\n${subTitle}\n${body}\n${suggestion}`;
 }
 
 export function getRemovedOutput(removedComponents?: ComponentID[]) {
   if (!removedComponents?.length) return '';
   const title = `the following ${removedComponents.length} component(s) have been removed`;
   const body = removedComponents.join('\n');
-  return `\n\n${chalk.underline(title)}\n${body}\n\n`;
+  return `${chalk.underline(title)}\n${body}`;
 }
 
 export function getAddedOutput(addedComponents?: ComponentID[]) {
   if (!addedComponents?.length) return '';
   const title = `the following ${addedComponents.length} component(s) have been added`;
   const body = addedComponents.join('\n');
-  return `\n\n${chalk.underline(title)}\n${body}\n\n`;
+  return `${chalk.underline(title)}\n${body}`;
 }
