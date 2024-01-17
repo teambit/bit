@@ -1,5 +1,6 @@
 import tarStream from 'tar-stream';
 import pMap from 'p-map';
+import { compact } from 'lodash';
 import { Readable, PassThrough, pipeline } from 'stream';
 import { BitObject } from '.';
 import { BitObjectList } from './bit-object-list';
@@ -7,6 +8,7 @@ import Ref from './ref';
 import logger from '../../logger/logger';
 import { concurrentIOLimit } from '../../utils/concurrency';
 import { ExportMetadata } from '../models';
+import { UnknownObjectType } from '../exceptions/unknown-object-type';
 
 /**
  * when error occurred during streaming between HTTP server and client, there is no good way to
@@ -239,12 +241,26 @@ export class ObjectList {
     });
   }
 
-  async toBitObjects(): Promise<BitObjectList> {
+  async toBitObjects(throwForUnknownTypes = false): Promise<BitObjectList> {
     const concurrency = concurrentIOLimit();
-    const bitObjects = await pMap(this.objects, (object) => BitObject.parseObject(object.buffer), {
-      concurrency,
-    });
-    return new BitObjectList(bitObjects);
+    const bitObjects = await pMap(
+      this.objects,
+      async (object) => {
+        try {
+          return await BitObject.parseObject(object.buffer);
+        } catch (err) {
+          if (throwForUnknownTypes || !(err instanceof UnknownObjectType)) {
+            throw err;
+          }
+          logger.error(
+            `toBitObjects, unable to parse object of type ${err.type}, ignoring it. please update your bit version`
+          );
+          return null;
+        }
+      },
+      { concurrency }
+    );
+    return new BitObjectList(compact(bitObjects));
   }
 
   static async fromBitObjects(bitObjects: BitObject[]): Promise<ObjectList> {
