@@ -1075,6 +1075,7 @@ export class IsolatorMain {
       const manifest = {
         dependencies: {},
         devDependencies: {},
+        peerDependencies: {},
       };
       const compDeps = dependencies.toTypeArray<ComponentDependency>('component');
       const promises = compDeps.map(async (dep) => {
@@ -1088,7 +1089,7 @@ export class IsolatorMain {
         const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
         const entry = dep.toManifest();
         if (entry) {
-          manifest[keyName][entry.packageName] = version;
+          manifest[keyName][entry.packageName] = keyName === 'peerDependencies' ? dep.versionPolicy : version;
         }
       });
       await Promise.all(promises);
@@ -1105,6 +1106,7 @@ export class IsolatorMain {
     const addDependencies = (packageJsonFile: PackageJsonFile) => {
       packageJsonFile.addDependencies(manifest.dependencies);
       packageJsonFile.addDevDependencies(manifest.devDependencies);
+      packageJsonFile.addPeerDependencies(manifest.peerDependencies);
     };
     addDependencies(packageJson);
     packageJson.addOrUpdateProperty('version', currentVersion);
