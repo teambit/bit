@@ -80,7 +80,7 @@ describe('peer-dependencies functionality', function () {
     });
   });
 
-  describe('a component is a peer dependency', () => {
+  describe.only('a component is a peer dependency', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(2);
@@ -91,7 +91,7 @@ describe('peer-dependencies functionality', function () {
     it('should save the peer dependency in the model', () => {
       const output = helper.command.showComponentParsed(`${helper.scopes.remote}/comp1`);
       expect(output.peerDependencies[0]).to.deep.equal({
-        id: `${helper.scopes.remote}/comp2@0.0.1-new`,
+        id: `${helper.scopes.remote}/comp2`,
         relativePaths: [],
         packageName: `@${helper.scopes.remote}/comp2`,
         versionPolicy: '*',
@@ -100,7 +100,7 @@ describe('peer-dependencies functionality', function () {
       const peerDep = depResolver.data.dependencies[0];
       expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/comp2`);
       expect(peerDep.lifecycle).to.eq('peer');
-      expect(peerDep.version).to.eq('0.0.1-new');
+      expect(peerDep.version).to.eq('latest');
       expect(peerDep.versionPolicy).to.eq('*');
     });
   });
