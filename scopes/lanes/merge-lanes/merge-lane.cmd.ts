@@ -39,14 +39,18 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
   ];
   alias = '';
   options = [
-    ['', 'ours', 'DEPRECATED. use --auto-merge-resolve. in case of a conflict, keep local modifications'],
-    ['', 'theirs', 'DEPRECATED. use --auto-merge-resolve. in case of a conflict, override local with incoming changes'],
-    ['', 'manual', 'DEPRECATED. use --auto-merge-resolve'],
+    [
+      '',
+      'manual',
+      'same as "--auto-merge-resolve manual". in case of merge conflict, write the files with the conflict markers',
+    ],
     [
       '',
       'auto-merge-resolve <merge-strategy>',
       'in case of a merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
     ],
+    ['', 'ours', 'DEPRECATED. use --auto-merge-resolve. in case of a conflict, keep local modifications'],
+    ['', 'theirs', 'DEPRECATED. use --auto-merge-resolve. in case of a conflict, override local with incoming changes'],
     ['', 'workspace', 'merge only lane components that are in the current workspace'],
     ['', 'no-snap', 'do not auto snap after merge completed without conflicts'],
     ['', 'tag', 'auto-tag all lane components after merging into main (or tag-merge in case of snap-merge)'],
@@ -139,9 +143,9 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     }
   ): Promise<string> {
     build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
-    if (ours || theirs || manual) {
+    if (ours || theirs) {
       throw new BitError(
-        'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead. see "bit lane merge --help" for more information'
+        'the "--ours" and "--theirs" flags are deprecated. use "--auto-merge-resolve" instead. see "bit lane merge --help" for more information'
       );
     }
     if (
@@ -152,6 +156,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     ) {
       throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
     }
+    if (manual) autoMergeResolve = 'manual';
     const mergeStrategy = autoMergeResolve;
     if (noSnap && snapMessage) throw new BitError('unable to use "no-snap" and "message" flags together');
     if (includeDeps && !pattern && !existingOnWorkspaceOnly) {

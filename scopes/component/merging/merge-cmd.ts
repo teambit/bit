@@ -33,7 +33,11 @@ ${WILDCARD_HELP('merge')}`;
       'theirs',
       'DEPRECATED. use --auto-merge-resolve. in case of a conflict, override the local modification with the specified version',
     ],
-    ['', 'manual', 'DEPRECATED. use --auto-merge-resolve'],
+    [
+      '',
+      'manual',
+      'same as "--auto-merge-resolve manual". in case of merge conflict, write the files with the conflict markers',
+    ],
     [
       '',
       'auto-merge-resolve <merge-strategy>',
@@ -80,10 +84,8 @@ ${WILDCARD_HELP('merge')}`;
     }
   ) {
     build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
-    if (ours || theirs || manual) {
-      throw new BitError(
-        'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead'
-      );
+    if (ours || theirs) {
+      throw new BitError('the "--ours" and "--theirs" flags are deprecated. use "--auto-merge-resolve" instead');
     }
     if (
       autoMergeResolve &&
@@ -93,6 +95,7 @@ ${WILDCARD_HELP('merge')}`;
     ) {
       throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
     }
+    if (manual) autoMergeResolve = 'manual';
     if (abort && resolve) throw new BitError('unable to use "abort" and "resolve" flags together');
     if (noSnap && message) throw new BitError('unable to use "noSnap" and "message" flags together');
     const {
