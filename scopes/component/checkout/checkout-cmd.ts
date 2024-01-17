@@ -49,6 +49,11 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       'auto-merge-resolve <merge-strategy>',
       'in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
     ],
+    [
+      '',
+      'manual',
+      'same as "--auto-merge-resolve manual". in case of merge conflict, write the files with the conflict markers',
+    ],
     ['a', 'all', 'all components'],
     [
       'e',
@@ -71,6 +76,7 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       forceOurs,
       forceTheirs,
       autoMergeResolve,
+      manual,
       all = false,
       workspaceOnly = false,
       verbose = false,
@@ -81,6 +87,7 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       forceOurs?: boolean;
       forceTheirs?: boolean;
       autoMergeResolve?: MergeStrategy;
+      manual?: boolean;
       all?: boolean;
       workspaceOnly?: boolean;
       verbose?: boolean;
@@ -99,6 +106,7 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
     ) {
       throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
     }
+    if (manual) autoMergeResolve = 'manual';
     if (workspaceOnly && to !== HEAD) {
       throw new BitError('--workspace-only is only relevant when running "bit checkout head" on a lane');
     }
