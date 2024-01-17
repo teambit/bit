@@ -44,8 +44,7 @@ import {
   ConfigMergerAspect,
   ConfigMergerMain,
   ConfigMergeResult,
-  WorkspaceDepsUpdates,
-  WorkspaceDepsConflicts,
+  WorkspaceConfigUpdateResult,
 } from '@teambit/config-merger';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { InstallMain, InstallAspect } from '@teambit/install';
@@ -104,9 +103,7 @@ export type ApplyVersionResults = {
   newFromLaneAdded?: boolean;
   installationError?: Error; // in case the package manager failed, it won't throw, instead, it'll return error here
   compilationError?: Error; // in case the compiler failed, it won't throw, instead, it'll return error here
-  workspaceDepsUpdates?: WorkspaceDepsUpdates; // in case workspace.jsonc has been updated with dependencies versions
-  workspaceDepsConflicts?: WorkspaceDepsConflicts; // in case workspace.jsonc has conflicts
-  workspaceConflictError?: Error; // in case workspace.jsonc has conflicts and we failed to write the conflicts to the file
+  workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult;
 };
 
 export class MergingMain {
@@ -253,9 +250,9 @@ export class MergingMain {
     const { workspaceDepsUpdates, workspaceDepsConflicts } =
       await this.configMerger.updateWorkspaceJsoncWithDepsIfNeeded(allConfigMerge);
 
-    let workspaceConflictError: Error | undefined;
+    let workspaceConfigConflictWriteError: Error | undefined;
     if (workspaceDepsConflicts) {
-      workspaceConflictError = await this.configMerger.writeWorkspaceJsoncWithConflictsGracefully(
+      workspaceConfigConflictWriteError = await this.configMerger.writeWorkspaceJsoncWithConflictsGracefully(
         workspaceDepsConflicts
       );
     }
@@ -321,10 +318,12 @@ export class MergingMain {
       removedComponents: [...componentIdsToRemove, ...(mergeSnapResults?.removedComponents || [])],
       mergeSnapResults,
       mergeSnapError,
-      workspaceConflictError,
-      workspaceDepsConflicts,
+      workspaceConfigUpdateResult: {
+        workspaceDepsUpdates,
+        workspaceDepsConflicts,
+        workspaceConfigConflictWriteError,
+      },
       leftUnresolvedConflicts,
-      workspaceDepsUpdates,
     };
   }
 

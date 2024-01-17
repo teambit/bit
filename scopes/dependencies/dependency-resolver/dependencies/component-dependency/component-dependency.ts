@@ -47,6 +47,10 @@ export class ComponentDependency extends BaseDependency {
     return this.packageName;
   }
 
+  get idWithoutVersion() {
+    return this.componentId.toStringWithoutVersion();
+  }
+
   setVersion(newVersion: string) {
     super.setVersion(newVersion);
     const newComponentId = this.componentId.changeVersion(newVersion);

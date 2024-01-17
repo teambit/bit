@@ -1,0 +1,20 @@
+.testsPage {
+  padding: 50px 40px 100px 40px;
+  width: 100%;
+  overflow-y: auto;
+  max-width: 1440px;
+  margin: 0 auto;
+  box-sizing: border-box;
+
+  .title {
+    margin-bottom: 24px;
+    font-size: var(--bit-h-xs, 26px);
+  }
+  .separator {
+    margin-bottom: 41px;
+  }
+}
+
+.testBlock {
+  margin-bottom: 50px;
+}

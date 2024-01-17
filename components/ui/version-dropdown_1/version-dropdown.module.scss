@@ -1,0 +1,122 @@
+@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
+.versionDropdown {
+  height: 100%;
+
+  > div {
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  .menu {
+    padding: 0;
+    right: 0;
+    // top: 43px;
+    font-size: var(--bit-p-xs);
+    border-radius: 6px;
+    z-index: $modal-z-index;
+  }
+}
+
+.title {
+  padding: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+}
+
+.titleContainer {
+  margin-bottom: 2px;
+}
+
+.versionContainerRoot {
+  max-height: 240px;
+  overflow-y: scroll;
+  padding-bottom: 8px;
+  position: relative;
+}
+
+.versionRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 40px;
+  padding: 0 16px;
+
+  &.localVersion {
+    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  }
+  .versionTimestamp {
+    margin-right: 2px;
+  }
+  .versionUserAvatar {
+    padding: 0px 8px;
+  }
+  .laneIcon {
+    padding: 0px 4px;
+  }
+  .version {
+    width: 60%;
+    display: flex;
+    flex-direction: row;
+    align-content: space-between;
+    align-items: center;
+  }
+  .versionName {
+    padding: 0px 8px;
+    min-width: fit-content;
+  }
+}
+
+.withVersions {
+  cursor: pointer;
+  > div {
+    margin-right: 5px;
+  }
+  > span {
+    display: unset;
+  }
+  &:hover {
+    background-color: var(--bit-bg-heavy);
+  }
+  [data-open='true'] & {
+    transition: color 300ms, background-color 300ms ease-in-out;
+    background-color: var(--bit-bg-color, #ffffff);
+    color: var(--bit-accent-color, #6c5ce7);
+    &:hover {
+      background-color: var(--bit-bg-color, #ffffff);
+    }
+  }
+}
+
+.tabs {
+  display: flex;
+  padding: 0 24px;
+  line-height: 14px;
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  overflow-x: auto;
+  margin-top: 8px;
+
+  .tab {
+    font-weight: bold;
+    padding-top: 4px;
+    font-size: 12px;
+  }
+}
+
+.loading {
+  color: var(--bit-bg-dent, #f6f6f6);
+}
+
+.loader {
+  color: var(--bit-bg-dent, #f6f6f6);
+  > div {
+    padding: 8px 0px;
+  }
+}
+
+.versionMenuContainer {
+  display: initial;
+  &.hide {
+    display: none;
+  }
+}

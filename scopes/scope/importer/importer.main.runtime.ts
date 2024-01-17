@@ -292,8 +292,8 @@ export class ImporterMain {
 
   private async removeFromWorkspaceConfig(component: ConsumerComponent[]) {
     const importedPackageNames = this.getImportedPackagesNames(component);
-    this.depResolver.removeFromRootPolicy(importedPackageNames);
-    await this.depResolver.persistConfig('import (remove package)');
+    const isRemoved = this.depResolver.removeFromRootPolicy(importedPackageNames);
+    if (isRemoved) await this.depResolver.persistConfig('import (remove package)');
   }
 
   private getImportedPackagesNames(components: ConsumerComponent[]): string[] {

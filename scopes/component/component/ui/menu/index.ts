@@ -1,5 +1,5 @@
 export { CollapsibleMenuNav, MenuNavProps } from './menu-nav';
-export { ComponentMenu, VersionRelatedDropdowns } from './menu';
+export { ComponentMenu, VersionRelatedDropdowns, RightSideMenuItem, RightSideMenuSlot } from './menu';
 export type {
   NavPlugin,
   OrderedNavigationSlot,

@@ -15,6 +15,7 @@ import { isDir, isDirEmptySync } from '@teambit/legacy/dist/utils';
 import { PathLinuxRelative, pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import ConfigMergerAspect, { ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import ComponentWriter, { ComponentWriterProps } from './component-writer';
 import { ComponentWriterAspect } from './component-writer.aspect';
@@ -31,9 +32,14 @@ export interface ManyComponentsWriterParams {
   skipUpdatingBitMap?: boolean;
   skipWriteConfigFiles?: boolean;
   reasonForBitmapChange?: string; // optional. will be written in the bitmap-history-metadata
+  shouldUpdateWorkspaceConfig?: boolean; // whether it should update dependencies policy (or leave conflicts) in workspace.jsonc
 }
 
-export type ComponentWriterResults = { installationError?: Error; compilationError?: Error };
+export type ComponentWriterResults = {
+  installationError?: Error;
+  compilationError?: Error;
+  workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult;
+};
 
 export class ComponentWriterMain {
   constructor(
@@ -41,7 +47,8 @@ export class ComponentWriterMain {
     private compiler: CompilerMain,
     private workspace: Workspace,
     private logger: Logger,
-    private mover: MoverMain
+    private mover: MoverMain,
+    private configMerge: ConfigMergerMain
   ) {}
 
   get consumer(): Consumer {
@@ -57,13 +64,17 @@ export class ComponentWriterMain {
     if (!opts.skipUpdatingBitMap) await this.consumer.writeBitMap(opts.reasonForBitmapChange);
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
+    let workspaceConfigUpdateResult: WorkspaceConfigUpdateResult | undefined;
+    if (opts.shouldUpdateWorkspaceConfig) {
+      workspaceConfigUpdateResult = await this.configMerge.updateDepsInWorkspaceConfig(opts.components);
+    }
     if (!opts.skipDependencyInstallation) {
       installationError = await this.installPackagesGracefully(opts.skipWriteConfigFiles);
       // no point to compile if the installation is not running. the environment is not ready.
       compilationError = await this.compileGracefully();
     }
     this.logger.debug('writeMany, completed!');
-    return { installationError, compilationError };
+    return { installationError, compilationError, workspaceConfigUpdateResult };
   }
 
   private async installPackagesGracefully(skipWriteConfigFiles = false): Promise<Error | undefined> {
@@ -286,17 +297,18 @@ to move all component files to a different directory, run bit remove and then bi
   }
 
   static slots = [];
-  static dependencies = [InstallAspect, CompilerAspect, LoggerAspect, WorkspaceAspect, MoverAspect];
+  static dependencies = [InstallAspect, CompilerAspect, LoggerAspect, WorkspaceAspect, MoverAspect, ConfigMergerAspect];
   static runtime = MainRuntime;
-  static async provider([install, compiler, loggerMain, workspace, mover]: [
+  static async provider([install, compiler, loggerMain, workspace, mover, configMerger]: [
     InstallMain,
     CompilerMain,
     LoggerMain,
     Workspace,
-    MoverMain
+    MoverMain,
+    ConfigMergerMain
   ]) {
     const logger = loggerMain.createLogger(ComponentWriterAspect.id);
-    return new ComponentWriterMain(install, compiler, workspace, logger, mover);
+    return new ComponentWriterMain(install, compiler, workspace, logger, mover, configMerger);
   }
 }
 
