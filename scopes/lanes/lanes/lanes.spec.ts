@@ -26,7 +26,7 @@ describe('LanesAspect', function () {
     it('should list all lanes', async () => {
       const currentLanes = await lanes.getLanes({});
       expect(currentLanes.length).toEqual(1);
-      expect(currentLanes[0].name).toEqual('stage');
+      expect(currentLanes[0].id.name).toEqual('stage');
     });
   });
 
@@ -274,6 +274,29 @@ describe('LanesAspect', function () {
         expect(results.components?.length).toEqual(1);
         expect(results.failedComponents?.length).toEqual(0);
       });
+    });
+  });
+
+  describe('create lanes with the same name different scope', () => {
+    let lanes: LanesMain;
+    let workspaceData: WorkspaceData;
+    beforeAll(async () => {
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      await mockComponents(workspacePath);
+      lanes = await loadAspect(LanesAspect, workspacePath);
+      await lanes.createLane('stage');
+      await lanes.switchLanes('main', { skipDependencyInstallation: true });
+    }, 30000);
+    afterAll(async () => {
+      await destroyWorkspace(workspaceData);
+    });
+    it('should not throw when creating the second lane', async () => {
+      await lanes.createLane('stage', { scope: 'new-scope' });
+      const currentLanes = await lanes.getLanes({});
+      expect(currentLanes.length).toEqual(2);
+      expect(currentLanes[0].id.name).toEqual('stage');
+      expect(currentLanes[1].id.name).toEqual('stage');
     });
   });
 });

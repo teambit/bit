@@ -63,8 +63,8 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
     ],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['x', 'skip-dependency-installation', 'do not auto-install dependencies of the imported components'],
-    ['', 'force-ours', 'regardless of conflicts, ignore theirs changes and keep our local files intact'],
-    ['', 'force-theirs', 'regardless of conflicts, ignore our local changes and use theirs files'],
+    ['', 'force-ours', 'do not merge, preserve local files as is'],
+    ['', 'force-theirs', 'do not merge, just overwrite with incoming files'],
   ] as CommandOptions;
   loader = true;
 
