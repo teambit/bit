@@ -45,7 +45,7 @@ export type Log = {
   email: string | undefined;
 };
 
-export type DepEdgeType = 'prod' | 'dev' | 'ext';
+export type DepEdgeType = 'prod' | 'dev' | 'peer' | 'ext';
 export type DepEdge = { source: ComponentID; target: ComponentID; type: DepEdgeType };
 
 type ExternalHead = { head: Ref; laneId: LaneId };

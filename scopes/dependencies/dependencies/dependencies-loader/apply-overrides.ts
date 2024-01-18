@@ -62,6 +62,7 @@ export class ApplyOverrides {
     this.allDependencies = {
       dependencies: [],
       devDependencies: [],
+      peerDependencies: [],
     };
     this.allPackagesDependencies = {
       packageDependencies: {},
