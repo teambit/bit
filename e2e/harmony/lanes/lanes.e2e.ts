@@ -1226,7 +1226,7 @@ describe('bit lane command', function () {
         expect(status.mergePendingComponents).to.have.lengthOf(1);
       });
       it('bit merge with no args should merge them', () => {
-        const output = helper.command.merge(`--auto-merge-resolve manual`);
+        const output = helper.command.merge(`--manual`);
         expect(output).to.have.string('successfully merged');
         expect(output).to.have.string('CONFLICT');
       });
