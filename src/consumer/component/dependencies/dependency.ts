@@ -24,6 +24,7 @@ export default class Dependency {
   id: ComponentID;
   relativePaths: RelativePath[];
   packageName?: string;
+  versionPolicy?: string;
 
   constructor(id: ComponentID, relativePaths: RelativePath[], packageName?: string) {
     this.id = id;
