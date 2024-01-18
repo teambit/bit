@@ -374,7 +374,7 @@ export class ApplyOverrides {
     });
     this.allPackagesDependencies.peerPackageDependencies = peerPackageDeps;
 
-    const peerDeps = this.allDependencies.peerDependencies || {};
+    const peerDeps = this.allDependencies.peerDependencies ?? [];
     ['dependencies', 'devDependencies'].forEach((field) => {
       for (const dep of this.allDependencies[field]) {
         const pkgName = dep.packageName;
