@@ -384,7 +384,7 @@ export class ApplyOverrides {
           dep.versionPolicy = peerVersionFromWsPolicy;
           peerDeps.push(dep);
         } else if (regularVersionFromWsPolicy) {
-          this.allDependencies[field][pkgName].versionPolicy = regularVersionFromWsPolicy;
+          dep.versionPolicy = regularVersionFromWsPolicy;
         }
       }
       this.allDependencies[field] = this.allDependencies[field].filter(({ packageName }) => !wsPeer[packageName]);
