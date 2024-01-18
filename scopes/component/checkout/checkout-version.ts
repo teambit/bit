@@ -84,7 +84,7 @@ export async function applyVersion(
   const files = component.files;
   updateFileStatus(files, filesStatus, componentFromFS || undefined);
 
-  await removeFilesIfNeeded(filesStatus, componentFromFS || undefined);
+  await removeFilesIfNeeded(filesStatus, consumer, componentFromFS || undefined);
 
   if (mergeResults) {
     // update files according to the merge results
@@ -117,8 +117,16 @@ export function updateFileStatus(files: SourceFile[], filesStatus: FilesStatus, 
  * this needs to be done *before* the component is written to the filesystem, otherwise, it won't work when a file
  * has a case change. e.g. from uppercase to lowercase. (see merge-lane.e2e 'renaming files from uppercase to lowercase').
  */
-export async function removeFilesIfNeeded(filesStatus: FilesStatus, componentFromFS?: ConsumerComponent) {
+export async function removeFilesIfNeeded(
+  filesStatus: FilesStatus,
+  consumer: Consumer,
+  componentFromFS?: ConsumerComponent
+) {
   if (!componentFromFS) return;
+  // @todo: if the component is not in the FS, it should be passed as undefined here.
+  // in the case this is coming from merge-lane, it's sometimes populated from the scope.
+  const isExistOnFs = consumer.bitMap.getComponentIdIfExist(componentFromFS.id, { ignoreVersion: true });
+  if (!isExistOnFs) return;
   const filePathsFromFS = componentFromFS.files || [];
   const dataToPersist = new DataToPersist();
   filePathsFromFS.forEach((file) => {

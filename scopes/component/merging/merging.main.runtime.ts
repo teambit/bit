@@ -478,7 +478,7 @@ export class MergingMain {
       filesStatus = { ...filesStatus, ...modifiedStatus };
     }
 
-    await removeFilesIfNeeded(filesStatus, currentComponent || undefined);
+    await removeFilesIfNeeded(filesStatus, consumer, currentComponent || undefined);
 
     if (configMergeResult) {
       const successfullyMergedConfig = configMergeResult.getSuccessfullyMergedConfig();
