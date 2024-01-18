@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
+import { compact } from 'lodash';
 import {
   ApplyVersionResults,
   applyVersionReport,
@@ -177,11 +178,11 @@ export function checkoutOutput(
     const body = notCheckedOutComponents
       .map((failedComponent) => `${failedComponent.id.toString()} - ${failedComponent.unchangedMessage}`)
       .join('\n');
-    return `${chalk.underline(title)}\n${body}\n\n`;
+    return `${chalk.underline(title)}\n${body}`;
   };
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
-    const title = `\n\nfiles with conflicts summary\n`;
+    const title = `files with conflicts summary\n`;
     const suggestion = `\n\nfix the conflicts above manually and then run "bit install".
 once ready, snap/tag the components to persist the changes`;
     const conflictSummary = conflictSummaryReport(components);
@@ -227,12 +228,11 @@ once ready, snap/tag the components to persist the changes`;
       ? `successfully added the following components from the lane`
       : `the following components exist on the lane but were not added to the workspace. omit --workspace-only flag to add them`;
     const body = newFromLane.join('\n');
-    return `\n\n${chalk.underline(title)}\n${body}`;
+    return `${chalk.underline(title)}\n${body}`;
   };
   const getSummary = () => {
     const checkedOut = components?.length || 0;
     const notCheckedOutLegitimately = notCheckedOutComponents.length;
-    const newLines = '\n\n';
     const title = chalk.bold.underline('Summary');
     const checkedOutStr = `\nTotal Changed: ${chalk.bold(checkedOut.toString())}`;
     const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(notCheckedOutLegitimately.toString())}`;
@@ -242,18 +242,18 @@ once ready, snap/tag the components to persist the changes`;
       ? `\nNew on lane${newOnLaneAddedStr}: ${chalk.bold(newOnLaneNum.toString())}`
       : '';
 
-    return newLines + title + checkedOutStr + unchangedLegitimatelyStr + newOnLaneStr;
+    return title + checkedOutStr + unchangedLegitimatelyStr + newOnLaneStr;
   };
 
-  return (
-    getNotCheckedOutOutput() +
-    getSuccessfulOutput() +
-    getRemovedOutput(removedComponents) +
-    getAddedOutput(addedComponents) +
-    getNewOnLaneOutput() +
-    getConflictSummary() +
-    getSummary() +
-    installationErrorOutput(installationError) +
-    compilationErrorOutput(compilationError)
-  );
+  return compact([
+    getNotCheckedOutOutput(),
+    getSuccessfulOutput(),
+    getRemovedOutput(removedComponents),
+    getAddedOutput(addedComponents),
+    getNewOnLaneOutput(),
+    getConflictSummary(),
+    getSummary(),
+    installationErrorOutput(installationError),
+    compilationErrorOutput(compilationError),
+  ]).join('\n\n');
 }

@@ -121,6 +121,7 @@ export class ImportCmd implements Command {
       workspaceConfigUpdateResult,
       missingIds,
       cancellationMessage,
+      lane,
     } = await this.getImportResults(ids, importFlags);
     if (!importedIds.length && !missingIds?.length) {
       return chalk.yellow(cancellationMessage || 'nothing to import');
@@ -146,12 +147,13 @@ export class ImportCmd implements Command {
       const logs = workspaceConfigUpdateResult?.logs;
       if (!logs || !logs.length) return '';
       const logsStr = logs.join('\n');
-      return `\n${chalk.underline(
+      return `${chalk.underline(
         'verbose logs of workspace config update'
-      )}\n(this is temporarily. once this feature is enabled, use --verbose to see these logs)\n${logsStr}\n\n`;
+      )}\n(this is temporarily. once this feature is enabled, use --verbose to see these logs)\n${logsStr}`;
     };
-    const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date`;
-    const summary = `\n\n${summaryPrefix}${upToDateStr}`;
+    const upToDateSuffix = lane ? ' on the lane' : '';
+    const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date${upToDateSuffix}`;
+    const summary = `${summaryPrefix}${upToDateStr}`;
     const importOutput = compact(importedComponents).join('\n');
     const importedDepsOutput =
       importFlags.displayDependencies && importedDeps.length
@@ -161,15 +163,16 @@ export class ImportCmd implements Command {
           ).join('\n')
         : '';
 
-    const output =
-      getWsConfigUpdateLogs() +
-      importOutput +
-      importedDepsOutput +
-      formatMissingComponents(missingIds) +
-      getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult) +
-      installationErrorOutput(installationError) +
-      compilationErrorOutput(compilationError) +
-      chalk.green(summary);
+    const output = compact([
+      getWsConfigUpdateLogs(),
+      importOutput,
+      importedDepsOutput,
+      formatMissingComponents(missingIds),
+      getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult),
+      installationErrorOutput(installationError),
+      compilationErrorOutput(compilationError),
+      chalk.green(summary),
+    ]).join('\n\n');
 
     return output;
   }
@@ -257,7 +260,7 @@ function formatMissingComponents(missing?: string[]) {
   const subTitle = `The following components are missing from the remote in the requested version, try running "bit status" to re-sync your .bitmap file
 Also, check that the requested version exists on main or the checked out lane`;
   const body = chalk.red(missing.join('\n'));
-  return `\n\n${title}\n${subTitle}\n${body}`;
+  return `${title}\n${subTitle}\n${body}`;
 }
 
 function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails: ImportDetails) {

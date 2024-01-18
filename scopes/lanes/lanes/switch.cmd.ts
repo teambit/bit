@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { compact } from 'lodash';
 import { applyVersionReport, installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
 import { Command, CommandOptions } from '@teambit/cli';
 import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
@@ -80,7 +81,7 @@ ${COMPONENT_PATTERN_HELP}`,
           return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.unchangedMessage)}`;
         })
         .join('\n');
-      return `${title}\n${body}\n\n`;
+      return `${title}\n${body}`;
     };
     const getSuccessfulOutput = () => {
       const laneSwitched = chalk.green(`\nsuccessfully set "${chalk.bold(lane)}" as the active lane`);
@@ -88,13 +89,12 @@ ${COMPONENT_PATTERN_HELP}`,
       const title = `successfully switched ${components.length} components to the head of lane ${lane}\n`;
       return chalk.bold(title) + applyVersionReport(components, true, false) + laneSwitched;
     };
-    const failedOutput = getFailureOutput();
-    const successOutput = getSuccessfulOutput();
-    return (
-      failedOutput +
-      successOutput +
-      installationErrorOutput(installationError) +
-      compilationErrorOutput(compilationError)
-    );
+
+    return compact([
+      getFailureOutput(),
+      getSuccessfulOutput(),
+      installationErrorOutput(installationError),
+      compilationErrorOutput(compilationError),
+    ]).join('\n\n');
   }
 }
