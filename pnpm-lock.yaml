@@ -191,6 +191,9 @@ importers:
       '@teambit/base-react.navigation.link':
         specifier: 2.0.27
         version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-react.themes.theme-switcher':
+        specifier: ^1.0.2
+        version: 1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.constants.storage':
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -12793,6 +12796,9 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
+      '@teambit/base-react.themes.theme-switcher':
+        specifier: ^1.0.2
+        version: 1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.controls.menu':
         specifier: ^0.0.1
         version: 0.0.1(react-dom@17.0.2)(react@17.0.2)
@@ -17287,6 +17293,9 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
+      '@teambit/base-react.themes.theme-switcher':
+        specifier: ^1.0.2
+        version: 1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.loaders.skeleton':
         specifier: 1.0.1
         version: 1.0.1(react-dom@17.0.2)(react@17.0.2)
@@ -24161,6 +24170,9 @@ importers:
       '@react-hook/latest':
         specifier: 1.0.3
         version: 1.0.3(react@17.0.2)
+      '@teambit/base-react.themes.theme-switcher':
+        specifier: ^1.0.2
+        version: 1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter':
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -32480,7 +32492,7 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
 
   /@teambit/base-react.themes.theme-switcher@1.0.2(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-ohfnPt23FmLPqATiPMmBwSeIpIA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-react/themes/theme-switcher@1.0.2.tgz}
+    resolution: {integrity: sha1-ohfnPt23FmLPqATiPMmBwSeIpIA=}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -32490,7 +32502,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   /@teambit/base-react.themes.theme-switcher@1.0.2(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha1-ohfnPt23FmLPqATiPMmBwSeIpIA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-react/themes/theme-switcher@1.0.2.tgz}
+    resolution: {integrity: sha1-ohfnPt23FmLPqATiPMmBwSeIpIA=}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67670,6 +67682,7 @@ packages:
       react: ^17.0.0 || ^18.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
+      '@teambit/base-react.themes.theme-switcher': 1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/cloud.models.cloud-scope': file:scopes/cloud/models/cloud-scope(react@17.0.2)
       '@teambit/cloud.models.cloud-user': file:scopes/cloud/models/cloud-user
       '@teambit/cloud.ui.user-bar': file:scopes/cloud/ui/user-bar(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
@@ -69474,6 +69487,7 @@ packages:
       react-dom: ^17.0.0 || ^18.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
+      '@teambit/base-react.themes.theme-switcher': 1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.loaders.skeleton': 1.0.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 1.2.0
       '@teambit/component.ui.component-meta': 0.0.358(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.74)(react-dom@17.0.2)(react@17.0.2)
@@ -72293,6 +72307,7 @@ packages:
       '@apollo/client': 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@react-hook/latest': 1.0.3(react@17.0.2)
+      '@teambit/base-react.themes.theme-switcher': 1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error': 0.0.404
