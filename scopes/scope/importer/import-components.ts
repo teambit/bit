@@ -1,15 +1,14 @@
 import chalk from 'chalk';
 import R from 'ramda';
+import yesno from 'yesno';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
 import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/lib/list-scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import loader from '@teambit/legacy/dist/cli/loader';
 import { BEFORE_IMPORT_ACTION } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
-import logger from '@teambit/legacy/dist/logger/logger';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
 import { getLatestVersionNumber, pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
@@ -38,6 +37,7 @@ import { EnvsMain } from '@teambit/envs';
 import { compact } from 'lodash';
 import { FilesStatus } from '@teambit/merging';
 import { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
+import { Logger } from '@teambit/logger';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -53,6 +53,7 @@ export type ImportOptions = {
   objectsOnly?: boolean;
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages, not as imported
   importDependents?: boolean;
+  dependentsDryRun?: boolean;
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
   saveInLane?: boolean; // save the imported component on the current lane (won't be available on main)
   lanes?: {
@@ -105,6 +106,7 @@ export default class ImportComponents {
     private graph: GraphMain,
     private componentWriter: ComponentWriterMain,
     private envs: EnvsMain,
+    private logger: Logger,
     public options: ImportOptions
   ) {
     this.consumer = this.workspace.consumer;
@@ -114,20 +116,20 @@ export default class ImportComponents {
 
   async importComponents(): Promise<ImportResult> {
     let result;
-    loader.start(BEFORE_IMPORT_ACTION);
+    this.logger.setStatusLine(BEFORE_IMPORT_ACTION);
     const startTime = process.hrtime();
     if (this.options.lanes && !this.options.ids.length) {
       result = await this.importObjectsOnLane();
-      loader.succeed(BEFORE_IMPORT_ACTION, startTime);
+      this.logger.consoleSuccess(BEFORE_IMPORT_ACTION, startTime);
       return result;
     }
     if (this.options.ids.length) {
       result = await this.importSpecificComponents();
-      loader.succeed(BEFORE_IMPORT_ACTION, startTime);
+      this.logger.consoleSuccess(BEFORE_IMPORT_ACTION, startTime);
       return result;
     }
     result = await this.importAccordingToBitMap();
-    loader.succeed(BEFORE_IMPORT_ACTION, startTime);
+    this.logger.consoleSuccess(BEFORE_IMPORT_ACTION, startTime);
     return result;
   }
 
@@ -138,8 +140,10 @@ export default class ImportComponents {
     const lane = this.remoteLane;
     const bitIds: ComponentIdList = await this.getBitIds();
     lane
-      ? logger.debug(`importObjectsOnLane, Lane: ${lane.id()}, Ids: ${bitIds.toString()}`)
-      : logger.debug(`importObjectsOnLane, the lane does not exist on the remote. importing only the main components`);
+      ? this.logger.debug(`importObjectsOnLane, Lane: ${lane.id()}, Ids: ${bitIds.toString()}`)
+      : this.logger.debug(
+          `importObjectsOnLane, the lane does not exist on the remote. importing only the main components`
+        );
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     const versionDependenciesArr = await this._importComponentsObjects(bitIds, {
       lane,
@@ -182,7 +186,7 @@ export default class ImportComponents {
   }
 
   async importSpecificComponents(): Promise<ImportResult> {
-    logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
+    this.logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
     const bitIds: ComponentIdList = await this.getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
@@ -337,7 +341,7 @@ if you need this specific snap, find the lane this snap is belong to, then run "
       reason: `of their latest on ${lane ? `lane ${lane.id()}` : 'main'}`,
     });
 
-    loader.start(`import ${ids.length} components with their dependencies (if missing)`);
+    this.logger.setStatusLine(`import ${ids.length} components with their dependencies (if missing)`);
     const results = fromOriginalScope
       ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)
       : await scopeComponentsImporter.importMany({
@@ -417,7 +421,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       this.options.ids.map(async (idStr: string) => {
         if (hasWildcard(idStr)) {
           const ids = await getRemoteBitIdsByWildcards(idStr, this.options.includeDeprecated);
-          loader.start(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
+          this.logger.setStatusLine(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
           bitIds.push(...ids);
         } else {
           bitIds.push(ComponentID.fromString(idStr)); // we don't support importing without a scope name
@@ -432,21 +436,32 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     const bitIds: ComponentID[] = this.options.lanes
       ? await this.getBitIdsForLanes()
       : await this.getBitIdsForNonLanes();
-    if (this.options.importDependenciesDirectly || this.options.importDependents) {
+    if (this.options.importDependenciesDirectly || this.options.importDependents || this.options.dependentsDryRun) {
       if (this.options.importDependenciesDirectly) {
         const dependenciesIds = await this.getFlattenedDepsUnique(bitIds);
         bitIds.push(...dependenciesIds);
       }
-      if (this.options.importDependents) {
+      if (this.options.importDependents || this.options.dependentsDryRun) {
+        this.logger.setStatusLine('finding dependents');
         const graph = await this.graph.getGraphIds();
         const targetCompIds = await this.workspace.resolveMultipleComponentIds(bitIds);
         const sourceIds = await this.workspace.listIds();
         const ids = graph.findIdsFromSourcesToTargets(sourceIds, targetCompIds);
-        logger.debug(
-          `found ${ids.length} component for --dependents flag`,
-          ids.map((id) => id.toString())
-        );
-        bitIds.push(...ids.map((id) => id));
+        const idsStr = ids.map((id) => id.toString());
+        this.logger.debug(`found ${ids.length} component for --dependents flag`, idsStr);
+        if (this.options.dependentsDryRun) {
+          this.logger.clearStatusLine();
+          const ok = await yesno({
+            question: `found the following ${ids.length} components for --dependents flag:\n${idsStr.join(
+              '\n'
+            )}\nWould you like to continue with the import?`,
+          });
+          if (!ok) {
+            throw new BitError('import was aborted');
+          }
+        }
+
+        bitIds.push(...ids);
       }
     }
     return ComponentIdList.uniqFromArray(bitIds);

@@ -30,6 +30,7 @@ type ImportFlags = {
   saveInLane?: boolean;
   dependencies?: boolean;
   dependents?: boolean;
+  dependentsDryRun?: boolean;
   allHistory?: boolean;
   fetchDeps?: boolean;
   trackOnly?: boolean;
@@ -77,6 +78,11 @@ export class ImportCmd implements Command {
       '',
       'dependents',
       'import components found while traversing from the imported components upwards to the workspace components',
+    ],
+    [
+      '',
+      'dependents-dry-run',
+      'same as --dependents, except it prints the found dependents and wait for confirmation before importing them',
     ],
     [
       '',
@@ -198,6 +204,7 @@ export class ImportCmd implements Command {
       saveInLane = false,
       dependencies = false,
       dependents = false,
+      dependentsDryRun = false,
       allHistory = false,
       fetchDeps = false,
       trackOnly = false,
@@ -215,6 +222,9 @@ export class ImportCmd implements Command {
     }
     if (!ids.length && dependents) {
       throw new GeneralError('you have to specify ids to use "--dependents" flag');
+    }
+    if (!ids.length && dependentsDryRun) {
+      throw new GeneralError('you have to specify ids to use "--dependents-dry-run" flag');
     }
     if (!ids.length && trackOnly) {
       throw new GeneralError('you have to specify ids to use "--track-only" flag');
@@ -245,6 +255,7 @@ export class ImportCmd implements Command {
       saveInLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
+      dependentsDryRun,
       allHistory,
       fetchDeps,
       trackOnly,
