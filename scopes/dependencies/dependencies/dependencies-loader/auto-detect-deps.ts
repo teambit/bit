@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import semver from 'semver';
 import { isSnap } from '@teambit/component-version';
 import { ComponentID } from '@teambit/component-id';
-import { uniq, isEmpty, forEach } from 'lodash';
+import { uniq, isEmpty, forEach, differenceWith } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
@@ -632,7 +632,7 @@ export class AutoDetectDeps {
 
   private getDiffSpecifiers(originSpecifiers: ImportSpecifier[], targetSpecifiers: ImportSpecifier[]) {
     const cmp = (specifier1, specifier2) => specifier1.mainFile.name === specifier2.mainFile.name;
-    return R.differenceWith(cmp, targetSpecifiers, originSpecifiers);
+    return differenceWith(targetSpecifiers, originSpecifiers, cmp);
   }
 
   /**
