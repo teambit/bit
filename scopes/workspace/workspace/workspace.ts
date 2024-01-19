@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import memoize from 'memoizee';
 import mapSeries from 'p-map-series';
+import fetch from 'node-fetch';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
@@ -1667,6 +1668,46 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.defaultDirectory;
   }
 
+  async resolveComponentIdFromPackageName(packageName: string): Promise<ComponentID> {
+    if (!packageName.startsWith('@')) {
+      throw new Error(`findComponentIdFromPackageName supports only packages that start with @, got ${packageName}`);
+    }
+    const errMsgPrefix = `unable to resolve a component-id from the package-name ${packageName}, `;
+    const pkgJsonPath = path.join(this.path, 'node_modules', packageName, 'package.json');
+    let pkgJson: Record<string, any> | undefined;
+    try {
+      pkgJson = await fs.readJson(pkgJsonPath);
+    } catch (err) {
+      // never mind the reason. probably it's not there.
+    }
+    if (pkgJson) {
+      const compId = pkgJson.componentId;
+      if (!compId) {
+        throw new BitError(
+          `${errMsgPrefix}the package.json file has no componentId field, it's probably not a component`
+        );
+      }
+      return ComponentID.fromObject(compId);
+    }
+
+    const url = `https://node-registry.bit.cloud/${packageName}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new BitError(`${errMsgPrefix}got ${res.statusText} from the url: ${url}`);
+    }
+    const data = await res.json();
+    const latest = data['dist-tags'].latest;
+    if (!latest) throw new BitError(`${errMsgPrefix}the "dist-tags" has no latest field`);
+    const version = data.versions[latest];
+    if (!version) throw new BitError(`${errMsgPrefix}the "versions" is missing the latest "${latest}" field`);
+    const compId = version.componentId;
+    if (!compId)
+      throw new BitError(
+        `${errMsgPrefix}the package.json of version "${latest}" has no componentId field, it's probably not a component`
+      );
+    return ComponentID.fromObject(compId).changeVersion(undefined);
+  }
+
   /**
    * Transform the id to ComponentId and get the exact id as appear in bitmap
    */
@@ -1677,6 +1718,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     }
     if (id instanceof ComponentID && id.hasVersion()) {
       return id;
+    }
+    if (typeof id === 'string' && id.startsWith('@')) {
+      return this.resolveComponentIdFromPackageName(id);
     }
     const getDefaultScope = async (bitId: ComponentID, bitMapOptions?: GetBitMapComponentOptions) => {
       if (bitId.scope) {
