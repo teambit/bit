@@ -1,6 +1,5 @@
 import { stripTrailingChar } from '@teambit/toolbox.string.strip-trailing-char';
 import { isPathInside } from '@teambit/toolbox.path.is-path-inside';
-import any from 'ramda/src/any';
 import minimatch from 'minimatch';
 import { maxBy, property, sortBy } from 'lodash';
 import { DirPatternWithStar } from './exceptions';
@@ -59,7 +58,7 @@ export function isMatchPattern(rootDir: PathLinuxRelative, componentName: string
   };
 
   const maxMatch: MatchedPatternItemWithExclude = maxBy(matches, (match) => match.specificity) || defaultVal;
-  const excluded = any((match) => match.match && match.excluded, matches);
+  const excluded = matches.some((match) => match.match && match.excluded);
 
   return {
     match: maxMatch.match,

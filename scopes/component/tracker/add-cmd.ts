@@ -3,7 +3,6 @@ import chalk from 'chalk';
 import * as path from 'path';
 import { BitError } from '@teambit/bit-error';
 import { PathLinux, PathOsBased } from '@teambit/legacy/dist/utils/path';
-import R from 'ramda';
 import { AddActionResults, Warnings } from './add-components';
 import { TrackerMain } from './tracker.main.runtime';
 
@@ -58,7 +57,7 @@ export class AddCmd implements Command {
           )
           .filter((x) => x)
           .join('\n');
-        return R.isEmpty(alreadyUsedWarning) ? '' : `${alreadyUsedWarning}\n`;
+        return alreadyUsedWarning ? `${alreadyUsedWarning}\n` : '';
       };
       const emptyDirectoryOutput = () => {
         if (!warnings.emptyDirectory.length) return '';
@@ -77,8 +76,8 @@ export class AddCmd implements Command {
 
     return (
       paintWarning() +
-      R.flatten(
-        addedComponents.map((result) => {
+      addedComponents
+        .map((result) => {
           if (result.files.length === 0) {
             return chalk.underline.red(`could not track component ${chalk.bold(result.id)}: no files to track`);
           }
@@ -86,7 +85,8 @@ export class AddCmd implements Command {
           const files = result.files.map((file) => chalk.green(`added ${file}`));
           return title + files.join('\n');
         })
-      ).join('\n\n')
+        .flat()
+        .join('\n\n')
     );
   }
 

@@ -3,7 +3,6 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import R from 'ramda';
 import semver, { ReleaseType } from 'semver';
 import { compact, difference, uniq } from 'lodash';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
@@ -197,7 +196,7 @@ export class SnappingMain {
       snapped,
       unmerged
     );
-    if (R.isEmpty(bitIds)) return null;
+    if (!bitIds.length) return null;
 
     const legacyBitIds = ComponentIdList.fromArray(bitIds);
 
@@ -1011,7 +1010,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     this.issues.removeIgnoredIssuesFromComponents(components, issuesToIgnore);
     const legacyComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
-    if (!R.isEmpty(componentsWithBlockingIssues)) {
+    if (componentsWithBlockingIssues.length) {
       throw new ComponentsHaveIssues(componentsWithBlockingIssues);
     }
 

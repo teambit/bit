@@ -1,9 +1,8 @@
 import { Harmony } from '@teambit/harmony';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import { compact } from 'lodash';
+import { compact, merge } from 'lodash';
 import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
@@ -200,7 +199,7 @@ export class AspectMain {
     return this.envs.override({
       getDependencies: async () => {
         const reactDeps = await this.aspectEnv.getDependencies();
-        return mergeDeepLeft(dependencyPolicy, reactDeps);
+        return merge(reactDeps, dependencyPolicy);
       },
     });
   }

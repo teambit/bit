@@ -1,6 +1,5 @@
-import forEachObjIndexed from 'ramda/src/forEachObjIndexed';
 import { SemVer } from 'semver';
-
+import { forEach } from 'lodash';
 import { PackageName } from '../../dependencies';
 import { ManifestDependenciesObject, ManifestDependenciesKeysNames, DepObjectValue } from '../manifest';
 import { DedupedDependencies } from './dedupe-dependencies';
@@ -18,14 +17,10 @@ export function mergeWithRootDeps(
   rootDependencies: ManifestDependenciesObject,
   dedupedDependencies: DedupedDependencies
 ): DedupedDependencies {
-  forEachObjIndexed(mergeSpecificLifeCycleRootDepsToDedupedDependencies(dedupedDependencies), rootDependencies);
+  forEach(rootDependencies, (deps: any, depKeyName: any) => {
+    forEach(deps, mergeRootDepToDedupedDependencies(dedupedDependencies, depKeyName));
+  });
   return dedupedDependencies;
-}
-
-function mergeSpecificLifeCycleRootDepsToDedupedDependencies(dedupedDependencies: DedupedDependencies) {
-  return (deps: DepObjectValue, depKeyName: ManifestDependenciesKeysNames) => {
-    forEachObjIndexed(mergeRootDepToDedupedDependencies(dedupedDependencies, depKeyName), deps);
-  };
 }
 
 function mergeRootDepToDedupedDependencies(

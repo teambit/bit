@@ -1,13 +1,13 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import chalk from 'chalk';
-import R from 'ramda';
+import { isEmpty } from 'lodash';
 
 export function removeTemplate(
   { dependentBits, modifiedComponents = [], removedComponentIds, missingComponents, removedFromLane },
   isRemote
 ) {
   const paintMissingComponents = () => {
-    if (R.isEmpty(missingComponents)) return '';
+    if (isEmpty(missingComponents)) return '';
     return (
       chalk.red('missing components:') +
       chalk(
@@ -19,7 +19,7 @@ export function removeTemplate(
     );
   };
   const paintRemoved = () => {
-    if (R.isEmpty(removedComponentIds) && R.isEmpty(removedFromLane)) return '';
+    if (isEmpty(removedComponentIds) && isEmpty(removedFromLane)) return '';
     const compToStr = (comps: ComponentIdList) =>
       chalk(` ${comps.map((id) => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}\n`);
     const getMsg = (isLane = false) => {
@@ -30,14 +30,14 @@ export function removeTemplate(
       return chalk.green(msg);
     };
     const newLine = '\n';
-    const compOutput = R.isEmpty(removedComponentIds) ? '' : getMsg(false) + compToStr(removedComponentIds) + newLine;
-    const laneOutput = R.isEmpty(removedFromLane) ? '' : getMsg(true) + compToStr(removedFromLane);
+    const compOutput = isEmpty(removedComponentIds) ? '' : getMsg(false) + compToStr(removedComponentIds) + newLine;
+    const laneOutput = isEmpty(removedFromLane) ? '' : getMsg(true) + compToStr(removedFromLane);
 
     return `${compOutput}${laneOutput}`;
   };
 
   const paintUnRemovedComponents = () => {
-    if (R.isEmpty(dependentBits)) return '';
+    if (isEmpty(dependentBits)) return '';
     return Object.keys(dependentBits)
       .map((key) => {
         const header = chalk.underline.red(
@@ -50,7 +50,7 @@ export function removeTemplate(
   };
 
   const paintModifiedComponents = () => {
-    if (R.isEmpty(modifiedComponents)) return '';
+    if (isEmpty(modifiedComponents)) return '';
     const modifiedStr = modifiedComponents.map((id: ComponentID) =>
       id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()
     );
