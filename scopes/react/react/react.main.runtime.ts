@@ -1,6 +1,5 @@
 import { Harmony } from '@teambit/harmony';
-import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
-import { omit } from 'lodash';
+import { merge, omit } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect, Compiler } from '@teambit/compiler';
@@ -347,7 +346,7 @@ export class ReactMain {
     return this.envs.override({
       getDependencies: async () => {
         const reactDeps = await this.reactEnv.getDependencies();
-        return mergeDeepLeft(dependencyPolicy, reactDeps);
+        return merge(reactDeps, dependencyPolicy);
       },
     });
   }

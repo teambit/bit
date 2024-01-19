@@ -1,9 +1,8 @@
 import arrayDiff from 'array-difference';
 import fs from 'fs-extra';
 import ignore from 'ignore';
-import groupby from 'lodash.groupby';
 import * as path from 'path';
-import R from 'ramda';
+import { compact, groupBy, isEmpty, unionBy, uniq } from 'lodash';
 import format from 'string-format';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { ComponentID } from '@teambit/component-id';
@@ -140,8 +139,8 @@ export default class AddComponents {
       return Promise.all(filesListMatch);
     });
 
-    const filesListFlatten = R.flatten(await Promise.all(filesListAllMatches));
-    const filesListUnique = R.uniq(filesListFlatten);
+    const filesListFlatten = (await Promise.all(filesListAllMatches)).flat();
+    const filesListUnique = uniq(filesListFlatten);
     return filesListUnique.map((file) => {
       // when files array has the test file with different letter case, use the one from the file array
       const fileNormalized = pathNormalizeToLinux(file);
@@ -328,7 +327,7 @@ you can add the directory these files are located at and it'll change the root d
     componentFiles: ComponentMapFile[],
     existingComponentMapFile: ComponentMapFile[]
   ) {
-    return R.unionWith(R.eqBy(R.prop('relativePath')), existingComponentMapFile, componentFiles);
+    return unionBy(existingComponentMapFile, componentFiles, 'relativePath');
   }
 
   /**
@@ -519,19 +518,19 @@ you can add the directory these files are located at and it'll change the root d
 
     let componentPathsStats: PathsStats = {};
 
-    const resolvedComponentPathsWithoutGitIgnore = R.flatten(
+    const resolvedComponentPathsWithoutGitIgnore = (
       await Promise.all(this.componentPaths.map((componentPath) => glob(componentPath)))
-    );
+    ).flat();
     this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
 
     const resolvedComponentPathsWithGitIgnore = this.gitIgnore.filter(resolvedComponentPathsWithoutGitIgnore);
     // Run diff on both arrays to see what was filtered out because of the gitignore file
     const diff = arrayDiff(resolvedComponentPathsWithGitIgnore, resolvedComponentPathsWithoutGitIgnore);
 
-    if (R.isEmpty(resolvedComponentPathsWithoutGitIgnore)) {
+    if (!resolvedComponentPathsWithoutGitIgnore.length) {
       throw new PathsNotExist(this.componentPaths);
     }
-    if (!R.isEmpty(resolvedComponentPathsWithGitIgnore)) {
+    if (resolvedComponentPathsWithGitIgnore.length) {
       componentPathsStats = validatePaths(resolvedComponentPathsWithGitIgnore);
     } else {
       throw new NoFiles(diff);
@@ -557,7 +556,7 @@ you can add the directory these files are located at and it'll change the root d
       // so then when a component is imported, it will write the files into the original directories
       const addedOne = await this.addOneComponent(Object.keys(componentPathsStats)[0]);
       await this._removeNamespaceIfNotNeeded([addedOne]);
-      if (!R.isEmpty(addedOne.files)) {
+      if (addedOne.files.length) {
         const addedResult = await this.addOrUpdateComponentInBitMap(addedOne);
         if (addedResult) this.addedComponents.push(addedResult);
       }
@@ -605,7 +604,7 @@ you can add the directory these files are located at and it'll change the root d
     const missingMainFiles = [];
     await Promise.all(
       added.map(async (component) => {
-        if (!R.isEmpty(component.files)) {
+        if (component.files.length) {
           try {
             const addedComponent = await this.addOrUpdateComponentInBitMap(component);
             if (addedComponent && addedComponent.files.length) this.addedComponents.push(addedComponent);
@@ -654,7 +653,7 @@ you can add the directory these files are located at and it'll change the root d
       }
     });
     const added = await Promise.all(addedP);
-    return R.reject(R.isNil, added);
+    return compact(added);
   }
 
   _throwForOutsideConsumer(relativeToConsumerPath: PathOsBased) {
@@ -705,9 +704,9 @@ function validatePaths(fileArray: string[]): PathsStats {
  */
 function validateNoDuplicateIds(addComponents: Record<string, any>[]) {
   const duplicateIds = {};
-  const newGroupedComponents = groupby(addComponents, 'componentId');
+  const newGroupedComponents = groupBy(addComponents, 'componentId');
   Object.keys(newGroupedComponents).forEach((key) => {
     if (newGroupedComponents[key].length > 1) duplicateIds[key] = newGroupedComponents[key];
   });
-  if (!R.isEmpty(duplicateIds) && !R.isNil(duplicateIds)) throw new DuplicateIds(duplicateIds);
+  if (!isEmpty(duplicateIds)) throw new DuplicateIds(duplicateIds);
 }

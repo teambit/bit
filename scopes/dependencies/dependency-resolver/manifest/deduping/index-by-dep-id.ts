@@ -1,8 +1,6 @@
-import forEachObjIndexed from 'ramda/src/forEachObjIndexed';
-import pick from 'ramda/src/pick';
-import omit from 'ramda/src/omit';
+import { forEach, omit, pick } from 'lodash';
 import { LIFECYCLE_TYPE_BY_KEY_NAME } from '../../dependencies/constants';
-import { ManifestDependenciesKeysNames, DepObjectValue } from '../manifest';
+import { ManifestDependenciesKeysNames, DepObjectValue, ManifestDependenciesObject } from '../manifest';
 import { DependencyLifecycleType, SemverVersion, PackageName } from '../../dependencies';
 import { ComponentDependenciesMap } from '../workspace-manifest-factory';
 import { WorkspacePolicy } from '../../policy';
@@ -39,13 +37,26 @@ export function indexByDepId(
   hoistedDepFields?: ManifestDependenciesKeysNames[]
 ): PackageNameIndex {
   const result: PackageNameIndex = new Map();
-  componentDependenciesMap.forEach((depsObject, compPackageName) => {
+  /**
+   * Record<ManifestDependenciesKeysNames, DepObjectValue>
+   * depsObject: {
+   *   dependencies: { depId: version },
+   *   devDependencies: { depId: version },
+   * }
+   */
+  componentDependenciesMap.forEach((depsObject: ManifestDependenciesObject, compPackageName) => {
     if (hoistedDepFields) {
-      depsObject = pick(hoistedDepFields, depsObject);
+      depsObject = pick(depsObject, hoistedDepFields);
     } else {
-      depsObject = omit(['peerDependenciesMeta'], depsObject);
+      depsObject = omit(depsObject, ['peerDependenciesMeta']);
     }
-    forEachObjIndexed(addSpecificLifeCycleDepsToIndex(result, compPackageName), depsObject);
+    forEach(
+      depsObject as Record<ManifestDependenciesKeysNames, DepObjectValue>,
+      (deps: DepObjectValue, depKeyName: string) => {
+        const lifecycleType = LIFECYCLE_TYPE_BY_KEY_NAME[depKeyName] as DependencyLifecycleType;
+        forEach(deps, addComponentDepToDepIdIndex(result, compPackageName, lifecycleType));
+      }
+    );
   });
   addPreservedFromRoot(result, rootPolicy);
   return result;
@@ -72,20 +83,6 @@ function setMetadataToExistingIndexItem(
   if (existingItem) {
     existingItem.metadata = metadata;
   }
-}
-
-/**
- * Mutate the index and add all deps from specific lifecycle type to the index
- *
- * @param {PackageNameIndex} index
- * @param {PackageName} origin
- * @returns
- */
-function addSpecificLifeCycleDepsToIndex(index: PackageNameIndex, origin: PackageName) {
-  return (deps: DepObjectValue, depKeyName: ManifestDependenciesKeysNames) => {
-    const lifecycleType = LIFECYCLE_TYPE_BY_KEY_NAME[depKeyName] as DependencyLifecycleType;
-    forEachObjIndexed(addComponentDepToDepIdIndex(index, origin, lifecycleType), deps);
-  };
 }
 
 /**

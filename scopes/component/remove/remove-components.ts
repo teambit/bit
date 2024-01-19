@@ -1,8 +1,8 @@
 import groupArray from 'group-array';
 import partition from 'lodash.partition';
 import { Workspace } from '@teambit/workspace';
-import R from 'ramda';
 import { ComponentIdList } from '@teambit/component-id';
+import { isEmpty } from 'lodash';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import enrichContextFromGlobal from '@teambit/legacy/dist/hooks/utils/enrich-context-from-global';
@@ -57,7 +57,7 @@ export async function removeComponents({
       `unable to remove the remote components: ${localIds.join(',')} as they don't contain a scope-name`
     );
   }
-  const remoteResult = remote && !R.isEmpty(remoteIds) ? await removeRemote(workspace, remoteIds, force) : [];
+  const remoteResult = remote && !isEmpty(remoteIds) ? await removeRemote(workspace, remoteIds, force) : [];
   const localResult = !remote
     ? await removeLocal(workspace as Workspace, bitIdsLatest, force, track, deleteFiles)
     : new RemovedLocalObjects();
@@ -114,8 +114,7 @@ async function removeLocal(
   // local remove in case user wants to delete tagged components
   const modifiedComponents = new ComponentIdList();
   const nonModifiedComponents = new ComponentIdList();
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  if (R.isEmpty(bitIds)) return new RemovedLocalObjects();
+  if (!bitIds.length) return new RemovedLocalObjects();
   if (!force) {
     await pMapSeries(bitIds, async (id) => {
       try {

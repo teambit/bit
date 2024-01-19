@@ -1,10 +1,9 @@
 import * as path from 'path';
 import fs from 'fs-extra';
-import R from 'ramda';
 import semver from 'semver';
 import { isSnap } from '@teambit/component-version';
 import { ComponentID } from '@teambit/component-id';
-import { uniq, isEmpty } from 'lodash';
+import { uniq, isEmpty, forEach, differenceWith } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
@@ -242,7 +241,7 @@ export class AutoDetectDeps {
       return;
     }
     const allDepsFiles = this.tree[originFile].files;
-    if (!allDepsFiles || R.isEmpty(allDepsFiles)) return;
+    if (!allDepsFiles || isEmpty(allDepsFiles)) return;
     allDepsFiles.forEach((depFile: FileObject) => {
       const isDepFileUntracked = this.processOneDepFile(
         originFile,
@@ -358,7 +357,7 @@ export class AutoDetectDeps {
    */
   private processComponents(originFile: PathLinuxRelative, fileType: FileType) {
     const components = this.tree[originFile].components;
-    if (!components || R.isEmpty(components)) return;
+    if (!components || isEmpty(components)) return;
     components.forEach((compDep) => {
       let componentId = this.getComponentIdByResolvedPackageData(compDep);
       if (componentId.isEqual(this.componentId)) {
@@ -451,7 +450,7 @@ export class AutoDetectDeps {
     }
     const packageNames = Object.keys(packages).concat(this.tree[originFile].missing?.packages ?? []);
     this._addTypesPackagesForTypeScript(packageNames, originFile);
-    if (!packages || R.isEmpty(packages)) return;
+    if (!packages || isEmpty(packages)) return;
     if (fileType.isTestFile) {
       Object.assign(this.allPackagesDependencies.devPackageDependencies, packages);
     } else {
@@ -477,13 +476,13 @@ export class AutoDetectDeps {
         const existWithDifferentExt = compFilesWithoutExt.some((f) => f === relativeToCompDirWithoutExt);
         return !existWithDifferentExt;
       });
-      if (R.isEmpty(missingFiles)) return;
+      if (isEmpty(missingFiles)) return;
       this._pushToMissingDependenciesOnFs(originFile, missingFiles);
     };
     const processMissingPackages = () => {
       if (isEmpty(missing.packages)) return;
       const missingPackages = missing.packages;
-      if (!R.isEmpty(missingPackages)) {
+      if (!isEmpty(missingPackages)) {
         this._pushToMissingPackagesDependenciesIssues(originFile, missingPackages, fileType);
       }
     };
@@ -561,7 +560,7 @@ export class AutoDetectDeps {
 
     this.tree[originFile].unidentifiedPackages = unidentifiedPackagesFiltered;
     this.tree[originFile].components = bitsFiltered;
-    this.coreAspects.push(...R.uniq(usedCoreAspects));
+    this.coreAspects.push(...uniq(usedCoreAspects));
   }
 
   /**
@@ -623,7 +622,7 @@ export class AutoDetectDeps {
   }
 
   private getExistingDepRelativePaths(dependency: Dependency, relativePath: RelativePath) {
-    if (!dependency.relativePaths || R.isEmpty(dependency.relativePaths)) return null;
+    if (!dependency.relativePaths || isEmpty(dependency.relativePaths)) return null;
     return dependency.relativePaths.find(
       (paths) =>
         paths.sourceRelativePath === relativePath.sourceRelativePath &&
@@ -633,7 +632,7 @@ export class AutoDetectDeps {
 
   private getDiffSpecifiers(originSpecifiers: ImportSpecifier[], targetSpecifiers: ImportSpecifier[]) {
     const cmp = (specifier1, specifier2) => specifier1.mainFile.name === specifier2.mainFile.name;
-    return R.differenceWith(cmp, targetSpecifiers, originSpecifiers);
+    return differenceWith(targetSpecifiers, originSpecifiers, cmp);
   }
 
   /**
@@ -682,14 +681,14 @@ export class AutoDetectDeps {
   private _pushToUntrackDependenciesIssues(originFile: PathLinuxRelative, depFileRelative, nested = false) {
     const findExisting = () => {
       let result;
-      R.forEachObjIndexed((currentUntracked) => {
+      forEach(this.issues.getIssue(IssuesClasses.UntrackedDependencies)?.data || {}, (currentUntracked) => {
         const found = currentUntracked.untrackedFiles.find((file) => {
           return file.relativePath === depFileRelative;
         });
         if (found) {
           result = found;
         }
-      }, this.issues.getIssue(IssuesClasses.UntrackedDependencies)?.data || {});
+      });
       return result;
     };
     const existing = findExisting();

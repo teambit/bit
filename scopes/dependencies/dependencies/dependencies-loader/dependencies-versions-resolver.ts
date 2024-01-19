@@ -1,8 +1,8 @@
-import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { Workspace } from '@teambit/workspace';
 import logger from '@teambit/legacy/dist/logger/logger';
+import { isEmpty } from 'lodash';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import Dependencies from '@teambit/legacy/dist/consumer/component/dependencies/dependencies';
@@ -127,7 +127,7 @@ export function updateDependenciesVersions(
 
   function getIdFromComponentConfig(componentId: ComponentID): ComponentID | undefined {
     const dependencies = component.overrides.getComponentDependenciesWithVersion();
-    if (R.isEmpty(dependencies)) return undefined;
+    if (isEmpty(dependencies)) return undefined;
     const dependency = Object.keys(dependencies).find((idStr) => componentId.toStringWithoutVersion() === idStr);
     if (!dependency) return undefined;
     return componentId.changeVersion(dependencies[dependency]);

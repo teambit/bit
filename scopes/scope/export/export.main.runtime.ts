@@ -1,7 +1,6 @@
 import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
-import R from 'ramda';
 import { BitError } from '@teambit/bit-error';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -149,7 +148,7 @@ export class ExportMain {
       includeNonStaged || headOnly
     );
 
-    if (R.isEmpty(idsToExport)) {
+    if (!idsToExport.length) {
       return {
         updatedIds: [],
         nonExistOnBitMap: [],
@@ -553,9 +552,9 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const results = await updateLocalObjects(laneObject);
     process.removeListener('SIGINT', warnCancelExport);
     return {
-      newIdsOnRemote: R.flatten(results.map((r) => r.newIdsOnRemote)),
-      exported: ComponentIdList.uniqFromArray(R.flatten(results.map((r) => r.exported))),
-      updatedLocally: ComponentIdList.uniqFromArray(R.flatten(results.map((r) => r.updatedLocally))),
+      newIdsOnRemote: results.map((r) => r.newIdsOnRemote).flat(),
+      exported: ComponentIdList.uniqFromArray(results.map((r) => r.exported).flat()),
+      updatedLocally: ComponentIdList.uniqFromArray(results.map((r) => r.updatedLocally).flat()),
       rippleJobs: centralHubResults?.rippleJobs || [],
     };
   }

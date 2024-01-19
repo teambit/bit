@@ -1,7 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { compact } from 'lodash';
-import R from 'ramda';
+import { compact, uniq } from 'lodash';
 import { installationErrorOutput, compilationErrorOutput, getWorkspaceConfigUpdateOutput } from '@teambit/merging';
 import {
   FileStatus,
@@ -164,7 +163,7 @@ export class ImportCmd implements Command {
     const importedDepsOutput =
       importFlags.displayDependencies && importedDeps.length
         ? immutableUnshift(
-            R.uniq(importedDeps.map(formatPlainComponentItem)),
+            uniq(importedDeps.map(formatPlainComponentItem)),
             chalk.green(`\n\nsuccessfully imported ${importedDeps.length} component dependencies`)
           ).join('\n')
         : '';
@@ -230,7 +229,7 @@ export class ImportCmd implements Command {
       throw new GeneralError('you have to specify ids to use "--track-only" flag');
     }
     let mergeStrategy;
-    if (merge && R.is(String, merge)) {
+    if (merge && typeof merge === 'string') {
       const options = Object.keys(MergeOptions);
       if (!options.includes(merge)) {
         throw new GeneralError(`merge must be one of the following: ${options.join(', ')}`);

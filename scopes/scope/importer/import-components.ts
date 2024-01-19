@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import R from 'ramda';
 import yesno from 'yesno';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
@@ -34,7 +33,7 @@ import { Workspace } from '@teambit/workspace';
 import { ComponentWriterMain, ComponentWriterResults, ManyComponentsWriterParams } from '@teambit/component-writer';
 import { LATEST_VERSION } from '@teambit/component-version';
 import { EnvsMain } from '@teambit/envs';
-import { compact } from 'lodash';
+import { compact, difference, fromPairs } from 'lodash';
 import { FilesStatus } from '@teambit/merging';
 import { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import { Logger } from '@teambit/logger';
@@ -500,7 +499,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       importedDeps: [],
       importDetails: [],
     };
-    if (R.isEmpty(componentsIdsToImport)) {
+    if (!componentsIdsToImport.length) {
       return emptyResult;
     }
     await this._throwForModifiedOrNewComponents(componentsIdsToImport);
@@ -543,7 +542,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       return [idStr, modelComponent.listVersions()];
     });
     const versions = await Promise.all(versionsP);
-    return R.fromPairs(versions);
+    return fromPairs(versions);
   }
 
   /**
@@ -567,7 +566,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
       if (!modelComponent) throw new BitError(`imported component ${idStr} was not found in the model`);
       const afterImportVersions = modelComponent.listVersions();
-      const versionDifference: string[] = R.difference(afterImportVersions, beforeImportVersions);
+      const versionDifference: string[] = difference(afterImportVersions, beforeImportVersions);
       const getStatus = (): ImportStatus => {
         if (!versionDifference.length) return 'up to date';
         if (!beforeImportVersions.length) return 'added';
@@ -737,8 +736,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       }
       return component;
     });
-    const removeNulls = R.reject(R.isNil);
-    return removeNulls(componentsToWrite);
+    return compact(componentsToWrite);
   }
 
   _shouldSaveLaneData(): boolean {
