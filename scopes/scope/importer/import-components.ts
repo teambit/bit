@@ -387,11 +387,13 @@ if you need this specific snap, find the lane this snap is belong to, then run "
 
     const idsWithWildcard = this.options.ids.filter((id) => hasWildcard(id));
     const idsWithoutWildcard = this.options.ids.filter((id) => !hasWildcard(id));
-    const idsWithoutWildcardPreferFromLane = idsWithoutWildcard.map((idStr) => {
-      const id = ComponentID.fromString(idStr);
-      const fromLane = bitIdsFromLane.searchWithoutVersion(id);
-      return fromLane && !id.hasVersion() ? fromLane : id;
-    });
+    const idsWithoutWildcardPreferFromLane = await Promise.all(
+      idsWithoutWildcard.map(async (idStr) => {
+        const id = await this.getIdFromStr(idStr);
+        const fromLane = bitIdsFromLane.searchWithoutVersion(id);
+        return fromLane && !id.hasVersion() ? fromLane : id;
+      })
+    );
 
     const bitIds: ComponentID[] = [...idsWithoutWildcardPreferFromLane];
 
@@ -414,6 +416,11 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     return bitIds;
   }
 
+  private async getIdFromStr(id: string): Promise<ComponentID> {
+    if (id.startsWith('@')) return this.workspace.resolveComponentIdFromPackageName(id);
+    return ComponentID.fromString(id); // we don't support importing without a scope name
+  }
+
   private async getBitIdsForNonLanes() {
     const bitIds: ComponentID[] = [];
     await Promise.all(
@@ -423,7 +430,8 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
           this.logger.setStatusLine(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
           bitIds.push(...ids);
         } else {
-          bitIds.push(ComponentID.fromString(idStr)); // we don't support importing without a scope name
+          const id = await this.getIdFromStr(idStr);
+          bitIds.push(id);
         }
       })
     );
