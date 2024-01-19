@@ -12,6 +12,7 @@ import {
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { compact, omit, uniqBy } from 'lodash';
 import { ConfigMergeResult } from './config-merge-result';
 
@@ -79,9 +80,10 @@ export class ComponentConfigMerger {
     private otherAspects: ExtensionDataList,
     private currentLabel: string,
     private otherLabel: string,
-    private logger: Logger
+    private logger: Logger,
+    private mergeStrategy: MergeStrategy
   ) {
-    this.otherLaneIdsStr = otherLane?.toBitIds().map((id) => id.toString()) || [];
+    this.otherLaneIdsStr = otherLane?.toComponentIds().map((id) => id.toString()) || [];
   }
 
   merge(): ConfigMergeResult {
@@ -102,6 +104,12 @@ export class ComponentConfigMerger {
       // exist in current but not in other
       if (baseExt) {
         // was removed on other
+        if (this.mergeStrategy === 'theirs') {
+          return { id, mergedConfig: '-' } as MergeStrategyResult;
+        }
+        if (this.mergeStrategy === 'ours') {
+          return null;
+        }
         return { id, conflict: { currentConfig: this.getConfig(currentExt), otherConfig: '-' } };
       }
       // exist in current but not in other and base, so it got created on current. nothing to do.
@@ -233,6 +241,12 @@ export class ComponentConfigMerger {
       return { id, mergedConfig: otherConfig };
     }
     // either no baseConfig, or baseConfig is also different from both: other and local. that's a conflict.
+    if (this.mergeStrategy === 'theirs') {
+      return { id, mergedConfig: otherConfig };
+    }
+    if (this.mergeStrategy === 'ours') {
+      return null;
+    }
     return { id, conflict: { currentConfig, otherConfig, baseConfig } };
   }
 
@@ -416,6 +430,13 @@ export class ComponentConfigMerger {
           // no need to add if the id exists in the workspace (regardless the version)
           return;
         }
+        if (this.mergeStrategy === 'theirs') {
+          addVariantPolicyEntryToPolicy(otherDep);
+          return;
+        }
+        if (this.mergeStrategy === 'ours') {
+          return;
+        }
 
         hasConflict = true;
         conflictedPolicy[depType].push({
@@ -520,6 +541,13 @@ export class ComponentConfigMerger {
       }
       if (baseVer && baseVer === currentVer) {
         addSerializedDepToPolicy(otherDep);
+        return;
+      }
+      if (this.mergeStrategy === 'theirs') {
+        addSerializedDepToPolicy(otherDep);
+        return;
+      }
+      if (this.mergeStrategy === 'ours') {
         return;
       }
       hasConflict = true;

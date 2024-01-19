@@ -151,11 +151,17 @@ export class MergeLanesMain {
     this.logger.debug(`merging the following ids: ${idsToMerge.toString()}`);
 
     const shouldSquash = squash || (currentLaneId.isDefault() && !noSquash);
-    let allComponentsStatus = await this.merging.getMergeStatus(idsToMerge, currentLane, otherLane, {
-      resolveUnrelated,
-      ignoreConfigChanges,
-      shouldSquash,
-    });
+    let allComponentsStatus = await this.merging.getMergeStatus(
+      idsToMerge,
+      {
+        resolveUnrelated,
+        ignoreConfigChanges,
+        shouldSquash,
+        mergeStrategy,
+      },
+      currentLane,
+      otherLane
+    );
 
     if (pattern) {
       const componentIds = await this.workspace.resolveMultipleComponentIds(idsToMerge);
