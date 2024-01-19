@@ -453,6 +453,9 @@ jobs:
       - run:
           name: 'run TSC'
           command: 'cd bit && npm run check-types'
+      - run:
+          name: 'make sure there is no "ramda" imported to Harmony'
+          command: 'cd bit && ./scripts/validate-no-ramda.sh'
       - persist_to_workspace:
           root: .
           paths:

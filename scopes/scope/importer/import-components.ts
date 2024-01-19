@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import R from 'ramda';
 import yesno from 'yesno';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
