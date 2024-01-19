@@ -114,8 +114,7 @@ async function removeLocal(
   // local remove in case user wants to delete tagged components
   const modifiedComponents = new ComponentIdList();
   const nonModifiedComponents = new ComponentIdList();
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  if (R.isEmpty(bitIds)) return new RemovedLocalObjects();
+  if (!bitIds.length) return new RemovedLocalObjects();
   if (!force) {
     await pMapSeries(bitIds, async (id) => {
       try {
