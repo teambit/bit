@@ -19,6 +19,7 @@ import { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } from './
 
 export type MergeStatusProviderOptions = {
   resolveUnrelated?: MergeStrategy;
+  mergeStrategy: MergeStrategy;
   ignoreConfigChanges?: boolean;
   shouldSquash?: boolean;
 };
@@ -28,9 +29,9 @@ export class MergeStatusProvider {
     private workspace: Workspace,
     private logger: Logger,
     private importer: ImporterMain,
+    private options: MergeStatusProviderOptions,
     private currentLane?: Lane, // currently checked out lane. if on main, then it's undefined.
-    private otherLane?: Lane, // the lane we want to merged to our lane. (undefined if it's "main").
-    private options?: MergeStatusProviderOptions
+    private otherLane?: Lane // the lane we want to merged to our lane. (undefined if it's "main").
   ) {}
 
   async getStatus(
@@ -127,7 +128,8 @@ other:   ${otherLaneHead.toString()}`);
       otherComponent.extensions,
       currentLabel,
       otherLabel,
-      this.logger
+      this.logger,
+      this.options.mergeStrategy
     );
     const configMergeResult = configMerger.merge();
 
