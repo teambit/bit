@@ -129,6 +129,7 @@ export class ApplyOverrides {
     this.applyWorkspacePolicy();
     this.makeLegacyAsPeer();
     await this.applyAutoDetectOverridesOnComponent();
+    // this.allPackagesDependencies.peerPackageDependencies = {};
     this.manuallyAddDependencies();
     // Doing this here (after manuallyAddDependencies) because usually the env of the env is adding dependencies as peer of the env
     // which will make this not work if it come before
@@ -205,11 +206,7 @@ export class ApplyOverrides {
     return packageObject;
   }
 
-  private _getComponentIdToAdd(
-    field: string,
-    dependency: string
-  ): { componentId?: ComponentID; packageName?: string } | undefined {
-    if (field === 'peerDependencies') return undefined;
+  private _getComponentIdToAdd(dependency: string): { componentId?: ComponentID; packageName?: string } | undefined {
     const packageData = this._resolvePackageData(dependency);
     return { componentId: packageData?.componentId, packageName: packageData?.name };
   }
@@ -226,7 +223,7 @@ export class ApplyOverrides {
       if (!overrides[depField]) return;
       Object.keys(overrides[depField]).forEach((dependency) => {
         const dependencyValue = overrides[depField][dependency];
-        const componentData = this._getComponentIdToAdd(depField, dependency);
+        const componentData = this._getComponentIdToAdd(dependency);
         if (componentData?.componentId) {
           const dependencyExist = existingDependencies[depField].find((d) =>
             d.id.isEqualWithoutVersion(componentData.componentId)
@@ -280,6 +277,13 @@ export class ApplyOverrides {
       for (const peerName of Object.keys(packages.peerPackageDependencies)) {
         delete this.allPackagesDependencies.packageDependencies[peerName];
       }
+    }
+    const componentPeers = new Set<string>(components.dependencies?.map(({ packageName }) => packageName) ?? []);
+    this.allDependencies.dependencies = this.allDependencies.dependencies.filter(
+      ({ packageName }) => !packageName || !componentPeers.has(packageName)
+    );
+    for (const compPeer of Array.from(componentPeers)) {
+      delete this.allPackagesDependencies.peerPackageDependencies[compPeer];
     }
   }
 
@@ -499,7 +503,11 @@ export class ApplyOverrides {
           pkgVal !== MANUALLY_REMOVE_DEPENDENCY &&
           ((!existsInCompsDeps && !existsInCompsDevDeps) || field === 'peerDependencies')
         ) {
-          this.allPackagesDependencies[key][pkgName] = pkgVal;
+          if (existsInCompsDeps && field === 'peerDependencies') {
+            this.allDependencies.peerDependencies.push(existsInCompsDeps);
+          } else {
+            this.allPackagesDependencies[key][pkgName] = pkgVal;
+          }
         }
       }, autoDetectOverrides[field]);
     });

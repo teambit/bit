@@ -117,4 +117,68 @@ describe('peer-dependencies functionality', function () {
       });
     });
   });
+
+  describe.only('a component is a peer dependency added by an env', function () {
+    let helper: Helper;
+    this.timeout(0);
+
+    describe('pnpm isolated linker', function () {
+      let workspaceCapsulesRootDir: string;
+      before(() => {
+        helper = new Helper();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+        helper.env.setCustomNewEnv(
+          undefined,
+          undefined,
+          {
+            policy: {
+              peers: [
+                {
+                  name: `@${helper.scopes.remote}/comp2`,
+                  supportedRange: '*',
+                  version: '0.0.0',
+                },
+              ],
+            },
+          },
+          false,
+          'custom-env/env1',
+          'custom-env/env1'
+        );
+
+        helper.fixtures.populateComponents(2);
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+        helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-env/env1`, {});
+        helper.extensions.addExtensionToVariant('custom-env', 'teambit.envs/env', {});
+        helper.command.install();
+      });
+      after(() => {
+        helper.scopeHelper.destroy();
+      });
+      it('should save the peer dependency in the model', () => {
+        const output = helper.command.showComponentParsed(`${helper.scopes.remote}/comp1`);
+        expect(output.peerDependencies[0]).to.deep.equal({
+          id: `${helper.scopes.remote}/comp2`,
+          relativePaths: [],
+          packageName: `@${helper.scopes.remote}/comp2`,
+          versionPolicy: '*',
+        });
+        const depResolver = output.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
+        const peerDep = depResolver.data.dependencies[0];
+        expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/comp2`);
+        expect(peerDep.lifecycle).to.eq('peer');
+        expect(peerDep.version).to.eq('latest');
+        expect(peerDep.versionPolicy).to.eq('*');
+      });
+      it('adds peer dependency to the generated package.json', () => {
+        const pkgJson = fs.readJsonSync(
+          path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1/package.json`)
+        );
+        expect(pkgJson.peerDependencies).to.deep.equal({
+          [`@${helper.scopes.remote}/comp2`]: '*',
+        });
+      });
+    });
+  });
 });
