@@ -14826,9 +14826,6 @@ importers:
       p-map:
         specifier: 4.0.0
         version: 4.0.0
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
       react:
         specifier: ^17.0.0
         version: 17.0.2
@@ -14960,12 +14957,12 @@ importers:
       graphql:
         specifier: 15.8.0
         version: 15.8.0
+      lodash:
+        specifier: 4.17.21
+        version: 4.17.21
       mocha:
         specifier: 10.2.0
         version: 10.2.0
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
       react:
         specifier: ^17.0.0
         version: 17.0.2
@@ -14988,6 +14985,9 @@ importers:
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
+      '@types/lodash':
+        specifier: 4.14.165
+        version: 4.14.165
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -15094,12 +15094,12 @@ importers:
       graphql:
         specifier: 15.8.0
         version: 15.8.0
+      lodash:
+        specifier: 4.17.21
+        version: 4.17.21
       mocha:
         specifier: 10.2.0
         version: 10.2.0
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
       react:
         specifier: ^17.0.0
         version: 17.0.2
@@ -15119,6 +15119,9 @@ importers:
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
+      '@types/lodash':
+        specifier: 4.14.165
+        version: 4.14.165
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -15295,9 +15298,6 @@ importers:
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
       react:
         specifier: ^17.0.0
         version: 17.0.2
@@ -15441,9 +15441,6 @@ importers:
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
       react:
         specifier: ^17.0.0
         version: 17.0.2
@@ -15599,9 +15596,6 @@ importers:
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
       react:
         specifier: ^17.0.0
         version: 17.0.2
@@ -15694,15 +15688,12 @@ importers:
       ignore:
         specifier: 3.3.10
         version: 3.3.10
-      lodash.groupby:
-        specifier: 4.6.0
-        version: 4.6.0
+      lodash:
+        specifier: 4.17.21
+        version: 4.17.21
       mocha:
         specifier: 10.2.0
         version: 10.2.0
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
       react:
         specifier: ^17.0.0
         version: 17.0.2
@@ -15725,6 +15716,9 @@ importers:
       '@types/jest':
         specifier: ^29.2.2
         version: 29.5.11
+      '@types/lodash':
+        specifier: 4.14.165
+        version: 4.14.165
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -16860,9 +16854,6 @@ importers:
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
       react:
         specifier: ^17.0.0
         version: 17.0.2
@@ -16987,9 +16978,6 @@ importers:
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
       react:
         specifier: ^17.0.0
         version: 17.0.2
@@ -18173,9 +18161,6 @@ importers:
       mocha:
         specifier: 10.2.0
         version: 10.2.0
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19208,9 +19193,9 @@ importers:
       jest-environment-node:
         specifier: 27.5.1
         version: 27.5.1
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
+      lodash:
+        specifier: 4.17.21
+        version: 4.17.21
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19224,6 +19209,9 @@ importers:
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
+      '@types/lodash':
+        specifier: 4.14.165
+        version: 4.14.165
       '@types/node':
         specifier: 12.20.4
         version: 12.20.4
@@ -19481,12 +19469,12 @@ importers:
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
+      lodash:
+        specifier: 4.17.21
+        version: 4.17.21
       map-obj:
         specifier: 4.2.1
         version: 4.2.1
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19500,6 +19488,9 @@ importers:
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
+      '@types/lodash':
+        specifier: 4.14.165
+        version: 4.14.165
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -21105,9 +21096,6 @@ importers:
       postcss-preset-env:
         specifier: 7.8.2
         version: 7.8.2(postcss@8.4.18)
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -21268,9 +21256,6 @@ importers:
       mocha:
         specifier: 10.2.0
         version: 10.2.0
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -21749,9 +21734,6 @@ importers:
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
       react:
         specifier: ^17.0.0
         version: 17.0.2
@@ -21828,9 +21810,6 @@ importers:
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
       react:
         specifier: ^17.0.0
         version: 17.0.2
@@ -21840,6 +21819,9 @@ importers:
       react-router-dom:
         specifier: 6.8.1
         version: 6.8.1(react-dom@17.0.2)(react@17.0.2)
+      yesno:
+        specifier: 0.4.0
+        version: 0.4.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 0.0.19
@@ -23931,9 +23913,6 @@ importers:
       minimatch:
         specifier: 3.0.5
         version: 3.0.5
-      ramda:
-        specifier: 0.27.1
-        version: 0.27.1
     devDependencies:
       '@babel/runtime':
         specifier: 7.20.0
@@ -24296,6 +24275,9 @@ importers:
       mocha:
         specifier: 10.2.0
         version: 10.2.0
+      node-fetch:
+        specifier: 2.6.7
+        version: 2.6.7
       p-map:
         specifier: 4.0.0
         version: 4.0.0
@@ -24351,6 +24333,9 @@ importers:
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
+      '@types/node-fetch':
+        specifier: 2.5.12
+        version: 2.5.12
       '@types/pluralize':
         specifier: 0.0.29
         version: 0.0.29
@@ -68575,6 +68560,7 @@ packages:
       chalk: 2.4.2
       cli-table: 0.3.6
       graphql: 15.8.0
+      lodash: 4.17.21
       mocha: 10.2.0
       ramda: 0.27.1
       react: 17.0.2
@@ -68627,6 +68613,7 @@ packages:
       chalk: 2.4.2
       fs-extra: 10.0.0
       graphql: 15.8.0
+      lodash: 4.17.21
       mocha: 10.2.0
       ramda: 0.27.1
       react: 17.0.2
@@ -68854,6 +68841,7 @@ packages:
       fs-extra: 10.0.0
       graphql: 15.8.0
       ignore: 3.3.10
+      lodash: 4.17.21
       lodash.groupby: 4.6.0
       mocha: 10.2.0
       ramda: 0.27.1
@@ -70231,6 +70219,7 @@ packages:
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       core-js: 3.13.0
       jest-environment-node: 27.5.1
+      lodash: 4.17.21
       ramda: 0.27.1
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -70343,6 +70332,7 @@ packages:
       '@teambit/html.modules.render-template': 0.0.104
       '@teambit/react.ui.docs-app': file:scopes/react/ui/docs-app(@testing-library/react@12.1.5)(@types/react@17.0.74)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
       core-js: 3.13.0
+      lodash: 4.17.21
       map-obj: 4.2.1
       ramda: 0.27.1
       react: 17.0.2
@@ -71345,6 +71335,7 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
       react-router-dom: 6.8.1(react-dom@17.0.2)(react@17.0.2)
+      yesno: 0.4.0
     transitivePeerDependencies:
       - '@teambit/legacy'
     dev: false
@@ -72370,6 +72361,7 @@ packages:
       lodash.compact: 3.0.1
       memoizee: 0.4.15
       mocha: 10.2.0
+      node-fetch: 2.6.7
       p-map: 4.0.0
       p-map-series: 2.1.0
       pluralize: 8.0.0
@@ -72382,6 +72374,7 @@ packages:
       - '@teambit/base-react.navigation.link'
       - '@teambit/legacy'
       - '@testing-library/react'
+      - encoding
     dev: false
 
   file:scopes/workspace/workspace-config-files:
