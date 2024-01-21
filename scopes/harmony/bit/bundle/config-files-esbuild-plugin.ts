@@ -25,6 +25,16 @@ function handleConfigFile(args: OnResolveArgs, bundleDir: string) {
   return undefined;
 }
 
+function resolveRelativePath(filePath: string) {
+  try {
+    const resolvedFilePath = require.resolve(filePath);
+    return resolvedFilePath;
+  } catch (err) {
+    const resolvedFilePath = require.resolve(`${filePath}.js`);
+    return resolvedFilePath;
+  }
+}
+
 async function handleRelativePath(args: OnResolveArgs, bundleDir: string) {
   const parsed = parse(args.path);
   const { componentName, relativePath, scopeName } = await parseArgs(args);
@@ -39,7 +49,7 @@ async function handleRelativePath(args: OnResolveArgs, bundleDir: string) {
   // const targetDir = join(bundleDir, targetDirName, parsed.dir);
   const targetDir = join(bundleDir, targetDirName, dirname(relativePath));
   await fs.ensureDir(targetDir);
-  const resolvedFilePath = require.resolve(origFilePath);
+  const resolvedFilePath = resolveRelativePath(origFilePath);
   const copyTarget = join(targetDir, basename(resolvedFilePath));
   await fs.copyFile(resolvedFilePath, copyTarget);
   // const newPath = replaceRelativePath(targetDirName, parsed);
