@@ -16,7 +16,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/api-reference",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "api-server": {
@@ -26,7 +26,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/api-server",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "application": {
@@ -36,7 +36,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/application",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "aspect": {
@@ -46,7 +46,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "aspect-docs/babel": {
@@ -203,7 +203,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect-loader",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "babel": {
@@ -213,7 +213,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/babel",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "babel/bit-react-transformer": {
@@ -230,7 +230,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "builder": {
@@ -240,7 +240,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/pipelines/builder",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "builder-data": {
@@ -257,7 +257,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/bundler",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "cache": {
@@ -267,7 +267,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cache",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "changelog": {
@@ -277,7 +277,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/changelog",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "checkout": {
@@ -287,7 +287,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/checkout",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "clear-cache": {
@@ -297,7 +297,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/clear-cache",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "cli": {
@@ -307,7 +307,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "cli-table": {
@@ -359,7 +359,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/cloud",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "code": {
@@ -369,7 +369,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/code",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "command-bar": {
@@ -379,7 +379,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/command-bar",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "community": {
@@ -389,7 +389,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/community/community",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "compiler": {
@@ -399,7 +399,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/compiler",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "component": {
@@ -409,7 +409,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "component-compare": {
@@ -419,7 +419,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-compare",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "component-descriptor": {
@@ -429,7 +429,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-descriptor",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "component-issues": {
@@ -446,7 +446,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-log",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "component-package-version": {
@@ -463,7 +463,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-sizer",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "component-tree": {
@@ -473,7 +473,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-tree",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "component-writer": {
@@ -483,7 +483,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-writer",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "composition-card": {
@@ -500,7 +500,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/compositions",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "config": {
@@ -510,7 +510,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/config",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "config-merger": {
@@ -520,7 +520,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/config-merger",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "content/cli-reference": {
@@ -537,7 +537,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/dependencies",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "dependency-resolver": {
@@ -547,7 +547,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/dependency-resolver",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "deprecation": {
@@ -557,7 +557,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/deprecation",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "dev-files": {
@@ -567,7 +567,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/dev-files",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "diagnostic": {
@@ -577,7 +577,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/diagnostic",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "docs": {
@@ -587,7 +587,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/docs",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "eject": {
@@ -597,7 +597,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/eject",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "entities/lane-diff": {
@@ -621,7 +621,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/env",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "envs": {
@@ -631,7 +631,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/envs",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "eslint": {
@@ -669,7 +669,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/export",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "express": {
@@ -679,7 +679,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/express",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "forking": {
@@ -689,7 +689,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/forking",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "formatter": {
@@ -699,7 +699,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/formatter",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "fs/hard-link-directory": {
@@ -723,7 +723,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/generator/generator",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "git": {
@@ -733,7 +733,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/git/git",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "global-config": {
@@ -743,7 +743,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/global-config",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "graph": {
@@ -753,7 +753,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/graph",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "graphql": {
@@ -763,7 +763,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/graphql",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "harmony-ui-app": {
@@ -773,7 +773,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/harmony-ui-app/harmony-ui-app",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "hooks/use-api": {
@@ -860,7 +860,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/importer",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "insights": {
@@ -870,7 +870,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/insights",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "install": {
@@ -880,7 +880,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/install",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "ipc-events": {
@@ -890,7 +890,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/ipc-events",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "isolator": {
@@ -900,7 +900,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/isolator",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "issues": {
@@ -910,7 +910,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/issues",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "jest": {
@@ -920,7 +920,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/jest",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "lanes": {
@@ -930,7 +930,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/lanes",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "linter": {
@@ -940,7 +940,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/linter",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "lister": {
@@ -950,7 +950,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/lister",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "logger": {
@@ -960,7 +960,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/logger",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "mdx": {
@@ -977,7 +977,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/merge-lanes",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "merging": {
@@ -987,7 +987,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/merging",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "mocha": {
@@ -997,7 +997,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/mocha",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "model/composition-id": {
@@ -1196,7 +1196,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/mover",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "multi-compiler": {
@@ -1206,7 +1206,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/multi-compiler",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "multi-tester": {
@@ -1216,7 +1216,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/multi-tester",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "network/get-port": {
@@ -1233,7 +1233,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/new-component-helper",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "node": {
@@ -1250,7 +1250,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/notifications/aspect",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "overview/api-reference-table-of-contents": {
@@ -1274,7 +1274,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/panels",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "panels/composition-gallery": {
@@ -1319,7 +1319,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/pkg/pkg",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "plugins/inject-head-webpack-plugin": {
@@ -1336,7 +1336,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/pnpm",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "prettier": {
@@ -1346,7 +1346,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/prettier",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "prettier/config-mutator": {
@@ -1363,7 +1363,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/preview",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "pubsub": {
@@ -1373,7 +1373,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/pubsub",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "react": {
@@ -1397,7 +1397,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/react-router",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "readme": {
@@ -1414,7 +1414,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/refactoring",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "remove": {
@@ -1424,7 +1424,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/remove",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "renaming": {
@@ -1434,7 +1434,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/renaming",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "renderers/api-node-details": {
@@ -1584,7 +1584,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/semantics/schema",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "scope": {
@@ -1594,7 +1594,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/scope",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "sections/api-reference-page": {
@@ -1618,7 +1618,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/sidebar",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "sign": {
@@ -1628,7 +1628,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/sign",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "snapping": {
@@ -1638,7 +1638,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/snapping",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "stash": {
@@ -1648,7 +1648,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/stash",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "status": {
@@ -1658,7 +1658,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/status",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "string/capitalize": {
@@ -1703,7 +1703,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/tester",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "testing/load-aspect": {
@@ -1741,7 +1741,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/tracker",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "ts-server": {
@@ -1765,7 +1765,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/typescript/typescript",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "ui": {
@@ -2125,7 +2125,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/update-dependencies",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "url/add-avatar-query-params": {
@@ -2149,7 +2149,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/user-agent",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "utils/code-editor-options": {
@@ -2201,7 +2201,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/variants",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "watcher": {
@@ -2211,7 +2211,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/watcher",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "webpack": {
@@ -2221,7 +2221,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/webpack",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "worker": {
@@ -2231,7 +2231,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/worker",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "workspace": {
@@ -2241,7 +2241,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "workspace-config-files": {
@@ -2251,7 +2251,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace-config-files",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "yarn": {
@@ -2261,7 +2261,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/yarn",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.20": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.21": {}
         }
     },
     "$schema-version": "17.0.0"
