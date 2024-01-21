@@ -1,3 +1,5 @@
+@use '~@teambit/design.skeletons.base-skeleton/base-skeleton.module.scss';
+
 .page {
   display: flex;
   flex-direction: column;
@@ -32,4 +34,23 @@
   font-size: 0.75em;
   box-shadow: var(--bit-shadow-faint);
   z-index: 8; // position above the abs positioned graph items
+}
+
+.graphPageSkeleton {
+  padding: 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  > h2 {
+    @extend .skeleton;
+    width: fit-content;
+    margin-bottom: 24px;
+  }
+}
+
+.block {
+  @extend .skeleton;
+  height: 100%;
+  width: 100%;
+  border-radius: 5px;
 }

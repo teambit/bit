@@ -15,9 +15,9 @@ import { useAPIRefParam } from '@teambit/api-reference.hooks.use-api-ref-url';
 import { APINodeRendererSlot } from '@teambit/api-reference';
 import { sortAPINodes } from '@teambit/api-reference.utils.sort-api-nodes';
 import { TreeNode } from '@teambit/design.ui.tree';
-import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
+import { ApiReferenceSkeleton } from './api-reference-page-skeleton';
 
 import styles from './api-reference-page.module.scss';
 
@@ -73,11 +73,7 @@ export function APIRefPage({ rendererSlot, className }: APIRefPageProps) {
   const query = useQuery();
 
   if (loading) {
-    return (
-      <div className={styles.loader}>
-        <RoundLoader />
-      </div>
-    );
+    return <ApiReferenceSkeleton />;
   }
 
   if (!apiModel || isEmpty) {

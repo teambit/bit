@@ -4,7 +4,6 @@ import { H2 } from '@teambit/documenter.ui.heading';
 import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
 import { ServerErrorPage } from '@teambit/design.ui.pages.server-error';
 import { ComponentContext } from '@teambit/component';
-import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 
 import { useGraphQuery } from '../query';
 import { DependenciesGraph } from '../dependencies-graph';
@@ -12,6 +11,7 @@ import { ComponentWidgetSlot } from '../../graph.ui.runtime';
 import type { GraphFilter } from '../../model/graph-filters';
 
 import { GraphFilters } from './graph-filters';
+import { GraphPageSkeleton } from './graph-page-skeleton';
 
 import styles from './graph-page.module.scss';
 
@@ -29,7 +29,7 @@ export function GraphPage({ componentWidgets }: GraphPageProps) {
 
   const { graph, error, loading } = useGraphQuery([component.id.toString()], filter);
   if (error) return error.code === 404 ? <NotFoundPage /> : <ServerErrorPage />;
-  if (!graph) return <FullLoader />;
+  if (!graph) return <GraphPageSkeleton />;
 
   const isFiltered = filter === 'runtimeOnly';
 
