@@ -13,6 +13,11 @@ export type ApplicationInstance = {
    * url of the running app.
    */
   url?: string;
+
+  /**
+   * function for closing the server.
+   */
+  stop?: () => Promise<void>;
 };
 
 /**

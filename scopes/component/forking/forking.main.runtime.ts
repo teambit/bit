@@ -285,7 +285,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
         dependencyId: dep.getPackageName?.() || dep.id,
         lifecycleType: dep.lifecycle === 'dev' ? 'runtime' : dep.lifecycle,
         value: {
-          version: dep.version,
+          version: this.dependencyResolver.getVersionWithSavePrefix({ version: dep.version }),
         },
       }));
   }
