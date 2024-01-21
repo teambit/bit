@@ -180,7 +180,7 @@ describe('merge lanes', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.createLane('dev');
-      helper.fixtures.populateComponents(1, undefined, 'v2');
+      helper.fixtures.populateComponents(1, undefined, 'version2');
       helper.command.snapAllComponentsWithoutBuild();
       mergeOutput = helper.command.mergeLane('main');
     });
@@ -203,7 +203,7 @@ describe('merge lanes', function () {
       headComp1OnLane = helper.command.getHeadOfLane('dev', 'comp1');
       laneWs = helper.scopeHelper.cloneLocalScope();
       helper.command.switchLocalLane('main', '-x');
-      helper.fixtures.populateComponents(2, undefined, 'v2');
+      helper.fixtures.populateComponents(2, undefined, 'version2');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
     });
@@ -226,9 +226,9 @@ describe('merge lanes', function () {
       });
       it('should update the component files in the filesystem for all of them', () => {
         const comp1 = helper.fs.readFile('comp1/index.js');
-        expect(comp1).to.have.string('v2');
+        expect(comp1).to.have.string('version2');
         const comp2 = helper.fs.readFile('comp2/index.js');
-        expect(comp2).to.have.string('v2');
+        expect(comp2).to.have.string('version2');
       });
     });
     describe('with --exclude-non-lane-comps flag', () => {
@@ -250,9 +250,9 @@ describe('merge lanes', function () {
       });
       it('should update the component files only for lane components', () => {
         const comp1 = helper.fs.readFile('comp1/index.js');
-        expect(comp1).to.have.string('v2');
+        expect(comp1).to.have.string('version2');
         const comp2 = helper.fs.readFile('comp2/index.js');
-        expect(comp2).to.not.have.string('v2');
+        expect(comp2).to.not.have.string('version2');
       });
     });
   });
@@ -391,7 +391,7 @@ describe('merge lanes', function () {
         helper.command.tagAllWithoutBuild();
         helper.command.export();
         helper.command.createLane();
-        helper.fixtures.populateComponents(3, undefined, 'v2');
+        helper.fixtures.populateComponents(3, undefined, 'version2');
         helper.command.snapAllComponentsWithoutBuild();
         comp1HeadOnLane = helper.command.getHeadOfLane('dev', 'comp1');
         comp2HeadOnLane = helper.command.getHeadOfLane('dev', 'comp2');
@@ -434,12 +434,12 @@ describe('merge lanes', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.createLane();
-      helper.fixtures.populateComponents(2, undefined, 'v2');
+      helper.fixtures.populateComponents(2, undefined, 'version2');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       workspaceOnLane = helper.scopeHelper.cloneLocalScope();
       helper.command.switchLocalLane('main');
-      helper.fixtures.populateComponents(2, undefined, 'v3');
+      helper.fixtures.populateComponents(2, undefined, 'version3');
       helper.command.snapAllComponentsWithoutBuild();
       comp2HeadOnMain = helper.command.getHead(`${helper.scopes.remote}/comp2`);
       helper.command.export();
@@ -512,8 +512,8 @@ describe('merge lanes', function () {
       });
       it('bit diff should show the diff between the .bitmap version and the currently merged version', () => {
         const diff = helper.command.diff();
-        expect(diff).to.have.string(`-module.exports = () => 'comp1v2 and ' + comp2();`);
-        expect(diff).to.have.string(`+module.exports = () => 'comp1v3 and ' + comp2();`);
+        expect(diff).to.have.string(`-module.exports = () => 'comp1version2 and ' + comp2();`);
+        expect(diff).to.have.string(`+module.exports = () => 'comp1version3 and ' + comp2();`);
       });
     });
   });
@@ -524,11 +524,11 @@ describe('merge lanes', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.createLane('lane-a');
-      helper.fixtures.populateComponents(1, false, 'v2');
+      helper.fixtures.populateComponents(1, false, 'version2');
       helper.command.snapComponentWithoutBuild('comp1');
       helper.command.export();
       helper.command.createLane('lane-b');
-      helper.fixtures.populateComponents(1, false, 'v3');
+      helper.fixtures.populateComponents(1, false, 'version3');
       helper.command.snapComponentWithoutBuild('comp1');
       helper.command.export();
       helper.command.switchLocalLane('lane-a');
