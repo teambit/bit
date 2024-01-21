@@ -11,6 +11,7 @@ export const getAllCoreAspectsIds = cjsModule.getAllCoreAspectsIds;
 export const registerCoreExtensions = cjsModule.registerCoreExtensions;
 export const BitAspect = cjsModule.BitAspect;
 export const loadBit = cjsModule.loadBit;
+export const restoreGlobals = cjsModule.restoreGlobals;
 
 export default cjsModule;
 

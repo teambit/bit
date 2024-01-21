@@ -5,5 +5,6 @@ export const ConfigAspect = cjsModule.ConfigAspect;
 export const ConfigRuntime = cjsModule.ConfigRuntime;
 export const getWorkspaceConfigTemplateParsed = cjsModule.getWorkspaceConfigTemplateParsed;
 export const stringifyWorkspaceConfig = cjsModule.stringifyWorkspaceConfig;
+export const getConfigAspect = cjsModule.getConfigAspect;
 
 export default cjsModule;
