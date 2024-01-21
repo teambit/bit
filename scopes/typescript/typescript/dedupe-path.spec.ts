@@ -1,10 +1,11 @@
+import { expect } from 'chai';
 import { dedupePaths } from './tsconfig-writer';
 
 describe('dedupePath', () => {
   it('should return the root-dir if there is only one env involved', () => {
     const input = [{ ids: ['env1'], paths: ['p1/e1, p2'] }];
     const output = dedupePaths(input);
-    expect(output).toEqual([{ ids: ['env1'], paths: ['.'] }]);
+    expect(output).to.deep.equal([{ ids: ['env1'], paths: ['.'] }]);
   });
   it('should set the env with the most components', () => {
     const input = [
@@ -13,13 +14,10 @@ describe('dedupePath', () => {
     ];
     const output = dedupePaths(input);
     // @ts-ignore
-    expect(output).toEqual(
-      // @ts-ignore
-      expect.arrayContaining([
-        { ids: ['env1'], paths: ['.'] },
-        { ids: ['env2'], paths: ['p1/e3'] },
-      ])
-    );
+    expect(output).to.deep.equal([
+      { ids: ['env2'], paths: ['p1/e3'] },
+      { ids: ['env1'], paths: ['.'] },
+    ]);
   });
   it('should not set any env to a shared dir if it no env has max components', () => {
     const input = [
@@ -27,8 +25,8 @@ describe('dedupePath', () => {
       { ids: ['env2'], paths: ['p1/e2'] },
     ];
     const output = dedupePaths(input);
-    expect(output.length).toEqual(2);
+    expect(output.length).to.equal(2);
     // @ts-ignore
-    expect(output).toEqual(expect.arrayContaining(input));
+    expect(output).to.deep.equal(input);
   });
 });
