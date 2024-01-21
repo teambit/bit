@@ -73,7 +73,7 @@ export function APIRefPage({ rendererSlot, className }: APIRefPageProps) {
   const query = useQuery();
 
   if (loading) {
-    return <ApiReferenceSkeleton />;
+    return <ApiReferenceSkeleton layout={sidebarOpenness} />;
   }
 
   if (!apiModel || isEmpty) {

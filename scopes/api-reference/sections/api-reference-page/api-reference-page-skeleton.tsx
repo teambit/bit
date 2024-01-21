@@ -6,9 +6,9 @@ import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitt
 
 import styles from './api-reference-page.module.scss';
 
-export function ApiReferenceSkeleton() {
+export function ApiReferenceSkeleton({ layout, className }: { layout: Layout; className?: string }) {
   return (
-    <SplitPane layout={Layout.row} size="85%" className={styles.apiRefPageContainer}>
+    <SplitPane layout={layout} size="85%" className={classNames(styles.apiRefPageContainer, className)}>
       <Pane className={styles.left}>
         <div className={styles.apiReferenceSkeleton}>
           <H1>Api Reference</H1>
