@@ -26,7 +26,7 @@ describe('Cache Aspect', () => {
     expect(data).to.equal('bar');
   });
 
-  afterAll(() => {
+  after(() => {
     rmdirSync(cacheDirectory, { recursive: true });
   });
 });
