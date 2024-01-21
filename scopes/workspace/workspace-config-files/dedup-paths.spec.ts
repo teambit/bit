@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import { DedupedPaths, dedupePaths } from './dedup-paths';
 import { ExtendingConfigFilesMap } from './writers';
 
@@ -294,55 +295,54 @@ const prettierExpectedDedupedPaths: DedupedPaths = [
 ];
 
 describe('Workspace Config files - dedupe paths', function () {
+  this.timeout(0);
+
   describe('dedupePaths', () => {
     describe('ts example', () => {
       let result: DedupedPaths;
-      beforeAll(async () => {
+      before(async () => {
         // @ts-ignore (we don't really care about the env itself here)
         result = dedupePaths(tsExtendingConfigFilesMap, envCompsDirsMap);
       });
 
       it('should reduce files to minimum necessary', async () => {
-        expect(result.length).toEqual(tsExpectedDedupedPaths.length);
+        expect(result).to.have.lengthOf(tsExpectedDedupedPaths.length);
       });
 
       it('should place files in correct folders', async () => {
-        // @ts-ignore
-        expect(result).toMatchObject(tsExpectedDedupedPaths);
+        expect(result).to.deep.equal(tsExpectedDedupedPaths);
       });
     });
 
     describe('eslint example', () => {
       let result: DedupedPaths;
-      beforeAll(async () => {
+      before(async () => {
         // @ts-ignore (we don't really care about the env itself here)
         result = dedupePaths(eslintExtendingConfigFilesMap, envCompsDirsMap);
       });
 
       it('should reduce files to minimum necessary', async () => {
-        expect(result.length).toEqual(eslintExpectedDedupedPaths.length);
+        expect(result).to.have.lengthOf(eslintExpectedDedupedPaths.length);
       });
 
       it('should place files in correct folders', async () => {
-        // @ts-ignore
-        expect(result).toMatchObject(eslintExpectedDedupedPaths);
+        expect(result).to.deep.equal(eslintExpectedDedupedPaths);
       });
     });
 
     describe('prettier example', () => {
       let result: DedupedPaths;
-      beforeAll(async () => {
+      before(async () => {
         // @ts-ignore (we don't really care about the env itself here)
         result = dedupePaths(prettierExtendingConfigFilesMap, envCompsDirsMap);
       });
 
       it('should reduce files to minimum necessary', async () => {
-        expect(result.length).toEqual(prettierExpectedDedupedPaths.length);
+        expect(result).to.have.lengthOf(prettierExpectedDedupedPaths.length);
       });
 
       it('should place files in correct folders', async () => {
-        // @ts-ignore
-        expect(result).toMatchObject(prettierExpectedDedupedPaths);
+        expect(result).to.deep.equal(prettierExpectedDedupedPaths);
       });
     });
   });
