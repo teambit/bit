@@ -1,5 +1,5 @@
 import { capitalize } from '@teambit/toolbox.string.capitalize';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 
 export class ComponentMeta {
   constructor(
@@ -17,7 +17,7 @@ export class ComponentMeta {
     return tokens.join(' ');
   }
 
-  toObject() {
+  toObject(): { id: ComponentIdObj } {
     return {
       id: this.id.toObject(),
     };

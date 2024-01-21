@@ -125,13 +125,7 @@ export const NODE_PATH_COMPONENT_SEPARATOR = '.';
 
 export const DEFAULT_COMPONENTS_DIR_PATH = `${BITS_DIRNAME}/{name}`;
 
-export const DEFAULT_DIR_DEPENDENCIES = '.dependencies';
-
-export const DEFAULT_DEPENDENCIES_DIR_PATH = `${BITS_DIRNAME}/${DEFAULT_DIR_DEPENDENCIES}`;
-
 export const COMPONENT_DIR = 'COMPONENT_DIR';
-
-export const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
 export const DEFAULT_SEPARATOR = '/';
 
@@ -150,12 +144,6 @@ export const NULL_BYTE = '\u0000';
 export const SPACE_DELIMITER = ' ';
 
 export const VERSION_DELIMITER = '@';
-
-export const DEPENDENCIES_DIR = 'dependencies';
-
-export const DEFAULT_REMOTES = {};
-
-export const DEFAULT_DEPENDENCIES = {};
 
 export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.dots : cliSpinners.dots12;
 
@@ -178,7 +166,7 @@ export const getCloudDomain = (): string => {
   return resolvedCloudDomain;
 };
 
-export const BASE_COMMUNITY_DOMAIN = 'bit.dev';
+export const BASE_COMMUNITY_DOMAIN = 'https://bit.dev';
 
 export const PREVIOUSLY_BASE_WEB_DOMAIN = 'bitsrc.io';
 
@@ -189,17 +177,28 @@ export const CFG_SYMPHONY_URL_KEY = 'symphony_url';
 let resolvedSymphonyUrl;
 export const getSymphonyUrl = (): string => {
   if (resolvedSymphonyUrl) return resolvedSymphonyUrl;
-  resolvedSymphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || `symphony.${getCloudDomain()}`;
+  resolvedSymphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || `api.v2.${getCloudDomain()}`;
   return resolvedSymphonyUrl;
+};
+
+export const CFG_CLOUD_DOMAIN_LOGIN_KEY = 'cloud_domain_login';
+
+export const CFG_WATCH_USE_POLLING = 'watch_use_polling';
+export const CFG_WATCH_USE_FS_EVENTS = 'watch_use_fsevents';
+
+export const CFG_FORCE_LOCAL_BUILD = 'force_local_build';
+
+export const getLoginUrl = (domain?: string): string => {
+  const finalDomain = domain || getSync(CFG_CLOUD_DOMAIN_LOGIN_KEY) || getCloudDomain();
+  const url = `https://${finalDomain}/bit-login`;
+  return url;
 };
 
 export const SYMPHONY_GRAPHQL = `https://${getSymphonyUrl()}/graphql`;
 
-export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/docs`;
+export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/`;
 
 export const BASE_LEGACY_DOCS_DOMAIN = `legacy-docs.${BASE_COMMUNITY_DOMAIN}/docs`;
-
-export const DEFAULT_HUB_LOGIN = `https://${getCloudDomain()}/bit-login`;
 
 export const DEFAULT_ANALYTICS_DOMAIN = `https://analytics.${getCloudDomain()}/`;
 
@@ -238,6 +237,9 @@ export const MergeConfigFilename = 'merge-conflict';
  * if you want to ignore only from component's root-dir, use `IGNORE_ROOT_ONLY_LIST` constant.
  */
 export const IGNORE_LIST = [
+  '**/.env',
+  '**/.env.local',
+  '**/.env.**.local',
   '**/.bit.map.json',
   '**/.bitmap',
   '**/.gitignore',
@@ -261,9 +263,9 @@ export const AUTO_GENERATED_MSG = `/* THIS IS A ${AUTO_GENERATED_STAMP} FILE. DO
 export const BITMAP_PREFIX_MESSAGE = `/**
  * The Bitmap file is an auto generated file used by Bit to track all your Bit components. It maps the component to a folder in your file system.
  * This file should be committed to VCS(version control).
- * Components are listed using their component ID (https://${BASE_DOCS_DOMAIN}/components/component-id).
+ * Components are listed using their component ID (${BASE_DOCS_DOMAIN}reference/components/component-id).
  * If you want to delete components you can use the "bit remove <component-id>" command.
- * See the docs (https://${BASE_DOCS_DOMAIN}/components/removing-components) for more information, or use "bit remove --help".
+ * See the docs (${BASE_DOCS_DOMAIN}reference/components/removing-components) for more information, or use "bit remove --help".
  */\n\n`;
 
 export const BIT_DESCRIPTION =
@@ -289,8 +291,6 @@ export const CFG_REGISTRY_URL_KEY = 'registry';
 export const CFG_SSH_KEY_FILE_KEY = 'ssh_key_file';
 
 export const CFG_HUB_DOMAIN_KEY = 'hub_domain';
-
-export const CFG_HUB_LOGIN_KEY = 'hub_domain_login';
 
 export const CFG_ANALYTICS_DOMAIN_KEY = 'analytics_domain';
 
@@ -373,6 +373,8 @@ export const CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS = 'default_resolve_envs_from_ro
  * whether to generate non existing capsules for scope aspects in a temp dated dir
  */
 export const CFG_USE_DATED_CAPSULES = 'use_dated_capsules';
+
+export const CFG_CACHE_LOCK_ONLY_CAPSULES = 'cache_lock_only_capsules';
 
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';
@@ -534,8 +536,6 @@ export const MANUALLY_REMOVE_ENVIRONMENT = '-';
 
 export const MANUALLY_ADD_DEPENDENCY = '+';
 
-export const OVERRIDE_FILE_PREFIX = 'file://';
-
 export const OVERRIDE_COMPONENT_PREFIX = '@bit/';
 
 export const ACCEPTABLE_NPM_VERSIONS = '>=5.0.0';
@@ -551,14 +551,14 @@ export const WILDCARD_HELP = (command: string) =>
 
 export const PATTERN_HELP = (command: string) =>
   `you can use a \`<pattern>\` for multiple component ids, such as \`bit ${command} "org.scope/utils/**"\`.
-use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
-always wrap the pattern with quotes to avoid collision with shell commands.
+use comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'
+always wrap the pattern with single quotes to avoid collision with shell commands.
 use \`bit pattern --help\` to understand patterns better and \`bit pattern <pattern>\` to validate the pattern.
 `;
 
 export const COMPONENT_PATTERN_HELP = `component name, component id, or component pattern. use component pattern to select multiple components.
-use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
-wrap the pattern with quotes`;
+wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button".
+use \`bit pattern --help\` to understand patterns better and \`bit pattern <pattern>\` to validate the pattern.`;
 
 export const CURRENT_UPSTREAM = 'current';
 
@@ -571,7 +571,7 @@ export const PREVIOUS_DEFAULT_LANE = 'master';
 export const statusInvalidComponentsMsg = 'invalid components';
 export const statusFailureMsg = 'issues found';
 export const statusWorkspaceIsCleanMsg =
-  'nothing to tag or export (use "bit add <file...>" to track files or directories as components)';
+  'nothing to tag or export (use "bit create <template> <component>" to generate a new component)';
 
 // todo: move the following two lines to the watch extension once its e2e moved to the extension dir
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
@@ -603,3 +603,7 @@ export enum BuildStatus {
 }
 
 export const SOURCE_DIR_SYMLINK_TO_NM = '_src'; // symlink from node_modules to the workspace sources files
+
+export const FILE_CHANGES_CHECKOUT_MSG = 'components with file changes';
+
+export const VERSION_CHANGED_BIT_ID_TO_COMP_ID = '1.2.10';

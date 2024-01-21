@@ -14,11 +14,6 @@ export interface WorkspaceExtConfig {
   icon: string;
 
   /**
-   * applies only on bit.dev. configure the main owner of your workspace
-   */
-  defaultOwner: string;
-
-  /**
    * set the default scope when there is no matching for the component in the components array.
    */
   defaultScope: string;

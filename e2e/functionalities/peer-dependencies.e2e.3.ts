@@ -14,7 +14,7 @@ describe('peer-dependencies functionality', function () {
     let catComponent;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.bitJsonc.addPolicyToDependencyResolver({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
       helper.npm.addFakeNpmPackage('chai', '2.4');
       helper.fixtures.createComponentBarFoo("import chai from 'chai';");
       helper.fixtures.addComponentBarFooAsDir();
@@ -42,7 +42,7 @@ describe('peer-dependencies functionality', function () {
       before(() => {
         helper.scopeHelper.reInitRemoteScope();
         helper.scopeHelper.addRemoteScope();
-        helper.bitJsonc.setupDefault();
+        helper.workspaceJsonc.setupDefault();
         helper.command.export();
 
         helper.scopeHelper.reInitLocalScope();
@@ -61,7 +61,7 @@ describe('peer-dependencies functionality', function () {
   describe('when a package is only a peer dependency but not required in the code', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.bitJsonc.addPolicyToDependencyResolver({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
       helper.npm.addFakeNpmPackage('chai', '2.4');
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();

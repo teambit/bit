@@ -1,28 +1,27 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { BitId } from '@teambit/legacy-bit-id';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { compact } from 'lodash';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/lib/list-scope';
-import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { IssuesClasses } from '@teambit/component-issues';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
+import { NoHeadNoVersion } from '@teambit/legacy/dist/scope/exceptions/no-head-no-version';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
-import { VersionNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { removeComponentsFromNodeModules } from '@teambit/legacy/dist/consumer/component/package-json-utils';
 import { RemoveCmd } from './remove-cmd';
-import { removeComponents } from './remove-components';
+import { RemoveComponentsResult, removeComponents } from './remove-components';
 import { RemoveAspect } from './remove.aspect';
 import { RemoveFragment } from './remove.fragment';
 import { RecoverCmd, RecoverOptions } from './recover-cmd';
+import { DeleteCmd } from './delete-cmd';
 
 const BEFORE_REMOVE = 'removing components';
 
@@ -48,15 +47,13 @@ export class RemoveMain {
     remote = false,
     track = false,
     deleteFiles = true,
-    fromLane = false,
   }: {
     componentsPattern: string;
     force?: boolean;
     remote?: boolean;
     track?: boolean;
     deleteFiles?: boolean;
-    fromLane?: boolean;
-  }): Promise<any> {
+  }): Promise<RemoveComponentsResult> {
     this.logger.setStatusLine(BEFORE_REMOVE);
     const bitIds = remote
       ? await this.getRemoteBitIdsToRemove(componentsPattern)
@@ -64,33 +61,34 @@ export class RemoveMain {
     this.logger.setStatusLine(BEFORE_REMOVE); // again because the loader might changed when talking to the remote
     const consumer = this.workspace?.consumer;
     const removeResults = await removeComponents({
-      consumer,
-      ids: BitIds.fromArray(bitIds),
+      workspace: this.workspace,
+      ids: ComponentIdList.fromArray(bitIds),
       force,
       remote,
       track,
       deleteFiles,
-      fromLane,
     });
-    if (consumer) await consumer.onDestroy();
+    if (consumer) await consumer.onDestroy('remove');
     return removeResults;
   }
 
   /**
    * remove components from the workspace.
    */
-  async removeLocallyByIds(ids: BitId[], { force = false }: { force?: boolean } = {}) {
+  async removeLocallyByIds(
+    ids: ComponentID[],
+    { force = false, reasonForRemoval }: { force?: boolean; reasonForRemoval?: string } = {}
+  ) {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const results = await removeComponents({
-      consumer: this.workspace.consumer,
-      ids: BitIds.fromArray(ids),
+      workspace: this.workspace,
+      ids: ComponentIdList.fromArray(ids),
       force,
       remote: false,
       track: false,
       deleteFiles: true,
-      fromLane: false,
     });
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`remove (by ${reasonForRemoval || 'N/A'})`);
 
     return results;
   }
@@ -106,36 +104,41 @@ export class RemoveMain {
     const config: RemoveInfo = { removed: true };
     if (shouldUpdateMain) config.removeOnMain = true;
     componentIds.map((compId) => this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, config));
-    await this.workspace.bitMap.write();
-    const bitIds = BitIds.fromArray(componentIds.map((id) => id._legacy));
+    await this.workspace.bitMap.write('delete');
+    const bitIds = ComponentIdList.fromArray(componentIds.map((id) => id));
     await deleteComponentsFiles(this.workspace.consumer, bitIds);
 
     return componentIds;
   }
 
-  async markRemoveOnMain(componentsPattern: string): Promise<ComponentID[]> {
+  async deleteComps(componentsPattern: string, opts: { updateMain?: boolean } = {}): Promise<ComponentID[]> {
     if (!this.workspace) throw new ConsumerNotFound();
-    if (!this.workspace.isOnMain()) {
-      throw new Error(`markRemoveOnMain expects to get called when on main`);
-    }
     const componentIds = await this.workspace.idsByPattern(componentsPattern);
-
     const newComps = componentIds.filter((id) => !id.hasVersion());
     if (newComps.length) {
       throw new BitError(
-        `unable to mark-remove the following new component(s), please remove them without --delete\n${newComps
+        `no need to delete the following new component(s), please remove them by "bit remove"\n${newComps
           .map((id) => id.toString())
           .join('\n')}`
       );
     }
+    const currentLane = await this.workspace.getCurrentLaneObject();
+    const { updateMain } = opts;
+    if (!updateMain && currentLane?.isNew) {
+      throw new Error(
+        'no need to delete components from an un-exported lane, you can remove them by running "bit remove"'
+      );
+    }
 
-    return this.markRemoveComps(componentIds);
+    return this.markRemoveComps(componentIds, updateMain);
   }
 
   /**
    * recover a soft-removed component.
    * there are 4 different scenarios.
    * 1. a component was just soft-removed, it wasn't snapped yet.  so it's now in .bitmap with the "removed" aspect entry.
+   * 1.a. the component still exists in the local scope. no need to import. write it from there.
+   * 1.b. the component doesn't exist in the local scope. import it.
    * 2. soft-removed and then snapped. It's not in .bitmap now.
    * 3. soft-removed, snapped, exported. it's not in .bitmap now.
    * 4. a soft-removed components was imported, so it's now in .bitmap without the "removed" aspect entry.
@@ -145,28 +148,38 @@ export class RemoveMain {
   async recover(compIdStr: string, options: RecoverOptions): Promise<boolean> {
     if (!this.workspace) throw new ConsumerNotFound();
     const bitMapEntry = this.workspace.consumer.bitMap.components.find((compMap) => {
-      return compMap.id.name === compIdStr || compMap.id.toStringWithoutVersion() === compIdStr;
+      return compMap.id.fullName === compIdStr || compMap.id.toStringWithoutVersion() === compIdStr;
     });
     const importComp = async (idStr: string) => {
       await this.importer.import({
         ids: [idStr],
         installNpmPackages: !options.skipDependencyInstallation,
+        writeConfigFiles: !options.skipWriteConfigFiles,
         override: true,
       });
     };
     const setAsRemovedFalse = async (compId: ComponentID) => {
       await this.workspace.addSpecificComponentConfig(compId, RemoveAspect.id, { removed: false });
-      await this.workspace.bitMap.write();
+      await this.workspace.bitMap.write('recover');
     };
     if (bitMapEntry) {
       if (bitMapEntry.config?.[RemoveAspect.id]) {
         // case #1
-        delete bitMapEntry.config?.[RemoveAspect.id];
-        await importComp(bitMapEntry.id.toString());
+        const compFromScope = await this.workspace.scope.get(bitMapEntry.id);
+        if (compFromScope) {
+          // in the case the component is in the scope, we prefer to write it from the scope rather than import it.
+          // because in some cases the "import" throws an error, e.g. when the component is diverged.
+          await this.workspace.write(compFromScope, bitMapEntry.rootDir);
+          this.workspace.bitMap.removeComponentConfig(bitMapEntry.id, RemoveAspect.id, false);
+          await this.workspace.bitMap.write('recover');
+        } else {
+          delete bitMapEntry.config?.[RemoveAspect.id];
+          await importComp(bitMapEntry.id.toString());
+        }
         return true;
       }
       // case #4
-      const compId = await this.workspace.resolveComponentId(bitMapEntry.id);
+      const compId = bitMapEntry.id;
       const comp = await this.workspace.get(compId);
       if (!this.isRemoved(comp)) {
         return false;
@@ -176,19 +189,9 @@ export class RemoveMain {
     }
     const compId = await this.workspace.scope.resolveComponentId(compIdStr);
     const currentLane = await this.workspace.getCurrentLaneObject();
-    const idOnLane = currentLane?.getComponent(compId._legacy);
+    const idOnLane = currentLane?.getComponent(compId);
     const compIdWithPossibleVer = idOnLane ? compId.changeVersion(idOnLane.head.toString()) : compId;
-    let compFromScope: Component | undefined;
-    try {
-      compFromScope = await this.workspace.scope.get(compIdWithPossibleVer);
-    } catch (err: any) {
-      if (err instanceof VersionNotFound && err.version === '0.0.0') {
-        throw new BitError(
-          `unable to find the component ${compIdWithPossibleVer.toString()} in the current lane or main`
-        );
-      }
-      throw err;
-    }
+    const compFromScope = await this.workspace.scope.get(compIdWithPossibleVer);
     if (compFromScope && this.isRemoved(compFromScope)) {
       // case #2 and #3
       await importComp(compIdWithPossibleVer._legacy.toString());
@@ -196,7 +199,17 @@ export class RemoveMain {
       return true;
     }
     // case #5
-    const comp = await this.workspace.scope.getRemoteComponent(compId);
+    let comp: Component | undefined;
+    try {
+      comp = await this.workspace.scope.getRemoteComponent(compId);
+    } catch (err: any) {
+      if (err instanceof NoHeadNoVersion) {
+        throw new BitError(
+          `unable to find the component ${compIdWithPossibleVer.toString()} in the current lane or main`
+        );
+      }
+      throw err;
+    }
     if (!this.isRemoved(comp)) {
       return false;
     }
@@ -210,7 +223,7 @@ export class RemoveMain {
     const currentLane = await this.workspace.getCurrentLaneObject();
     if (!currentLane) return; // user on main
     const laneComps = currentLane.toBitIds();
-    const mainComps = components.filter((comp) => !laneComps.hasWithoutVersion(comp.id._legacy));
+    const mainComps = components.filter((comp) => !laneComps.hasWithoutVersion(comp.id));
     if (mainComps.length) {
       throw new BitError(`the following components belong to main, they cannot be soft-removed when on a lane. consider removing them without --soft.
 ${mainComps.map((c) => c.id.toString()).join('\n')}`);
@@ -235,9 +248,10 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     if (!componentId.hasVersion()) return false;
     const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(componentId);
     if (bitmapEntry && bitmapEntry.isRemoved()) return true;
+    if (bitmapEntry && bitmapEntry.isRecovered()) return false;
     const modelComp = await this.workspace.scope.getBitObjectModelComponent(componentId);
     if (!modelComp) return false;
-    const versionObj = await this.workspace.scope.getBitObjectVersion(modelComp, componentId.version);
+    const versionObj = await this.workspace.scope.getBitObjectVersion(modelComp, componentId.version as string);
     if (!versionObj) return false;
     return versionObj.isRemoved();
   }
@@ -283,9 +297,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     if (!currentLane) return [];
     const laneIds = currentLane.toBitIds();
     const workspaceIds = await this.workspace.listIds();
-    const laneIdsNotInWorkspace = laneIds.filter(
-      (id) => !workspaceIds.find((wId) => wId._legacy.isEqualWithoutVersion(id))
-    );
+    const laneIdsNotInWorkspace = laneIds.filter((id) => !workspaceIds.find((wId) => wId.isEqualWithoutVersion(id)));
     if (!laneIdsNotInWorkspace.length) return [];
     const laneCompIdsNotInWorkspace = await this.workspace.scope.resolveMultipleComponentIds(laneIdsNotInWorkspace);
     const comps = await this.workspace.scope.getMany(laneCompIdsNotInWorkspace);
@@ -306,17 +318,17 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     return compact(staged);
   }
 
-  private async getLocalBitIdsToRemove(componentsPattern: string): Promise<BitId[]> {
+  private async getLocalBitIdsToRemove(componentsPattern: string): Promise<ComponentID[]> {
     if (!this.workspace) throw new ConsumerNotFound();
     const componentIds = await this.workspace.idsByPattern(componentsPattern);
-    return componentIds.map((id) => id._legacy);
+    return componentIds.map((id) => id);
   }
 
-  private async getRemoteBitIdsToRemove(componentsPattern: string): Promise<BitId[]> {
+  private async getRemoteBitIdsToRemove(componentsPattern: string): Promise<ComponentID[]> {
     if (hasWildcard(componentsPattern)) {
       return getRemoteBitIdsByWildcards(componentsPattern);
     }
-    return [BitId.parse(componentsPattern, true)];
+    return [ComponentID.fromString(componentsPattern)];
   }
 
   static slots = [];
@@ -344,7 +356,11 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     const removeMain = new RemoveMain(workspace, logger, importerMain, depResolver);
     issues.registerAddComponentsIssues(removeMain.addRemovedDependenciesIssues.bind(removeMain));
     componentAspect.registerShowFragments([new RemoveFragment(removeMain)]);
-    cli.register(new RemoveCmd(removeMain, workspace), new RecoverCmd(removeMain));
+    cli.register(
+      new RemoveCmd(removeMain, workspace),
+      new DeleteCmd(removeMain, workspace),
+      new RecoverCmd(removeMain)
+    );
     return removeMain;
   }
 }

@@ -22,7 +22,7 @@ type ExpressSsrOptions = {
   logger?: Logger;
 };
 
-export function createExpressSsr({ name, workdir, port, app, assets, logger }: ExpressSsrOptions) {
+export function createExpressSsr({ name, workdir, port, app, assets, logger }: ExpressSsrOptions): Express.Express {
   const express = Express();
 
   const publicFolder = resolve(workdir, calcOutputPath(name, 'browser'), MAGIC_FOLDER);
@@ -35,6 +35,7 @@ export function createExpressSsr({ name, workdir, port, app, assets, logger }: E
     }
     response.sendFile(resolve(workdir, calcOutputPath(name, 'browser'), MAGIC_FOLDER, 'index.html'));
   });
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   express.use(async (request, response) => {
     logger?.info(`[react.application] [ssr] handling "${request.url}"`);
     const browser = browserFromExpress(request, port);

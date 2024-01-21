@@ -8,8 +8,15 @@ export {
   compilationErrorOutput,
   getRemovedOutput,
   getAddedOutput,
+  getWorkspaceConfigUpdateOutput,
 } from './merge-cmd';
-export type { MergingMain, ComponentMergeStatus, ApplyVersionResults } from './merging.main.runtime';
-export { ConfigMergeResult } from './config-merge-result';
+export type {
+  MergingMain,
+  ComponentMergeStatus,
+  ApplyVersionResults,
+  ApplyVersionResult,
+  FilesStatus,
+  FailedComponents,
+} from './merging.main.runtime';
 export default MergingAspect;
 export { MergingAspect };

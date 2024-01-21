@@ -57,8 +57,8 @@ describe('harmony extension config', function () {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
-        helper.bitJsonc.addDefaultScope();
-        helper.bitJsonc.disablePreview();
+        helper.workspaceJsonc.addDefaultScope();
+        helper.workspaceJsonc.disablePreview();
         helper.fixtures.copyFixtureExtensions(EXTENSION_FOLDER);
         helper.command.addComponent(EXTENSION_FOLDER);
         helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension-without-logs`, config);
@@ -70,7 +70,8 @@ describe('harmony extension config', function () {
       describe('extension is new component on the workspace', () => {
         it('should not allow tagging the component without tagging the extensions', () => {
           output = helper.general.runWithTryCatch('bit tag bar/foo');
-          expect(output).to.have.string('has a dependency "dummy-extension-without-logs"');
+          expect(output).to.have.string('has a dependency');
+          expect(output).to.have.string('dummy-extension-without-logs');
           expect(output).to.have.string('this dependency was not included in the tag command');
         });
 
@@ -98,7 +99,7 @@ describe('harmony extension config', function () {
           let componentModel;
           before(() => {
             helper.scopeHelper.getClonedLocalScope(localBeforeTag);
-            helper.bitJsonc.disablePreview();
+            helper.workspaceJsonc.disablePreview();
             helper.command.tagAllComponents();
             const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
             const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
@@ -196,7 +197,7 @@ describe('harmony extension config', function () {
           helper.command.tagComponent('dummy-extension-without-logs');
           helper.command.export('dummy-extension-without-logs');
           helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension-without-logs`, config);
-          helper.bitJsonc.disablePreview();
+          helper.workspaceJsonc.disablePreview();
           helper.command.tagAllComponents();
           helper.command.export();
           helper.scopeHelper.reInitLocalScope();

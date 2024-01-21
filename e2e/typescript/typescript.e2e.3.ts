@@ -46,7 +46,7 @@ export class List extends React.Component {
       it('should be able to parse .tsx syntax successfully and recognize the dependencies', () => {
         const outputParsed = helper.command.showComponentParsed('list/list');
         expect(outputParsed.dependencies).to.have.lengthOf(1);
-        expect(outputParsed.dependencies[0].id).to.equal('item/item');
+        expect(outputParsed.dependencies[0].id).to.include('item/item');
       });
     }
   });
@@ -85,7 +85,7 @@ export class List extends React.Component {
             '@types/ninja': '-',
           },
         };
-        helper.bitJsonc.setPolicyToVariant('bar', policy);
+        helper.workspaceJsonc.setPolicyToVariant('bar', policy);
       });
       it('should not show the @types package anymore', () => {
         const show = helper.command.showComponentParsed();

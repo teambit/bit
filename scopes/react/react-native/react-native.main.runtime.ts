@@ -1,9 +1,8 @@
-import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
-import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { TsConfigSourceFile } from 'typescript';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { MainRuntime } from '@teambit/cli';
+import { merge } from 'lodash';
 import { BuildTask } from '@teambit/builder';
 import { Aspect } from '@teambit/harmony';
 import AspectAspect, { AspectMain } from '@teambit/aspect';
@@ -11,7 +10,6 @@ import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain, ReactEnv, UseWebpackModifiers } from '@teambit/react';
 import { ReactNativeAspect } from './react-native.aspect';
-import { componentTemplates, workspaceTemplates } from './react-native.templates';
 import { previewConfigTransformer, devServerConfigTransformer } from './webpack/webpack-transformers';
 import { ReactNativeEnv } from './react-native.env';
 
@@ -97,7 +95,7 @@ export class ReactNativeMain {
    */
   overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
-      getDependencies: () => mergeDeepLeft(dependencyPolicy, this.reactNativeEnv.getDependencies()),
+      getDependencies: () => merge(this.reactNativeEnv.getDependencies(), dependencyPolicy),
     });
   }
 
@@ -108,9 +106,9 @@ export class ReactNativeMain {
     return this.envs.compose(this.envs.merge(targetEnv, this.reactNativeEnv), transformers);
   }
 
-  static dependencies: Aspect[] = [ReactAspect, EnvsAspect, GeneratorAspect, AspectAspect];
+  static dependencies: Aspect[] = [ReactAspect, EnvsAspect, AspectAspect];
   static runtime = MainRuntime;
-  static async provider([react, envs, generator, aspect]: [ReactMain, EnvsMain, GeneratorMain, AspectMain]) {
+  static async provider([react, envs, aspect]: [ReactMain, EnvsMain, AspectMain]) {
     const jestConfig = require.resolve('./jest/jest.config');
 
     const webpackModifiers: UseWebpackModifiers = {
@@ -124,10 +122,9 @@ export class ReactNativeMain {
     );
     envs.registerEnv(reactNativeComposedEnv);
 
-    if (generator) {
-      generator.registerComponentTemplate(componentTemplates);
-      generator.registerWorkspaceTemplate(workspaceTemplates);
-    }
+    // if (generator) {
+    // generator.registerComponentTemplate(componentTemplates);
+    // }
 
     return new ReactNativeMain(react, reactNativeComposedEnv, envs);
   }

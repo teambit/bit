@@ -19,7 +19,7 @@ chai.use(require('chai-string'));
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -32,7 +32,7 @@ chai.use(require('chai-string'));
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
     });
     describe('using Yarn', () => {
       before(() => {
@@ -47,9 +47,11 @@ chai.use(require('chai-string'));
             },
           },
         });
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
         helper.scopeHelper.addRemoteScope();
-        helper.bitJsonc.setupDefault();
+        helper.workspaceJsonc.setupDefault();
+        helper.workspaceJsonc.addKeyValToWorkspace('resolveAspectsFromNodeModules', false);
+        helper.workspaceJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', false);
         helper.fixtures.populateComponents(1);
         helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
         helper.capsules.removeScopeAspectCapsules();
@@ -57,9 +59,11 @@ chai.use(require('chai-string'));
       });
       it('packageExtensions is taken into account when running install in the capsule', () => {
         const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-        expect(
-          path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-1@0.0.1/node_modules/is-positive`)
-        ).to.be.a.path();
+        const isPositivePath = path.join(
+          scopeAspectsCapsulesRootDir,
+          `${helper.scopes.remote}_node-env-1@0.0.1/node_modules/is-positive`
+        );
+        expect(isPositivePath).to.be.a.path();
       });
     });
     describe('using pnpm', () => {
@@ -69,9 +73,9 @@ chai.use(require('chai-string'));
             'hoist-pattern[]': 'foo',
           },
         });
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
         helper.scopeHelper.addRemoteScope();
-        helper.bitJsonc.setupDefault();
+        helper.workspaceJsonc.setupDefault();
         helper.fixtures.populateComponents(1);
         helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
         helper.capsules.removeScopeAspectCapsules();

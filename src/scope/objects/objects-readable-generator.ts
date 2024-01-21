@@ -1,12 +1,12 @@
 import pMapSeries from 'p-map-series';
+import { BitError } from '@teambit/bit-error';
 import { Readable } from 'stream';
-import { Ref, Repository } from '.';
+import { BitObject, Ref, Repository } from '.';
 import { Scope } from '..';
-import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import { getAllVersionHashesMemoized } from '../component-ops/traverse-versions';
 import { HashMismatch } from '../exceptions';
-import { Lane, ModelComponent, Version } from '../models';
+import { Lane, LaneHistory, ModelComponent, Version } from '../models';
 import { ObjectItem } from './object-list';
 
 export type ComponentWithCollectOptions = {
@@ -36,14 +36,11 @@ export class ObjectsReadableGenerator {
     }
   }
 
-  async pushLanes(lanesToFetch: Lane[]) {
+  async pushLanes(lanesToFetch: Lane[], lanesHistory: LaneHistory[] = []) {
     try {
-      await Promise.all(
-        lanesToFetch.map(async (laneToFetch) => {
-          const laneBuffer = await laneToFetch.compress();
-          this.push({ ref: laneToFetch.hash(), buffer: laneBuffer });
-        })
-      );
+      const lanesItems = await Promise.all(lanesToFetch.map((laneToFetch) => this.bitObjectToItem(laneToFetch)));
+      const laneHistoryItems = await Promise.all(lanesHistory.map((laneHistory) => this.bitObjectToItem(laneHistory)));
+      this.pushManyObjects([...lanesItems, ...laneHistoryItems]);
       this.closeReadableSuccessfully();
     } catch (err: any) {
       this.closeReadableFailure(err);
@@ -73,6 +70,14 @@ export class ObjectsReadableGenerator {
     logger.error(`ObjectsReadableGenerator, got an error`, err);
     this.callbackOnceDone(err);
     this.readable.destroy(err);
+  }
+
+  private async bitObjectToItem(obj: BitObject): Promise<ObjectItem> {
+    return {
+      ref: obj.hash(),
+      buffer: await obj.compress(),
+      type: obj.getType(),
+    };
   }
 
   private async getObjectGracefully(ref: Ref, scope: Scope) {
@@ -108,8 +113,7 @@ export class ObjectsReadableGenerator {
     const { component, collectParents, collectArtifacts, collectParentsUntil, includeVersionHistory } =
       componentWithOptions;
     const version = await component.loadVersion(componentWithOptions.version, this.repo, false);
-    if (!version)
-      throw new ShowDoctorError(`failed loading version ${componentWithOptions.version} of ${component.id()}`);
+    if (!version) throw new BitError(`failed loading version ${componentWithOptions.version} of ${component.id()}`);
     if (collectParentsUntil && version.hash().isEqual(collectParentsUntil)) {
       return;
     }

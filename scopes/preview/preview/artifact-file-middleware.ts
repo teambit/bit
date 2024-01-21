@@ -1,5 +1,5 @@
 import mime from 'mime';
-import type { Request, Response } from '@teambit/express';
+import type { Request, Response, Middleware } from '@teambit/express';
 import { noPreview, serverError } from '@teambit/ui-foundation.ui.pages.static-error';
 import type { Logger } from '@teambit/logger';
 import type { PreviewArtifact } from './preview-artifact';
@@ -15,7 +15,7 @@ export type PreviewUrlParams = {
 
 export type GetCacheControlFunc = (filePath: string, contents: string, mimeType?: string | null) => string | undefined;
 
-export function getArtifactFileMiddleware(logger: Logger, getCacheControlFunc?: GetCacheControlFunc) {
+export function getArtifactFileMiddleware(logger: Logger, getCacheControlFunc?: GetCacheControlFunc): Middleware {
   return async (req: Request<PreviewUrlParams>, res: Response) => {
     try {
       // @ts-ignore

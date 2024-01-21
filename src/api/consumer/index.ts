@@ -6,8 +6,6 @@ import getScopeComponent from './lib/get-scope-component';
 import config from './lib/global-config';
 import init from './lib/init';
 import { listScope } from './lib/list-scope';
-import login from './lib/login';
-import migrate from './lib/migrate';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 import show from './lib/show';
 import { clearCache } from './lib/clear-cache';
@@ -23,8 +21,6 @@ export {
   remoteList,
   remoteRm,
   dependencyStatus,
-  migrate,
-  login,
   show,
   clearCache,
 };

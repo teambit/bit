@@ -6,14 +6,20 @@ import { typesObj as types } from '../object-registrar';
 import { ObjectItem } from './object-list';
 import Ref from './ref';
 import Repository from './repository';
+import { UnknownObjectType } from '../exceptions/unknown-object-type';
 
 function parse(buffer: Buffer): BitObject {
+  const { type, hash, contents } = extractHeaderAndContent(buffer);
+  if (!types[type]) throw new UnknownObjectType(type);
+  return types[type].parse(contents, hash);
+}
+
+function extractHeaderAndContent(buffer: Buffer): { type: string; hash: string; contents: Buffer } {
   const firstNullByteLocation = buffer.indexOf(NULL_BYTE);
   const headers = buffer.slice(0, firstNullByteLocation).toString();
-  const contents = buffer.slice(firstNullByteLocation + 1, buffer.length);
   const [type, hash] = headers.split(SPACE_DELIMITER);
-  if (!types[type]) throw new Error(`BitObject: unable to find subclass "${type}"`);
-  return types[type].parse(contents, hash);
+  const contents = buffer.slice(firstNullByteLocation + 1, buffer.length);
+  return { type, hash, contents };
 }
 
 export default class BitObject {
@@ -116,9 +122,20 @@ path: ${err.path}`);
     return parse(buffer);
   }
 
-  // static parse(fileContents: Buffer, types: { [key: string]: Function }): Promise<BitObject> {
-  //   return Promise.resolve(parse(fileContents, types));
-  // }
+  /**
+   * same as `parseObject`, however, if the type is not one of the given "typeNames", it returns null.
+   * the performance improvement is huge compare to "parseObject", as it doesn't parse the object if not needed.
+   */
+  static async parseObjectOnlyIfType(
+    fileContents: Buffer,
+    typeNames: string[],
+    filePath?: string
+  ): Promise<BitObject | null> {
+    const buffer = await inflate(fileContents, filePath);
+    const { type } = extractHeaderAndContent(buffer);
+    if (typeNames.includes(type)) return parse(buffer);
+    return null;
+  }
 
   /**
    * prefer using `this.parseObject()`, unless it must be sync.

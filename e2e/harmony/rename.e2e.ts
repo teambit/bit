@@ -101,6 +101,20 @@ describe('bit rename command', function () {
       expect(list).to.have.lengthOf(1);
     });
   });
+  describe('rename a new component when the scope is different than the defaultScope', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.setScope('different-scope', 'comp1');
+      // previously it was errored with "error: component "different-scope/comp1" was not found on your local workspace".
+      helper.command.rename('comp1', 'comp2');
+    });
+    it('should rename successfully', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap).to.not.have.property('comp1');
+      expect(bitmap).to.have.property('comp2');
+    });
+  });
   describe('rename a new component scope-name', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
@@ -134,7 +148,7 @@ describe('bit rename command', function () {
   describe('wrong rename with scope-name inside the name', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.addDefaultScope('owner.scope');
+      helper.workspaceJsonc.addDefaultScope('owner.scope');
       helper.fixtures.populateComponents(1);
     });
     // previously, it was letting renaming, but afterwards, after any command, it was throwing InvalidName because the
@@ -146,7 +160,7 @@ describe('bit rename command', function () {
   describe('rename scope-name without refactoring', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.addDefaultScope('owner.scope');
+      helper.workspaceJsonc.addDefaultScope('owner.scope');
       helper.fixtures.populateComponents(2);
       helper.command.rename('comp2', 'comp2', '--scope owner2.scope2');
     });
@@ -157,7 +171,7 @@ describe('bit rename command', function () {
   describe('rename scope-name with refactoring', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.addDefaultScope('owner.scope');
+      helper.workspaceJsonc.addDefaultScope('owner.scope');
       helper.fixtures.populateComponents(2);
       helper.command.rename('comp2', 'comp2', '--scope owner2.scope2 --refactor');
     });
@@ -169,7 +183,7 @@ describe('bit rename command', function () {
   describe('rename a new aspect without --preserve flag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.command.create('aspect', 'my-aspect');
+      helper.command.create('bit-aspect', 'my-aspect');
       helper.command.rename('my-aspect', 'foo');
     });
     it('should rename the root-dir', () => {
@@ -191,7 +205,7 @@ describe('bit rename command', function () {
   describe('rename a new aspect with --preserve flag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.command.create('aspect', 'my-aspect');
+      helper.command.create('bit-aspect', 'my-aspect');
       helper.command.rename('my-aspect', 'foo', '--preserve');
     });
     it('should not rename the root-dir', () => {
@@ -215,7 +229,7 @@ describe('bit rename command', function () {
   describe('rename an exported aspect', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.command.create('aspect', 'my-aspect');
+      helper.command.create('bit-aspect', 'my-aspect');
       helper.command.install();
       helper.command.tagAllWithoutBuild();
       helper.command.export();

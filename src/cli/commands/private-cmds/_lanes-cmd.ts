@@ -1,6 +1,4 @@
-import { migrate } from '../../../api/consumer';
 import lanesList from '../../../api/scope/lib/scope-lanes-list';
-import logger from '../../../logger/logger';
 import { LaneData } from '../../../scope/lanes/lanes';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
 import { buildCommandMessage, fromBase64, packCommand, unpackCommand } from '../../../utils';
@@ -22,11 +20,8 @@ export default class ListLanes implements LegacyCommand {
     const { payload, headers } = unpackCommand(args);
     compressResponse = clientSupportCompressedCommand(headers.version);
     checkVersionCompatibilityOnTheServer(headers.version);
-    logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
-    return migrate(scopePath, false).then(() => {
-      return lanesList(scopePath, payload, mergeData);
-    });
+    return lanesList(scopePath, payload, mergeData);
   }
 
   report(str: string): string {

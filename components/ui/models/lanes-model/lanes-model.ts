@@ -1,7 +1,6 @@
 import { ComponentModel, ComponentModelProps } from '@teambit/component';
 import { LaneId } from '@teambit/lane-id';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
-import { affix } from '@teambit/base-ui.utils.string.affix';
 import { pathToRegexp } from 'path-to-regexp';
 import { compact, uniqBy } from 'lodash';
 
@@ -119,23 +118,35 @@ export class LanesModel {
   static getLaneUrl = (laneId: LaneId, relative?: boolean) =>
     `${relative ? '' : '/'}${LanesModel.lanesPrefix}/${laneId.toString()}`;
 
-  static getLaneComponentUrl = (componentId: ComponentID, laneId: LaneId) => {
+  static getLaneComponentUrl = (componentId: ComponentID, laneId: LaneId, addScopeMetadataInUrl?: boolean) => {
     const isExternalComponent = componentId.scope !== laneId.scope;
-
     const laneUrl = LanesModel.getLaneUrl(laneId);
-    const urlSearch = affix('?version=', componentId.version);
+    const queryParams = new URLSearchParams();
 
-    if (!isExternalComponent) {
-      return `${laneUrl}${LanesModel.baseLaneComponentRoute}/${componentId.fullName}${urlSearch}`;
+    if (componentId.version) {
+      queryParams.set('version', componentId.version);
     }
 
-    return `${laneUrl}${LanesModel.baseLaneComponentRoute}/${componentId.toStringWithoutVersion()}${urlSearch}`;
+    if (addScopeMetadataInUrl) queryParams.set('scope', componentId.scope);
+
+    const urlPath = isExternalComponent
+      ? `${laneUrl}${LanesModel.baseLaneComponentRoute}/${componentId.toStringWithoutVersion()}`
+      : `${laneUrl}${LanesModel.baseLaneComponentRoute}/${componentId.fullName}`;
+
+    return `${urlPath}?${queryParams.toString()}`;
   };
 
-  static getMainComponentUrl = (componentId: ComponentID, laneId?: LaneId) => {
+  static getMainComponentUrl = (componentId: ComponentID, laneId?: LaneId, addScopeMetadataInUrl?: boolean) => {
     const componentUrl = componentId.fullName;
-    const urlSearch = affix(`?${LanesModel.laneUrlParamsKey}=`, laneId?.toString());
-    return `${componentUrl}${urlSearch}`;
+    const queryParams = new URLSearchParams();
+
+    if (laneId) {
+      queryParams.set(LanesModel.laneUrlParamsKey, laneId.toString());
+    }
+
+    if (addScopeMetadataInUrl) queryParams.set('scope', componentId.scope);
+
+    return `${componentUrl}?${queryParams.toString()}`;
   };
 
   static mapToLaneModel(laneData: LaneQueryResult): LaneModel {
@@ -293,7 +304,7 @@ export class LanesModel {
   defaultLane?: LaneModel;
   lanes: LaneModel[];
 
-  getLaneComponentUrlByVersion = (componentId: ComponentID, laneId?: LaneId) => {
+  getLaneComponentUrlByVersion = (componentId: ComponentID, laneId?: LaneId, addScopeMetadataInUrl?: boolean) => {
     // if there is no version, the component is new and is on main
     // if the component is on the currently checked out lane then remove version
     const defaultLane = this.getDefaultLane();
@@ -303,7 +314,7 @@ export class LanesModel {
       !defaultLane ||
       (laneId && this.currentLane && laneId.isEqual(this.currentLane.id))
     ) {
-      return LanesModel.getMainComponentUrl(componentId);
+      return LanesModel.getMainComponentUrl(componentId, undefined, addScopeMetadataInUrl);
     }
 
     const lane = this.getLanesByComponentId(componentId)?.find((l) => l.id.isEqual(laneId));
@@ -311,11 +322,11 @@ export class LanesModel {
     if (!lane) {
       // return url from main if it exits
       return defaultLane.components.find((c) => c.isEqual(componentId))
-        ? LanesModel.getMainComponentUrl(componentId, laneId)
+        ? LanesModel.getMainComponentUrl(componentId, laneId, addScopeMetadataInUrl)
         : undefined;
     }
-    if (lane.id.isDefault()) return LanesModel.getMainComponentUrl(componentId);
-    return LanesModel.getLaneComponentUrl(componentId, lane.id);
+    if (lane.id.isDefault()) return LanesModel.getMainComponentUrl(componentId, undefined, addScopeMetadataInUrl);
+    return LanesModel.getLaneComponentUrl(componentId, lane.id, addScopeMetadataInUrl);
   };
 
   setViewedLane = (viewedLaneId?: LaneId) => {

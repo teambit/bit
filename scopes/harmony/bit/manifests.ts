@@ -33,8 +33,6 @@ import { ComponentSizerAspect } from '@teambit/component-sizer/component-sizer.a
 import { ReactAspect } from '@teambit/react/react.aspect';
 import { ReactNativeAspect } from '@teambit/react-native/react-native.aspect';
 import { ReactRouterAspect } from '@teambit/react-router/react-router.aspect';
-import { ReactElementsAspect } from '@teambit/react-elements/react-elements.aspect';
-import { ElementsAspect } from '@teambit/elements/elements.aspect';
 import { SchemaAspect } from '@teambit/schema/schema.aspect';
 import { PubsubAspect } from '@teambit/pubsub/pubsub.aspect';
 import { ScopeAspect } from '@teambit/scope/scope.aspect';
@@ -79,7 +77,6 @@ import { ClearCacheAspect } from '@teambit/clear-cache/clear-cache.aspect';
 import { DiagnosticAspect } from '@teambit/diagnostic/diagnostic.aspect';
 import { NewComponentHelperAspect } from '@teambit/new-component-helper/new-component-helper.aspect';
 import { MochaAspect } from '@teambit/mocha/mocha.aspect';
-import { BitCustomAspectAspect } from '@teambit/bit-custom-aspect/bit-custom-aspect.aspect';
 import { CommunityAspect } from '@teambit/community/community.aspect';
 import { CloudAspect } from '@teambit/cloud/cloud.aspect';
 import { StatusAspect } from '@teambit/status/status.aspect';
@@ -102,6 +99,7 @@ import { WatcherAspect } from '@teambit/watcher/watcher.aspect';
 import { StashAspect } from '@teambit/stash/stash.aspect';
 import { GitAspect } from '@teambit/git/git.aspect';
 import { IpcEventsAspect } from '@teambit/ipc-events/ipc-events.aspect';
+import { ConfigMergerAspect } from '@teambit/config-merger/config-merger.aspect';
 
 import { AspectMain } from '@teambit/aspect/aspect.main.runtime';
 import { AspectLoaderMain } from '@teambit/aspect-loader/aspect-loader.main.runtime';
@@ -136,8 +134,6 @@ import { PreviewMain } from '@teambit/preview/preview.main.runtime';
 import { ComponentSizerMain } from '@teambit/component-sizer/component-sizer.main.runtime';
 import { ReactMain } from '@teambit/react/react.main.runtime';
 import { ReactNativeMain } from '@teambit/react-native/react-native.main.runtime';
-import { ReactElementsMain } from '@teambit/react-elements/react-elements.main.runtime';
-import { ElementsMain } from '@teambit/elements/elements.main.runtime';
 import { SchemaMain } from '@teambit/schema/schema.main.runtime';
 import { PubsubMain } from '@teambit/pubsub/pubsub.main.runtime';
 import { ScopeMain } from '@teambit/scope/scope.main.runtime';
@@ -175,7 +171,6 @@ import { ClearCacheMain } from '@teambit/clear-cache/clear-cache.main.runtime';
 import { DiagnosticMain } from '@teambit/diagnostic/diagnostic.main.runtime';
 import { NewComponentHelperMain } from '@teambit/new-component-helper/new-component-helper.main.runtime';
 import { MochaMain } from '@teambit/mocha/mocha.main.runtime';
-import { BitCustomAspectMain } from '@teambit/bit-custom-aspect/bit-custom-aspect.main.runtime';
 import { CommunityMain } from '@teambit/community/community.main.runtime';
 import { CloudMain } from '@teambit/cloud/cloud.main.runtime';
 import { StatusMain } from '@teambit/status/status.main.runtime';
@@ -197,6 +192,8 @@ import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files/worksp
 import { StashMain } from '@teambit/stash/stash.main.runtime';
 import { GitMain } from '@teambit/git/git.main.runtime';
 import { IpcEventsMain } from '@teambit/ipc-events/ipc-events.main.runtime';
+import { ConfigMergerMain } from '@teambit/config-merger/config-merger.main.runtime';
+
 
 import { BitMain } from './bit.main.runtime';
 import { BitAspect } from './bit.aspect';
@@ -239,8 +236,6 @@ export function getManifestsMap() {
     [PkgAspect.id]: PkgAspect,
     [ReactAspect.id]: ReactAspect,
     [ReactNativeAspect.id]: ReactNativeAspect,
-    [ReactElementsAspect.id]: ReactElementsAspect,
-    [ElementsAspect.id]: ElementsAspect,
     [WorkerAspect.id]: WorkerAspect,
     [ScopeAspect.id]: ScopeAspect,
     [TesterAspect.id]: TesterAspect,
@@ -282,7 +277,6 @@ export function getManifestsMap() {
     [ComponentLogAspect.id]: ComponentLogAspect,
     [ClearCacheAspect.id]: ClearCacheAspect,
     [MochaAspect.id]: MochaAspect,
-    [BitCustomAspectAspect.id]: BitCustomAspectAspect,
     [DiagnosticAspect.id]: DiagnosticAspect,
     [StatusAspect.id]: StatusAspect,
     [CommunityAspect.id]: CommunityAspect,
@@ -306,6 +300,7 @@ export function getManifestsMap() {
     [StashAspect.id]: StashAspect,
     [GitAspect.id]: GitAspect,
     [IpcEventsAspect.id]: IpcEventsAspect,
+    [ConfigMergerAspect.id]: ConfigMergerAspect,
   };
   return manifestsMap;
 }
@@ -344,8 +339,6 @@ export const runtimesMap = {
   [ComponentSizerAspect.id]: ComponentSizerMain,
   [ReactAspect.id]: ReactMain,
   [ReactNativeAspect.id]: ReactNativeMain,
-  [ReactElementsAspect.id]: ReactElementsMain,
-  [ElementsAspect.id]: ElementsMain,
   [SchemaAspect.id]: SchemaMain,
   [PubsubAspect.id]: PubsubMain,
   [ScopeAspect.id]: ScopeMain,
@@ -383,7 +376,6 @@ export const runtimesMap = {
   [DiagnosticAspect.id]: DiagnosticMain,
   [NewComponentHelperAspect.id]: NewComponentHelperMain,
   [MochaAspect.id]: MochaMain,
-  [BitCustomAspectAspect.id]: BitCustomAspectMain,
   [CommunityAspect.id]: CommunityMain,
   [CloudAspect.id]: CloudMain,
   [StatusAspect.id]: StatusMain,
@@ -405,6 +397,7 @@ export const runtimesMap = {
   [StashAspect.id]: StashMain,
   [GitAspect.id]: GitMain,
   [IpcEventsAspect.id]: IpcEventsMain,
+  [ConfigMergerAspect.id]: ConfigMergerMain,
   [BitAspect.id]: BitMain,
 };
 

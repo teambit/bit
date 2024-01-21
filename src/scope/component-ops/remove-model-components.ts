@@ -1,10 +1,10 @@
 import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
-import { BitId, BitIds } from '../../bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LATEST_BIT_VERSION } from '../../constants';
 import Consumer from '../../consumer/consumer';
 import logger from '../../logger/logger';
-import { Lane, Symlink } from '../models';
+import { Lane } from '../models';
 import { Ref } from '../objects';
 import RemovedObjects from '../removed-components';
 import Scope from '../scope';
@@ -17,25 +17,16 @@ import Scope from '../scope';
  */
 export default class RemoveModelComponents {
   scope: Scope;
-  bitIds: BitIds;
+  bitIds: ComponentIdList;
   force: boolean;
   consumer: Consumer | null | undefined;
   currentLane?: Lane | null = null;
-  fromLane?: boolean;
-  constructor(
-    scope: Scope,
-    bitIds: BitIds,
-    force: boolean,
-    consumer?: Consumer,
-    currentLane?: Lane | null,
-    fromLane?: boolean
-  ) {
+  constructor(scope: Scope, bitIds: ComponentIdList, force: boolean, consumer?: Consumer, currentLane?: Lane | null) {
     this.scope = scope;
     this.bitIds = bitIds;
     this.force = force;
     this.consumer = consumer;
     this.currentLane = currentLane;
-    this.fromLane = fromLane;
   }
 
   async remove(): Promise<RemovedObjects> {
@@ -52,14 +43,13 @@ export default class RemoveModelComponents {
       }
     }
 
-    const removedFromLane: BitId[] = [];
+    const removedFromLane: ComponentID[] = [];
     const removalDataWithNulls = await mapSeries(foundComponents, (bitId) => {
       if (this.currentLane) {
         const result = this.currentLane.removeComponent(bitId);
         if (result) {
           // component was found on the lane.
           removedFromLane.push(bitId);
-          if (this.fromLane) return null;
         }
         // component was not found on lane. it's ok, it might be on main. continue with the component removal.
       }
@@ -67,22 +57,22 @@ export default class RemoveModelComponents {
     });
     const removalData = compact(removalDataWithNulls);
     logger.debug(`RemoveModelComponents.remove, got removalData`);
-    const compIds = new BitIds(...removalData.map((x) => x.compId));
+    const compIds = new ComponentIdList(...removalData.map((x) => x.compId));
     const refsToRemoveAll = removalData.map((removed) => removed.refsToRemove).flat();
     if (removedFromLane.length) {
       await this.scope.objects.writeObjectsToTheFS([this.currentLane as Lane]);
     }
     await this.scope.objects.deleteObjectsFromFS(refsToRemoveAll);
-    await this.scope.objects.deleteRecordsFromUnmergedComponents(compIds.map((id) => id.name));
+    await this.scope.objects.deleteRecordsFromUnmergedComponents(compIds);
 
     return new RemovedObjects({
       removedComponentIds: compIds,
       missingComponents,
-      removedFromLane: BitIds.fromArray(removedFromLane),
+      removedFromLane: ComponentIdList.fromArray(removedFromLane),
     });
   }
 
-  private async getRemoveSingleData(bitId: BitId): Promise<{ compId: BitId; refsToRemove: Ref[] }> {
+  private async getRemoveSingleData(bitId: ComponentID): Promise<{ compId: ComponentID; refsToRemove: Ref[] }> {
     logger.debug(`scope.removeSingle ${bitId.toString()}`);
     const component = (await this.scope.getModelComponent(bitId)).toComponentVersion();
     const componentsRefs = await this.getDataForRemovingComponent(bitId);
@@ -94,13 +84,8 @@ export default class RemoveModelComponents {
     };
   }
 
-  private async getDataForRemovingComponent(id: BitId): Promise<Ref[]> {
-    const componentList = await this.scope.listIncludesSymlinks();
-    const symlink = componentList.find(
-      (component) => component instanceof Symlink && id.isEqualWithoutScopeAndVersion(component.toBitId())
-    );
+  private async getDataForRemovingComponent(id: ComponentID): Promise<Ref[]> {
     const refs = await this.scope.sources.getRefsForComponentRemoval(id);
-    if (symlink) refs.push(symlink.hash());
     return refs;
   }
 }

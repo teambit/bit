@@ -47,7 +47,7 @@ describe('bit lane command', function () {
       it('bit lane should show the component in the checked out lane', () => {
         const lanes = helper.command.showOneLaneParsed('dev');
         expect(lanes.components).to.have.lengthOf(1);
-        expect(lanes.components[0].id.name).to.equal('bar/foo');
+        expect(lanes.components[0].id).to.include('bar/foo');
       });
       it('bit status should not show the component as pending updates', () => {
         const status = helper.command.statusJson();
@@ -203,7 +203,7 @@ describe('bit lane command', function () {
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
       helper.command.importComponent('comp1');
       helper.command.switchRemoteLane('dev');
       helper.command.switchLocalLane('main');

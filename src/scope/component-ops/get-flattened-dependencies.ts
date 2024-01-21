@@ -1,9 +1,8 @@
 import graphlib, { Graph as GraphLib } from 'graphlib';
-import { flatten } from 'lodash';
 import mapSeries from 'p-map-series';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import R from 'ramda';
 import { Scope } from '..';
-import { BitId, BitIds } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
 import Component from '../../consumer/component/consumer-component';
 import GeneralError from '../../error/general-error';
@@ -16,7 +15,7 @@ import { Lane } from '../models';
 export class FlattenedDependenciesGetter {
   private dependenciesGraph: Graph;
   private versionDependencies: VersionDependencies[];
-  private cache: { [idStr: string]: BitIds } = {};
+  private cache: { [idStr: string]: ComponentIdList } = {};
   constructor(private scope: Scope, private components: Component[], private lane?: Lane) {}
 
   /**
@@ -40,7 +39,7 @@ export class FlattenedDependenciesGetter {
     // console.log("this.dependenciesGraph", this.dependenciesGraph.toString())
     await this.importExternalDependenciesInBulk();
     await mapSeries(this.components, async (component) => {
-      component.flattenedDependencies = await this.getFlattened(component.id);
+      component.flattenedDependencies = await this.getFlattened(component.componentId);
     });
   }
 
@@ -52,42 +51,47 @@ export class FlattenedDependenciesGetter {
     const bitIds = idsStr
       .filter((id) => id)
       .map((idStr) => this.dependenciesGraph.node(idStr))
-      .filter((bitId: BitId) => bitId && bitId.hasScope())
       .filter((bitId) => !this.components.find((c) => c.id.isEqual(bitId)));
     const scopeComponentsImporter = this.scope.scopeImporter;
     this.versionDependencies = await scopeComponentsImporter.importMany({
-      ids: BitIds.fromArray(bitIds),
+      ids: ComponentIdList.fromArray(bitIds),
+      preferDependencyGraph: false,
       cache: true,
       throwForDependencyNotFound: true,
       lane: this.lane,
+      reason: 'for fetching all dependencies',
     });
   }
 
-  private async getFlattened(bitId: BitId): Promise<BitIds> {
+  private async getFlattened(bitId: ComponentID): Promise<ComponentIdList> {
     const dependencies = this.getFlattenedFromCurrentComponents(bitId);
     dependencies.forEach((dep) => throwWhenDepNotIncluded(bitId, dep));
     const dependenciesDeps = await mapSeries(dependencies, (dep) => this.getFlattenedFromVersion(dep, bitId));
-    const dependenciesDepsFlattened = flatten(dependenciesDeps);
-    dependencies.push(...dependenciesDepsFlattened);
-    return BitIds.uniqFromArray(dependencies);
+    const dependenciesDepsFlattened = dependenciesDeps.flat();
+    // this dependenciesDepsFlattened can be huge, don't use spread operator (...) here. otherwise, it throws
+    // `Maximum call stack size exceeded`. it's important to first make them uniq
+    // (from a real example, before uniq: 133,068. after uniq: 2,126)
+    const dependenciesDepsUniq = ComponentIdList.uniqFromArray(dependenciesDepsFlattened);
+    dependencies.push(...dependenciesDepsUniq);
+    return ComponentIdList.uniqFromArray(dependencies);
   }
 
-  private getFlattenedFromCurrentComponents(bitId: BitId): BitId[] {
+  private getFlattenedFromCurrentComponents(bitId: ComponentID): ComponentID[] {
     const allDeps = getEdges(this.dependenciesGraph, bitId.toString()) || [];
     const dependencies = allDeps.map((idStr) => this.dependenciesGraph.node(idStr));
     return dependencies;
   }
 
-  private async getFlattenedFromVersion(id: BitId, dependentId: BitId): Promise<BitIds> {
+  private async getFlattenedFromVersion(id: ComponentID, dependentId: ComponentID): Promise<ComponentIdList> {
     if (!this.cache[id.toString()]) {
-      const versionDeps = this.versionDependencies.find(({ component }) => component.toId().isEqual(id));
+      const versionDeps = this.versionDependencies.find(({ component }) => component.toComponentId().isEqual(id));
       if (versionDeps) {
         const dependencies = await versionDeps.component.flattenedDependencies(this.scope.objects);
         this.cache[id.toString()] = dependencies;
       } else {
         const existing = this.components.find((c) => c.id.isEqual(id));
         if (existing) {
-          this.cache[id.toString()] = new BitIds();
+          this.cache[id.toString()] = new ComponentIdList();
         } else {
           if (!id.hasVersion()) {
             throw new Error(`error found while getting the dependencies of "${dependentId.toString()}". A dependency "${id.toString()}" doesn't have a version
@@ -102,7 +106,7 @@ if this is an external env/extension/aspect configured in workspace.jsonc, make 
   }
 }
 
-function throwWhenDepNotIncluded(componentId: BitId, dependencyId: BitId) {
+function throwWhenDepNotIncluded(componentId: ComponentID, dependencyId: ComponentID) {
   if (!dependencyId.hasScope() && !dependencyId.hasVersion()) {
     throw new GeneralError(`fatal: "${componentId.toString()}" has a dependency "${dependencyId.toString()}".
 this dependency was not included in the tag command.`);

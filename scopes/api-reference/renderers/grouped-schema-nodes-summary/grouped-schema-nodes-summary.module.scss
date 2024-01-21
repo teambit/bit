@@ -1,8 +1,8 @@
 .groupName {
-  padding-bottom: 16px;
-  font-size: var(--bit-p-md);
+  font-size: var(--bit-p-lg);
   font-weight: 500;
   text-transform: capitalize;
+  padding-bottom: 16px;
 }
 
 .groupNodesContainer {
@@ -11,15 +11,46 @@
 }
 
 .table {
-  > div {
-    grid-gap: 16px 24px;
-  }
+  display: flex;
+  flex-direction: column;
 }
 
 .paddingTop {
-  padding-top: 16px;
+  padding-top: 8px;
 }
 
 .row {
-  grid-template-columns: 1fr 1fr 2fr;
+  display: flex;
+  justify-content: space-between;
+  overflow-wrap: break-word;
+}
+
+.headingRow {
+  padding: 8px 0px 16px 0px;
+}
+
+.row > div {
+  flex: 1;
+  text-align: left;
+}
+
+.name {
+  word-break: normal;
+}
+
+.codeSnippet {
+  font-size: var(--bit-p-xs);
+  word-break: normal;
+  position: relative;
+  line-height: 1.2em;
+  background-color: var(--surface01-color, #fffbff);
+  padding: 4px;
+  border-radius: 4px;
+  word-break: keep-all;
+  flex-wrap: wrap;
+}
+
+.table {
+  display: flex;
+  flex: 1;
 }

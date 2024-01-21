@@ -15,6 +15,7 @@ import { EnvsAspect } from '@teambit/envs';
 import type { EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain, UIRoot } from '@teambit/ui';
+import { CacheAspect, CacheMain } from '@teambit/cache';
 import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
@@ -31,6 +32,7 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { BundlingStrategyNotFound } from './exceptions';
 import { generateLink, MainModulesMap } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
@@ -60,6 +62,9 @@ import { ComponentPreviewRoute } from './component-preview.route';
 import { previewSchema } from './preview.graphql';
 import { PreviewAssetsRoute } from './preview-assets.route';
 import { PreviewService } from './preview.service';
+import { PUBLIC_DIR, RUNTIME_NAME, buildPreBundlePreview, generateBundlePreviewEntry } from './pre-bundle';
+import { BUNDLE_DIR, PreBundlePreviewTask } from './pre-bundle.task';
+import { createBundleHash, getBundlePath, readBundleHash } from './pre-bundle-utils';
 
 const noopResult = {
   results: [],
@@ -121,6 +126,16 @@ export type PreviewAnyComponentData = {
   /**
    * don't allow other aspects implementing a preview definition to be included in your preview.
    */
+  onlyOverview?: boolean;
+
+  /**
+   * use name query params to select a specific composition to render.
+   */
+  useNameParam?: boolean;
+
+  /**
+   * don't allow other aspects implementing a preview definition to be included in your preview.
+   */
   skipIncludes?: boolean;
 };
 
@@ -129,6 +144,8 @@ export type PreviewAnyComponentData = {
  */
 export type PreviewEnvComponentData = {
   isScaling?: boolean;
+  supportsOnlyOverview?: boolean;
+  supportsUseNameParam?: boolean;
 };
 
 export type PreviewConfig = {
@@ -140,6 +157,7 @@ export type PreviewConfig = {
    * default - no limit.
    */
   maxChunkSize?: number;
+  onlyOverview?: boolean;
 };
 
 export type EnvPreviewConfig = {
@@ -164,6 +182,8 @@ export class PreviewMain {
     private previewSlot: PreviewDefinitionRegistry,
 
     private ui: UiMain,
+
+    private cache: CacheMain,
 
     private envs: EnvsMain,
 
@@ -244,6 +264,42 @@ export class PreviewMain {
   }
 
   /**
+   * check if the current version of env component supports skipping other included previews
+   * @param envComponent
+   * @returns
+   */
+  doesEnvIncludesOnlyOverview(envComponent: Component): boolean {
+    const previewData = this.getPreviewData(envComponent);
+    return !!previewData?.supportsOnlyOverview;
+  }
+
+  /**
+   * check if the current version of env component supports name query param
+   * @param envComponent
+   * @returns
+   */
+  doesEnvUseNameParam(envComponent: Component): boolean {
+    const previewData = this.getPreviewData(envComponent);
+    return !!previewData?.supportsUseNameParam;
+  }
+
+  private async calculateIncludeOnlyOverview(component: Component): Promise<boolean> {
+    if (this.envs.isUsingCoreEnv(component)) {
+      return true;
+    }
+    const envComponent = await this.envs.getEnvComponent(component);
+    return this.doesEnvIncludesOnlyOverview(envComponent);
+  }
+
+  private async calculateUseNameParam(component: Component): Promise<boolean> {
+    if (this.envs.isUsingCoreEnv(component)) {
+      return true;
+    }
+    const envComponent = await this.envs.getEnvComponent(component);
+    return this.doesEnvUseNameParam(envComponent);
+  }
+
+  /**
    * Calculate preview data on component load
    * @param component
    * @returns
@@ -252,8 +308,13 @@ export class PreviewMain {
     const doesScaling = await this.calcDoesScalingForComponent(component);
     const dataFromEnv = await this.calcPreviewDataFromEnv(component);
     const envData = (await this.calculateDataForEnvComponent(component)) || {};
+    const onlyOverview = await this.calculateIncludeOnlyOverview(component);
+    const useNameParam = await this.calculateUseNameParam(component);
+
     const data: PreviewComponentData = {
       doesScaling,
+      onlyOverview,
+      useNameParam,
       ...dataFromEnv,
       ...envData,
     };
@@ -267,7 +328,7 @@ export class PreviewMain {
    */
   async calcPreviewDataFromEnv(
     component: Component
-  ): Promise<Omit<PreviewAnyComponentData, 'doesScaling'> | undefined> {
+  ): Promise<Omit<PreviewAnyComponentData, 'doesScaling' | 'onlyOverview' | 'useNameParam'> | undefined> {
     // Prevent infinite loop that caused by the fact that the env of the aspect env or the env env is the same as the component
     // so we can't load it since during load we are trying to get env component and load it again
     if (
@@ -296,15 +357,17 @@ export class PreviewMain {
    */
   private async calculateDataForEnvComponent(envComponent: Component): Promise<PreviewEnvComponentData | undefined> {
     const isEnv = this.envs.isEnv(envComponent);
+
     // If the component is not an env, we don't want to store anything in the data
     if (!isEnv) return undefined;
+
     const previewAspectConfig = this.getPreviewAspectConfig(envComponent);
 
     const data = {
       // default to true if the env doesn't have a preview config
       isScaling: previewAspectConfig?.isScaling ?? true,
-      // disalbe it for now, we will re-enable it later
-      // skipIncludes: true,
+      supportsOnlyOverview: true,
+      supportsUseNameParam: true,
     };
     return data;
   }
@@ -428,12 +491,31 @@ export class PreviewMain {
   }
 
   async isSupportSkipIncludes(component: Component) {
+    if (!this.config.onlyOverview) return false;
+
     const isCore = this.envs.isUsingCoreEnv(component);
     if (isCore) return false;
 
     const envComponent = await this.envs.getEnvComponent(component);
     const previewData = this.getPreviewData(envComponent);
     return !!previewData?.skipIncludes;
+  }
+
+  /**
+   * check if the component preview should only include the overview (skipping rendering of the compostions and properties table)
+   */
+  async getOnlyOverview(component: Component): Promise<boolean> {
+    if (!this.config.onlyOverview) return false;
+    const previewData = this.getPreviewData(component);
+    return previewData?.onlyOverview ?? false;
+  }
+
+  /**
+   * check if the component preview should include the name query param
+   */
+  async getUseNameParam(component: Component): Promise<boolean> {
+    const previewData = this.getPreviewData(component);
+    return previewData?.useNameParam ?? false;
   }
 
   /**
@@ -600,10 +682,45 @@ export class PreviewMain {
       this.executionRefs.set(ctxId, new ExecutionRef(context));
     });
 
-    const previewRuntime = await this.writePreviewRuntime(context);
+    const previewRuntime = await this.writePreviewEntry(context);
     const linkFiles = await this.updateLinkFiles(context.components, context);
 
     return [...linkFiles, previewRuntime];
+  }
+
+  private async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
+    const { rebuild, skipUiBuild } = this.ui.runtimeOptions;
+
+    const [name, uiRoot] = this.getUi();
+    const cacheKey = `${uiRoot.path}|${RUNTIME_NAME}`;
+    const currentBundleHash = await createBundleHash(uiRoot, RUNTIME_NAME);
+    const preBundleHash = readBundleHash(PreviewAspect.id, BUNDLE_DIR, '');
+    const workspaceBundleDir = join(uiRoot.path, PUBLIC_DIR);
+    const lastBundleHash = await this.cache.get(cacheKey);
+
+    let bundlePath = '';
+
+    // ensure the pre-bundle is ready
+    if (!rebuild && !existsSync(workspaceBundleDir) && (currentBundleHash === preBundleHash || skipUiBuild)) {
+      // use pre-bundle
+      bundlePath = getBundlePath(PreviewAspect.id, BUNDLE_DIR, '') as string;
+    } else if (!rebuild && existsSync(workspaceBundleDir) && (currentBundleHash === lastBundleHash || skipUiBuild)) {
+      // use workspace bundle
+      bundlePath = workspaceBundleDir;
+    } else {
+      // do build
+      const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
+      const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
+
+      await buildPreBundlePreview(filteredAspects);
+      bundlePath = workspaceBundleDir;
+      await this.cache.set(cacheKey, currentBundleHash);
+    }
+
+    // prepare the runtime entry
+    const previewRuntime = await generateBundlePreviewEntry(name, bundlePath, this.harmony.config.toObject());
+
+    return previewRuntime;
   }
 
   private updateLinkFiles(components: Component[] = [], context: ExecutionContext) {
@@ -800,6 +917,7 @@ export class PreviewMain {
     BuilderAspect,
     ComponentAspect,
     UIAspect,
+    CacheAspect,
     EnvsAspect,
     WorkspaceAspect,
     PkgAspect,
@@ -809,10 +927,12 @@ export class PreviewMain {
     DependencyResolverAspect,
     GraphqlAspect,
     WatcherAspect,
+    ScopeAspect,
   ];
 
   static defaultConfig = {
     disabled: false,
+    onlyOverview: false,
   };
 
   static async provider(
@@ -822,6 +942,7 @@ export class PreviewMain {
       builder,
       componentExtension,
       uiMain,
+      cache,
       envs,
       workspace,
       pkg,
@@ -831,11 +952,13 @@ export class PreviewMain {
       dependencyResolver,
       graphql,
       watcher,
+      scope,
     ]: [
       BundlerMain,
       BuilderMain,
       ComponentMain,
       UiMain,
+      CacheMain,
       EnvsMain,
       Workspace | undefined,
       PkgMain,
@@ -844,7 +967,8 @@ export class PreviewMain {
       LoggerMain,
       DependencyResolverMain,
       GraphqlMain,
-      WatcherMain
+      WatcherMain,
+      ScopeMain
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
@@ -856,6 +980,7 @@ export class PreviewMain {
       harmony,
       previewSlot,
       uiMain,
+      cache,
       envs,
       componentExtension,
       pkg,
@@ -889,19 +1014,23 @@ export class PreviewMain {
       builder.registerBuildTasks([
         new EnvPreviewTemplateTask(preview, envs, aspectLoader, dependencyResolver, logger),
         new PreviewTask(bundler, preview, dependencyResolver, logger),
+        new PreBundlePreviewTask(uiMain, logger),
       ]);
 
     if (workspace) {
       workspace.registerOnComponentAdd((c) =>
         preview.handleComponentChange(c, (currentComponents) => currentComponents.add(c))
       );
-      workspace.onComponentLoad(async (component) => {
+      workspace.registerOnComponentLoad(async (component) => {
         return preview.calcPreviewData(component);
       });
       workspace.registerOnComponentChange((c) =>
         preview.handleComponentChange(c, (currentComponents) => currentComponents.update(c))
       );
       workspace.registerOnComponentRemove((cId) => preview.handleComponentRemoval(cId));
+    }
+    if (scope) {
+      scope.registerOnCompAspectReCalc((c) => preview.calcPreviewData(c));
     }
 
     envs.registerService(new PreviewService());

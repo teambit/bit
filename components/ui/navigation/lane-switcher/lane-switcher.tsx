@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, useRef } from 'react';
+import React, { HTMLAttributes } from 'react';
 import { UseLanes, useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneSelector } from '@teambit/lanes.ui.inputs.lane-selector';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
@@ -41,8 +41,10 @@ export function LaneSwitcher({
   getHref = LanesModel.getLaneUrl,
   ...rest
 }: LaneSwitcherProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { lanesModel, loading, fetchMoreLanes, hasMore, offset, limit } = useLanes();
+  const { lanesModel, loading, fetchMoreLanes, hasMore, offset, limit } = useLanes(undefined, undefined, {
+    offset: 0,
+    limit: 10,
+  });
 
   const mainLane = lanesModel?.getDefaultLane();
   const nonMainLanes = lanesModel?.getNonMainLanes() || [];
@@ -60,7 +62,7 @@ export function LaneSwitcher({
   const selectedLaneGalleryHref = selectedLane && getHref(selectedLane.id);
 
   return (
-    <div className={classnames(styles.laneSwitcherContainer, className)} ref={containerRef}>
+    <div className={classnames(styles.laneSwitcherContainer, className)}>
       <div className={styles.laneSelectorContainer}>
         {loading && <WordSkeleton className={styles.loader} length={24} />}
         {

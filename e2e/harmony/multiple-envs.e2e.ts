@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-import { IssuesClasses } from '../../scopes/component/component-issues';
+import { IssuesClasses } from '@teambit/component-issues';
 
 import Helper from '../../src/e2e-helper/e2e-helper';
 

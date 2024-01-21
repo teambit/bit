@@ -4,7 +4,7 @@ import { flatten } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Component, ComponentID } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import BitIds from '@teambit/legacy/dist/bit-id/bit-ids';
+import { ComponentIdList } from '@teambit/component-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
@@ -114,14 +114,16 @@ export class GraphFromFsBuilder {
     const compOnWorkspaceOnly = components.filter((comp) => workspaceIds.find((id) => id.isEqual(comp.id)));
     const allDeps = (await Promise.all(compOnWorkspaceOnly.map((c) => this.getAllDepsUnfiltered(c)))).flat();
     const allDepsNotImported = allDeps.filter((d) => !this.importedIds.includes(d.toString()));
-    const allDepsWithScope = allDepsNotImported.map((id) => id._legacy).filter((dep) => dep.hasScope());
+    const exportedDeps = allDepsNotImported.map((id) => id).filter((dep) => this.workspace.isExported(dep));
     const scopeComponentsImporter = this.consumer.scope.scopeImporter;
     await scopeComponentsImporter.importMany({
-      ids: BitIds.uniqFromArray(allDepsWithScope),
+      ids: ComponentIdList.uniqFromArray(exportedDeps),
+      preferDependencyGraph: false,
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
       throwForSeederNotFound: this.shouldThrowOnMissingDep,
       reFetchUnBuiltVersion: false,
       lane: this.currentLane || undefined,
+      reason: 'for building a graph from the workspace',
     });
     allDepsNotImported.map((id) => this.importedIds.push(id.toString()));
   }

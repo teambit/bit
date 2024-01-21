@@ -2,14 +2,19 @@
   word-break: normal;
 }
 
-.row {
-  grid-template-columns: 1fr 2fr 1fr;
+.node {
+  font-size: var(--bit-p-xs);
+  word-break: normal;
+  position: relative;
+  line-height: 1.2em;
+  background-color: var(--surface01-color, #fffbff);
+  padding: 4px;
+  border-radius: 4px;
+  word-break: keep-all;
+  flex-wrap: wrap;
 }
 
-.node {
-  display: flex;
-  font-family: Roboto mono;
-  font-size: var(--bit-p-xxs);
-  word-break: normal;
-  color: rgb(57, 115, 0);
+.row {
+  padding: 8px 0px !important;
+  margin-bottom: 0;
 }

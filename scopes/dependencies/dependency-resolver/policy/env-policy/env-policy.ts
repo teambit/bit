@@ -1,10 +1,10 @@
 import { validateEnvPolicyConfigObject } from './validate-env-policy';
 import {
   createVariantPolicyEntry,
-  DependencySource,
   VariantPolicyEntry,
   VariantPolicy,
   VariantPolicyConfigObject,
+  VariantPolicyFromConfigObjectOptions,
 } from '../variant-policy';
 import { DependencyLifecycleType } from '../../dependencies';
 
@@ -19,6 +19,7 @@ type EnvJsoncPolicyEntry = {
    * force add to component dependencies even if it's not used by the component.
    */
   force?: boolean;
+  optional?: boolean;
 };
 
 export type EnvJsoncPolicyPeerEntry = EnvJsoncPolicyEntry & {
@@ -47,15 +48,25 @@ export class EnvPolicy extends VariantPolicy {
     super(_policiesEntries);
   }
 
-  static fromConfigObject(configObject): EnvPolicy {
+  static fromConfigObject(
+    configObject,
+    { includeLegacyPeersInSelfPolicy }: VariantPolicyFromConfigObjectOptions = {}
+  ): EnvPolicy {
     validateEnvPolicyConfigObject(configObject);
 
     /**
      * Calculate the policy for the env itself.
      * Always force it for the env itself
      */
-    const selfPeersEntries = entriesFromKey(configObject, 'peers', 'version', 'runtime', 'env-own', true);
-
+    let selfPeersEntries: VariantPolicyEntry[];
+    if (includeLegacyPeersInSelfPolicy && !configObject.peers && configObject.peerDependencies) {
+      selfPeersEntries = handleLegacyPeers(configObject);
+    } else {
+      selfPeersEntries = entriesFromKey(configObject, 'peers', 'version', 'runtime', {
+        source: 'env-own',
+        force: true,
+      });
+    }
     const selfPolicy = VariantPolicy.fromArray(selfPeersEntries);
 
     /**
@@ -63,12 +74,14 @@ export class EnvPolicy extends VariantPolicy {
      * when we used to configure dependencies, devDependencies, peerDependencies as objects of dependencyId: version
      * Those were always forced on the components as visible dependencies.
      */
-    const legacyPolicy = VariantPolicy.fromConfigObject(configObject, 'env', false, true);
-    const componentPeersEntries = entriesFromKey(configObject, 'peers', 'supportedRange', 'peer', 'env');
+    const legacyPolicy = VariantPolicy.fromConfigObject(configObject, { source: 'env', force: true, hidden: false });
+    const componentPeersEntries = entriesFromKey(configObject, 'peers', 'supportedRange', 'peer', { source: 'env' });
     const otherKeyNames: EnvJsoncPolicyConfigKey[] = ['dev', 'runtime'];
     const otherEntries: VariantPolicyEntry[] = otherKeyNames.reduce(
       (acc: VariantPolicyEntry[], keyName: EnvJsoncPolicyConfigKey) => {
-        const currEntries = entriesFromKey(configObject, keyName, 'version', keyName as DependencyLifecycleType, 'env');
+        const currEntries = entriesFromKey(configObject, keyName, 'version', keyName as DependencyLifecycleType, {
+          source: 'env',
+        });
         return acc.concat(currEntries);
       },
       []
@@ -83,28 +96,40 @@ export class EnvPolicy extends VariantPolicy {
   }
 }
 
+function handleLegacyPeers(configObject: VariantPolicyConfigObject): VariantPolicyEntry[] {
+  if (!configObject.peerDependencies) {
+    return [];
+  }
+  const entries = Object.entries(configObject.peerDependencies).map(([packageName, version]) => {
+    return createVariantPolicyEntry(packageName, version, 'runtime', {
+      source: 'env-own',
+      hidden: false,
+      force: true,
+    });
+  });
+  return entries;
+}
+
 function entriesFromKey(
   configObject: VariantPolicyConfigObject,
   keyName: EnvJsoncPolicyConfigKey,
   versionKey: VersionKeyName = 'version',
   lifecycleType: DependencyLifecycleType,
-  source: DependencySource = 'env',
-  force?: boolean
+  options: VariantPolicyFromConfigObjectOptions
 ): VariantPolicyEntry[] {
   const configEntries: Array<EnvJsoncPolicyPeerEntry | EnvJsoncPolicyEntry> = configObject[keyName];
   if (!configEntries) {
     return [];
   }
   const entries = configEntries.map((entry) => {
-    return createVariantPolicyEntry(
-      entry.name,
-      entry[versionKey],
-      lifecycleType,
-      source,
-      entry.hidden,
+    return createVariantPolicyEntry(entry.name, entry[versionKey], lifecycleType, {
+      ...options,
+      source: options.source ?? 'env',
+      hidden: entry.hidden,
       // allow override the entry's force value (used for the env itself)
-      force ?? !!entry.force
-    );
+      force: options.force ?? !!entry.force,
+      optional: options.optional ?? !!entry.optional,
+    });
   });
   return entries;
 }

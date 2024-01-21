@@ -47,6 +47,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
   const currentComposition =
     component.compositions.find((composition) => composition.identifier.toLowerCase() === currentCompositionName) ||
     head(component.compositions);
+
   // const [selected, selectComposition] = useState(head(component.compositions));
   const selectedRef = useRef(currentComposition);
   selectedRef.current = currentComposition;
@@ -70,13 +71,18 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
   const compositionUrl = toPreviewUrl(component, 'compositions');
   const isScaling = component?.preview?.isScaling;
   const includesEnvTemplates = component?.preview?.includesEnvTemplate;
+  const useNameParam = component?.preview?.useNameParam;
   const compositionIdentifierParam =
-    isScaling && includesEnvTemplates === false
+    useNameParam || (isScaling && includesEnvTemplates === false)
       ? `name=${currentComposition?.identifier}`
       : currentComposition?.identifier;
+
   const currentCompositionFullUrl = toPreviewUrl(component, 'compositions', compositionIdentifierParam);
 
-  const [compositionParams, setCompositionParams] = useState<Record<string, any>>({});
+  const [compositionParams, setCompositionParams] = useState<Record<string, any>>({
+    fullscreen: true,
+  });
+
   const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);
 
   // collapse sidebar when empty, reopen when not
@@ -91,6 +97,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
             </Link>
           </CompositionsMenuBar>
           <CompositionContent
+            className={styles.compositionPanel}
             emptyState={emptyState}
             component={component}
             selected={currentComposition}
@@ -117,31 +124,26 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
               <TabPanel className={styles.tabContent}>
                 <CompositionsPanel
                   isScaling={isScaling}
+                  useNameParam={useNameParam}
                   includesEnvTemplate={component.preview?.includesEnvTemplate}
                   onSelectComposition={(composition) => {
                     if (!currentComposition || !location) return;
-                    if (location.pathname.includes(currentComposition.identifier.toLowerCase())) {
-                      navigate(composition.identifier.toLowerCase());
-                      return;
+                    const selectedCompositionFromUrl = params['*'];
+
+                    const pathSegments = location.pathname.split('/').filter((x) => x);
+
+                    if (!selectedCompositionFromUrl) {
+                      pathSegments.push(composition.identifier.toLowerCase());
+                    } else {
+                      pathSegments[pathSegments.length - 1] = composition.identifier.toLowerCase();
                     }
 
-                    const path = location.pathname.replace(
-                      currentComposition.identifier.toLowerCase(),
-                      composition.identifier.toLowerCase()
-                    );
-
-                    if (!path) return;
-                    if (!path.includes(composition.identifier.toLowerCase())) {
-                      const nextPath = location.pathname.concat(`/${composition.identifier.toLowerCase()}`);
-                      navigate(nextPath);
-                      return;
-                    }
-                    navigate(path);
+                    const newPath = pathSegments.join('/');
+                    navigate(`/${newPath}`);
                   }}
                   url={compositionUrl}
                   compositions={component.compositions}
                   active={currentComposition}
-                  className={styles.compost}
                 />
               </TabPanel>
               <TabPanel className={styles.tabContent}>
@@ -213,7 +215,7 @@ export function CompositionContent({
       <EmptyBox
         title="There are no compositions for this component."
         linkText="Learn how to create compositions"
-        link={`https://bit.dev/docs/dev-services-overview/compositions/compositions-overview`}
+        link={`https://bit.dev/reference/dev-services-overview/compositions/compositions-overview`}
       />
     );
   }

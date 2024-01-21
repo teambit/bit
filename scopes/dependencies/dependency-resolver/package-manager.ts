@@ -78,6 +78,37 @@ export type PackageManagerInstallOptions = {
    * E.g., if this is set to 1000, then the progress will be updated every second.
    */
   throttleProgress?: number;
+
+  hideProgressPrefix?: boolean;
+
+  hideLifecycleOutput?: boolean;
+
+  /**
+   * Do installation using lockfile only. Ignore the component manifests.
+   */
+  ignorePackageManifest?: boolean;
+
+  /**
+   * When enabled, installation by the package manager will be skipped
+   * but all the options will be calculated and the rebuild function will be returned.
+   * We use this option for a performance optimization in Ripple CI.
+   */
+  dryRun?: boolean;
+
+  dedupeInjectedDeps?: boolean;
+
+  /**
+   * When this is set to true, pnpm will hoist workspace packages to node_modules/.pnpm/node_modules.
+   * This is something we need in capsules.
+   */
+  hoistWorkspacePackages?: boolean;
+
+  /**
+   * Tells pnpm which packages should be hoisted to node_modules/.pnpm/node_modules.
+   * By default, all packages are hoisted - however, if you know that only some flawed packages have phantom dependencies,
+   * you can use this option to exclusively hoist the phantom dependencies (recommended).
+   */
+  hoistPatterns?: string[];
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -151,4 +182,6 @@ export interface PackageManager {
    * These entries tell the package manager from where to the local components should be installed.
    */
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string>;
+
+  findUsages?(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string>;
 }

@@ -41,7 +41,8 @@ export class UserAgentUI {
 }
 
 function UserAgentReactContext({ children, renderCtx }: { children: ReactNode; renderCtx?: UserAgentRenderCtx }) {
-  return <UserAgentProvider value={renderCtx?.userAgent}>{children}</UserAgentProvider>;
+  // @todo - UserAgentProvider needs to be explicitly typed
+  return <UserAgentProvider value={renderCtx?.userAgent as any}>{children}</UserAgentProvider>;
 }
 
 UserAgentAspect.addRuntime(UserAgentUI);

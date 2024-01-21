@@ -1,7 +1,7 @@
 import c from 'chalk';
 import rightpad from 'pad-right';
 import { table } from 'table';
-import { BitId } from '../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 
 import {
   componentToPrintableForDiff,
@@ -213,7 +213,7 @@ export default function paintComponent(
   }
 }
 
-function getAllDependenciesRows(dependenciesInfoArray: DependenciesInfo[], id: BitId): Array<string[]> {
+function getAllDependenciesRows(dependenciesInfoArray: DependenciesInfo[], id: ComponentID): Array<string[]> {
   return dependenciesInfoArray.map((dependency: DependenciesInfo) => {
     const row: string[] = [];
     row.push(dependency.id.toString());
@@ -224,7 +224,7 @@ function getAllDependenciesRows(dependenciesInfoArray: DependenciesInfo[], id: B
   });
 }
 
-export function generateDependenciesInfoTable(dependenciesInfo: DependenciesInfo[], id: BitId) {
+export function generateDependenciesInfoTable(dependenciesInfo: DependenciesInfo[], id: ComponentID) {
   if (!dependenciesInfo.length) {
     return '';
   }
@@ -242,7 +242,7 @@ export function generateDependenciesInfoTable(dependenciesInfo: DependenciesInfo
   return `\n${c.bold('Dependencies Details')}\n${dependenciesTable}`;
 }
 
-export function generateDependentsInfoTable(dependentsInfo: DependenciesInfo[], id: BitId) {
+export function generateDependentsInfoTable(dependentsInfo: DependenciesInfo[], id: ComponentID) {
   if (!dependentsInfo.length) {
     return '';
   }

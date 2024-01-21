@@ -1,10 +1,10 @@
 import { Graph } from '@teambit/graph.cleargraph';
 import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { CompIdGraph } from '@teambit/graph';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import type { AspectDefinition } from '@teambit/aspect-loader';
-import { ComponentID } from '@teambit/component-id';
 import { Component, InvalidComponent } from './component';
 import { State } from './state';
 import { Snap } from './snap';
@@ -15,6 +15,7 @@ export type ResolveAspectsOptions = FilterAspectsOptions & {
   workspaceName?: string;
   skipDeps?: boolean;
   resolveEnvsFromRoots?: boolean;
+  packageManagerConfigRootDir?: string;
 };
 
 export type LoadAspectsOptions = {
@@ -69,12 +70,12 @@ export interface ComponentFactory {
   /**
    * resolve a `string` component ID to an instance of a ComponentID.
    */
-  resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID>;
+  resolveComponentId(id: string | BitId | ComponentID): Promise<ComponentID>;
 
   /**
    * resolve multiple `string` component ID to an instance of a ComponentID.
    */
-  resolveMultipleComponentIds(ids: (string | ComponentID | BitId)[]): Promise<ComponentID[]>;
+  resolveMultipleComponentIds(ids: (string | BitId | ComponentID)[]): Promise<ComponentID[]>;
 
   /**
    * returns a component by ID.

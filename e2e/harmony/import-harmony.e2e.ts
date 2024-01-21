@@ -3,6 +3,7 @@ import path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { UPDATE_DEPS_ON_IMPORT } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -98,13 +99,13 @@ describe('import functionality on Harmony', function () {
           npmCiRegistry.setResolver();
 
           // as an intermediate step, make sure the package is listed in the workspace config.
-          const workspaceConf = helper.bitJsonc.getPolicyFromDependencyResolver();
+          const workspaceConf = helper.workspaceJsonc.getPolicyFromDependencyResolver();
           expect(workspaceConf.dependencies).to.have.property(comp1Pkg);
 
           helper.command.importComponent('comp1');
         });
         it('should remove the package from workspace.jsonc', () => {
-          const workspaceConf = helper.bitJsonc.getPolicyFromDependencyResolver();
+          const workspaceConf = helper.workspaceJsonc.getPolicyFromDependencyResolver();
           expect(workspaceConf.dependencies).to.be.empty;
         });
       });
@@ -268,17 +269,17 @@ describe('import functionality on Harmony', function () {
       beforeImport = helper.scopeHelper.cloneLocalScope();
     });
     it('should import with no errors when defaultDirectory has "{owner}" placeholder', () => {
-      helper.bitJsonc.setComponentsDir('{owner}/{name}');
+      helper.workspaceJsonc.setComponentsDir('{owner}/{name}');
       expect(() => helper.command.importComponent('comp1')).to.not.throw();
     });
     it('should import with no errors when defaultDirectory has "{scope-id}" placeholder', () => {
       helper.scopeHelper.getClonedLocalScope(beforeImport);
-      helper.bitJsonc.setComponentsDir('{scopeId}/{name}');
+      helper.workspaceJsonc.setComponentsDir('{scopeId}/{name}');
       expect(() => helper.command.importComponent('comp1')).to.not.throw();
     });
     it('should throw an error when the placeholder is not supported', () => {
       helper.scopeHelper.getClonedLocalScope(beforeImport);
-      helper.bitJsonc.setComponentsDir('{hello}/{name}');
+      helper.workspaceJsonc.setComponentsDir('{hello}/{name}');
       expect(() => helper.command.importComponent('comp1')).to.throw();
     });
   });
@@ -328,6 +329,53 @@ describe('import functionality on Harmony', function () {
     it('should only add the entries to the .bitmap without writing files', () => {
       helper.bitMap.expectToHaveId('comp1');
       expect(path.join(helper.scopes.localPath, `${helper.scopes.remote}/comp1/file`)).to.be.a.file();
+    });
+  });
+  describe('import with deps having different versions than workspace.jsonc', () => {
+    const initWsWithVer = (ver: string) => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.workspaceJsonc.addPolicyToDependencyResolver({
+        dependencies: {
+          'lodash.get': ver,
+        },
+      });
+      helper.npm.addFakeNpmPackage('lodash.get', ver.replace('^', '').replace('~', ''));
+      helper.command.importComponent('comp1', '-x');
+    };
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.setFeatures(UPDATE_DEPS_ON_IMPORT);
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/foo.js', `const get = require('lodash.get'); console.log(get);`);
+      helper.workspaceJsonc.addPolicyToDependencyResolver({
+        dependencies: {
+          'lodash.get': '^4.4.2',
+        },
+      });
+      helper.npm.addFakeNpmPackage('lodash.get', '4.4.2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+    });
+    it('if the ws has a lower range, it should update workspace.jsonc with the new range', () => {
+      initWsWithVer('^4.4.1');
+      const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+      expect(policy.dependencies['lodash.get']).to.equal('^4.4.2');
+    });
+
+    it('if the ws has a higher range, it should not update', () => {
+      initWsWithVer('^4.4.3');
+      const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+      expect(policy.dependencies['lodash.get']).to.equal('^4.4.3');
+    });
+
+    it('if the ws has a lower exact version, it should write a conflict', () => {
+      initWsWithVer('4.4.1');
+      const policy = helper.workspaceJsonc.readRaw();
+      expect(policy).to.have.string('<<<<<<< ours');
+      expect(policy).to.have.string('"lodash.get": "4.4.1"');
+      expect(policy).to.have.string('"lodash.get": "^4.4.2"');
+      expect(policy).to.have.string('>>>>>>> theirs');
     });
   });
 });

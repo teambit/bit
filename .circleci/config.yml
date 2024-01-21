@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: cimg/node:18.16.1
+    - image: cimg/node:20.10.0
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -87,7 +87,7 @@ commands: # reusable commands
         default: 'BASE_IMAGE'
         type: string
       docker_build_arg_value:
-        default: 'node:18.16.1'
+        default: 'node:20.10.0'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -116,7 +116,7 @@ commands: # reusable commands
         default: 'BASE_IMAGE'
         type: string
       docker_build_arg_value:
-        default: 'node:18.16.1'
+        default: 'node:20.10.0'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -162,7 +162,8 @@ commands: # reusable commands
       - run: 'ssh-add ~/.ssh/id_rsa'
   install_bvm:
     steps:
-      - run: yarn global add @teambit/bvm
+      - run: npm config set prefix '~/.npm-global'
+      - run: npm install --global @teambit/bvm
       - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
       - run: bvm config set RELEASE_TYPE nightly
   set_bit_cloud_registry:
@@ -170,6 +171,9 @@ commands: # reusable commands
       - run:
           name: set bit cloud registry in npm config
           command: npm config set @teambit:registry=https://node-registry.bit.cloud
+      - run:
+          name: set bit cloud registry in npm config
+          command: npm config set @bitdev:registry=https://node-registry.bit.cloud
 
   set_git_credentials:
     steps:
@@ -191,6 +195,54 @@ commands: # reusable commands
       - run: cd bit && git remote rm origin
       # todo: find a better way. currently, the ssh doesn't work, see the commented steps above.
       - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
+  windows_set_node_version:
+    parameters:
+      version:
+        default: 20.10.0
+        type: string
+    steps:
+      - run: choco upgrade nvm -y
+      - run: nvm -v
+      - run: nvm install 20.10.0
+      - run: nvm use 20.10.0
+      - run: node -v
+  windows_add_bvm_to_path:
+    steps:
+      - run: New-Item $Profile.CurrentUserAllHosts -Force
+      - run: Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "C:\Users\circleci\AppData\Local\.bvm;$env:PATH"'
+      - run: $Env:Path.Split(';')
+
+  setup_bit_version:
+    steps:
+      - run:
+          name: print bit version
+          command: npm view @teambit/bit version
+      - run:
+          name: Setup bit version environment variables
+          command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
+      - run:
+          name: create empty folder
+          command: mkdir bit-${BIT_VERSION}
+
+  setup_pnpm:
+    steps:
+      - run:
+          name: Install pnpm
+          command: >
+            npm config set prefix '~/.npm-global' &&
+            npm install --global pnpm@8.10.4 &&
+            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+
+  compress_bit:
+    steps:
+      - run:
+          name: Compress Bit
+          command: >
+            tar -cvf bit-${BIT_VERSION}.tar.gz
+            --exclude=bit-${BIT_VERSION}/.npmrc
+            --exclude=bit-${BIT_VERSION}/package.json
+            --exclude=bit-${BIT_VERSION}/pnpm-lock.yaml
+            bit-${BIT_VERSION}
 
 jobs:
   checkout_code:
@@ -212,9 +264,13 @@ jobs:
       - attach_workspace:
           at: ./
       - run:
-          name: set bit.dev registry
+          name: set bit.dev registry (@teambit)
           # command: npm config set @teambit:registry https://node.bit.dev
           command: npm config set @teambit:registry https://node-registry.bit.cloud
+      - run:
+          name: set bit.dev registry (@bitdev)
+          # command: npm config set @teambit:registry https://node.bit.dev
+          command: npm config set @bitdev:registry https://node-registry.bit.cloud
       - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:`npm show @teambit/bit version` .
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:latest .
@@ -229,16 +285,6 @@ jobs:
   #         at: ./
   #     - docker_build_and_push
 
-  docker_build_node_18:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - attach_workspace:
-          at: ./
-      - docker_build_and_push:
-          docker_build_arg_value: "node:18.16.1"
-          docker_tag_suffix: "-node-18.16.1"
-
   docker_build_node_20:
     machine:
       image: ubuntu-2004:202111-02
@@ -246,8 +292,8 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:20.3.1"
-          docker_tag_suffix: "-node-20.3.1"
+          docker_build_arg_value: "node:20.10.0"
+          docker_tag_suffix: "-node-20.10.0"
 
   # docker_non_root_build:
   #   machine:
@@ -259,19 +305,6 @@ jobs:
   #         image_name: "bitcli/bit-non-root"
   #         docker_file_name: "Dockerfile-bit-non-root"
 
-  docker_non_root_build_node_18:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - attach_workspace:
-          at: ./
-      - docker_build_and_push:
-          docker_build_arg_value: "node:18.16.1"
-          image_name: "bitcli/bit-non-root"
-          docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-18.16.1"
-
-
   docker_non_root_build_node_20:
     machine:
       image: ubuntu-2004:202111-02
@@ -279,23 +312,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:20.3.1"
+          docker_build_arg_value: "node:20.10.0"
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-20.3.1"
-
-  server_docker_build_node_18:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - attach_workspace:
-          at: ./
-      - docker_build_and_push:
-          docker_build_arg_name: "BIT_IMAGE"
-          docker_build_arg_value: "`npm show @teambit/bit version`-node-18.16.1"
-          image_name: "bitcli/bit-server"
-          docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-18.16.1"
+          docker_tag_suffix: "-node-20.10.0"
 
   server_docker_build_node_20:
     machine:
@@ -305,10 +325,10 @@ jobs:
           at: ./
       - docker_build_and_push:
           docker_build_arg_name: "BIT_IMAGE"
-          docker_build_arg_value: "`npm show @teambit/bit version`-node-20.3.1"
+          docker_build_arg_value: "`npm show @teambit/bit version`-node-20.10.0"
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-20.3.1"
+          docker_tag_suffix: "-node-20.10.0"
 
   set_ssh_key:
     <<: *defaults
@@ -433,6 +453,9 @@ jobs:
       - run:
           name: 'run TSC'
           command: 'cd bit && npm run check-types'
+      - run:
+          name: 'make sure there is no "ramda" imported to Harmony'
+          command: 'cd bit && ./scripts/validate-no-ramda.sh'
       - persist_to_workspace:
           root: .
           paths:
@@ -448,6 +471,8 @@ jobs:
           at: ./
       - restore_cache:
           key: bitsrc-registry10
+      - restore_cache:
+          key: core-aspect-env-v0.0.19-v10
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
@@ -463,6 +488,7 @@ jobs:
       - run: bvm config set RELEASE_TYPE nightly
       # - run: bvm install 0.0.910
       - run: bvm upgrade
+      # - run: bvm install 1.5.36
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
@@ -472,7 +498,13 @@ jobs:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
-      - run: cd bit && bbit install
+      - run:
+          name: bbit install
+          command: cd bit && bbit install
+      - save_cache:
+          key: core-aspect-env-v0.0.19-v10
+          paths:
+            - /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088
       - run: cd bit && npm run link-bit-legacy
       # - run: cd bit && bbit compile
 
@@ -511,6 +543,11 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+      - restore_cache:
+          key: core-aspect-env-v0.0.19-v10
       # - update_ssh_agent
       # temporary, check if we can remove it
       - run: cd bit && bit cc
@@ -522,10 +559,13 @@ jobs:
           name: 'bit status'
           command: 'cd bit && ./scripts/bit-status.sh'
       - run:
+          name: 'bit diff'
+          command: cd bit && bit diff
+      - run:
           name: 'bit build'
           command: 'cd bit && bit build'
           environment:
-            NODE_OPTIONS: --max_old_space_size=12000
+            NODE_OPTIONS: --max-old-space-size=15000
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
@@ -542,6 +582,8 @@ jobs:
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+      - restore_cache:
+          key: core-aspect-env-v0.0.19-v10
       - bit_config:
           env: "hub"
       - restore_cache:
@@ -555,9 +597,11 @@ jobs:
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run: cd bit && node scripts/bump-bit-legacy-ver.js
       - run: bvm link
+      - run: cd bit && bit config set force_local_build true
       # temporary, check if we can remove it
       - run: cd bit && bit cc
       - run: cd bit && bit status
+      - run: cd bit && bit diff
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
@@ -574,18 +618,20 @@ jobs:
       - run: cd bit && npm run link-bit-legacy
       # temporary, check if we can remove it
       - run: cd bit && bit cc
+
       # - run: cd bit && bit config set cache.max.objects 100000
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
           # command: cd bit && bit tag --ignore-newest-version
+          # command: cd bit && bit tag --increment-by 3
           # command: cd bit && bit tag --increment-by 2
           command: cd bit && bit tag
           # command: cd bit && bit tag --persist
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
-            NODE_OPTIONS: --max_old_space_size=12000
+            NODE_OPTIONS: --max-old-space-size=15000
       - run: cd bit && git diff
       - run:
           name: backup bit objects (before export)
@@ -610,24 +656,6 @@ jobs:
     steps:
       - run: sleep 300;
 
-  get_linux_arm64_packages:
-    <<: *defaults
-    resource_class: small
-    steps:
-      - run: mkdir esbuild-linux-arm64
-      # in order to bring new version of esbuild, you need to install it on linux arm64 machine, tar it, and upload to the bucket
-      # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
-      - run: cd esbuild-linux-arm64 && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-linux-arm64.tar.gz
-
-      # - save_cache:
-      #     key: esbuild-0.14.29-linux-arm64-v1
-      #     paths:
-      #       - esbuild-linux-arm64/esbuild-0.14.29-linux-arm64.tar.gz
-      - persist_to_workspace:
-          root: .
-          paths:
-            - esbuild-linux-arm64
-
   bundle_version_linux:
     <<: *defaults
     environment:
@@ -636,45 +664,33 @@ jobs:
     steps:
       - attach_workspace:
             at: ./
-      - run: cd esbuild-linux-arm64 && tar -xvf esbuild-0.14.29-linux-arm64.tar.gz
       - set_bit_cloud_registry
+      - setup_bit_version
+      - setup_pnpm
       - run:
-          name: print bit version
-          command: npm view @teambit/bit version
-      - run:
-          name: Setup bit version environment variables
-          command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
-      - run:
-          name: create linux
-          command: mkdir linux
-      - run:
-          name: create empty folder
-          command: mkdir bit-${BIT_VERSION}
-      - run:
-          name: install bit
-          command: cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
-      - run:
-          name: remove leftovers
-          command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
-      - run:
-          name: compress bit
-          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+          name: install bit for Linux x64
+          command: >
+            cd bit-${BIT_VERSION} &&
+            pnpm init &&
+            echo "node-linker=hoisted" >> .npmrc &&
+            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values linux --values linux &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
+            pnpm add @teambit/bit
+      - compress_bit
       - run:
           name: move to linux folder
-          command: mv bit-${BIT_VERSION}.tar.gz linux/bit-${BIT_VERSION}.tar.gz
+          command: mkdir linux && mv bit-${BIT_VERSION}.tar.gz linux/bit-${BIT_VERSION}.tar.gz
       - run:
-          name: create linux-arm64
-          command: mkdir linux-arm64
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-linux-arm64
-      - run: cp -r esbuild-linux-arm64/node_modules/* bit-${BIT_VERSION}/node_modules
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/nan
-      - run:
-          name: compress bit arm64
-          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+          name: install bit for Linux arm64
+          command: >
+            cd bit-${BIT_VERSION} &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values arm64 --values arm64 &&
+            pnpm install
+      - compress_bit
       - run:
           name: move to linux-arm64 folder
-          command: mv bit-${BIT_VERSION}.tar.gz linux-arm64/bit-${BIT_VERSION}.tar.gz
+          command: mkdir linux-arm64 && mv bit-${BIT_VERSION}.tar.gz linux-arm64/bit-${BIT_VERSION}.tar.gz
 
       - persist_to_workspace:
           root: .
@@ -686,81 +702,41 @@ jobs:
       - store_artifacts:
           path: linux-arm64
 
-  get_darwin_arm64_packages:
-    <<: *defaults
-    resource_class: small
-    steps:
-      - run: mkdir esbuild-darwin-arm64
-      # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
-      # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
-      - run: cd esbuild-darwin-arm64 && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
-
-      # - save_cache:
-      #     key: esbuild-0.14.29-darwin-arm64-v1
-      #     paths:
-      #       - esbuild-darwin-arm64/esbuild-0.14.29-darwin-arm64.tar.gz
-      - persist_to_workspace:
-          root: .
-          paths:
-            - esbuild-darwin-arm64
-
   bundle_version_macos:
-    <<: *mac_defaults
+    <<: *defaults
     environment:
       # do not download chromium when installing puppeteer
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
     steps:
       - attach_workspace:
             at: ./
-      - run: node -v
-      - run: rm -rf /usr/local/bin/yarn
-      - run: rm -rf /usr/local/bin/yarnpkg
-      - run: npm install --global yarn --force
-      - run: yarn cache clean
-      - run: yarn -v
-      # - run: mkdir esbuild-darwin-arm64
-      # - restore_cache:
-      #     key: esbuild-0.14.29-darwin-arm64-v1
-      - run: cd esbuild-darwin-arm64 && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
       - set_bit_cloud_registry
+      - setup_bit_version
+      - setup_pnpm
       - run:
-          name: print bit version
-          command: npm view @teambit/bit version
-      - run:
-          name: Setup bit version environment variables
-          command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
-      - run:
-          name: create macos
-          command: mkdir macos
-      - run:
-          name: create empty folder
-          command: mkdir bit-${BIT_VERSION}
-      - run:
-          name: install bit
-          command: cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
-      - run:
-          name: remove leftovers
-          command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
-      - run:
-          name: compress bit
-          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+          name: install bit for macOS x64
+          command: >
+            cd bit-${BIT_VERSION} &&
+            pnpm init &&
+            echo "node-linker=hoisted" >> .npmrc &&
+            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values darwin --values darwin &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
+            pnpm add @teambit/bit
+      - compress_bit
       - run:
           name: move to macos folder
-          command: mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
+          command: mkdir macos && mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
       - run:
-          name: create macos-arm64
-          command: mkdir macos-arm64
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-darwin-arm64
-      - run: cp -r esbuild-darwin-arm64/node_modules/* bit-${BIT_VERSION}/node_modules
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/nan
-      - run:
-          name: compress bit arm64
-          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+          name: install bit for macOS arm64
+          command: >
+            cd bit-${BIT_VERSION} &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values arm64 --values arm64 &&
+            pnpm install
+      - compress_bit
       - run:
           name: move to macos-arm64 folder
-          command: mv bit-${BIT_VERSION}.tar.gz macos-arm64/bit-${BIT_VERSION}.tar.gz
-
+          command: mkdir macos-arm64 && mv bit-${BIT_VERSION}.tar.gz macos-arm64/bit-${BIT_VERSION}.tar.gz
 
       - persist_to_workspace:
           root: .
@@ -773,60 +749,32 @@ jobs:
           path: macos-arm64
 
   bundle_version_windows:
-    <<: *windows_defaults
+    <<: *defaults
     environment:
       # do not download chromium when installing puppeteer
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
     steps:
-      # - run: choco install nodejs --version 16.15.1
-      # - run: cinst nodejs --version 16.16.0
-      # - run: nodejs.install v12.16.0
-      # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
-      - run: choco upgrade nvm -y
-      - run: nvm -v
-      - run: nvm install 18.16.1
-      - run: nvm use 18.16.1
-      - run: node -v
-      - run: npm install --global yarn
-      - run: 'yarn -v'
+      - attach_workspace:
+            at: ./
       - set_bit_cloud_registry
+      - setup_bit_version
+      - setup_pnpm
       - run:
-          name: print bit version
-          command: npm view @teambit/bit version
-      # - run:
-      #     name: Setup bit version environment variables
-      #     command: $BIT_VERSION = npm view @teambit/bit version
-      # - run:
-      #     name: print version again
-      #     command: $BIT_VERSION
-      - run:
-          name: create version file
-          command: npm view @teambit/bit version | Out-File -FilePath .\version.txt
-      - run:
-          name: create folder
-          command: New-Item -ItemType "directory" -Path ".\bundle"
-      # - run:
-      #     name: create folder
-      #     command: $BIT_VERSION = Get-Content -Path .\version.txt;New-Item -ItemType "directory" -Path ".\bit-$BIT_VERSION" -Force
-      - run: 'node -v'
-      - run:
-          name: install bit
-          command: cd bundle; npm init -y; yarn add @teambit/bit
-      - run:
-          name: remove leftovers
-          command: Remove-Item .\bundle\package.json; Remove-Item .\bundle\yarn.lock
-      - run:
-          name: rename folder
-          command: $BIT_VERSION = Get-Content -Path .\version.txt; Rename-Item .\bundle ".\bit-$BIT_VERSION"
-      - run:
-          name: compress bit
-          command: $BIT_VERSION = Get-Content -Path .\version.txt; tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
-      - run:
-          name: create folder
-          command: New-Item -ItemType "directory" -Path ".\windows"
+          name: install bit for Windows x64
+          command: >
+            cd bit-${BIT_VERSION} &&
+            pnpm init &&
+            echo "node-linker=hoisted" >> .npmrc &&
+            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
+            echo "prefer-symlinked-executables=false" >> .npmrc &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values win32 --values win32 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
+            pnpm add @teambit/bit
+      - compress_bit
       - run:
           name: move to windows folder
-          command: $BIT_VERSION = Get-Content -Path .\version.txt;Move-Item -Path .\bit-${BIT_VERSION}.tar.gz -Destination .\windows\bit-${BIT_VERSION}.tar.gz
+          command: mkdir windows && mv bit-${BIT_VERSION}.tar.gz windows/bit-${BIT_VERSION}.tar.gz
+
       - persist_to_workspace:
           root: .
           paths:
@@ -945,6 +893,8 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
+      - restore_cache:
+          key: core-aspect-env-v0.0.19-v10
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -962,7 +912,7 @@ jobs:
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
-            NODE_OPTIONS: --no-warnings
+            NODE_OPTIONS: --no-warnings --max-old-space-size=5000
           when: always
       - store_test_results:
           path: bit/junit
@@ -981,9 +931,9 @@ jobs:
       # - run: node -v
       # - run: npm -v
       # - run: yarn -v
-      # # - run: choco install nodejs --version 18.16.1
+      # # - run: choco install nodejs --version 20.10.0
       # # - run: node -v
-      # - run: cinst nodejs --version 18.16.1
+      # - run: cinst nodejs --version 20.10.0
       # - run: node -v
 
   windows_checkout_code:
@@ -1085,11 +1035,13 @@ jobs:
 
   windows_bvm_install:
     <<: *windows_defaults
-    environment:
-      Path: C:\Users\circleci\.npm-global;C:\Users\circleci\AppData\Local\.bvm;$ENV:PATH
+    # environment:
+    #   Path: C:\Users\circleci\.npm-global;C:\Users\circleci\AppData\Local\.bvm;$ENV:PATH
     steps:
       - attach_workspace:
           at: .
+      - windows_add_bvm_to_path
+      - windows_set_node_version
       - run: npm view @teambit/bit version | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
       - restore_cache:
@@ -1100,7 +1052,7 @@ jobs:
           name: 'bvm upgrade'
           command: 'bvm upgrade'
           no_output_timeout: 60m
-      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
+      # - windows_add_bvm_to_path
       - run: 'bit -v'
       - run: bit -v | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
@@ -1119,28 +1071,19 @@ jobs:
       BITSRC_ENV: stg
       SKIP_REGISTRY_TESTS: "true"
       SKIP_BIT_DEV_TESTS: "true"
+      BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: .
       # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
-      - run: choco upgrade nvm -y
-      - run: nvm -v
-      - run: nvm install 18.16.1
-      - run: nvm use 18.16.1
-      - run: node -v
-      - run: npm -v
+      - windows_add_bvm_to_path
+      - windows_set_node_version
       # - run: Get-Content -Path .\version.txt
       # - restore_cache:
       #     key: bvm-folder-v1
       - restore_cache:
           key: v2-bvm-folder-{{ checksum "version.txt" }}
-      # - run: bit -v
-      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: bit -v
-      # - run: 'npm i -g @teambit/bvm'
-      # - run: 'bvm list'
-      # - run: 'bvm link'
-      # - run: bit -v
       - run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
@@ -1182,10 +1125,8 @@ jobs:
       - attach_workspace:
           at: .
       # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
-      - run: nvm install 18.16.1
-      - run: nvm use 18.16.1
-      - run: node -v
-      - run: npm -v
+      - windows_add_bvm_to_path
+      - windows_set_node_version
       # - run: Get-Content -Path .\version.txt
       # - restore_cache:
       #     key: bvm-folder-v1
@@ -1250,7 +1191,7 @@ jobs:
       - attach_workspace:
           at: .
       - run: $Env:Path
-      - run: 'npm i -g yarn'
+      - run: corepack enable && corepack prepare yarn@4.0.1 --activate
       - run: 'npm -v'
       # -
       #   run:
@@ -1371,8 +1312,6 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_npm_registries
-      - get_darwin_arm64_packages
-      - get_linux_arm64_packages
       - setup_harmony:
           requires:
             - set_npm_registries
@@ -1391,27 +1330,25 @@ workflows:
           requires:
             - bit_tag
             - bit_export
-            - get_linux_arm64_packages
-            - sleep_5_minutes
-      - bundle_version_windows:
-          <<: *master_only_filter
-          requires:
-            - bit_export
-            - bit_tag
             - sleep_5_minutes
       - bundle_version_macos:
           <<: *master_only_filter
           requires:
-            - bit_export
             - bit_tag
-            - get_darwin_arm64_packages
+            - bit_export
+            - sleep_5_minutes
+      - bundle_version_windows:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+            - bit_export
             - sleep_5_minutes
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
             - bundle_version_linux
-            - bundle_version_windows
             - bundle_version_macos
+            - bundle_version_windows
             - checkout_code # This is needed to generate index.json
       - bit_export:
           <<: *master_only_filter
@@ -1431,15 +1368,15 @@ workflows:
       # - server_docker_build:
       #     requires:
       #       - docker_build
-      - docker_build_node_18:
-          requires:
-            - harmony_publish_to_gcloud
-      - docker_non_root_build_node_18:
-          requires:
-            - harmony_publish_to_gcloud
-      - server_docker_build_node_18:
-          requires:
-            - docker_build_node_18
+      # - docker_build_node_18:
+      #     requires:
+      #       - harmony_publish_to_gcloud
+      # - docker_non_root_build_node_18:
+      #     requires:
+      #       - harmony_publish_to_gcloud
+      # - server_docker_build_node_18:
+      #     requires:
+      #       - docker_build_node_18
       - docker_build_node_20:
           requires:
             - harmony_publish_to_gcloud
@@ -1482,12 +1419,14 @@ workflows:
   #   jobs:
   #     - windows_set_ssh_key
   #     - windows_checkout_code
-  #     - windows_bvm_install:
-  #         requires:
-  #           - windows_checkout_code
+  #     - windows_bvm_install
+  #     # - windows_bvm_install:
+  #         # requires:
+  #         #   - windows_checkout_code
   #     - windows_build_bvm:
   #         requires:
   #           - windows_bvm_install
+  #           - windows_checkout_code
   #     - windows_e2e_test_bvm:
   #         requires:
   #           - windows_checkout_code
@@ -1501,14 +1440,6 @@ workflows:
           <<: *master_only_filter
           type: approval
       - checkout_code:
-          <<: *master_only_filter
-          requires:
-            - harmony_deploy_approval_job
-      - get_linux_arm64_packages:
-          <<: *master_only_filter
-          requires:
-            - harmony_deploy_approval_job
-      - get_darwin_arm64_packages:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
@@ -1543,30 +1474,28 @@ workflows:
             - harmony_deploy_approval_job
             - bit_tag
             - bit_export
-            - get_linux_arm64_packages
-            - sleep_5_minutes
-      - bundle_version_windows:
-          <<: *master_only_filter
-          requires:
-            - harmony_deploy_approval_job
-            - bit_export
-            - bit_tag
             - sleep_5_minutes
       - bundle_version_macos:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
-            - bit_export
             - bit_tag
-            - get_darwin_arm64_packages
+            - bit_export
+            - sleep_5_minutes
+      - bundle_version_windows:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bit_tag
+            - bit_export
             - sleep_5_minutes
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
             - bundle_version_linux
-            - bundle_version_windows
             - bundle_version_macos
+            - bundle_version_windows
             - checkout_code # This is needed to generate index.json
       - bit_export:
           <<: *master_only_filter
@@ -1591,18 +1520,18 @@ workflows:
       #     requires:
       #       - harmony_deploy_approval_job
       #       - docker_build
-      - docker_build_node_18:
-          requires:
-            - harmony_deploy_approval_job
-            - harmony_publish_to_gcloud
-      - docker_non_root_build_node_18:
-          requires:
-            - harmony_deploy_approval_job
-            - harmony_publish_to_gcloud
-      - server_docker_build_node_18:
-          requires:
-            - harmony_deploy_approval_job
-            - docker_build_node_18
+      # - docker_build_node_18:
+      #     requires:
+      #       - harmony_deploy_approval_job
+      #       - harmony_publish_to_gcloud
+      # - docker_non_root_build_node_18:
+      #     requires:
+      #       - harmony_deploy_approval_job
+      #       - harmony_publish_to_gcloud
+      # - server_docker_build_node_18:
+      #     requires:
+      #       - harmony_deploy_approval_job
+      #       - docker_build_node_18
       - docker_build_node_20:
           requires:
             - harmony_deploy_approval_job
@@ -1621,13 +1550,14 @@ workflows:
   #     - checkout_code:
   #         filters:
   #           branches:
-  #             only: upgrade-symphony-docker-node
+  #             only: circle-docker-symphony
   #     - symphony_docker_build:
   #         filters:
   #           branches:
-  #             only: upgrade-symphony-docker-node
+  #             only: circle-docker-symphony
   #         requires:
   #           - checkout_code
+
   # uncomment to update esbuild arm64 cache
   # get_arm64_workflow_packages:
   #   jobs:
@@ -1641,48 +1571,36 @@ workflows:
   #     - checkout_code:
   #         filters:
   #           branches:
-  #             only: circle-use-new-registry-bundle
-  #     - get_linux_arm64_packages:
-  #         filters:
-  #           branches:
-  #             only: circle-use-new-registry-bundle
+  #             only: improve-bundling
   #     - bundle_version_linux:
   #         filters:
   #           branches:
-  #             only: circle-use-new-registry-bundle
-  #         requires:
-  #           - get_linux_arm64_packages
-  #     - bundle_version_windows:
-  #         filters:
-  #           branches:
-  #             only: circle-use-new-registry-bundle
-  #     - get_darwin_arm64_packages:
-  #         filters:
-  #           branches:
-  #             only: circle-use-new-registry-bundle
+  #             only: improve-bundling
   #     - bundle_version_macos:
   #         filters:
   #           branches:
-  #             only: circle-use-new-registry-bundle
-  #         requires:
-  #           - get_darwin_arm64_packages
+  #             only: improve-bundling
+  #     - bundle_version_windows:
+  #         filters:
+  #           branches:
+  #             only: improve-bundling
   #     - harmony_publish_to_gcloud:
   #         filters:
   #           branches:
-  #             only: circle-ci-windows-node-version
+  #             only: improve-bundling
   #         requires:
-  #           - bundle_version_macos
   #           - bundle_version_linux
+  #           - bundle_version_macos
   #           - bundle_version_windows
   #           - checkout_code # This is needed to generate index.json
   #     # - docker_build:
   #     #     requires:
   #     #       - checkout_code
   #     #       - harmony_publish_to_gcloud
-  #     - docker_build_node_18:
-  #         requires:
-  #           - checkout_code
-  #           - harmony_publish_to_gcloud
+  # #     - docker_build_node_18:
+  # #         requires:
+  # #           - checkout_code
+  # #           - harmony_publish_to_gcloud
   #     - docker_build_node_20:
   #         requires:
   #           - checkout_code
@@ -1691,10 +1609,10 @@ workflows:
   #     #     requires:
   #     #       - checkout_code
   #     #       - harmony_publish_to_gcloud
-  #     - docker_non_root_build_node_18:
-  #         requires:
-  #           - checkout_code
-  #           - harmony_publish_to_gcloud
+  # #     - docker_non_root_build_node_18:
+  # #         requires:
+  # #           - checkout_code
+  # #           - harmony_publish_to_gcloud
   #     - docker_non_root_build_node_20:
   #         requires:
   #           - checkout_code
@@ -1702,9 +1620,9 @@ workflows:
   #     # - server_docker_build:
   #     #     requires:
   #     #       - docker_build
-  #     - server_docker_build_node_18:
-  #         requires:
-  #           - docker_build_node_18
+  # #     - server_docker_build_node_18:
+  # #         requires:
+  # #           - docker_build_node_18
   #     - server_docker_build_node_20:
   #         requires:
   #           - docker_build_node_20

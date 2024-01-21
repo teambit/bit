@@ -8,3 +8,14 @@
 .laneDetails {
   padding-bottom: 32px;
 }
+
+.cardGrid {
+  grid-column-gap: 10px;
+  grid-gap: 32px 24px;
+  -moz-column-gap: 10px;
+  column-gap: 10px;
+  display: grid;
+  gap: 32px 24px;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  max-width: 1280px;
+}

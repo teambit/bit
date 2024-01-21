@@ -7,11 +7,10 @@ import loader from './loader';
 export async function handleErrorAndExit(err: Error, commandName: string, shouldSerialize = false): Promise<void> {
   try {
     loader.off();
-    logger.error(`got an error from command ${commandName}: ${err}`);
-    logger.error(err.stack || '<no error stack was found>');
+    logger.error(`got an error from command ${commandName}: ${err}`, err);
     const { message, error } = defaultHandleError(err);
     if (shouldSerialize) serializeErrAndExit(error, commandName);
-    else await logErrAndExit(message, commandName);
+    else await logErrAndExit(message, commandName, err);
   } catch (e: any) {
     // eslint-disable-next-line no-console
     console.error('failed to log the error properly, failure error', e);
@@ -31,10 +30,12 @@ export async function handleUnhandledRejection(err: Error | null | undefined | {
   return handleErrorAndExit(new Error(`unhandledRejections found. err ${err}`), process.argv[2]);
 }
 
-export async function logErrAndExit(err: Error | string, commandName: string) {
-  if (!err) throw new Error(`logErrAndExit expects to get either an Error or a string, got nothing`);
-  console.error(err); // eslint-disable-line
-  await logger.exitAfterFlush(1, commandName, err.toString());
+async function logErrAndExit(errMsg: Error | string, commandName: string, errObj: Error) {
+  if (!errMsg) throw new Error(`logErrAndExit expects to get either an Error or a string, got nothing`);
+  console.error(errMsg); // eslint-disable-line
+  // for CI, print the entire error with the stacktrace
+  if (process.env.CI) console.error(errObj); // eslint-disable-line
+  await logger.exitAfterFlush(1, commandName, errMsg.toString());
 }
 
 function serializeErrAndExit(err, commandName: string) {

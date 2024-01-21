@@ -3,7 +3,6 @@ import chalk from 'chalk';
 import * as path from 'path';
 import { BitError } from '@teambit/bit-error';
 import { PathLinux, PathOsBased } from '@teambit/legacy/dist/utils/path';
-import R from 'ramda';
 import { AddActionResults, Warnings } from './add-components';
 import { TrackerMain } from './tracker.main.runtime';
 
@@ -26,19 +25,22 @@ export class AddCmd implements Command {
   description = 'Add any subset of files to be tracked as a component(s).';
   group = 'development';
   extendedDescription = 'Learn the recommended workflow for tracking directories as components, in the link below.';
-  helpUrl = 'docs/workspace/creating-workspaces?new_existing_project=1';
+  helpUrl = 'reference/workspace/component-directory';
   alias = 'a';
   options = [
     ['i', 'id <name>', 'manually set component id'],
-    ['m', 'main <file>', 'define entry point for the components'],
+    ['m', 'main <file>', 'define component entry point'],
     ['n', 'namespace <namespace>', 'organize component in a namespace'],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)'],
-    ['s', 'scope <string>', `sets the component's scope-name. if not entered, the default-scope will be used`],
+    [
+      's',
+      'scope <string>',
+      `sets the component's scope. if not entered, the default-scope from workspace.jsonc will be used`,
+    ],
     ['e', 'env <string>', "set the component's environment. (overrides the env from variants if exists)"],
     ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;
-  migration = true;
 
   constructor(private tracker: TrackerMain) {}
 
@@ -55,7 +57,7 @@ export class AddCmd implements Command {
           )
           .filter((x) => x)
           .join('\n');
-        return R.isEmpty(alreadyUsedWarning) ? '' : `${alreadyUsedWarning}\n`;
+        return alreadyUsedWarning ? `${alreadyUsedWarning}\n` : '';
       };
       const emptyDirectoryOutput = () => {
         if (!warnings.emptyDirectory.length) return '';
@@ -74,8 +76,8 @@ export class AddCmd implements Command {
 
     return (
       paintWarning() +
-      R.flatten(
-        addedComponents.map((result) => {
+      addedComponents
+        .map((result) => {
           if (result.files.length === 0) {
             return chalk.underline.red(`could not track component ${chalk.bold(result.id)}: no files to track`);
           }
@@ -83,7 +85,8 @@ export class AddCmd implements Command {
           const files = result.files.map((file) => chalk.green(`added ${file}`));
           return title + files.join('\n');
         })
-      ).join('\n\n')
+        .flat()
+        .join('\n\n')
     );
   }
 
@@ -92,7 +95,9 @@ export class AddCmd implements Command {
     { id, main, namespace, scope, env, override = false }: AddFlags
   ): Promise<AddResults> {
     if (namespace && id) {
-      throw new BitError('please use either [id] or [namespace] to add a particular component');
+      throw new BitError(
+        'please use either [id] or [namespace] to add a particular component - they cannot be used together'
+      );
     }
 
     const normalizedPaths: PathOsBased[] = paths.map((p) => path.normalize(p));

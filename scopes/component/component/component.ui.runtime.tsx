@@ -21,7 +21,15 @@ import { ComponentAspect } from './component.aspect';
 import { ComponentModel } from './ui';
 import { Component, ComponentPageElement, ComponentPageSlot } from './ui/component';
 import { ComponentResultPlugin, ComponentSearcher } from './ui/component-searcher';
-import { ConsumeMethodSlot, ConsumePlugin, ComponentMenu, NavPlugin, OrderedNavigationSlot } from './ui/menu';
+import {
+  ConsumeMethodSlot,
+  ConsumePlugin,
+  ComponentMenu,
+  NavPlugin,
+  OrderedNavigationSlot,
+  RightSideMenuItem,
+  RightSideMenuSlot,
+} from './ui/menu';
 import { GetComponentsOptions } from './get-component-opts';
 
 export type ComponentSearchResultSlot = SlotRegistry<ComponentResultPlugin[]>;
@@ -59,6 +67,10 @@ export class ComponentUI {
      * slot for registering a new widget to the menu.
      */
     private widgetSlot: OrderedNavigationSlot,
+    /**
+     * slot for registering the right section of the menu
+     */
+    private rightSideMenuSlot: RightSideMenuSlot,
 
     private menuItemSlot: MenuItemSlot,
 
@@ -157,7 +169,7 @@ export class ComponentUI {
 
     const version = componentId.version === latest ? '' : `@${componentId.version}`;
     const packageVersion =
-      componentId.version === latest ? '' : `@${this.formatToInstallableVersion(componentId.version)}`;
+      componentId.version === latest ? '' : `@${this.formatToInstallableVersion(componentId.version as string)}`;
 
     return {
       Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
@@ -215,6 +227,7 @@ export class ComponentUI {
         skipRightSide={options.skipRightSide}
         navigationSlot={this.navSlot}
         consumeMethodSlot={this.consumeMethodSlot}
+        rightSideMenuSlot={this.rightSideMenuSlot}
         widgetSlot={this.widgetSlot}
         host={host}
         menuItemSlot={this.menuItemSlot}
@@ -252,6 +265,10 @@ export class ComponentUI {
     this.widgetSlot.register({ props: widget, order });
   }
 
+  registerRightSideMenuItem(...rightSideMenuItem: RightSideMenuItem[]) {
+    this.rightSideMenuSlot.register(rightSideMenuItem);
+  }
+
   registerMenuItem = (menuItems: MenuItem[]) => {
     this.menuItemSlot.register(menuItems);
   };
@@ -284,6 +301,7 @@ export class ComponentUI {
     Slot.withType<MenuItemSlot>(),
     Slot.withType<ComponentPageSlot>(),
     Slot.withType<ComponentSearchResultSlot>(),
+    Slot.withType<RightSideMenuSlot>(),
   ];
   static defaultConfig: ComponentUIConfig = {
     commandBar: true,
@@ -292,14 +310,24 @@ export class ComponentUI {
   static async provider(
     [pubsub, commandBarUI, reactRouterUI]: [PubsubUI, CommandBarUI, ReactRouterUI],
     config: ComponentUIConfig,
-    [routeSlot, navSlot, consumeMethodSlot, widgetSlot, menuItemSlot, pageSlot, componentSearchResultSlot]: [
+    [
+      routeSlot,
+      navSlot,
+      consumeMethodSlot,
+      widgetSlot,
+      menuItemSlot,
+      pageSlot,
+      componentSearchResultSlot,
+      rightSideMenuSlot,
+    ]: [
       RouteSlot,
       OrderedNavigationSlot,
       ConsumeMethodSlot,
       OrderedNavigationSlot,
       MenuItemSlot,
       ComponentPageSlot,
-      ComponentSearchResultSlot
+      ComponentSearchResultSlot,
+      RightSideMenuSlot
     ]
   ) {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)
@@ -310,6 +338,7 @@ export class ComponentUI {
       navSlot,
       consumeMethodSlot,
       widgetSlot,
+      rightSideMenuSlot,
       menuItemSlot,
       pageSlot,
       componentSearchResultSlot,

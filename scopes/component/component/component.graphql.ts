@@ -1,7 +1,9 @@
 import stripAnsi from 'strip-ansi';
 import gql from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
+import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import { type ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { Component } from './component';
 import { ComponentFactory } from './component-factory';
 import { ComponentMain } from './component.main.runtime';
@@ -120,6 +122,12 @@ export function componentSchema(componentExtension: ComponentMain) {
         ): [LogEntry]!
 
         aspects(include: [String]): [Aspect]
+
+        """
+        element url of the component - this is deprecated, and will return empty string now.
+        it's here to not break old queries
+        """
+        elementsUrl: String @deprecated(reason: "Not in use anymore")
       }
 
       type Aspect {
@@ -159,7 +167,7 @@ export function componentSchema(componentExtension: ComponentMain) {
     resolvers: {
       JSONObject: GraphQLJSONObject,
       Component: {
-        id: (component: Component) => component.id.toObject(),
+        id: (component: Component): ComponentIdObj => component.id.toObject(),
         displayName: (component: Component) => component.displayName,
         fs: (component: Component) => {
           return component.state.filesystem.files.map((file) => file.relative);
@@ -194,6 +202,8 @@ export function componentSchema(componentExtension: ComponentMain) {
         aspects: (component: Component, { include }: { include?: string[] }) => {
           return component.state.aspects.filter(include).serialize();
         },
+        // Here only to not break old queries
+        elementsUrl: () => undefined,
         logs: async (
           component: Component,
           filter?: {
@@ -223,7 +233,7 @@ export function componentSchema(componentExtension: ComponentMain) {
             return null;
           }
         },
-        snaps: async (host: ComponentFactory, { id }: { id: string }) => {
+        snaps: async (host: ComponentFactory, { id }: { id: string }): Promise<ComponentLog[]> => {
           const componentId = await host.resolveComponentId(id);
           // return (await host.getLogs(componentId)).map(log => ({...log, id: log.hash}))
           return host.getLogs(componentId);
@@ -234,7 +244,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         listInvalid: async (host: ComponentFactory) => {
           const invalidComps = await host.listInvalid();
           return invalidComps.map(({ id, err }) => ({
-            id,
+            id: id as ComponentID,
             errorName: err.name,
             errorMessage: err.message ? stripAnsi(err.message) : err.name,
           }));

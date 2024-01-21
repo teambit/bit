@@ -16,7 +16,7 @@ export type WorkspaceModelComponent = {
 export type WorkspaceProps = {
   name: string;
   path: string;
-  components: ComponentModelProps[];
+  components: (ComponentModelProps & { aspects: Record<string, any> })[];
   icon: string;
 };
 
@@ -58,7 +58,16 @@ export class Workspace {
   static from({ name, path, components, icon }: WorkspaceProps) {
     const componentDescriptors = components.map((component) => {
       const id = ComponentID.fromObject(component.id);
-      return ComponentDescriptor.fromObject({ id: id.toString() });
+      const aspectList = {
+        entries: component?.aspects.map((aspectObject) => {
+          return {
+            ...aspectObject,
+            aspectId: aspectObject.aspectId,
+            aspectData: aspectObject.data,
+          };
+        }),
+      };
+      return ComponentDescriptor.fromObject({ id: id.toString(), aspectList });
     });
     return new Workspace(
       name,

@@ -19,7 +19,7 @@ chai.use(require('chai-string'));
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setPackageManager();
+    helper.workspaceJsonc.setPackageManager();
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();
     npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -34,16 +34,17 @@ chai.use(require('chai-string'));
 
     helper.scopeHelper.reInitLocalScope();
     helper.scopeHelper.addRemoteScope();
-    helper.bitJsonc.setupDefault();
+    helper.workspaceJsonc.setupDefault();
   });
   describe('using pnpm', () => {
     let nodeEnv1CapsuleDir: string;
     let nodeEnv2CapsuleDir: string;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('capsuleSelfReference', true);
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
       helper.extensions.addExtensionToVariant('comp2', `${envId2}@0.0.1`);
@@ -78,9 +79,10 @@ chai.use(require('chai-string'));
     let nodeEnv2CapsuleDir: string;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('capsuleSelfReference', true);
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
       helper.extensions.addExtensionToVariant('comp2', `${envId2}@0.0.1`);
@@ -113,10 +115,10 @@ chai.use(require('chai-string'));
   describe('using Yarn with isolatedCapsules set to false', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('isolatedCapsules', false);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('isolatedCapsules', false);
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
       helper.extensions.addExtensionToVariant('comp2', `${envId2}@0.0.1`);

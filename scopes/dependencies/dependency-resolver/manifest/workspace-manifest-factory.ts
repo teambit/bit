@@ -1,9 +1,8 @@
-import { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
-import { pickBy, mapValues, uniq, difference } from 'lodash';
+import { fromPairs, pickBy, mapValues, uniq, difference } from 'lodash';
 import { SemVer } from 'semver';
 import pMapSeries from 'p-map-series';
 import { snapToSemver } from '@teambit/component-package-version';
@@ -56,6 +55,7 @@ export class WorkspaceManifestFactory {
     // Make sure to take other default if passed options with only one option
     const optsWithDefaults = Object.assign({}, DEFAULT_CREATE_OPTIONS, options);
     const hasRootComponents = options.hasRootComponents ?? this.dependencyResolver.hasRootComponents();
+    rootPolicy = this.filterOutCoreAspects(rootPolicy);
     const componentDependenciesMap: ComponentDependenciesMap = await this.buildComponentDependenciesMap(components, {
       filterComponentsFromManifests: optsWithDefaults.filterComponentsFromManifests,
       rootPolicy: optsWithDefaults.resolveVersionsFromDependenciesOnly ? undefined : rootPolicy,
@@ -65,7 +65,6 @@ export class WorkspaceManifestFactory {
       rootDependencies: hasRootComponents ? rootPolicy.toManifest().dependencies : undefined,
     });
     let dedupedDependencies = getEmptyDedupedDependencies();
-    rootPolicy = rootPolicy.filter((dep) => dep.dependencyId !== '@teambit/legacy');
     if (hasRootComponents) {
       const { rootDependencies } = dedupeDependencies(rootPolicy, componentDependenciesMap, {
         dedupePeerDependencies: hasRootComponents,
@@ -99,6 +98,13 @@ export class WorkspaceManifestFactory {
       componentsManifestsMap
     );
     return workspaceManifest;
+  }
+
+  private filterOutCoreAspects(rootPolicy: WorkspacePolicy) {
+    const coreAspectIds = this.aspectLoader.getCoreAspectIds();
+    const coreAspectPkgNames = new Set(coreAspectIds.map((coreAspectId) => getCoreAspectPackageName(coreAspectId)));
+    coreAspectPkgNames.add('@teambit/legacy');
+    return rootPolicy.filter((dep) => !coreAspectPkgNames.has(dep.dependencyId));
   }
 
   private getEnvsSelfPeersPolicy(componentsManifestsMap: ComponentsManifestsMap) {
@@ -138,9 +144,10 @@ export class WorkspaceManifestFactory {
       rootPolicy?: WorkspacePolicy;
     }
   ): Promise<ComponentDependenciesMap> {
+    const packageNames = components.map((component) => this.dependencyResolver.getPackageName(component));
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
-      let depList = await this.dependencyResolver.getDependencies(component, { includeHidden: true });
+      let depList = this.dependencyResolver.getDependencies(component, { includeHidden: true });
       const additionalDeps = {};
       if (referenceLocalPackages) {
         const coreAspectIds = this.aspectLoader.getCoreAspectIds();
@@ -197,7 +204,11 @@ export class WorkspaceManifestFactory {
           !depManifestBeforeFiltering.peerDependencies[rootPackageName]
         );
       });
+
+      const defaultPeerDependencies = await this._getDefaultPeerDependencies(component, packageNames);
+
       depManifest.dependencies = {
+        ...defaultPeerDependencies,
         ...unresolvedRuntimeMissingRootDeps,
         ...additionalDeps,
         ...depManifest.dependencies,
@@ -220,6 +231,17 @@ export class WorkspaceManifestFactory {
     }
 
     return result;
+  }
+
+  private async _getDefaultPeerDependencies(
+    component: Component,
+    packageNamesFromWorkspace: string[]
+  ): Promise<Record<string, string>> {
+    const envPolicy = await this.dependencyResolver.getComponentEnvPolicy(component);
+    const selfPolicyWithoutLocal = envPolicy.selfPolicy.filter(
+      (dep) => !packageNamesFromWorkspace.includes(dep.dependencyId)
+    );
+    return fromPairs(selfPolicyWithoutLocal.toNameVersionTuple());
   }
 
   private async updateDependenciesVersions(
@@ -258,8 +280,10 @@ export class WorkspaceManifestFactory {
       ) {
         const blankDependencies: ManifestDependenciesObject = {
           dependencies: {},
+          optionalDependencies: {},
           devDependencies: {},
           peerDependencies: {},
+          peerDependenciesMeta: {},
         };
         let dependencies = blankDependencies;
         if (dedupedDependencies.componentDependenciesMap.has(packageName)) {
@@ -310,13 +334,13 @@ function filterComponents(dependencyList: DependencyList, componentsToFilterOut:
       if (!component.id.hasVersion()) {
         return component.id.toString() === dep.componentId.toString({ ignoreVersion: true });
       }
-      // We are checking against both component.id._legacy and component.state._consumer.id
-      // Because during tag operation, the component.id._legacy has the current version (before the tag)
+      // We are checking against both component.id and component.state._consumer.id
+      // Because during tag operation, the component.id has the current version (before the tag)
       // while the component.state._consumer.id has the upcoming version (the version that will be after the tag)
       // The dependency in some cases is already updated to the upcoming version
       return (
-        component.id._legacy.isEqualWithoutVersion(dep.componentId._legacy) ||
-        component.state._consumer.id.isEqualWithoutVersion(dep.componentId._legacy)
+        component.id.isEqualWithoutVersion(dep.componentId) ||
+        component.state._consumer.id.isEqualWithoutVersion(dep.componentId)
       );
     });
     if (existingComponent) return false;
@@ -331,19 +355,21 @@ function excludeWorkspaceDependencies(deps: DepObjectValue): DepObjectValue {
 
 async function getMissingPackages(component: Component): Promise<{ devMissings: string[]; runtimeMissings: string[] }> {
   const missingPackagesData = component.state.issues.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data;
-  if (!missingPackagesData) return { devMissings: [], runtimeMissings: [] };
-  // TODO: this is a hack to get it from the legacy, we should take it from the dev files aspect
-  // TODO: the reason we don't is that it will make circular dependency between the dep resolver and the dev files aspect
-  const devFiles = await DependencyResolver.getDevFiles(component.state._consumer);
+  if (!missingPackagesData?.length) return { devMissings: [], runtimeMissings: [] };
+
   let devMissings: string[] = [];
   let runtimeMissings: string[] = [];
-  Object.entries(missingPackagesData).forEach(([fileName, packages]) => {
-    if (devFiles.includes(fileName)) {
-      devMissings = uniq([...devMissings, ...packages]);
+
+  missingPackagesData.forEach((data) => {
+    if (data.isDevFile) {
+      devMissings.push(...data.missingPackages);
     } else {
-      runtimeMissings = uniq([...runtimeMissings, ...packages]);
+      runtimeMissings.push(...data.missingPackages);
     }
   });
+  devMissings = uniq(devMissings);
+  runtimeMissings = uniq(runtimeMissings);
+
   // Remove dev missing which are also runtime missing
   devMissings = difference(devMissings, runtimeMissings);
   return {

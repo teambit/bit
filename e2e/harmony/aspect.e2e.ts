@@ -1,4 +1,4 @@
-import { UNABLE_TO_LOAD_EXTENSION } from '@teambit/aspect-loader/constants';
+import { UNABLE_TO_LOAD_EXTENSION } from '@teambit/aspect-loader';
 import chai, { expect } from 'chai';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -42,8 +42,8 @@ describe('aspect', function () {
   describe('aspect loading failures', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
-      helper.command.create('aspect', 'my-aspect');
-      helper.bitJsonc.addKeyVal('my-scope/my-aspect', {});
+      helper.command.create('bit-aspect', 'my-aspect');
+      helper.workspaceJsonc.addKeyVal('my-scope/my-aspect', {});
     });
     it('commands with loaders should show a descriptive error', () => {
       const output = helper.command.status();
@@ -64,7 +64,7 @@ describe('aspect', function () {
     let output: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.command.create('aspect', 'my-aspect');
+      helper.command.create('bit-aspect', 'my-aspect');
       helper.command.compile();
       helper.command.install();
       helper.command.tagAllWithoutBuild();
@@ -114,7 +114,7 @@ describe('aspect', function () {
   describe('bit aspect unset command', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.command.create('aspect', 'my-aspect');
+      helper.command.create('bit-aspect', 'my-aspect');
       helper.command.compile();
       helper.command.install();
       helper.command.tagAllWithoutBuild();

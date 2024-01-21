@@ -6,6 +6,7 @@ import * as path from 'path';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import { NewerVersionFound } from '../../src/consumer/exceptions';
 import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
+import { FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -38,7 +39,7 @@ describe('bit checkout command', function () {
     });
     it('before tagging it should show an error saying the component was not tagged yet', () => {
       const output = helper.general.runWithTryCatch('bit checkout 1.0.0 bar/foo');
-      expect(output).to.have.string('component bar/foo is new, no version to checkout');
+      expect(output).to.have.string('is new, no version to checkout');
     });
     describe('after the component was tagged', () => {
       before(() => {
@@ -47,7 +48,7 @@ describe('bit checkout command', function () {
       describe('using a non-exist version', () => {
         it('should show an error saying the version does not exist', () => {
           const output = helper.general.runWithTryCatch('bit checkout 1.0.0 bar/foo');
-          expect(output).to.have.string("component bar/foo doesn't have version 1.0.0");
+          expect(output).to.have.string("bar/foo doesn't have version 1.0.0");
         });
       });
       describe('and component was modified', () => {
@@ -56,7 +57,7 @@ describe('bit checkout command', function () {
         });
         it('should show an error saying the component already uses that version', () => {
           const output = helper.general.runWithTryCatch('bit checkout 0.0.5 bar/foo');
-          expect(output).to.have.string('component bar/foo is already at version 0.0.5');
+          expect(output).to.have.string('bar/foo is already at version 0.0.5');
         });
         describe('and tagged again', () => {
           let output;
@@ -96,7 +97,7 @@ describe('bit checkout command', function () {
             it('should throw an error NewerVersionFound', () => {
               const tagFunc = () => helper.command.tagComponent('bar/foo');
               const error = new NewerVersionFound([
-                { componentId: 'bar/foo', currentVersion: '0.0.5', latestVersion: '0.0.10' },
+                { componentId: `${helper.scopes.remote}/bar/foo`, currentVersion: '0.0.5', latestVersion: '0.0.10' },
               ]);
               helper.general.expectToThrow(tagFunc, error);
             });
@@ -282,7 +283,7 @@ describe('bit checkout command', function () {
     describe('using manual strategy', () => {
       let output;
       before(() => {
-        output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--auto-merge-resolve manual');
+        output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--manual');
       });
       it('should indicate that the file has conflicts', () => {
         expect(output).to.have.string(successOutput);
@@ -362,7 +363,7 @@ describe('bit checkout command', function () {
         expect(output).to.have.string('bar/foo');
       });
       it('should indicate that the file was not changed', () => {
-        expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
+        expect(output).to.not.have.string(FILE_CHANGES_CHECKOUT_MSG);
       });
       it('should leave the file intact', () => {
         const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
@@ -388,7 +389,7 @@ describe('bit checkout command', function () {
       describe('using manual strategy', () => {
         let output;
         before(() => {
-          output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--auto-merge-resolve manual');
+          output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--manual');
         });
         it('should indicate that a new file was added', () => {
           expect(output).to.have.string(FileStatusWithoutChalk.added);
@@ -419,8 +420,7 @@ describe('bit checkout command', function () {
           output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--auto-merge-resolve ours');
         });
         it('should indicate that the new file was not changed', () => {
-          expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
-          expect(output).to.have.string('foo2.js');
+          expect(output).to.not.have.string(FILE_CHANGES_CHECKOUT_MSG);
         });
         it('should not delete the file', () => {
           expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.be.a.file();
@@ -539,6 +539,43 @@ describe('bit checkout command', function () {
     });
     it('should be able to checkout to a non-exist older version', () => {
       expect(() => helper.command.checkoutVersion('0.0.1', `${helper.scopes.remote}/comp1`)).to.not.throw();
+    });
+  });
+  describe('modified component without conflicts', () => {
+    let beforeCheckout: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/index.js', '// first line\n\n');
+      helper.command.tagAllWithoutBuild();
+      helper.fs.outputFile('comp1/index.js', '// first line modified\n\n');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.checkoutVersion('0.0.1', 'comp1', '-x');
+      helper.fs.appendFile('comp1/index.js', '// second line\n');
+      beforeCheckout = helper.scopeHelper.cloneLocalScope();
+    });
+    it('without any flag should merge successfully', () => {
+      helper.command.checkoutHead('comp1', '-x');
+      const file = helper.fs.readFile('comp1/index.js');
+      expect(file).to.include(`// first line modified
+
+// second line`);
+    });
+    it('with --force-ours flag, should keep the file as is', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeCheckout);
+      helper.command.checkoutHead('comp1', '-x --force-ours');
+      const file = helper.fs.readFile('comp1/index.js');
+      expect(file).to.include(`// first line
+
+// second line`);
+    });
+    it('with --force-theirs flag, should write the files according to the head', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeCheckout);
+      helper.command.checkoutHead('comp1', '-x --force-theirs');
+      const file = helper.fs.readFile('comp1/index.js');
+      expect(file).to.include(`// first line modified
+`);
     });
   });
 });

@@ -8,7 +8,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import AspectAspect from '@teambit/aspect';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
@@ -28,7 +28,7 @@ import { TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
 import { BuildPipelineResultList, AspectData, PipelineReport } from './build-pipeline-result-list';
-import { Serializable } from './types';
+import { TaskMetadata } from './types';
 import { ArtifactsCmd } from './artifact/artifacts.cmd';
 import { buildTaskTemplate } from './templates/build-task';
 import { BuilderRoute } from './builder.route';
@@ -74,7 +74,8 @@ export class BuilderMain {
     private globalConfig: GlobalConfigMain,
     private buildTaskSlot: TaskSlot,
     private tagTaskSlot: TaskSlot,
-    private snapTaskSlot: TaskSlot
+    private snapTaskSlot: TaskSlot,
+    private logger: Logger
   ) {}
 
   private async storeArtifacts(tasksResults: TaskResults[]) {
@@ -93,7 +94,7 @@ export class BuilderMain {
     await Promise.all(storeP);
   }
 
-  private pipelineResultsToBuilderData(
+  pipelineResultsToBuilderData(
     components: Component[],
     buildPipelineResults: TaskResults[]
   ): ComponentMap<RawBuilderData> {
@@ -147,7 +148,75 @@ export class BuilderMain {
     if (populateArtifactsFrom) await this.combineBuildDataFrom(builderDataMap, populateArtifactsFrom);
     this.validateBuilderDataMap(builderDataMap);
 
+    await this.sanitizePreviewData(components);
+
     return { builderDataMap, pipeResults };
+  }
+
+  /**
+   * remove the onlyOverview from the preview data of the component if
+   * the env is in the workspace
+   * the env is not tagged with the component
+   * the last tagged env has onlyOverview undefined in preview data
+   *
+   * We don't want to do this but have no choice because,
+   * when we load components in workspace,
+   * we set the onlyOverview to true in the env's preview data
+   * which sets the onlyOverview to true in the component's preview data
+   * but if you don't tag the env with the component,
+   * the onlyOverview will be true in the component's preview data, since its env is in the workspace
+   * even though the env it is tagged with doesn't have onlyOverview in its preview data
+   * which will result in inconsistent preview data when exported to the scope
+   */
+  async sanitizePreviewData(harmonyComps: Component[]) {
+    const compsBeingTaggedLookup = new Set(harmonyComps.map((comp) => comp.id.toString()));
+
+    const harmonyCompIdsWithEnvId = await Promise.all(
+      harmonyComps.map(async (comp) => {
+        const envId = await this.envs.getEnvId(comp);
+        if (this.envs.isUsingCoreEnv(comp)) {
+          return [comp.id.toString(), { envId, inWs: false, lastTaggedEnvHasOnlyOverview: false }] as [
+            string,
+            { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview?: boolean; isEnvTaggedWithComp?: boolean }
+          ];
+        }
+
+        // check if the env is tagged with the component
+        if (envId && !compsBeingTaggedLookup.has(comp.id.toString())) {
+          return [comp.id.toString(), { envId, isEnvTaggedWithComp: false }] as [
+            string,
+            { envId: string; inWs?: boolean; lastTaggedEnvHasOnlyOverview?: boolean; isEnvTaggedWithComp?: boolean }
+          ];
+        }
+
+        const envCompId = (envId && ComponentID.fromString(envId)) || undefined;
+        const inWs = this.workspace && envCompId ? await this.workspace.hasId(envCompId) : false;
+
+        const lastTaggedEnvHasOnlyOverview: boolean | undefined =
+          envCompId &&
+          (await this.scope.get(envCompId, false))?.state.aspects.get('teambit.preview/preview')?.data?.onlyOverview;
+
+        return [comp.id.toString(), { envId, inWs, lastTaggedEnvHasOnlyOverview, isEnvTaggedWithComp: true }] as [
+          string,
+          { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean; isEnvTaggedWithComp?: boolean }
+        ];
+      })
+    );
+
+    const harmonyCompIdsWithEnvIdMap = new Map(harmonyCompIdsWithEnvId);
+
+    const compsToDeleteOnlyOverviewPreviewData = harmonyComps.filter((comp) => {
+      const envData:
+        | { envId: string; inWs?: boolean; lastTaggedEnvHasOnlyOverview?: boolean; isEnvTaggedWithComp?: boolean }
+        | undefined = harmonyCompIdsWithEnvIdMap.get(comp.id.toString());
+      return envData?.inWs && !envData?.lastTaggedEnvHasOnlyOverview && envData?.isEnvTaggedWithComp;
+    });
+
+    for (const comp of compsToDeleteOnlyOverviewPreviewData) {
+      const previewData = comp.state.aspects.get('teambit.preview/preview')?.data;
+      // if the env is not tagged with the component remove it from the preview data of the component
+      delete previewData?.onlyOverview;
+    }
   }
 
   private validateBuilderDataMap(builderDataMap: ComponentMap<RawBuilderData>) {
@@ -209,7 +278,7 @@ export class BuilderMain {
   // TODO: merge with getArtifactsVinylByExtensionAndName by getting aspect name and name as object with optional props
   async getArtifactsVinylByAspect(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
     const artifacts = this.getArtifactsByAspect(component, aspectName);
-    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id, this.scope.legacyScope);
     return vinyls;
   }
 
@@ -219,7 +288,7 @@ export class BuilderMain {
     name: string
   ): Promise<ArtifactVinyl[]> {
     const artifacts = this.getArtifactsByAspectAndName(component, aspectName, name);
-    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id, this.scope.legacyScope);
     return vinyls;
   }
 
@@ -229,7 +298,7 @@ export class BuilderMain {
     name: string
   ): Promise<ArtifactVinyl[]> {
     const artifacts = this.getArtifactsbyAspectAndTaskName(component, aspectName, name);
-    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id, this.scope.legacyScope);
     return vinyls;
   }
 
@@ -253,7 +322,12 @@ export class BuilderMain {
     return artifacts;
   }
 
-  getDataByAspect(component: IComponent, aspectName: string): Serializable | undefined {
+  /**
+   * this is the aspect's data that was generated as "metadata" of the task component-result during the build process
+   * and saved by the builder aspect in the "aspectsData" property.
+   * (not to be confused with the data saved in the aspect itself, which is saved in the "data" property of the aspect).
+   */
+  getDataByAspect(component: IComponent, aspectName: string): TaskMetadata | undefined {
     const aspectsData = this.getBuilderData(component)?.aspectsData;
     const data = aspectsData?.find((aspectData) => aspectData.aspectId === aspectName);
     return data?.data;
@@ -288,7 +362,8 @@ export class BuilderMain {
   async build(
     components: Component[],
     isolateOptions?: IsolateComponentsOptions,
-    builderOptions?: BuilderServiceOptions
+    builderOptions?: BuilderServiceOptions,
+    extraOptions?: { includeTag?: boolean; includeSnap?: boolean }
   ): Promise<TaskResultsList> {
     const ids = components.map((c) => c.id);
     const capsulesBaseDir = this.buildService.getComponentsCapsulesBaseDir();
@@ -309,7 +384,20 @@ export class BuilderMain {
       capsulesBaseDir,
       ...(builderOptions || {}),
     };
-    const buildResult = await envs.runOnce(this.buildService, builderServiceOptions);
+    this.logger.consoleTitle(`Total ${components.length} components to build`);
+    const buildResult: TaskResultsList = await envs.runOnce(this.buildService, builderServiceOptions);
+
+    if (extraOptions?.includeSnap || extraOptions?.includeTag) {
+      const builderOptionsForTagSnap: BuilderServiceOptions = {
+        ...builderServiceOptions,
+        previousTasksResults: buildResult.tasksResults,
+      };
+      const deployEnvsExecutionResults = extraOptions?.includeSnap
+        ? await this.runSnapTasks(components, builderOptionsForTagSnap)
+        : await this.runTagTasks(components, builderOptionsForTagSnap);
+      buildResult.tasksResults.push(...deployEnvsExecutionResults.tasksResults);
+    }
+
     return buildResult;
   }
 
@@ -456,7 +544,8 @@ export class BuilderMain {
       globalConfig,
       buildTaskSlot,
       tagTaskSlot,
-      snapTaskSlot
+      snapTaskSlot,
+      logger
     );
     builder.registerBuildTasks([new BundleUiTask(ui, logger)]);
     component.registerRoute([new BuilderRoute(builder, scope, logger)]);

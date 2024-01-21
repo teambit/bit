@@ -1,14 +1,17 @@
 import { join, resolve } from 'path';
+import { NativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
+import esmLoader from '@teambit/node.utils.esm-loader';
+// import findRoot from 'find-root';
 import { readdirSync, existsSync } from 'fs-extra';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import { GLOBAL_SCOPE, DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { MainRuntime } from '@teambit/cli';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
 import type { LoggerMain } from '@teambit/logger';
-import { ComponentID, Component, FilterAspectsOptions } from '@teambit/component';
+import { Component, FilterAspectsOptions } from '@teambit/component';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { replaceFileExtToJs } from '@teambit/compilation.modules.babel-compiler';
@@ -21,6 +24,7 @@ import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { PluginDefinition } from './plugin-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from './constants';
+import { isEsmModule } from './is-esm-module';
 import { CannotLoadExtension } from './exceptions';
 import { getAspectDef } from './core-aspects';
 import { Plugins } from './plugins';
@@ -490,6 +494,15 @@ export class AspectLoaderMain {
     return this.getPluginsFromDefs(component, componentPath, defs);
   }
 
+  async isEsmModule(path: string) {
+    return isEsmModule(path);
+  }
+
+  async loadEsm(path: string) {
+    NativeCompileCache.uninstall();
+    return esmLoader(path);
+  }
+
   getPluginsFromDefs(component: Component, componentPath: string, defs: PluginDefinition[]): Plugins {
     return Plugins.from(
       component,
@@ -549,10 +562,10 @@ export class AspectLoaderMain {
     const aspectLoader = globalScopeHarmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
     // @todo: Gilad make this work
     // const ids = await scope.resolveMultipleComponentIds(aspectIds);
-    const ids = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
+    const ids = aspectIds.map((id) => ComponentID.fromString(id));
     const hasVersions = ids.every((id) => id.hasVersion());
     const useCache = hasVersions; // if all components has versions, try to use the cached aspects
-    await scope.import(ids, { useCache, preferDependencyGraph: true });
+    await scope.import(ids, { useCache, reason: 'to load aspects from global scope' });
     const components = await scope.getMany(ids, true);
 
     // don't use `await scope.loadAspectsFromCapsules(components, true);`

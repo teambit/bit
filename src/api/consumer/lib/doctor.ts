@@ -6,7 +6,6 @@ import path from 'path';
 import tar from 'tar-stream';
 import tarFS from 'tar-fs';
 import { getHarmonyVersion } from '../../../bootstrap';
-
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '../../../constants';
 import BitMap from '../../../consumer/bit-map';
 import WorkspaceConfig from '../../../consumer/config/workspace-config';
@@ -15,11 +14,12 @@ import Diagnosis, { ExamineResult } from '../../../doctor/diagnosis';
 import DoctorRegistrar from '../../../doctor/doctor-registrar';
 import registerCoreAndExtensionsDiagnoses from '../../../doctor/doctor-registrar-builder';
 import logger from '../../../logger/logger';
-import npmClient from '../../../npm-client';
-import { getExt, getWithoutExt, removeChalkCharacters } from '../../../utils';
+import { findScopePath, getExt, getWithoutExt, removeChalkCharacters } from '../../../utils';
 import DiagnosisNotFound from './exceptions/diagnosis-not-found';
 import MissingDiagnosisName from './exceptions/missing-diagnosis-name';
 import * as globalConfig from './global-config';
+import { getNpmVersion } from '../../../doctor/core-diagnoses/validate-npm-exec';
+import { getYarnVersion } from '../../../doctor/core-diagnoses/validate-yarn-exec';
 
 // run specific check
 export type DoctorMetaData = {
@@ -168,7 +168,8 @@ async function _generateExamineResultsTarFile(
     }
     if (consumerInfo && consumerInfo.hasConsumerConfig) {
       // TODO: support new config as well
-      const config = await WorkspaceConfig.loadIfExist(consumerInfo.path);
+      const scopePath = findScopePath(consumerInfo.path);
+      const config = scopePath ? await WorkspaceConfig.loadIfExist(consumerInfo.path, scopePath) : undefined;
       const legacyPlainConfig = config?._legacyPlainObject();
       if (legacyPlainConfig) {
         pack.entry({ name: 'config.json' }, JSON.stringify(legacyPlainConfig, null, 4));
@@ -202,8 +203,8 @@ async function _getEnvMeta(): Promise<DoctorMetaData> {
     runningTimestamp: runningTimeStamp || _getTimeStamp(),
     platform: os.platform(),
     bitVersion: getHarmonyVersion(),
-    npmVersion: await npmClient.getNpmVersion(),
-    yarnVersion: await npmClient.getYarnVersion(),
+    npmVersion: await getNpmVersion(),
+    yarnVersion: await getYarnVersion(),
     userDetails: _getUserDetails(),
   };
 

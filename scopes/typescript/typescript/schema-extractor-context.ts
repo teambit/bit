@@ -76,8 +76,8 @@ export class SchemaExtractorContext {
     this.hostRootPath = pathNormalizeToLinux(hostRootPath);
   }
 
-  getComputedNodeKey({ filePath, line, character }: Location) {
-    return `${filePath}:${line}:${character}`;
+  getComputedNodeKey({ filePath, line, character }: Location, schema: string) {
+    return `${filePath}:${line}:${character}__${schema}`;
   }
 
   getIdentifierKeyForNode(node: Node) {
@@ -90,8 +90,8 @@ export class SchemaExtractorContext {
   }
 
   setComputed(node: SchemaNode) {
-    const { location } = node;
-    const key = this.getComputedNodeKey(location);
+    const { location, __schema } = node;
+    const key = this.getComputedNodeKey(location, __schema);
     this.computed.set(key, node);
   }
 
@@ -109,9 +109,14 @@ export class SchemaExtractorContext {
     }
   }
 
-  async computeSchema(node: Node) {
+  findComputedSchemaByName(name: string) {
+    const computed = Array.from(this.computed.values());
+    return computed.filter((schema) => schema.name === name);
+  }
+
+  async computeSchema(node: Node): Promise<SchemaNode> {
     const location = this.getLocation(node);
-    const key = this.getComputedNodeKey(location);
+    const key = this.getComputedNodeKey(location, SyntaxKind[node.kind]);
     const existingComputedSchema = this.computed.get(key);
     if (existingComputedSchema) {
       return existingComputedSchema;
@@ -119,6 +124,10 @@ export class SchemaExtractorContext {
     const computedSchema = await this.extractor.computeSchema(node, this);
     this.setComputed(computedSchema);
     return computedSchema;
+  }
+
+  async transformSchemaNode(schema: SchemaNode) {
+    return this.extractor.transformAPI(schema, this);
   }
 
   /**
@@ -393,8 +402,11 @@ export class SchemaExtractorContext {
     if (headTypeDefinition) {
       return headTypeDefinition;
     }
+
     const definition = await this.tsserver.getDefinition(node.getSourceFile().fileName, this.getLocation(node));
-    return head(definition?.body);
+    const headDefinition = head(definition?.body);
+
+    return headDefinition;
   }
 
   // when we can't figure out the component/package/type of this node, we'll use the typeStr as the type.
@@ -439,13 +451,10 @@ export class SchemaExtractorContext {
     }
 
     const definition = await this.getDefinition(node);
+
     if (!definition) {
       return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
     }
-
-    const file = this.findFileInComponent(definition.file);
-
-    if (!file) return this.getTypeRefForExternalPath(typeStr, definition.file, location);
 
     if (this.isDefInSameLocation(node, definition)) {
       return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
@@ -471,10 +480,19 @@ export class SchemaExtractorContext {
     const transformer = this.extractor.getTransformer(definitionNode, this);
 
     if (transformer === undefined) {
+      const file = this.findFileInComponent(definition.file);
+      if (!file) return this.getTypeRefForExternalPath(typeStr, definition.file, location);
       return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
     }
+
     const schemaNode = await this.visit(definitionNode);
-    return schemaNode || this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
+
+    if (!schemaNode) {
+      return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
+    }
+
+    const apiTransformer = this.extractor.getAPITransformer(schemaNode);
+    return apiTransformer ? apiTransformer.transform(schemaNode, this) : schemaNode;
   }
 
   private getCompIdByPkgName(pkgName: string): ComponentID | undefined {
@@ -513,7 +531,7 @@ export class SchemaExtractorContext {
   ): Promise<TypeRefSchema> {
     const sourceFilePath = identifier.sourceFilePath;
 
-    if (!sourceFilePath || isExportedFromMain) {
+    if (!sourceFilePath || (isExportedFromMain && isRelativeImport(sourceFilePath))) {
       return new TypeRefSchema(
         location,
         identifier.id,

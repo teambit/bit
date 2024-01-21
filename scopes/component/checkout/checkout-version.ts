@@ -1,66 +1,56 @@
-import { compact } from 'lodash';
 import * as path from 'path';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import Version from '@teambit/legacy/dist/scope/models/version';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { pathNormalizeToLinux, PathOsBased } from '@teambit/legacy/dist/utils/path';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
-import {
-  ApplyVersionResult,
-  FileStatus,
-  MergeOptions,
-  MergeStrategy,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { FileStatus, MergeOptions, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { Workspace } from '@teambit/workspace';
-
-export type CheckoutProps = {
-  version?: string; // if reset is true, the version is undefined
-  ids?: BitId[];
-  latestVersion?: boolean;
-  promptMergeOptions?: boolean;
-  mergeStrategy?: MergeStrategy | null;
-  verbose?: boolean;
-  skipNpmInstall?: boolean;
-  ignorePackageJson?: boolean;
-  writeConfig?: boolean;
-  reset?: boolean; // remove local changes. if set, the version is undefined.
-  all?: boolean; // checkout all ids
-  ignoreDist?: boolean;
-  isLane?: boolean;
-};
+import { BitError } from '@teambit/bit-error';
+import chalk from 'chalk';
+import { ApplyVersionResult, FilesStatus } from '@teambit/merging';
+import { CheckoutProps } from './checkout.main.runtime';
 
 export type ComponentStatusBase = {
   currentComponent?: ConsumerComponent;
   componentFromModel?: Version;
-  id: BitId;
+  id: ComponentID;
   shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
+  unchangedMessage?: string; // this gets populated either upon skip or failure.
+  unchangedLegitimately?: boolean; // true for skipped legitimately (e.g. already up to date). false for failure.
 };
 
 export type ComponentStatus = ComponentStatusBase & {
-  failureMessage?: string;
-  unchangedLegitimately?: boolean; // failed to checkout but for a legitimate reason, such as, up-to-date
   mergeResults?: MergeResultsThreeWay | null | undefined;
 };
 
-export type ApplyVersionWithComps = { applyVersionResult: ApplyVersionResult; component?: ConsumerComponent };
+export type ApplyVersionWithComps = {
+  applyVersionResult: ApplyVersionResult;
+  component?: ConsumerComponent;
+  // in case the component needs to be written to the filesystem, this is the component to write.
+  legacyCompToWrite?: ConsumerComponent;
+};
 
 /**
- * 1) when the files are modified with conflicts and the strategy is "ours", leave the FS as is
- * and update only bitmap id version. (not the componentMap object).
+ * This function optionally returns "component" object. If it returns, it means it needs to be written to the filesystem.
+ * Otherwise, it means the component is already up to date and no need to write it.
  *
- * 2) when the files are modified with conflicts and the strategy is "theirs", write the component
- * according to id.version.
+ * If no need to change anything (ours), then don't return the component object.
+ * Otherwise, either return the component object as is (if no conflicts or "theirs"), or change the files in this
+ * component object. Later, this component object is written to the filesystem.
+ *
+ * 1) when the files are modified with conflicts and the strategy is "ours", or forceOurs was used, leave the FS as is.
+ *
+ * 2) when the files are modified with conflicts and the strategy is "theirs", or forceTheirs was used, write the
+ * component according to "component" object
  *
  * 3) when files are modified with no conflict or files are modified with conflicts and the
  * strategy is manual, load the component according to id.version and update component.files.
  * applyModifiedVersion() docs explains what files are updated/added.
- *
- * 4) when --reset flag is used, write the component according to the bitmap version
  *
  * Side note:
  * Deleted file => if files are in used version but not in the modified one, no need to delete it. (similar to git).
@@ -68,16 +58,16 @@ export type ApplyVersionWithComps = { applyVersionResult: ApplyVersionResult; co
  */
 export async function applyVersion(
   consumer: Consumer,
-  id: BitId,
+  id: ComponentID,
   componentFromFS: ConsumerComponent | null | undefined, // it can be null only when isLanes is true
   mergeResults: MergeResultsThreeWay | null | undefined,
   checkoutProps: CheckoutProps
 ): Promise<ApplyVersionWithComps> {
   if (!checkoutProps.isLane && !componentFromFS)
     throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
-  const { mergeStrategy } = checkoutProps;
+  const { mergeStrategy, forceOurs } = checkoutProps;
   let filesStatus = {};
-  if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
+  if ((mergeResults?.hasConflicts && mergeStrategy === MergeOptions.ours) || forceOurs) {
     // even when isLane is true, the mergeResults is possible only when the component is on the filesystem
     // otherwise it's impossible to have conflicts
     if (!componentFromFS) throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
@@ -92,9 +82,10 @@ export async function applyVersion(
   if (componentFromFS && !componentMap) throw new GeneralError('applyVersion: componentMap was not found');
 
   const files = component.files;
-  files.forEach((file) => {
-    filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
-  });
+  updateFileStatus(files, filesStatus, componentFromFS || undefined);
+
+  await removeFilesIfNeeded(filesStatus, consumer, componentFromFS || undefined);
+
   if (mergeResults) {
     // update files according to the merge results
     const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(files, mergeResults, mergeStrategy);
@@ -102,10 +93,51 @@ export async function applyVersion(
     component.files = modifiedFiles;
   }
 
+  // in case of forceTheirs, the mergeResults is undefined, the "component" object is according to "theirs", so it'll work
+  // expected. (later, it writes the component object).
+
   return {
     applyVersionResult: { id, filesStatus },
     component,
   };
+}
+
+export function updateFileStatus(files: SourceFile[], filesStatus: FilesStatus, componentFromFS?: ConsumerComponent) {
+  files.forEach((file) => {
+    const fileFromFs = componentFromFS?.files.find((f) => f.relative === file.relative);
+    const areFilesEqual = fileFromFs && Buffer.compare(fileFromFs.contents, file.contents) === 0;
+    // @ts-ignore
+    filesStatus[pathNormalizeToLinux(file.relative)] = areFilesEqual ? FileStatus.unchanged : FileStatus.updated;
+  });
+}
+
+/**
+ * when files exist on the filesystem but not on the checked out versions, they need to be deleted.
+ * without this function, these files would be left on the filesystem. (we don't delete the comp-dir before writing).
+ * this needs to be done *before* the component is written to the filesystem, otherwise, it won't work when a file
+ * has a case change. e.g. from uppercase to lowercase. (see merge-lane.e2e 'renaming files from uppercase to lowercase').
+ */
+export async function removeFilesIfNeeded(
+  filesStatus: FilesStatus,
+  consumer: Consumer,
+  componentFromFS?: ConsumerComponent
+) {
+  if (!componentFromFS) return;
+  // @todo: if the component is not in the FS, it should be passed as undefined here.
+  // in the case this is coming from merge-lane, it's sometimes populated from the scope.
+  const isExistOnFs = consumer.bitMap.getComponentIdIfExist(componentFromFS.id, { ignoreVersion: true });
+  if (!isExistOnFs) return;
+  const filePathsFromFS = componentFromFS.files || [];
+  const dataToPersist = new DataToPersist();
+  filePathsFromFS.forEach((file) => {
+    const filename = pathNormalizeToLinux(file.relative);
+    if (!filesStatus[filename]) {
+      // @ts-ignore todo: typescript has a good point here. it should be the string "removed", not chalk.green(removed).
+      filesStatus[filename] = FileStatus.removed;
+      dataToPersist.removePath(new RemovePath(file.path));
+    }
+  });
+  await dataToPersist.persistAllToFS();
 }
 
 /**
@@ -189,60 +221,15 @@ export function applyModifiedVersion(
   return { filesStatus, modifiedFiles };
 }
 
-/**
- * when files exist on the filesystem but not on the checked out versions, they need to be deleted.
- * this function only mark them as such. later `deleteFilesIfNeeded()` will delete them
- */
-export function markFilesToBeRemovedIfNeeded(
-  succeededComponents: ComponentStatus[],
-  componentsResults: ApplyVersionWithComps[]
-) {
-  const succeededComponentsByBitId: {
-    [K in string]: ComponentStatus;
-  } = succeededComponents.reduce((accum, current) => {
-    const bitId = current.id.toStringWithoutVersion();
-    if (!accum[bitId]) accum[bitId] = current;
-    return accum;
-  }, {});
-
-  componentsResults.forEach((componentResult) => {
-    const existingFilePathsFromModel = componentResult.applyVersionResult.filesStatus;
-    const bitId = componentResult.applyVersionResult.id.toStringWithoutVersion();
-    const succeededComponent = succeededComponentsByBitId[bitId];
-    const filePathsFromFS = succeededComponent.currentComponent?.files || [];
-
-    filePathsFromFS.forEach((file) => {
-      const filename = pathNormalizeToLinux(file.relative);
-      if (!existingFilePathsFromModel[filename]) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        existingFilePathsFromModel[filename] = FileStatus.removed;
-      }
-    });
-  });
-}
-
-/**
- * it's needed in case the checked out version removed files that exist on the current version.
- * without this function, these files would be left on the filesystem.
- */
-export async function deleteFilesIfNeeded(
-  componentsResults: ApplyVersionWithComps[],
-  workspace: Workspace
-): Promise<void> {
-  const pathsToRemoveIncludeNull = componentsResults.map((compResult) => {
-    return Object.keys(compResult.applyVersionResult.filesStatus).map((filePath) => {
-      if (compResult.applyVersionResult.filesStatus[filePath] === FileStatus.removed) {
-        if (!compResult.component) return null;
-        const compDir = compResult.component.writtenPath || compResult.component.componentMap?.rootDir;
-        if (!compDir) return null;
-        return path.join(compDir, filePath);
-      }
-      return null;
-    });
-  });
-  const pathsToRemove = compact(pathsToRemoveIncludeNull.flat());
-  const dataToPersist = new DataToPersist();
-  dataToPersist.removeManyPaths(pathsToRemove.map((p) => new RemovePath(p, true)));
-  dataToPersist.addBasePath(workspace.path);
-  await dataToPersist.persistAllToFS();
+export function throwForFailures(allComponentsStatus: ComponentStatusBase[]) {
+  const failedComponents = allComponentsStatus.filter((c) => c.unchangedMessage && !c.unchangedLegitimately);
+  if (failedComponents.length) {
+    const failureMsgs = failedComponents
+      .map(
+        (failedComponent) =>
+          `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.unchangedMessage as string)}`
+      )
+      .join('\n');
+    throw new BitError(`unable to proceed due to the following failures:\n${failureMsgs}`);
+  }
 }

@@ -2,14 +2,14 @@ import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ScopeMain } from '@teambit/scope';
-// import { BitIds } from '@teambit/legacy/dist/bit-id';
+// import { ComponentIdList } from '@teambit/component-id';
 import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
-import { isHash } from '@teambit/component-version';
-import { getBitCloudUser } from '@teambit/snapping';
+import { isSnap } from '@teambit/component-version';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { Workspace } from '@teambit/workspace';
 import { compact } from 'lodash';
+import { getBitCloudUser } from '@teambit/legacy/dist/utils/bit/get-cloud-user';
 
 const MAX_LANE_NAME_LENGTH = 800;
 
@@ -21,8 +21,10 @@ export async function createLane(
 ): Promise<Lane> {
   const consumer = workspace.consumer;
   const lanes = await consumer.scope.listLanes();
-  if (lanes.find((lane) => lane.name === laneName)) {
-    throw new BitError(`lane "${laneName}" already exists, to switch to this lane, please use "bit switch" command`);
+  if (lanes.find((lane) => lane.name === laneName && lane.scope === scopeName)) {
+    throw new BitError(
+      `lane "${scopeName}/${laneName}" already exists, to switch to this lane, please use "bit switch" command`
+    );
   }
   const bitCloudUser = await getBitCloudUser();
   throwForInvalidLaneName(laneName);
@@ -37,11 +39,11 @@ export async function createLane(
     const workspaceIds = consumer.bitMap.getAllBitIds();
     const laneComponentWithBitmapHead = await Promise.all(
       laneComponents.map(async ({ id, head }) => {
-        const compId = await workspace.resolveComponentId(id.changeVersion(head.toString()));
+        const compId = id.changeVersion(head.toString());
         const isRemoved = await workspace.scope.isComponentRemoved(compId);
         if (isRemoved) return null;
         const bitmapHead = workspaceIds.searchWithoutVersion(id);
-        if (bitmapHead && isHash(bitmapHead.version)) {
+        if (bitmapHead && isSnap(bitmapHead.version)) {
           return { id, head: Ref.from(bitmapHead.version as string) };
         }
         return { id, head };
@@ -63,7 +65,8 @@ export async function createLane(
   const dataToPopulate = await getDataToPopulateLaneObjectIfNeeded();
   newLane.setLaneComponents(dataToPopulate);
 
-  await consumer.scope.lanes.saveLane(newLane);
+  const laneHistoryMsg = remoteLane ? `fork lane "${remoteLane.name}"` : 'new lane';
+  await consumer.scope.lanes.saveLane(newLane, { laneHistoryMsg });
 
   return newLane;
 }
@@ -75,7 +78,7 @@ export async function createLaneInScope(laneName: string, scope: ScopeMain): Pro
   }
   throwForInvalidLaneName(laneName);
   const newLane = Lane.create(laneName, scope.name);
-  await scope.legacyScope.lanes.saveLane(newLane);
+  await scope.legacyScope.lanes.saveLane(newLane, { laneHistoryMsg: 'new lane (created from scope)' });
   return newLane;
 }
 

@@ -3,7 +3,7 @@ import pLocate from 'p-locate';
 import { parse } from 'comment-json';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMain, ComponentID } from '@teambit/component';
+import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
@@ -16,7 +16,7 @@ import { BitError } from '@teambit/bit-error';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { head, uniq } from 'lodash';
 import WorkerAspect, { WorkerMain } from '@teambit/worker';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { EnvService } from './services';
 import { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
@@ -657,6 +657,12 @@ export class EnvsMain {
     }, []);
   }
 
+  getEnvIdFromEnvsLegacyExtensions(extensions: ExtensionDataList): string | undefined {
+    const envsAspect = extensions.findCoreExtension(EnvsAspect.id);
+    const envIdFromEnvsConfig = envsAspect?.data.id;
+    return envIdFromEnvsConfig;
+  }
+
   /**
    * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .calculateEnvId() instead!)
    */
@@ -678,10 +684,10 @@ export class EnvsMain {
     // we search in the component aspect list a matching aspect which is match the id from the teambit.envs/envs
     if (envIdFromEnvsConfigWithoutVersion) {
       const matchedEntry = extensions.find((extension) => {
-        if (extension.newExtensionId) {
+        if (extension.extensionId) {
           return (
-            envIdFromEnvsConfigWithoutVersion === extension.newExtensionId.toString() ||
-            envIdFromEnvsConfigWithoutVersion === extension.newExtensionId.toString({ ignoreVersion: true })
+            envIdFromEnvsConfigWithoutVersion === extension.extensionId.toString() ||
+            envIdFromEnvsConfigWithoutVersion === extension.extensionId.toString({ ignoreVersion: true })
           );
         }
         return envIdFromEnvsConfigWithoutVersion === extension.stringId;
@@ -692,9 +698,8 @@ export class EnvsMain {
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
     const ids: string[] = [];
     extensions.forEach((extension) => {
-      if (extension.newExtensionId) {
-        ids.push(extension.newExtensionId.toString());
-        // ids.push(extension.newExtensionId.toString({ ignoreVersion: true }));
+      if (extension.extensionId) {
+        ids.push(extension.extensionId.toString());
       } else {
         ids.push(extension.stringId);
       }
@@ -727,10 +732,10 @@ export class EnvsMain {
     // we search in the component aspect list a matching aspect which is match the id from the teambit.envs/envs
     if (envIdFromEnvsConfigWithoutVersion) {
       const matchedEntry = extensions.find((extension) => {
-        if (extension.newExtensionId) {
+        if (extension.extensionId) {
           return (
-            envIdFromEnvsConfigWithoutVersion === extension.newExtensionId.toString() ||
-            envIdFromEnvsConfigWithoutVersion === extension.newExtensionId.toString({ ignoreVersion: true })
+            envIdFromEnvsConfigWithoutVersion === extension.extensionId.toString() ||
+            envIdFromEnvsConfigWithoutVersion === extension.extensionId.toString({ ignoreVersion: true })
           );
         }
         return envIdFromEnvsConfigWithoutVersion === extension.stringId;
@@ -757,9 +762,8 @@ export class EnvsMain {
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
     const ids: string[] = [];
     extensions.forEach((extension) => {
-      if (extension.newExtensionId) {
-        ids.push(extension.newExtensionId.toString());
-        // ids.push(extension.newExtensionId.toString({ ignoreVersion: true }));
+      if (extension.extensionId) {
+        ids.push(extension.extensionId.toString());
       } else {
         ids.push(extension.stringId);
       }
@@ -808,8 +812,8 @@ export class EnvsMain {
   }
 
   private getEnvDefinitionByLegacyExtension(extension: ExtensionDataEntry): EnvDefinition | undefined {
-    const envDef = extension.newExtensionId
-      ? this.getEnvDefinitionById(extension.newExtensionId)
+    const envDef = extension.extensionId
+      ? this.getEnvDefinitionById(extension.extensionId)
       : this.getEnvDefinitionByStringId(extension.stringId);
     return envDef;
   }
@@ -833,12 +837,6 @@ export class EnvsMain {
       this.getEnvDefinitionByStringId(id.toString()) ||
       this.getEnvDefinitionByStringId(id.toString({ ignoreVersion: true }));
     return envDef;
-  }
-
-  async getEnvDefinitionByLegacyId(id: BitId): Promise<EnvDefinition | undefined> {
-    const host = this.componentMain.getHost();
-    const newId = await host.resolveComponentId(id);
-    return this.getEnvDefinitionById(newId);
   }
 
   public getEnvDefinitionByStringId(envId: string): EnvDefinition | undefined {
@@ -918,8 +916,12 @@ export class EnvsMain {
     const services: [string, EnvService<any>][] = [];
     allServices.forEach(([id, currentServices]) => {
       currentServices.forEach((service) => {
-        if (this.implements(env, service)) {
-          services.push([id, service]);
+        try {
+          if (this.implements(env, service)) {
+            services.push([id, service]);
+          }
+        } catch (err) {
+          this.logger.warn(`failed loading service ${id} for env ${env.id}`);
         }
       });
     });

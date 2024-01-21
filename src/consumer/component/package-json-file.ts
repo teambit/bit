@@ -121,15 +121,10 @@ export default class PackageJsonFile {
   static createFromComponent(
     componentDir: PathRelative,
     component: Component,
-    addDefaultScopeToCompId = false, // for the capsule, we want the default-scope because it gets published
     addExportProperty = false
   ): PackageJsonFile {
     const filePath = composePath(componentDir);
-    const name = componentIdToPackageName({ withPrefix: true, ...component, id: component.id });
-    const componentIdWithDefaultScope =
-      component.id.hasScope() || !addDefaultScopeToCompId
-        ? component.id
-        : component.id.changeScope(component.defaultScope);
+    const name = componentIdToPackageName(component);
     const packageJsonObject = {
       name,
       version: component.version,
@@ -139,7 +134,7 @@ export default class PackageJsonFile {
       // Used when resolve dependencies to identify that some package should be treated as component
       // TODO: replace by better way to identify that something is a component for sure
       // TODO: Maybe need to add the binding prefix here
-      componentId: componentIdWithDefaultScope.serialize(),
+      componentId: component.id.serialize(),
       dependencies: {
         ...component.packageDependencies,
       },

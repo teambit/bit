@@ -18,9 +18,9 @@ describe('app root components', function () {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(4);
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-      helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
-      helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp4`, {});
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.workspaceJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
+      helper.workspaceJsonc.addKeyVal(`${helper.scopes.remote}/comp4`, {});
       helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
       helper.fs.outputFile(
         `comp2/index.js`,
@@ -80,7 +80,7 @@ module.exports.default = {
       });
       helper.extensions.addExtensionToVariant('comp3', 'teambit.harmony/aspect');
       helper.extensions.addExtensionToVariant('comp4', 'teambit.harmony/aspect');
-      helper.bitJsonc.addKeyValToDependencyResolver('policy', {
+      helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
         dependencies: {
           react: '17',
         },
@@ -438,10 +438,10 @@ module.exports.default = {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(4);
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-      helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
-      helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp4`, {});
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.workspaceJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
+      helper.workspaceJsonc.addKeyVal(`${helper.scopes.remote}/comp4`, {});
       helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
       helper.fs.outputFile(
         `comp2/index.js`,
@@ -501,7 +501,7 @@ module.exports.default = {
       });
       helper.extensions.addExtensionToVariant('comp3', 'teambit.harmony/aspect');
       helper.extensions.addExtensionToVariant('comp4', 'teambit.harmony/aspect');
-      helper.bitJsonc.addKeyValToDependencyResolver('policy', {
+      helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
         dependencies: {
           react: '17',
         },
@@ -837,10 +837,10 @@ module.exports.default = {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(4);
-      helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/yarn');
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-      helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
-      helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp4`, {});
+      helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.workspaceJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
+      helper.workspaceJsonc.addKeyVal(`${helper.scopes.remote}/comp4`, {});
       helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
       helper.fs.outputFile(
         `comp2/index.js`,
@@ -1273,9 +1273,9 @@ describe('env root components', function () {
       );
 
       helper.fixtures.populateComponents(4);
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-      helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
-      helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp4`, {});
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.workspaceJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
+      helper.workspaceJsonc.addKeyVal(`${helper.scopes.remote}/comp4`, {});
       helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
       helper.fs.outputFile(
         `comp2/index.js`,
@@ -1377,13 +1377,13 @@ module.exports.default = {
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+    helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();
     npmCiRegistry.configureCiInPackageJsonHarmony();
-    helper.command.create('aspect', 'dep-dep-aspect');
-    helper.command.create('aspect', 'dep-aspect');
-    helper.command.create('aspect', 'main-aspect');
+    helper.command.create('bit-aspect', 'dep-dep-aspect');
+    helper.command.create('bit-aspect', 'dep-aspect');
+    helper.command.create('bit-aspect', 'main-aspect');
     helper.fs.outputFile(
       `${helper.scopes.remoteWithoutOwner}/dep-aspect/dep-aspect.main.runtime.ts`,
       getDepAspect(helper.scopes.remoteWithoutOwner)
@@ -1434,15 +1434,15 @@ module.exports.default = {
       },
     });
     helper.scopeHelper.addRemoteScope();
-    helper.bitJsonc.setupDefault();
+    helper.workspaceJsonc.setupDefault();
   });
   describe('using Yarn', () => {
     let scopeAspectsCapsulesRootDir!: string;
     before(() => {
-      helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/yarn`);
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/yarn`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/main-aspect@0.0.1`);
       helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/main-aspect@0.0.2`);
@@ -1459,7 +1459,7 @@ module.exports.default = {
             'react/package.json',
           ])
         ).version
-      ).to.match(/^16\./);
+      ).to.match(/^17\./);
       expect(
         fs.readJsonSync(
           resolveFrom(path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_main-aspect@0.0.2`), [
@@ -1474,10 +1474,10 @@ module.exports.default = {
   describe('using pnpm', () => {
     let scopeAspectsCapsulesRootDir!: string;
     before(() => {
-      helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/main-aspect@0.0.1`);
       helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/main-aspect@0.0.2`);
@@ -1494,7 +1494,7 @@ module.exports.default = {
             'react/package.json',
           ])
         ).version
-      ).to.match(/^16\./);
+      ).to.match(/^17\./);
       expect(
         fs.readJsonSync(
           resolveFrom(path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_main-aspect@0.0.2`), [
@@ -1563,8 +1563,8 @@ describe('env peer dependencies hoisting', function () {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-      helper.command.create('react', 'my-button', '-p my-button');
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.command.create('react', 'my-button', '-p my-button --env teambit.react/react');
       helper.command.install();
     });
     after(() => {
@@ -1617,35 +1617,46 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
   function prepare(pm: 'yarn' | 'pnpm') {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/${pm}`);
-    helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-    helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
-      envName: 'env1',
-      dependencies: {
-        peers: [
-          {
-            name: 'react',
-            supportedRange: '^16.8.0',
-            version: '16.14.0',
-          },
-        ],
+    helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/${pm}`);
+    helper.env.setCustomNewEnv(
+      undefined,
+      undefined,
+      {
+        policy: {
+          peers: [
+            {
+              name: 'react',
+              supportedRange: '^16.8.0',
+              version: '16.14.0',
+            },
+          ],
+        },
       },
-    });
-    helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2');
-    helper.fixtures.populateEnvMainRuntime(`custom-react/env2/env2.main.runtime.ts`, {
-      envName: 'env2',
-      dependencies: {
-        peers: [
-          {
-            name: 'react',
-            supportedRange: '^18.0.0',
-            version: '18.0.0',
-          },
-        ],
+      false,
+      'custom-react/env1',
+      'custom-react/env1'
+    );
+    helper.env.setCustomNewEnv(
+      undefined,
+      undefined,
+      {
+        policy: {
+          peers: [
+            {
+              name: 'react',
+              supportedRange: '^18.0.0',
+              version: '18.0.0',
+            },
+          ],
+        },
       },
-    });
+      true,
+      'custom-react/env2',
+      'custom-react/env2'
+    );
+
     helper.fixtures.populateComponents(2);
-    helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
+    helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
     helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
     helper.fs.outputFile(
       `comp2/index.js`,
@@ -1655,7 +1666,6 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/custom-react/env2`, {});
     helper.extensions.addExtensionToVariant('custom-react', 'teambit.envs/env', {});
     helper.command.install();
-    helper.command.install(); // For some reason only works on second run with Yarn
   }
 });
 
@@ -1665,10 +1675,10 @@ describe('create with root components on', function () {
   before(() => {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-    helper.command.create('react', 'card');
+    helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+    helper.command.create('react', 'card', '--env teambit.react/react');
     helper.command.install();
-    helper.command.create('react', 'my-button');
+    helper.command.create('react', 'my-button', '--env teambit.react/react');
   });
   it('should create the runtime component directory for the created component', () => {
     expect(path.join(helper.env.rootCompDirDep('teambit.react/react', 'my-button'), 'index.ts')).to.be.a.path();

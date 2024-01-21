@@ -3,10 +3,10 @@ import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import { getAllCoreAspectsIds } from '@teambit/bit';
 import { getRelativeRootComponentDir } from '@teambit/bit-roots';
-import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent, ComponentID } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
-import { compact, get, pick, uniq } from 'lodash';
+import { compact, get, pick, uniq, omit } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { DependenciesEnv, EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
@@ -21,25 +21,23 @@ import {
   CFG_ISOLATED_SCOPE_CAPSULES,
   getCloudDomain,
 } from '@teambit/legacy/dist/constants';
-// TODO: it's weird we take it from here.. think about it../workspace/utils
-import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 import { onTagIdTransformer } from '@teambit/snapping';
-import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
-import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
+import { ProjectManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
+import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { Registries, Registry } from './registry';
-import { applyUpdates } from './apply-updates';
+import { applyUpdates, UpdatedComponent } from './apply-updates';
 import { ROOT_NAME } from './dependencies/constants';
 import {
   DependencyInstaller,
@@ -50,7 +48,8 @@ import {
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DepLinkerContext, DependencyLinker, LinkingOptions } from './dependency-linker';
-import { ComponentModelVersion, getAllPolicyPkgs, OutdatedPkg } from './get-all-policy-pkgs';
+import { DependencyResolverWorkspaceConfig, NodeLinker } from './dependency-resolver-workspace-config';
+import { ComponentModelVersion, getAllPolicyPkgs, OutdatedPkg, CurrentPkgSource } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
@@ -69,7 +68,6 @@ import {
   SerializedVariantPolicy,
 } from './policy';
 import {
-  PackageImportMethod,
   PackageManager,
   PeerDependencyIssuesByProjects,
   PackageManagerGetPeerDependencyIssuesOptions,
@@ -90,11 +88,7 @@ import { DependencyDetector } from './dependency-detector';
 import { DependenciesService } from './dependencies.service';
 import { EnvPolicy } from './policy/env-policy';
 
-/**
- * @deprecated use BIT_CLOUD_REGISTRY instead
- */
-export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
-export const BIT_CLOUD_REGISTRY = `https://node.${getCloudDomain()}/`;
+export const BIT_CLOUD_REGISTRY = `https://node-registry.${getCloudDomain()}/`;
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
 export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
@@ -103,189 +97,6 @@ export interface DependencyResolverComponentData {
   packageName: string;
   policy: SerializedVariantPolicy;
   dependencies: SerializedDependency;
-}
-
-export interface DependencyResolverWorkspaceConfig {
-  policy: WorkspacePolicyConfigObject;
-  /**
-   * choose the package manager for Bit to use. you can choose between 'npm', 'yarn', 'pnpm'
-   * and 'librarian'. our recommendation is use 'librarian' which reduces package duplicates
-   * and totally removes the need of a 'node_modules' directory in your project.
-   */
-  packageManager: string;
-
-  /**
-   * A proxy server for out going network requests by the package manager
-   * Used for both http and https requests (unless the httpsProxy is defined)
-   */
-  proxy?: string;
-
-  /**
-   * A proxy server for outgoing https requests by the package manager (fallback to proxy server if not defined)
-   * Use this in case you want different proxy for http and https requests.
-   */
-  httpsProxy?: string;
-
-  /**
-   * A path to a file containing one or multiple Certificate Authority signing certificates.
-   * allows for multiple CA's, as well as for the CA information to be stored in a file on disk.
-   */
-  ca?: string;
-
-  /**
-   * Whether or not to do SSL key validation when making requests to the registry via https
-   */
-  strictSsl?: string;
-
-  /**
-   * A client certificate to pass when accessing the registry. Values should be in PEM format (Windows calls it "Base-64 encoded X.509 (.CER)") with newlines replaced by the string "\n". For example:
-   * cert="-----BEGIN CERTIFICATE-----\nXXXX\nXXXX\n-----END CERTIFICATE-----"
-   * It is not the path to a certificate file (and there is no "certfile" option).
-   */
-  cert?: string;
-
-  /**
-   * A client key to pass when accessing the registry. Values should be in PEM format with newlines replaced by the string "\n". For example:
-   * key="-----BEGIN PRIVATE KEY-----\nXXXX\nXXXX\n-----END PRIVATE KEY-----"
-   * It is not the path to a key file (and there is no "keyfile" option).
-   */
-  key?: string;
-
-  /**
-   * A comma-separated string of domain extensions that a proxy should not be used for.
-   */
-  noProxy?: string;
-
-  /**
-   * The IP address of the local interface to use when making connections to the npm registry.
-   */
-  localAddress?: string;
-
-  /**
-   * How many times to retry if Bit fails to fetch from the registry.
-   */
-  fetchRetries?: number;
-
-  /*
-   * The exponential factor for retry backoff.
-   */
-  fetchRetryFactor?: number;
-
-  /*
-   * The minimum (base) timeout for retrying requests.
-   */
-  fetchRetryMintimeout?: number;
-
-  /*
-   * The maximum fallback timeout to ensure the retry factor does not make requests too long.
-   */
-  fetchRetryMaxtimeout?: number;
-
-  /*
-   * The maximum amount of time (in milliseconds) to wait for HTTP requests to complete.
-   */
-  fetchTimeout?: number;
-
-  /*
-   * The maximum number of connections to use per origin (protocol/host/port combination).
-   */
-  maxSockets?: number;
-
-  /*
-   * Controls the maximum number of HTTP(S) requests to process simultaneously.
-   */
-  networkConcurrency?: number;
-
-  /*
-   * Set the prefix to use when adding dependency to workspace.jsonc via bit install
-   * to lock version to exact version you can use empty string (default)
-   */
-  savePrefix?: string;
-
-  /*
-   * in case you want to disable this proxy set this config to false
-   *
-   */
-  installFromBitDevRegistry?: boolean;
-
-  /*
-   * map of extra arguments to pass to the configured package manager upon the installation
-   * of dependencies.
-   */
-  packageManagerArgs?: string[];
-
-  /*
-   * This field allows to instruct the package manager to override any dependency in the dependency graph.
-   * This is useful to enforce all your packages to use a single version of a dependency, backport a fix,
-   * or replace a dependency with a fork.
-   */
-  overrides?: Record<string, string>;
-
-  /**
-   * This is similar to overrides, but will only affect installation in capsules.
-   * In case overrides is configured and this not, the regular overrides will affect capsules as well.
-   * in case both configured, capsulesOverrides will be used for capsules, and overrides will affect the workspace.
-   */
-  capsulesOverrides?: Record<string, string>;
-
-  /*
-   * Defines what linker should be used for installing Node.js packages.
-   * Supported values are hoisted and isolated.
-   */
-  nodeLinker?: 'hoisted' | 'isolated';
-
-  /*
-   * Controls the way packages are imported from the store.
-   */
-  packageImportMethod?: PackageImportMethod;
-
-  /*
-   * Use and cache the results of (pre/post)install hooks.
-   */
-  sideEffectsCache?: boolean;
-
-  /*
-   * The list of components that should be installed in isolation from the workspace.
-   * The component's package names should be used in this list, not their component IDs.
-   */
-  rootComponents?: boolean;
-
-  /*
-   * The node version to use when checking a package's engines setting.
-   */
-  nodeVersion?: string;
-
-  /*
-   * Refuse to install any package that claims to not be compatible with the current Node.js version.
-   */
-  engineStrict?: boolean;
-
-  /*
-   * Rules to mute specific peer dependeny warnings.
-   */
-  peerDependencyRules?: PeerDependencyRules;
-
-  /*
-   * This setting is "true" by default and tells bit to link core aspects to the node_modules of the workspace.
-   * It only makes sense to set this to "false" in a workspace in which core aspects are actually developed.
-   */
-  linkCoreAspects?: boolean;
-
-  /**
-   * When false, Bit will create a shared node_modules directory for all components in a capsule.
-   */
-  isolatedCapsules?: boolean;
-
-  /*
-   * Ignore the builds of specific dependencies. The "preinstall", "install", and "postinstall" scripts
-   * of the listed packages will not be executed during installation.
-   */
-  neverBuiltDependencies?: string[];
-
-  /**
-   * If true, staleness checks for cached data will be bypassed, but missing data will be requested from the server.
-   */
-  preferOffline?: boolean;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -306,6 +117,7 @@ export type GetInstallerOptions = {
   packageManager?: string;
   cacheRootDirectory?: string;
   installingContext?: DepInstallerContext;
+  nodeLinker?: NodeLinker;
 };
 
 export type GetLinkerOptions = {
@@ -322,8 +134,6 @@ export type GetVersionResolverOptions = {
   cacheRootDirectory?: string;
 };
 
-type OnExportIdTransformer = (id: BitId) => BitId;
-
 const defaultLinkingOptions: LinkingOptions = {
   linkTeambitBit: true,
   linkCoreAspects: true,
@@ -335,11 +145,16 @@ const defaultCreateFromComponentsOptions: CreateFromComponentsOptions = {
 };
 
 export class DependencyResolverMain {
+  /**
+   * cache the workspace policy to improve performance. when workspace.jsonc is changed, this gets cleared.
+   * @see workspace.triggerOnWorkspaceConfigChange
+   */
+  private _workspacePolicy: WorkspacePolicy | undefined;
   constructor(
     /**
      * Dependency resolver  extension configuration.
      */
-    readonly config: DependencyResolverWorkspaceConfig,
+    public config: DependencyResolverWorkspaceConfig,
 
     /**
      * Registry for changes by other extensions.
@@ -399,6 +214,10 @@ export class DependencyResolverMain {
     return packageManager?.supportsDedupingOnExistingRoot?.() === true && !this.isolatedCapsules();
   }
 
+  setConfig(config: DependencyResolverWorkspaceConfig) {
+    this.config = config;
+  }
+
   hasRootComponents(): boolean {
     return Boolean(this.config.rootComponents);
   }
@@ -416,10 +235,11 @@ export class DependencyResolverMain {
     return rootPolicy.entries.some(({ dependencyId }) => dependencyId === '@teambit/harmony');
   }
 
-  nodeLinker(): 'hoisted' | 'isolated' {
+  nodeLinker(packageManagerName?: string): NodeLinker {
     if (this.config.nodeLinker) return this.config.nodeLinker;
-    if (this.config.packageManager === 'teambit.dependencies/pnpm') return 'isolated';
-    return 'hoisted';
+    const pmName = packageManagerName || this.config.packageManager;
+    if (pmName === 'teambit.dependencies/yarn') return 'hoisted';
+    return 'isolated';
   }
 
   linkCoreAspects(): boolean {
@@ -497,6 +317,7 @@ export class DependencyResolverMain {
       // if no policy found, the dependency was auto-resolved from the source code
       dep.source = found?.source || 'auto';
       dep.hidden = found?.hidden;
+      dep.optional = found?.optional;
     });
     return dependencyList;
   }
@@ -515,16 +336,27 @@ export class DependencyResolverMain {
    * Main function to get the dependency list of a given component
    * @param component
    */
-  async getDependencies(
-    component: IComponent,
-    { includeHidden = false }: GetDependenciesOptions = {}
-  ): Promise<DependencyList> {
+  getDependencies(component: IComponent, { includeHidden = false }: GetDependenciesOptions = {}): DependencyList {
     const entry = component.get(DependencyResolverAspect.id);
     if (!entry) {
       return DependencyList.fromArray([]);
     }
     const serializedDependencies: SerializedDependency[] = entry?.data?.dependencies || [];
-    const depList = await this.getDependenciesFromSerializedDependencies(serializedDependencies);
+    const depList = this.getDependenciesFromSerializedDependencies(serializedDependencies);
+    if (includeHidden) return depList;
+    return depList.filterHidden();
+  }
+
+  getDependenciesFromLegacyComponent(
+    component: LegacyComponent,
+    { includeHidden = false }: GetDependenciesOptions = {}
+  ) {
+    const entry = component.extensions.findCoreExtension(DependencyResolverAspect.id);
+    if (!entry) {
+      return DependencyList.fromArray([]);
+    }
+    const serializedDependencies: SerializedDependency[] = entry?.data?.dependencies || [];
+    const depList = this.getDependenciesFromSerializedDependencies(serializedDependencies);
     if (includeHidden) return depList;
     return depList.filterHidden();
   }
@@ -537,25 +369,34 @@ export class DependencyResolverMain {
     return dependencyList.getComponentDependencies();
   }
 
-  private async getDependenciesFromSerializedDependencies(
-    dependencies: SerializedDependency[]
-  ): Promise<DependencyList> {
+  private getDependenciesFromSerializedDependencies(dependencies: SerializedDependency[]): DependencyList {
     if (!dependencies.length) {
       return DependencyList.fromArray([]);
     }
     const listFactory = this.getDependencyListFactory();
-    const deps = await listFactory.fromSerializedDependencies(dependencies);
+    const deps = listFactory.fromSerializedDependencies(dependencies);
     return deps;
   }
 
   /**
    * Getting the merged workspace policy (from dep resolver config and others like root package.json)
-   * @returns
    */
   getWorkspacePolicy(): WorkspacePolicy {
-    const policyFromConfig = this.getWorkspacePolicyFromConfig();
-    const externalPolicies = this.rootPolicyRegistry.toArray().map(([, policy]) => policy);
-    return this.mergeWorkspacePolices([policyFromConfig, ...externalPolicies]);
+    if (!this._workspacePolicy) {
+      const policyFromConfig = this.getWorkspacePolicyFromConfig();
+      const externalPolicies = this.rootPolicyRegistry.toArray().map(([, policy]) => policy);
+      this._workspacePolicy = this.mergeWorkspacePolices([policyFromConfig, ...externalPolicies]);
+    }
+    return this._workspacePolicy;
+  }
+
+  getWorkspacePolicyManifest() {
+    const workspacePolicy = this.getWorkspacePolicy();
+    return workspacePolicy.toManifest();
+  }
+
+  clearCache() {
+    this._workspacePolicy = undefined;
   }
 
   /**
@@ -654,13 +495,15 @@ export class DependencyResolverMain {
    * Returns the location where the component is installed with its peer dependencies
    * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
    */
-  getRuntimeModulePath(component: Component) {
+  getRuntimeModulePath(component: Component, isInWorkspace = false) {
     if (!this.hasRootComponents()) {
       const modulePath = this.getModulePath(component);
       return modulePath;
     }
     const pkgName = this.getPackageName(component);
-    const selfRootDir = getRelativeRootComponentDir(component.id.toString());
+    const selfRootDir = getRelativeRootComponentDir(
+      !isInWorkspace ? component.id.toString() : component.id.toStringWithoutVersion()
+    );
     // In case the component is it's own root we want to load it from it's own root folder
     if (fs.pathExistsSync(selfRootDir)) {
       const innerDir = join(selfRootDir, 'node_modules', pkgName);
@@ -713,7 +556,7 @@ export class DependencyResolverMain {
       cacheRootDir,
       preInstallSubscribers,
       postInstallSubscribers,
-      this.config.nodeLinker,
+      options.nodeLinker || this.nodeLinker(packageManagerName),
       this.config.packageImportMethod,
       this.config.sideEffectsCache,
       this.config.nodeVersion,
@@ -965,15 +808,13 @@ export class DependencyResolverMain {
       registries = await systemPm.getRegistries();
     }
 
-    const bitScope = registries.scopes.bit;
-
     const getDefaultBitRegistry = (): Registry => {
       const bitGlobalConfigRegistry = this.globalConfig.getSync(CFG_REGISTRY_URL_KEY);
-      const bitRegistry = bitGlobalConfigRegistry || bitScope?.uri || BIT_DEV_REGISTRY;
+      const bitRegistry = bitGlobalConfigRegistry || BIT_CLOUD_REGISTRY;
 
-      const { bitOriginalAuthType, bitAuthHeaderValue, bitOriginalAuthValue } = this.getBitAuthConfig(bitScope);
+      const { bitOriginalAuthType, bitAuthHeaderValue, bitOriginalAuthValue } = this.getBitAuthConfig();
 
-      const alwaysAuth = bitAuthHeaderValue !== undefined;
+      const alwaysAuth = !!bitAuthHeaderValue;
       const bitDefaultRegistry = new Registry(
         bitRegistry,
         alwaysAuth,
@@ -1002,24 +843,20 @@ export class DependencyResolverMain {
       // then in the registry server it should be use it when proxies
       registries = registries.setDefaultRegistry(bitDefaultRegistry);
     }
-    // Make sure @bit scope is register with alwaysAuth
-    if (!bitScope || (bitScope && !bitScope.alwaysAuth)) {
-      registries = registries.updateScopedRegistry('bit', bitDefaultRegistry);
-    }
 
-    registries = this.addAuthToScopedBitRegistries(registries, bitScope);
+    registries = this.addAuthToScopedBitRegistries(registries);
     return registries;
   }
 
   /**
    * This will mutate any registry which point to BIT_DEV_REGISTRY to have the auth config from the @bit scoped registry or from the user.token in bit's config
    */
-  private addAuthToScopedBitRegistries(registries: Registries, bitScopeRegistry: Registry): Registries {
-    const { bitOriginalAuthType, bitAuthHeaderValue, bitOriginalAuthValue } = this.getBitAuthConfig(bitScopeRegistry);
+  private addAuthToScopedBitRegistries(registries: Registries): Registries {
+    const { bitOriginalAuthType, bitAuthHeaderValue, bitOriginalAuthValue } = this.getBitAuthConfig();
     const alwaysAuth = bitAuthHeaderValue !== undefined;
     let updatedRegistries = registries;
     Object.entries(registries.scopes).map(([name, registry]) => {
-      if (!registry.authHeaderValue && BIT_DEV_REGISTRY.includes(registry.uri)) {
+      if (!registry.authHeaderValue && BIT_CLOUD_REGISTRY.includes(registry.uri)) {
         const registryWithAuth = new Registry(
           registry.uri,
           alwaysAuth,
@@ -1034,26 +871,26 @@ export class DependencyResolverMain {
     return updatedRegistries;
   }
 
-  private getBitAuthConfig(
-    bitScopeRegistry: Registry
-  ): Partial<{ bitOriginalAuthType: string; bitAuthHeaderValue: string; bitOriginalAuthValue: string }> {
+  private getBitAuthConfig(): Partial<{
+    bitOriginalAuthType: string;
+    bitAuthHeaderValue: string;
+    bitOriginalAuthValue: string;
+  }> {
     const bitGlobalConfigToken = this.globalConfig.getSync(CFG_USER_TOKEN_KEY);
-    let bitAuthHeaderValue = bitScopeRegistry?.authHeaderValue;
-    let bitOriginalAuthType = bitScopeRegistry?.originalAuthType;
-    let bitOriginalAuthValue = bitScopeRegistry?.originalAuthValue;
+    const res = {
+      bitOriginalAuthType: '',
+      bitAuthHeaderValue: '',
+      bitOriginalAuthValue: '',
+    };
 
     // In case there is no auth configuration in the npmrc, but there is token in bit config, take it from the config
-    if ((!bitScopeRegistry || !bitScopeRegistry.authHeaderValue) && bitGlobalConfigToken) {
-      bitOriginalAuthType = 'authToken';
-      bitAuthHeaderValue = `Bearer ${bitGlobalConfigToken}`;
-      bitOriginalAuthValue = bitGlobalConfigToken;
+    if (bitGlobalConfigToken) {
+      res.bitOriginalAuthType = 'authToken';
+      res.bitAuthHeaderValue = `Bearer ${bitGlobalConfigToken}`;
+      res.bitOriginalAuthValue = bitGlobalConfigToken;
     }
 
-    return {
-      bitOriginalAuthType,
-      bitAuthHeaderValue,
-      bitOriginalAuthValue,
-    };
+    return res;
   }
 
   get packageManagerName(): string {
@@ -1067,10 +904,12 @@ export class DependencyResolverMain {
     return workspacePolicy;
   }
 
-  removeFromRootPolicy(dependencyIds: string[]) {
+  removeFromRootPolicy(dependencyIds: string[]): boolean {
     const workspacePolicy = this.getWorkspacePolicyFromConfig();
     const workspacePolicyUpdated = workspacePolicy.remove(dependencyIds);
-    this.updateConfigPolicy(workspacePolicyUpdated);
+    const isRemoved = workspacePolicyUpdated.entries.length !== workspacePolicy.entries.length;
+    if (isRemoved) this.updateConfigPolicy(workspacePolicyUpdated);
+    return isRemoved;
   }
 
   private updateConfigPolicy(workspacePolicy: WorkspacePolicy) {
@@ -1082,8 +921,9 @@ export class DependencyResolverMain {
     });
   }
 
-  async persistConfig(workspaceDir?: string) {
-    return this.configAspect.workspaceConfig?.write({ dir: workspaceDir });
+  async persistConfig(reasonForChange?: string) {
+    await this.configAspect.workspaceConfig?.write({ reasonForChange });
+    this.clearCache();
   }
 
   /**
@@ -1111,47 +951,55 @@ export class DependencyResolverMain {
     const envId = await this.envs.calculateEnvIdFromExtensions(configuredExtensions);
     if (this.envs.isCoreEnv(envId)) {
       const env = await this.envs.calculateEnvFromExtensions(configuredExtensions);
-      return this.getComponentEnvPolicyFromEnv(env.env);
+      return this.getComponentEnvPolicyFromEnv(env.env, { envId });
     }
 
     const fromFile = await this.getEnvPolicyFromFile(envId);
     if (fromFile) return fromFile;
     const env = await this.envs.calculateEnvFromExtensions(configuredExtensions);
-    return this.getComponentEnvPolicyFromEnv(env.env);
+    return this.getComponentEnvPolicyFromEnv(env.env, { envId });
   }
 
   async getEnvPolicyFromEnvId(id: ComponentID, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
-    return this.getEnvPolicyFromEnvLegacyId(id._legacy, legacyFiles);
-  }
-
-  async getEnvPolicyFromEnvLegacyId(id: BitId, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
     const fromFile = await this.getEnvPolicyFromFile(id.toString(), legacyFiles);
     if (fromFile) return fromFile;
-    const envDef = await this.envs.getEnvDefinitionByLegacyId(id);
+    const envDef = this.envs.getEnvDefinitionById(id);
     if (!envDef) return undefined;
     const env = envDef.env;
-    return this.getComponentEnvPolicyFromEnv(env);
+    return this.getComponentEnvPolicyFromEnv(env, {
+      envId: id.toStringWithoutVersion(),
+    });
+  }
+
+  /**
+   * @deprecated use getEnvPolicyFromEnvId instead (it's the same)
+   */
+  async getEnvPolicyFromEnvLegacyId(id: ComponentID, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
+    return this.getEnvPolicyFromEnvId(id, legacyFiles);
   }
 
   async getComponentEnvPolicy(component: Component): Promise<EnvPolicy> {
     // const envComponent = await this.envs.getEnvComponent(component);
     const envId = await this.envs.calculateEnvId(component);
-    if (this.envs.isCoreEnv(envId.toStringWithoutVersion())) {
+    const envIdWithoutVersion = envId.toStringWithoutVersion();
+    if (this.envs.isCoreEnv(envIdWithoutVersion)) {
       const env = this.envs.getEnv(component).env;
-      return this.getComponentEnvPolicyFromEnv(env);
+      return this.getComponentEnvPolicyFromEnv(env, { envId: envIdWithoutVersion });
     }
     const fromFile = await this.getEnvPolicyFromFile(envId.toString());
     if (fromFile) return fromFile;
     this.envsWithoutManifest.add(envId.toString());
     const env = this.envs.getEnv(component).env;
-    return this.getComponentEnvPolicyFromEnv(env);
+    return this.getComponentEnvPolicyFromEnv(env, { envId: envIdWithoutVersion });
   }
 
   getEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): EnvPolicy | undefined {
     const object = this.envs.getEnvManifest(envComponent, legacyFiles) as any;
     const policy = object?.policy;
     if (!policy) return undefined;
-    const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policy);
+    const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policy, {
+      includeLegacyPeersInSelfPolicy: envComponent && this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()),
+    });
     return allPoliciesFromEnv;
   }
 
@@ -1165,11 +1013,14 @@ export class DependencyResolverMain {
     return this.getEnvManifest(envComponent);
   }
 
-  async getComponentEnvPolicyFromEnv(env: DependenciesEnv): Promise<EnvPolicy> {
+  async getComponentEnvPolicyFromEnv(env: DependenciesEnv, options: { envId: string }): Promise<EnvPolicy> {
     if (env.getDependencies && typeof env.getDependencies === 'function') {
       const policiesFromEnvConfig = await env.getDependencies();
       if (policiesFromEnvConfig) {
-        const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policiesFromEnvConfig);
+        const idWithoutVersion = options.envId.split('@')[0];
+        const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policiesFromEnvConfig, {
+          includeLegacyPeersInSelfPolicy: this.envs.isCoreEnv(idWithoutVersion),
+        });
         return allPoliciesFromEnv;
       }
     }
@@ -1179,7 +1030,7 @@ export class DependencyResolverMain {
   async getComponentEnvPolicyFromEnvDefinition(envDef: EnvDefinition): Promise<EnvPolicy> {
     const fromFile = await this.getEnvPolicyFromFile(envDef.id);
     if (fromFile) return fromFile;
-    return this.getComponentEnvPolicyFromEnv(envDef.env);
+    return this.getComponentEnvPolicyFromEnv(envDef.env, { envId: envDef.id });
   }
 
   /**
@@ -1208,7 +1059,7 @@ export class DependencyResolverMain {
    */
   async mergeVariantPolicies(
     configuredExtensions: ExtensionDataList,
-    id: BitId,
+    id: ComponentID,
     legacyFiles?: SourceFile[]
   ): Promise<VariantPolicy> {
     let policiesFromSlots: VariantPolicy = VariantPolicy.getEmpty();
@@ -1227,14 +1078,14 @@ export class DependencyResolverMain {
       });
 
       if (policyTupleToApply && policyTupleToApply[1]) {
-        const currentPolicy = VariantPolicy.fromConfigObject(policyTupleToApply[1], 'slots');
+        const currentPolicy = VariantPolicy.fromConfigObject(policyTupleToApply[1], { source: 'slots' });
         policiesFromSlots = VariantPolicy.mergePolices([policiesFromSlots, currentPolicy]);
       }
     });
     const currentExtension = configuredExtensions.findExtension(DependencyResolverAspect.id);
     const currentConfig = currentExtension?.config as unknown as DependencyResolverVariantConfig;
     if (currentConfig && currentConfig.policy) {
-      policiesFromConfig = VariantPolicy.fromConfigObject(currentConfig.policy, 'config');
+      policiesFromConfig = VariantPolicy.fromConfigObject(currentConfig.policy, { source: 'config' });
     }
     const policiesFromEnvForItself =
       (await this.getPoliciesFromEnvForItself(id, legacyFiles)) ?? VariantPolicy.getEmpty();
@@ -1252,8 +1103,8 @@ export class DependencyResolverMain {
    * These are the policies that the env itself defines for itself.
    * So policies installed only locally for the env, not to any components that use the env.
    */
-  async getPoliciesFromEnvForItself(id: BitId, legacyFiles?: SourceFile[]): Promise<VariantPolicy | undefined> {
-    const envPolicy = await this.getEnvPolicyFromEnvLegacyId(id, legacyFiles);
+  async getPoliciesFromEnvForItself(id: ComponentID, legacyFiles?: SourceFile[]): Promise<VariantPolicy | undefined> {
+    const envPolicy = await this.getEnvPolicyFromEnvId(id, legacyFiles);
     return envPolicy?.selfPolicy;
   }
 
@@ -1265,7 +1116,11 @@ export class DependencyResolverMain {
     const dependencies = get(entry, ['data', 'dependencies'], []);
     dependencies.forEach((dep) => {
       if (dep.__type === COMPONENT_DEP_TYPE) {
-        const depId = new BitId(dep.componentId);
+        // @todo: it's unclear why "dep.componentId" randomly becomes a ComponentID instance.
+        // this check is added because on Ripple in some scenarios it was throwing:
+        // "ComponentID.fromObject expect to get an object, got an instance of ComponentID" (locally it didn't happen)
+        const depId =
+          dep.componentId instanceof ComponentID ? dep.componentId : ComponentID.fromObject(dep.componentId);
         const newDepId = idTransformer(depId);
         dep.componentId = (newDepId || depId).serialize();
         dep.id = (newDepId || depId).toString();
@@ -1273,23 +1128,6 @@ export class DependencyResolverMain {
       }
     });
     return component;
-  }
-
-  updateDepsOnLegacyExport(version: VersionModel, idTransformer: OnExportIdTransformer): VersionModel {
-    const entry = version.extensions.findCoreExtension(DependencyResolverAspect.id);
-    if (!entry) {
-      return version;
-    }
-    const dependencies = get(entry, ['data', 'dependencies'], []);
-    dependencies.forEach((dep) => {
-      if (dep.__type === COMPONENT_DEP_TYPE) {
-        const depId = new BitId(dep.componentId);
-        const newDepId = idTransformer(depId);
-        dep.componentId = (newDepId || depId).serialize();
-        dep.id = (newDepId || depId).toString();
-      }
-    });
-    return version;
   }
 
   /**
@@ -1401,18 +1239,18 @@ export class DependencyResolverMain {
   async getOutdatedPkgsFromPolicies({
     rootDir,
     variantPoliciesByPatterns,
-    componentPoliciesById,
+    componentPolicies,
     components,
     patterns,
     forceVersionBump,
   }: {
     rootDir: string;
     variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
-    componentPoliciesById: Record<string, any>;
+    componentPolicies: Array<{ componentId: ComponentID; policy: any }>;
     components: Component[];
     patterns?: string[];
-    forceVersionBump?: 'major' | 'minor' | 'patch';
-  }): Promise<OutdatedPkg[]> {
+    forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible';
+  }): Promise<MergedOutdatedPkg[] | null> {
     const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
     const componentModelVersions: ComponentModelVersion[] = (
       await Promise.all(
@@ -1431,7 +1269,8 @@ export class DependencyResolverMain {
             .map((dep) => ({
               name: dep.getPackageName!(), // eslint-disable-line
               version: dep.version,
-              componentId: component.id.toString(),
+              isAuto: dep.source === 'auto',
+              componentId: component.id,
               lifecycleType: dep.lifecycle,
             }));
         })
@@ -1440,7 +1279,7 @@ export class DependencyResolverMain {
     let allPkgs = getAllPolicyPkgs({
       rootPolicy: this.getWorkspacePolicyFromConfig(),
       variantPoliciesByPatterns,
-      componentPoliciesById,
+      componentPolicies,
       componentModelVersions,
     });
     if (patterns?.length) {
@@ -1451,8 +1290,12 @@ export class DependencyResolverMain {
         )
       );
       allPkgs = allPkgs.filter(({ name }) => selectedPkgNames.has(name));
+      if (!allPkgs.length) {
+        return null;
+      }
     }
-    return this.getOutdatedPkgs({ rootDir, forceVersionBump }, allPkgs);
+    const outdatedPkgs = await this.getOutdatedPkgs({ rootDir, forceVersionBump }, allPkgs);
+    return mergeOutdatedPkgs(outdatedPkgs);
   }
 
   /**
@@ -1464,7 +1307,7 @@ export class DependencyResolverMain {
       forceVersionBump,
     }: {
       rootDir: string;
-      forceVersionBump?: 'major' | 'minor' | 'patch';
+      forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible';
     },
     pkgs: Array<
       { name: string; currentRange: string; source: 'variants' | 'component' | 'rootPolicy' | 'component-model' } & T
@@ -1487,7 +1330,9 @@ export class DependencyResolverMain {
     const outdatedPkgs = compact(
       await Promise.all(
         pkgs.map(async (pkg) => {
-          const latestVersion = await tryResolve(`${pkg.name}@${newVersionRange(pkg.currentRange, forceVersionBump)}`);
+          const latestVersion = await tryResolve(
+            `${pkg.name}@${newVersionRange(pkg.currentRange, { pkgSource: pkg.source, forceVersionBump })}`
+          );
           if (!latestVersion) return null;
           const currentVersion = semver.valid(pkg.currentRange.replace(/[\^~]/, ''));
           // If the current version is newer than the latest, then no need to update the dependency
@@ -1515,15 +1360,13 @@ export class DependencyResolverMain {
     outdatedPkgs: Array<Omit<OutdatedPkg, 'currentRange'>>,
     options: {
       variantPoliciesByPatterns: Record<string, any>;
-      componentPoliciesById: Record<string, any>;
     }
   ): {
     updatedVariants: string[];
-    updatedComponents: string[];
+    updatedComponents: UpdatedComponent[];
   } {
     const { updatedVariants, updatedComponents, updatedWorkspacePolicyEntries } = applyUpdates(outdatedPkgs, {
       variantPoliciesByPatterns: options.variantPoliciesByPatterns,
-      componentPoliciesById: options.componentPoliciesById,
     });
     this.addToRootPolicy(updatedWorkspacePolicyEntries, {
       updateExisting: true,
@@ -1620,27 +1463,13 @@ export class DependencyResolverMain {
     // @ts-ignore
     dependencyResolver.registerDependencyFactories([new ComponentDependencyFactory(componentAspect)]);
 
-    DependencyResolver.getDepResolverAspectName = () => DependencyResolverAspect.id;
-
     LegacyComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
-      async (configuredExtensions: ExtensionDataList, id: BitId, legacyFiles: SourceFile[]) => {
+      async (configuredExtensions: ExtensionDataList, id: ComponentID, legacyFiles: SourceFile[]) => {
         const policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
         return policy.toLegacyDepsOverrides();
       }
     );
-    DependencyResolver.registerWorkspacePolicyGetter(() => {
-      const workspacePolicy = dependencyResolver.getWorkspacePolicy();
-      return workspacePolicy.toManifest();
-    });
-    DependencyResolver.registerEnvDetectorGetter(async (extensions: ExtensionDataList) => {
-      return dependencyResolver.calcComponentEnvDepDetectors(extensions);
-    });
-    DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: BitId, files: SourceFile[]) => {
-      const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id, files);
-      if (!envPolicy) return undefined;
-      return envPolicy.selfPolicy.toVersionManifest();
-    });
     if (aspectLoader)
       aspectLoader.registerOnLoadRequireableExtensionSlot(
         dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
@@ -1648,6 +1477,27 @@ export class DependencyResolverMain {
 
     graphql.register(dependencyResolverSchema(dependencyResolver));
     envs.registerService(new DependenciesService());
+
+    // this is needed because during tag process, the data.dependencies can be loaded and the componentId can become
+    // an instance of ComponentID class. it needs to be serialized before saved into objects.
+    const serializeDepResolverDataBeforePersist = (extDataList: ExtensionDataList) => {
+      const entry = extDataList.findCoreExtension(DependencyResolverAspect.id);
+      if (!entry) return;
+      const dependencies = get(entry, ['data', 'dependencies'], []);
+      dependencies.forEach((dep) => {
+        if (dep.__type === COMPONENT_DEP_TYPE) {
+          dep.componentId = dep.componentId instanceof ComponentID ? dep.componentId.serialize() : dep.componentId;
+        }
+      });
+    };
+    ExtensionDataList.toModelObjectsHook.push(serializeDepResolverDataBeforePersist);
+    PackageJsonTransformer.registerPackageJsonTransformer(async (component, packageJsonObject) => {
+      const deps = await dependencyResolver.getDependencies(component);
+      const { optionalDependencies, peerDependenciesMeta } = deps.toDependenciesManifest();
+      packageJsonObject.optionalDependencies = optionalDependencies;
+      packageJsonObject.peerDependenciesMeta = peerDependenciesMeta;
+      return packageJsonObject;
+    });
 
     return dependencyResolver;
   }
@@ -1696,12 +1546,21 @@ function repeatPrefix(originalSpec: string, newVersion: string): string {
   }
 }
 
-function newVersionRange(currentRange: string, forceVersionBump?: 'major' | 'minor' | 'patch') {
-  if (forceVersionBump == null || forceVersionBump === 'major') return 'latest';
+function newVersionRange(
+  currentRange: string,
+  opts: { pkgSource: CurrentPkgSource; forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible' }
+) {
+  if (opts.forceVersionBump == null || opts.forceVersionBump === 'major') return 'latest';
   const currentVersion = semver.valid(currentRange.replace(/[\^~]/, ''));
+  if (opts.forceVersionBump === 'compatible') {
+    if ((opts.pkgSource === 'component' || opts.pkgSource === 'component-model') && currentVersion === currentRange) {
+      return `^${currentVersion}`;
+    }
+    return currentRange;
+  }
   if (!currentVersion) return null;
   const [major, minor] = currentVersion.split('.');
-  switch (forceVersionBump) {
+  switch (opts.forceVersionBump) {
     case 'patch':
       return `>=${currentVersion} <${major}.${+minor + 1}.0`;
     case 'minor':
@@ -1709,4 +1568,59 @@ function newVersionRange(currentRange: string, forceVersionBump?: 'major' | 'min
     default:
       return null;
   }
+}
+
+export interface MergedOutdatedPkg extends OutdatedPkg {
+  dependentComponents?: ComponentID[];
+  hasDifferentRanges?: boolean;
+}
+
+function mergeOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): MergedOutdatedPkg[] {
+  const mergedOutdatedPkgs: Record<
+    string,
+    MergedOutdatedPkg & Required<Pick<MergedOutdatedPkg, 'dependentComponents'>>
+  > = {};
+  const outdatedPkgsNotFromComponentModel: OutdatedPkg[] = [];
+  for (const outdatedPkg of outdatedPkgs) {
+    if (outdatedPkg.source === 'component-model' && outdatedPkg.componentId) {
+      if (!mergedOutdatedPkgs[outdatedPkg.name]) {
+        mergedOutdatedPkgs[outdatedPkg.name] = {
+          ...omit(outdatedPkg, ['componentId']),
+          source: 'rootPolicy',
+          dependentComponents: [outdatedPkg.componentId],
+        };
+      } else {
+        if (mergedOutdatedPkgs[outdatedPkg.name].currentRange !== outdatedPkg.currentRange) {
+          mergedOutdatedPkgs[outdatedPkg.name].hasDifferentRanges = true;
+        }
+        mergedOutdatedPkgs[outdatedPkg.name].currentRange = tryPickLowestRange(
+          mergedOutdatedPkgs[outdatedPkg.name].currentRange,
+          outdatedPkg.currentRange
+        );
+        mergedOutdatedPkgs[outdatedPkg.name].dependentComponents.push(outdatedPkg.componentId);
+        if (outdatedPkg.targetField === 'dependencies') {
+          mergedOutdatedPkgs[outdatedPkg.name].targetField = outdatedPkg.targetField;
+        }
+      }
+    } else {
+      outdatedPkgsNotFromComponentModel.push(outdatedPkg);
+    }
+  }
+  return [...Object.values(mergedOutdatedPkgs), ...outdatedPkgsNotFromComponentModel];
+}
+
+function tryPickLowestRange(range1: string, range2: string) {
+  if (range1 === '*' || range2 === '*') return '*';
+  try {
+    return semver.lt(rangeToVersion(range1), rangeToVersion(range2)) ? range1 : range2;
+  } catch {
+    return '*';
+  }
+}
+
+function rangeToVersion(range: string) {
+  if (range.startsWith('~') || range.startsWith('^')) {
+    return range.substring(1);
+  }
+  return range;
 }

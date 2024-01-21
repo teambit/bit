@@ -63,7 +63,7 @@ $b70: #0d2de3;
   right: 24px;
   bottom: 24px;
   box-shadow: var(--bit-shadow-faint);
-  background: white !important; // override inline styles from package
+  background: var(--background-color) !important; // override inline styles from package
   border-radius: 5px;
 
   :global {
@@ -80,4 +80,14 @@ $b70: #0d2de3;
 
   left: 24px;
   bottom: 24px;
+  > div {
+    background: var(--background-color);
+    border-bottom: 1px solid var(--border-medium-color, #ededed);
+    &:hover {
+      background: var(--bit-accent-bg, #eceaff);
+    }
+    > svg {
+      fill: var(--on-background-color);
+    }
+  }
 }

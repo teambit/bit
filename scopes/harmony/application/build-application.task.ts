@@ -35,6 +35,12 @@ export type BuildAppResult = {
   artifacts?: ArtifactDefinition[];
 };
 
+export type BuildDeployContexts = {
+  deployContext: { publicDir?: string; ssrPublicDir?: string };
+  name: string;
+  appType: string;
+};
+
 export type Options = {
   deploy: boolean;
 };
@@ -82,16 +88,34 @@ export class AppsBuildTask implements BuildTask {
     context: BuildContext
   ): Promise<OneAppResult | undefined> {
     if (!app.build) return undefined;
-    // const { component } = capsule;
-    const appDeployContext: AppBuildContext = Object.assign(context, {
-      capsule,
+    const artifactsDir = this.getArtifactDirectory();
+    const capsuleRootDir = context.capsuleNetwork.capsulesRootDir;
+    const appContext = await this.application.createAppBuildContext(
+      component.id,
+      app.name,
+      capsuleRootDir,
+      capsule.path
+    );
+    const appBuildContext = AppBuildContext.create({
+      appContext,
+      buildContext: context,
       appComponent: component,
       name: app.name,
-      artifactsDir: this.getArtifactDirectory(),
+      capsule,
+      artifactsDir,
     });
-    const deployContext = await app.build(appDeployContext);
+    const deployContext = await app.build(appBuildContext);
     const defaultArtifacts: ArtifactDefinition[] = this.getDefaultArtifactDef(app.applicationType || app.name);
     const artifacts = defaultArtifacts.concat(deployContext.artifacts || []);
+
+    const getDeployContextFromMetadata = () => {
+      if (deployContext.metadata) {
+        return deployContext.metadata;
+      }
+      // if metadata is not defined, don't save deployContext blindly. in node-app for example it includes the entire
+      // Network object, with all capsules and components.
+      return {};
+    };
 
     return {
       artifacts,
@@ -99,9 +123,12 @@ export class AppsBuildTask implements BuildTask {
         component: capsule.component,
         errors: deployContext.errors,
         warnings: deployContext.warnings,
+        metadata: { deployContext: getDeployContextFromMetadata(), name: app.name, appType: app.applicationType },
         /**
+         * @deprecated - please use metadata instead
+         *
          * @guysaar223
-         * @ram8
+         * @ranm8
          * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
          * or create new deploy context on builder
          */
@@ -119,8 +146,7 @@ export class AppsBuildTask implements BuildTask {
         component: appsResults[0].componentResult.component,
         errors: [],
         warnings: [],
-        // @ts-ignore
-        _metadata: {
+        metadata: {
           buildDeployContexts: [],
         },
       },
@@ -133,11 +159,11 @@ export class AppsBuildTask implements BuildTask {
       merged.componentResult.warnings = (merged.componentResult.warnings || []).concat(
         appResult.componentResult.warnings || []
       );
-      // @ts-ignore
-      merged.componentResult._metadata.buildDeployContexts = // @ts-ignore
-      (merged.componentResult._metadata.buildDeployContexts || [])
-        // @ts-ignore
-        .concat(appResult.componentResult._metadata || []);
+
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      merged.componentResult.metadata!.buildDeployContexts =
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        (merged.componentResult.metadata!.buildDeployContexts || []).concat(appResult.componentResult.metadata || []);
     });
     return merged;
   }
@@ -150,8 +176,7 @@ export class AppsBuildTask implements BuildTask {
     return [
       {
         name: `app-build-${nameSuffix}`,
-        globPatterns: ['**'],
-        rootDir: this.getArtifactDirectory(),
+        globPatterns: [`${this.getArtifactDirectory()}/**`],
       },
     ];
   }

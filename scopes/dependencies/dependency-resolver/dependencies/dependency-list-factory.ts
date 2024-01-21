@@ -1,5 +1,6 @@
 import mapSeries from 'p-map-series';
-import { get, flatten } from 'lodash';
+import type { MissingPackagesData } from '@teambit/component-issues';
+import { get } from 'lodash';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { DependencyFactory } from './dependency-factory';
 import { SerializedDependency } from './dependency';
@@ -10,14 +11,14 @@ import { DependencyResolverAspect } from '../dependency-resolver.aspect';
 export class DependencyListFactory {
   constructor(private factories: Record<string, DependencyFactory>) {}
 
-  async fromSerializedDependencies(serializedDependencies: SerializedDependency[]): Promise<DependencyList> {
-    const dependencies = await mapSeries(serializedDependencies, async (serializedDependency) => {
+  fromSerializedDependencies(serializedDependencies: SerializedDependency[]): DependencyList {
+    const dependencies = serializedDependencies.map((serializedDependency) => {
       const type = serializedDependency.__type;
       const factory = this.factories[type];
       if (!factory) {
         throw new UnknownDepType(type);
       }
-      const dependency = await factory.parse(serializedDependency);
+      const dependency = factory.parse(serializedDependency);
       return dependency;
     });
     return new DependencyList(dependencies);
@@ -47,12 +48,13 @@ export class DependencyListFactory {
    * @param legacyComponent
    */
   private async getMissingDependenciesByComponentFromModel(legacyComponent: LegacyComponent): Promise<DependencyList> {
-    const missingPackages: string[] = flatten(
-      // Use getIssueByName to prevent issues when getting different instances while using both bit from bvm and from the repo
-      Object.values(legacyComponent.issues?.getIssueByName('MissingPackagesDependenciesOnFs')?.data || {})
-    );
+    // Use getIssueByName to prevent issues when getting different instances while using both bit from bvm and from the repo
+    const missingData = (legacyComponent.issues.getIssueByName('MissingPackagesDependenciesOnFs')?.data ||
+      []) as MissingPackagesData[];
+
+    const missingPackages: string[] = missingData.map((d) => d.missingPackages).flat();
     const componentFromModel = legacyComponent.componentFromModel;
-    if (!missingPackages || !missingPackages.length || !componentFromModel) {
+    if (!missingPackages.length || !componentFromModel) {
       return DependencyList.fromArray([]);
     }
     // All deps defined in model

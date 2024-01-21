@@ -1,7 +1,8 @@
 import { Readable } from 'stream';
+import Queue from 'p-queue';
+import { ComponentIdList } from '@teambit/component-id';
 import semver from 'semver';
 import { LaneId } from '@teambit/lane-id';
-import { BitIds } from '../../../bit-id';
 import { LATEST_BIT_VERSION, POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
 import logger from '../../../logger/logger';
@@ -13,7 +14,7 @@ import {
   ObjectsReadableGenerator,
 } from '../../../scope/objects/objects-readable-generator';
 import { LaneNotFound } from './exceptions/lane-not-found';
-import { Lane } from '../../../scope/models';
+import { Lane, LaneHistory } from '../../../scope/models';
 
 /**
  * 'component-delta' is not supported anymore in fetchSchema of 0.0.3 and above.
@@ -60,6 +61,11 @@ export type FETCH_OPTIONS = {
    */
   returnNothingIfGivenVersionExists?: boolean;
 
+  /**
+   * relevant when type is "lane". in case the remote has the lane-history object, it'll be returned as well.
+   */
+  includeLaneHistory?: boolean;
+
   fetchSchema: string;
 };
 
@@ -68,7 +74,27 @@ export const CURRENT_FETCH_SCHEMA = '0.0.3';
 const HooksManagerInstance = HooksManager.getInstance();
 
 const openConnections: number[] = [];
+const openConnectionsMetadata: { [connectionId: string]: Record<string, any> } = {};
 let fetchCounter = 0;
+
+// queues are needed because some fetch-request are very slow, for example, when includeParents is true.
+// we don't want multiple of slow requests to block other requests. so we created three queues with different
+// concurrency limits and different timeouts.
+const fastQueue = new Queue({ concurrency: 50, timeout: 1000 * 60 * 3, throwOnTimeout: true });
+const depsQueue = new Queue({ concurrency: 10, timeout: 1000 * 60 * 3, throwOnTimeout: true });
+const parentsQueue = new Queue({ concurrency: 3, timeout: 1000 * 60 * 10, throwOnTimeout: true });
+
+parentsQueue.on('add', () => {
+  logger.debug(
+    `scope.fetch parentsQueue added task for connection [${fetchCounter}], queue pending: ${parentsQueue.size}`
+  );
+});
+depsQueue.on('add', () => {
+  logger.debug(`scope.fetch depsQueue added task for connection [${fetchCounter}], queue pending: ${depsQueue.size}`);
+});
+fastQueue.on('add', () => {
+  logger.debug(`scope.fetch fastQueue added task for connection [${fetchCounter}], queue pending: ${fastQueue.size}`);
+});
 
 export default async function fetch(
   path: string,
@@ -88,8 +114,21 @@ path ${path}.
 open connections: [${openConnections.join(', ')}]. (total ${openConnections.length}).
 memory usage: ${getMemoryUsageInMB()} MB.
 total ids: ${ids.length}.${logIds}
+queues: fastQueue ${fastQueue.size} pending, depsQueue ${depsQueue.size} pending, parentsQueue ${
+      parentsQueue.size
+    } pending.
 fetchOptions`,
     fetchOptions
+  );
+  const dateNow = new Date().toISOString().split('.')[0];
+  openConnectionsMetadata[currentFetch] = {
+    started: dateNow,
+    ids,
+    fetchOptions,
+    headers,
+  };
+  logger.trace(
+    `DEBUG-CONNECTIONS: Date now: ${dateNow}. Connections:\n${JSON.stringify(openConnectionsMetadata, null, 2)}`
   );
 
   if (!fetchOptions.type) fetchOptions.type = 'component'; // for backward compatibility
@@ -115,6 +154,7 @@ fetchOptions`,
   const finishLog = (err?: Error) => {
     const duration = new Date().getTime() - startTime;
     openConnections.splice(openConnections.indexOf(currentFetch), 1);
+    delete openConnectionsMetadata[currentFetch];
     const successOrErr = `${err ? 'with errors' : 'successfully'}`;
     logger.debug(`scope.fetch [${currentFetch}] completed ${successOrErr}.
 open connections: [${openConnections.join(', ')}]. (total ${openConnections.length}).
@@ -157,9 +197,13 @@ async function fetchByType(
   const shouldFetchDependencies = () => {
     return fetchOptions.includeDependencies;
   };
+  const catchTimeoutErr = (err: Error) => {
+    const error = err.name === 'TimeoutError' ? new Error(`fetch timed out`) : err;
+    objectsReadableGenerator.readable.destroy(error);
+  };
   switch (fetchOptions.type) {
     case 'component': {
-      const bitIds: BitIds = BitIds.deserialize(ids);
+      const bitIds: ComponentIdList = ComponentIdList.fromStringArray(ids);
       const shouldCollectParents = () => {
         if (clientSupportsVersionHistory) {
           return Boolean(fetchOptions.collectParents);
@@ -180,7 +224,7 @@ async function fetchByType(
       const getBitIds = () => {
         if (!lane) return bitIds;
         const laneIds = lane.toBitIds();
-        return BitIds.fromArray(
+        return ComponentIdList.fromArray(
           bitIds.map((bitId) => {
             if (bitId.hasVersion()) return bitId;
             // when the client asks for bitId without version and it's on the lane, we need the latest from the lane, not main
@@ -239,8 +283,16 @@ async function fetchByType(
         }));
       };
       const componentsWithOptions = await getComponentsWithOptions();
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      objectsReadableGenerator.pushObjectsToReadable(componentsWithOptions);
+      const getQueue = () => {
+        if (componentsWithOptions.length === 1) return fastQueue;
+        if (collectParents) return parentsQueue;
+        if (shouldFetchDependencies()) return depsQueue;
+        return fastQueue;
+      };
+      const queue = getQueue();
+      queue
+        .add(async () => objectsReadableGenerator.pushObjectsToReadable(componentsWithOptions))
+        .catch(catchTimeoutErr);
       break;
     }
     case 'component-delta': {
@@ -251,7 +303,7 @@ async function fetchByType(
         // backward compatible before 0.0.900 - it was always true
         return true;
       };
-      const bitIdsWithHashToStop: BitIds = BitIds.deserialize(ids);
+      const bitIdsWithHashToStop: ComponentIdList = ComponentIdList.fromStringArray(ids);
       const scopeComponentsImporter = scope.scopeImporter;
       const laneId = fetchOptions.laneId ? LaneId.parse(fetchOptions.laneId) : null;
       const lane = laneId ? await scope.loadLane(laneId) : null;
@@ -273,8 +325,11 @@ async function fetchByType(
           collectParentsUntil: hashToStop ? Ref.from(hashToStop) : null,
         };
       });
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      objectsReadableGenerator.pushObjectsToReadable(componentsWithOptions);
+      const isSlow = componentsWithOptions.length > 1 && (shouldCollectParents() || shouldFetchDependencies());
+      const queue = isSlow ? parentsQueue : fastQueue;
+      queue
+        .add(async () => objectsReadableGenerator.pushObjectsToReadable(componentsWithOptions))
+        .catch(catchTimeoutErr);
       break;
     }
     case 'lane': {
@@ -290,8 +345,16 @@ async function fetchByType(
       lanesToFetch.forEach((laneToFetch) => {
         laneToFetch.scope = scope.name;
       });
+      const lanesHistory: LaneHistory[] = [];
+      if (fetchOptions.includeLaneHistory) {
+        const laneHistoryPromises = lanesToFetch.map(async (laneToFetch) => {
+          const laneHistory = await scope.lanes.getOrCreateLaneHistory(laneToFetch);
+          return laneHistory;
+        });
+        lanesHistory.push(...(await Promise.all(laneHistoryPromises)));
+      }
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      objectsReadableGenerator.pushLanes(lanesToFetch);
+      objectsReadableGenerator.pushLanes(lanesToFetch, lanesHistory);
       break;
     }
     case 'object': {
@@ -305,12 +368,12 @@ async function fetchByType(
   }
 }
 
-function bitIdsToLatest(bitIds: BitIds, lane: Lane | null) {
+function bitIdsToLatest(bitIds: ComponentIdList, lane: Lane | null) {
   if (!lane) {
     return bitIds.toVersionLatest();
   }
   const laneIds = lane.toBitIds();
-  return BitIds.fromArray(
+  return ComponentIdList.fromArray(
     bitIds.map((bitId) => {
       const inLane = laneIds.searchWithoutVersion(bitId);
       return inLane || bitId.changeVersion(LATEST_BIT_VERSION);

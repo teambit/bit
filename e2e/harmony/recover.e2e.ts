@@ -23,6 +23,7 @@ describe('bit recover command', function () {
 
       helper.command.softRemoveComponent('comp2');
       helper.command.recover('comp2');
+      helper.command.link();
     });
     it('bit status should not show a section of removed components', () => {
       const status = helper.command.statusJson();
@@ -139,8 +140,11 @@ describe('bit recover command', function () {
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
 
-        helper.command.removeLaneComp('comp2');
+        helper.command.softRemoveOnLane('comp2');
         helper.command.recover('comp2');
+        // @todo: this should not be needed. the installation during "recover" should create the link correctly.
+        // for some reason, the links it creates are incorrect. (@ur256cwd-remote/rgq5tjys-local.comp1 instead of @ur256cwd-remote/comp1)
+        helper.command.link();
       });
       it('bit status should not show a section of removed components', () => {
         const status = helper.command.statusJson();
@@ -162,7 +166,7 @@ describe('bit recover command', function () {
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
 
-        helper.command.removeLaneComp('comp2');
+        helper.command.softRemoveOnLane('comp2');
         helper.fs.outputFile('comp1/index.js', '');
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.recover(`${helper.scopes.remote}/comp2`);
@@ -192,7 +196,7 @@ describe('bit recover command', function () {
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
 
-        helper.command.removeLaneComp('comp2');
+        helper.command.softRemoveOnLane('comp2');
         helper.fs.outputFile('comp1/index.js', '');
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
@@ -248,7 +252,7 @@ describe('bit recover command', function () {
       helper.command.export();
 
       helper.command.switchLocalLane('lane-a', '-x');
-      helper.command.removeLaneComp('comp1');
+      helper.command.softRemoveOnLane('comp1');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
@@ -266,7 +270,6 @@ describe('bit recover command', function () {
       helper.bitMap.expectToHaveId('comp1');
     });
   });
-
   describe('remove in one lane, recover in an empty lane', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -274,7 +277,7 @@ describe('bit recover command', function () {
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      helper.command.removeLaneComp('comp1');
+      helper.command.softRemoveOnLane('comp1');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.createLane('lane-b');
@@ -282,6 +285,30 @@ describe('bit recover command', function () {
     // currently it threw version "0.0.0" of component onpp7beq-remote/comp1 was not found
     it('should show a descriptive error', () => {
       expect(() => helper.command.recover(`${helper.scopes.remote}/comp1`)).to.throw('unable to find the component');
+    });
+  });
+  describe('recover diverged component before snapping', () => {
+    let beforeDiverge: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+      beforeDiverge = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(beforeDiverge);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.import();
+
+      helper.command.softRemoveComponent('comp1');
+    });
+    it('should not throw', () => {
+      expect(() => helper.command.recover('comp1')).not.to.throw();
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(1);
     });
   });
 });

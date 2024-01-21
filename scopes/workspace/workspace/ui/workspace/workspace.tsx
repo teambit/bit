@@ -9,14 +9,16 @@ import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.sl
 import { Corner } from '@teambit/ui-foundation.ui.corner';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
+import { useThemePicker } from '@teambit/base-react.themes.theme-switcher';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { TopBar } from '@teambit/ui-foundation.ui.top-bar';
+import classNames from 'classnames';
 
 import { useWorkspace } from './use-workspace';
 import { WorkspaceOverview } from './workspace-overview';
 import { WorkspaceProvider } from './workspace-provider';
 import styles from './workspace.module.scss';
-import WorkspaceUI from '../../workspace.ui.runtime';
+import { WorkspaceUI } from '../../workspace.ui.runtime';
 
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
@@ -32,10 +34,10 @@ export type WorkspaceProps = {
 export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebarTogglerChange }: WorkspaceProps) {
   const reactions = useComponentNotifications();
   const { workspace } = useWorkspace(reactions);
-
+  const { current } = useThemePicker();
   const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
-
+  const themeName = current?.themeName || 'light';
   onSidebarTogglerChange(handleSidebarToggle);
 
   if (!workspace) {
@@ -48,13 +50,21 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
     <WorkspaceProvider workspace={workspace}>
       <div className={styles.workspaceWrapper}>
         <TopBar
-          className={styles.topbar}
-          Corner={() => <Corner name={workspace.name} icon={workspace.icon} />}
+          className={classNames(styles.topbar, styles[themeName])}
+          Corner={() => (
+            <Corner
+              className={classNames(styles.corner, styles[themeName])}
+              name={workspace.name}
+              icon={workspace.icon}
+            />
+          )}
           menu={menuSlot}
         />
 
-        <SplitPane className={styles.main} size={264} layout={sidebarOpenness}>
-          <Pane className={styles.sidebar}>{sidebar}</Pane>
+        <SplitPane className={styles.main} size={246} layout={sidebarOpenness}>
+          <Pane className={classNames(styles.sidebar, styles[themeName], !isSidebarOpen && styles.closed)}>
+            {sidebar}
+          </Pane>
           <HoverSplitter className={styles.splitter}>
             <Collapser
               isOpen={isSidebarOpen}

@@ -63,7 +63,36 @@ export class RefactoringMain {
    * replaces the old-name inside the source code of the given component with the new name.
    * helpful when renaming/forking an aspect/env where the component-name is used as the class-name and variable-name.
    */
-  async refactorVariableAndClasses(component: Component, sourceId: ComponentID, targetId: ComponentID) {
+  async refactorVariableAndClasses(
+    component: Component,
+    sourceId: ComponentID,
+    targetId: ComponentID,
+    options?: { ast?: boolean }
+  ) {
+    if (options?.ast) {
+      await this.refactorVariableAndClassesUsingAST(component, sourceId, targetId);
+    } else {
+      await this.replaceMultipleStrings(
+        [component],
+        [
+          {
+            oldStr: sourceId.name,
+            newStr: targetId.name,
+          },
+          {
+            oldStr: camelCase(sourceId.name),
+            newStr: camelCase(targetId.name),
+          },
+          {
+            oldStr: camelCase(sourceId.name, { pascalCase: true }),
+            newStr: camelCase(targetId.name, { pascalCase: true }),
+          },
+        ]
+      );
+    }
+  }
+
+  async refactorVariableAndClassesUsingAST(component: Component, sourceId: ComponentID, targetId: ComponentID) {
     // transform kebabCase importPaths and PascalCase importNames
     await this.replaceMultipleStrings(
       [component],
@@ -132,7 +161,7 @@ export class RefactoringMain {
   async replaceMultipleStrings(
     components: Component[],
     stringsToReplace: MultipleStringsReplacement = [],
-    transformers: SourceFileTransformer[]
+    transformers?: SourceFileTransformer[]
   ): Promise<{
     changedComponents: Component[];
   }> {
@@ -233,7 +262,7 @@ export class RefactoringMain {
   private async replaceMultipleStringsInOneComp(
     comp: Component,
     stringsToReplace: MultipleStringsReplacement,
-    transformers: SourceFileTransformer[]
+    transformers?: SourceFileTransformer[]
   ): Promise<boolean> {
     const updates = stringsToReplace.reduce((acc, { oldStr, newStr }) => ({ ...acc, [oldStr]: newStr }), {});
 
@@ -243,8 +272,15 @@ export class RefactoringMain {
         if (isBinary) return false;
         const strContent = file.contents.toString();
         let newContent = strContent;
-        const transformerFactories = transformers.map((t) => t(updates));
-        newContent = await transformSourceFile(file.path, strContent, transformerFactories, undefined, updates);
+        if (transformers?.length) {
+          const transformerFactories = transformers.map((t) => t(updates));
+          newContent = await transformSourceFile(file.path, strContent, transformerFactories, undefined, updates);
+        } else {
+          stringsToReplace.forEach(({ oldStr, newStr }) => {
+            const oldStringRegex = new RegExp(oldStr, 'g');
+            newContent = newContent.replace(oldStringRegex, newStr);
+          });
+        }
         if (strContent !== newContent) {
           file.contents = Buffer.from(newContent);
           return true;

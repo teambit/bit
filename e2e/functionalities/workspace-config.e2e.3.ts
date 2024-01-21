@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
-import * as path from 'path';
 import { IssuesClasses } from '@teambit/component-issues';
-import { OVERRIDE_COMPONENT_PREFIX, statusFailureMsg } from '../../src/constants';
+import { statusFailureMsg } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -33,7 +32,7 @@ describe('workspace config', function () {
             [`@${helper.scopes.remote}/foo`]: '0.0.1',
           },
         };
-        helper.bitJsonc.setPolicyToVariant('bar', policy);
+        helper.workspaceJsonc.setPolicyToVariant('bar', policy);
       });
       it('bit diff should show the tagged dependency version vs the version from overrides', () => {
         const diff = helper.command.diff('bar --verbose');
@@ -80,7 +79,7 @@ describe('workspace config', function () {
                 [`@${helper.scopes.remote}/utils.foo.foo1`]: '-',
               },
             };
-            helper.bitJsonc.setPolicyToVariant('bar', policy);
+            helper.workspaceJsonc.setPolicyToVariant('bar', policy);
             showBar = helper.command.showComponentParsed('bar');
           });
           it('should not add the removed dependency to the component', () => {
@@ -97,7 +96,7 @@ describe('workspace config', function () {
                 [`@${helper.scopes.remote}/utils.foo.foo1`]: '+',
               },
             };
-            helper.bitJsonc.setPolicyToVariant('bar', policy);
+            helper.workspaceJsonc.setPolicyToVariant('bar', policy);
           });
           // todo: make a decision about the desired behavior. see #2061
           it.skip('should not show the component twice as dependency and as devDependencies', () => {
@@ -127,7 +126,7 @@ describe('workspace config', function () {
               'non-exist-package': '-',
             },
           };
-          helper.bitJsonc.setPolicyToVariant('bar', policy);
+          helper.workspaceJsonc.setPolicyToVariant('bar', policy);
         });
         it('bit status should not show the component as missing packages', () => {
           const status = helper.command.status();
@@ -148,7 +147,7 @@ describe('workspace config', function () {
               'existing-package': '-',
             },
           };
-          helper.bitJsonc.setPolicyToVariant('bar', policy);
+          helper.workspaceJsonc.setPolicyToVariant('bar', policy);
           showBar = helper.command.showComponentParsed('bar');
         });
         it('should ignore the specified package but keep other packages intact', () => {
@@ -179,7 +178,7 @@ describe('workspace config', function () {
               'existing-package': '-',
             },
           };
-          helper.bitJsonc.setPolicyToVariant('bar', policy);
+          helper.workspaceJsonc.setPolicyToVariant('bar', policy);
           showBar = helper.command.showComponentParsed('bar');
         });
         it('should ignore the specified package but keep other packages intact', () => {
@@ -214,7 +213,7 @@ describe('workspace config', function () {
               chai: '-',
             },
           };
-          helper.bitJsonc.setPolicyToVariant('bar', policy);
+          helper.workspaceJsonc.setPolicyToVariant('bar', policy);
           showBar = helper.command.showComponentParsed('bar/foo');
         });
         it('should ignore the specified peer package', () => {
@@ -251,7 +250,7 @@ describe('workspace config', function () {
             [`@${helper.scopes.remote}/utils.foo.foo2`]: '-',
           },
         };
-        helper.bitJsonc.setPolicyToVariant('bar', policy);
+        helper.workspaceJsonc.setPolicyToVariant('bar', policy);
       });
       describe('tagging the component', () => {
         let output;
@@ -329,7 +328,7 @@ describe('workspace config', function () {
               chai: '+',
             },
           };
-          helper.bitJsonc.setPolicyToVariant('bar', policy);
+          helper.workspaceJsonc.setPolicyToVariant('bar', policy);
           showBar = helper.command.showComponentParsed('bar/foo');
         });
         it('should ignore the specified package from dependencies', () => {
@@ -361,7 +360,7 @@ describe('workspace config', function () {
               chai: '2.2.0',
             },
           };
-          helper.bitJsonc.setPolicyToVariant('bar', policy);
+          helper.workspaceJsonc.setPolicyToVariant('bar', policy);
           showBar = helper.command.showComponentParsed('bar/foo');
         });
         it('should add the specified package to peerDependencies', () => {
@@ -384,7 +383,7 @@ describe('workspace config', function () {
               chai: '+',
             },
           };
-          helper.bitJsonc.setPolicyToVariant('bar', policy);
+          helper.workspaceJsonc.setPolicyToVariant('bar', policy);
         });
         // See similar test in show.e2e - component with overrides data
         it('should not show the package in dependencies', () => {
@@ -396,206 +395,6 @@ describe('workspace config', function () {
           const output = helper.command.status().replace(/\n/g, '');
           helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
           expect(output).to.have.string('foo.js -> chai');
-        });
-      });
-      // skipped for now. see the first test for more details.
-      describe.skip('adding a component with a version', () => {
-        let showBar;
-        before(() => {
-          helper.scopeHelper.setNewLocalAndRemoteScopes();
-          helper.fs.createFile('', 'bar.js');
-          helper.fs.createFile('', 'foo.js');
-          helper.command.addComponent('bar.js');
-          helper.command.addComponent('foo.js');
-          helper.command.tagAllWithoutBuild();
-          const overrides = {
-            bar: {
-              dependencies: {
-                [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '0.0.1',
-              },
-            },
-          };
-          helper.bitJson.addOverrides(overrides);
-          showBar = helper.command.showComponentParsed('bar');
-        });
-        it('should show the component as manually added dependency', () => {
-          expect(showBar.manuallyAddedDependencies.dependencies).to.deep.equal(['foo@0.0.1']);
-        });
-        it('should add the component to the dependencies array with an empty relativePaths', () => {
-          expect(showBar.dependencies[0].id).to.equal('foo@0.0.1');
-          expect(showBar.dependencies[0].relativePaths).to.deep.equal([]);
-        });
-        describe('tagging the components', () => {
-          let catBar;
-          before(() => {
-            // with non-legacy mode, it complains about the missing foo@0.0.1 during the capsule write
-            // this is fine. normally users use the version once the version created.
-            helper.command.tagAllWithoutBuild();
-            catBar = helper.command.catComponent('bar@latest');
-          });
-          it('should save the overrides data into the scope', () => {
-            expect(catBar).to.have.property('overrides');
-            expect(catBar.overrides)
-              .to.have.property('dependencies')
-              .that.deep.equal({ [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '0.0.1' });
-          });
-          it('should save the manually added dependency into dependencies', () => {
-            expect(catBar.dependencies[0].id).to.deep.equal({ name: 'foo', version: '0.0.1' });
-            expect(catBar.dependencies[0].relativePaths).to.deep.equal([]);
-          });
-          it('should save the manually added dependency into flattenedDependencies', () => {
-            expect(catBar.flattenedDependencies[0]).to.deep.equal({ name: 'foo', version: '0.0.1' });
-          });
-          describe('importing the component', () => {
-            let originalAuthorScope;
-            let afterImport;
-            before(() => {
-              helper.command.export();
-              originalAuthorScope = helper.scopeHelper.cloneLocalScope();
-              helper.scopeHelper.reInitLocalScope();
-              helper.scopeHelper.addRemoteScope();
-              helper.command.importComponent('bar');
-              afterImport = helper.scopeHelper.cloneLocalScope();
-            });
-            it('should also import the manually added dependency', () => {
-              const fooPath = path.join(helper.scopes.localPath, 'components/.dependencies/foo');
-              expect(fooPath).to.be.a.directory();
-            });
-            it('should add the overrides data into package.json', () => {
-              const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/bar'));
-              expect(packageJson).to.have.property('bit');
-              expect(packageJson.bit.overrides.dependencies).to.deep.equal({
-                [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '0.0.1',
-              });
-            });
-            it('bit status should show a clean state', () => {
-              helper.command.expectStatusToBeClean();
-            });
-            describe('changing the component name in the overrides to a package syntax', () => {
-              before(() => {
-                const componentPackageJson = helper.packageJson.readComponentPackageJson('bar');
-                componentPackageJson.bit.overrides.dependencies = {
-                  [`${OVERRIDE_COMPONENT_PREFIX}${helper.scopes.remote}.foo`]: '0.0.1',
-                };
-                helper.packageJson.write(componentPackageJson, path.join(helper.scopes.localPath, 'components/bar'));
-              });
-              it('should not recognize the bit component as a package', () => {
-                const show = helper.command.showComponentParsed('bar');
-                expect(show.packageDependencies).to.deep.equal({});
-                expect(show.dependencies).to.have.lengthOf(1);
-              });
-            });
-            describe('removing the manually added dependency from the imported', () => {
-              before(() => {
-                helper.scopeHelper.getClonedLocalScope(afterImport);
-                const barPath = path.join(helper.scopes.localPath, 'components/bar');
-                const packageJson = helper.packageJson.read(barPath);
-                packageJson.bit.overrides.dependencies = {};
-                helper.packageJson.write(packageJson, barPath);
-              });
-              it('bit diff should show the removed dependency', () => {
-                const diff = helper.command.diff('--verbose');
-                expect(diff).to.have.string('--- dependencies 0.0.2 original');
-                expect(diff).to.have.string('+++ dependencies 0.0.2 modified');
-                expect(diff).to.have.string(`- ${helper.scopes.remote}/foo@0.0.1`);
-                expect(diff).to.have.string('--- Overrides Dependencies (0.0.2 original)');
-                expect(diff).to.have.string('+++ Overrides Dependencies (0.0.2 modified)');
-                expect(diff).to.have.string(`- [ ${OVERRIDE_COMPONENT_PREFIX}foo@0.0.1 ]`);
-              });
-              describe('tagging, exporting the component and then re-import for original author', () => {
-                before(() => {
-                  helper.command.tagAllWithoutBuild();
-                  helper.command.export();
-                  helper.scopeHelper.reInitLocalScope();
-                  helper.scopeHelper.getClonedLocalScope(originalAuthorScope);
-                  helper.command.importComponent('bar');
-                });
-                it('bit status should show a clean state', () => {
-                  helper.command.expectStatusToBeClean();
-                });
-                it('should remove the added dependencies from consumer-config', () => {
-                  const bitJson = helper.bitJson.read();
-                  expect(bitJson.overrides.bar.dependencies).to.be.empty;
-                });
-                it('should remove the dependency from the model', () => {
-                  catBar = helper.command.catComponent('bar@0.0.3');
-                  expect(catBar.dependencies).to.deep.equal([]);
-                  expect(catBar.overrides.dependencies).to.deep.equal({});
-                });
-                it('bit show should have the manuallyAddedDependencies empty', () => {
-                  showBar = helper.command.showComponentParsed('bar');
-                  expect(showBar.manuallyAddedDependencies).to.deep.equal({});
-                });
-              });
-            });
-          });
-        });
-      });
-      // skipped for now. see the first test for more details.
-      describe.skip('adding a component without a version', () => {
-        let showBar;
-        before(() => {
-          helper.scopeHelper.setNewLocalAndRemoteScopes();
-          helper.fs.createFile('', 'bar.js');
-          helper.fs.createFile('', 'foo.js');
-          helper.command.addComponent('bar.js');
-          helper.command.addComponent('foo.js');
-          const overrides = {
-            bar: {
-              dependencies: {
-                [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '+',
-              },
-            },
-          };
-          helper.bitJson.addOverrides(overrides);
-          showBar = helper.command.showComponentParsed('bar');
-        });
-        it('should show the component as manually added dependency', () => {
-          expect(showBar.manuallyAddedDependencies.dependencies).to.deep.equal(['foo']);
-        });
-        it('should add the component to the dependencies array with an empty relativePaths', () => {
-          expect(showBar.dependencies[0].id).to.equal('foo');
-          expect(showBar.dependencies[0].relativePaths).to.deep.equal([]);
-        });
-        describe('tagging the components', () => {
-          let catBar;
-          before(() => {
-            helper.command.tagAllWithoutBuild();
-            catBar = helper.command.catComponent('bar@latest');
-          });
-          it('should save the overrides data into the scope', () => {
-            expect(catBar).to.have.property('overrides');
-            expect(catBar.overrides)
-              .to.have.property('dependencies')
-              .that.deep.equal({ [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '+' });
-          });
-          it('should save the manually added dependency into dependencies and resolve its version correctly', () => {
-            expect(catBar.dependencies[0].id).to.deep.equal({ name: 'foo', version: '0.0.1' });
-            expect(catBar.dependencies[0].relativePaths).to.deep.equal([]);
-          });
-          it('should save the manually added dependency into flattenedDependencies', () => {
-            expect(catBar.flattenedDependencies[0]).to.deep.equal({ name: 'foo', version: '0.0.1' });
-          });
-        });
-        describe('importing the component', () => {
-          before(() => {
-            helper.command.export();
-            helper.scopeHelper.reInitLocalScope();
-            helper.scopeHelper.addRemoteScope();
-            helper.command.importComponent('bar');
-          });
-          it('should also import the manually added dependency', () => {
-            const fooPath = path.join(helper.scopes.localPath, 'components/.dependencies/foo');
-            expect(fooPath).to.be.a.directory();
-          });
-          it('should add the overrides data into package.json', () => {
-            const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/bar'));
-            expect(packageJson).to.have.property('bit');
-            expect(packageJson.bit.overrides.dependencies).to.deep.equal({ [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '+' });
-          });
-          it('bit status should show a clean state', () => {
-            helper.command.expectStatusToBeClean();
-          });
         });
       });
     });

@@ -1,13 +1,25 @@
 import mapSeries from 'p-map-series';
-import { BuilderMain, BuildTask, BuildContext, ComponentResult, TaskResults, BuiltTaskResult } from '@teambit/builder';
-import { compact } from 'lodash';
+import {
+  BuilderMain,
+  BuildTask,
+  BuildContext,
+  ComponentResult,
+  TaskResults,
+  BuiltTaskResult,
+  CAPSULE_ARTIFACTS_DIR,
+  ArtifactList,
+  Artifact,
+} from '@teambit/builder';
+import { compact, join } from 'lodash';
 import { Capsule } from '@teambit/isolator';
-import { ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { ApplicationAspect } from './application.aspect';
 import { ApplicationMain } from './application.main.runtime';
-import { BUILD_TASK } from './build-application.task';
+import { ARTIFACTS_DIR_NAME, BUILD_TASK, BuildDeployContexts } from './build-application.task';
 import { AppDeployContext } from './app-deploy-context';
 import { Application } from './application';
+import { ApplicationDeployment } from './app-instance';
+import { AppBuildContext } from './app-build-context';
 
 export const DEPLOY_TASK = 'deploy_application';
 
@@ -21,20 +33,39 @@ export class DeployTask implements BuildTask {
     const originalSeedersIds = context.capsuleNetwork.originalSeedersCapsules.map((c) => c.component.id.toString());
     const { capsuleNetwork } = context;
 
+    const builderData = this.builder.pipelineResultsToBuilderData(context.components, context.previousTasksResults);
+
     const components = await mapSeries(capsuleNetwork.originalSeedersCapsules, async (capsule) => {
       const component = capsule.component;
+      const compBuilderData = builderData.getValueByComponentId(component.id);
+      const artifactsObjects = compBuilderData?.artifacts || [];
+      const artifactsObjectsList = ArtifactList.fromArtifactObjects(artifactsObjects);
       if (originalSeedersIds && originalSeedersIds.length && !originalSeedersIds.includes(component.id.toString())) {
         return undefined;
       }
-
       const apps = await this.application.loadAppsFromComponent(component, capsule.path);
       if (!apps || !apps.length) return undefined;
-      await mapSeries(compact(apps), async (app) => this.runForOneApp(app, capsule, context));
-      return component;
+      const appDeployments = await mapSeries(compact(apps), async (app) =>
+        this.runForOneApp(app, capsule, context, artifactsObjectsList)
+      );
+      const deploys = compact(appDeployments);
+      return { component, deploys };
     });
 
-    const _componentsResults: ComponentResult[] = compact(components).map((component) => {
-      return { component };
+    const _componentsResults: ComponentResult[] = compact(components).map(({ component, deploys }) => {
+      return {
+        component,
+        metadata: {
+          deployments: deploys.map((deploy) => {
+            const deployObject = deploy || {};
+            return {
+              appName: deployObject?.appName,
+              timestamp: deployObject?.timestamp,
+              url: deployObject?.url,
+            };
+          }),
+        },
+      };
     });
 
     return {
@@ -42,37 +73,67 @@ export class DeployTask implements BuildTask {
     };
   }
 
-  private async runForOneApp(app: Application, capsule: Capsule, context: BuildContext): Promise<void> {
+  private async runForOneApp(
+    app: Application,
+    capsule: Capsule,
+    context: BuildContext,
+    artifacts: ArtifactList<Artifact>
+  ): Promise<ApplicationDeployment | void | undefined> {
     const aspectId = this.application.getAppAspect(app.name);
-    if (!aspectId) return;
-    if (!capsule || !capsule?.component) return;
+    if (!aspectId) return undefined;
+
+    if (!capsule || !capsule?.component) return undefined;
+
     const buildTask = this.getBuildTask(context.previousTasksResults, context.envRuntime.id);
-    if (!buildTask) return;
-    const _metadata = this.getBuildMetadata(buildTask, capsule.component.id, app);
-    const appDeployContext: AppDeployContext = Object.assign(context, _metadata.deployContext, {
-      capsule,
+
+    const metadata = this.getBuildMetadata(buildTask, capsule.component);
+    if (!metadata) return undefined;
+    const buildDeployContexts = metadata.find((ctx) => ctx.name === app.name && ctx.appType === app.applicationType);
+    if (!buildDeployContexts) return undefined;
+
+    // const artifacts = this.builder.getArtifacts(capsule.component);
+    const appContext = await this.application.createAppBuildContext(capsule.component.id, app.name, capsule.path);
+    const artifactsDir = this.getArtifactDirectory();
+    const appBuildContext = AppBuildContext.create({
+      appContext,
+      buildContext: context,
       appComponent: capsule.component,
+      name: app.name,
+      capsule,
+      artifactsDir,
     });
-    if (!app.deploy) return;
-    await app.deploy(appDeployContext);
+
+    const appDeployContext = new AppDeployContext(
+      appBuildContext,
+      artifacts,
+      buildDeployContexts.deployContext.publicDir,
+      buildDeployContexts.deployContext.ssrPublicDir
+    );
+
+    if (app && typeof app.deploy === 'function') {
+      return app.deploy(appDeployContext);
+    }
+
+    return undefined;
   }
 
-  private getBuildMetadata(buildTask: TaskResults, componentId: ComponentID, app: Application) {
-    const componentResults = buildTask.componentsResults.find((res) =>
-      res.component.id.isEqual(componentId, { ignoreVersion: true })
-    );
-    /**
-     * @guysaar223
-     * @ram8
-     * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
-     * or create new deploy context on builder
-     */
-    // @ts-ignore
-    const metadata = componentResults?._metadata.buildDeployContexts.find(
-      (ctx) => ctx.name === app.name && ctx.appType === app.applicationType
-    );
+  private getArtifactDirectory() {
+    return join(CAPSULE_ARTIFACTS_DIR, ARTIFACTS_DIR_NAME);
+  }
 
-    return metadata;
+  private getBuildMetadata(
+    buildTask: TaskResults | undefined,
+    component: Component
+  ): BuildDeployContexts[] | undefined {
+    if (!buildTask) {
+      const appData = this.builder.getDataByAspect(component, ApplicationAspect.id);
+      if (!appData) return undefined;
+      return appData.buildDeployContexts;
+    }
+    const componentResults = buildTask?.componentsResults.find((res) =>
+      res.component.id.isEqual(component.id, { ignoreVersion: true })
+    );
+    return componentResults?.metadata?.buildDeployContexts;
   }
 
   private getBuildTask(taskResults: TaskResults[], runtime: string) {

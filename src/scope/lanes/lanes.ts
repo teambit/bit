@@ -1,11 +1,11 @@
 import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
+import { ComponentID } from '@teambit/component-id';
 import { Scope } from '..';
 import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
-import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
-import { Lane } from '../models';
-import { Repository } from '../objects';
+import { Lane, LaneHistory } from '../models';
+import { BitObject, Repository } from '../objects';
 import { IndexType, LaneItem } from '../objects/scope-index';
 import { ScopeJson, TrackLane } from '../scope-json';
 import { Log } from '../models/lane';
@@ -38,8 +38,54 @@ export default class Lanes {
     return lane;
   }
 
-  async saveLane(laneObject: Lane) {
-    await this.objects.writeObjectsToTheFS([laneObject]);
+  async getOrCreateLaneHistory(laneObject: Lane): Promise<LaneHistory> {
+    const emptyLaneHistory = LaneHistory.fromLaneObject(laneObject);
+    const existingLaneHistory = (await this.objects.load(emptyLaneHistory.hash(), false)) as LaneHistory;
+    return existingLaneHistory || emptyLaneHistory;
+  }
+
+  async updateLaneHistory(laneObject: Lane, laneHistoryMsg?: string) {
+    const laneHistory = await this.getOrCreateLaneHistory(laneObject);
+    await laneHistory.addHistory(laneObject, laneHistoryMsg);
+    return laneHistory;
+  }
+
+  async saveLane(
+    laneObject: Lane,
+    { saveLaneHistory = true, laneHistoryMsg }: { saveLaneHistory?: boolean; laneHistoryMsg?: string }
+  ) {
+    if (!laneObject.hasChanged) {
+      logger.debug(`lanes, saveLane, no need to save the lane "${laneObject.name}" as it has not changed`);
+      return;
+    }
+    const objectsToSave: BitObject[] = [laneObject];
+    if (saveLaneHistory) {
+      const laneHistory = await this.updateLaneHistory(laneObject, laneHistoryMsg);
+      objectsToSave.push(laneHistory);
+    }
+    await this.objects.writeObjectsToTheFS(objectsToSave);
+    laneObject.hasChanged = false;
+  }
+
+  async renameLane(lane: Lane, newName: string) {
+    // change tracking data
+    const oldName = lane.name;
+    const afterTrackData = {
+      localLane: newName,
+      remoteLane: newName,
+      remoteScope: lane.scope,
+    };
+    this.trackLane(afterTrackData);
+    this.removeTrackLane(oldName);
+
+    // rename the lane in the "new" prop
+    if (lane.isNew) {
+      this.scopeJson.lanes.new = this.scopeJson.lanes.new.map((l) => (l === oldName ? newName : l));
+    }
+
+    // change the lane object
+    lane.changeName(newName);
+    await this.saveLane(lane, { laneHistoryMsg: `rename lane from "${oldName}" to "${newName}"` });
   }
 
   getAliasByLaneId(laneId: LaneId): string | null {
@@ -101,9 +147,9 @@ export default class Lanes {
     }
     await this.objects.moveObjectsToTrash(lanesToRemove.map((l) => l.hash()));
 
-    // const compIdsFromDeletedLanes = BitIds.uniqFromArray(lanesToRemove.map((l) => l.toBitIds()).flat());
+    // const compIdsFromDeletedLanes = ComponentIdList.uniqFromArray(lanesToRemove.map((l) => l.toBitIds()).flat());
     // const notDeletedLanes = existingLanes.filter((l) => !lanes.includes(l.name));
-    // const compIdsFromNonDeletedLanes = BitIds.uniqFromArray(notDeletedLanes.map((l) => l.toBitIds()).flat());
+    // const compIdsFromNonDeletedLanes = ComponentIdList.uniqFromArray(notDeletedLanes.map((l) => l.toBitIds()).flat());
     // const pendingDeleteCompIds = compIdsFromDeletedLanes.filter(
     //   (id) => !compIdsFromNonDeletedLanes.hasWithoutVersion(id)
     // );
@@ -212,9 +258,20 @@ export type LaneData = {
   remote: string | null;
   id: LaneId;
   alias?: string | null;
-  components: Array<{ id: BitId; head: string }>;
+  components: Array<{ id: ComponentID; head: string }>;
   isMerged: boolean | null;
-  readmeComponent?: { id: BitId; head?: string };
+  readmeComponent?: { id: ComponentID; head?: string };
   log?: Log;
   hash: string;
 };
+
+export function serializeLaneData(laneData: LaneData) {
+  return {
+    ...laneData,
+    components: laneData.components.map((c) => ({ id: c.id.toString(), head: c.head })),
+    readmeComponent: laneData.readmeComponent && {
+      id: laneData.readmeComponent.id.toString(),
+      head: laneData.readmeComponent.head,
+    },
+  };
+}

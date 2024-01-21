@@ -38,7 +38,7 @@ describe('init command on Harmony', function () {
       helper.scopeHelper.reInitLocalScope({ initGit: true });
       helper.scopeHelper.reInitRemoteScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
+      helper.workspaceJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();

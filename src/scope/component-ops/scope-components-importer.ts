@@ -1,4 +1,5 @@
 import { filter } from 'bluebird';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Mutex, withTimeout } from 'async-mutex';
 import mapSeries from 'p-map-series';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
@@ -7,10 +8,8 @@ import groupArray from 'group-array';
 import R from 'ramda';
 import { compact, flatten, partition, uniq } from 'lodash';
 import { Scope } from '..';
-import { BitId, BitIds } from '../../bit-id';
 import ConsumerComponent from '../../consumer/component';
 import GeneralError from '../../error/general-error';
-import ShowDoctorError from '../../error/show-doctor-error';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
@@ -100,9 +99,11 @@ export default class ScopeComponentsImporter {
     reFetchUnBuiltVersion = true,
     lane,
     ignoreMissingHead = false,
-    preferDependencyGraph = false,
+    preferDependencyGraph = true,
+    includeUnexported = false,
+    reason,
   }: {
-    ids: BitIds;
+    ids: ComponentIdList;
     cache?: boolean;
     throwForDependencyNotFound?: boolean;
     throwForSeederNotFound?: boolean; // in some cases, the "ids" params are not seeders but deps, e.g. in buildGraphFromFS.
@@ -110,32 +111,43 @@ export default class ScopeComponentsImporter {
     lane?: Lane; // if ids coming from a lane, add the lane object so we could fetch these ids from the lane's remote
     ignoreMissingHead?: boolean; // needed when fetching "main" objects when on a lane
     preferDependencyGraph?: boolean; // if an external is missing and the remote has it with the dependency graph, don't fetch all its dependencies
+    includeUnexported?: boolean; // whether filter out new component-ids that were not exported yet (default), or not (for cases we want to fix out-of-sync scenarios)
+    reason?: string; // reason why this import is needed
   }): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
     logger.debug(
       `importMany, cache ${cache}, preferDependencyGraph: ${preferDependencyGraph}, reFetchUnBuiltVersion: ${reFetchUnBuiltVersion}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: ${ids.toString()}, lane: ${lane?.id()}`
     );
-    const idsToImport = compact(ids.filter((id) => id.hasScope()));
+    const idsToImport = compact(ids.filter((id) => (includeUnexported ? id.hasScope() : this.scope.isExported(id))));
     if (R.isEmpty(idsToImport)) {
       logger.debug(`importMany, nothing to import`);
       return [];
     }
 
-    const externalsToFetch: BitId[] = [];
+    const externalsToFetch: ComponentID[] = [];
 
     const compDefs = await this.sources.getMany(idsToImport, reFetchUnBuiltVersion);
+    const checkForIncompleteHistory: ComponentDef[] = [];
     const existingDefs = compDefs.filter(({ id, component }) => {
-      if (id.isLocal(this.scope.name)) {
+      if (this.scope.isLocal(id)) {
         if (!component) throw new ComponentNotFound(id.toString());
         return true;
       }
-      if (cache && component) return true;
+      if (cache && component) {
+        checkForIncompleteHistory.push({ id, component });
+        return true;
+      }
       externalsToFetch.push(id);
       return false;
     });
 
-    const incompleteVersionHistory = await this.getIncompleteVersionHistory(existingDefs);
-    externalsToFetch.push(...incompleteVersionHistory);
+    const shouldRefetchIncompleteHistory = process.env.BIT_FETCH_INCOMPLETE_VERSION_HISTORY;
+
+    let incompleteVersionHistory: ComponentID[] = [];
+    if (shouldRefetchIncompleteHistory) {
+      incompleteVersionHistory = await this.getIncompleteVersionHistory(checkForIncompleteHistory);
+      externalsToFetch.push(...incompleteVersionHistory);
+    }
 
     await this.findMissingExternalsRecursively(
       existingDefs,
@@ -144,7 +156,7 @@ export default class ScopeComponentsImporter {
       reFetchUnBuiltVersion,
       preferDependencyGraph
     );
-    const uniqExternals = BitIds.uniqFromArray(externalsToFetch);
+    const uniqExternals = ComponentIdList.uniqFromArray(externalsToFetch);
     logger.debug('importMany', `total missing externals: ${uniqExternals.length}`);
     const remotes = await getScopeRemotes(this.scope);
     // we don't care about the VersionDeps returned here as it may belong to the dependencies
@@ -154,17 +166,21 @@ export default class ScopeComponentsImporter {
       throwForDependencyNotFound,
       lane,
       throwForSeederNotFound,
-      preferDependencyGraph
+      preferDependencyGraph,
+      includeUnexported,
+      reason
     );
 
-    await this.warnForIncompleteVersionHistory(incompleteVersionHistory);
+    if (shouldRefetchIncompleteHistory) {
+      await this.warnForIncompleteVersionHistory(incompleteVersionHistory);
+    }
 
     const versionDeps = await this.bitIdsToVersionDeps(idsToImport, throwForSeederNotFound, preferDependencyGraph);
     logger.debug('importMany, completed!');
     return versionDeps;
   }
 
-  private async warnForIncompleteVersionHistory(bitIds: BitId[]) {
+  private async warnForIncompleteVersionHistory(bitIds: ComponentID[]) {
     const defs = await this.sources.getMany(bitIds);
     const stillIncomplete = await this.getIncompleteVersionHistory(defs);
     if (!stillIncomplete.length) return;
@@ -176,13 +192,13 @@ export default class ScopeComponentsImporter {
   }
 
   private async getIncompleteVersionHistory(existingDefs: ComponentDef[]) {
-    const incompleteVersionHistory: BitId[] = [];
+    const incompleteVersionHistory: ComponentID[] = [];
     logger.profile(`getIncompleteVersionHistory`); // temporarily here to see how if affects the performance
     const changedVersionHistory: VersionHistory[] = [];
     await pMapPool(
       existingDefs,
       async ({ id, component }) => {
-        if (id.isLocal(this.scope.name)) return;
+        if (this.scope.isLocal(id)) return;
         if (!id.hasVersion()) return;
         if (!component)
           throw new Error(`importMany, a component for ${id.toString()} is needed for version-history validation`);
@@ -218,16 +234,16 @@ export default class ScopeComponentsImporter {
    * original scope, so it won't be retrieved by this method, however, next time the component is
    * imported,
    */
-  async importManyFromOriginalScopes(ids: BitIds) {
+  async importManyFromOriginalScopes(ids: ComponentIdList) {
     logger.debugAndAddBreadCrumb('importManyFromOriginalScopes', `ids: {ids}`, { ids: ids.toString() });
     const idsToImport = compact(ids);
     if (R.isEmpty(idsToImport)) return [];
 
-    const externalsToFetch: BitId[] = [];
+    const externalsToFetch: ComponentID[] = [];
     const defs = await this.sources.getMany(idsToImport);
     const existingDefs = defs.filter(({ id, component }) => {
       if (component) return true;
-      if (id.isLocal(this.scope.name)) throw new ComponentNotFound(id.toString());
+      if (this.scope.isLocal(id)) throw new ComponentNotFound(id.toString());
       externalsToFetch.push(id);
       return false;
     });
@@ -245,8 +261,8 @@ export default class ScopeComponentsImporter {
    * checks whether the given components has all history.
    * if not, it fetches the history from their remotes without deps.
    */
-  async importMissingHistory(bitIds: BitIds) {
-    const externals = bitIds.filter((bitId) => !bitId.isLocal(this.scope.name));
+  async importMissingHistory(bitIds: ComponentIdList) {
+    const externals = bitIds.filter((bitId) => !this.scope.isLocal(bitId));
     if (!externals.length) {
       return;
     }
@@ -260,10 +276,11 @@ export default class ScopeComponentsImporter {
       return;
     }
     logger.debug(`importMissingHistory, total ${missingHistory.length} component has history missing`);
-    await this.importWithoutDeps(BitIds.fromArray(missingHistory).toVersionLatest(), {
+    await this.importWithoutDeps(ComponentIdList.fromArray(missingHistory).toVersionLatest(), {
       cache: false,
       collectParents: true,
       includeVersionHistory: true,
+      reason: 'for missing history from main to the scope-lane',
     });
   }
 
@@ -272,7 +289,7 @@ export default class ScopeComponentsImporter {
    * instead of loading all versions objects, load only the VersionHistory, get the graph from head, then only check whether
    * the objects exist in the filesystem.
    */
-  private async importMissingHistoryOne(id: BitId) {
+  private async importMissingHistoryOne(id: ComponentID) {
     const modelComponent = await this.scope.getModelComponent(id);
     if (!modelComponent.head) return null; // doesn't exist on the remote.
     const verHistory = await modelComponent.getAndPopulateVersionHistory(this.scope.objects, modelComponent.head);
@@ -300,10 +317,14 @@ export default class ScopeComponentsImporter {
     logger.profile(`importMissingVersionHistory, ${externalComponents.length} externalComponents`);
     const [compsWithHead, compsWithoutHead] = partition(externalComponents, (comp) => comp.hasHead());
     try {
-      await this.importWithoutDeps(BitIds.fromArray(compsWithoutHead.map((c) => c.toBitId())).toVersionLatest(), {
-        cache: false,
-        includeVersionHistory: true,
-      });
+      await this.importWithoutDeps(
+        ComponentIdList.fromArray(compsWithoutHead.map((c) => c.toComponentId())).toVersionLatest(),
+        {
+          cache: false,
+          includeVersionHistory: true,
+          reason: 'lane-components without heads from main to ensure they have version-history',
+        }
+      );
     } catch (err) {
       // probably scope doesn't exist, which is fine.
       logger.debug(`importMissingVersionHistory failed getting a component without head from the other scope`, err);
@@ -313,7 +334,7 @@ export default class ScopeComponentsImporter {
         await getAllVersionHashes({ modelComponent, repo: this.repo, throws: true, startFrom: modelComponent.head });
       } catch (err: any) {
         if (errorIsTypeOfMissingObject(err)) {
-          return modelComponent.toBitId();
+          return modelComponent.toComponentId();
         }
         // we don't care much about other errors here. but it's good to know about them.
         logger.warn(`importMissingVersionHistory, failed traversing ${modelComponent.id()}, err: ${err.message}`, err);
@@ -324,15 +345,16 @@ export default class ScopeComponentsImporter {
     const missingHistory = compact(missingHistoryWithNulls);
     if (!missingHistory.length) return;
     logger.debug(`importMissingVersionHistory, total ${missingHistory.length} component has version-history missing`);
-    await this.importWithoutDeps(BitIds.fromArray(missingHistory).toVersionLatest(), {
+    await this.importWithoutDeps(ComponentIdList.fromArray(missingHistory).toVersionLatest(), {
       cache: false,
       includeVersionHistory: true,
+      reason: 'lane-components from main to ensure they have version-history',
     });
     logger.profile(`importMissingVersionHistory, ${externalComponents.length} externalComponents`);
   }
 
   async importWithoutDeps(
-    ids: BitIds,
+    ids: ComponentIdList,
     {
       cache = true,
       lane,
@@ -340,6 +362,8 @@ export default class ScopeComponentsImporter {
       ignoreMissingHead = false,
       collectParents = false,
       fetchHeadIfLocalIsBehind = false,
+      includeUnexported = false,
+      reason,
     }: {
       /**
        * if cache is true and the component found locally, don't go to the remote
@@ -359,20 +383,29 @@ export default class ScopeComponentsImporter {
        * go to the remote, check what’s the head. if the local head is behind, then fetch it, otherwise, return nothing
        */
       fetchHeadIfLocalIsBehind?: boolean;
+      /**
+       * whether filter out new component-ids that were not exported yet (default), or not (for cases we want to fix
+       * out-of-sync scenarios)
+       */
+      includeUnexported?: boolean;
+      /**
+       * the reason why this import is needed (shown during the import)
+       */
+      reason?: string;
     }
   ): Promise<void> {
     const idsWithoutNils = compact(ids);
     if (!idsWithoutNils.length) return;
     logger.debug(`importWithoutDeps, total ids: ${ids.length}`);
 
-    const [, externals] = partition(idsWithoutNils, (id) => id.isLocal(this.scope.name));
+    const [, externals] = partition(idsWithoutNils, (id) => this.isIdLocal(id, includeUnexported));
     if (!externals.length) return;
 
     const getIds = async () => {
       if (!fetchHeadIfLocalIsBehind) {
         return externals;
       }
-      const compDef = await this.sources.getMany(BitIds.fromArray(externals).toVersionLatest(), true);
+      const compDef = await this.sources.getMany(ComponentIdList.fromArray(externals).toVersionLatest(), true);
       const idsForDelta = await mapSeries(compDef, async ({ id, component }) => {
         if (!component) {
           return id.changeVersion(undefined);
@@ -403,43 +436,27 @@ export default class ScopeComponentsImporter {
       ignoreMissingHead,
       collectParents,
       delta: fetchHeadIfLocalIsBehind,
+      reason,
     });
   }
 
-  /**
-   * @deprecated use importWithoutDeps() instead.
-   *
-   * this is a minimal import, which runs very fast.
-   * it only brings the version you asked for, nothing else. it doesn't bring dependencies, it doesn't bring previous
-   * versions, it even doesn't bring the version-history object. (for performance reasons).
-   */
-  async importManyIfMissingWithoutDeps({
-    ids,
-    fromHead = false,
-    lane,
-  }: {
-    ids: BitIds;
-    fromHead?: boolean;
-    lane?: Lane;
-  }): Promise<void> {
-    logger.debugAndAddBreadCrumb('importManyIfMissingWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
-    const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
-    if (R.isEmpty(idsWithoutNils)) return;
-    const idsToImport = fromHead ? idsWithoutNils.toVersionLatest() : idsWithoutNils;
-
-    await this.importWithoutDeps(idsToImport, {
-      cache: true,
-      lane,
-      includeVersionHistory: false,
-    });
+  private isIdLocal(id: ComponentID, includeNonExported = false) {
+    return includeNonExported ? id.isLocal(this.scope.name) : this.scope.isLocal(id);
   }
 
-  async importLanes(remoteLaneIds: LaneId[]): Promise<Lane[]> {
+  async importLanes(remoteLaneIds: LaneId[], includeLaneHistory = false): Promise<Lane[]> {
     const remotes = await getScopeRemotes(this.scope);
-    const objectsStreamPerRemote = await remotes.fetch(groupByScopeName(remoteLaneIds), this.scope, { type: 'lane' });
+    const objectsStreamPerRemote = await remotes.fetch(groupByScopeName(remoteLaneIds), this.scope, {
+      type: 'lane',
+      includeLaneHistory,
+    });
     const bitObjects = await this.multipleStreamsToBitObjects(objectsStreamPerRemote);
     const lanes = bitObjects.getLanes();
     await Promise.all(lanes.map((lane) => this.repo.remoteLanes.syncWithLaneObject(lane.scope as string, lane)));
+    if (includeLaneHistory) {
+      const laneHistories = bitObjects.getLaneHistories();
+      await this.scope.objects.writeObjectsToTheFS(laneHistories);
+    }
     return lanes;
   }
 
@@ -450,7 +467,7 @@ export default class ScopeComponentsImporter {
    * just make sure not to use it for components/lanes, as they require a proper "merge" before
    * persisting them to the filesystem. this method is good for immutable objects.
    */
-  async importManyObjects(groupedHashes: HashesPerRemote): Promise<void> {
+  async importManyObjects(groupedHashes: HashesPerRemote, reason?: string): Promise<void> {
     await this.importManyObjectsMutex.runExclusive(async () => {
       const groupedHashedMissing = {};
       await Promise.all(
@@ -476,7 +493,8 @@ export default class ScopeComponentsImporter {
         undefined,
         undefined,
         undefined,
-        groupedHashedMissing
+        groupedHashedMissing,
+        reason
       ).fetchFromRemoteAndWrite();
       this.throwForMissingObjects(groupedHashedMissing, allObjects);
     });
@@ -485,9 +503,7 @@ export default class ScopeComponentsImporter {
   async checkWhatHashesExistOnRemote(remote: string, hashes: string[]): Promise<string[]> {
     const remotes = await getScopeRemotes(this.scope);
     const multipleStreams = await remotes.fetch({ [remote]: hashes }, this.scope, { type: 'object' });
-    const bitObjectsList = await this.multipleStreamsToBitObjects(multipleStreams);
-    const allObjects = bitObjectsList.getAll();
-    const existing = allObjects.map((o) => o.hash().toString());
+    const existing = await this.streamToHashes(remote, multipleStreams[remote]);
     logger.debug(
       `checkWhatHashesExistOnRemote, searched for ${hashes.length} hashes, found ${existing.length} hashes on ${remote}`
     );
@@ -509,7 +525,11 @@ export default class ScopeComponentsImporter {
     throw new MissingObjects(missingPerRemotes);
   }
 
-  async fetchWithoutDeps(ids: BitIds, allowExternal: boolean, ignoreMissingHead = false): Promise<ComponentVersion[]> {
+  async fetchWithoutDeps(
+    ids: ComponentIdList,
+    allowExternal: boolean,
+    ignoreMissingHead = false
+  ): Promise<ComponentVersion[]> {
     logger.debugAndAddBreadCrumb('fetchWithoutDeps', `total ids: {ids}`, { ids: ids.length });
     if (!allowExternal) this.throwIfExternalFound(ids);
     const localDefs: ComponentDef[] = await this.sources.getMany(ids);
@@ -528,7 +548,7 @@ export default class ScopeComponentsImporter {
   }
 
   async fetchWithDeps(
-    ids: BitIds,
+    ids: ComponentIdList,
     allowExternal: boolean,
     fetchOptions: Partial<FETCH_OPTIONS>
   ): Promise<VersionDependencies[]> {
@@ -547,12 +567,11 @@ export default class ScopeComponentsImporter {
     if (!shouldUseMutex) {
       logger.debug('fetchWithDeps, skipping the mutex');
       const localDefs: ComponentDef[] = await this.sources.getMany(ids);
-      const versionDeps = await this.multipleCompsDefsToVersionDeps(
-        localDefs,
-        undefined,
+      const versionDeps = await this.multipleCompsDefsToVersionDeps(localDefs, {
         onlyIfBuilt,
-        preferDependencyGraph
-      );
+        skipComponentsWithDepsGraph: preferDependencyGraph,
+        reasonForImport: `which are flattened dependencies of components that don't have dependency-graph`,
+      });
       return versionDeps;
     }
 
@@ -562,12 +581,11 @@ export default class ScopeComponentsImporter {
     return this.fetchWithDepsMutex.runExclusive(async () => {
       logger.debug('fetchWithDeps, acquiring a lock');
       const localDefs: ComponentDef[] = await this.sources.getMany(ids);
-      const versionDeps = await this.multipleCompsDefsToVersionDeps(
-        localDefs,
-        undefined,
+      const versionDeps = await this.multipleCompsDefsToVersionDeps(localDefs, {
         onlyIfBuilt,
-        preferDependencyGraph
-      );
+        skipComponentsWithDepsGraph: preferDependencyGraph,
+        reasonForImport: 'which are flattened dependencies of the components to fetch',
+      });
       logger.debug('fetchWithDeps, releasing the lock');
       return versionDeps;
     });
@@ -576,16 +594,16 @@ export default class ScopeComponentsImporter {
   /**
    * get ConsumerComponent by bitId. if the component was not found locally, import it from a remote scope
    */
-  async loadRemoteComponent(id: BitId): Promise<ConsumerComponent> {
+  async loadRemoteComponent(id: ComponentID): Promise<ConsumerComponent> {
     const component = await this._getComponentVersion(id);
     if (!component) throw new ComponentNotFound(id.toString());
     return component.toConsumer(this.scope.objects);
   }
 
-  async loadComponent(id: BitId, localOnly = true): Promise<ConsumerComponent> {
+  async loadComponent(id: ComponentID, localOnly = true): Promise<ConsumerComponent> {
     logger.debugAndAddBreadCrumb('ScopeComponentsImporter', 'loadComponent {id}', { id: id.toString() });
 
-    if (localOnly && !id.isLocal(this.scope.name)) {
+    if (localOnly && !this.scope.isLocal(id)) {
       throw new GeneralError('cannot load a component from remote scope, please import first');
     }
     return this.loadRemoteComponent(id);
@@ -594,9 +612,9 @@ export default class ScopeComponentsImporter {
   /**
    * get a single component from a remote without saving it locally
    */
-  async getRemoteComponent(id: BitId): Promise<BitObjectList | null | undefined> {
-    if (!id.scope) {
-      throw new Error(`unable to get remote component "${id.toString()}", the scope is empty`);
+  async getRemoteComponent(id: ComponentID): Promise<BitObjectList | null | undefined> {
+    if (!this.scope.isExported(id)) {
+      throw new Error(`unable to get remote component "${id.toString()}", the scope was not exported yet`);
     }
     const remotes = await getScopeRemotes(this.scope);
     let bitObjectsList: BitObjectList;
@@ -614,11 +632,11 @@ export default class ScopeComponentsImporter {
   /**
    * get components from a remote without saving it locally
    */
-  async getManyRemoteComponents(ids: BitId[]): Promise<BitObjectList> {
+  async getManyRemoteComponents(ids: ComponentID[]): Promise<BitObjectList> {
     logger.debug(`getManyRemoteComponents, ids: ${ids.map((id) => id.toString()).join(', ')}`);
     ids.forEach((id) => {
-      if (!id.scope) {
-        throw new Error(`unable to get remote component "${id.toString()}", the scope is empty`);
+      if (!this.scope.isExported(id)) {
+        throw new Error(`unable to get remote component "${id.toString()}", the scope was not exported yet`);
       }
     });
     const remotes = await getScopeRemotes(this.scope);
@@ -645,13 +663,26 @@ export default class ScopeComponentsImporter {
     return bitObjects;
   }
 
-  private async getVersionFromComponentDef(component: ModelComponent, id: BitId): Promise<Version | null> {
+  private async streamToHashes(remoteName: string, stream: ObjectItemsStream): Promise<string[]> {
+    const hashes: string[] = [];
+    try {
+      for await (const obj of stream) {
+        hashes.push(obj.ref.hash);
+      }
+    } catch (err: any) {
+      logger.error(`streamToHashes, error from ${remoteName}`, err);
+      throw new Error(`the remote "${remoteName}" threw an error:\n${err.message}`);
+    }
+    return hashes;
+  }
+
+  private async getVersionFromComponentDef(component: ModelComponent, id: ComponentID): Promise<Version | null> {
     const versionComp: ComponentVersion = component.toComponentVersion(id.version);
     const version = await versionComp.getVersion(this.scope.objects, false);
     if (version) return version;
-    if (id.isLocal(this.scope.name)) {
+    if (this.scope.isLocal(id)) {
       // it should have been fetched locally, since it wasn't found, this is an error
-      throw new ShowDoctorError(
+      throw new BitError(
         `Version ${versionComp.version} of ${id.toString()} was not found in scope ${this.scope.name}`
       );
     }
@@ -660,9 +691,17 @@ export default class ScopeComponentsImporter {
 
   private async multipleCompsDefsToVersionDeps(
     compsDefs: ComponentDef[],
-    lane?: Lane,
-    onlyIfBuilt = false,
-    skipComponentsWithDepsGraph = false
+    {
+      lane,
+      onlyIfBuilt = false,
+      skipComponentsWithDepsGraph = false,
+      reasonForImport,
+    }: {
+      lane?: Lane;
+      onlyIfBuilt?: Boolean;
+      skipComponentsWithDepsGraph?: Boolean;
+      reasonForImport?: string;
+    } = {}
   ): Promise<VersionDependencies[]> {
     const concurrency = concurrentComponentsLimit();
     const componentsWithVersionsWithNulls = await pMapPool(
@@ -700,7 +739,7 @@ export default class ScopeComponentsImporter {
     );
     const componentsWithVersion = compact(componentsWithVersionsWithNulls);
 
-    const flattenedDepsToFetch = new BitIds();
+    const flattenedDepsToFetch = new ComponentIdList();
     await Promise.all(
       componentsWithVersion.map(async (compWithVer) => {
         const flattenedEdges = await compWithVer.versionObj.getFlattenedEdges(this.repo);
@@ -715,13 +754,13 @@ export default class ScopeComponentsImporter {
       })
     );
 
-    await this.importWithoutDeps(flattenedDepsToFetch, { lane });
+    await this.importWithoutDeps(flattenedDepsToFetch, { lane, reason: reasonForImport });
     const compDefsOfDeps = await this.sources.getMany(flattenedDepsToFetch);
     const compVersionsOfDeps = this.componentsDefToComponentsVersion(compDefsOfDeps, false, true);
 
     const versionDeps = componentsWithVersion.map(({ componentVersion, versionObj }) => {
       const dependencies = versionObj.flattenedDependencies.map((dep) =>
-        compVersionsOfDeps.find((c) => c.id.isEqual(dep))
+        compVersionsOfDeps.find((c) => c.toComponentId().isEqual(dep))
       );
       return new VersionDependencies(componentVersion, compact(dependencies), versionObj);
     });
@@ -733,12 +772,14 @@ export default class ScopeComponentsImporter {
    * never checks if exist locally. always fetches from remote and then, save into the model.
    */
   private async getExternalMany(
-    ids: BitId[],
+    ids: ComponentID[],
     remotes: Remotes,
     throwForDependencyNotFound = false,
     lane?: Lane,
     throwOnUnavailableScope = true,
-    preferDependencyGraph = false
+    preferDependencyGraph = false,
+    includeUnexported = false,
+    reason?: string
   ): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
     lane = await this.getLaneForFetcher(lane);
@@ -747,7 +788,7 @@ export default class ScopeComponentsImporter {
     );
     const context = {};
     ids.forEach((id) => {
-      if (id.isLocal(this.scope.name))
+      if (this.isIdLocal(id, includeUnexported))
         throw new Error(`getExternalMany expects to get external ids only, got ${id.toString()}`);
     });
     enrichContextFromGlobal(Object.assign({}, { requestedBitIds: ids.map((id) => id.toString()) }));
@@ -768,15 +809,16 @@ export default class ScopeComponentsImporter {
       ids,
       lane,
       context,
-      throwOnUnavailableScope
+      throwOnUnavailableScope,
+      undefined,
+      reason
     ).fetchFromRemoteAndWrite();
     const componentDefs = await this.sources.getMany(ids);
-    const versionDeps = await this.multipleCompsDefsToVersionDeps(
-      componentDefs,
+    const versionDeps = await this.multipleCompsDefsToVersionDeps(componentDefs, {
       lane,
-      undefined,
-      preferDependencyGraph
-    );
+      skipComponentsWithDepsGraph: preferDependencyGraph,
+      reasonForImport: reason ? `${reason} - missing dependencies` : 'which are missing dependencies',
+    });
     if (throwForDependencyNotFound) {
       versionDeps.forEach((verDep) => verDep.throwForMissingDependencies());
     }
@@ -801,7 +843,7 @@ export default class ScopeComponentsImporter {
   }
 
   private async getExternalManyWithoutDeps(
-    ids: BitId[],
+    ids: ComponentID[],
     {
       localFetch = false,
       lane,
@@ -809,6 +851,7 @@ export default class ScopeComponentsImporter {
       ignoreMissingHead = false,
       collectParents = false,
       delta = false,
+      reason,
     }: {
       localFetch?: boolean;
       lane?: Lane;
@@ -816,6 +859,7 @@ export default class ScopeComponentsImporter {
       ignoreMissingHead?: boolean;
       collectParents?: boolean;
       delta?: boolean;
+      reason?: string;
     }
   ): Promise<void> {
     if (!ids.length) return;
@@ -850,19 +894,22 @@ export default class ScopeComponentsImporter {
       },
       leftIds,
       lane,
-      context
+      context,
+      undefined,
+      undefined,
+      reason
     ).fetchFromRemoteAndWrite();
   }
 
   private async getLaneForFetcher(lane?: Lane): Promise<Lane | undefined> {
-    if (lane) return lane;
+    if (lane && !lane.isNew) return lane;
     if (!this.shouldOnlyFetchFromCurrentLane) return undefined;
     const currentLane = await this.scope.getCurrentLaneObject();
-    return currentLane || undefined;
+    return currentLane && !currentLane.isNew ? currentLane : undefined;
   }
 
-  private async _getComponentVersion(id: BitId): Promise<ComponentVersion> {
-    if (!id.isLocal(this.scope.name)) {
+  private async _getComponentVersion(id: ComponentID): Promise<ComponentVersion> {
+    if (!this.scope.isLocal(id)) {
       await this.getExternalManyWithoutDeps([id], { localFetch: true });
       const compDefs: ComponentDef[] = await this.sources.getMany([id]);
       const componentVersions = this.componentsDefToComponentsVersion(compDefs, false, true);
@@ -887,12 +934,12 @@ export default class ScopeComponentsImporter {
    */
   private async findMissingExternalsRecursively(
     compDefs: ComponentDef[],
-    externalsToFetch: BitId[],
+    externalsToFetch: ComponentID[],
     ignoreMissingHead: boolean,
     reFetchUnBuiltVersion = true,
     preferDependencyGraph = false,
     visited: string[] = [],
-    existingCache = new BitIds()
+    existingCache = new ComponentIdList()
   ): Promise<void> {
     if (!compDefs.length) return;
     const idsStr = compDefs.map((c) => c.id.toString()).join(', ');
@@ -903,7 +950,8 @@ export default class ScopeComponentsImporter {
       if (visited.includes(idStr)) return;
       visited.push(idStr);
       if (!component) {
-        if (id.isLocal(this.scope.name)) throw new ComponentNotFound(idStr);
+        if (!this.scope.isExported(id)) return;
+        if (this.scope.isLocal(id)) throw new ComponentNotFound(idStr);
         externalsToFetch.push(id);
         return;
       }
@@ -939,7 +987,7 @@ export default class ScopeComponentsImporter {
         return;
       }
       // some flattened are missing
-      if (!id.isLocal(this.scope.name)) {
+      if (!this.scope.isLocal(id)) {
         externalsToFetch.push(id);
         return;
       }
@@ -964,7 +1012,7 @@ export default class ScopeComponentsImporter {
    * it doesn't go to any remote and it fetches each component only once.
    */
   private async bitIdsToVersionDeps(
-    ids: BitId[],
+    ids: ComponentID[],
     throwForSeederNotFound = true,
     preferDependencyGraph = false
   ): Promise<VersionDependencies[]> {
@@ -986,7 +1034,7 @@ export default class ScopeComponentsImporter {
       const version = await this.getVersionFromComponentDef(component, id);
       if (!version) {
         // should have been fetched before by getExternalMany(). probably doesn't exist on the remote.
-        throw new ShowDoctorError(`Version ${versionComp.version} of ${component.id().toString()} was not found`);
+        throw new BitError(`Version ${versionComp.version} of ${component.id().toString()} was not found`);
       }
       return new VersionDependencies(versionComp, [], version);
     });
@@ -998,7 +1046,7 @@ export default class ScopeComponentsImporter {
         return v.version.getAllFlattenedDependencies();
       })
     );
-    const allFlattenedUniq = BitIds.uniqFromArray(flatten(allFlattened));
+    const allFlattenedUniq = ComponentIdList.uniqFromArray(flatten(allFlattened));
     const allFlattenedDefs = await this.sources.getMany(allFlattenedUniq);
     const flattenedComponentVersions = compact(
       allFlattenedDefs.map(({ id, component }) => {
@@ -1011,7 +1059,7 @@ export default class ScopeComponentsImporter {
     );
     versionDeps.forEach((versionDep) => {
       const deps = versionDep.version.flattenedDependencies.map((dep) =>
-        flattenedComponentVersions.find((c) => c.id.isEqual(dep))
+        flattenedComponentVersions.find((c) => c.toComponentId().isEqual(dep))
       );
       versionDep.dependencies = compact(deps);
     });
@@ -1019,8 +1067,8 @@ export default class ScopeComponentsImporter {
     return versionDeps;
   }
 
-  private throwIfExternalFound(ids: BitIds) {
-    const externals = ids.filter((id) => !id.isLocal(this.scope.name));
+  private throwIfExternalFound(ids: ComponentIdList) {
+    const externals = ids.filter((id) => !this.scope.isLocal(id));
     if (externals.length) {
       const externalStr = externals.map((id) => id.toString()).join(', ');
       // we can't support fetching-with-dependencies of external components as we risk going into an infinite loop
@@ -1031,7 +1079,7 @@ please make sure that the scope-resolver points to the right scope.`);
   }
 }
 
-export function groupByScopeName(ids: Array<BitId | LaneId>): { [scopeName: string]: string[] } {
+export function groupByScopeName(ids: Array<ComponentID | LaneId>): { [scopeName: string]: string[] } {
   const grouped = groupArray(ids, 'scope');
   Object.keys(grouped).forEach((scopeName) => {
     grouped[scopeName] = grouped[scopeName].map((id) => id.toString());
@@ -1039,7 +1087,7 @@ export function groupByScopeName(ids: Array<BitId | LaneId>): { [scopeName: stri
   return grouped;
 }
 
-export function groupByLanes(ids: BitId[], lanes: Lane[]): { [scopeName: string]: string[] } {
+export function groupByLanes(ids: ComponentID[], lanes: Lane[]): { [scopeName: string]: string[] } {
   const lane = lanes[0];
   if (!lane.scope) {
     throw new Error(`can't group by Lane object, the scope is undefined for ${lane.id()}`);
@@ -1050,7 +1098,7 @@ export function groupByLanes(ids: BitId[], lanes: Lane[]): { [scopeName: string]
   }
   const grouped: { [scopeName: string]: string[] } = {};
 
-  const isLaneIncludeId = (id: BitId, laneBitIds: BitIds) => {
+  const isLaneIncludeId = (id: ComponentID, laneBitIds: ComponentIdList) => {
     if (laneBitIds.has(id)) return true;
     const foundWithoutVersion = laneBitIds.searchWithoutVersion(id);
     return foundWithoutVersion;
@@ -1061,7 +1109,7 @@ export function groupByLanes(ids: BitId[], lanes: Lane[]): { [scopeName: string]
       (grouped[lane.scope] ||= []).push(id.toString());
     } else {
       // if not found on a lane, fetch from main.
-      (grouped[id.scope as string] ||= []).push(id.toString());
+      (grouped[id.scope] ||= []).push(id.toString());
     }
   });
 

@@ -1,23 +1,23 @@
+import { Harmony } from '@teambit/harmony';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import { compact } from 'lodash';
+import { compact, merge } from 'lodash';
 import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Environment, EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
+import { EnvContext, Environment, EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BabelAspect, BabelMain } from '@teambit/babel';
 import { ComponentID } from '@teambit/component-id';
 import { AspectList } from '@teambit/component';
+import WorkerAspect, { WorkerMain } from '@teambit/worker';
 import WorkspaceAspect, { ExtensionsOrigin, Workspace } from '@teambit/workspace';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { AspectAspect } from './aspect.aspect';
 import { AspectEnv } from './aspect.env';
 import { CoreExporterTask } from './core-exporter.task';
-import { aspectTemplate } from './templates/aspect';
 import { babelConfig } from './babel/babel-config';
 import {
   AspectCmd,
@@ -28,6 +28,7 @@ import {
   UnsetAspectCmd,
   UpdateAspectCmd,
 } from './aspect.cmd';
+import { getTemplates } from './aspect.templates';
 
 export type AspectSource = { aspectName: string; source: string; level: string };
 
@@ -98,10 +99,12 @@ export class AspectMain {
     const componentIds = await this.workspace.idsByPattern(pattern);
     await Promise.all(
       componentIds.map(async (componentId) => {
-        await this.workspace.addSpecificComponentConfig(componentId, aspectId, config, options.merge);
+        await this.workspace.addSpecificComponentConfig(componentId, aspectId, config, {
+          shouldMergeWithExisting: options.merge,
+        });
       })
     );
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`aspect-set (${aspectId})`);
 
     return componentIds;
   }
@@ -119,7 +122,7 @@ export class AspectMain {
         updatedCompIds.push(component.id);
       })
     );
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`aspect-unset (${aspectId})`);
     return updatedCompIds;
   }
 
@@ -185,7 +188,7 @@ export class AspectMain {
         return comp.id;
       })
     );
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`aspect-update (${aspectCompId})`);
     return { updated: compact(updatedComponentIds), alreadyUpToDate };
   }
 
@@ -196,7 +199,7 @@ export class AspectMain {
     return this.envs.override({
       getDependencies: async () => {
         const reactDeps = await this.aspectEnv.getDependencies();
-        return mergeDeepLeft(dependencyPolicy, reactDeps);
+        return merge(reactDeps, dependencyPolicy);
       },
     });
   }
@@ -213,20 +216,27 @@ export class AspectMain {
     WorkspaceAspect,
     CLIAspect,
     LoggerAspect,
+    WorkerAspect,
   ];
 
-  static async provider([react, envs, builder, aspectLoader, compiler, babel, generator, workspace, cli, loggerMain]: [
-    ReactMain,
-    EnvsMain,
-    BuilderMain,
-    AspectLoaderMain,
-    CompilerMain,
-    BabelMain,
-    GeneratorMain,
-    Workspace,
-    CLIMain,
-    LoggerMain
-  ]) {
+  static async provider(
+    [react, envs, builder, aspectLoader, compiler, babel, generator, workspace, cli, loggerMain, workerMain]: [
+      ReactMain,
+      EnvsMain,
+      BuilderMain,
+      AspectLoaderMain,
+      CompilerMain,
+      BabelMain,
+      GeneratorMain,
+      Workspace,
+      CLIMain,
+      LoggerMain,
+      WorkerMain
+    ],
+    config,
+    slots,
+    harmony: Harmony
+  ) {
     const logger = loggerMain.createLogger(AspectAspect.id);
 
     const babelCompiler = babel.createCompiler({
@@ -240,13 +250,13 @@ export class AspectMain {
       },
     });
 
-    const transformer = (config) => {
-      config
+    const transformer = (tsConfigMutator) => {
+      tsConfigMutator
         .mergeTsConfig(tsconfig)
         .setArtifactName('declaration')
         .setDistGlobPatterns([`dist/**/*.d.ts`])
         .setShouldCopyNonSupportedFiles(false);
-      return config;
+      return tsConfigMutator;
     };
     const tsCompiler = react.env.getCjsCompilerTask([transformer]);
 
@@ -266,7 +276,10 @@ export class AspectMain {
     }
 
     envs.registerEnv(aspectEnv);
-    if (generator) generator.registerComponentTemplate([aspectTemplate]);
+    if (generator) {
+      const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerMain, workerMain, harmony);
+      generator.registerComponentTemplate(getTemplates(envContext));
+    }
     const aspectMain = new AspectMain(aspectEnv as AspectEnv, envs, workspace);
     const aspectCmd = new AspectCmd();
     aspectCmd.commands = [

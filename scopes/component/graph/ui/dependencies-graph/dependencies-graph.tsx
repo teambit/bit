@@ -60,8 +60,13 @@ export function DependenciesGraph({
 
   const handleLoad = useCallback(
     (instance: OnLoadParams) => {
-      graphRef.current = instance;
-      instance.fitView();
+      if ((graph?.nodes.length ?? 0) <= 3) {
+        instance.fitView({
+          padding: 2,
+        });
+      } else {
+        instance.fitView();
+      }
       onLoad?.(instance);
     },
     [onLoad]
@@ -71,7 +76,13 @@ export function DependenciesGraph({
   useEffect(() => () => (graphRef.current = undefined), []);
 
   useEffect(() => {
-    graphRef.current?.fitView();
+    setTimeout(() => {
+      if (graph.nodes.length <= 3)
+        return graphRef.current?.fitView({
+          padding: 2,
+        });
+      return graphRef.current?.fitView();
+    }, 0);
   }, [graph]);
 
   return (
@@ -85,7 +96,8 @@ export function DependenciesGraph({
           nodesConnectable={false}
           zoomOnDoubleClick={false}
           elementsSelectable={false}
-          maxZoom={1}
+          maxZoom={100}
+          minZoom={0}
           {...rest}
           className={classnames(styles.graph, className)}
           elements={elements}

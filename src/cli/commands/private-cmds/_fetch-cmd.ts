@@ -1,7 +1,5 @@
-import { migrate } from '../../../api/consumer';
 import { fetch } from '../../../api/scope';
 import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS, FETCH_TYPE } from '../../../api/scope/lib/fetch';
-import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
 import { FETCH_FORMAT_OBJECT_LIST, ObjectList } from '../../../scope/objects/object-list';
 import { buildCommandMessage, fromBase64, unpackCommand } from '../../../utils';
@@ -37,7 +35,6 @@ export default class Fetch implements LegacyCommand {
     const { payload, headers } = unpackCommand(args);
     compressResponse = clientSupportCompressedCommand(headers.version);
     checkVersionCompatibilityOnTheServer(headers.version);
-    logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
     const fetchOptions: FETCH_OPTIONS = {
       type,
@@ -46,9 +43,7 @@ export default class Fetch implements LegacyCommand {
       includeArtifacts,
       allowExternal: false, // not relevant for SSH. only used in http for lanes.
     };
-    return migrate(scopePath, false)
-      .then(() => fetch(scopePath, payload, fetchOptions, headers))
-      .then((readable) => ObjectList.fromReadableStream(readable));
+    return fetch(scopePath, payload, fetchOptions, headers).then((readable) => ObjectList.fromReadableStream(readable));
   }
 
   report(objectList: ObjectList): string {

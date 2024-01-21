@@ -83,8 +83,8 @@ describe('bit lane command', function () {
       helper.command.export();
 
       helper.fs.outputFile('bar2/foo2.js', 'console.log("v1");');
+      helper.workspaceJsonc.addToVariant('bar2', 'defaultScope', anotherRemote);
       helper.command.addComponent('bar2');
-      helper.bitJsonc.addToVariant('bar2', 'defaultScope', anotherRemote);
       helper.command.compile();
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
@@ -158,7 +158,7 @@ describe('bit lane command', function () {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.command.createLane();
-        helper.command.create('aspect', 'my-aspect');
+        helper.command.create('bit-aspect', 'my-aspect');
         helper.fixtures.populateComponents();
         helper.fs.outputFile(
           `${helper.scopes.remote}/my-aspect/foo.ts`,
@@ -166,7 +166,7 @@ describe('bit lane command', function () {
         );
         helper.command.compile();
         // helper.command.use(`${helper.scopes.remote}/my-aspect`); // doesn't work
-        helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/my-aspect`, {});
+        helper.workspaceJsonc.addKeyVal(`${helper.scopes.remote}/my-aspect`, {});
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
         helper.command.export();

@@ -121,18 +121,21 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     }, 0);
 
     if (testCount === 0 && !options.ui) {
-      this.logger.consoleWarning(`no tests found for environment ${chalk.cyan(context.id)}\n`);
+      this.logger.consoleWarning(`no tests found for components using environment ${chalk.cyan(context.id)}\n`);
       return new Tests([]);
     }
 
     if (!options.ui)
       this.logger.console(`testing ${componentWithTests} components with environment ${chalk.cyan(context.id)}\n`);
 
-    const patterns = ComponentMap.as(context.components, (component) => {
+    const patterns = await ComponentMap.asAsync(context.components, async (component) => {
       const componentDir = this.workspace.componentDir(component.id);
       const componentPatterns = this.devFiles.getDevPatterns(component, TesterAspect.id);
+      const packageRootDir = await this.workspace.getComponentPackagePath(component);
+
       return {
         componentDir,
+        packageRootDir,
         paths:
           componentPatterns.map((pattern: string) => ({
             path: resolve(componentDir, pattern),

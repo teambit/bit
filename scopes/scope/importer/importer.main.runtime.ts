@@ -4,8 +4,9 @@ import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/work
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { BitId, InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
+import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import pMapSeries from 'p-map-series';
+import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
@@ -14,7 +15,7 @@ import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/sc
 import { importAllArtifacts } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import InstallAspect, { InstallMain } from '@teambit/install';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import GraphAspect, { GraphMain } from '@teambit/graph';
@@ -32,6 +33,7 @@ export class ImporterMain {
     private graph: GraphMain,
     private scope: ScopeMain,
     private componentWriter: ComponentWriterMain,
+    private envs: EnvsMain,
     private logger: Logger
   ) {}
 
@@ -45,22 +47,22 @@ export class ImporterMain {
     if (this.workspace.consumer.isOnLane()) {
       const currentRemoteLane = await this.workspace.getCurrentRemoteLane();
       if (currentRemoteLane) {
-        importOptions.lanes = { laneIds: [currentRemoteLane.toLaneId()], lanes: [currentRemoteLane] };
+        importOptions.lanes = { laneId: currentRemoteLane.toLaneId(), remoteLane: currentRemoteLane };
       } else if (!importOptions.ids.length) {
         // this is probably a local lane that was never exported.
         // although no need to fetch from the lane, still, the import is needed for main (which are available on this
         // local lane)
         const currentLaneId = this.workspace.getCurrentLaneId();
-        importOptions.lanes = { laneIds: [currentLaneId], lanes: [] };
+        importOptions.lanes = { laneId: currentLaneId };
       }
     }
-    const importComponents = new ImportComponents(this.workspace, this.graph, this.componentWriter, importOptions);
+    const importComponents = this.createImportComponents(importOptions);
     const results = await importComponents.importComponents();
     Analytics.setExtraData('num_components', results.importedIds.length);
     if (results.writtenComponents && results.writtenComponents.length) {
       await this.removeFromWorkspaceConfig(results.writtenComponents);
     }
-    await consumer.onDestroy();
+    await consumer.onDestroy('import');
     return results;
   }
 
@@ -74,8 +76,9 @@ export class ImporterMain {
       objectsOnly: true,
       ids: options.ids || [],
       installNpmPackages: false,
+      writeConfigFiles: false,
     };
-    const importComponents = new ImportComponents(this.workspace, this.graph, this.componentWriter, importOptions);
+    const importComponents = this.createImportComponents(importOptions);
     return importComponents.importComponents();
   }
 
@@ -83,7 +86,7 @@ export class ImporterMain {
    * given a lane object, load all components by their head on the lane, find the artifacts refs and import them from
    * the lane scope
    */
-  async importHeadArtifactsFromLane(lane: Lane, ids: BitId[] = lane.toBitIds(), throwIfMissing = false) {
+  async importHeadArtifactsFromLane(lane: Lane, ids: ComponentID[] = lane.toComponentIds(), throwIfMissing = false) {
     const laneComps = await this.scope.legacyScope.getManyConsumerComponents(ids);
     try {
       await importAllArtifacts(this.scope.legacyScope, laneComps, lane);
@@ -102,17 +105,18 @@ export class ImporterMain {
       ids: [],
       objectsOnly: true,
       installNpmPackages: false,
+      writeConfigFiles: false,
     };
     const currentRemoteLane = await this.workspace.getCurrentRemoteLane();
     if (currentRemoteLane) {
-      importOptions.lanes = { laneIds: [currentRemoteLane.toLaneId()], lanes: [currentRemoteLane] };
+      importOptions.lanes = { laneId: currentRemoteLane.toLaneId(), remoteLane: currentRemoteLane };
     }
-    const importComponents = new ImportComponents(this.workspace, this.graph, this.componentWriter, importOptions);
+    const importComponents = this.createImportComponents(importOptions);
     return importComponents.importComponents();
   }
 
-  async importObjectsFromMainIfExist(ids: BitId[]) {
-    await this.scope.legacyScope.scopeImporter.importWithoutDeps(BitIds.fromArray(ids), {
+  async importObjectsFromMainIfExist(ids: ComponentID[]) {
+    await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(ids), {
       cache: false,
       includeVersionHistory: true,
       ignoreMissingHead: true,
@@ -124,14 +128,18 @@ export class ImporterMain {
    * once done, merge the lane object and save it as well.
    */
   async fetchLaneComponents(lane: Lane) {
-    const ids = lane.toBitIds();
+    const ids = lane.toComponentIds();
     await this.scope.legacyScope.scopeImporter.importMany({
       ids,
       lane,
-      preferDependencyGraph: true,
+      reason: `for fetching lane ${lane.id()}`,
     });
     const { mergeLane } = await this.scope.legacyScope.sources.mergeLane(lane, true);
-    await this.scope.legacyScope.lanes.saveLane(mergeLane);
+    const isRemoteLaneEqualsToMergedLane = lane.isEqual(mergeLane);
+    await this.scope.legacyScope.lanes.saveLane(mergeLane, {
+      saveLaneHistory: !isRemoteLaneEqualsToMergedLane,
+      laneHistoryMsg: 'fetch (merge from remote)',
+    });
   }
 
   async fetch(ids: string[], lanes: boolean, components: boolean, fromOriginalScope: boolean, allHistory = false) {
@@ -158,13 +166,14 @@ export class ImporterMain {
       writeConfig: false,
       override: false,
       installNpmPackages: false,
+      writeConfigFiles: false,
       fromOriginalScope,
     };
 
-    const importComponents = new ImportComponents(this.workspace, this.graph, this.componentWriter, importOptions);
+    const importComponents = this.createImportComponents(importOptions);
     const { importedIds, importDetails } = await importComponents.importComponents();
     Analytics.setExtraData('num_components', importedIds.length);
-    await consumer.onDestroy();
+    await consumer.onDestroy('import');
     return { importedIds, importDetails };
 
     async function getLanes(logger: Logger): Promise<Lane[]> {
@@ -183,7 +192,7 @@ export class ImporterMain {
       const scopeComponentImporter = ScopeComponentsImporter.getInstance(consumer.scope);
       try {
         return await scopeComponentImporter.importLanes(remoteLaneIds);
-      } catch (err) {
+      } catch (err: any) {
         if (
           err instanceof InvalidScopeName ||
           err instanceof ScopeNotFoundOrDenied ||
@@ -202,6 +211,17 @@ export class ImporterMain {
     }
   }
 
+  private createImportComponents(importOptions: ImportOptions) {
+    return new ImportComponents(
+      this.workspace,
+      this.graph,
+      this.componentWriter,
+      this.envs,
+      this.logger,
+      importOptions
+    );
+  }
+
   async fetchLanes(
     lanes: Lane[],
     shouldFetchFromMain?: boolean,
@@ -212,7 +232,8 @@ export class ImporterMain {
       : { importedIds: [], importDetails: [], importedDeps: [] };
     const resultsPerLane = await pMapSeries(lanes, async (lane) => {
       this.logger.setStatusLine(`fetching lane ${lane.name}`);
-      options.lanes = { laneIds: [lane.toLaneId()], lanes: [lane] };
+      options.lanes = { laneId: lane.toLaneId(), remoteLane: lane };
+      options.isLaneFromRemote = true;
       const results = await this.importObjects(options);
       this.logger.consoleSuccess();
       return results;
@@ -233,26 +254,33 @@ export class ImporterMain {
    * see `sources.mergeLane()` for export and `import-components._saveLaneDataIfNeeded()` for import.
    * in this case, because we only bring the lane object and not the components, it's not easy to do the merge.
    */
-  async importLaneObject(laneId: LaneId, persistIfNotExists = true): Promise<Lane> {
+  async importLaneObject(laneId: LaneId, persistIfNotExists = true, includeLaneHistory = false): Promise<Lane> {
     const legacyScope = this.scope.legacyScope;
-    const results = await legacyScope.scopeImporter.importLanes([laneId]);
+    const results = await legacyScope.scopeImporter.importLanes([laneId], includeLaneHistory);
     const laneObject = results[0];
     if (!laneObject) throw new LaneNotFound(laneId.scope, laneId.name);
 
     if (persistIfNotExists) {
       const exists = await legacyScope.loadLane(laneId);
       if (!exists) {
-        await legacyScope.lanes.saveLane(laneObject);
+        laneObject.hasChanged = true;
+        await legacyScope.lanes.saveLane(laneObject, { saveLaneHistory: false });
       }
     }
 
     return laneObject;
   }
 
+  async importObjectsByHashes(hashes: string[], scope: string, reason?: string) {
+    const groupByScope = { [scope]: hashes };
+    const results = await this.scope.legacyScope.scopeImporter.importManyObjects(groupByScope, reason);
+    return results;
+  }
+
   private async removeFromWorkspaceConfig(component: ConsumerComponent[]) {
     const importedPackageNames = this.getImportedPackagesNames(component);
-    this.depResolver.removeFromRootPolicy(importedPackageNames);
-    await this.depResolver.persistConfig(this.workspace.path);
+    const isRemoved = this.depResolver.removeFromRootPolicy(importedPackageNames);
+    if (isRemoved) await this.depResolver.persistConfig('import (remove package)');
   }
 
   private getImportedPackagesNames(components: ConsumerComponent[]): string[] {
@@ -268,10 +296,11 @@ export class ImporterMain {
     ScopeAspect,
     ComponentWriterAspect,
     InstallAspect,
+    EnvsAspect,
     LoggerAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, depResolver, graph, scope, componentWriter, install, loggerMain]: [
+  static async provider([cli, workspace, depResolver, graph, scope, componentWriter, install, envs, loggerMain]: [
     CLIMain,
     Workspace,
     DependencyResolverMain,
@@ -279,10 +308,11 @@ export class ImporterMain {
     ScopeMain,
     ComponentWriterMain,
     InstallMain,
+    EnvsMain,
     LoggerMain
   ]) {
     const logger = loggerMain.createLogger(ImporterAspect.id);
-    const importerMain = new ImporterMain(workspace, depResolver, graph, scope, componentWriter, logger);
+    const importerMain = new ImporterMain(workspace, depResolver, graph, scope, componentWriter, envs, logger);
     install.registerPreInstall(async (opts) => {
       if (!opts?.import) return;
       logger.setStatusLine('importing missing objects');

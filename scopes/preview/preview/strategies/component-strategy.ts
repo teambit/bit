@@ -89,7 +89,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     // }, {});
 
     // const modules = await Promise.all(entriesArr.map(async (entry) => {
-    //   const dependencies = await this.dependencyResolver.getDependencies(entry.component);
+    //   const dependencies = this.dependencyResolver.getDependencies(entry.component);
     //   const manifest = dependencies.toDependenciesManifest();
     //   const peer = Object.entries(manifest.peerDependencies || {}).reduce((acc, [packageName, version]) => {
     //     acc[packageName] = {

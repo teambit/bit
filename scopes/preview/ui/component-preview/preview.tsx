@@ -135,7 +135,7 @@ export function ComponentPreview({
   const containerHeight = containerRef.current?.offsetHeight || 0;
   const currentWidth = fullContentHeight ? '100%' : width || 1280;
   const legacyCurrentWidth = '100%';
-  const targetWidth = currentWidth < containerWidth ? containerWidth : currentWidth;
+  const targetWidth = typeof currentWidth === 'string' ? currentWidth : Math.max(currentWidth, containerWidth);
   const targetHeight = height !== 0 ? height : 5000;
   const finalHeight = !fullContentHeight && targetHeight < containerHeight ? containerHeight : targetHeight;
   const defaultLegacyHeight = forceHeight || 5000;

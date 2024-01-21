@@ -1,39 +1,28 @@
-import { ComponentTemplate, WorkspaceTemplate } from '@teambit/generator';
-import { reactComponent, deprecatedReactComponent } from './templates/react-component';
-import { reactComponentJS, deprecatedReactComponentJS } from './templates/react-component-js';
-import { reactEnvTemplate } from './templates/react-env';
-import { deprecatedReactWorkspaceTemplate } from './templates/react-workspace-deprecated';
-import { reactHook } from './templates/react-hook';
-import { reactContext } from './templates/react-context';
-import { reactAppTemplate } from './templates/react-app';
-import { reactWorkspaceTemplate } from './templates/react-workspace';
-import { reactWorkspaceDesignSystemTemplate } from './templates/react-workspace-design-system';
-import { reactWorkspaceWikiTemplate } from './templates/react-workspace-wiki';
-import { reactWorkspaceAnalyticsTemplate } from './templates/react-workspace-analytics';
-import { reactWorkspaceDataFetchingTemplate } from './templates/react-workspace-data-fetching';
-import { reactWorkspaceAppTemplate } from './templates/react-workspace-app';
-import { reactWorkspaceLibTemplate } from './templates/react-workspace-lib';
-import { reactWorkspaceBlogTemplate } from './templates/react-workspace-blog';
+import {
+  ReactComponentTemplate,
+  ReactHookTemplate,
+  ReactWebpackTemplate,
+  ReactViteTemplate,
+  ReactJSComponentTemplate,
+  ReactEnvTemplate,
+  ThemeTemplate,
+} from '@bitdev/react.generators.react-templates';
+import { EnvContext } from '@teambit/envs';
+import { ComponentTemplate, TemplateList } from '@teambit/generator';
 
-export const componentTemplates: ComponentTemplate[] = [
-  reactComponent,
-  reactContext,
-  reactHook,
-  reactComponentJS,
-  reactEnvTemplate,
-  reactAppTemplate,
-  deprecatedReactComponent,
-  deprecatedReactComponentJS,
-];
+const templateListHandler = TemplateList.from([
+  ReactComponentTemplate.from({ env: 'bitdev.react/react-env' }),
+  ReactViteTemplate.from({ env: 'bitdev.react/react-env' }),
+  ReactHookTemplate.from({ env: 'bitdev.react/react-env' }),
+  ThemeTemplate.from({ env: 'bitdev.react/react-env' }),
+  // ReactContextTemplate.from({ env: 'bitdev.react/react-env' }),
+  ReactWebpackTemplate.from({ env: 'bitdev.react/react-env' }),
+  // ReactWebpackAppTemplate.from({ env: 'bitdev.react/react-env' }),
+  ReactJSComponentTemplate.from({ env: 'bitdev.react/react-env' }),
+  ReactEnvTemplate.from(),
+]);
 
-export const workspaceTemplates: WorkspaceTemplate[] = [
-  reactWorkspaceTemplate,
-  reactWorkspaceAppTemplate,
-  reactWorkspaceLibTemplate,
-  deprecatedReactWorkspaceTemplate,
-  reactWorkspaceDesignSystemTemplate,
-  reactWorkspaceWikiTemplate,
-  reactWorkspaceAnalyticsTemplate,
-  reactWorkspaceDataFetchingTemplate,
-  reactWorkspaceBlogTemplate,
-];
+export function getTemplates(envContext: EnvContext): ComponentTemplate[] {
+  const templateList = templateListHandler(envContext);
+  return templateList.compute();
+}

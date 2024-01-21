@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { isEmpty } from 'lodash';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import R from 'ramda';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { isDir } from '@teambit/legacy/dist/utils';
 import moveSync from '@teambit/legacy/dist/utils/fs/move-sync';
@@ -40,11 +40,11 @@ export class MoverMain {
       // user would like to physically move the file. Otherwise (!fromExists and toExists), user would like to only update bit.map
       moveSync(fromAbsolute, toAbsolute);
     }
-    if (!R.isEmpty(changes)) {
+    if (!isEmpty(changes)) {
       const componentsIds = changes.map((c) => c.id);
       await linkToNodeModulesByIds(this.workspace, componentsIds);
     }
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write('move');
     return changes;
   }
 

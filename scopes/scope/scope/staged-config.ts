@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Logger } from '@teambit/logger';
 
@@ -8,10 +8,11 @@ const STAGED_CONFIG_DIR = 'staged-config';
 
 type Config = Record<string, any> | undefined;
 type ComponentConfig = { id: ComponentID; config: Config };
+type ComponentConfigObj = { id: ComponentIdObj; config: Config };
 
 export class StagedConfig {
   hasChanged = false;
-  constructor(private filePath: string, private componentsConfig: ComponentConfig[], private logger: Logger) {}
+  constructor(readonly filePath: string, private componentsConfig: ComponentConfig[], private logger: Logger) {}
 
   static async load(scopePath: string, logger: Logger, laneId?: LaneId): Promise<StagedConfig> {
     const lanePath = laneId ? path.join(laneId.scope, laneId.name) : DEFAULT_LANE;
@@ -30,7 +31,7 @@ export class StagedConfig {
     return new StagedConfig(filePath, componentsConfig, logger);
   }
 
-  toObject() {
+  toObject(): ComponentConfigObj[] {
     return this.componentsConfig.map(({ id, config }) => ({ id: id.toObject(), config }));
   }
 
@@ -45,6 +46,16 @@ export class StagedConfig {
 
   getAll() {
     return this.componentsConfig;
+  }
+
+  isEmpty() {
+    return this.componentsConfig.length === 0;
+  }
+
+  async deleteFile() {
+    this.logger.debug(`staged-config, deleting ${this.filePath}`);
+    await fs.remove(this.filePath);
+    this.componentsConfig = [];
   }
 
   addComponentConfig(id: ComponentID, config: Config) {

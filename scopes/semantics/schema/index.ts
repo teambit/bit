@@ -1,7 +1,8 @@
 import { SchemaAspect } from './schema.aspect';
 
-export { Parser } from './parser';
-export { SchemaExtractor } from './schema-extractor';
+export type { Parser } from './parser';
+export type { SchemaExtractor } from './schema-extractor';
+export type { SchemaExtractorOptions } from './schema-extractor';
 export {
   SchemaTask,
   SCHEMA_ARTIFACT_NAME,

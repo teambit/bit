@@ -34,8 +34,6 @@ import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejecte
 import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
 import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
 import { NoComponentDir } from '../consumer/component/exceptions/no-component-dir';
-import InvalidBitJson from '../consumer/config/exceptions/invalid-bit-json';
-import InvalidConfigPropPath from '../consumer/config/exceptions/invalid-config-prop-path';
 import InvalidPackageJson from '../consumer/config/exceptions/invalid-package-json';
 import InvalidPackageManager from '../consumer/config/exceptions/invalid-package-manager';
 import {
@@ -193,7 +191,7 @@ ${err.message ? `server responded with: "${err.message}"` : ''}`,
     ) => `error: unable to export components to ${err.destinationScope} because they have dependencies on components in ${err.sourceScope}.
 bit does not allow setting dependencies between components in private collections managed by different owners.
 
-see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/bit-dev#permissions-for-collections`,
+see troubleshooting at ${BASE_DOCS_DOMAIN}docs/bit-dev#permissions-for-collections`,
   ],
   [
     SSHInvalidResponse,
@@ -225,11 +223,6 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
   ],
   [NothingToImport, () => chalk.yellow('nothing to import. please use `bit import [component_id]`')],
   [
-    InvalidBitJson,
-    (err) => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.
-consider running ${chalk.bold('bit init --reset')} to recreate the file`,
-  ],
-  [
     InvalidPackageManager,
     (err) => `error: the package manager provided ${chalk.bold(err.packageManager)} is not a valid package manager.
 please specify 'npm' or 'yarn'`,
@@ -240,30 +233,23 @@ please specify 'npm' or 'yarn'`,
 please fix the file in order to run bit commands`,
   ],
   [
-    InvalidConfigPropPath,
-    (err) => `error: the path "${chalk.bold(err.fieldValue)}" of "${chalk.bold(
-      err.fieldName
-    )}" in your bit.json or package.json file is invalid.
-please make sure it's not absolute and doesn't contain invalid characters`,
-  ],
-  [
     MissingMainFile,
     (err) =>
       `error: the component ${chalk.bold(
         err.componentId
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/components/component-main-file`,
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at ${BASE_DOCS_DOMAIN}components/component-main-file`,
   ],
   [
     NoComponentDir,
     (err) => `"${err.id}" doesn't have a component directory, which is invalid.
-please run "bit status" to get more info.\nLearn more at https://${BASE_DOCS_DOMAIN}/workspace/component-directory`,
+please run "bit status" to get more info.\nLearn more at https:/BASE_DOCS_DOMAIN/reference/workspace/component-directory`,
   ],
   [
     MissingMainFileMultipleComponents,
     (err) =>
       `error: the components ${chalk.bold(
         err.componentIds.join(', ')
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/components/component-main-file`,
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at ${BASE_DOCS_DOMAIN}components/component-main-file`,
   ],
   [
     InvalidBitMap,
@@ -381,7 +367,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
       err.scopePath
     )}.
 1. use the ${chalk.bold('--reset-hard')} flag to clear all data and initialize an empty workspace.
-2. if deleted by mistake, please restore .bitmap and bit.json.
+2. if deleted by mistake, please restore .bitmap and workspace.jsonc.
 3. force workspace initialization without clearing data use the ${chalk.bold('--force')} flag.`,
   ],
 ];

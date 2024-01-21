@@ -1,7 +1,15 @@
-@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 .emptyContainer {
   height: 100vh;
+}
+
+.corner {
+  width: 300px;
+  &.dark {
+    --bit-border-color-lightest: #333333;
+    --bit-text-color-heavy: white;
+  }
 }
 
 .workspaceWrapper {
@@ -13,6 +21,32 @@
 
 .topbar {
   flex: none;
+  &.dark {
+    --bit-bg-heaviest: #333333;
+    --bit-accent-color: #6a57fd;
+    --bit-bg-heavy: #2c2b36;
+    div[class*='versionMenuContainer'] {
+      --bit-bg-heavy: #f4f5f6;
+    }
+    div[class*='useBox'] {
+      div[class*='placeholder'] {
+        --bit-bg-color: transparent;
+        &:hover {
+          color: #2b2b2b;
+        }
+      }
+      &[data-open='true'] {
+        div[class*='placeholder'] {
+          color: #2b2b2b;
+        }
+      }
+    }
+    div[class*='iconAnchor'] {
+      > span {
+        color: white;
+      }
+    }
+  }
 }
 
 .main {
@@ -35,6 +69,19 @@
   min-width: 100px;
   max-width: 85%;
   position: relative;
+  // background: var(--bit-bg-heaviest, #ededed);
 
   height: 100%;
+
+  &.closed {
+    overflow: hidden;
+  }
+  &.dark {
+    background-color: #333333;
+    a[class*='laneGalleryIcon'] {
+      > img {
+        filter: invert(1);
+      }
+    }
+  }
 }

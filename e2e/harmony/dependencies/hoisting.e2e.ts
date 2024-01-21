@@ -10,15 +10,15 @@ describe('pnpm with hoisted node linker, when there is a dependency that has the
   before(() => {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-    helper.extensions.bitJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
+    helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+    helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
     helper.fixtures.populateComponents(1);
     helper.extensions.addExtensionToVariant('comp1', 'teambit.pkg/pkg', {
       packageJson: {
         name: 'once',
       },
     });
-    helper.bitJsonc.addKeyValToDependencyResolver('policy', {
+    helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
       dependencies: {
         'map-limit': '0.0.1', // this dependency has "once" in dependencies
       },

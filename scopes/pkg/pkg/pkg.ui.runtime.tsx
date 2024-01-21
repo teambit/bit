@@ -30,13 +30,13 @@ export class PkgUI {
     const registry = packageName.split('/')[0];
 
     const packageVersion =
-      componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version)}`;
+      componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version as string)}`;
 
     return {
       Title: <img style={{ width: '30px' }} src="https://static.bit.dev/brands/logo-npm-new.svg" />,
       Component: !options?.hide ? (
         <Install
-          config={`npm config set '${registry}:registry' https://node.bit.cloud`}
+          config={`npm config set '${registry}:registry' https://node-registry.bit.cloud`}
           componentName={componentId.name}
           packageManager="npm"
           copyString={`npm i ${packageName}${packageVersion}`}
@@ -44,7 +44,7 @@ export class PkgUI {
           isInstallable={!options?.disableInstall}
         />
       ) : null,
-      order: 10,
+      order: 30,
     };
   };
 }

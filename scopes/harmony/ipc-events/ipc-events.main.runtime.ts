@@ -1,12 +1,13 @@
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import pMapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import path from 'path';
 import fs from 'fs-extra';
 import { IpcEventsAspect } from './ipc-events.aspect';
 
-type EventName = 'onPostInstall';
+type EventName = 'onPostInstall' | 'onPostObjectsPersist';
 
 type GotEvent = (eventName: EventName) => Promise<void>;
 type GotEventSlot = SlotRegistry<GotEvent>;
@@ -29,13 +30,18 @@ const EVENTS_DIR = 'events';
  * is onPostInstall and then triggers its own OnPostInstall slot.
  */
 export class IpcEventsMain {
-  constructor(private scope: ScopeMain, private gotEventSlot: GotEventSlot) {}
+  constructor(private scope: ScopeMain, private gotEventSlot: GotEventSlot, private logger: Logger) {}
 
   registerGotEventSlot(fn: GotEvent) {
     this.gotEventSlot.register(fn);
   }
 
+  /**
+   * this gets called from the watcher only.
+   * as soon as the watcher finds out that a new event has been written to the filesystem, it triggers this function
+   */
   async triggerGotEvent(eventName: EventName) {
+    this.logger.info(`triggering got event ${eventName}`);
     await pMapSeries(this.gotEventSlot.values(), (fn) => fn(eventName));
   }
 
@@ -54,11 +60,27 @@ export class IpcEventsMain {
   }
 
   static slots = [Slot.withType<GotEventSlot>()];
-  static dependencies = [ScopeAspect];
+  static dependencies = [ScopeAspect, LoggerAspect];
   static runtime = MainRuntime;
 
-  static async provider([scope]: [ScopeMain], _, [gotEventSlot]: [GotEventSlot]) {
-    return new IpcEventsMain(scope, gotEventSlot);
+  static async provider([scope, loggerMain]: [ScopeMain, LoggerMain], _, [gotEventSlot]: [GotEventSlot]) {
+    const logger = loggerMain.createLogger(IpcEventsAspect.id);
+    const ipcEventsMain = new IpcEventsMain(scope, gotEventSlot, logger);
+
+    if (scope) {
+      // in case commands like "bit export" are running from the cli, long-running processes should clear their cache.
+      // otherwise, objects like "ModelComponent" are out-of-date and could have the wrong head and the "state"/"local" data.
+      scope.registerOnPostObjectsPersist(async () => {
+        await ipcEventsMain.publishIpcEvent('onPostObjectsPersist');
+      });
+      ipcEventsMain.registerGotEventSlot(async (eventName) => {
+        if (eventName === 'onPostObjectsPersist') {
+          scope.legacyScope.objects.clearObjectsFromCache();
+        }
+      });
+    }
+
+    return ipcEventsMain;
   }
 }
 

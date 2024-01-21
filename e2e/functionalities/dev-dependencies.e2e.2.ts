@@ -21,7 +21,7 @@ describe('dev-dependencies functionality', function () {
         helper.fixtures.populateComponents();
         helper.fs.outputFile('comp1/foo.spec.js', 'require("chai");');
         helper.npm.addFakeNpmPackage('chai', '4.1.2');
-        helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: 'chai@4.1.2' });
+        helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: 'chai@4.1.2' });
         helper.command.tagAllWithoutBuild();
         comp1 = helper.command.catComponent('comp1@0.0.1');
       });
@@ -40,8 +40,16 @@ describe('dev-dependencies functionality', function () {
         expect(comp1.dependencies[0].id.version).to.equal('0.0.1');
       });
       it('should leave the flattened-dependencies intact', () => {
-        expect(comp1.flattenedDependencies).to.deep.include({ name: 'comp3', version: '0.0.1' });
-        expect(comp1.flattenedDependencies).to.deep.include({ name: 'comp2', version: '0.0.1' });
+        expect(comp1.flattenedDependencies).to.deep.include({
+          name: 'comp3',
+          scope: helper.scopes.remote,
+          version: '0.0.1',
+        });
+        expect(comp1.flattenedDependencies).to.deep.include({
+          name: 'comp2',
+          scope: helper.scopes.remote,
+          version: '0.0.1',
+        });
       });
     });
     describe('without dependencies and with dev-dependencies', () => {
@@ -53,17 +61,29 @@ describe('dev-dependencies functionality', function () {
         helper.fs.outputFile('comp1/foo.spec.js', `require("chai"); require('@${helper.scopes.remote}/comp2');`);
         helper.fs.outputFile('comp1/index.js', '');
         helper.npm.addFakeNpmPackage('chai', '4.1.2');
-        helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: 'chai@4.1.2' });
+        helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: 'chai@4.1.2' });
         helper.command.tagAllWithoutBuild();
         comp1 = helper.command.catComponent('comp1@0.0.1');
       });
       it('should save the dev-dependencies', () => {
         expect(comp1.devDependencies).to.be.an('array').that.have.lengthOf(1);
-        expect(comp1.devDependencies[0].id).to.deep.equal({ name: 'comp2', version: '0.0.1' });
+        expect(comp1.devDependencies[0].id).to.deep.equal({
+          name: 'comp2',
+          scope: helper.scopes.remote,
+          version: '0.0.1',
+        });
       });
       it('should save the flattened-dependencies', () => {
-        expect(comp1.flattenedDependencies).to.deep.include({ name: 'comp3', version: '0.0.1' });
-        expect(comp1.flattenedDependencies).to.deep.include({ name: 'comp2', version: '0.0.1' });
+        expect(comp1.flattenedDependencies).to.deep.include({
+          name: 'comp3',
+          scope: helper.scopes.remote,
+          version: '0.0.1',
+        });
+        expect(comp1.flattenedDependencies).to.deep.include({
+          name: 'comp2',
+          scope: helper.scopes.remote,
+          version: '0.0.1',
+        });
       });
       it('should save "chai" in the dev-packages', () => {
         expect(comp1.devPackageDependencies).to.be.an('object').that.has.property('chai');
@@ -152,7 +172,11 @@ describe('dev-dependencies functionality', function () {
       expect(barFoo.devDependencies[0].id.name).to.equal('comp2');
     });
     it('should include the prod dependencies inside flattenedDependencies', () => {
-      expect(barFoo.flattenedDependencies).to.deep.include({ name: 'comp3', version: '0.0.1' });
+      expect(barFoo.flattenedDependencies).to.deep.include({
+        name: 'comp3',
+        scope: helper.scopes.remote,
+        version: '0.0.1',
+      });
     });
   });
   describe('component with devDependency coming from an env and is used as prod', () => {

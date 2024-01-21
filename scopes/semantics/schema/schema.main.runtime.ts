@@ -5,7 +5,13 @@ import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
-import { APISchema, Export } from '@teambit/semantics.entities.semantic-schema';
+import {
+  APISchema,
+  Export,
+  Schemas,
+  SchemaNodeConstructor,
+  SchemaRegistry,
+} from '@teambit/semantics.entities.semantic-schema';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Formatter } from '@teambit/formatter';
@@ -54,10 +60,14 @@ export class SchemaMain {
     return this.parserSlot.get(this.config.defaultParser) as Parser;
   }
 
+  registerSchemaClass(schema: SchemaNodeConstructor) {
+    SchemaRegistry.register(schema);
+  }
+
   /**
    * parse a module into a component schema.
    */
-  parseModule(path: string): Export[] {
+  parseModule(path: string, content?: string): Export[] {
     const parsers = this.parserSlot.toArray();
     let maybeParser = parsers.find(([, parser]) => {
       const match = path.match(parser.extension);
@@ -69,7 +79,7 @@ export class SchemaMain {
     }
 
     const [, parser] = maybeParser;
-    return parser.parseModule(path);
+    return parser.parseModule(path, content);
   }
 
   getSchemaExtractor(component: Component, tsserverPath?: string, contextPath?: string): SchemaExtractor {
@@ -94,7 +104,8 @@ export class SchemaMain {
     shouldDisposeResourcesOnceDone = false,
     alwaysRunExtractor = false,
     tsserverPath?: string,
-    contextPath?: string
+    contextPath?: string,
+    skipInternals?: boolean
   ): Promise<APISchema> {
     if (alwaysRunExtractor || this.workspace) {
       const env = this.envs.getEnv(component).env;
@@ -110,7 +121,7 @@ export class SchemaMain {
       }
       const schemaExtractor: SchemaExtractor = env.getSchemaExtractor(undefined, tsserverPath, contextPath);
 
-      const result = await schemaExtractor.extract(component, formatter);
+      const result = await schemaExtractor.extract(component, { formatter, tsserverPath, contextPath, skipInternals });
       if (shouldDisposeResourcesOnceDone) schemaExtractor.dispose();
 
       return result;
@@ -131,7 +142,7 @@ export class SchemaMain {
        * when tag/snap without build
        * or backwards compatibility
        */
-      return APISchema.empty(component.id);
+      return APISchema.empty(component.id as any);
     }
 
     const schemaJsonStr = schemaArtifact[0].contents.toString('utf-8');
@@ -197,10 +208,10 @@ export class SchemaMain {
     graphql.register(schemaSchema(schema));
     envs.registerService(new SchemaService());
 
-    // workspace.onComponentLoad(async (component) => {
-    //   const apiSchema = await schema.getSchema(component);
-    //   return {};
-    // });
+    // register all default schema classes
+    Object.values(Schemas).forEach((Schema) => {
+      schema.registerSchemaClass(Schema);
+    });
 
     return schema;
   }

@@ -1,6 +1,5 @@
 import { expect } from 'chai';
-
-import { BitId, BitIds } from '../../bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ModelComponent } from '../../scope/models';
 import ComponentsList from './components-list';
 
@@ -8,7 +7,7 @@ describe('ComponentList', function () {
   // @ts-ignore
   this.timeout(0);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const getModelComponent = () => ModelComponent.fromBitId({ name: 'myName', scope: 'scope' });
+  const getModelComponent = () => ModelComponent.fromBitId(ComponentID.fromObject({ name: 'myName', scope: 'scope' }));
   const getScope = (modelComponent) => ({
     listLocal: () => {
       return modelComponent ? Promise.resolve([modelComponent]) : Promise.resolve([]);
@@ -31,7 +30,7 @@ describe('ComponentList', function () {
     let componentList;
     const scope = {};
     before(() => {
-      const bitMap = { getAllBitIds: () => new BitIds() };
+      const bitMap = { getAllBitIds: () => new ComponentIdList() };
       const consumer = { scope, bitMap, getCurrentLaneId: () => {} };
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentList = new ComponentsList(consumer);
@@ -43,7 +42,7 @@ describe('ComponentList', function () {
       const results = await componentList.listAll(false, true);
       const result = results[0];
       expect(result).to.have.property('id');
-      expect(result.id).to.be.an.instanceOf(BitId);
+      expect(result.id).to.be.an.instanceOf(ComponentID);
     });
   });
   describe('filterComponentsByWildcard', () => {
@@ -51,12 +50,12 @@ describe('ComponentList', function () {
       let bitIds;
       before(() => {
         bitIds = [
-          BitId.parse('utils/is/string'),
-          BitId.parse('utils/is/type'),
-          BitId.parse('utils/fs/read'),
-          BitId.parse('utils/fs/write'),
-          BitId.parse('bar/foo'),
-          BitId.parse('vuz/vuz'),
+          ComponentID.fromString('utils/is/string'),
+          ComponentID.fromString('utils/is/type'),
+          ComponentID.fromString('utils/fs/read'),
+          ComponentID.fromString('utils/fs/write'),
+          ComponentID.fromString('bar/foo'),
+          ComponentID.fromString('vuz/vuz'),
         ];
       });
       const expectToMatch = (idWithWildCard, expectedResults) => {
@@ -93,8 +92,8 @@ describe('ComponentList', function () {
       it('should not match non-exist*', () => {
         expectToMatch('non-exist*', []);
       });
-      it('should match bit ids also without the scope name', () => {
-        expectToMatch('fs*', ['utils/fs/read', 'utils/fs/write']);
+      it('should not match bit ids also without the scope name', () => {
+        expectToMatch('fs*', []);
       });
       it('should not match s* as non of the ids starts with "s" (with and without scope names)', () => {
         expectToMatch('s*', []);
@@ -102,8 +101,8 @@ describe('ComponentList', function () {
       it('when no wildcard is specified, it should match an exact id with a scope name', () => {
         expectToMatch('utils/fs/read', ['utils/fs/read']);
       });
-      it('when no wildcard is specified, it should match an exact id without a scope name', () => {
-        expectToMatch('fs/read', ['utils/fs/read']);
+      it('when no wildcard is specified, it should not match an exact id without a scope name', () => {
+        expectToMatch('fs/read', []);
       });
       it('should match multiple different ids when using an array of ids with wildcard', () => {
         expectToMatch(['vuz/*', 'utils/fs/*'], ['vuz/vuz', 'utils/fs/read', 'utils/fs/write']);

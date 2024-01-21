@@ -15,6 +15,7 @@ type GetDependenciesFlags = {
 
 export type SetDependenciesFlags = {
   dev?: boolean;
+  optional?: boolean;
   peer?: boolean;
 };
 
@@ -41,7 +42,9 @@ export class DependenciesGetCmd implements Command {
           return archy(graphAsTree);
         } catch (err: any) {
           if (err.constructor.name === 'RangeError') {
-            return `${chalk.red('unable to generate a tree representation, the graph is too big or has cycles')}`;
+            return `${chalk.red(
+              'unable to generate a tree representation, the graph is too big or has cyclic dependencies'
+            )}`;
           }
           throw err;
         }
@@ -106,6 +109,7 @@ export class DependenciesSetCmd implements Command {
   alias = '';
   options = [
     ['d', 'dev', 'add to the devDependencies'],
+    ['o', 'optional', 'add to the optionalDependencies'],
     ['p', 'peer', 'add to the peerDependencies'],
   ] as CommandOptions;
 
@@ -277,6 +281,10 @@ export class DependenciesBlameCmd implements Command {
   }
 }
 
+type DependenciesUsageCmdOptions = {
+  depth?: number;
+};
+
 export class DependenciesUsageCmd implements Command {
   name = 'usage <dependency-name>';
   arguments = [
@@ -289,11 +297,13 @@ export class DependenciesUsageCmd implements Command {
   group = 'info';
   description = 'EXPERIMENTAL. find components that use the specified dependency';
   alias = '';
-  options = [] as CommandOptions;
+  options = [['', 'depth <number>', 'max display depth of the dependency graph']] as CommandOptions;
 
   constructor(private deps: DependenciesMain) {}
 
-  async report([depName]: [string]) {
+  async report([depName]: [string], options: DependenciesUsageCmdOptions) {
+    const deepUsageResult = await this.deps.usageDeep(depName, options);
+    if (deepUsageResult != null) return deepUsageResult;
     const results = await this.deps.usage(depName);
     if (!Object.keys(results).length) {
       return chalk.yellow(`the specified dependency ${depName} is not used by any component`);
@@ -304,6 +314,10 @@ export class DependenciesUsageCmd implements Command {
   }
 }
 
+export class WhyCmd extends DependenciesUsageCmd {
+  name = 'why <dependency-name>';
+}
+
 export class DependenciesCmd implements Command {
   name = 'deps <sub-command>';
   alias = 'dependencies';
@@ -311,7 +325,7 @@ export class DependenciesCmd implements Command {
   options = [];
   group = 'info';
   commands: Command[] = [];
-  helpUrl = 'docs/dependencies/configuring-dependencies';
+  helpUrl = 'reference/dependencies/configuring-dependencies';
 
   async report([unrecognizedSubcommand]: [string]) {
     return chalk.red(

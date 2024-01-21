@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
+import path from 'path';
 import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { MainRuntime } from '@teambit/cli';
-import { composeComponentPath } from '@teambit/legacy/dist/utils/bit/compose-component-path';
 import { Component } from '@teambit/component';
 import TrackerAspect, { TrackerMain } from '@teambit/tracker';
 import { isDirEmpty } from '@teambit/legacy/dist/utils';
@@ -11,8 +11,11 @@ import { Harmony } from '@teambit/harmony';
 import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { PkgAspect } from '@teambit/pkg';
+import { RenamingAspect } from '@teambit/renaming';
 import { EnvsAspect } from '@teambit/envs';
 import { NewComponentHelperAspect } from './new-component-helper.aspect';
+
+const aspectsConfigToIgnore: string[] = [PkgAspect.id, RenamingAspect.id];
 
 export class NewComponentHelperMain {
   constructor(private workspace: Workspace, private harmony: Harmony, private tracker: TrackerMain) {}
@@ -36,11 +39,22 @@ export class NewComponentHelperMain {
    * if not provided, generate the path based on the component-id.
    * the component will be written to that path.
    */
-  getNewComponentPath(componentId: ComponentID, pathFromUser?: string): PathLinuxRelative {
-    if (pathFromUser) return pathFromUser;
-    return composeComponentPath(componentId._legacy.changeScope(componentId.scope), this.workspace.defaultDirectory);
-  }
+  getNewComponentPath(componentId: ComponentID, pathFromUser?: string, componentsToCreate?: number): PathLinuxRelative {
+    if (pathFromUser) {
+      const fullPath = path.join(this.workspace.path, pathFromUser);
+      const componentPath = componentId.fullName;
+      const dirExists = fs.pathExistsSync(fullPath);
+      if (componentsToCreate && componentsToCreate === 1) {
+        return dirExists ? path.join(pathFromUser, componentPath) : pathFromUser;
+      }
+      if (componentsToCreate && componentsToCreate > 1) {
+        return path.join(pathFromUser, componentPath);
+      }
+      return pathFromUser;
+    }
 
+    return this.workspace.consumer.composeRelativeComponentPath(componentId.changeScope(componentId.scope));
+  }
   async writeAndAddNewComp(
     comp: Component,
     targetId: ComponentID,
@@ -65,7 +79,7 @@ export class NewComponentHelperMain {
         rootDir: targetPath,
         componentName: targetId.fullName,
         mainFile: comp.state._consumer.mainFile,
-        defaultScope: options?.scope,
+        defaultScope: options?.scope || this.workspace.defaultScope,
         config,
       });
     } catch (err) {
@@ -73,10 +87,10 @@ export class NewComponentHelperMain {
       throw err;
     }
 
-    await this.workspace.bitMap.write();
+    await this.workspace.bitMap.write(`adding ${targetId.toString()}`);
     await this.workspace.clearCache();
     // this takes care of compiling the component as well
-    await this.workspace.triggerOnComponentAdd(targetId);
+    await this.workspace.triggerOnComponentAdd(targetId, { compile: true });
   }
 
   private async throwForExistingPath(targetPath: string) {
@@ -102,9 +116,9 @@ export class NewComponentHelperMain {
     comp.state.aspects.entries.forEach((entry) => {
       if (!entry.config) return;
       const aspectId = entry.id.toString();
-      // don't copy the pkg aspect, it's not relevant for the new component
-      // (it might contain values that are bounded to the other component name / id)
-      if (aspectId === PkgAspect.id) {
+      // don't copy config of aspects that are not relevant for the new component
+      // (e.g. pkg aspect config might contain values that are bounded to the other component name / id)
+      if (aspectsConfigToIgnore.includes(aspectId)) {
         return;
       }
       fromExisting[aspectId] = entry.config;

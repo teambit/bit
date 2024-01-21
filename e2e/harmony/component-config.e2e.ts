@@ -152,7 +152,7 @@ describe('component config', function () {
       helper.extensions.addExtensionToVariant('*', 'my-scope/ext2', { key: 'val-ws-defaults' });
       helper.extensions.addExtensionToVariant('*', 'my-scope/ext5', { key: 'val-ws-defaults' });
       helper.extensions.addExtensionToVariant('extensions', 'teambit.harmony/aspect');
-      helper.bitJsonc.addToVariant('extensions', 'propagate', false);
+      helper.workspaceJsonc.addToVariant('extensions', 'propagate', false);
       helper.command.install();
       helper.command.compile();
       helper.extensions.addExtensionToVariant('bar', 'my-scope/ext2', { key: 'val-variant' });
@@ -177,7 +177,7 @@ describe('component config', function () {
     describe('stop on variant - component.json propagate true and variant propagate false', () => {
       before(() => {
         helper.componentJson.setPropagate(true);
-        helper.bitJsonc.addToVariant('bar', 'propagate', false);
+        helper.workspaceJsonc.addToVariant('bar', 'propagate', false);
         output = helper.command.showComponentParsed('bar/foo');
         configuredExtensions = getExtensions(output.extensions);
       });
@@ -196,7 +196,7 @@ describe('component config', function () {
     describe('propagate all the way - component.json propagate true and variant propagate true', () => {
       before(() => {
         helper.componentJson.setPropagate(true);
-        helper.bitJsonc.addToVariant('bar', 'propagate', true);
+        helper.workspaceJsonc.addToVariant('bar', 'propagate', true);
         output = helper.command.showComponentParsed('bar/foo');
         configuredExtensions = getExtensions(output.extensions);
       });
@@ -222,14 +222,14 @@ describe('component config', function () {
   });
 });
 
-function getExtensionEntry(extensionId: string, config: any): any {
+function getExtensionEntry(extensionName: string, config: any): any {
   return {
-    extensionId,
+    extensionId: `my-scope/${extensionName}`,
     config,
     newExtensionId: {
-      legacyComponentId: {
+      _legacy: {
         scope: null,
-        name: extensionId,
+        name: extensionName,
         version: 'latest',
       },
       _scope: 'my-scope',

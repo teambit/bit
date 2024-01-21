@@ -39,7 +39,6 @@ export type Specifier = {
  */
 export type ImportSpecifier = {
   mainFile: Specifier;
-  linkFile?: Specifier; // relevant only when the dependency is a link file (e.g. index.js which import and export the variable from other file)
 };
 
 /**

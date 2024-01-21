@@ -22,6 +22,7 @@ type VariantPolicyLifecycleConfigEntryObject = {
    * force add to component dependencies even if it's not used by the component.
    */
   force?: boolean;
+  optional?: boolean;
 };
 
 export type VariantPolicyConfigEntryValue = VariantPolicyEntryValue | VariantPolicyEntryVersion;
@@ -34,6 +35,7 @@ export type VariantPolicyEntryVersion = SemverVersion;
 export type VariantPolicyEntryValue = {
   version: VariantPolicyEntryVersion;
   resolveFromEnv?: boolean;
+  optional?: boolean;
 };
 
 export type DependencySource = 'auto' | 'env' | 'env-own' | 'slots' | 'config';
@@ -49,10 +51,19 @@ export type VariantPolicyEntry = PolicyEntry & {
    * force add to component dependencies even if it's not used by the component.
    */
   force?: boolean;
+  optional?: boolean;
 };
 
 export type SerializedVariantPolicyEntry = VariantPolicyEntry;
 export type SerializedVariantPolicy = SerializedVariantPolicyEntry[];
+
+export interface VariantPolicyFromConfigObjectOptions {
+  includeLegacyPeersInSelfPolicy?: boolean;
+  source?: DependencySource;
+  hidden?: boolean;
+  force?: boolean;
+  optional?: boolean;
+}
 
 export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
   constructor(private _policiesEntries: VariantPolicyEntry[]) {
@@ -218,10 +229,10 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     return res;
   }
 
-  static fromConfigObject(configObject, source?: DependencySource, hidden?: boolean, force?: boolean): VariantPolicy {
-    const runtimeEntries = entriesFromKey(configObject, 'dependencies', source, hidden, force);
-    const devEntries = entriesFromKey(configObject, 'devDependencies', source, hidden, force);
-    const peerEntries = entriesFromKey(configObject, 'peerDependencies', source, hidden, force);
+  static fromConfigObject(configObject, options: VariantPolicyFromConfigObjectOptions = {}): VariantPolicy {
+    const runtimeEntries = entriesFromKey(configObject, 'dependencies', options);
+    const devEntries = entriesFromKey(configObject, 'devDependencies', options);
+    const peerEntries = entriesFromKey(configObject, 'peerDependencies', options);
     const entries = runtimeEntries.concat(devEntries).concat(peerEntries);
     return new VariantPolicy(entries);
   }
@@ -259,9 +270,7 @@ function uniqEntries(entries: Array<VariantPolicyEntry>): Array<VariantPolicyEnt
 function entriesFromKey(
   configObject: VariantPolicyConfigObject,
   keyName: PolicyConfigKeysNames,
-  source?: DependencySource,
-  hidden?: boolean,
-  force?: boolean
+  options: VariantPolicyFromConfigObjectOptions
 ): VariantPolicyEntry[] {
   const obj = configObject[keyName];
   if (!obj) {
@@ -269,24 +278,25 @@ function entriesFromKey(
   }
   const lifecycleType = LIFECYCLE_TYPE_BY_KEY_NAME[keyName];
   if (Array.isArray(obj)) {
-    return entriesFromArrayKey(obj, lifecycleType, source, hidden, force);
+    return entriesFromArrayKey(obj, lifecycleType, options);
   }
-  return entriesFromObjectKey(obj, lifecycleType, source, hidden, force);
+  return entriesFromObjectKey(obj, lifecycleType, options);
 }
 
 function entriesFromObjectKey(
   obj: Record<string, VariantPolicyConfigEntryValue> | undefined,
   lifecycleType: DependencyLifecycleType,
-  source?: DependencySource,
-  hidden?: boolean,
-  force = true
+  options: VariantPolicyFromConfigObjectOptions
 ): VariantPolicyEntry[] {
   if (!obj) {
     return [];
   }
   const entries = Object.entries(obj).map(([depId, value]: [string, VariantPolicyConfigEntryValue]) => {
     if (value) {
-      return createVariantPolicyEntry(depId, value, lifecycleType, source, hidden, force);
+      return createVariantPolicyEntry(depId, value, lifecycleType, {
+        ...options,
+        force: options.force ?? true,
+      });
     }
     return undefined;
   });
@@ -296,23 +306,20 @@ function entriesFromObjectKey(
 function entriesFromArrayKey(
   configEntries: Array<VariantPolicyLifecycleConfigEntryObject> | undefined,
   lifecycleType: DependencyLifecycleType,
-  source: DependencySource = 'config',
-  hidden?: boolean,
-  force?: boolean
+  options: VariantPolicyFromConfigObjectOptions
 ): VariantPolicyEntry[] {
   if (!configEntries) {
     return [];
   }
   const entries = configEntries.map((entry) => {
-    return createVariantPolicyEntry(
-      entry.name,
-      entry.version,
-      lifecycleType,
-      source,
-      hidden ?? !!entry.hidden,
+    return createVariantPolicyEntry(entry.name, entry.version, lifecycleType, {
+      ...options,
+      source: options.source ?? 'config',
+      hidden: Boolean(options.hidden ?? entry.hidden),
       // allow override the entry's force value (used for the env itself)
-      force ?? !!entry.force
-    );
+      force: Boolean(options.force ?? entry.force),
+      optional: Boolean(options.optional ?? entry.optional),
+    });
   });
   return entries;
 }
@@ -321,24 +328,22 @@ export function createVariantPolicyEntry(
   depId: string,
   value: VariantPolicyConfigEntryValue,
   lifecycleType: DependencyLifecycleType,
-  source?: DependencySource,
-  hidden?: boolean,
-  force?: boolean
+  opts: VariantPolicyFromConfigObjectOptions
 ): VariantPolicyEntry {
   const version = typeof value === 'string' ? value : value.version;
   const resolveFromEnv = typeof value === 'string' ? false : value.resolveFromEnv;
+  const optional = typeof value === 'string' ? undefined : value.optional;
 
   const entryValue: VariantPolicyEntryValue = {
     version,
     resolveFromEnv,
   };
   const entry: VariantPolicyEntry = {
+    ...opts,
     dependencyId: depId,
     value: entryValue,
     lifecycleType,
-    source,
-    hidden,
-    force,
+    optional: optional ?? opts.optional,
   };
   return entry;
 }

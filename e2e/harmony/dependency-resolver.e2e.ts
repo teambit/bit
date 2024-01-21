@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
+import { Modules, readModulesManifest } from '@pnpm/modules-yaml';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -89,7 +90,7 @@ describe('dependency-resolver extension', function () {
           helper.fs.outputFile('utils/is-type.js', fixtures.isType);
           helper.command.addComponent('utils', { i: 'utils/is-type' });
           // important! don't disable the preview.
-          helper.bitJsonc.addDefaultScope();
+          helper.workspaceJsonc.addDefaultScope();
           const envName = helper.env.setCustomEnv('env-add-dependencies');
           const envId = `${helper.scopes.remote}/${envName}`;
           helper.extensions.addExtensionToVariant('*', envId);
@@ -225,8 +226,8 @@ describe('dependency-resolver extension', function () {
     describe('using Yarn as a package manager', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/yarn');
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('overrides', {
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/yarn');
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('overrides', {
           'is-odd': '1.0.0',
           'glob@^7.1.3': '6.0.4',
           'inflight>once': '1.3.0',
@@ -260,8 +261,8 @@ describe('dependency-resolver extension', function () {
     describe('using pnpm as a package manager', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/pnpm');
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('overrides', {
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/pnpm');
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('overrides', {
           'is-odd': '1.0.0',
           'glob@^7.1.3': '6.0.4',
           'inflight>once': '1.3.0',
@@ -289,6 +290,23 @@ describe('dependency-resolver extension', function () {
           helper.fixtures.fs.readJsonFile('node_modules/.pnpm/inflight@1.0.6/node_modules/once/package.json').version
         ).to.eq('1.3.0');
       });
+    });
+  });
+  describe('hoist patterns', function () {
+    let modulesState: Modules | null;
+    before(async () => {
+      helper = new Helper();
+      helper.scopeHelper.reInitLocalScope();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('hoistPatterns', ['hoist-pattern']);
+      helper.command.install('is-positive');
+      modulesState = await readModulesManifest(path.join(helper.fixtures.scopes.localPath, 'node_modules'));
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('should run pnpm with the specified hoist pattern', () => {
+      expect(modulesState?.hoistPattern).to.deep.eq(['hoist-pattern']);
     });
   });
 });

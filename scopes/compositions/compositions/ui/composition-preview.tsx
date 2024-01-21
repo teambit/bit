@@ -13,7 +13,7 @@ export type ComponentCompositionProps = {
 export function ComponentComposition({ composition, component, queryParams = [], ...rest }: ComponentCompositionProps) {
   const includesEnvTemplate = component.preview?.includesEnvTemplate;
   const isScaling = component.preview?.isScaling;
-  const shouldAddNameParam = isScaling && includesEnvTemplate === false;
+  const shouldAddNameParam = component.preview?.useNameParam || (isScaling && includesEnvTemplate === false);
 
   const compositionParams = useMemo(
     () =>

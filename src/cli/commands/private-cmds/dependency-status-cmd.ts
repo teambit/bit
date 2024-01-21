@@ -10,7 +10,6 @@ export default class DependencyStatus implements LegacyCommand {
   description = 'returns the status of the dependency status of bit map against bit dependencies';
   alias = '';
   opts = [];
-  migration = true;
 
   action([mainFile]: [string[]]): Promise<DependencyStatusResult> {
     const dependencyStatusProps: DependencyStatusProps = {

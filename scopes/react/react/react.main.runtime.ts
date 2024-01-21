@@ -1,16 +1,17 @@
-import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
-import { omit } from 'lodash';
+import { Harmony } from '@teambit/harmony';
+import { merge, omit } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect, Compiler } from '@teambit/compiler';
 import { BuildTask } from '@teambit/builder';
-import { Component } from '@teambit/component';
-import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
+import { Component, ComponentID } from '@teambit/component';
+import { EnvsAspect, EnvsMain, EnvTransformer, Environment, EnvContext } from '@teambit/envs';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import type { JestMain } from '@teambit/jest';
 import { JestAspect } from '@teambit/jest';
 import type { PkgMain, PackageJsonProps } from '@teambit/pkg';
+import { SchemaMain, SchemaAspect } from '@teambit/schema';
 import { PkgAspect } from '@teambit/pkg';
 import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
@@ -29,12 +30,16 @@ import { LinterContext } from '@teambit/linter';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
 import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
+import WorkerAspect, { WorkerMain } from '@teambit/worker';
+
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { ReactAppType } from './apps/web';
 import { reactSchema } from './react.graphql';
-import { componentTemplates, workspaceTemplates } from './react.templates';
+import { getTemplates } from './react.templates';
 import { ReactAppOptions } from './apps/web/react-app-options';
+import { ReactSchema } from './react.schema';
+import { ReactAPITransformer } from './react.api.transformer';
 
 type ReactDeps = [
   EnvsMain,
@@ -51,7 +56,9 @@ type ReactDeps = [
   ApplicationMain,
   GeneratorMain,
   DependencyResolverMain,
-  LoggerMain
+  LoggerMain,
+  SchemaMain,
+  WorkerMain
 ];
 
 export type ReactMainConfig = {
@@ -174,7 +181,7 @@ export class ReactMain {
   }
 
   /**
-   * Override the Bit documentation link. See docs: https://bit.dev/docs/docs/doc-templates
+   * Override the Bit documentation link. See docs: https://bit.dev/refrence/docs/doc-templates
    */
   overrideDocsTemplate(templatePath: string) {
     return this.envs.override({
@@ -339,7 +346,7 @@ export class ReactMain {
     return this.envs.override({
       getDependencies: async () => {
         const reactDeps = await this.reactEnv.getDependencies();
-        return mergeDeepLeft(dependencyPolicy, reactDeps);
+        return merge(reactDeps, dependencyPolicy);
       },
     });
   }
@@ -409,6 +416,8 @@ export class ReactMain {
     GeneratorAspect,
     DependencyResolverAspect,
     LoggerAspect,
+    SchemaAspect,
+    WorkerAspect,
   ];
 
   static async provider(
@@ -428,8 +437,12 @@ export class ReactMain {
       generator,
       dependencyResolver,
       loggerMain,
+      schemaMain,
+      workerMain,
     ]: ReactDeps,
-    config: ReactMainConfig
+    config: ReactMainConfig,
+    slots,
+    harmony: Harmony
   ) {
     const logger = loggerMain.createLogger(ReactAspect.id);
     const reactEnv = new ReactEnv(
@@ -452,11 +465,13 @@ export class ReactMain {
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
     if (generator) {
-      generator.registerComponentTemplate(componentTemplates);
-      generator.registerWorkspaceTemplate(workspaceTemplates);
+      const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerMain, workerMain, harmony);
+      generator.registerComponentTemplate(getTemplates(envContext));
     }
 
     if (application) application.registerAppType(appType);
+    if (schemaMain) schemaMain.registerSchemaClass(ReactSchema);
+    if (tsAspect) tsAspect.registerApiTransformer([new ReactAPITransformer()]);
 
     return react;
   }

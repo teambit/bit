@@ -33,7 +33,11 @@ export class StartCmd implements Command {
   options = [
     ['d', 'dev', 'start UI server in dev mode.'],
     ['p', 'port [port-number]', 'port of the UI server.'],
-    ['r', 'rebuild', 'rebuild the UI'],
+    [
+      'r',
+      'rebuild',
+      'rebuild the UI (useful e.g. when updating the workspace UI - can use the dev flag for HMR in this case)',
+    ],
     ['', 'skip-ui-build', 'skip building UI'],
     ['v', 'verbose', 'show verbose output for inspection and prints stack trace'],
     ['n', 'no-browser', 'do not automatically open browser when ready'],
@@ -72,7 +76,16 @@ export class StartCmd implements Command {
 
   async render(
     [userPattern]: StartArgs,
-    { dev, port, rebuild, verbose, noBrowser, skipCompilation, skipUiBuild, uiRootName }: StartFlags
+    {
+      dev,
+      port,
+      rebuild,
+      verbose,
+      noBrowser,
+      skipCompilation,
+      skipUiBuild,
+      uiRootName: uiRootAspectIdOrName,
+    }: StartFlags
   ): Promise<React.ReactElement> {
     this.logger.off();
     if (!this.ui.isHostAvailable()) {
@@ -80,10 +93,10 @@ export class StartCmd implements Command {
         `bit start can only be run inside a bit workspace or a bit scope - please ensure you are running the command in the correct directory`
       );
     }
-    const appName = this.ui.getUiName(uiRootName);
+    const appName = this.ui.getUiName(uiRootAspectIdOrName);
     await this.ui.invokePreStart({ skipCompilation });
     const uiServer = this.ui.createRuntime({
-      uiRootName,
+      uiRootAspectIdOrName,
       skipUiBuild,
       pattern: userPattern,
       dev,

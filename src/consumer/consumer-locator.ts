@@ -6,7 +6,7 @@
 import fs from 'fs-extra';
 import * as pathlib from 'path';
 
-import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_JSON, BIT_MAP, DOT_GIT_DIR, OLD_BIT_MAP } from '../constants';
+import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, DOT_GIT_DIR, OLD_BIT_MAP } from '../constants';
 import { LegacyWorkspaceConfig } from './config';
 
 export type ConsumerInfo = {
@@ -22,17 +22,6 @@ function composeBitHiddenDirPath(path: string) {
 
 function composeBitGitHiddenDirPath(path: string) {
   return pathlib.join(path, DOT_GIT_DIR, BIT_GIT_DIR);
-}
-
-function composeBitJsonPath(path: string) {
-  return pathlib.join(path, BIT_JSON);
-}
-
-/**
- * determine whether given path has a bit.Json
- */
-export function pathHasBitJson(path: string) {
-  return fs.existsSync(composeBitJsonPath(path));
 }
 
 /**

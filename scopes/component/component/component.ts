@@ -4,12 +4,13 @@ import { SemVer } from 'semver';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { BuildStatus } from '@teambit/legacy/dist/constants';
+import { type ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 
 import { slice } from 'lodash';
 import { ComponentFactory } from './component-factory';
 import ComponentFS from './component-fs';
 // import { NothingToSnap } from './exceptions';
-import ComponentConfig from './config';
+import { Config as ComponentConfig } from './config';
 // eslint-disable-next-line import/no-cycle
 import { Snap } from './snap';
 import { State } from './state';
@@ -114,7 +115,9 @@ export class Component implements IComponent {
     return this.state.aspects.get(id)?.serialize();
   }
 
-  async getLogs(filter?: { type?: string; offset?: number; limit?: number; head?: string; sort?: string }) {
+  async getLogs(
+    filter?: { type?: string; offset?: number; limit?: number; head?: string; sort?: string }
+  ): Promise<ComponentLog[]> {
     const allLogs = await this.factory.getLogs(this.id, false, filter?.head);
 
     if (!filter) return allLogs;
@@ -177,6 +180,13 @@ export class Component implements IComponent {
    */
   isModified(): Promise<boolean> {
     return this.factory.isModified(this);
+  }
+
+  /**
+   * whether a component is marked as deleted.
+   */
+  isDeleted(): boolean {
+    return this.state._consumer.isRemoved();
   }
 
   /**

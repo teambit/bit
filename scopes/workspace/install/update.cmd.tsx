@@ -8,44 +8,60 @@ type UpdateCmdOptions = {
   major?: boolean;
   minor?: boolean;
   patch?: boolean;
+  latest?: boolean;
 };
 
 export default class UpdateCmd implements Command {
   name = 'update [package-patterns...]';
-  description = 'update dependencies';
-  helpUrl = 'docs/dependencies/configuring-dependencies/#update-dependencies';
+  description = 'update dependencies. By default, dependencies are updated to the highest semver compatible versions.';
+  helpUrl = 'reference/dependencies/configuring-dependencies/#update-dependencies';
   alias = 'up';
   group = 'development';
   arguments = [
     {
       name: 'package-patterns...',
       description:
-        'a list of package names, or patterns (separated by space). The patterns should be in glob format. By default, all packages are selected.',
+        'a string list of package names, or patterns (separated by spaces or commas), e.g. "@teambit/**,@my-org/ui/**". The patterns should be in glob format. By default, all packages are selected.',
     },
   ];
   options = [
-    ['y', 'yes', 'automatically update all outdated packages'],
+    [
+      'y',
+      'yes',
+      'automatically update all outdated versions for packages specified in pattern (all if no pattern supplied) - use carefully as could result in breaking updates for dependencies',
+    ],
     ['', 'patch', 'update to the latest patch version. Semver rules are ignored'],
     ['', 'minor', 'update to the latest minor version. Semver rules are ignored'],
     ['', 'major', 'update to the latest major version. Semver rules are ignored'],
+    ['', 'latest', 'update to the latest version. Semver rules are ignored'],
   ] as CommandOptions;
 
   constructor(private install: InstallMain) {}
 
   async report([patterns = []]: [string[]], options: UpdateCmdOptions) {
-    let forceVersionBump: 'major' | 'minor' | 'patch' | undefined;
+    let forceVersionBump: 'major' | 'minor' | 'patch' | 'compatible' | undefined;
     if (options.major) {
       forceVersionBump = 'major';
     } else if (options.minor) {
       forceVersionBump = 'minor';
     } else if (options.patch) {
       forceVersionBump = 'patch';
+    } else if (!options.latest) {
+      forceVersionBump = 'compatible';
     }
     await this.install.updateDependencies({
       all: options.yes === true,
-      patterns,
+      patterns: splitPatterns(patterns),
       forceVersionBump,
     });
     return '';
   }
+}
+
+function splitPatterns(patterns: string[]): string[] {
+  const splittedPatterns: string[] = [];
+  for (const pattern of patterns) {
+    splittedPatterns.push(...pattern.split(/[, ]/));
+  }
+  return splittedPatterns;
 }

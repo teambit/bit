@@ -1,0 +1,16 @@
+.cardWrapper {
+  position: relative;
+  min-width: 300px;
+}
+
+.loadPreview {
+  background-color: #1c1b1f;
+  right: 4px !important;
+  left: unset !important;
+  z-index: 100;
+  height: fit-content;
+  width: fit-content;
+  &:hover {
+    background-color: #262438;
+  }
+}

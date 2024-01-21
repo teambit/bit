@@ -1,4 +1,5 @@
 import React from 'react';
+import { flatten } from 'lodash';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
 import { APIRefPage } from '@teambit/api-reference.sections.api-reference-page';
@@ -19,17 +20,49 @@ import { typeLiteralRenderer } from '@teambit/api-reference.renderers.type-liter
 import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
 import { inferenceTypeRenderer } from '@teambit/api-reference.renderers.inference-type';
 import { typeArrayRenderer } from '@teambit/api-reference.renderers.type-array';
+import { thisRenderer } from '@teambit/api-reference.renderers.this';
+import { APIRefRenderersProvider } from '@teambit/api-reference.hooks.use-api-renderers';
+import { SchemaNodeConstructor, SchemaRegistry, Schemas } from '@teambit/semantics.entities.semantic-schema';
+import CodeAspect, { CodeUI } from '@teambit/code';
+import { TaggedExports } from '@teambit/tagged-exports';
 
 import { APIReferenceAspect } from './api-reference.aspect';
 
 export type APINodeRendererSlot = SlotRegistry<APINodeRenderer[]>;
 export class APIReferenceUI {
-  static dependencies = [ComponentAspect];
+  constructor(private host: string, private apiNodeRendererSlot: APINodeRendererSlot, private code: CodeUI) {}
+
+  static dependencies = [ComponentAspect, CodeAspect];
   static runtime = UIRuntime;
   static slots = [Slot.withType<APINodeRenderer[]>()];
 
   getAPIPage() {
-    return <APIRefPage host={this.host} rendererSlot={this.apiNodeRendererSlot} />;
+    const EditorProvider = this.code.getCodeEditorProvider();
+    return (
+      <EditorProvider>
+        <APIRefPage host={this.host} rendererSlot={this.apiNodeRendererSlot} />
+      </EditorProvider>
+    );
+  }
+
+  TaggedAPIPage = ({ componentId }: { componentId: string }) => {
+    return (
+      <APIRefRenderersProvider nodeRenderers={flatten(this.apiNodeRendererSlot.values())}>
+        <TaggedExports componentId={componentId} />
+      </APIRefRenderersProvider>
+    );
+  };
+
+  registerSchemaClass(schema: SchemaNodeConstructor) {
+    SchemaRegistry.register(schema);
+  }
+
+  getSchemaClasses() {
+    return SchemaRegistry.schemas;
+  }
+
+  registerAPINodeRenderer(apiNodeRenderers: APINodeRenderer[]) {
+    this.apiNodeRendererSlot.register(apiNodeRenderers);
   }
 
   apiNodeRenderers: APINodeRenderer[] = [
@@ -47,29 +80,28 @@ export class APIReferenceUI {
     typeLiteralRenderer,
     inferenceTypeRenderer,
     typeArrayRenderer,
+    thisRenderer,
   ];
 
   static async provider(
-    [componentUI]: [ComponentUI],
+    [componentUI, codeUI]: [ComponentUI, CodeUI],
     _,
     [apiNodeRendererSlot]: [APINodeRendererSlot],
     harmony: Harmony
   ) {
     const { config } = harmony;
     const host = String(config.get('teambit.harmony/bit'));
-    const apiReferenceUI = new APIReferenceUI(host, apiNodeRendererSlot);
+    const apiReferenceUI = new APIReferenceUI(host, apiNodeRendererSlot, codeUI);
     apiReferenceUI.registerAPINodeRenderer(apiReferenceUI.apiNodeRenderers);
     const apiReferenceSection = new APIRefSection(apiReferenceUI);
     componentUI.registerNavigation(apiReferenceSection.navigationLink, apiReferenceSection.order);
     componentUI.registerRoute(apiReferenceSection.route);
+    // register all default schema classes
+    Object.values(Schemas).forEach((Schema) => {
+      apiReferenceUI.registerSchemaClass(Schema);
+    });
     return apiReferenceUI;
   }
-
-  registerAPINodeRenderer(apiNodeRenderers: APINodeRenderer[]) {
-    this.apiNodeRendererSlot.register(apiNodeRenderers);
-  }
-
-  constructor(private host: string, private apiNodeRendererSlot: APINodeRendererSlot) {}
 }
 
 export default APIReferenceUI;

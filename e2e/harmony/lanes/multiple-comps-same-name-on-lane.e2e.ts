@@ -25,7 +25,7 @@ describe('lane with multiple components with the same name but different scope-n
     helper.scopeHelper.addRemoteScope(scopePath);
     helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
     helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
-    helper.bitJsonc.addDefaultScope(scopeName);
+    helper.workspaceJsonc.addDefaultScope(scopeName);
     helper.fixtures.populateComponents(1);
     helper.command.snapAllComponentsWithoutBuild();
     helper.command.export();
@@ -53,8 +53,15 @@ describe('lane with multiple components with the same name but different scope-n
       helper.scopeHelper.addRemoteScope();
       helper.scopeHelper.addRemoteScope(anotherRemotePath);
     });
-    it('should fail due to duplication of the same name in the same workspace', () => {
-      expect(() => helper.command.importLane('lane-a')).to.throw('duplicate');
+    after(() => {
+      helper.command.resetFeatures();
+    });
+    it('should not fail due to duplication of the same name in the same workspace', () => {
+      expect(() => helper.command.importLane('lane-a')).to.not.throw();
+    });
+    it('bit status should not show the components as invalid', () => {
+      const status = helper.command.statusJson();
+      expect(status.invalidComponents).to.have.lengthOf(0);
     });
   });
   describe('importing the lane into a new workspace by excluding one of the duplicate names', () => {

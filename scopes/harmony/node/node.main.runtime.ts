@@ -1,23 +1,23 @@
-import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
+import { Harmony } from '@teambit/harmony';
 import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { TsConfigSourceFile } from 'typescript';
 import { TsCompilerOptionsWithoutTsConfig, TypescriptAspect, TypescriptMain } from '@teambit/typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
+import { merge } from 'lodash';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { MainRuntime } from '@teambit/cli';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BuildTask } from '@teambit/builder';
+import { ComponentID } from '@teambit/component-id';
+import WorkerAspect, { WorkerMain } from '@teambit/worker';
 import { Compiler } from '@teambit/compiler';
 import { PackageJsonProps } from '@teambit/pkg';
-import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
+import { EnvsAspect, EnvsMain, EnvTransformer, Environment, EnvContext } from '@teambit/envs';
 import { ReactAspect, ReactEnv, ReactMain, UseTypescriptModifiers } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
-import { nodeEnvTemplate } from './templates/node-env';
-import { nodeTemplate } from './templates/node';
+import { getTemplates } from './node.templates';
 import { NodeAppType } from './node.app-type';
-import { expressAppTemplate } from './templates/express-app';
-import { expressRouteTemplate } from './templates/express-route';
 
 export class NodeMain {
   constructor(
@@ -136,7 +136,7 @@ export class NodeMain {
    */
   overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
-      getDependencies: () => mergeDeepLeft(dependencyPolicy, this.nodeEnv.getDependencies()),
+      getDependencies: () => merge(this.nodeEnv.getDependencies(), dependencyPolicy),
     });
   }
 
@@ -150,23 +150,39 @@ export class NodeMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [LoggerAspect, EnvsAspect, ApplicationAspect, ReactAspect, GeneratorAspect, TypescriptAspect];
+  static dependencies = [
+    LoggerAspect,
+    EnvsAspect,
+    ApplicationAspect,
+    ReactAspect,
+    GeneratorAspect,
+    TypescriptAspect,
+    WorkerAspect,
+  ];
 
-  static async provider([loggerAspect, envs, application, react, generator, tsAspect]: [
-    LoggerMain,
-    EnvsMain,
-    ApplicationMain,
-    ReactMain,
-    GeneratorMain,
-    TypescriptMain
-  ]) {
+  static async provider(
+    [loggerAspect, envs, application, react, generator, tsAspect, workerMain]: [
+      LoggerMain,
+      EnvsMain,
+      ApplicationMain,
+      ReactMain,
+      GeneratorMain,
+      TypescriptMain,
+      WorkerMain
+    ],
+    config,
+    slots,
+    harmony: Harmony
+  ) {
     const logger = loggerAspect.createLogger(NodeAspect.id);
     const nodeEnv = envs.merge<NodeEnv, ReactEnv>(new NodeEnv(tsAspect, react), react.reactEnv);
     envs.registerEnv(nodeEnv);
     const nodeAppType = new NodeAppType('node-app', nodeEnv, logger);
     application.registerAppType(nodeAppType);
-    if (generator)
-      generator.registerComponentTemplate([nodeEnvTemplate, nodeTemplate, expressAppTemplate, expressRouteTemplate]);
+    if (generator) {
+      const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerAspect, workerMain, harmony);
+      generator.registerComponentTemplate(getTemplates(envContext));
+    }
     return new NodeMain(react, tsAspect, nodeEnv, envs);
   }
 }

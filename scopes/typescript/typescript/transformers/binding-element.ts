@@ -28,6 +28,7 @@ export class BindingElementTransformer implements SchemaTransformer {
     const typeStr = parseTypeFromQuickInfo(info);
     const type = await context.resolveType(node, typeStr);
     const doc = await context.jsDocToDocSchema(node);
-    return new VariableLikeSchema(context.getLocation(node), name, displaySig, type, false, doc);
+    const defaultValue = node.initializer ? node.initializer.getText() : undefined;
+    return new VariableLikeSchema(context.getLocation(node), name, displaySig, type, false, doc, defaultValue);
   }
 }

@@ -30,7 +30,7 @@ export class TagFromScopeCmd implements Command {
 the input data is a stringified JSON of an array of the following object.
 {
   componentId: string;    // ids always have scope, so it's safe to parse them from string
-  dependencies?: string[]; // e.g. [teambit/compiler@1.0.0, teambit/tester@1.0.0]
+  dependencies?: string[]; // e.g. [teambit/compiler@1.0.0, teambit/tester^@1.0.0, teambit/linter~@0.0.1]
   versionToTag?: string;  // specific version (e.g. '1.0.0') or semver (e.g. 'minor', 'patch')
   prereleaseId?: string;  // applicable when versionToTag is a pre-release. (e.g. "dev", for 1.0.0-dev.1)
   message?: string;       // tag-message.
@@ -53,6 +53,7 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
     ['', 'disable-tag-pipeline', 'skip the tag pipeline to avoid publishing the components'],
     ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
     ['', 'ignore-build-errors', 'run the tag pipeline although the build pipeline failed'],
+    ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
     [
       '',
       'increment-by <number>',
@@ -90,6 +91,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       disableTagPipeline = false,
       forceDeploy = false,
       ignoreBuildErrors = false,
+      rebuildDepsGraph,
       incrementBy = 1,
     }: {
       push?: boolean;
@@ -160,6 +162,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       persist: true,
       disableTagAndSnapPipelines: disableTagPipeline,
       ignoreBuildErrors,
+      rebuildDepsGraph,
       forceDeploy,
       incrementBy,
       version: ver,
@@ -186,9 +189,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       return comps
         .map((component) => {
           let componentOutput = `     > ${component.id.toString()}`;
-          const autoTag = autoTaggedResults.filter((result) =>
-            result.triggeredBy.searchWithoutScopeAndVersion(component.id)
-          );
+          const autoTag = autoTaggedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
           if (autoTag.length) {
             const autoTagComp = autoTag.map((a) => a.component.id.toString());
             componentOutput += `\n       ${AUTO_TAGGED_MSG}:

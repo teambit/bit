@@ -25,6 +25,7 @@ import { configFactory as baseConfigFactory } from './config/webpack.config';
 import { WebpackAspect } from './webpack.aspect';
 import { WebpackBundler } from './webpack.bundler';
 import { WebpackDevServer } from './webpack.dev-server';
+import { runTransformersWithContext } from './run-transformer';
 
 export type WebpackConfigTransformContext = GlobalWebpackConfigTransformContext & {
   target: Target;
@@ -95,6 +96,7 @@ export class WebpackMain {
       context.id,
       context.rootPath,
       context.publicPath,
+      this.workspace.getComponentPathsRegExps(),
       context.title
     ) as any;
     const wdsPath = webpackDevServerModulePath || require.resolve('webpack-dev-server');
@@ -197,9 +199,19 @@ export class WebpackMain {
     devServerID: string,
     publicRoot: string,
     publicPath: string,
+    componentPathsRegExps: RegExp[],
     title?: string
   ) {
-    return devServerConfigFactory(devServerID, rootPath, entry, publicRoot, publicPath, this.pubsub, title);
+    return devServerConfigFactory(
+      devServerID,
+      rootPath,
+      entry,
+      publicRoot,
+      publicPath,
+      componentPathsRegExps,
+      this.pubsub,
+      title
+    );
   }
 
   static slots = [];
@@ -214,17 +226,3 @@ export class WebpackMain {
 }
 
 WebpackAspect.addRuntime(WebpackMain);
-
-export function runTransformersWithContext(
-  config: WebpackConfigMutator,
-  transformers: Array<WebpackConfigTransformer | WebpackConfigDevServerTransformer> = [],
-  // context: WebpackConfigTransformContext | WebpackConfigDevServerTransformContext
-  context: any
-): WebpackConfigMutator {
-  if (!Array.isArray(transformers)) return config;
-  const newConfig = transformers.reduce((acc, transformer) => {
-    // @ts-ignore
-    return transformer(acc, context);
-  }, config);
-  return newConfig;
-}

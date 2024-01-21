@@ -1,8 +1,9 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import path from 'path';
 import EnvsAspect from '@teambit/envs';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { AddCmd } from './add-cmd';
 import AddComponents, { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
 import { TrackerAspect } from './tracker.aspect';
@@ -10,7 +11,7 @@ import { TrackerAspect } from './tracker.aspect';
 export type TrackResult = { componentName: string; files: string[]; warnings: Warnings };
 
 export type TrackData = {
-  rootDir: PathOsBasedRelative; // path relative to the workspace
+  rootDir: PathOsBasedRelative | PathOsBasedAbsolute; // path relative to the workspace or absolute path
   componentName?: string; // if empty, it'll be generated from the path
   mainFile?: string; // if empty, attempts will be made to guess the best candidate
   defaultScope?: string; // can be entered as part of "bit create" command, helpful for out-of-sync logic
@@ -27,10 +28,13 @@ export class TrackerMain {
    */
   async track(trackData: TrackData): Promise<TrackResult> {
     const defaultScope = trackData.defaultScope ? await this.addOwnerToScopeName(trackData.defaultScope) : undefined;
+    const compPath = path.isAbsolute(trackData.rootDir)
+      ? trackData.rootDir
+      : path.join(this.workspace.path, trackData.rootDir);
     const addComponent = new AddComponents(
       { workspace: this.workspace },
       {
-        componentPaths: [trackData.rootDir],
+        componentPaths: [compPath],
         id: trackData.componentName,
         main: trackData.mainFile,
         override: false,
@@ -40,7 +44,7 @@ export class TrackerMain {
     );
     const result = await addComponent.add();
     const addedComponent = result.addedComponents[0];
-    const componentName = addedComponent?.id.name || (trackData.componentName as string);
+    const componentName = addedComponent?.id.fullName || (trackData.componentName as string);
     const files = addedComponent?.files.map((f) => f.relativePath) || [];
     return { componentName, files, warnings: result.warnings };
   }
@@ -56,7 +60,7 @@ export class TrackerMain {
     }
     const addComponents = new AddComponents(addContext, addProps);
     const addResults = await addComponents.add();
-    await this.workspace.consumer.onDestroy();
+    await this.workspace.consumer.onDestroy('add');
 
     return addResults;
   }

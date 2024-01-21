@@ -29,13 +29,13 @@ export class PnpmUI {
 
     const registry = packageName.split('/')[0];
     const packageVersion =
-      componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version)}`;
+      componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version as string)}`;
 
     return {
       Title: <img style={{ height: '16px', marginTop: '-2px' }} src="https://static.bit.dev/brands/pnpm.svg" />,
       Component: !options?.hide ? (
         <Install
-          config={`npm config set '${registry}:registry' https://node.bit.cloud`}
+          config={`npm config set '${registry}:registry' https://node-registry.bit.cloud`}
           componentName={componentId.name}
           packageManager="pnpm"
           copyString={`pnpm i ${packageName}${packageVersion}`}
@@ -43,7 +43,7 @@ export class PnpmUI {
           isInstallable={!options?.disableInstall}
         />
       ) : null,
-      order: 30,
+      order: 10,
     };
   };
 }

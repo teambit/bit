@@ -1,10 +1,10 @@
 import React from 'react';
-import { FunctionLikeSchema } from '@teambit/semantics.entities.semantic-schema';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { FunctionLikeSchema, TagName } from '@teambit/semantics.entities.semantic-schema';
+import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
+import classnames from 'classnames';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
 import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
-import classnames from 'classnames';
 
 import styles from './function.renderer.module.scss';
 
@@ -27,10 +27,34 @@ function FunctionComponent(props: APINodeRenderProps) {
   const returnTypeRenderer = renderers.find((renderer) => renderer.predicate(returnType));
 
   if (props.metadata?.[api.__schema]?.columnView) {
-    return <div className={styles.node}>{api.toString()}</div>;
+    return <div className={nodeStyles.node}>{api.toString()}</div>;
   }
 
-  const hasParams = params.length > 0;
+  const Params = params.map((param) => {
+    const paramRenderer = renderers.find((renderer) => renderer.predicate(param));
+
+    const ParamComponent = paramRenderer?.Component ? (
+      <paramRenderer.Component
+        {...props}
+        key={`props-${param.name}`}
+        depth={(props.depth ?? 0) + 1}
+        apiNode={{ ...props.apiNode, renderer: paramRenderer, api: param }}
+        metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
+      />
+    ) : (
+      <defaultParamRenderer.Component
+        {...props}
+        key={`props-${param.name}`}
+        depth={(props.depth ?? 0) + 1}
+        apiNode={{ ...props.apiNode, renderer: defaultParamRenderer, api: param }}
+        metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
+      />
+    );
+
+    return ParamComponent;
+  });
+
+  const returnDocComment = api.doc?.findTag(TagName.return)?.comment;
 
   return (
     <APINodeDetails {...props} options={{ hideIndex: true }}>
@@ -48,39 +72,20 @@ function FunctionComponent(props: APINodeRenderProps) {
           </div>
         </div>
       )}
-      {hasParams && (
-        <div className={styles.container}>
+      {Params.length > 0 && (
+        <div key={`parameter-list`} className={styles.container}>
           <div className={styles.title}>Parameters</div>
-          <div className={styles.table}>
-            <HeadingRow colNumber={4} headings={['name', 'type', 'default', 'description']} />
-            {params.map((param) => {
-              const paramRenderer = renderers.find((renderer) => renderer.predicate(param));
-              if (paramRenderer?.Component) {
-                return (
-                  <paramRenderer.Component
-                    {...props}
-                    key={`param-${param.name}`}
-                    depth={(props.depth ?? 0) + 1}
-                    apiNode={{ ...props.apiNode, renderer: paramRenderer, api: param }}
-                    metadata={{ [param.__schema]: { columnView: true } }}
-                  />
-                );
-              }
-              return (
-                <defaultParamRenderer.Component
-                  {...props}
-                  key={`param-${param.name}`}
-                  depth={(props.depth ?? 0) + 1}
-                  apiNode={{ ...props.apiNode, renderer: defaultParamRenderer, api: param }}
-                  metadata={{ [param.__schema]: { columnView: true } }}
-                />
-              );
-            })}
-          </div>
+          <HeadingRow
+            className={styles.paramHeading}
+            headings={['name', 'type', 'default', 'description']}
+            colNumber={4}
+          />
+          {...Params}
         </div>
       )}
       <div className={styles.container}>
         <div className={styles.title}>Returns</div>
+        {returnDocComment && <div className={styles.docComment}>{returnDocComment}</div>}
         <div className={styles.returnType}>
           {(returnTypeRenderer && (
             <returnTypeRenderer.Component
@@ -88,7 +93,7 @@ function FunctionComponent(props: APINodeRenderProps) {
               apiNode={{ ...props.apiNode, api: returnType, renderer: returnTypeRenderer }}
               depth={(props.depth ?? 0) + 1}
             />
-          )) || <div className={styles.node}>{returnType.toString()}</div>}
+          )) || <div className={nodeStyles.node}>{returnType.toString()}</div>}
         </div>
       </div>
     </APINodeDetails>

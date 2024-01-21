@@ -10,7 +10,6 @@ export class UndeprecateCmd implements Command {
   alias = '';
   options = [] as CommandOptions;
   loader = true;
-  migration = true;
   skipWorkspace = true;
   remoteOp = true;
 
@@ -21,7 +20,7 @@ export class UndeprecateCmd implements Command {
     if (result) {
       return chalk.green(`the component "${id}" has been undeprecated successfully`);
     }
-    return chalk.bold(`the component "${id}" is already undeprecated. no changes have been made`);
+    return chalk.bold(`the component "${id}" is not currently deprecated. no changes have been made`);
   }
 
   private async undeprecate(id: string) {

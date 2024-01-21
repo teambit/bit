@@ -18,7 +18,7 @@ export class PublishCmd implements Command {
   ];
   options = [
     ['d', 'dry-run', 'npm publish --dry-run'],
-    ['', 'allow-staged', 'allow publish components that were not exported yet (not recommended)'],
+    ['', 'allow-staged', 'allow publishing components that were not exported yet (not recommended)'],
     ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
   alias = '';
@@ -30,7 +30,7 @@ export class PublishCmd implements Command {
   async report(args: PublishArgs, options: PublisherOptions) {
     const result = await this.json(args, options);
     const publishResults: ComponentResult[] = result.data;
-    if (!publishResults.length) return 'no components were found candidate for publish';
+    if (!publishResults.length) return 'no components candidates found to publish';
 
     const publishOrDryRun = options.dryRun ? 'dry-run' : 'published';
     const title = chalk.white.bold(`successfully ${publishOrDryRun} the following components\n`);
