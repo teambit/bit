@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
@@ -18,7 +19,7 @@ describe('Snapping aspect', () => {
   let workspaceData: WorkspaceData;
   let snapping: SnappingMain;
   describe('components with issues', () => {
-    beforeAll(async () => {
+    before(async () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       // eslint-disable-next-line no-console
@@ -28,12 +29,12 @@ describe('Snapping aspect', () => {
       const compiler: CompilerMain = await loadAspect(CompilerAspect, workspacePath);
       await compiler.compileOnWorkspace();
       snapping = await loadAspect(SnappingAspect, workspacePath);
-    }, 30000);
+    });
     it('tag should throw an ComponentsHaveIssues error', async () => {
       try {
         await snapping.tag({ ids: ['comp1'] });
       } catch (err: any) {
-        expect(err.constructor.name).toEqual(ComponentsHaveIssues.name);
+        expect(err.constructor.name).to.equal(ComponentsHaveIssues.name);
       }
     });
     // @todo: this test fails during "bit build" for some reason. It passes on "bit test";
@@ -43,9 +44,9 @@ describe('Snapping aspect', () => {
       });
       snapping = await loadAspect(SnappingAspect, workspaceData.workspacePath);
       const results = await snapping.tag({ ids: ['comp1'] });
-      expect(results?.taggedComponents.length).toEqual(1);
+      expect(results?.taggedComponents.length).to.equal(1);
     });
-    afterAll(async () => {
+    after(async () => {
       await destroyWorkspace(workspaceData);
     });
   });
