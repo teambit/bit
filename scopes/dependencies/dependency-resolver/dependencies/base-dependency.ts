@@ -57,6 +57,10 @@ export abstract class BaseDependency implements Dependency {
     return this._optional;
   }
 
+  get idWithoutVersion() {
+    return this._id;
+  }
+
   serialize<SerializedDependency>(): SerializedDependency {
     return {
       id: this.id,

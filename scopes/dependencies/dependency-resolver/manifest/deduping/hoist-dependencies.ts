@@ -1,5 +1,4 @@
-import forEachObjIndexed from 'ramda/src/forEachObjIndexed';
-import { countBy, property, sortBy, uniq } from 'lodash';
+import { countBy, forEach, property, sortBy, uniq } from 'lodash';
 import semver from 'semver';
 import { parseRange } from 'semver-intersect';
 import { intersect } from 'semver-range-intersect';
@@ -381,12 +380,12 @@ function findMostCommonVersion(versions: SemverVersion[]): MostCommonVersion {
     version: '0.0.0',
     count: 0,
   };
-  forEachObjIndexed((count, version) => {
+  forEach(counts, (count, version) => {
     if (count > result.count) {
       result.version = version;
       result.count = count;
     }
-  }, counts);
+  });
   return result;
 }
 

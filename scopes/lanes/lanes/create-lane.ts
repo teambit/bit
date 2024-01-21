@@ -21,8 +21,10 @@ export async function createLane(
 ): Promise<Lane> {
   const consumer = workspace.consumer;
   const lanes = await consumer.scope.listLanes();
-  if (lanes.find((lane) => lane.name === laneName)) {
-    throw new BitError(`lane "${laneName}" already exists, to switch to this lane, please use "bit switch" command`);
+  if (lanes.find((lane) => lane.name === laneName && lane.scope === scopeName)) {
+    throw new BitError(
+      `lane "${scopeName}/${laneName}" already exists, to switch to this lane, please use "bit switch" command`
+    );
   }
   const bitCloudUser = await getBitCloudUser();
   throwForInvalidLaneName(laneName);
@@ -37,7 +39,7 @@ export async function createLane(
     const workspaceIds = consumer.bitMap.getAllBitIds();
     const laneComponentWithBitmapHead = await Promise.all(
       laneComponents.map(async ({ id, head }) => {
-        const compId = await workspace.resolveComponentId(id.changeVersion(head.toString()));
+        const compId = id.changeVersion(head.toString());
         const isRemoved = await workspace.scope.isComponentRemoved(compId);
         if (isRemoved) return null;
         const bitmapHead = workspaceIds.searchWithoutVersion(id);

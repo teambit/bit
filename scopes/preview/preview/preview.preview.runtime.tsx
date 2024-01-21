@@ -121,8 +121,22 @@ export class PreviewPreview {
 
     this.reportSize();
     this.setViewport();
+    this.setFullScreen();
     return render;
   };
+
+  setFullScreen() {
+    const query = this.getQuery();
+    const fullScreen = this.getParam(query, 'fullscreen');
+
+    if (!fullScreen) return;
+
+    const root = window.document.getElementById('root');
+
+    if (root) {
+      root.style.height = '100vh';
+    }
+  }
 
   setViewport() {
     const query = this.getQuery();

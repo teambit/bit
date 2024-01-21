@@ -12,7 +12,7 @@ import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import NpmHelper from './e2e-npm-helper';
 import ScopesData, { DEFAULT_OWNER } from './e2e-scopes';
-import BitJsoncHelper from './e2e-bit-jsonc-helper';
+import WorkspaceJsoncHelper from './e2e-workspace-jsonc-helper';
 
 type SetupWorkspaceOpts = {
   addRemoteScopeAsDefaultScope?: boolean; // default to true, otherwise, the scope is "my-scope"
@@ -33,7 +33,7 @@ export default class ScopeHelper {
   command: CommandHelper;
   fs: FsHelper;
   npm: NpmHelper;
-  bitJsonc: BitJsoncHelper;
+  workspaceJsonc: WorkspaceJsoncHelper;
   cache?: Record<string, any>;
   keepEnvs: boolean;
   clonedScopes: string[] = [];
@@ -44,7 +44,7 @@ export default class ScopeHelper {
     commandHelper: CommandHelper,
     fsHelper: FsHelper,
     npmHelper: NpmHelper,
-    bitJsonc: BitJsoncHelper
+    workspaceJsonc: WorkspaceJsoncHelper
   ) {
     this.debugMode = debugMode;
     this.keepEnvs = !!process.env.npm_config_keep_envs; // default = false
@@ -52,7 +52,7 @@ export default class ScopeHelper {
     this.command = commandHelper;
     this.fs = fsHelper;
     this.npm = npmHelper;
-    this.bitJsonc = bitJsonc;
+    this.workspaceJsonc = workspaceJsonc;
   }
   clean() {
     fs.emptyDirSync(this.scopes.localPath);
@@ -86,10 +86,10 @@ export default class ScopeHelper {
     if (opts?.initGit) this.command.runCmd('git init');
     this.initWorkspace();
 
-    if (opts?.addRemoteScopeAsDefaultScope ?? true) this.bitJsonc.addDefaultScope();
-    if (opts?.disablePreview ?? true) this.bitJsonc.disablePreview();
+    if (opts?.addRemoteScopeAsDefaultScope ?? true) this.workspaceJsonc.addDefaultScope();
+    if (opts?.disablePreview ?? true) this.workspaceJsonc.disablePreview();
     if (opts?.disableMissingManuallyConfiguredPackagesIssue ?? true)
-      this.bitJsonc.disableMissingManuallyConfiguredPackagesIssue();
+      this.workspaceJsonc.disableMissingManuallyConfiguredPackagesIssue();
 
     if (opts?.registry) {
       this._writeNpmrc({

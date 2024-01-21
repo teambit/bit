@@ -1,15 +1,13 @@
 import chalk from 'chalk';
-import R from 'ramda';
+import yesno from 'yesno';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
 import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/lib/list-scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import loader from '@teambit/legacy/dist/cli/loader';
 import { BEFORE_IMPORT_ACTION } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
-import logger from '@teambit/legacy/dist/logger/logger';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
 import { getLatestVersionNumber, pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
@@ -30,12 +28,15 @@ import VersionDependencies, {
   multipleVersionDependenciesToConsumer,
 } from '@teambit/legacy/dist/scope/version-dependencies';
 import { GraphMain } from '@teambit/graph';
+import { UPDATE_DEPS_ON_IMPORT, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { Workspace } from '@teambit/workspace';
 import { ComponentWriterMain, ComponentWriterResults, ManyComponentsWriterParams } from '@teambit/component-writer';
 import { LATEST_VERSION } from '@teambit/component-version';
 import { EnvsMain } from '@teambit/envs';
-import { compact } from 'lodash';
+import { compact, difference, fromPairs } from 'lodash';
 import { FilesStatus } from '@teambit/merging';
+import { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
+import { Logger } from '@teambit/logger';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -51,11 +52,12 @@ export type ImportOptions = {
   objectsOnly?: boolean;
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages, not as imported
   importDependents?: boolean;
+  dependentsDryRun?: boolean;
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
   saveInLane?: boolean; // save the imported component on the current lane (won't be available on main)
   lanes?: {
-    laneIds: LaneId[];
-    lanes: Lane[]; // it can be an empty array when a lane is a local lane and doesn't exist on the remote
+    laneId: LaneId;
+    remoteLane?: Lane; // it can be an empty array when a lane is a local lane and doesn't exist on the remote
   };
   allHistory?: boolean;
   fetchDeps?: boolean; // by default, if a component was tagged with > 0.0.900, it has the flattened-deps-graph in the object
@@ -87,43 +89,46 @@ export type ImportResult = {
   cancellationMessage?: string;
   installationError?: Error;
   compilationError?: Error;
+  workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult;
   missingIds?: string[]; // in case the import is configured to not throw when missing
+  lane?: Lane;
 };
 
 export default class ImportComponents {
   consumer: Consumer;
   scope: Scope;
   mergeStatus: { [id: string]: FilesStatus };
-  private laneObjects: Lane[];
+  private remoteLane: Lane | undefined;
   private divergeData: Array<ModelComponent> = [];
   constructor(
     private workspace: Workspace,
     private graph: GraphMain,
     private componentWriter: ComponentWriterMain,
     private envs: EnvsMain,
+    private logger: Logger,
     public options: ImportOptions
   ) {
     this.consumer = this.workspace.consumer;
     this.scope = this.consumer.scope;
-    this.laneObjects = this.options.lanes ? (this.options.lanes.lanes as Lane[]) : [];
+    this.remoteLane = this.options.lanes?.remoteLane;
   }
 
   async importComponents(): Promise<ImportResult> {
     let result;
-    loader.start(BEFORE_IMPORT_ACTION);
+    this.logger.setStatusLine(BEFORE_IMPORT_ACTION);
     const startTime = process.hrtime();
     if (this.options.lanes && !this.options.ids.length) {
       result = await this.importObjectsOnLane();
-      loader.succeed(BEFORE_IMPORT_ACTION, startTime);
+      this.logger.consoleSuccess(BEFORE_IMPORT_ACTION, startTime);
       return result;
     }
     if (this.options.ids.length) {
       result = await this.importSpecificComponents();
-      loader.succeed(BEFORE_IMPORT_ACTION, startTime);
+      this.logger.consoleSuccess(BEFORE_IMPORT_ACTION, startTime);
       return result;
     }
     result = await this.importAccordingToBitMap();
-    loader.succeed(BEFORE_IMPORT_ACTION, startTime);
+    this.logger.consoleSuccess(BEFORE_IMPORT_ACTION, startTime);
     return result;
   }
 
@@ -131,21 +136,20 @@ export default class ImportComponents {
     if (!this.options.objectsOnly) {
       throw new Error(`importObjectsOnLane should have objectsOnly=true`);
     }
-    if (this.laneObjects.length > 1) {
-      throw new Error(`importObjectsOnLane does not support more than one lane`);
-    }
-    const lane = this.laneObjects.length ? this.laneObjects[0] : undefined;
+    const lane = this.remoteLane;
     const bitIds: ComponentIdList = await this.getBitIds();
     lane
-      ? logger.debug(`importObjectsOnLane, Lane: ${lane.id()}, Ids: ${bitIds.toString()}`)
-      : logger.debug(`importObjectsOnLane, the lane does not exist on the remote. importing only the main components`);
+      ? this.logger.debug(`importObjectsOnLane, Lane: ${lane.id()}, Ids: ${bitIds.toString()}`)
+      : this.logger.debug(
+          `importObjectsOnLane, the lane does not exist on the remote. importing only the main components`
+        );
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     const versionDependenciesArr = await this._importComponentsObjects(bitIds, {
       lane,
     });
 
     if (lane) {
-      await this.mergeAndSaveLaneObject();
+      await this.mergeAndSaveLaneObject(lane);
     }
 
     return this.returnCompleteResults(beforeImportVersions, versionDependenciesArr);
@@ -174,23 +178,22 @@ export default class ImportComponents {
       importDetails,
       installationError: componentWriterResults?.installationError,
       compilationError: componentWriterResults?.compilationError,
+      workspaceConfigUpdateResult: componentWriterResults?.workspaceConfigUpdateResult,
       missingIds,
+      lane: this.remoteLane,
     };
   }
 
   async importSpecificComponents(): Promise<ImportResult> {
-    logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
+    this.logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
     const bitIds: ComponentIdList = await this.getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
     const versionDependenciesArr = await this._importComponentsObjects(bitIds, {
-      lane: this.laneObjects?.[0],
+      lane: this.remoteLane,
     });
-    if (this.laneObjects?.length && this.options.objectsOnly) {
-      if (this.laneObjects.length > 1) {
-        throw new Error(`importSpecificComponents does not support more than one lane`);
-      }
-      await this.mergeAndSaveLaneObject();
+    if (this.remoteLane && this.options.objectsOnly) {
+      await this.mergeAndSaveLaneObject(this.remoteLane);
     }
     let writtenComponents: Component[] = [];
     let componentWriterResults: ComponentWriterResults | undefined;
@@ -213,8 +216,7 @@ export default class ImportComponents {
     );
   }
 
-  private async mergeAndSaveLaneObject() {
-    const lane = this.laneObjects[0];
+  private async mergeAndSaveLaneObject(lane: Lane) {
     const mergeLaneResults = await this.scope.sources.mergeLane(lane, true);
     const mergedLane = mergeLaneResults.mergeLane;
     const isRemoteLaneEqualsToMergedLane = lane.isEqual(mergedLane);
@@ -283,9 +285,7 @@ export default class ImportComponents {
   private async throwForComponentsFromAnotherLane(bitIds: ComponentID[]) {
     if (this.options.objectsOnly) return;
     const currentLaneId = this.workspace.getCurrentLaneId();
-    const currentRemoteLane = currentLaneId
-      ? this.options.lanes?.lanes.find((l) => l.toLaneId().isEqual(currentLaneId))
-      : undefined;
+    const currentRemoteLane = this.remoteLane?.toLaneId().isEqual(currentLaneId) ? this.remoteLane : undefined;
     const currentLane = await this.workspace.getCurrentLaneObject();
     const idsFromAnotherLane: ComponentID[] = [];
     if (currentRemoteLane) {
@@ -340,7 +340,7 @@ if you need this specific snap, find the lane this snap is belong to, then run "
       reason: `of their latest on ${lane ? `lane ${lane.id()}` : 'main'}`,
     });
 
-    loader.start(`import ${ids.length} components with their dependencies (if missing)`);
+    this.logger.setStatusLine(`import ${ids.length} components with their dependencies (if missing)`);
     const results = fromOriginalScope
       ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)
       : await scopeComponentsImporter.importMany({
@@ -375,7 +375,7 @@ if you need this specific snap, find the lane this snap is belong to, then run "
     if (!this.options.lanes) {
       throw new Error(`getBitIdsForLanes: this.options.lanes must be set`);
     }
-    const bitIdsFromLane = ComponentIdList.fromArray(this.laneObjects.flatMap((lane) => lane.toBitIds()));
+    const bitIdsFromLane = this.remoteLane?.toComponentIds() || new ComponentIdList();
 
     if (!this.options.ids.length) {
       const bitMapIds = this.consumer.bitMap.getAllBitIds();
@@ -387,11 +387,13 @@ if you need this specific snap, find the lane this snap is belong to, then run "
 
     const idsWithWildcard = this.options.ids.filter((id) => hasWildcard(id));
     const idsWithoutWildcard = this.options.ids.filter((id) => !hasWildcard(id));
-    const idsWithoutWildcardPreferFromLane = idsWithoutWildcard.map((idStr) => {
-      const id = ComponentID.fromString(idStr);
-      const fromLane = bitIdsFromLane.searchWithoutVersion(id);
-      return fromLane && !id.hasVersion() ? fromLane : id;
-    });
+    const idsWithoutWildcardPreferFromLane = await Promise.all(
+      idsWithoutWildcard.map(async (idStr) => {
+        const id = await this.getIdFromStr(idStr);
+        const fromLane = bitIdsFromLane.searchWithoutVersion(id);
+        return fromLane && !id.hasVersion() ? fromLane : id;
+      })
+    );
 
     const bitIds: ComponentID[] = [...idsWithoutWildcardPreferFromLane];
 
@@ -404,7 +406,7 @@ if you need this specific snap, find the lane this snap is belong to, then run "
       const existingOnLanes = idsFromRemote.filter((id) => bitIdsFromLane.hasWithoutVersion(id));
       if (!existingOnLanes.length) {
         throw new BitError(`the id with the the wildcard "${idStr}" has been parsed to multiple component ids.
-however, none of them existing on the lane "${this.laneObjects.map((l) => l.name).join(', ')}"
+however, none of them existing on the lane "${this.remoteLane?.id()}".
 in case you intend to import these components from main, please run the following:
 bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`);
       }
@@ -414,16 +416,22 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     return bitIds;
   }
 
+  private async getIdFromStr(id: string): Promise<ComponentID> {
+    if (id.startsWith('@')) return this.workspace.resolveComponentIdFromPackageName(id);
+    return ComponentID.fromString(id); // we don't support importing without a scope name
+  }
+
   private async getBitIdsForNonLanes() {
     const bitIds: ComponentID[] = [];
     await Promise.all(
       this.options.ids.map(async (idStr: string) => {
         if (hasWildcard(idStr)) {
           const ids = await getRemoteBitIdsByWildcards(idStr, this.options.includeDeprecated);
-          loader.start(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
+          this.logger.setStatusLine(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
           bitIds.push(...ids);
         } else {
-          bitIds.push(ComponentID.fromString(idStr)); // we don't support importing without a scope name
+          const id = await this.getIdFromStr(idStr);
+          bitIds.push(id);
         }
       })
     );
@@ -435,21 +443,32 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     const bitIds: ComponentID[] = this.options.lanes
       ? await this.getBitIdsForLanes()
       : await this.getBitIdsForNonLanes();
-    if (this.options.importDependenciesDirectly || this.options.importDependents) {
+    if (this.options.importDependenciesDirectly || this.options.importDependents || this.options.dependentsDryRun) {
       if (this.options.importDependenciesDirectly) {
         const dependenciesIds = await this.getFlattenedDepsUnique(bitIds);
         bitIds.push(...dependenciesIds);
       }
-      if (this.options.importDependents) {
+      if (this.options.importDependents || this.options.dependentsDryRun) {
+        this.logger.setStatusLine('finding dependents');
         const graph = await this.graph.getGraphIds();
         const targetCompIds = await this.workspace.resolveMultipleComponentIds(bitIds);
         const sourceIds = await this.workspace.listIds();
         const ids = graph.findIdsFromSourcesToTargets(sourceIds, targetCompIds);
-        logger.debug(
-          `found ${ids.length} component for --dependents flag`,
-          ids.map((id) => id.toString())
-        );
-        bitIds.push(...ids.map((id) => id));
+        const idsStr = ids.map((id) => id.toString());
+        this.logger.debug(`found ${ids.length} component for --dependents flag`, idsStr);
+        if (this.options.dependentsDryRun) {
+          this.logger.clearStatusLine();
+          const ok = await yesno({
+            question: `found the following ${ids.length} components for --dependents flag:\n${idsStr.join(
+              '\n'
+            )}\nWould you like to continue with the import?`,
+          });
+          if (!ok) {
+            throw new BitError('import was aborted');
+          }
+        }
+
+        bitIds.push(...ids);
       }
     }
     return ComponentIdList.uniqFromArray(bitIds);
@@ -488,7 +507,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       importedDeps: [],
       importDetails: [],
     };
-    if (R.isEmpty(componentsIdsToImport)) {
+    if (!componentsIdsToImport.length) {
       return emptyResult;
     }
     await this._throwForModifiedOrNewComponents(componentsIdsToImport);
@@ -531,7 +550,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       return [idStr, modelComponent.listVersions()];
     });
     const versions = await Promise.all(versionsP);
-    return R.fromPairs(versions);
+    return fromPairs(versions);
   }
 
   /**
@@ -555,7 +574,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
       if (!modelComponent) throw new BitError(`imported component ${idStr} was not found in the model`);
       const afterImportVersions = modelComponent.listVersions();
-      const versionDifference: string[] = R.difference(afterImportVersions, beforeImportVersions);
+      const versionDifference: string[] = difference(afterImportVersions, beforeImportVersions);
       const getStatus = (): ImportStatus => {
         if (!versionDifference.length) return 'up to date';
         if (!beforeImportVersions.length) return 'added';
@@ -725,8 +744,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       }
       return component;
     });
-    const removeNulls = R.reject(R.isNil);
-    return removeNulls(componentsToWrite);
+    return compact(componentsToWrite);
   }
 
   _shouldSaveLaneData(): boolean {
@@ -744,7 +762,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     if (!currentLane) {
       return; // user on main
     }
-    const idsFromRemoteLanes = ComponentIdList.fromArray(this.laneObjects.flatMap((lane) => lane.toComponentIds()));
+    const idsFromRemoteLanes = this.remoteLane?.toComponentIds() || new ComponentIdList();
     await Promise.all(
       components.map(async (comp) => {
         const existOnRemoteLane = idsFromRemoteLanes.has(comp.id);
@@ -772,6 +790,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       verbose: this.options.verbose,
       throwForExistingDir: !this.options.override,
       skipWritingToFs: this.options.trackOnly,
+      shouldUpdateWorkspaceConfig: isFeatureEnabled(UPDATE_DEPS_ON_IMPORT),
       reasonForBitmapChange: 'import',
     };
     return this.componentWriter.writeMany(manyComponentsWriterOpts);

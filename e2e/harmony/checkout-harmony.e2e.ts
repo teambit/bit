@@ -283,7 +283,7 @@ describe('bit checkout command', function () {
     describe('using manual strategy', () => {
       let output;
       before(() => {
-        output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--auto-merge-resolve manual');
+        output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--manual');
       });
       it('should indicate that the file has conflicts', () => {
         expect(output).to.have.string(successOutput);
@@ -389,7 +389,7 @@ describe('bit checkout command', function () {
       describe('using manual strategy', () => {
         let output;
         before(() => {
-          output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--auto-merge-resolve manual');
+          output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--manual');
         });
         it('should indicate that a new file was added', () => {
           expect(output).to.have.string(FileStatusWithoutChalk.added);
@@ -539,6 +539,43 @@ describe('bit checkout command', function () {
     });
     it('should be able to checkout to a non-exist older version', () => {
       expect(() => helper.command.checkoutVersion('0.0.1', `${helper.scopes.remote}/comp1`)).to.not.throw();
+    });
+  });
+  describe('modified component without conflicts', () => {
+    let beforeCheckout: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/index.js', '// first line\n\n');
+      helper.command.tagAllWithoutBuild();
+      helper.fs.outputFile('comp1/index.js', '// first line modified\n\n');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.checkoutVersion('0.0.1', 'comp1', '-x');
+      helper.fs.appendFile('comp1/index.js', '// second line\n');
+      beforeCheckout = helper.scopeHelper.cloneLocalScope();
+    });
+    it('without any flag should merge successfully', () => {
+      helper.command.checkoutHead('comp1', '-x');
+      const file = helper.fs.readFile('comp1/index.js');
+      expect(file).to.include(`// first line modified
+
+// second line`);
+    });
+    it('with --force-ours flag, should keep the file as is', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeCheckout);
+      helper.command.checkoutHead('comp1', '-x --force-ours');
+      const file = helper.fs.readFile('comp1/index.js');
+      expect(file).to.include(`// first line
+
+// second line`);
+    });
+    it('with --force-theirs flag, should write the files according to the head', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeCheckout);
+      helper.command.checkoutHead('comp1', '-x --force-theirs');
+      const file = helper.fs.readFile('comp1/index.js');
+      expect(file).to.include(`// first line modified
+`);
     });
   });
 });

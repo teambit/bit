@@ -3,7 +3,7 @@ import { v4 } from 'uuid';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
-import { compact, flatten, pick } from 'lodash';
+import { compact, flatten, isEqual, pick } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Component, ComponentMap, ComponentAspect } from '@teambit/component';
 import type { ComponentMain, ComponentFactory } from '@teambit/component';
@@ -47,7 +47,6 @@ import { Scope } from '@teambit/legacy/dist/scope';
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
 import path, { basename } from 'path';
-import equals from 'ramda/src/equals';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
@@ -786,6 +785,7 @@ export class IsolatorMain {
       installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
       nmSelfReferences: this.dependencyResolver.config.capsuleSelfReference,
       overrides: this.dependencyResolver.config.capsulesOverrides || this.dependencyResolver.config.overrides,
+      hoistPatterns: this.dependencyResolver.config.hoistPatterns,
       rootComponentsForCapsules: this.dependencyResolver.isolatedCapsules(),
       useNesting: isolateInstallOptions.useNesting,
       keepExistingModulesDir: this.dependencyResolver.isolatedCapsules(),
@@ -1027,7 +1027,7 @@ export class IsolatorMain {
     const { previousPackageJson, currentPackageJson } = capsuleWithPackageData;
     if (!previousPackageJson) return true;
     // @ts-ignore at this point, currentPackageJson is set
-    return DEPENDENCIES_FIELDS.some((field) => !equals(previousPackageJson[field], currentPackageJson[field]));
+    return DEPENDENCIES_FIELDS.some((field) => !isEqual(previousPackageJson[field], currentPackageJson[field]));
   }
 
   private async getCapsulesPreviousPackageJson(capsules: Capsule[]): Promise<CapsulePackageJsonData[]> {
@@ -1093,7 +1093,7 @@ export class IsolatorMain {
       await Promise.all(promises);
       return manifest;
     };
-    const deps = await this.dependencyResolver.getDependencies(component);
+    const deps = this.dependencyResolver.getDependencies(component);
     const manifest = await getComponentDepsManifest(deps);
 
     // component.packageJsonFile is not available here. we don't mutate the component object for capsules.

@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
+import { compact } from 'lodash';
 import {
   ApplyVersionResults,
   applyVersionReport,
@@ -44,19 +45,16 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       'interactive-merge',
       'when a component is modified and the merge process found conflicts, display options to resolve them',
     ],
-    ['', 'ours', 'DEPRECATED. use --auto-merge-resolve. In the future, this flag will leave the current code intact'],
-    [
-      '',
-      'theirs',
-      'DEPRECATED. use --auto-merge-resolve. In the future, this flag will override the current code with the incoming code',
-    ],
-    ['', 'manual', 'DEPRECATED. use --auto-merge-resolve'],
     [
       '',
       'auto-merge-resolve <merge-strategy>',
       'in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
     ],
-    ['r', 'reset', 'revert changes that were not snapped/tagged'],
+    [
+      '',
+      'manual',
+      'same as "--auto-merge-resolve manual". in case of merge conflict, write the files with the conflict markers',
+    ],
     ['a', 'all', 'all components'],
     [
       'e',
@@ -65,6 +63,8 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
     ],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['x', 'skip-dependency-installation', 'do not auto-install dependencies of the imported components'],
+    ['', 'force-ours', 'do not merge, preserve local files as is'],
+    ['', 'force-theirs', 'do not merge, just overwrite with incoming files'],
   ] as CommandOptions;
   loader = true;
 
@@ -74,10 +74,10 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
     [to, componentPattern]: [string, string],
     {
       interactiveMerge = false,
-      ours = false,
-      theirs = false,
-      manual = false,
+      forceOurs,
+      forceTheirs,
       autoMergeResolve,
+      manual,
       all = false,
       workspaceOnly = false,
       verbose = false,
@@ -85,10 +85,10 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       revert = false,
     }: {
       interactiveMerge?: boolean;
-      ours?: boolean;
-      theirs?: boolean;
-      manual?: boolean;
+      forceOurs?: boolean;
+      forceTheirs?: boolean;
       autoMergeResolve?: MergeStrategy;
+      manual?: boolean;
       all?: boolean;
       workspaceOnly?: boolean;
       verbose?: boolean;
@@ -96,10 +96,8 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       revert?: boolean;
     }
   ) {
-    if (ours || theirs || manual) {
-      throw new BitError(
-        'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead.'
-      );
+    if (forceOurs && forceTheirs) {
+      throw new BitError('please use either --force-ours or --force-theirs, not both');
     }
     if (
       autoMergeResolve &&
@@ -109,6 +107,7 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
     ) {
       throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
     }
+    if (manual) autoMergeResolve = 'manual';
     if (workspaceOnly && to !== HEAD) {
       throw new BitError('--workspace-only is only relevant when running "bit checkout head" on a lane');
     }
@@ -121,6 +120,8 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       skipNpmInstall: skipDependencyInstallation,
       workspaceOnly,
       revert,
+      forceOurs,
+      forceTheirs,
     };
     if (to === HEAD) checkoutProps.head = true;
     else if (to === LATEST) checkoutProps.latest = true;
@@ -136,7 +137,11 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
   }
 }
 
-export function checkoutOutput(checkoutResults: ApplyVersionResults, checkoutProps: CheckoutProps) {
+export function checkoutOutput(
+  checkoutResults: ApplyVersionResults,
+  checkoutProps: CheckoutProps,
+  alternativeTitle?: string
+) {
   const {
     components,
     version,
@@ -173,27 +178,31 @@ export function checkoutOutput(checkoutResults: ApplyVersionResults, checkoutPro
     const body = notCheckedOutComponents
       .map((failedComponent) => `${failedComponent.id.toString()} - ${failedComponent.unchangedMessage}`)
       .join('\n');
-    return `${chalk.underline(title)}\n${body}\n\n`;
+    return `${chalk.underline(title)}\n${body}`;
   };
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
-    const title = `\n\nfiles with conflicts summary\n`;
+    const title = `files with conflicts summary\n`;
     const suggestion = `\n\nfix the conflicts above manually and then run "bit install".
 once ready, snap/tag the components to persist the changes`;
-    return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
+    const conflictSummary = conflictSummaryReport(components);
+    return chalk.underline(title) + conflictSummary.conflictStr + chalk.yellow(suggestion);
   };
   const getSuccessfulOutput = () => {
-    const switchedOrReverted = revert ? 'reverted' : 'switched';
     if (!components || !components.length) return '';
+    const newLine = '\n';
+    const switchedOrReverted = revert ? 'reverted' : 'switched';
     if (components.length === 1) {
       const component = components[0];
       const componentName = reset ? component.id.toString() : component.id.toStringWithoutVersion();
       if (reset) return `successfully reset ${chalk.bold(componentName)}\n`;
-      const title = `successfully ${switchedOrReverted} ${chalk.bold(componentName)} to version ${chalk.bold(
-        // @ts-ignore version is defined when !reset
-        head || latest ? component.id.version : version
-      )}\n`;
-      return chalk.bold(title) + applyVersionReport(components, false);
+      const title =
+        alternativeTitle ||
+        `successfully ${switchedOrReverted} ${chalk.bold(componentName)} to version ${chalk.bold(
+          // @ts-ignore version is defined when !reset
+          head || latest ? component.id.version : version
+        )}`;
+      return chalk.bold(title) + newLine + applyVersionReport(components, false);
     }
     if (reset) {
       const title = 'successfully reset the following components\n\n';
@@ -208,9 +217,10 @@ once ready, snap/tag the components to persist the changes`;
       return `version ${chalk.bold(version)}`;
     };
     const versionOutput = getVerOutput();
-    const title = `successfully ${switchedOrReverted} ${components.length} components to ${versionOutput}\n`;
+    const title =
+      alternativeTitle || `successfully ${switchedOrReverted} ${components.length} components to ${versionOutput}`;
     const showVersion = head || reset;
-    return chalk.bold(title) + applyVersionReport(components, true, showVersion);
+    return chalk.bold(title) + newLine + applyVersionReport(components, true, showVersion);
   };
   const getNewOnLaneOutput = () => {
     if (!newFromLane?.length) return '';
@@ -218,12 +228,11 @@ once ready, snap/tag the components to persist the changes`;
       ? `successfully added the following components from the lane`
       : `the following components exist on the lane but were not added to the workspace. omit --workspace-only flag to add them`;
     const body = newFromLane.join('\n');
-    return `\n\n${chalk.underline(title)}\n${body}`;
+    return `${chalk.underline(title)}\n${body}`;
   };
   const getSummary = () => {
     const checkedOut = components?.length || 0;
     const notCheckedOutLegitimately = notCheckedOutComponents.length;
-    const newLines = '\n\n';
     const title = chalk.bold.underline('Summary');
     const checkedOutStr = `\nTotal Changed: ${chalk.bold(checkedOut.toString())}`;
     const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(notCheckedOutLegitimately.toString())}`;
@@ -233,18 +242,18 @@ once ready, snap/tag the components to persist the changes`;
       ? `\nNew on lane${newOnLaneAddedStr}: ${chalk.bold(newOnLaneNum.toString())}`
       : '';
 
-    return newLines + title + checkedOutStr + unchangedLegitimatelyStr + newOnLaneStr;
+    return title + checkedOutStr + unchangedLegitimatelyStr + newOnLaneStr;
   };
 
-  return (
-    getNotCheckedOutOutput() +
-    getSuccessfulOutput() +
-    getRemovedOutput(removedComponents) +
-    getAddedOutput(addedComponents) +
-    getNewOnLaneOutput() +
-    getConflictSummary() +
-    getSummary() +
-    installationErrorOutput(installationError) +
-    compilationErrorOutput(compilationError)
-  );
+  return compact([
+    getNotCheckedOutOutput(),
+    getSuccessfulOutput(),
+    getRemovedOutput(removedComponents),
+    getAddedOutput(addedComponents),
+    getNewOnLaneOutput(),
+    getConflictSummary(),
+    getSummary(),
+    installationErrorOutput(installationError),
+    compilationErrorOutput(compilationError),
+  ]).join('\n\n');
 }

@@ -6,7 +6,6 @@ import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/work
 import LanesAspect, { LanesMain } from '@teambit/lanes';
 import { ComponentID } from '@teambit/component-id';
 import { Component, InvalidComponent } from '@teambit/component';
-import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BEFORE_STATUS } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
@@ -124,28 +123,6 @@ export class StatusMain {
     const currentLane = await consumer.getCurrentLaneObject();
     const forkedLaneId = currentLane?.forkedFrom;
     const workspaceIssues = this.workspace.getWorkspaceIssues();
-    Analytics.setExtraData('new_components', newComponents.length);
-    Analytics.setExtraData('staged_components', stagedComponents.length);
-    Analytics.setExtraData('num_components_with_missing_dependencies', componentsWithIssues.length);
-    Analytics.setExtraData('autoTagPendingComponents', autoTagPendingComponentsIds.length);
-    Analytics.setExtraData('deleted', invalidComponents.length);
-
-    const convertBitIdToComponentIdsAndSort = async (ids: ComponentID[]) =>
-      ComponentID.sortIds(await this.workspace.resolveMultipleComponentIds(ids));
-
-    const convertObjToComponentIdsAndSort = async <T>(
-      objectsWithId: Array<T & { id: ComponentID }>
-    ): Promise<Array<T & { id: ComponentID }>> => {
-      const results = await Promise.all(
-        objectsWithId.map(async (obj) => {
-          return {
-            ...obj,
-            id: await this.workspace.resolveComponentId(obj.id),
-          };
-        })
-      );
-      return results.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
-    };
 
     const sortObjectsWithId = <T>(objectsWithId: Array<T & { id: ComponentID }>): Array<T & { id: ComponentID }> => {
       return objectsWithId.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
@@ -153,30 +130,30 @@ export class StatusMain {
 
     await consumer.onDestroy('status');
     return {
-      newComponents: await convertBitIdToComponentIdsAndSort(newComponents.map((c) => c.id)),
-      modifiedComponents: await convertBitIdToComponentIdsAndSort(modifiedComponents.map((c) => c.id)),
-      stagedComponents: await convertObjToComponentIdsAndSort(stagedComponentsWithVersions),
+      newComponents: ComponentID.sortIds(newComponents.map((c) => c.id)),
+      modifiedComponents: ComponentID.sortIds(modifiedComponents.map((c) => c.id)),
+      stagedComponents: sortObjectsWithId(stagedComponentsWithVersions),
       componentsWithIssues: sortObjectsWithId(componentsWithIssues.map((c) => ({ id: c.id, issues: c.state.issues }))),
       importPendingComponents, // no need to sort, we use only its length
-      autoTagPendingComponents: await convertBitIdToComponentIdsAndSort(autoTagPendingComponentsIds),
+      autoTagPendingComponents: ComponentID.sortIds(autoTagPendingComponentsIds),
       invalidComponents: sortObjectsWithId(invalidComponents.map((c) => ({ id: c.id, error: c.err }))),
-      locallySoftRemoved: await convertBitIdToComponentIdsAndSort(locallySoftRemoved),
-      remotelySoftRemoved: await convertBitIdToComponentIdsAndSort(remotelySoftRemoved.map((c) => c.id)),
-      outdatedComponents: await convertObjToComponentIdsAndSort(
+      locallySoftRemoved: ComponentID.sortIds(locallySoftRemoved),
+      remotelySoftRemoved: ComponentID.sortIds(remotelySoftRemoved.map((c) => c.id)),
+      outdatedComponents: sortObjectsWithId(
         outdatedComponents.map((c) => ({
           id: c.id,
           headVersion: c.headVersion,
           latestVersion: c.latestVersion,
         }))
       ),
-      mergePendingComponents: await convertObjToComponentIdsAndSort(
+      mergePendingComponents: sortObjectsWithId(
         mergePendingComponents.map((c) => ({ id: c.id, divergeData: c.diverge }))
       ),
-      componentsDuringMergeState: await convertBitIdToComponentIdsAndSort(idsDuringMergeState),
+      componentsDuringMergeState: ComponentID.sortIds(idsDuringMergeState),
       softTaggedComponents: ComponentID.sortIds(softTaggedComponents),
-      snappedComponents: await convertBitIdToComponentIdsAndSort(snappedComponents),
-      pendingUpdatesFromMain: await convertObjToComponentIdsAndSort(pendingUpdatesFromMain),
-      updatesFromForked: await convertObjToComponentIdsAndSort(updatesFromForked),
+      snappedComponents: ComponentID.sortIds(snappedComponents),
+      pendingUpdatesFromMain: sortObjectsWithId(pendingUpdatesFromMain),
+      updatesFromForked: sortObjectsWithId(updatesFromForked),
       unavailableOnMain,
       currentLaneId,
       forkedLaneId,

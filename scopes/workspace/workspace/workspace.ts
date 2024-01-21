@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import memoize from 'memoizee';
 import mapSeries from 'p-map-series';
+import fetch from 'node-fetch';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
@@ -12,7 +13,6 @@ import {
   ComponentMain,
   Component,
   ComponentFactory,
-  AspectList,
   InvalidComponent,
   ResolveAspectsOptions,
 } from '@teambit/component';
@@ -946,21 +946,6 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   /**
-   * see component-aspect, createAspectListFromLegacy() method for a context why this is needed.
-   */
-  private async resolveScopeAspectListIds(aspectListFromScope: AspectList): Promise<AspectList> {
-    const resolvedList = await aspectListFromScope.pmap(async (entry) => {
-      if (entry.id.scope !== this.scope.name) {
-        return entry;
-      }
-      const newId = await this.resolveComponentId(entry.id.fullName);
-      const newEntry = new AspectEntry(newId, entry.legacy);
-      return newEntry;
-    });
-    return resolvedList;
-  }
-
-  /**
    * @deprecated use `this.idsByPattern` instead for consistency. also, it supports negation and list of patterns.
    *
    * load components into the workspace through a variants pattern.
@@ -1062,7 +1047,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     return mapSeries(components, async (component) => {
-      const id = await this.resolveComponentId(component.id);
+      const id = component.id;
       return this.get(id, component, true, true, loadOpts);
     });
   }
@@ -1309,6 +1294,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.aspectsMerger.getDepsDataOfMergeConfig(id);
   }
 
+  /**
+   * @deprecated
+   * the workspace.jsonc conflicts are not written to the config-merge file anymore.
+   * see https://github.com/teambit/bit/pull/8393 for more details.
+   */
   getWorkspaceJsonConflictFromMergeConfig(): { data?: Record<string, any>; conflict: boolean } {
     const configMergeFile = this.getConflictMergeFile();
     let data: Record<string, any> | undefined;
@@ -1327,6 +1317,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   getWorkspaceIssues(): Error[] {
     const errors: Error[] = [];
+
+    // since PR #8393, the workspace.jsonc conflicts are not written to the config-merge file anymore.
+    // @todo remove this in the future. (maybe Q2 of 2024).
     const configMergeFile = this.getConflictMergeFile();
     try {
       configMergeFile.getConflictParsed('WORKSPACE');
@@ -1509,7 +1502,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const linuxPath = pathNormalizeToLinux(relativePath);
     const bitId = this.consumer.bitMap.getComponentIdByPath(linuxPath);
     if (bitId) {
-      return this.resolveComponentId(bitId);
+      return bitId;
     }
     return undefined;
   }
@@ -1675,6 +1668,46 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.defaultDirectory;
   }
 
+  async resolveComponentIdFromPackageName(packageName: string): Promise<ComponentID> {
+    if (!packageName.startsWith('@')) {
+      throw new Error(`findComponentIdFromPackageName supports only packages that start with @, got ${packageName}`);
+    }
+    const errMsgPrefix = `unable to resolve a component-id from the package-name ${packageName}, `;
+    const pkgJsonPath = path.join(this.path, 'node_modules', packageName, 'package.json');
+    let pkgJson: Record<string, any> | undefined;
+    try {
+      pkgJson = await fs.readJson(pkgJsonPath);
+    } catch (err) {
+      // never mind the reason. probably it's not there.
+    }
+    if (pkgJson) {
+      const compId = pkgJson.componentId;
+      if (!compId) {
+        throw new BitError(
+          `${errMsgPrefix}the package.json file has no componentId field, it's probably not a component`
+        );
+      }
+      return ComponentID.fromObject(compId);
+    }
+
+    const url = `https://node-registry.bit.cloud/${packageName}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new BitError(`${errMsgPrefix}got ${res.statusText} from the url: ${url}`);
+    }
+    const data = await res.json();
+    const latest = data['dist-tags'].latest;
+    if (!latest) throw new BitError(`${errMsgPrefix}the "dist-tags" has no latest field`);
+    const version = data.versions[latest];
+    if (!version) throw new BitError(`${errMsgPrefix}the "versions" is missing the latest "${latest}" field`);
+    const compId = version.componentId;
+    if (!compId)
+      throw new BitError(
+        `${errMsgPrefix}the package.json of version "${latest}" has no componentId field, it's probably not a component`
+      );
+    return ComponentID.fromObject(compId).changeVersion(undefined);
+  }
+
   /**
    * Transform the id to ComponentId and get the exact id as appear in bitmap
    */
@@ -1682,6 +1715,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (id instanceof BitId && id.hasScope() && id.hasVersion()) {
       // an optimization to make it faster when BitId is passed
       return ComponentID.fromLegacy(id);
+    }
+    if (id instanceof ComponentID && id.hasVersion()) {
+      return id;
+    }
+    if (typeof id === 'string' && id.startsWith('@')) {
+      return this.resolveComponentIdFromPackageName(id);
     }
     const getDefaultScope = async (bitId: ComponentID, bitMapOptions?: GetBitMapComponentOptions) => {
       if (bitId.scope) {

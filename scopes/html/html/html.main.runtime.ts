@@ -1,12 +1,12 @@
-import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { TsConfigSourceFile } from 'typescript';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { BuildTask } from '@teambit/builder';
+import { merge } from 'lodash';
 import { Compiler } from '@teambit/compiler';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { MainRuntime } from '@teambit/cli';
-import { EnvsAspect, EnvsMain, EnvTransformer, Environment} from '@teambit/envs';
+import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactEnv, ReactMain } from '@teambit/react';
 import { HtmlAspect } from './html.aspect';
 import { HtmlEnv } from './html.env';
@@ -96,7 +96,7 @@ export class HtmlMain {
    */
   overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
-      getDependencies: () => mergeDeepLeft(dependencyPolicy, this.htmlEnv.getDependencies()),
+      getDependencies: () => merge(this.htmlEnv.getDependencies(), dependencyPolicy),
     });
   }
 
@@ -107,17 +107,15 @@ export class HtmlMain {
     return this.envs.compose(this.envs.merge(targetEnv, this.htmlEnv), transformers);
   }
 
-  static async provider(
-    [envs, react]: [EnvsMain, ReactMain],
-    // config,
-    // slots,
-    // harmony: Harmony
-  ) {
+  static async provider([envs, react]: [EnvsMain, ReactMain]) // config,
+  // slots,
+  // harmony: Harmony
+  {
     const htmlEnv: HtmlEnv = envs.merge<HtmlEnv, ReactEnv>(new HtmlEnv(), react.reactEnv);
     envs.registerEnv(htmlEnv);
     // if (generator) {
-      // const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerAspect, workerMain, harmony);
-      // generator.registerComponentTemplate(getTemplates(envContext));
+    // const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerAspect, workerMain, harmony);
+    // generator.registerComponentTemplate(getTemplates(envContext));
     // }
 
     return new HtmlMain(react, htmlEnv, envs);

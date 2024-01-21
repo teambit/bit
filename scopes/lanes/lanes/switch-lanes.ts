@@ -3,7 +3,7 @@ import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ApplyVersionResults } from '@teambit/merging';
 import { Lane } from '@teambit/legacy/dist/scope/models';
-import { CheckoutPropsLegacy, CheckoutProps } from '@teambit/checkout';
+import { CheckoutProps } from '@teambit/checkout';
 import { Workspace } from '@teambit/workspace';
 import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
@@ -29,7 +29,7 @@ export class LaneSwitcher {
     private workspace: Workspace,
     private logger: Logger,
     private switchProps: SwitchProps,
-    private checkoutProps: CheckoutPropsLegacy,
+    private checkoutProps: CheckoutProps,
     private Lanes: LanesMain
   ) {
     this.consumer = this.workspace.consumer;

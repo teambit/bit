@@ -1,0 +1,50 @@
+.versionRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 40px;
+  padding: 0 16px;
+  line-height: 1.2em;
+}
+
+.versionTimestamp {
+  min-width: fit-content;
+  margin-right: 2px;
+  text-align: right;
+}
+
+.versionUserAvatar {
+  flex: none;
+  padding: 0px 8px;
+}
+
+.laneIcon {
+  padding: 0px 4px;
+}
+
+.version {
+  max-width: 70%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.versionName {
+  padding: 0px 8px;
+  flex-grow: 1;
+  min-width: fit-content;
+}
+
+.commitMessage {
+  flex-grow: 1;
+  padding: 0px 8px;
+}
+
+.emptyMessage {
+  font-style: italic;
+  color: var(--bit-text-color-light, #6c707c);
+  padding: 0px 8px;
+  font-size: (var-bit-p-xs, 14px);
+}

@@ -6,7 +6,7 @@ import logger from '../../logger/logger';
 import { Remote, Remotes } from '../../remotes';
 import { ComponentNotFound, MergeConflict, MergeConflictOnRemote } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import { Lane, Version, ModelComponent, VersionHistory } from '../models';
+import { Lane, Version, ModelComponent, VersionHistory, LaneHistory } from '../models';
 import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import { ObjectList } from '../objects/object-list';
@@ -50,11 +50,20 @@ export async function saveObjects(scope: Scope, objectList: ObjectList): Promise
   const bitObjectList = await objectList.toBitObjects();
   const objectsNotRequireMerge = bitObjectList.getObjectsNotRequireMerge();
   // components and lanes can't be just added, they need to be carefully merged.
-  const { mergedIds, mergedComponentsResults, mergedLanes } = await mergeObjects(scope, bitObjectList);
+  const { mergedIds, mergedComponentsResults, mergedLanes, mergedLaneHistories } = await mergeObjects(
+    scope,
+    bitObjectList
+  );
   const mergedComponents = mergedComponentsResults.map((_) => _.mergedComponent);
   const versionObjects = objectsNotRequireMerge.filter((o) => o instanceof Version) as Version[];
   const versionsHistory = await updateVersionHistory(scope, mergedComponents, versionObjects);
-  const allObjects = [...mergedComponents, ...mergedLanes, ...objectsNotRequireMerge, ...versionsHistory];
+  const allObjects = [
+    ...mergedComponents,
+    ...mergedLanes,
+    ...objectsNotRequireMerge,
+    ...versionsHistory,
+    ...mergedLaneHistories,
+  ];
   scope.objects.validateObjects(true, allObjects);
   await scope.objects.writeObjectsToTheFS(allObjects);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
@@ -157,7 +166,12 @@ async function _updateVersionHistoryForVersionsWithOrigin(
   return compact(versionsHistory);
 }
 
-type MergeObjectsResult = { mergedIds: ComponentIdList; mergedComponentsResults: MergeResult[]; mergedLanes: Lane[] };
+type MergeObjectsResult = {
+  mergedIds: ComponentIdList;
+  mergedComponentsResults: MergeResult[];
+  mergedLanes: Lane[];
+  mergedLaneHistories: LaneHistory[];
+};
 
 /**
  * merge components into the scope.
@@ -174,6 +188,7 @@ export async function mergeObjects(
   const components = bitObjectList.getComponents();
   const lanesObjects = bitObjectList.getLanes();
   const versions = bitObjectList.getVersions();
+  const lanesHistory = bitObjectList.getLaneHistories();
   logger.debugAndAddBreadCrumb(
     'export-scope-components.mergeObjects',
     `Going to merge ${components.length} components, ${lanesObjects.length} lanes`
@@ -213,7 +228,16 @@ export async function mergeObjects(
   const mergedIds = ComponentIdList.uniqFromArray(mergedComponentsResults.map(getMergedIds).flat());
   const mergedLanes = mergeAllLanesResults.map((r) => r.mergeLane);
 
-  return { mergedIds, mergedComponentsResults, mergedLanes };
+  const mergedLaneHistories = await mapSeries(lanesHistory, async (laneHistory) => {
+    const existingLaneHistory = (await scope.objects.load(laneHistory.hash())) as LaneHistory | undefined;
+    if (existingLaneHistory) {
+      existingLaneHistory.merge(laneHistory);
+      return existingLaneHistory;
+    }
+    return laneHistory;
+  });
+
+  return { mergedIds, mergedComponentsResults, mergedLanes, mergedLaneHistories };
 }
 
 /**

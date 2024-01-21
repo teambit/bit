@@ -1,5 +1,5 @@
 export class LinkPlugin {
   link(id) {
-    return id.fullName;
+    return `${id.fullName}?scope=${id.scope}`;
   }
 }

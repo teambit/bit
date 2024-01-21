@@ -1,5 +1,4 @@
 import mapSeries from 'p-map-series';
-import R from 'ramda';
 import { isEmpty } from 'lodash';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
@@ -229,7 +228,7 @@ export async function tagModelComponent({
     // Store it in a map so we can take it easily from the sorted array which contain only the id
     consumerComponentsIdsMap[componentIdString] = consumerComponent;
   });
-  const componentsToTag: ConsumerComponent[] = R.values(consumerComponentsIdsMap); // consumerComponents unique
+  const componentsToTag: ConsumerComponent[] = Object.values(consumerComponentsIdsMap); // consumerComponents unique
   const idsToTag = ComponentIdList.fromArray(componentsToTag.map((c) => c.id));
   // ids without versions are new. it's impossible that tagged (and not-modified) components has
   // them as dependencies.
@@ -368,6 +367,9 @@ export async function tagModelComponent({
       );
     }
   }
+
+  // clear all objects. otherwise, ModelComponent has the wrong divergeData
+  legacyScope.objects.clearObjectsFromCache();
 
   return {
     taggedComponents: componentsToTag,

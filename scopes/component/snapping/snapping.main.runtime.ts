@@ -3,10 +3,8 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import R from 'ramda';
 import semver, { ReleaseType } from 'semver';
 import { compact, difference, uniq } from 'lodash';
-import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, Extensions, LATEST, BuildStatus } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
@@ -47,7 +45,7 @@ import {
   ArtifactSource,
   getArtifactsFiles,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import { VersionNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import { VersionNotFound, ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import DependenciesAspect, { DependenciesMain } from '@teambit/dependencies';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
@@ -197,7 +195,7 @@ export class SnappingMain {
       snapped,
       unmerged
     );
-    if (R.isEmpty(bitIds)) return null;
+    if (!bitIds.length) return null;
 
     const legacyBitIds = ComponentIdList.fromArray(bitIds);
 
@@ -246,11 +244,6 @@ export class SnappingMain {
 
     const postHook = isAll ? POST_TAG_ALL_HOOK : POST_TAG_HOOK;
     HooksManagerInstance?.triggerHook(postHook, tagResults);
-    Analytics.setExtraData(
-      'num_components',
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      R.concat(tagResults.taggedComponents, tagResults.autoTaggedResults, tagResults.newComponents).length
-    );
     await consumer.onDestroy(`tag (message: ${message || 'N/A'})`);
     await stagedConfig?.write();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -776,7 +769,7 @@ there are matching among unmodified components thought. consider using --unmodif
             : await this.scope.legacyScope.isPartOfMainHistory(dep.id);
         } catch (err) {
           if (throwForMissingObjects) throw err;
-          if (err instanceof VersionNotFound) {
+          if (err instanceof VersionNotFound || err instanceof ComponentNotFound) {
             missingDeps.push(dep.id);
             return;
           }
@@ -1011,7 +1004,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     this.issues.removeIgnoredIssuesFromComponents(components, issuesToIgnore);
     const legacyComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
-    if (!R.isEmpty(componentsWithBlockingIssues)) {
+    if (componentsWithBlockingIssues.length) {
       throw new ComponentsHaveIssues(componentsWithBlockingIssues);
     }
 
@@ -1105,7 +1098,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     const componentIdStr = component.id.toString();
     const legacyComponent: ConsumerComponent = component.state._consumer;
     const deps = [...legacyComponent.dependencies.get(), ...legacyComponent.devDependencies.get()];
-    const dependenciesList = await this.dependencyResolver.getDependencies(component);
+    const dependenciesList = this.dependencyResolver.getDependencies(component);
     deps.forEach((dep) => {
       const updatedBitId = updatedIds.searchWithoutVersion(dep.id);
       if (updatedBitId) {

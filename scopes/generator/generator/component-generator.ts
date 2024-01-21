@@ -64,11 +64,6 @@ export class ComponentGenerator {
         if (fs.existsSync(path.join(this.workspace.path, componentPath))) {
           throw new BitError(`unable to create a component at "${componentPath}", this path already exist`);
         }
-        if (await this.workspace.hasName(componentId.fullName)) {
-          throw new BitError(
-            `unable to create a component "${componentId.fullName}", a component with the same name already exist`
-          );
-        }
         dirsToDeleteIfFailed.push(componentPath);
         return await this.generateOneComponent(componentId, componentPath);
       } catch (err: any) {

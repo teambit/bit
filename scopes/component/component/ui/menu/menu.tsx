@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, ReactNode } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import classnames from 'classnames';
-import { compact, flatten, groupBy, isFunction } from 'lodash';
+import { compact, flatten, groupBy, isFunction, orderBy } from 'lodash';
 import * as semver from 'semver';
+import { SlotRegistry } from '@teambit/harmony';
 import { DropdownComponentVersion, GetActiveTabIndex, VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
@@ -19,6 +20,9 @@ import { useIdFromLocation } from '../use-component-from-location';
 import { ComponentID } from '../..';
 import styles from './menu.module.scss';
 
+export type RightSideMenuItem = { item: ReactNode; order: number };
+export type RightSideMenuSlot = SlotRegistry<RightSideMenuItem[]>;
+
 export type MenuProps = {
   className?: string;
   /**
@@ -34,9 +38,14 @@ export type MenuProps = {
    */
   navigationSlot: OrderedNavigationSlot;
   /**
-   * right side menu item slot
+   * right side navigation menu item slot
    */
   widgetSlot: OrderedNavigationSlot;
+
+  /**
+   * right side menu item slot
+   */
+  rightSideMenuSlot: RightSideMenuSlot;
   /**
    * workspace or scope
    */
@@ -75,6 +84,7 @@ export function ComponentMenu({
   host,
   menuItemSlot,
   consumeMethodSlot,
+  rightSideMenuSlot,
   componentIdStr,
   skipRightSide,
   RightNode,
@@ -83,14 +93,16 @@ export function ComponentMenu({
   useComponentFilters,
 }: MenuProps) {
   const idFromLocation = useIdFromLocation();
+  const componentIdStrWithScopeFromLocation = useIdFromLocation(undefined, true);
   const _componentIdStr = getComponentIdStr(componentIdStr);
   const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
   const resolvedComponentIdStr = path || idFromLocation;
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
+  const rightSideItems = useMemo(() => orderBy(flatten(rightSideMenuSlot.values()), 'order'), [rightSideMenuSlot]);
   const componentFilters = useComponentFilters?.() || {};
   const useComponentVersions = defaultLoadVersions(
     host,
-    componentId?.toString() || idFromLocation,
+    componentId?.toString() || componentIdStrWithScopeFromLocation,
     componentFilters,
     useComponent
   );
@@ -107,6 +119,7 @@ export function ComponentMenu({
             componentFilters={componentFilters}
             // loading={loading}
           />
+          {rightSideItems.map(({ item }) => item)}
           <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
         </>
       )}

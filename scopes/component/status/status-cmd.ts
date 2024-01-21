@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import R from 'ramda';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
@@ -13,7 +12,7 @@ import {
   statusWorkspaceIsCleanMsg,
   BASE_DOCS_DOMAIN,
 } from '@teambit/legacy/dist/constants';
-import { compact, partition } from 'lodash';
+import { compact, groupBy, partition } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import { StatusMain, StatusResult } from './status.main.runtime';
 
@@ -201,10 +200,10 @@ export class StatusCmd implements Command {
 
     const importPendingWarning = importPendingComponents.length ? chalk.yellow(`${IMPORT_PENDING_MSG}.\n`) : '';
 
-    const splitByMissing = R.groupBy((component) => {
+    const newCompFormatted = newComponents.map((c) => format(c));
+    const { missing, nonMissing } = groupBy(newCompFormatted, (component) => {
       return component.includes(statusFailureMsg) ? 'missing' : 'nonMissing';
     });
-    const { missing, nonMissing } = splitByMissing(newComponents.map((c) => format(c)));
 
     const outdatedTitle = 'pending updates';
     const outdatedDesc =

@@ -179,7 +179,7 @@ export class RemoveMain {
         return true;
       }
       // case #4
-      const compId = await this.workspace.resolveComponentId(bitMapEntry.id);
+      const compId = bitMapEntry.id;
       const comp = await this.workspace.get(compId);
       if (!this.isRemoved(comp)) {
         return false;

@@ -1,8 +1,14 @@
 import { join, resolve } from 'path';
 import fs, { existsSync, outputFileSync, readJsonSync } from 'fs-extra';
 import { AspectDefinition } from '@teambit/aspect-loader';
-import { createHarmonyImports, createImports, getIdSetters, getIdentifiers } from '@teambit/ui';
+import {
+  createHarmonyImports,
+  createImports,
+  getIdSetters,
+  getIdentifiers,
+} from '@teambit/harmony.modules.harmony-root-generator';
 import { sha1 } from '@teambit/legacy/dist/utils';
+import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compatible-path';
 import webpack from 'webpack';
 import { promisify } from 'util';
 import { PreviewAspect } from './preview.aspect';
@@ -10,7 +16,7 @@ import { createWebpackConfig } from './webpack/webpack.config';
 import { clearConsole } from './pre-bundle-utils';
 
 export const RUNTIME_NAME = 'preview';
-export const PUBLIC_DIR = 'public/bit-preview';
+export const PUBLIC_DIR = join('public', 'bit-preview');
 export const UIROOT_ASPECT_ID = 'teambit.workspace/workspace';
 
 const ENTRY_CONTENT_TEMPLATE = `__IMPORTS__
@@ -115,11 +121,10 @@ export async function generateBundlePreviewEntry(rootAspectId: string, previewPr
   const manifestPath = join(previewPreBundlePath, 'asset-manifest.json');
   const manifest = readJsonSync(manifestPath);
   const imports = manifest.entrypoints
-    .map((entry: string) =>
-      entry.endsWith('.js')
-        ? `import { run } from '${previewPreBundlePath}/${entry}';`
-        : `import '${previewPreBundlePath}/${entry}';`
-    )
+    .map((entry: string) => {
+      const entryPath = toWindowsCompatiblePath(join(previewPreBundlePath, entry));
+      return entry.endsWith('.js') ? `import { run } from '${entryPath}';` : `import '${entryPath}';`;
+    })
     .join('\n');
   config['teambit.harmony/bit'] = rootAspectId;
 

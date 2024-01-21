@@ -395,7 +395,7 @@ describe('bit lane command', function () {
       helper.scopeHelper.addRemoteScope();
       helper.command.import();
       helper.fixtures.populateComponents(1, undefined, ' v2');
-      helper.bitJsonc.disablePreview();
+      helper.workspaceJsonc.disablePreview();
       helper.command.snapAllComponents();
     });
     it('should export with no errors about missing artifact files from the first snap', () => {
@@ -671,7 +671,7 @@ describe('bit lane command', function () {
       helper.fs.outputFile('bar1/foo1.js', 'console.log("v1");');
       helper.fs.outputFile('bar2/foo2.js', 'console.log("v1");');
       helper.command.addComponent('bar1');
-      helper.bitJsonc.addToVariant('bar2', 'defaultScope', anotherRemote);
+      helper.workspaceJsonc.addToVariant('bar2', 'defaultScope', anotherRemote);
       helper.command.addComponent('bar2');
       helper.command.linkAndRewire();
       helper.command.compile();
@@ -1226,7 +1226,7 @@ describe('bit lane command', function () {
         expect(status.mergePendingComponents).to.have.lengthOf(1);
       });
       it('bit merge with no args should merge them', () => {
-        const output = helper.command.merge(`--auto-merge-resolve manual`);
+        const output = helper.command.merge(`--manual`);
         expect(output).to.have.string('successfully merged');
         expect(output).to.have.string('CONFLICT');
       });

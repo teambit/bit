@@ -152,6 +152,7 @@ export class InstallMain {
         copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
         dependencyFilterFn: depsFilterFn,
         overrides: this.dependencyResolver.config.overrides,
+        hoistPatterns: this.dependencyResolver.config.hoistPatterns,
         packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       };
       const missingPeers = await this.dependencyResolver.getMissingPeerDependencies(
@@ -311,6 +312,7 @@ export class InstallMain {
       includeOptionalDeps: options?.includeOptionalDeps,
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
       overrides: this.dependencyResolver.config.overrides,
+      hoistPatterns: this.dependencyResolver.config.hoistPatterns,
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       rootComponents: hasRootComponents,
       updateAll: options?.updateAll,

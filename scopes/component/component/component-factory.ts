@@ -1,4 +1,5 @@
 import { Graph } from '@teambit/graph.cleargraph';
+import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentID } from '@teambit/component-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { CompIdGraph } from '@teambit/graph';
@@ -69,12 +70,12 @@ export interface ComponentFactory {
   /**
    * resolve a `string` component ID to an instance of a ComponentID.
    */
-  resolveComponentId(id: string | ComponentID | ComponentID): Promise<ComponentID>;
+  resolveComponentId(id: string | BitId | ComponentID): Promise<ComponentID>;
 
   /**
    * resolve multiple `string` component ID to an instance of a ComponentID.
    */
-  resolveMultipleComponentIds(ids: (string | ComponentID | ComponentID)[]): Promise<ComponentID[]>;
+  resolveMultipleComponentIds(ids: (string | BitId | ComponentID)[]): Promise<ComponentID[]>;
 
   /**
    * returns a component by ID.

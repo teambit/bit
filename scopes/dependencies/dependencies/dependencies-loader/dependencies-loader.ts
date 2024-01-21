@@ -1,4 +1,3 @@
-import R from 'ramda';
 import path from 'path';
 import { uniq } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
@@ -143,7 +142,7 @@ export class DependenciesLoader {
     this.component.devPackageDependencies = dependenciesData.allPackagesDependencies.devPackageDependencies ?? {};
     this.component.peerPackageDependencies = dependenciesData.allPackagesDependencies.peerPackageDependencies ?? {};
     const missingFromOverrides = overridesDependencies.missingPackageDependencies;
-    if (!R.isEmpty(missingFromOverrides)) {
+    if (missingFromOverrides.length) {
       dependenciesData.issues.getOrCreate(IssuesClasses.MissingManuallyConfiguredPackages).data =
         uniq(missingFromOverrides);
     }

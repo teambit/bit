@@ -53,6 +53,8 @@ import {
   LaneRemoveCompCmd,
   CatLaneHistoryCmd,
   LaneHistoryCmd,
+  LaneCheckoutCmd,
+  LaneCheckoutOpts,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
@@ -190,7 +192,31 @@ export class LanesMain {
     return laneHistory;
   }
 
+  async checkoutHistory(historyId: string, options?: LaneCheckoutOpts) {
+    const laneId = this.getCurrentLaneId();
+    if (!laneId || laneId.isDefault()) {
+      throw new BitError(`unable to checkout history "${historyId}" while on main`);
+    }
+    await this.importLaneHistory(laneId);
+    const laneHistory = await this.getLaneHistory(laneId);
+    const history = laneHistory.getHistory();
+    const historyItem = history[historyId];
+    if (!historyItem) {
+      throw new BitError(`unable to find history "${historyId}" in lane "${laneId.toString()}"`);
+    }
+    const ids = historyItem.components.map((id) => ComponentID.fromString(id));
+    const results = await this.checkout.checkout({
+      ids: ids.map((id) => id.changeVersion(undefined)),
+      versionPerId: ids,
+      allowAddingComponentsFromScope: true,
+      skipNpmInstall: options?.skipDependencyInstallation,
+    });
+    return results;
+  }
+
   async importLaneHistory(laneId: LaneId) {
+    const existingLane = await this.loadLane(laneId);
+    if (existingLane?.isNew) return;
     await this.importer.importLaneObject(laneId, undefined, true);
   }
 
@@ -469,8 +495,8 @@ please create a new lane instead, which will include all components of this lane
     });
   }
 
-  async importLaneObject(laneId: LaneId, persistIfNotExists = true): Promise<Lane> {
-    return this.importer.importLaneObject(laneId, persistIfNotExists);
+  async importLaneObject(laneId: LaneId, persistIfNotExists = true, includeLaneHistory = false): Promise<Lane> {
+    return this.importer.importLaneObject(laneId, persistIfNotExists, includeLaneHistory);
   }
 
   /**
@@ -566,12 +592,8 @@ please create a new lane instead, which will include all components of this lane
     const checkoutProps = {
       mergeStrategy,
       skipNpmInstall: skipDependencyInstallation,
-      verbose: false, // not relevant in Harmony
-      ignorePackageJson: true, // not relevant in Harmony
-      ignoreDist: true, // not relevant in Harmony
       isLane: true,
       promptMergeOptions: false,
-      writeConfig: false,
       reset: false,
       all: false,
     };
@@ -609,14 +631,7 @@ please create a new lane instead, which will include all components of this lane
         )
       : laneComponents;
 
-    const host = this.componentAspect.getHost();
-
-    return Promise.all(
-      filteredComponentIds.map((laneComponent) => {
-        const legacyIdWithVersion = laneComponent.id.changeVersion(laneComponent.head);
-        return host.resolveComponentId(legacyIdWithVersion);
-      })
-    );
+    return filteredComponentIds.map((laneComponent) => laneComponent.id.changeVersion(laneComponent.head));
   }
 
   async getLaneReadmeComponent(lane: LaneData): Promise<Component | undefined> {
@@ -624,9 +639,7 @@ please create a new lane instead, which will include all components of this lane
     const laneReadmeComponent = lane.readmeComponent;
     if (!laneReadmeComponent) return undefined;
     const host = this.componentAspect.getHost();
-    const laneReadmeComponentId = await host.resolveComponentId(
-      laneReadmeComponent.id.changeVersion(laneReadmeComponent.head)
-    );
+    const laneReadmeComponentId = laneReadmeComponent.id.changeVersion(laneReadmeComponent.head);
     const readmeComponent = await host.get(laneReadmeComponentId);
     return readmeComponent;
   }
@@ -654,7 +667,7 @@ please create a new lane instead, which will include all components of this lane
       throw new BitError(`there is no readme component added to the lane ${laneName || currentLaneName}`);
     }
 
-    const readmeComponentId = await this.workspace.resolveComponentId(lane.readmeComponent.id);
+    const readmeComponentId = lane.readmeComponent.id;
     const existingLaneConfig =
       (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
 
@@ -1187,6 +1200,7 @@ please create a new lane instead, which will include all components of this lane
     ];
     if (isFeatureEnabled(SUPPORT_LANE_HISTORY)) {
       laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
+      laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
     }
     cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));
     cli.registerOnStart(async () => {
