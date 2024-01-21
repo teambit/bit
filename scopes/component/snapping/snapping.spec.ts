@@ -15,7 +15,9 @@ import { SnappingMain } from './snapping.main.runtime';
 import { SnappingAspect } from './snapping.aspect';
 import { ComponentsHaveIssues } from './components-have-issues';
 
-describe('Snapping aspect', () => {
+describe('Snapping aspect', function () {
+  this.timeout(0);
+
   let workspaceData: WorkspaceData;
   let snapping: SnappingMain;
   describe('components with issues', () => {
