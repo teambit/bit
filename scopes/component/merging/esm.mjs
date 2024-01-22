@@ -10,5 +10,6 @@ export const getRemovedOutput = cjsModule.getRemovedOutput;
 export const getAddedOutput = cjsModule.getAddedOutput;
 export const ConfigMergeResult = cjsModule.ConfigMergeResult;
 export const MergingAspect = cjsModule.MergingAspect;
+export const getWorkspaceConfigUpdateOutput = cjsModule.getWorkspaceConfigUpdateOutput;
 
 export default cjsModule;

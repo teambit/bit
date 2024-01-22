@@ -56,13 +56,7 @@ export class ImporterMain {
         importOptions.lanes = { laneId: currentLaneId };
       }
     }
-    const importComponents = new ImportComponents(
-      this.workspace,
-      this.graph,
-      this.componentWriter,
-      this.envs,
-      importOptions
-    );
+    const importComponents = this.createImportComponents(importOptions);
     const results = await importComponents.importComponents();
     Analytics.setExtraData('num_components', results.importedIds.length);
     if (results.writtenComponents && results.writtenComponents.length) {
@@ -84,13 +78,7 @@ export class ImporterMain {
       installNpmPackages: false,
       writeConfigFiles: false,
     };
-    const importComponents = new ImportComponents(
-      this.workspace,
-      this.graph,
-      this.componentWriter,
-      this.envs,
-      importOptions
-    );
+    const importComponents = this.createImportComponents(importOptions);
     return importComponents.importComponents();
   }
 
@@ -123,13 +111,7 @@ export class ImporterMain {
     if (currentRemoteLane) {
       importOptions.lanes = { laneId: currentRemoteLane.toLaneId(), remoteLane: currentRemoteLane };
     }
-    const importComponents = new ImportComponents(
-      this.workspace,
-      this.graph,
-      this.componentWriter,
-      this.envs,
-      importOptions
-    );
+    const importComponents = this.createImportComponents(importOptions);
     return importComponents.importComponents();
   }
 
@@ -188,13 +170,7 @@ export class ImporterMain {
       fromOriginalScope,
     };
 
-    const importComponents = new ImportComponents(
-      this.workspace,
-      this.graph,
-      this.componentWriter,
-      this.envs,
-      importOptions
-    );
+    const importComponents = this.createImportComponents(importOptions);
     const { importedIds, importDetails } = await importComponents.importComponents();
     Analytics.setExtraData('num_components', importedIds.length);
     await consumer.onDestroy('import');
@@ -233,6 +209,17 @@ export class ImporterMain {
 
       return [];
     }
+  }
+
+  private createImportComponents(importOptions: ImportOptions) {
+    return new ImportComponents(
+      this.workspace,
+      this.graph,
+      this.componentWriter,
+      this.envs,
+      this.logger,
+      importOptions
+    );
   }
 
   async fetchLanes(

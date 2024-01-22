@@ -202,6 +202,7 @@ describe('merge config scenarios', function () {
   });
   describe('diverge with different dependencies config', () => {
     let mainBeforeDiverge: string;
+    let beforeMerge: string;
     let beforeConfigResolved: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -228,6 +229,7 @@ describe('merge config scenarios', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev', '--skip-dependency-installation');
+      beforeMerge = helper.scopeHelper.cloneLocalScope();
       helper.command.mergeLane('main', '--no-snap --skip-dependency-installation');
       beforeConfigResolved = helper.scopeHelper.cloneLocalScope();
     });
@@ -260,6 +262,37 @@ describe('merge config scenarios', function () {
         const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
         const lodashDep = showConfig.data.dependencies.find((d) => d.id === 'lodash');
         expect(lodashDep.version).to.equal('1.0.0');
+      });
+    });
+    describe('merging with --auto-merge-resolve ours', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeMerge);
+        helper.command.mergeLane('main', '--no-snap --skip-dependency-installation --auto-merge-resolve=ours');
+      });
+      it('should not generate the config-merge file', () => {
+        const configMerge = helper.general.getConfigMergePath();
+        expect(configMerge).to.not.be.a.path();
+      });
+      it('should show the dev-dependency as it was set on the lane', () => {
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
+        expect(ramdaDep.version).to.equal('0.0.20');
+        expect(ramdaDep.lifecycle).to.equal('dev');
+      });
+    });
+    describe('merging with --auto-merge-resolve theirs', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeMerge);
+        helper.command.mergeLane('main', '--no-snap --skip-dependency-installation --auto-merge-resolve=theirs');
+      });
+      it('should not generate the config-merge file', () => {
+        const configMerge = helper.general.getConfigMergePath();
+        expect(configMerge).to.not.be.a.path();
+      });
+      it('should show the dev-dependency as it was set on main', () => {
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
+        expect(ramdaDep.version).to.equal('0.0.21');
       });
     });
   });

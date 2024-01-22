@@ -168,7 +168,12 @@ export class MergingMain {
   ): Promise<ApplyVersionResults> {
     const currentLaneId = consumer.getCurrentLaneId();
     const currentLaneObject = await consumer.getCurrentLaneObject();
-    const allComponentsStatus = await this.getAllComponentsStatus(bitIds, currentLaneId, currentLaneObject);
+    const allComponentsStatus = await this.getAllComponentsStatus(
+      bitIds,
+      currentLaneId,
+      currentLaneObject,
+      mergeStrategy
+    );
     const failedComponents = allComponentsStatus.filter((c) => c.unchangedMessage && !c.unchangedLegitimately);
     if (failedComponents.length) {
       const failureMsgs = failedComponents
@@ -335,17 +340,17 @@ export class MergingMain {
    */
   async getMergeStatus(
     bitIds: ComponentID[], // the id.version is the version we want to merge to the current component
+    options: MergeStatusProviderOptions,
     currentLane: Lane | null, // currently checked out lane. if on main, then it's null.
-    otherLane?: Lane | null, // the lane we want to merged to our lane. (null if it's "main").
-    options?: MergeStatusProviderOptions
+    otherLane?: Lane | null // the lane we want to merged to our lane. (null if it's "main").
   ): Promise<ComponentMergeStatus[]> {
     const mergeStatusProvider = new MergeStatusProvider(
       this.workspace,
       this.logger,
       this.importer,
+      options,
       currentLane || undefined,
-      otherLane || undefined,
-      options
+      otherLane || undefined
     );
     return mergeStatusProvider.getStatus(bitIds);
   }
@@ -478,7 +483,7 @@ export class MergingMain {
       filesStatus = { ...filesStatus, ...modifiedStatus };
     }
 
-    await removeFilesIfNeeded(filesStatus, currentComponent || undefined);
+    await removeFilesIfNeeded(filesStatus, consumer, currentComponent || undefined);
 
     if (configMergeResult) {
       const successfullyMergedConfig = configMergeResult.getSuccessfullyMergedConfig();
@@ -540,7 +545,8 @@ export class MergingMain {
   private async getAllComponentsStatus(
     bitIds: ComponentID[],
     laneId: LaneId,
-    localLaneObject: Lane | null
+    localLaneObject: Lane | null,
+    mergeStrategy: MergeStrategy
   ): Promise<ComponentMergeStatus[]> {
     const ids = await Promise.all(
       bitIds.map(async (bitId) => {
@@ -555,7 +561,7 @@ export class MergingMain {
       })
     );
 
-    return this.getMergeStatus(ids, localLaneObject, localLaneObject, { shouldSquash: false });
+    return this.getMergeStatus(ids, { shouldSquash: false, mergeStrategy }, localLaneObject, localLaneObject);
   }
 
   private async snapResolvedComponents(

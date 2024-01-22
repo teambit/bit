@@ -1,8 +1,8 @@
-import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { TsConfigSourceFile } from 'typescript';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { MainRuntime } from '@teambit/cli';
+import { merge } from 'lodash';
 import { BuildTask } from '@teambit/builder';
 import { Aspect } from '@teambit/harmony';
 import AspectAspect, { AspectMain } from '@teambit/aspect';
@@ -97,7 +97,7 @@ export class ReactNativeMain {
    */
   overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
-      getDependencies: () => mergeDeepLeft(dependencyPolicy, this.reactNativeEnv.getDependencies()),
+      getDependencies: () => merge(this.reactNativeEnv.getDependencies(), dependencyPolicy),
     });
   }
 
@@ -123,7 +123,7 @@ export class ReactNativeMain {
     envs.registerEnv(reactNativeComposedEnv);
 
     // if (generator) {
-      // generator.registerComponentTemplate(componentTemplates);
+    // generator.registerComponentTemplate(componentTemplates);
     // }
 
     return new ReactNativeMain(react, reactNativeComposedEnv, envs);

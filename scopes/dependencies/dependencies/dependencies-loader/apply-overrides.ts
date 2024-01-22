@@ -1,7 +1,6 @@
-import R from 'ramda';
 import path from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { cloneDeep, uniq } from 'lodash';
+import { cloneDeep, difference, forEach, isEmpty, pick, pickBy, uniq } from 'lodash';
 import { IssuesList, IssuesClasses, MissingPackagesData } from '@teambit/component-issues';
 import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy/dist/constants';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
@@ -138,7 +137,7 @@ export class ApplyOverrides {
     // the custom react uses the "teambit.envs/env" env, which will add react ^17.0.0 to every component that uses it
     // we want to make sure that the custom react is using 16.4.0 not 17.
     await this.applyAutoDetectedPeersFromEnvOnEnvItSelf();
-    this.coreAspects = R.uniq(this.coreAspects);
+    this.coreAspects = uniq(this.coreAspects);
   }
 
   private removeIgnoredComponentsByOverrides() {
@@ -181,13 +180,13 @@ export class ApplyOverrides {
     const shouldBeIncludedDev = (pkgVersion, pkgName) =>
       !this.overridesDependencies.shouldIgnorePackageByType(pkgName, 'devDependencies');
 
-    this.allPackagesDependencies.packageDependencies = R.pickBy(
-      shouldBeIncluded,
-      this.allPackagesDependencies.packageDependencies
+    this.allPackagesDependencies.packageDependencies = pickBy(
+      this.allPackagesDependencies.packageDependencies,
+      shouldBeIncluded
     );
-    this.allPackagesDependencies.devPackageDependencies = R.pickBy(
-      shouldBeIncludedDev,
-      this.allPackagesDependencies.devPackageDependencies
+    this.allPackagesDependencies.devPackageDependencies = pickBy(
+      this.allPackagesDependencies.devPackageDependencies,
+      shouldBeIncludedDev
     );
   }
 
@@ -262,7 +261,7 @@ export class ApplyOverrides {
           this.allDependencies[depField].push(new Dependency(depData.componentId, [], depData.packageName))
         );
       }
-      if (packages[depField] && !R.isEmpty(packages[depField])) {
+      if (packages[depField] && !isEmpty(packages[depField])) {
         Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], packages[depField]);
       }
     });
@@ -295,10 +294,10 @@ export class ApplyOverrides {
   private removeDevAndEnvDepsIfTheyAlsoRegulars() {
     // remove dev and env packages that are also regular packages
     const getNotRegularPackages = (packages) =>
-      R.difference(R.keys(packages), R.keys(this.allPackagesDependencies.packageDependencies));
-    this.allPackagesDependencies.devPackageDependencies = R.pick(
-      getNotRegularPackages(this.allPackagesDependencies.devPackageDependencies),
-      this.allPackagesDependencies.devPackageDependencies
+      difference(Object.keys(packages), Object.keys(this.allPackagesDependencies.packageDependencies));
+    this.allPackagesDependencies.devPackageDependencies = pick(
+      this.allPackagesDependencies.devPackageDependencies,
+      getNotRegularPackages(this.allPackagesDependencies.devPackageDependencies)
     );
     // remove dev dependencies that are also regular dependencies
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -316,7 +315,7 @@ export class ApplyOverrides {
     };
     const projectPeerDependencies = getPeerDependencies();
     const peerPackages = {};
-    if (R.isEmpty(projectPeerDependencies)) return;
+    if (isEmpty(projectPeerDependencies)) return;
 
     // check whether the peer-dependencies was actually require in the code. if so, remove it from
     // the packages/dev-packages and add it as a peer-package.
@@ -340,7 +339,7 @@ export class ApplyOverrides {
     const pkgJsonRegularDeps = packageJson.dependencies || {};
     const peerDeps = this.allPackagesDependencies.peerPackageDependencies || {};
     ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
-      R.forEachObjIndexed((_pkgVal, pkgName) => {
+      forEach(this.allPackagesDependencies[field], (_pkgVal, pkgName) => {
         const peerVersionFromPkgJson = pkgJsonPeer[pkgName];
         const regularVersionFromPkgJson = pkgJsonRegularDeps[pkgName];
         if (peerVersionFromPkgJson) {
@@ -350,7 +349,7 @@ export class ApplyOverrides {
           delete this.allPackagesDependencies.peerPackageDependencies?.[pkgName];
           this.allPackagesDependencies[field][pkgName] = regularVersionFromPkgJson;
         }
-      }, this.allPackagesDependencies[field]);
+      });
     });
     this.allPackagesDependencies.peerPackageDependencies = peerDeps;
   }
@@ -364,7 +363,7 @@ export class ApplyOverrides {
     // we are not iterate component deps since they are resolved from what actually installed
     // the policy used for installation only in that case
     ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
-      R.forEachObjIndexed((_pkgVal, pkgName) => {
+      forEach(this.allPackagesDependencies[field], (_pkgVal, pkgName) => {
         const peerVersionFromWsPolicy = wsPeer[pkgName];
         const regularVersionFromWsPolicy = wsRegular[pkgName];
         if (peerVersionFromWsPolicy) {
@@ -374,7 +373,7 @@ export class ApplyOverrides {
           delete this.allPackagesDependencies.peerPackageDependencies?.[pkgName];
           this.allPackagesDependencies[field][pkgName] = regularVersionFromWsPolicy;
         }
-      }, this.allPackagesDependencies[field]);
+      });
     });
     this.allPackagesDependencies.peerPackageDependencies = peerPackageDeps;
 
@@ -432,7 +431,7 @@ export class ApplyOverrides {
       missingPackages = uniq(missingData.map((d) => d.missingPackages).flat());
     }
     ['dependencies', 'devDependencies', 'peerDependencies'].forEach((field) => {
-      R.forEachObjIndexed((pkgVal, pkgName) => {
+      forEach(autoDetectOverrides[field], (pkgVal, pkgName) => {
         if (this.overridesDependencies.shouldIgnorePeerPackage(pkgName)) return;
         // Validate it was auto detected, we only affect stuff that were detected
         const existsInCompsDeps = this.allDependencies.dependencies.find((dep) => {
@@ -509,7 +508,7 @@ export class ApplyOverrides {
             this.allPackagesDependencies[key][pkgName] = pkgVal;
           }
         }
-      }, autoDetectOverrides[field]);
+      });
     });
   }
 
@@ -525,12 +524,12 @@ export class ApplyOverrides {
     // we are not iterate component deps since they are resolved from what actually installed
     // the policy used for installation only in that case
     ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
-      R.forEachObjIndexed((_pkgVal, pkgName) => {
+      forEach(this.allPackagesDependencies[field], (_pkgVal, pkgName) => {
         const peerVersionFromEnvPolicy = envPolicyManifest[pkgName];
         if (peerVersionFromEnvPolicy) {
           delete this.allPackagesDependencies[field][pkgName];
         }
-      }, this.allPackagesDependencies[field]);
+      });
     });
     Object.assign(deps, envPolicyManifest);
     // TODO: handle component deps once we support peers between components

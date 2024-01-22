@@ -1,7 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { compact } from 'lodash';
-import R from 'ramda';
+import { compact, uniq } from 'lodash';
 import { installationErrorOutput, compilationErrorOutput, getWorkspaceConfigUpdateOutput } from '@teambit/merging';
 import {
   FileStatus,
@@ -30,6 +29,7 @@ type ImportFlags = {
   saveInLane?: boolean;
   dependencies?: boolean;
   dependents?: boolean;
+  dependentsDryRun?: boolean;
   allHistory?: boolean;
   fetchDeps?: boolean;
   trackOnly?: boolean;
@@ -77,6 +77,11 @@ export class ImportCmd implements Command {
       '',
       'dependents',
       'import components found while traversing from the imported components upwards to the workspace components',
+    ],
+    [
+      '',
+      'dependents-dry-run',
+      'same as --dependents, except it prints the found dependents and wait for confirmation before importing them',
     ],
     [
       '',
@@ -158,7 +163,7 @@ export class ImportCmd implements Command {
     const importedDepsOutput =
       importFlags.displayDependencies && importedDeps.length
         ? immutableUnshift(
-            R.uniq(importedDeps.map(formatPlainComponentItem)),
+            uniq(importedDeps.map(formatPlainComponentItem)),
             chalk.green(`\n\nsuccessfully imported ${importedDeps.length} component dependencies`)
           ).join('\n')
         : '';
@@ -198,6 +203,7 @@ export class ImportCmd implements Command {
       saveInLane = false,
       dependencies = false,
       dependents = false,
+      dependentsDryRun = false,
       allHistory = false,
       fetchDeps = false,
       trackOnly = false,
@@ -216,11 +222,14 @@ export class ImportCmd implements Command {
     if (!ids.length && dependents) {
       throw new GeneralError('you have to specify ids to use "--dependents" flag');
     }
+    if (!ids.length && dependentsDryRun) {
+      throw new GeneralError('you have to specify ids to use "--dependents-dry-run" flag');
+    }
     if (!ids.length && trackOnly) {
       throw new GeneralError('you have to specify ids to use "--track-only" flag');
     }
     let mergeStrategy;
-    if (merge && R.is(String, merge)) {
+    if (merge && typeof merge === 'string') {
       const options = Object.keys(MergeOptions);
       if (!options.includes(merge)) {
         throw new GeneralError(`merge must be one of the following: ${options.join(', ')}`);
@@ -245,6 +254,7 @@ export class ImportCmd implements Command {
       saveInLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
+      dependentsDryRun,
       allHistory,
       fetchDeps,
       trackOnly,

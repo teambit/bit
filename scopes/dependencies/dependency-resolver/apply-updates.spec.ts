@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import { ComponentID } from '@teambit/component';
 import { applyUpdates } from './apply-updates';
 
@@ -23,7 +24,7 @@ describe('applyUpdates()', () => {
       }
     );
     // @ts-ignore
-    expect(updatedWorkspacePolicyEntries).toStrictEqual(
+    expect(updatedWorkspacePolicyEntries).to.deep.equal(
       [
         {
           dependencyId: 'lodash',
@@ -118,7 +119,7 @@ describe('applyUpdates()', () => {
       }
     );
     // @ts-ignore
-    expect(variantPoliciesByPatterns.variant1).toStrictEqual({
+    expect(variantPoliciesByPatterns.variant1).to.deep.equal({
       dependencies: {
         'variant1-runtime-dep1': { version: '2.0.0', resolveFromEnv: true },
         'variant1-runtime-dep2': '1.0.0',
@@ -133,7 +134,7 @@ describe('applyUpdates()', () => {
       },
     });
     // @ts-ignore
-    expect(variantPoliciesByPatterns.variant2).toStrictEqual({
+    expect(variantPoliciesByPatterns.variant2).to.deep.equal({
       dependencies: {
         'variant2-runtime-dep1': '1.0.0',
         'variant2-runtime-dep2': '1.0.0',
@@ -148,7 +149,7 @@ describe('applyUpdates()', () => {
       },
     });
     // @ts-ignore
-    expect(variantPoliciesByPatterns.variant3).toStrictEqual({
+    expect(variantPoliciesByPatterns.variant3).to.deep.equal({
       dependencies: {
         'variant3-runtime-dep1': '1.0.0',
         'variant3-runtime-dep2': '1.0.0',
@@ -193,7 +194,7 @@ describe('applyUpdates()', () => {
       }
     );
     // @ts-ignore
-    expect(updatedComponents).toStrictEqual([
+    expect(updatedComponents).to.deep.equal([
       {
         componentId: ComponentID.fromString('scope/component1'),
         config: {

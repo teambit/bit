@@ -1,6 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
+import { isEmpty } from 'lodash';
 import chalk from 'chalk';
-import R from 'ramda';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { listTemplate } from './list-template';
 import { ListerMain, ListScopeResult } from './lister.main.runtime';
@@ -42,7 +42,7 @@ export class ListCmd implements Command {
       return chalk.white(`found ${listScopeResults.length} components in ${chalk.bold(scopeName)}\n`);
     }
 
-    if (R.isEmpty(listScopeResults)) {
+    if (isEmpty(listScopeResults)) {
       return chalk.white(decideHeaderSentence());
     }
 
@@ -54,7 +54,7 @@ export class ListCmd implements Command {
   async json([scopeName]: string[], listFlags: ListFlags) {
     const listScopeResults = await this.getListResults(scopeName, listFlags);
 
-    if (R.isEmpty(listScopeResults)) {
+    if (isEmpty(listScopeResults)) {
       return [];
     }
 

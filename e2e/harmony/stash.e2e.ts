@@ -18,12 +18,12 @@ describe('bit stash command', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
-      helper.fixtures.populateComponents(1, undefined, 'v2');
+      helper.fixtures.populateComponents(1, undefined, 'version2');
       helper.command.stash();
     });
     it('should change the code to the last tag', () => {
       const content = helper.fs.readFile('comp1/index.js');
-      expect(content).to.not.have.string('v2');
+      expect(content).to.not.have.string('version2');
     });
     it('should create a stash-file', () => {
       const stashPath = path.join(helper.scopes.localPath, '.bit/stash/stash-1.json');
@@ -39,7 +39,7 @@ describe('bit stash command', function () {
       });
       it('should return the code that was stashed before', () => {
         const content = helper.fs.readFile('comp1/index.js');
-        expect(content).to.have.string('v2');
+        expect(content).to.have.string('version2');
       });
       it('bit status should show the component as modified', () => {
         const status = helper.command.statusJson();

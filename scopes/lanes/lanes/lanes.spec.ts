@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
 import { ExportAspect, ExportMain } from '@teambit/export';
@@ -10,23 +11,25 @@ import { LanesAspect } from './lanes.aspect';
 import { LanesMain } from './lanes.main.runtime';
 
 describe('LanesAspect', function () {
+  this.timeout(0);
+
   describe('getLanes()', () => {
     let lanes: LanesMain;
     let workspaceData: WorkspaceData;
-    beforeAll(async () => {
+    before(async () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
       lanes = await loadAspect(LanesAspect, workspacePath);
       await lanes.createLane('stage');
-    }, 30000);
-    afterAll(async () => {
+    });
+    after(async () => {
       await destroyWorkspace(workspaceData);
     });
     it('should list all lanes', async () => {
       const currentLanes = await lanes.getLanes({});
-      expect(currentLanes.length).toEqual(1);
-      expect(currentLanes[0].name).toEqual('stage');
+      expect(currentLanes).to.have.lengthOf(1);
+      expect(currentLanes[0].name).to.equal('stage');
     });
   });
 
@@ -34,7 +37,7 @@ describe('LanesAspect', function () {
     let lanes: LanesMain;
     let snapping: SnappingMain;
     let workspaceData: WorkspaceData;
-    beforeAll(async () => {
+    before(async () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
@@ -51,9 +54,9 @@ describe('LanesAspect', function () {
         ignoreIssues: 'MissingManuallyConfiguredPackages',
       });
       // intermediate step, make sure it is snapped
-      expect(result?.snappedComponents.length).toEqual(1);
-    }, 30000);
-    afterAll(async () => {
+      expect(result?.snappedComponents.length).to.equal(1);
+    });
+    after(async () => {
       await destroyWorkspace(workspaceData);
     });
     it('should return that the lane is up to date when the lane is ahead of main', async () => {
@@ -63,7 +66,7 @@ describe('LanesAspect', function () {
         await lanes.diffStatus(currentLane.toLaneId(), undefined, { skipChanges: true })
       ).componentsStatus.every((c) => c.upToDate);
 
-      expect(isUpToDate).toEqual(true);
+      expect(isUpToDate).to.be.true;
     });
     it('should return that the lane is not up to date when main is ahead', async () => {
       const currentLane = await lanes.getCurrentLane();
@@ -79,7 +82,7 @@ describe('LanesAspect', function () {
         await lanes.diffStatus(currentLane.toLaneId(), undefined, { skipChanges: true })
       ).componentsStatus.every((c) => c.upToDate);
 
-      expect(isUpToDate).toEqual(false);
+      expect(isUpToDate).to.be.false;
     });
   });
 
@@ -87,7 +90,7 @@ describe('LanesAspect', function () {
     let lanes: LanesMain;
     let snapping: SnappingMain;
     let workspaceData: WorkspaceData;
-    beforeAll(async () => {
+    before(async () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
@@ -99,17 +102,17 @@ describe('LanesAspect', function () {
       await lanes.createLane('stage');
       const result = await snapping.snap({ pattern: 'comp1', build: false, unmodified: true });
       // intermediate step, make sure it is snapped
-      expect(result?.snappedComponents.length).toEqual(1);
-    }, 30000);
-    afterAll(async () => {
+      expect(result?.snappedComponents.length).to.equal(1);
+    });
+    after(async () => {
       await destroyWorkspace(workspaceData);
     });
     it('should return that the lane is up to date when the lane is ahead of main', async () => {
       const currentLane = await lanes.getCurrentLane();
       if (!currentLane) throw new Error('unable to get the current lane');
       const laneDiffResults = await lanes.diffStatus(currentLane.toLaneId());
-      expect(laneDiffResults.componentsStatus[0].upToDate).toEqual;
-      expect(laneDiffResults.componentsStatus[0].changeType).toEqual(ChangeType.NONE);
+      expect(laneDiffResults.componentsStatus[0].upToDate).to.be.true;
+      expect(laneDiffResults.componentsStatus[0].changeType).to.equal(ChangeType.NONE);
     });
     it('should return that the lane is not up to date when main is ahead', async () => {
       const currentLane = await lanes.getCurrentLane();
@@ -118,15 +121,15 @@ describe('LanesAspect', function () {
       await snapping.snap({ pattern: 'comp1', build: false, unmodified: true });
 
       const laneDiffResults = await lanes.diffStatus(currentLane.toLaneId());
-      expect(laneDiffResults.componentsStatus[0].upToDate).toEqual(false);
-      expect(laneDiffResults.componentsStatus[0].changeType).toEqual(ChangeType.NONE);
+      expect(laneDiffResults.componentsStatus[0].upToDate).to.be.false;
+      expect(laneDiffResults.componentsStatus[0].changeType).to.equal(ChangeType.NONE);
     });
   });
 
   describe('restoreLane()', () => {
     let lanes: LanesMain;
     let workspaceData: WorkspaceData;
-    beforeAll(async () => {
+    before(async () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
@@ -135,32 +138,32 @@ describe('LanesAspect', function () {
 
       // as an intermediate step, make sure the lane was created
       const currentLanes = await lanes.getLanes({});
-      expect(currentLanes.length).toEqual(1);
+      expect(currentLanes).to.have.lengthOf(1);
 
       await lanes.switchLanes('main', { skipDependencyInstallation: true });
       await lanes.removeLanes(['stage']);
 
       // as an intermediate step, make sure the lane was removed
       const lanesAfterDelete = await lanes.getLanes({});
-      expect(lanesAfterDelete.length).toEqual(0);
+      expect(lanesAfterDelete).to.have.lengthOf(0);
 
       await lanes.restoreLane(currentLanes[0].hash);
-    }, 30000);
-    afterAll(async () => {
+    });
+    after(async () => {
       await destroyWorkspace(workspaceData);
     });
     it('should restore the deleted lane', async () => {
       const currentLanes = await lanes.getLanes({});
-      expect(currentLanes.length).toEqual(1);
-      expect(currentLanes[0].id.name).toEqual('stage');
+      expect(currentLanes).to.have.lengthOf(1);
+      expect(currentLanes[0].id.name).to.equal('stage');
     });
     describe('delete restored lane', () => {
       let output: string[];
-      beforeAll(async () => {
+      before(async () => {
         output = await lanes.removeLanes(['stage']);
       });
       it('should not throw', () => {
-        expect(output.length).toEqual(1);
+        expect(output).to.have.lengthOf(1);
       });
     });
   });
@@ -169,7 +172,7 @@ describe('LanesAspect', function () {
     let lanes: LanesMain;
     let workspaceData: WorkspaceData;
     let laneHash: string;
-    beforeAll(async () => {
+    before(async () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
@@ -178,15 +181,15 @@ describe('LanesAspect', function () {
 
       // as an intermediate step, make sure the lane was created
       const currentLanes = await lanes.getLanes({});
-      expect(currentLanes.length).toEqual(1);
+      expect(currentLanes).to.have.lengthOf(1);
 
       await lanes.switchLanes('main', { skipDependencyInstallation: true });
       await lanes.removeLanes(['stage']);
 
       await lanes.createLane('stage');
       laneHash = currentLanes[0].hash;
-    }, 30000);
-    afterAll(async () => {
+    });
+    after(async () => {
       await destroyWorkspace(workspaceData);
     });
     it('should throw when restoring the lane', async () => {
@@ -196,8 +199,8 @@ describe('LanesAspect', function () {
       } catch (err: any) {
         error = err;
       }
-      expect(error).toBeInstanceOf(Error);
-      expect(error?.message).toMatch(/unable to restore lane/);
+      expect(error).to.be.instanceOf(Error);
+      expect(error?.message).to.include('unable to restore lane');
     });
   });
 
@@ -206,7 +209,7 @@ describe('LanesAspect', function () {
     let workspaceData: WorkspaceData;
     let snapping: SnappingMain;
     let laneId: LaneId;
-    beforeAll(async () => {
+    before(async () => {
       addFeature(SUPPORT_LANE_HISTORY);
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
@@ -217,53 +220,53 @@ describe('LanesAspect', function () {
       const currentLaneId = lanes.getCurrentLaneId();
       if (!currentLaneId) throw new Error('unable to get the current lane-id');
       laneId = currentLaneId;
-    }, 30000);
-    afterAll(async () => {
+    });
+    after(async () => {
       removeFeature(SUPPORT_LANE_HISTORY);
       await destroyWorkspace(workspaceData);
     });
     it('should create lane history object when creating a new lane', async () => {
       const laneHistory = await lanes.getLaneHistory(laneId);
       const history = laneHistory.getHistory();
-      expect(Object.keys(history).length).toEqual(1);
+      expect(Object.keys(history).length).to.equal(1);
     });
     it('should add a record to LaneHistory when snapping', async () => {
       const results = await snapping.snap({ pattern: 'comp1', build: false, message: 'first snap' });
       const laneHistory = await lanes.getLaneHistory(laneId);
       const history = laneHistory.getHistory();
-      expect(Object.keys(history).length).toEqual(2);
+      expect(Object.keys(history).length).to.equal(2);
       const snapHistory = history[Object.keys(history)[1]];
-      expect(snapHistory.log.message).toEqual('snap (first snap)');
-      expect(snapHistory.components.length).toEqual(1);
-      expect(snapHistory.components[0]).toEqual(results?.snappedComponents[0].id.toString() as string);
+      expect(snapHistory.log.message).to.equal('snap (first snap)');
+      expect(snapHistory.components.length).to.equal(1);
+      expect(snapHistory.components[0]).to.equal(results?.snappedComponents[0].id.toString() as string);
     });
     describe('import to another workspace', () => {
       let newWorkspace: WorkspaceData;
-      beforeAll(async () => {
+      before(async () => {
         // make another snap to check to test the checkout later.
         await snapping.snap({ pattern: 'comp1', build: false, message: 'second snap' });
         const laneHistory = await lanes.getLaneHistory(laneId);
         const history = laneHistory.getHistory();
-        expect(Object.keys(history).length).toEqual(3);
+        expect(Object.keys(history).length).to.equal(3);
 
         const exporter: ExportMain = await loadAspect(ExportAspect, workspaceData.workspacePath);
         const exportResults = await exporter.export();
-        expect(exportResults.componentsIds.length).toEqual(1);
-        expect(exportResults.exportedLanes.length).toEqual(1);
+        expect(exportResults.componentsIds.length).to.equal(1);
+        expect(exportResults.exportedLanes.length).to.equal(1);
 
         newWorkspace = mockWorkspace({ bareScopeName: workspaceData.remoteScopeName });
 
         lanes = await loadAspect(LanesAspect, newWorkspace.workspacePath);
         await lanes.switchLanes(laneId.toString(), { skipDependencyInstallation: true, getAll: true });
         await lanes.importLaneObject(laneId, true, true);
-      }, 30000);
-      afterAll(async () => {
+      });
+      after(async () => {
         await destroyWorkspace(newWorkspace);
       });
       it('should not add a record to the lane-history', async () => {
         const laneHistory = await lanes.getLaneHistory(laneId);
         const history = laneHistory.getHistory();
-        expect(Object.keys(history).length).toEqual(3);
+        expect(Object.keys(history).length).to.equal(3);
       });
       it('should be able to checkout to a previous state of the lane', async () => {
         const laneHistory = await lanes.getLaneHistory(laneId);
@@ -271,9 +274,32 @@ describe('LanesAspect', function () {
         const snapHistoryId = Object.keys(history).find((key) => history[key].log.message?.includes('first snap'));
         if (!snapHistoryId) throw new Error('unable to find snap history of the first snap');
         const results = await lanes.checkoutHistory(snapHistoryId, { skipDependencyInstallation: true });
-        expect(results.components?.length).toEqual(1);
-        expect(results.failedComponents?.length).toEqual(0);
+        expect(results.components?.length).to.equal(1);
+        expect(results.failedComponents?.length).to.equal(0);
       });
+    });
+  });
+
+  describe('create lanes with the same name different scope', () => {
+    let lanes: LanesMain;
+    let workspaceData: WorkspaceData;
+    before(async () => {
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      await mockComponents(workspacePath);
+      lanes = await loadAspect(LanesAspect, workspacePath);
+      await lanes.createLane('stage');
+      await lanes.switchLanes('main', { skipDependencyInstallation: true });
+    });
+    after(async () => {
+      await destroyWorkspace(workspaceData);
+    });
+    it('should not throw when creating the second lane', async () => {
+      await lanes.createLane('stage', { scope: 'new-scope' });
+      const currentLanes = await lanes.getLanes({});
+      expect(currentLanes.length).to.equal(2);
+      expect(currentLanes[0].id.name).to.equal('stage');
+      expect(currentLanes[1].id.name).to.equal('stage');
     });
   });
 });

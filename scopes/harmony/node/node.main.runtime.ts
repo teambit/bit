@@ -1,9 +1,9 @@
 import { Harmony } from '@teambit/harmony';
-import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { TsConfigSourceFile } from 'typescript';
 import { TsCompilerOptionsWithoutTsConfig, TypescriptAspect, TypescriptMain } from '@teambit/typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
+import { merge } from 'lodash';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { MainRuntime } from '@teambit/cli';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
@@ -136,7 +136,7 @@ export class NodeMain {
    */
   overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
-      getDependencies: () => mergeDeepLeft(dependencyPolicy, this.nodeEnv.getDependencies()),
+      getDependencies: () => merge(this.nodeEnv.getDependencies(), dependencyPolicy),
     });
   }
 

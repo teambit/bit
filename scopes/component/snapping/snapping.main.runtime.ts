@@ -3,10 +3,8 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import R from 'ramda';
 import semver, { ReleaseType } from 'semver';
 import { compact, difference, uniq } from 'lodash';
-import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, Extensions, LATEST, BuildStatus } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
@@ -197,7 +195,7 @@ export class SnappingMain {
       snapped,
       unmerged
     );
-    if (R.isEmpty(bitIds)) return null;
+    if (!bitIds.length) return null;
 
     const legacyBitIds = ComponentIdList.fromArray(bitIds);
 
@@ -246,11 +244,6 @@ export class SnappingMain {
 
     const postHook = isAll ? POST_TAG_ALL_HOOK : POST_TAG_HOOK;
     HooksManagerInstance?.triggerHook(postHook, tagResults);
-    Analytics.setExtraData(
-      'num_components',
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      R.concat(tagResults.taggedComponents, tagResults.autoTaggedResults, tagResults.newComponents).length
-    );
     await consumer.onDestroy(`tag (message: ${message || 'N/A'})`);
     await stagedConfig?.write();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -1011,7 +1004,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     this.issues.removeIgnoredIssuesFromComponents(components, issuesToIgnore);
     const legacyComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
-    if (!R.isEmpty(componentsWithBlockingIssues)) {
+    if (componentsWithBlockingIssues.length) {
       throw new ComponentsHaveIssues(componentsWithBlockingIssues);
     }
 

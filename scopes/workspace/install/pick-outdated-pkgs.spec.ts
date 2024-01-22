@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import stripAnsi from 'strip-ansi';
 import { ComponentID } from '@teambit/component';
 import { makeOutdatedPkgChoices } from './pick-outdated-pkgs';
@@ -38,7 +39,7 @@ describe('makeOutdatedPkgChoices', () => {
     const stripped = stripAnsiFromChoices(choices);
     // @ts-ignore
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    expect(stripped).toMatchObject(orderedChoices);
+    expect(stripped).to.deep.equal(orderedChoices);
   });
   it('should render choices with context information', () => {
     const choices = makeOutdatedPkgChoices([
@@ -63,7 +64,7 @@ describe('makeOutdatedPkgChoices', () => {
     const stripped = stripAnsiFromChoices(choices);
     // @ts-ignore
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    expect(stripped).toMatchObject(contextOrders);
+    expect(stripped).to.deep.equal(contextOrders);
   });
 });
 
