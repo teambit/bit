@@ -3,7 +3,8 @@
 .dropdown {
   // otherwise when the dropdown is open it clashes with the content of the tree
   // (this is bizarre, the tree has no position absolute)
-  z-index: $modal-z-index;
+  // todo - check why this is commented out in cloud
+  // z-index: $modal-z-index;
   border-radius: 8px;
   width: 100%;
 
@@ -50,6 +51,9 @@
 .searchInput {
   // otherwise, search input defaults to 12px for 's' inputSize
   font-size: var(--bit-p-xs, '14px') !important;
+  &:focus {
+    border: 1px solid var(--border-high-color);
+  }
 }
 
 .toolbar {

@@ -41,8 +41,7 @@
   border-bottom: none;
   padding: 8px 0px;
   overflow: unset;
-  min-height: fit-content;
-  max-height: fit-content;
+  height: fit-content;
 
   &.fullScreen {
     height: 100%;

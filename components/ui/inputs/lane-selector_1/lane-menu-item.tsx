@@ -78,7 +78,7 @@ export const LaneMenuItem = forwardRef<HTMLDivElement, LaneMenuItemProps>(
 
               {formattedTimestamp && (
                 <div className={styles.timeStamp}>
-                  <TimeAgo date={formattedTimestamp} />
+                  <TimeAgo date={formattedTimestamp} className={styles.laneUpdated} />
                 </div>
               )}
             </div>

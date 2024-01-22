@@ -27,6 +27,7 @@ export function CodeCompareNavigation({
   Menu,
 }: CodeCompareNavigationProps) {
   const [open, setOpen] = useState<boolean | undefined>();
+
   return (
     <CodeCompareNav
       files={files}
@@ -124,7 +125,6 @@ function CodeCompareNav({
         navPlugins={extractedTabs}
         activeTabIndex={selectedFileIndex}
         alwaysShowActiveTab={true}
-        // moveSelectedTabFirstIfHidden={true}
       >
         {children}
       </CollapsibleMenuNav>

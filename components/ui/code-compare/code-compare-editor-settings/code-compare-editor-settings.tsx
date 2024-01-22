@@ -52,12 +52,20 @@ export function CodeCompareEditorSettings({
         </Radio>
       </div>
       <div className={styles.ignoreWhitespaceSettings}>
-        <CheckboxItem checked={ignoreWhitespace} onInputChanged={() => onIgnoreWhitespaceChanged(!ignoreWhitespace)}>
+        <CheckboxItem
+          className={styles.checkbox}
+          checked={ignoreWhitespace}
+          onInputChanged={() => onIgnoreWhitespaceChanged(!ignoreWhitespace)}
+        >
           Hide whitespace
         </CheckboxItem>
       </div>
       <div className={styles.wordWrapSettings}>
-        <CheckboxItem checked={wordWrap} onInputChanged={() => onWordWrapChanged(!wordWrap)}>
+        <CheckboxItem
+          className={styles.checkbox}
+          checked={wordWrap}
+          onInputChanged={() => onWordWrapChanged(!wordWrap)}
+        >
           Word wrap
         </CheckboxItem>
       </div>

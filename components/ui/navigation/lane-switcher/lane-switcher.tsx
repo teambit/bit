@@ -11,8 +11,6 @@ import styles from './lane-switcher.module.scss';
 
 export type LaneSwitcherProps = {
   groupByScope?: boolean;
-  // sortBy?: LaneSelectorSortBy;
-  // sortOptions?: LaneSelectorSortBy[];
   mainIcon?: () => React.ReactNode;
   scopeIcon?: (scopeName: string) => React.ReactNode;
   useLanes?: UseLanes;
@@ -34,8 +32,6 @@ export function LaneSwitcher({
   groupByScope = false,
   mainIcon,
   scopeIcon,
-  // sortBy,
-  // sortOptions,
   useLanes = defaultUseLanes,
   searchLanes = defaultSearchLanes(useLanes),
   getHref = LanesModel.getLaneUrl,
@@ -60,17 +56,18 @@ export function LaneSwitcher({
 
   const selectedLane = lanesModel?.viewedLane || mainLane;
   const selectedLaneGalleryHref = selectedLane && getHref(selectedLane.id);
+  const MainIcon = mainIcon?.();
 
   return (
     <div className={classnames(styles.laneSwitcherContainer, className)}>
       <div className={styles.laneSelectorContainer}>
-        {loading && <WordSkeleton className={styles.loader} length={24} />}
+        {loading && <WordSkeleton className={styles.loader} length={20} />}
         {
           <LaneSelector
             selectedLaneId={selectedLane?.id}
             nonMainLanes={nonMainLanes}
             mainLane={mainLane}
-            mainIcon={mainIcon?.()}
+            mainIcon={MainIcon}
             groupByScope={groupByScope}
             // sortBy={sortBy}
             // sortOptions={sortOptions}

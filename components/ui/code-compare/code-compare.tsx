@@ -32,7 +32,9 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   const query = useQuery();
   const location = useLocation() || { pathname: '/' };
 
-  const { base, compare, state: compareState, hooks: compareHooks, hidden } = componentCompareContext || {};
+  // todo - look into this loading flag where it needs to be used
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { base, compare, state: compareState, hooks: compareHooks, hidden, loading } = componentCompareContext || {};
 
   const state = compareState?.code;
   const hook = compareHooks?.code;

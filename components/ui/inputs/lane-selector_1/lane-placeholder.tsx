@@ -12,6 +12,7 @@ export type LanePlaceholderProps = {
   disabled?: boolean;
   showScope?: boolean;
   loading?: boolean;
+  placeholderText?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function LanePlaceholder({
@@ -20,11 +21,14 @@ export function LanePlaceholder({
   className,
   showScope = true,
   loading,
+  placeholderText: placeholderTextFromProps,
   ...rest
 }: LanePlaceholderProps) {
+  const nothingSelected = !selectedLaneId;
   const laneIdStr = selectedLaneId?.isDefault()
     ? selectedLaneId.name
     : (showScope && selectedLaneId?.toString()) || selectedLaneId?.name;
+  const placeholderText = nothingSelected ? placeholderTextFromProps || 'Select lane' : laneIdStr;
 
   if (loading) {
     return null;
@@ -33,7 +37,7 @@ export function LanePlaceholder({
   return (
     <div {...rest} className={classnames(styles.placeholder, className, disabled && styles.disabled)}>
       <LaneIcon className={styles.icon} />
-      <Ellipsis className={styles.placeholderText}>{laneIdStr}</Ellipsis>
+      <Ellipsis className={styles.placeholderText}>{placeholderText}</Ellipsis>
       {!disabled && <Icon of="fat-arrow-down" />}
     </div>
   );

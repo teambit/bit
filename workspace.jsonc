@@ -119,7 +119,6 @@
         "@teambit/component.ui.component-compare.compare-aspects.context": "^0.0.12",
         "@teambit/component.ui.component-compare.compare-aspects.hooks.use-compare-aspects": "^0.0.118",
         "@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model": "^0.0.11",
-        "@teambit/component.ui.component-compare.context": "^0.0.117",
         "@teambit/component.ui.component-compare.hooks.use-component-compare": "^0.0.113",
         "@teambit/component.ui.component-compare.hooks.use-component-compare-url": "^0.0.9",
         "@teambit/component.ui.component-compare.layouts.compare-split-layout-preset": "^0.0.10",
