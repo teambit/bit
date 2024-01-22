@@ -1876,6 +1876,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/models/component-compare-props"
     },
+    "ui/component-compare/utils/lazy-loading": {
+        "name": "ui/component-compare/utils/lazy-loading",
+        "scope": "teambit.component",
+        "version": "0.0.6",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/utils/lazy-loading"
+    },
     "ui/component-compare/version-picker": {
         "name": "ui/component-compare/version-picker",
         "scope": "teambit.component",
@@ -2071,6 +2078,13 @@
         "version": "0.0.508",
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs"
+    },
+    "ui/react-router/slot-router": {
+        "name": "ui/react-router/slot-router",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.506",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/react-router/slot-router"
     },
     "ui/side-bar": {
         "name": "ui/side-bar",
