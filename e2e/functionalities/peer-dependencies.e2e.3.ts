@@ -118,10 +118,7 @@ describe('peer-dependencies functionality', function () {
     });
   });
 
-  describe.only('a component is a peer dependency added by an env', function () {
-    let helper: Helper;
-    this.timeout(0);
-
+  describe('a component is a peer dependency added by an env', function () {
     describe('pnpm isolated linker', function () {
       let workspaceCapsulesRootDir: string;
       before(() => {
