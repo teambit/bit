@@ -1,5 +1,6 @@
 import { resolve } from 'path';
 import { readFileSync } from 'fs-extra';
+import normalize from 'normalize-path';
 import minimatch from 'minimatch';
 import { compact, flatten, isEmpty } from 'lodash';
 import { proxy } from 'comlink';
@@ -70,9 +71,14 @@ export class JestTester implements Tester {
       if (!componentPatternValue) return undefined;
       const [currComponent, patternEntry] = componentPatternValue;
       const resolvedPatterns = this.resolveComponentPattern(currComponent, patternEntry, testerContext);
-      return testResult.filter((test) => {
-        return resolvedPatterns.filter((resolvedPattern) => minimatch(test.testFilePath, resolvedPattern)).length > 0;
-      });
+      return testResult.filter((test) =>
+        resolvedPatterns.some(
+          (resolvedPattern) =>
+            minimatch(test.testFilePath, resolvedPattern) ||
+            // on Windows, `test.testFilePath` has only single black slashes, while `resolvedPattern` has double black slashes.
+            minimatch(normalize(test.testFilePath), normalize(resolvedPattern))
+        )
+      );
     });
   }
 
