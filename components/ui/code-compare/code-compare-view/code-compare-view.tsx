@@ -7,14 +7,10 @@ import classNames from 'classnames';
 import { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
-import {
-  CodeCompareEditor,
-  CodeCompareEditorSettings,
-  CodeCompareNavigation,
-  useCodeCompare,
-  EditorViewMode,
-  useCodeCompareEditor,
-} from '../index';
+import { CodeCompareEditor, useCodeCompareEditor } from '../code-compare-editor';
+import { CodeCompareEditorSettings, EditorViewMode } from '../code-compare-editor-settings';
+import { CodeCompareNavigation } from '../code-compare-navigation';
+import { useCodeCompare } from '../use-code-compare';
 
 import styles from './code-compare-view.module.scss';
 

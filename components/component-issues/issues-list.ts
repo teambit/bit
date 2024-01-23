@@ -18,6 +18,7 @@ import { MergeConfigHasConflict } from './merge-config-has-conflict';
 import { NonLoadedEnv } from './non-loaded-env';
 import { ExternalEnvWithoutVersion } from './external-env-without-version';
 import { RemovedDependencies } from './removed-dependencies';
+import { SelfReference } from './self-reference';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
@@ -39,6 +40,7 @@ export const IssuesClasses = {
   NonLoadedEnv,
   ExternalEnvWithoutVersion,
   RemovedDependencies,
+  SelfReference,
 };
 export type IssuesNames = keyof typeof IssuesClasses;
 

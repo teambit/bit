@@ -1,4 +1,4 @@
-import { ComponentContext } from '@teambit/generator';
+import { ComponentContext } from '../../../component-template';
 
 export function docFile(context: ComponentContext) {
   const { name, componentId } = context;

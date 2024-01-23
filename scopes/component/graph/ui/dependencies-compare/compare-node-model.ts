@@ -1,5 +1,5 @@
 import { ComponentModel } from '@teambit/component';
-import { NodeModel } from '@teambit/graph';
+import { NodeModel } from '../query';
 
 export type CompareStatus = 'modified' | 'new' | 'deleted' | undefined;
 

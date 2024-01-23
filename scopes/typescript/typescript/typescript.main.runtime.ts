@@ -14,7 +14,7 @@ import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import WatcherAspect, { WatcherMain, WatchOptions } from '@teambit/watcher';
 import type { Component, ComponentID } from '@teambit/component';
-import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import { BuilderMain } from '@teambit/builder';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { TypeScriptExtractor } from './typescript.extractor';
@@ -67,7 +67,6 @@ import {
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
 import WriteTsconfigCmd from './cmds/write-tsconfig.cmd';
-import { RemoveTypesTask } from './remove-types-task';
 
 export type TsMode = 'build' | 'dev';
 
@@ -330,12 +329,11 @@ export class TypescriptMain {
     EnvsAspect,
     WatcherAspect,
     ScopeAspect,
-    BuilderAspect,
   ];
   static slots = [Slot.withType<SchemaTransformer[]>(), Slot.withType<SchemaNodeTransformer[]>()];
 
   static async provider(
-    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs, watcher, scope, builder]: [
+    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs, watcher, scope]: [
       SchemaMain,
       LoggerMain,
       AspectLoaderMain,

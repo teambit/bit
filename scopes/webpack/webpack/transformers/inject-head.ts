@@ -1,5 +1,5 @@
 import { InjectHeadPlugin } from '@teambit/webpack.plugins.inject-head-webpack-plugin';
-import type { WebpackConfigTransformer } from '@teambit/webpack';
+import type { WebpackConfigTransformer } from '../webpack.main.runtime';
 
 export type HeadInjectionOptions = {
   content: string;
