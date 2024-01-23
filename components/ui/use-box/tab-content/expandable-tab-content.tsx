@@ -2,8 +2,8 @@ import React, { useState, ReactNode } from 'react';
 import classNames from 'classnames';
 import AnimateHeight from 'react-animate-height';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
+import { TabContent } from './tab-content';
 import styles from './tab-content.module.scss';
 
 export type ExpandableTabContentProps = {
