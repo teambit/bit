@@ -1,7 +1,7 @@
 import React from 'react';
 import { DiffEditorProps, DiffOnMount } from '@monaco-editor/react';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
-import { EditorSettingsState } from '@teambit/code.ui.code-compare';
+import { EditorSettingsState } from '../code-compare-editor-settings';
 
 export type CodeCompareEditorProps = {
   language: string;

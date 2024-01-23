@@ -1,5 +1,5 @@
 import InjectBodyPlugin from 'inject-body-webpack-plugin';
-import type { WebpackConfigTransformer } from '@teambit/webpack';
+import type { WebpackConfigTransformer } from '../webpack.main.runtime';
 
 export type BodyInjectionOptions = {
   content: string;

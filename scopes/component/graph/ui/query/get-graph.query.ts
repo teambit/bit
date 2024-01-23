@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import { EdgeType } from '@teambit/graph';
+import { EdgeType } from '../../edge-type';
 
 // please update types when updating query, for added safety
 

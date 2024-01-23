@@ -18,10 +18,10 @@ import { MainRuntime } from '@teambit/cli';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { ExtensionManifest, Aspect } from '@teambit/harmony';
 import { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
-import { ScopeMain } from '@teambit/scope';
 import { Logger } from '@teambit/logger';
 import { EnvsMain } from '@teambit/envs';
 import { NodeLinker } from '@teambit/dependency-resolver';
+import { ScopeMain } from './scope.main.runtime';
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
 
