@@ -1,0 +1,40 @@
+---
+description: 'React router context adapter for our abstract routing system'
+labels: ['ui', 'react-router', 'link']
+---
+
+import { MemoryRouter } from 'react-router-dom';
+import { Link } from '@teambit/base-react.navigation.link';
+
+A [React Router (v6)](https://reactrouter.com/) adapter for the Bit's generic [Link](https://bit.dev/teambit/base-react/navigation/link) component.
+
+## Basic usage
+
+```tsx
+import React from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { NavigationProvider, Link } from '@teambit/base-react.navigation.link';
+import { reactRouterAdapter } from '@teambit/ui-foundation.ui.navigation.react-router-adapter';
+import { IndexPage, AboutPage } from './example-pages';
+
+export function ReactRouterAdapterExample() {
+  return (
+    <BrowserRouter>
+      <NavigationProvider implementation={reactRouterAdapter}>
+        {/* this link won't refresh the entire page, and will use the React Router link. */}
+        <Link href="/">Home </Link>
+        <Link href="/about"> About</Link>
+        <Routes>
+          <Route path="/" element={<IndexPage />} />
+          <Route path="/about" element={<AboutPage />} />
+        </Routes>
+      </NavigationProvider>
+    </BrowserRouter>
+  );
+```
+
+Fork [this demo component](https://bit.dev/learnbit/base-react/navigation/react-router-adapter-example) to try it in your workspace:
+
+```bash
+bit fork learnbit.base-react/navigation/react-router-adapter-example
+```

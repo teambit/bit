@@ -1797,7 +1797,13 @@
         "scope": "teambit.code",
         "version": "259a4be31935028bb15db2197668e2305e4e27d9",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/code-compare"
+        "rootDir": "components/ui/code-compare",
+        "config": {
+            "teambit.react/v17/react-env@1.0.31": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/v17/react-env"
+            }
+        }
     },
     "ui/code-tab-page": {
         "name": "ui/code-tab-page",
@@ -1811,14 +1817,26 @@
         "scope": "teambit.lanes",
         "version": "582ab3fa6f29cfa0d7686ced67d68bd8a3f82db5",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare"
+        "rootDir": "components/ui/compare/lane-compare",
+        "config": {
+            "teambit.react/v17/react-env@1.0.31": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/v17/react-env"
+            }
+        }
     },
     "ui/compare/lane-compare-drawer": {
         "name": "ui/compare/lane-compare-drawer",
         "scope": "teambit.lanes",
         "version": "d996a5a26a992e8bb23bc146df62c092b7bbd7ca",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare-drawer"
+        "rootDir": "components/ui/compare/lane-compare-drawer",
+        "config": {
+            "teambit.react/v17/react-env@1.0.31": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/v17/react-env"
+            }
+        }
     },
     "ui/compare/lane-compare-hooks/use-lane-diff-status": {
         "name": "ui/compare/lane-compare-hooks/use-lane-diff-status",
@@ -1839,7 +1857,13 @@
         "scope": "teambit.lanes",
         "version": "1cda1017acfbeaf62f4aa13bc54f0e026c58097a",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare-page"
+        "rootDir": "components/ui/compare/lane-compare-page",
+        "config": {
+            "teambit.react/v17/react-env@1.0.31": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/v17/react-env"
+            }
+        }
     },
     "ui/compare/lane-compare-state": {
         "name": "ui/compare/lane-compare-state",
@@ -1860,7 +1884,13 @@
         "scope": "teambit.component",
         "version": "f0811699af55a4c4720f5774fecff2f053b96aa2",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/component-compare"
+        "rootDir": "components/ui/component-compare/component-compare",
+        "config": {
+            "teambit.react/v17/react-env@1.0.31": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/v17/react-env"
+            }
+        }
     },
     "ui/component-compare/context": {
         "name": "ui/component-compare/context",
@@ -1939,6 +1969,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/compositions-app"
     },
+    "ui/constants/z-indexes": {
+        "name": "ui/constants/z-indexes",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.504",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/constants/z-indexes"
+    },
+    "ui/corner": {
+        "name": "ui/corner",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.520",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/corner"
+    },
     "ui/current-user": {
         "name": "ui/current-user",
         "scope": "teambit.cloud",
@@ -1981,6 +2025,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/docs/properties-table"
     },
+    "ui/empty-component-gallery": {
+        "name": "ui/empty-component-gallery",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.508",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/empty-component-gallery"
+    },
     "ui/env-icon": {
         "name": "ui/env-icon",
         "scope": "teambit.envs",
@@ -1994,6 +2045,27 @@
         "version": "0.0.130",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/error-fallback"
+    },
+    "ui/full-loader": {
+        "name": "ui/full-loader",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.500",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/full-loader"
+    },
+    "ui/get-icon-from-file-name": {
+        "name": "ui/get-icon-from-file-name",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.500",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/get-icon-from-file-name"
+    },
+    "ui/global-loader": {
+        "name": "ui/global-loader",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.502",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/global-loader"
     },
     "ui/highlighter-provider": {
         "name": "ui/highlighter-provider",
@@ -2016,12 +2088,61 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/hooks/scope-context"
     },
+    "ui/hooks/use-bind-key": {
+        "name": "ui/hooks/use-bind-key",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.500",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/hooks/use-bind-key"
+    },
+    "ui/hooks/use-data-query": {
+        "name": "ui/hooks/use-data-query",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.505",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/hooks/use-data-query"
+    },
+    "ui/hooks/use-in-out-transition": {
+        "name": "ui/hooks/use-in-out-transition",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.500",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/hooks/use-in-out-transition"
+    },
+    "ui/hooks/use-is-mobile": {
+        "name": "ui/hooks/use-is-mobile",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.197",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/hooks/use-is-mobile"
+    },
+    "ui/hooks/use-user-agent": {
+        "name": "ui/hooks/use-user-agent",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.197",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/hooks/use-user-agent"
+    },
     "ui/inputs/lane-selector": {
         "name": "ui/inputs/lane-selector",
         "scope": "teambit.lanes",
         "version": "765c8ebd6c2a17ab65419714628b3f4b0ff2b743",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inputs/lane-selector_1"
+    },
+    "ui/is-browser": {
+        "name": "ui/is-browser",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.500",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/is-browser"
+    },
+    "ui/keycap": {
+        "name": "ui/keycap",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.500",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/keycap"
     },
     "ui/lane-overview": {
         "name": "ui/lane-overview",
@@ -2044,6 +2165,27 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/ui/login"
     },
+    "ui/main-dropdown": {
+        "name": "ui/main-dropdown",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.502",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/main-dropdown"
+    },
+    "ui/menu": {
+        "name": "ui/menu",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.502",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/menu"
+    },
+    "ui/menu-widget-icon": {
+        "name": "ui/menu-widget-icon",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.502",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/menu-widget-icon"
+    },
     "ui/menus/use-lanes-menu": {
         "name": "ui/menus/use-lanes-menu",
         "scope": "teambit.lanes",
@@ -2063,7 +2205,62 @@
         "scope": "teambit.lanes",
         "version": "badfe5b4fcf815ac1070cf6d0c7d55678042c791",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/navigation/lane-switcher"
+        "rootDir": "components/ui/navigation/lane-switcher",
+        "config": {
+            "teambit.react/v17/react-env@1.0.31": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/v17/react-env"
+            }
+        }
+    },
+    "ui/navigation/react-router-adapter": {
+        "name": "ui/navigation/react-router-adapter",
+        "scope": "teambit.ui-foundation",
+        "version": "6.1.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/navigation/react-router-adapter"
+    },
+    "ui/notifications/notification": {
+        "name": "ui/notifications/notification",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.515",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/notifications/notification"
+    },
+    "ui/notifications/notification-center": {
+        "name": "ui/notifications/notification-center",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.523",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/notifications/notification-center"
+    },
+    "ui/notifications/notification-context": {
+        "name": "ui/notifications/notification-context",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.501",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/notifications/notification-context"
+    },
+    "ui/notifications/store": {
+        "name": "ui/notifications/store",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.500",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/notifications/store"
+    },
+    "ui/pages/preview-not-found": {
+        "name": "ui/pages/preview-not-found",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.84",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/pages/preview-not-found"
+    },
+    "ui/pages/static-error": {
+        "name": "ui/pages/static-error",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.92",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/pages/static-error"
     },
     "ui/preview-placeholder": {
         "name": "ui/preview-placeholder",
@@ -2079,12 +2276,40 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs"
     },
+    "ui/react-router/extend-path": {
+        "name": "ui/react-router/extend-path",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.486",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/react-router/extend-path"
+    },
     "ui/react-router/slot-router": {
         "name": "ui/react-router/slot-router",
         "scope": "teambit.ui-foundation",
         "version": "0.0.506",
         "mainFile": "index.ts",
         "rootDir": "components/ui/react-router/slot-router"
+    },
+    "ui/react-router/use-query": {
+        "name": "ui/react-router/use-query",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.501",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/react-router/use-query"
+    },
+    "ui/rendering/html": {
+        "name": "ui/rendering/html",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.85",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/rendering/html"
+    },
+    "ui/routing/compare-url": {
+        "name": "ui/routing/compare-url",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.364",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/routing/compare-url"
     },
     "ui/side-bar": {
         "name": "ui/side-bar",
@@ -2107,12 +2332,96 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/test-page"
     },
+    "ui/top-bar": {
+        "name": "ui/top-bar",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.514",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/top-bar"
+    },
     "ui/tree/drawer": {
         "name": "ui/tree/drawer",
         "scope": "teambit.ui-foundation",
         "version": "0.0.518",
         "mainFile": "index.ts",
         "rootDir": "components/ui/tree/drawer"
+    },
+    "ui/tree/file-tree": {
+        "name": "ui/tree/file-tree",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.522",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/tree/file-tree"
+    },
+    "ui/tree/folder-tree-node": {
+        "name": "ui/tree/folder-tree-node",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.509",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/tree/folder-tree-node"
+    },
+    "ui/tree/tree-node": {
+        "name": "ui/tree/tree-node",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.513",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/tree/tree-node"
+    },
+    "ui/use-box/back-button": {
+        "name": "ui/use-box/back-button",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.119",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/use-box/back-button"
+    },
+    "ui/use-box/bit-info": {
+        "name": "ui/use-box/bit-info",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.128",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/use-box/bit-info"
+    },
+    "ui/use-box/bottom-link": {
+        "name": "ui/use-box/bottom-link",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.119",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/use-box/bottom-link"
+    },
+    "ui/use-box/dropdown": {
+        "name": "ui/use-box/dropdown",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.142",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/use-box/dropdown"
+    },
+    "ui/use-box/menu": {
+        "name": "ui/use-box/menu",
+        "scope": "teambit.ui-foundation",
+        "version": "1.0.7",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/use-box/menu"
+    },
+    "ui/use-box/scope-menu": {
+        "name": "ui/use-box/scope-menu",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.146",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/use-box/scope-menu"
+    },
+    "ui/use-box/tab": {
+        "name": "ui/use-box/tab",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.122",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/use-box/tab"
+    },
+    "ui/use-box/tab-content": {
+        "name": "ui/use-box/tab-content",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.122",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/use-box/tab-content"
     },
     "ui/user-bar": {
         "name": "ui/user-bar",

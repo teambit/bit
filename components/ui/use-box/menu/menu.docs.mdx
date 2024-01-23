@@ -1,0 +1,46 @@
+---
+description: A concrete menu that shows the ways to consume a component.
+labels: ['react', 'ui-component', 'component', 'menu']
+---
+
+import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
+import { Menu } from './menu';
+import { Install } from './install';
+import { Import } from './import';
+
+Menu accepts an array of methods with a `Title` to be displayed in the tab, a `Component` to be rendered in the content section and an `order` to determine the order of the tab.
+
+The menu has some more concrete components available for the most common usages, `Install` and `Import`. both can be used to supply the menu with it's methods.
+
+```js live
+() => {
+  const methods = [
+    {
+      Title: <img style={{ width: '30px' }} src="https://static.bit.dev/brands/logo-npm-new.svg" />,
+      Component: (
+        <Install
+          config={`npm config set @teambit:registry' https://node-registry.bit.cloud`}
+          componentName="radio"
+          packageManager="npm"
+          copyString="npm i @teambit/design.ui.radio"
+          registryName="@teambit"
+        />
+      ),
+      order: 1,
+    },
+    {
+      Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
+      Component: (
+        <Import componentId="teambit.design/ui/radio" packageName="@teambit/design.ui.radio" componentName="radio" />
+      ),
+      order: 0,
+    },
+  ];
+
+  return <Menu methods={methods} componentName="radio" />;
+};
+```
+
+::: note
+Please note that the `bit` tab is presented before the `npm` tab due to the fact that it's `order`.
+:::

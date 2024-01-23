@@ -1,0 +1,14 @@
+.tab {
+  margin-right: 8px;
+  padding: 0 16px 8px 16px;
+  display: flex;
+  align-items: center;
+  user-select: none;
+  cursor: pointer;
+  box-sizing: border-box;
+  border-bottom: 3px solid var(--bit-bg-modal, white);
+  &.active {
+    border-bottom: 3px solid var(--bit-accent-color, #6c5ce7);
+    cursor: unset;
+  }
+}

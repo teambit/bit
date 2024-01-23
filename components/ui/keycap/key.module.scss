@@ -1,0 +1,54 @@
+.keyCombo {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+
+  .keycap {
+    margin-right: 4px;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}
+
+.keySequence {
+  display: flex;
+  white-space: nowrap;
+  align-items: center;
+}
+
+.keycap {
+  text-transform: uppercase;
+  background-color: var(--bit-bg-dent, #f6f6f6);
+  color: var(--bit-text-color-light, #6c707c);
+  border-radius: 3px;
+  min-width: 1.7em;
+  padding: 0 0.4em;
+  box-sizing: border-box;
+  height: 1.7em;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thenSep {
+  font-size: 0.8em;
+  margin: 0 4px;
+}
+
+// // design similar to a physical key
+// .keycap {
+//   display: inline-block;
+//   min-width: 1em;
+//   line-height: 1;
+//   padding: 0.38em 0.38em;
+//   border-radius: 0.23em;
+//   text-align: center;
+//   vertical-align: middle;
+//   text-transform: uppercase;
+
+//   background: var(--bit-bg-heavy, #f6f6f6);
+//   box-shadow: var(--bit-shadow-raised-low);
+// }

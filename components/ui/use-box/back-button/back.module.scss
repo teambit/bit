@@ -1,0 +1,13 @@
+.back {
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  padding: 15px 24px;
+  > div {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    width: fit-content;
+    > span:first-child {
+      margin-right: 5px;
+    }
+  }
+}
