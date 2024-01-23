@@ -1,4 +1,4 @@
-import { EdgeModel, GraphModel } from '@teambit/graph';
+import { EdgeModel, GraphModel } from '../query';
 import { CompareNodeModel } from './compare-node-model';
 
 export class CompareGraphModel extends GraphModel<CompareNodeModel, EdgeModel> {

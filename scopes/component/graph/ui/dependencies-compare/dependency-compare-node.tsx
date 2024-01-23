@@ -7,10 +7,11 @@ import { CompareStatusResolver } from '@teambit/component.ui.component-compare.s
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';
-import { componentNodeStyles, defaultNode, external } from '@teambit/graph';
 import classnames from 'classnames';
 import React, { useMemo } from 'react';
 import { compare, valid } from 'semver';
+import { defaultNode, external } from '../../ui/component-node/variants';
+import { styles as componentNodeStyles } from '../../ui/component-node';
 import { CompareNodeModel } from './compare-node-model';
 import styles from './dependency-compare-node.module.scss';
 import variants from './dependency-compare-variants.module.scss';

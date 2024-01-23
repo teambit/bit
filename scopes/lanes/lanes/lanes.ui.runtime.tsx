@@ -3,7 +3,6 @@ import { Route, RouteProps } from 'react-router-dom';
 import { Slot, Harmony, SlotRegistry } from '@teambit/harmony';
 import { LaneCompare, LaneCompareProps as DefaultLaneCompareProps } from '@teambit/lanes.ui.compare.lane-compare';
 import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
-import { LanesAspect } from '@teambit/lanes';
 import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
 import ScopeAspect, { ScopeContext, ScopeUI } from '@teambit/scope';
@@ -27,6 +26,7 @@ import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-c
 import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
 import { ScopeIcon } from '@teambit/scope.ui.scope-icon';
 
+import { LanesAspect } from './lanes.aspect';
 import styles from './lanes.ui.module.scss';
 
 export type LaneCompareProps = Partial<DefaultLaneCompareProps>;
