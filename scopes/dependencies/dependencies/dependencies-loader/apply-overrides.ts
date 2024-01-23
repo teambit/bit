@@ -442,6 +442,10 @@ export class ApplyOverrides {
           return dep.packageName === pkgName;
         });
 
+        const existsInCompsPeerDeps = this.allDependencies.peerDependencies.find((dep) => {
+          return dep.packageName === pkgName;
+        });
+
         if (
           // We are checking originAllPackagesDependencies instead of allPackagesDependencies
           // as it might be already removed from allPackagesDependencies at this point if it was set with
@@ -452,6 +456,7 @@ export class ApplyOverrides {
           !this.originAllPackagesDependencies.peerPackageDependencies[pkgName] &&
           !existsInCompsDeps &&
           !existsInCompsDevDeps &&
+          !existsInCompsPeerDeps &&
           // Check if it was orignally exists in the component
           // as we might have a policy which looks like this:
           // "components": {
@@ -502,10 +507,15 @@ export class ApplyOverrides {
           pkgVal !== MANUALLY_REMOVE_DEPENDENCY &&
           ((!existsInCompsDeps && !existsInCompsDevDeps) || field === 'peerDependencies')
         ) {
-          if (existsInCompsDeps && field === 'peerDependencies') {
-            this.allDependencies.peerDependencies.push(existsInCompsDeps);
+          if ((existsInCompsDeps || existsInCompsDevDeps) && field === 'peerDependencies') {
+            const comp = (existsInCompsDeps ?? existsInCompsDevDeps) as Dependency;
+            comp.versionPolicy = pkgVal;
+            this.allDependencies.peerDependencies.push(comp);
           } else {
             this.allPackagesDependencies[key][pkgName] = pkgVal;
+          }
+          if (existsInCompsPeerDeps) {
+            existsInCompsPeerDeps.versionPolicy = pkgVal;
           }
         }
       });
