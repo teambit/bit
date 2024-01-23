@@ -243,7 +243,7 @@ export class TypescriptMain {
   getCjsPackageJsonProps(): PackageJsonProps {
     return {
       main: 'dist/{main}.js',
-      types: '{main}.ts',
+      // types: '{main}.ts',
     };
   }
 
@@ -256,7 +256,7 @@ export class TypescriptMain {
       // main: 'dist-esm/{main}.js',
       main: 'dist/{main}.js',
       type: 'module',
-      types: '{main}.ts',
+      // types: '{main}.ts',
     };
   }
 
@@ -413,9 +413,9 @@ export class TypescriptMain {
       workspace.registerOnComponentAdd(tsMain.onComponentChange.bind(tsMain));
     }
 
-    const removeTypesTask = new RemoveTypesTask();
-    builder.registerSnapTasks([removeTypesTask]);
-    builder.registerTagTasks([removeTypesTask]);
+    // const removeTypesTask = new RemoveTypesTask();
+    // builder.registerSnapTasks([removeTypesTask]);
+    // builder.registerTagTasks([removeTypesTask]);
 
     const checkTypesCmd = new CheckTypesCmd(tsMain, workspace, logger);
     const writeTsconfigCmd = new WriteTsconfigCmd(tsMain);
