@@ -54,7 +54,7 @@ export function LaneComparePage({
         <div className={styles.title}>
           <div className={styles.compareLane}>{compare?.id.name}</div>
           <div className={styles.rightIcon}>
-            <img src="https://static.bit.dev/bit-icons/arrow-right.svg"></img>
+            <img src="https://static.bit.dev/bit-icons/arrow-right.svg" alt="arrow-right" />
           </div>
           <div className={styles.baseSelectorContainer}>
             <LaneSelector

@@ -110,36 +110,40 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
         )}
       >
         <Pane className={classNames(styles.left, !isSidebarOpen && styles.collapsed)}>
-          {
-            <div className={styles.codeCompareTreeCollapse} onClick={() => setSidebarOpenness((value) => !value)}>
-              <img src={sidebarIconUrl} />
-            </div>
-          }
-          {
-            <CodeCompareTree
-              className={styles.codeCompareTree}
-              fileIconSlot={fileIconSlot}
-              fileTree={fileTree}
-              currentFile={selectedFile}
-              drawerName={'FILES'}
-              widgets={[Widget]}
-              getHref={getHref}
-              onTreeNodeSelected={hook?.onClick}
-              open={isSidebarOpen}
-            />
-          }
+          <div
+            className={styles.codeCompareTreeCollapse}
+            onClick={() => setSidebarOpenness((value) => !value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === 'Space') {
+                setSidebarOpenness((value) => !value);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+          >
+            <img src={sidebarIconUrl} alt="sidebar-icon" />
+          </div>
+          <CodeCompareTree
+            className={styles.codeCompareTree}
+            fileIconSlot={fileIconSlot}
+            fileTree={fileTree}
+            currentFile={selectedFile}
+            drawerName="FILES"
+            widgets={[Widget]}
+            getHref={getHref}
+            onTreeNodeSelected={hook?.onClick}
+            open={isSidebarOpen}
+          />
         </Pane>
-        <HoverSplitter className={styles.splitter}></HoverSplitter>
+        <HoverSplitter className={styles.splitter} />
         <Pane className={classNames(styles.right, styles.dark, !isSidebarOpen && styles.collapsed)}>
-          {
-            <CodeView
-              widgets={[Widget]}
-              fileName={selectedFile}
-              files={fileTree}
-              getHref={getHref}
-              onTabClicked={hook?.onClick}
-            />
-          }
+          <CodeView
+            widgets={[Widget]}
+            fileName={selectedFile}
+            files={fileTree}
+            getHref={getHref}
+            onTabClicked={hook?.onClick}
+          />
         </Pane>
       </SplitPane>
     </ThemeSwitcher>

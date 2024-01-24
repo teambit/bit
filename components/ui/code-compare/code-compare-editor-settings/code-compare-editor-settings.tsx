@@ -37,7 +37,7 @@ export function CodeCompareEditorSettings({
         <Radio
           className={styles.splitOption}
           checked={editorViewMode === 'inline'}
-          value={'inline'}
+          value="inline"
           onInputChanged={() => onViewModeChanged('inline')}
         >
           <span>Inline</span>
@@ -45,7 +45,7 @@ export function CodeCompareEditorSettings({
         <Radio
           className={styles.splitOption}
           checked={editorViewMode === 'split'}
-          value={'split'}
+          value="split"
           onInputChanged={() => onViewModeChanged('split')}
         >
           <span>Split</span>

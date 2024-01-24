@@ -33,6 +33,10 @@ const languageOverrides = {
   md: 'markdown',
 };
 
+export function CodeCompareViewLoader({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
+  return <LineSkeleton {...rest} className={classNames(styles.loader, className)} count={50} />;
+}
+
 export function CodeCompareView({
   className,
   fileName,
@@ -366,8 +370,4 @@ export function CodeCompareView({
       </div>
     </div>
   );
-}
-
-export function CodeCompareViewLoader({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
-  return <LineSkeleton {...rest} className={classNames(styles.loader, className)} count={50} />;
 }

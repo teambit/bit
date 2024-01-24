@@ -19,7 +19,7 @@ export type LaneSwitcherProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 function defaultSearchLanes(useLanes: UseLanes) {
-  return function (search?: string) {
+  return function searchFn(search?: string) {
     const { searchResult } = useLanes(undefined, undefined, { search });
     if (searchResult?.loading) return undefined;
     if (!searchResult?.lanesModel) return null;
@@ -62,30 +62,28 @@ export function LaneSwitcher({
     <div className={classnames(styles.laneSwitcherContainer, className)}>
       <div className={styles.laneSelectorContainer}>
         {loading && <WordSkeleton className={styles.loader} length={20} />}
-        {
-          <LaneSelector
-            selectedLaneId={selectedLane?.id}
-            nonMainLanes={nonMainLanes}
-            mainLane={mainLane}
-            mainIcon={MainIcon}
-            groupByScope={groupByScope}
-            // sortBy={sortBy}
-            // sortOptions={sortOptions}
-            scopeIconLookup={scopeIconLookup}
-            getHref={getHref}
-            loading={loading}
-            fetchMoreLanes={fetchMoreLanes}
-            hasMore={hasMore}
-            initialOffset={(offset ?? 0) + (limit ?? 0)}
-            searchLanes={searchLanes}
-            {...rest}
-          />
-        }
+        <LaneSelector
+          selectedLaneId={selectedLane?.id}
+          nonMainLanes={nonMainLanes}
+          mainLane={mainLane}
+          mainIcon={MainIcon}
+          groupByScope={groupByScope}
+          // sortBy={sortBy}
+          // sortOptions={sortOptions}
+          scopeIconLookup={scopeIconLookup}
+          getHref={getHref}
+          loading={loading}
+          fetchMoreLanes={fetchMoreLanes}
+          hasMore={hasMore}
+          initialOffset={(offset ?? 0) + (limit ?? 0)}
+          searchLanes={searchLanes}
+          {...rest}
+        />
       </div>
       {!loading && (
         <div className={styles.laneIconContainer}>
-          <MenuLinkItem exact={true} className={styles.laneGalleryIcon} href={selectedLaneGalleryHref}>
-            <img src="https://static.bit.dev/bit-icons/corner-up-left.svg" />
+          <MenuLinkItem exact className={styles.laneGalleryIcon} href={selectedLaneGalleryHref}>
+            <img src="https://static.bit.dev/bit-icons/corner-up-left.svg" alt="corner-up-left" />
           </MenuLinkItem>
         </div>
       )}
