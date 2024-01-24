@@ -14,7 +14,7 @@ import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import WatcherAspect, { WatcherMain, WatchOptions } from '@teambit/watcher';
 import type { Component, ComponentID } from '@teambit/component';
-import { BuilderMain } from '@teambit/builder';
+import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { TypeScriptExtractor } from './typescript.extractor';
@@ -67,6 +67,7 @@ import {
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
 import WriteTsconfigCmd from './cmds/write-tsconfig.cmd';
+import { RemoveTypesTask } from './remove-types-task';
 
 export type TsMode = 'build' | 'dev';
 
@@ -242,7 +243,7 @@ export class TypescriptMain {
   getCjsPackageJsonProps(): PackageJsonProps {
     return {
       main: 'dist/{main}.js',
-      // types: '{main}.ts',
+      types: '{main}.ts',
     };
   }
 
@@ -255,7 +256,7 @@ export class TypescriptMain {
       // main: 'dist-esm/{main}.js',
       main: 'dist/{main}.js',
       type: 'module',
-      // types: '{main}.ts',
+      types: '{main}.ts',
     };
   }
 
@@ -329,11 +330,12 @@ export class TypescriptMain {
     EnvsAspect,
     WatcherAspect,
     ScopeAspect,
+    BuilderAspect,
   ];
   static slots = [Slot.withType<SchemaTransformer[]>(), Slot.withType<SchemaNodeTransformer[]>()];
 
   static async provider(
-    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs, watcher, scope]: [
+    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs, watcher, scope, builder]: [
       SchemaMain,
       LoggerMain,
       AspectLoaderMain,
@@ -411,9 +413,9 @@ export class TypescriptMain {
       workspace.registerOnComponentAdd(tsMain.onComponentChange.bind(tsMain));
     }
 
-    // const removeTypesTask = new RemoveTypesTask();
-    // builder.registerSnapTasks([removeTypesTask]);
-    // builder.registerTagTasks([removeTypesTask]);
+    const removeTypesTask = new RemoveTypesTask();
+    builder.registerSnapTasks([removeTypesTask]);
+    builder.registerTagTasks([removeTypesTask]);
 
     const checkTypesCmd = new CheckTypesCmd(tsMain, workspace, logger);
     const writeTsconfigCmd = new WriteTsconfigCmd(tsMain);
