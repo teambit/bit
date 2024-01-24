@@ -1799,10 +1799,10 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-compare",
         "config": {
-            "teambit.react/v17/react-env@1.0.31": {},
             "teambit.envs/envs": {
                 "env": "teambit.react/v17/react-env"
-            }
+            },
+            "teambit.react/v17/react-env@1.0.33": {}
         }
     },
     "ui/code-tab-page": {
@@ -1819,10 +1819,10 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/compare/lane-compare",
         "config": {
-            "teambit.react/v17/react-env@1.0.31": {},
             "teambit.envs/envs": {
                 "env": "teambit.react/v17/react-env"
-            }
+            },
+            "teambit.react/v17/react-env@1.0.33": {}
         }
     },
     "ui/compare/lane-compare-drawer": {
@@ -1832,10 +1832,10 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/compare/lane-compare-drawer",
         "config": {
-            "teambit.react/v17/react-env@1.0.31": {},
             "teambit.envs/envs": {
                 "env": "teambit.react/v17/react-env"
-            }
+            },
+            "teambit.react/v17/react-env@1.0.33": {}
         }
     },
     "ui/compare/lane-compare-hooks/use-lane-diff-status": {
@@ -1859,10 +1859,10 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/compare/lane-compare-page",
         "config": {
-            "teambit.react/v17/react-env@1.0.31": {},
             "teambit.envs/envs": {
                 "env": "teambit.react/v17/react-env"
-            }
+            },
+            "teambit.react/v17/react-env@1.0.33": {}
         }
     },
     "ui/compare/lane-compare-state": {
@@ -1886,10 +1886,10 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/component-compare",
         "config": {
-            "teambit.react/v17/react-env@1.0.31": {},
             "teambit.envs/envs": {
                 "env": "teambit.react/v17/react-env"
-            }
+            },
+            "teambit.react/v17/react-env@1.0.33": {}
         }
     },
     "ui/component-compare/context": {
@@ -2095,10 +2095,10 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/navigation/lane-switcher",
         "config": {
-            "teambit.react/v17/react-env@1.0.31": {},
             "teambit.envs/envs": {
                 "env": "teambit.react/v17/react-env"
-            }
+            },
+            "teambit.react/v17/react-env@1.0.33": {}
         }
     },
     "ui/navigation/react-router-adapter": {
