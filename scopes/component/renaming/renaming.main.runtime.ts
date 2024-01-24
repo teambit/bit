@@ -11,6 +11,7 @@ import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
+import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
 import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
@@ -39,7 +40,8 @@ export class RenamingMain {
     private componentWriter: ComponentWriterMain,
     private compiler: CompilerMain,
     private logger: Logger,
-    private envs: EnvsMain
+    private envs: EnvsMain,
+    private remove: RemoveMain
   ) {}
 
   async rename(sourceIdStr: string, targetName: string, options: RenameOptions): Promise<RenameDependencyNameResult> {
@@ -61,7 +63,9 @@ make sure this argument is the name only, without the scope-name. to change the 
     if (isTagged) {
       const config = await this.getConfig(sourceComp);
       await this.newComponentHelper.writeAndAddNewComp(sourceComp, targetId, options, config);
-      await this.deprecation.deprecate(sourceId, targetId);
+      options.delete
+        ? await this.remove.deleteComps(sourceId.toString())
+        : await this.deprecation.deprecate(sourceId, targetId);
     } else {
       this.workspace.bitMap.renameNewComponent(sourceId, targetId);
       await this.workspace.bitMap.write(`rename (${sourceIdStr} to ${targetName})`);
@@ -372,6 +376,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     CompilerAspect,
     LoggerAspect,
     EnvsAspect,
+    RemoveAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -388,6 +393,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     compiler,
     loggerMain,
     envs,
+    remove,
   ]: [
     CLIMain,
     Workspace,
@@ -401,7 +407,8 @@ make sure this argument is the name only, without the scope-name. to change the 
     ComponentWriterMain,
     CompilerMain,
     LoggerMain,
-    EnvsMain
+    EnvsMain,
+    RemoveMain
   ]) {
     const logger = loggerMain.createLogger(RenamingAspect.id);
     const renaming = new RenamingMain(
@@ -414,7 +421,8 @@ make sure this argument is the name only, without the scope-name. to change the 
       componentWriter,
       compiler,
       logger,
-      envs
+      envs,
+      remove
     );
     cli.register(new RenameCmd(renaming));
 

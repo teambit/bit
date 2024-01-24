@@ -1,4 +1,5 @@
 import { TimerResponse, Timer } from '@teambit/legacy/dist/toolbox/timer';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentFactory, ComponentID } from '@teambit/component';
 import chalk from 'chalk';
@@ -39,8 +40,9 @@ export type JsonLintResults = {
 };
 
 export class LintCmd implements Command {
-  name = 'lint [component...]';
+  name = 'lint [component-pattern]';
   description = 'lint components in the development workspace';
+  arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   helpUrl = 'reference/linting/linter-overview';
   group = 'development';
   options = [
@@ -52,8 +54,8 @@ export class LintCmd implements Command {
 
   constructor(private linter: LinterMain, private componentHost: ComponentFactory, private workspace: Workspace) {}
 
-  async report([components = []]: [string[]], linterOptions: LintCmdOptions) {
-    const { code, data } = await this.json([components], linterOptions);
+  async report([pattern]: [string], linterOptions: LintCmdOptions) {
+    const { code, data } = await this.json([pattern], linterOptions);
     const { lintResults, componentsIdsToLint } = data;
     const title = chalk.bold(
       `linting total of ${chalk.cyan(componentsIdsToLint.length.toString())} component(s) in workspace '${chalk.cyan(
@@ -121,10 +123,10 @@ export class LintCmd implements Command {
     )} components)`;
   }
 
-  async json([components = []]: [string[]], linterOptions: LintCmdOptions): Promise<JsonLintResults> {
+  async json([pattern]: [string], linterOptions: LintCmdOptions): Promise<JsonLintResults> {
     const timer = Timer.create();
     timer.start();
-    const componentsIds = await this.getIdsToLint(components, linterOptions.changed);
+    const componentsIds = await this.getIdsToLint(pattern, linterOptions.changed);
     const componentsToLint = await this.workspace.getMany(componentsIds);
     const opts: LinterOptions = {
       fix: linterOptions.fix,
@@ -147,9 +149,9 @@ export class LintCmd implements Command {
     };
   }
 
-  private async getIdsToLint(components: string[], changed = false): Promise<ComponentID[]> {
-    if (components.length) {
-      return this.workspace.resolveMultipleComponentIds(components);
+  private async getIdsToLint(pattern: string, changed = false): Promise<ComponentID[]> {
+    if (pattern) {
+      return this.workspace.idsByPattern(pattern);
     }
     if (changed) {
       return this.workspace.getNewAndModifiedIds();

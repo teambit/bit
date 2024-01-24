@@ -8,6 +8,7 @@ export type RenameOptions = {
   refactor?: boolean;
   preserve?: boolean;
   ast?: boolean;
+  delete?: boolean;
 };
 
 export class RenameCmd implements Command {
@@ -38,6 +39,7 @@ export class RenameCmd implements Command {
     ['r', 'refactor', 'update the import/require statements in all dependent components (in the same workspace)'],
     ['', 'preserve', 'avoid renaming files and variables/classes according to the new component name'],
     ['', 'ast', 'EXPERIMENTAL. use ast to transform files instead of regex'],
+    ['', 'delete', 'EXPERIMENTAL. instead of deprecating the original component, delete it'],
   ] as CommandOptions;
   loader = true;
   remoteOp = true;

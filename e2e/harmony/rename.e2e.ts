@@ -81,6 +81,20 @@ describe('bit rename command', function () {
         );
       });
     });
+    describe('rename with --delete flag', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(scopeAfterExport);
+        helper.command.rename('comp1', 'comp2', '--delete');
+      });
+      it('should create a new component', () => {
+        const status = helper.command.statusJson();
+        expect(status.newComponents).to.have.lengthOf(1);
+      });
+      it('should delete the original component', () => {
+        const showRemove = helper.command.showAspectConfig('comp1', Extensions.remove);
+        expect(showRemove.config.removed).to.be.true;
+      });
+    });
   });
   describe('rename a new component', () => {
     before(() => {
