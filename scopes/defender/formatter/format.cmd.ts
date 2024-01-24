@@ -1,4 +1,5 @@
 import { TimerResponse, Timer } from '@teambit/legacy/dist/toolbox/timer';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentFactory, ComponentID } from '@teambit/component';
 import chalk from 'chalk';
@@ -38,8 +39,9 @@ export type JsonFormatResults = {
 };
 
 export class FormatCmd implements Command {
-  name = 'format [component...]';
+  name = 'format [component-pattern]';
   description = 'format components in the development workspace';
+  arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   group = 'development';
   helpUrl = 'reference/formatting/formatter-overview';
   options = [
@@ -54,8 +56,8 @@ export class FormatCmd implements Command {
     private workspace: Workspace
   ) {}
 
-  async report([components = []]: [string[]], formatterOptions: FormatCmdOptions) {
-    const { duration, data, code, componentsIdsToFormat } = await this.json([components], formatterOptions);
+  async report([pattern]: [string], formatterOptions: FormatCmdOptions) {
+    const { duration, data, code, componentsIdsToFormat } = await this.json([pattern], formatterOptions);
 
     const title = chalk.bold(
       `formatting total of ${chalk.cyan(
@@ -76,10 +78,10 @@ export class FormatCmd implements Command {
     };
   }
 
-  async json([components = []]: [string[]], formatterCmdOptions: FormatCmdOptions): Promise<JsonFormatResults> {
+  async json([pattern]: [string], formatterCmdOptions: FormatCmdOptions): Promise<JsonFormatResults> {
     const timer = Timer.create();
     timer.start();
-    const componentsIds = await this.getIdsToFormat(components, formatterCmdOptions.changed);
+    const componentsIds = await this.getIdsToFormat(pattern, formatterCmdOptions.changed);
     const componentsToFormat = await this.workspace.getMany(componentsIds);
     const opts: FormatterOptions = {};
     const formatterResults = formatterCmdOptions.check
@@ -104,9 +106,9 @@ export class FormatCmd implements Command {
     return 0;
   }
 
-  private async getIdsToFormat(components: string[], changed = false): Promise<ComponentID[]> {
-    if (components.length) {
-      return this.workspace.resolveMultipleComponentIds(components);
+  private async getIdsToFormat(pattern: string, changed = false): Promise<ComponentID[]> {
+    if (pattern) {
+      return this.workspace.idsByPattern(pattern);
     }
     if (changed) {
       return this.workspace.getNewAndModifiedIds();
