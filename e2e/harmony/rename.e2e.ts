@@ -83,6 +83,7 @@ describe('bit rename command', function () {
     });
     describe('rename with --delete flag', () => {
       before(() => {
+        helper.scopeHelper.getClonedLocalScope(scopeAfterExport);
         helper.command.rename('comp1', 'comp2', '--delete');
       });
       it('should create a new component', () => {
