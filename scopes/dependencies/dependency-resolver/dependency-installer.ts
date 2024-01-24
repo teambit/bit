@@ -299,10 +299,12 @@ export class DependencyInstaller {
       options,
       this.installingContext
     );
+    const allPkgNames: Set<string> = new Set();
     const manifests: Record<string, ProjectManifest> = componentDirectoryMap
       .toArray()
       .reduce((acc, [component, dir]) => {
         const packageName = this.dependencyResolver.getPackageName(component);
+        allPkgNames.add(packageName);
         const manifest = workspaceManifest.componentsManifestsMap.get(packageName);
         if (manifest) {
           acc[dir] = manifest.toJson({ copyPeerToRuntime: copyPeerToRuntimeOnComponents });
@@ -313,6 +315,7 @@ export class DependencyInstaller {
       manifests[rootDir] = workspaceManifest.toJson({
         copyPeerToRuntime: copyPeerToRuntimeOnRoot,
         installPeersFromEnvs,
+        ignoredPeers: allPkgNames,
       });
     }
     return manifests;

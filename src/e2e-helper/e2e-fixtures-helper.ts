@@ -207,7 +207,8 @@ export default class FixtureHelper {
     if (index === numOfComponents) return `module.exports = () => 'comp${index}${additionalStr}';`;
     const nextComp = `comp${index + 1}`;
     return `const ${nextComp} = require('../${nextComp}');
-module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
+
+module.exports = () => \`comp${index}${additionalStr} and \$\{${nextComp}()\}\`;`;
   }
 
   private getEsmImplForPopulate(numOfComponents: number, index: number, additionalStr = ''): string {
