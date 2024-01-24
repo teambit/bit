@@ -128,7 +128,6 @@ export class ApplyOverrides {
     this.applyWorkspacePolicy();
     this.makeLegacyAsPeer();
     await this.applyAutoDetectOverridesOnComponent();
-    // this.allPackagesDependencies.peerPackageDependencies = {};
     this.manuallyAddDependencies();
     // Doing this here (after manuallyAddDependencies) because usually the env of the env is adding dependencies as peer of the env
     // which will make this not work if it come before

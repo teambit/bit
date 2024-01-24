@@ -343,8 +343,8 @@ describe('peer-dependencies functionality', function () {
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-env/env1`, {});
       helper.extensions.addExtensionToVariant('custom-env', 'teambit.envs/env', {});
-      helper.command.install();
-      helper.command.build();
+      helper.command.install('--add-missing-deps');
+      helper.command.build('--skip-tests');
       workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
     });
     after(() => {
