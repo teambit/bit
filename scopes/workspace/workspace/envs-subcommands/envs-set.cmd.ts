@@ -42,6 +42,7 @@ export class EnvsSetCmd implements Command {
     const componentIds = await this.workspace.idsByPattern(pattern);
     await this.workspace.setEnvToComponents(envId, componentIds);
     return `assigned ${chalk.bold(envId.toString())} env to the following component(s):
-${componentIds.map((compId) => compId.toString()).join('\n')}`;
+${componentIds.map((compId) => compId.toString()).join('\n')}\n
+please run 'bit install' for env replace changes to take effect`;
   }
 }

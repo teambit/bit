@@ -1,5 +1,4 @@
 import { AspectBox } from '@teambit/harmony.ui.aspect-box';
-import { ComponentContext } from '@teambit/component';
 import React, { useContext } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
@@ -7,6 +6,7 @@ import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
 import styles from './aspect-page.module.scss';
+import { ComponentContext } from '../context';
 
 const GET_COMPONENT = gql`
   query ($id: String!) {

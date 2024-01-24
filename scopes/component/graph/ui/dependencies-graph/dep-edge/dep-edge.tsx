@@ -1,4 +1,4 @@
-import { EdgeType } from '@teambit/graph';
+import { EdgeType } from '../../../edge-type';
 import edgeStyles from './edge.module.scss';
 
 export function depTypeToClass(depType: string) {

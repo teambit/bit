@@ -1,9 +1,9 @@
 import React, { ComponentType } from 'react';
 import compact from 'lodash.compact';
-import { ComponentModel } from '@teambit/component';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';
 import classnames from 'classnames';
+import { ComponentModel } from '../component-model';
 
 import styles from './component-result.module.scss';
 

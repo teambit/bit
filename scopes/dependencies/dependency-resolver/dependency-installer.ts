@@ -3,13 +3,14 @@ import path from 'path';
 import fs from 'fs-extra';
 import { MainAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { ComponentMap } from '@teambit/component';
-import { CreateFromComponentsOptions, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
 import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
 import { MainAspectNotInstallable, RootDirNotDefined } from './exceptions';
 import { PackageManager, PackageManagerInstallOptions, PackageImportMethod } from './package-manager';
 import { WorkspacePolicy } from './policy';
+import { CreateFromComponentsOptions } from './manifest';
+import { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
 const DEFAULT_PM_INSTALL_OPTIONS: PackageManagerInstallOptions = {
   dedupe: true,

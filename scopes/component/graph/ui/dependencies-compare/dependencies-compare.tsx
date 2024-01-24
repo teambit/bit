@@ -1,14 +1,5 @@
 import classNames from 'classnames';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
-import {
-  calcElements,
-  calcMinimapColors,
-  dependenciesGraphStyles,
-  GraphFilter,
-  GraphFilters,
-  graphPageStyles,
-  useGraphQuery,
-} from '@teambit/graph';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import ReactFlow, {
@@ -22,6 +13,10 @@ import ReactFlow, {
   Position,
   ReactFlowProvider,
 } from 'react-flow-renderer';
+import { useGraphQuery } from '../query';
+import { GraphFilter } from '../../model/graph-filters';
+import { GraphFilters, styles as graphPageStyles } from '../graph-page';
+import { calcMinimapColors, calcElements, styles as dependenciesGraphStyles } from '../dependencies-graph';
 import styles from './dependencies-compare.module.scss';
 import { DependencyCompareNode } from './dependency-compare-node';
 import { diffGraph } from './diff-graph';

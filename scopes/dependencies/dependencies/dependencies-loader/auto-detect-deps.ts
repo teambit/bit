@@ -362,6 +362,7 @@ export class AutoDetectDeps {
     components.forEach((compDep) => {
       let componentId = this.getComponentIdByResolvedPackageData(compDep);
       if (componentId.isEqual(this.componentId)) {
+        this.issues.getOrCreate(IssuesClasses.SelfReference).data[originFile] = compDep.name;
         // the component is importing itself, so ignore it. although currently it doesn't cause any issues, (probably
         // because it filtered out later), it's better to remove it as soon as possible, for less-confusing debugging.
         return;
