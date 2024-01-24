@@ -1785,6 +1785,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/ui/aspect-box"
     },
+    "ui/buttons/collapser": {
+        "name": "ui/buttons/collapser",
+        "scope": "teambit.ui-foundation",
+        "version": "16b5ac0ac185cae37dd611cf215da595c55882ef",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/buttons/collapser"
+    },
     "ui/code-compare": {
         "name": "ui/code-compare",
         "scope": "teambit.code",
