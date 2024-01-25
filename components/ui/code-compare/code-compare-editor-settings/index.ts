@@ -1,6 +1,7 @@
-export {
+export { CodeCompareEditorSettings } from './code-compare-editor-settings';
+
+export type {
   EditorViewMode,
-  CodeCompareEditorSettings,
   CodeCompareEditorSettingsProps,
   EditorSettings,
   EditorSettingsState,

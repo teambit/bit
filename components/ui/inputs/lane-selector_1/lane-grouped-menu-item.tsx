@@ -45,7 +45,7 @@ export function LaneGroupedMenuItem({
     );
   }
 
-  const onClickStopPropagation = (e: React.MouseEvent) => e.stopPropagation();
+  const onClickStopPropagation = (e) => e.stopPropagation();
 
   return (
     <div className={classnames(styles.groupedMenuItem, className)} {...rest}>

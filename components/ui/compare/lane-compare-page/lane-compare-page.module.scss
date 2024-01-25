@@ -11,7 +11,7 @@
   align-items: flex-start;
   flex-direction: column;
   gap: 4px;
-  width: 100%;
+  // width: 100%;
 }
 
 .subTitle {
@@ -42,6 +42,7 @@
 .bottom {
   display: flex;
   overflow: auto;
+  height: 100%;
 }
 
 .compareLane {

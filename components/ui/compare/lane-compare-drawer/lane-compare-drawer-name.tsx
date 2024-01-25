@@ -38,24 +38,24 @@ export function LaneCompareDrawerName({
         <div className={classnames(styles.compId, ellipsis)}>{compareId?.toStringWithoutVersion()}</div>
         <div className={styles.versionContainer}>
           {baseId && (
-            <Tooltip content={baseId.version} placement={'bottom'}>
+            <Tooltip content={baseId.version} placement="bottom">
               <div className={styles.version}>{shortenVersion(baseId?.version)}</div>
             </Tooltip>
           )}
           {baseId && (
             <div className={styles.versionIcon}>
-              <img src="https://static.bit.dev/bit-icons/arrow-right.svg"></img>
+              <img src="https://static.bit.dev/bit-icons/arrow-right.svg" alt="arrow-right" />
             </div>
           )}
           {compareId && (
-            <Tooltip content={compareId.version} placement={'bottom'}>
+            <Tooltip content={compareId.version} placement="bottom">
               <div className={classnames(styles.version, isCompareOverriden && styles.override)}>
                 {shortenVersion(compareId?.version)}
               </div>
             </Tooltip>
           )}
           {compareIdOverride && (
-            <Tooltip content={compareIdOverride.version} placement={'bottom'}>
+            <Tooltip content={compareIdOverride.version} placement="bottom">
               <div className={classnames(styles.version, styles.overridden)}>
                 {shortenVersion(compareIdOverride?.version)}
               </div>

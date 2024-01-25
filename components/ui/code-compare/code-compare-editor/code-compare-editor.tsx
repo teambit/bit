@@ -35,10 +35,10 @@ export function CodeCompareEditor({
         language={language}
         originalModelPath={originalPath}
         modifiedModelPath={modifiedPath}
-        height={'100%'}
+        height="100%"
         onMount={handleEditorDidMount}
         className={darkMode}
-        theme={'vs-dark'}
+        theme="vs-dark"
         options={{
           ignoreTrimWhitespace: ignoreWhitespace,
           readOnly: true,

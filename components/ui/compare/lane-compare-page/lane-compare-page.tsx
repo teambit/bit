@@ -1,5 +1,5 @@
 import React, { HTMLAttributes, useState, useEffect, useMemo } from 'react';
-import { LaneCompareProps } from '@teambit/lanes';
+import { LaneCompareProps, LanesModel } from '@teambit/lanes';
 import { UseLanes, useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneSelector } from '@teambit/lanes.ui.inputs.lane-selector';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
@@ -10,6 +10,7 @@ export type LaneComparePageProps = {
   getLaneCompare: (props: LaneCompareProps) => React.ReactNode;
   groupByScope?: boolean;
   useLanes?: UseLanes;
+  searchLanes?: (search?: string) => LanesModel | undefined | null;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function LaneComparePage({
@@ -53,7 +54,7 @@ export function LaneComparePage({
         <div className={styles.title}>
           <div className={styles.compareLane}>{compare?.id.name}</div>
           <div className={styles.rightIcon}>
-            <img src="https://static.bit.dev/bit-icons/arrow-right.svg"></img>
+            <img src="https://static.bit.dev/bit-icons/arrow-right.svg" alt="arrow-right" />
           </div>
           <div className={styles.baseSelectorContainer}>
             <LaneSelector

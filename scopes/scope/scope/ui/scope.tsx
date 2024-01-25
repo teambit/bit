@@ -13,10 +13,10 @@ import { Route } from 'react-router-dom';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { ScopeProvider } from '@teambit/scope.ui.hooks.scope-context';
 import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
+import type { ScopeModel } from '@teambit/scope.models.scope-model';
 import { ScopeOverview } from './scope-overview';
 import styles from './scope.module.scss';
 import { ScopeUI, ScopeBadgeSlot, ScopeContextType, CornerSlot, OverviewLineSlot } from '../scope.ui.runtime';
-import { ScopeModel } from '..';
 
 export type ScopeProps = {
   routeSlot: RouteSlot;
