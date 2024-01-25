@@ -54,7 +54,7 @@ function createEntry(
   lifecycleType: WorkspaceDependencyLifecycleType
 ): WorkspacePolicyEntry {
   const version = typeof value === 'string' ? value : value.version;
-  const preserve = typeof value === 'string' ? false : value.preserve;
+  const preserve = typeof value === 'string' ? true : value.preserve;
   const entryValue: WorkspacePolicyEntryValue = {
     version,
     preserve,
