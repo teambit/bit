@@ -923,7 +923,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/jest",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.24": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.24": {},
+            "teambit.dependencies/dependency-resolver": {
+                "policy": {
+                    "peerDependencies": {
+                        "jest": "-"
+                    }
+                }
+            }
         }
     },
     "lanes": {
