@@ -2,11 +2,11 @@ import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import { ComponentID } from '@teambit/component-id';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 
-export type useCodeCompareProps = {
+export type UseCodeCompareProps = {
   fileName: string;
 };
 
-export type useCodeCompareResult = {
+export type UseCodeCompareResult = {
   baseId?: ComponentID;
   compareId?: ComponentID;
   originalFileContent?: string;
@@ -16,7 +16,7 @@ export type useCodeCompareResult = {
   loading?: boolean;
 };
 
-export function useCodeCompare({ fileName }: useCodeCompareProps): useCodeCompareResult {
+export function useCodeCompare({ fileName }: UseCodeCompareProps): UseCodeCompareResult {
   const componentCompareContext = useComponentCompare();
   const comparingLocalChanges = componentCompareContext?.compare?.hasLocalChanges;
   const codeCompareDataForFile = componentCompareContext?.fileCompareDataByName?.get(fileName);

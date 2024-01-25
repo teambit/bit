@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { createContext, useContext, ReactNode } from 'react';
 
 const CodeCompareEditorContext = createContext<any>(null);
