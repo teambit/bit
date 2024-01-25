@@ -139,4 +139,21 @@ describe('bit reset when on lane', function () {
       expect(() => helper.command.resetAll()).not.to.throw();
     });
   });
+  describe('reset a component that was just introduced to the lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.reset('comp1');
+    });
+    it('should remove the component from the lane', () => {
+      const lane = helper.command.showOneLaneParsed('dev');
+      expect(lane.components).to.have.lengthOf(1);
+      expect(lane.components[0].id).to.include('comp2');
+      expect(lane.components[0].id).to.not.include('comp1');
+    });
+  });
 });

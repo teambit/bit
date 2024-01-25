@@ -365,6 +365,14 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       const newHead = await getNewHead();
       if (newHead) {
         laneItem.head = newHead;
+        const divergeData = component.getDivergeData();
+        if (!component.laneHeadRemote && divergeData.commonSnapBeforeDiverge === newHead) {
+          // if the component doesn't exist on the remote lane and this reset removed all local snaps, remove the
+          // component from the lane. otherwise, the component stays on the lane but it's not staged so the export
+          // fails on the remote saying the component doesn't exist (in case the remote-lane and component-lane are
+          // not the same scope).
+          lane?.removeComponent(component.toComponentId());
+        }
       } else {
         if (lane?.isNew && this.scope.isExported(component.toComponentId()) && component.scope) {
           // the fact that the component has a scope-name means it was exported.
