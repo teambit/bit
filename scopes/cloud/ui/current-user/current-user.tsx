@@ -8,11 +8,17 @@ export type CurrentUserProps = {
   currentUser: CloudUser;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function CurrentUser({ currentUser, onClick, className, ...rest }: CurrentUserProps) {
+export function CurrentUser({ currentUser: currentUserFromProps, onClick, className, ...rest }: CurrentUserProps) {
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
       onClick?.(event as unknown as React.MouseEvent<HTMLDivElement, MouseEvent>);
     }
+  };
+  const currentUser = {
+    ...currentUserFromProps,
+    displayName: currentUserFromProps.displayName ?? undefined,
+    username: currentUserFromProps.username ?? undefined,
+    profileImage: currentUserFromProps.profileImage ?? undefined,
   };
   return (
     <div
