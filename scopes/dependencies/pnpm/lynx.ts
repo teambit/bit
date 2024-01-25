@@ -244,7 +244,7 @@ export async function install(
   });
   const opts: InstallOptions = {
     allProjects,
-    autoInstallPeers: false,
+    autoInstallPeers: true,
     confirmModulesPurge: false,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
