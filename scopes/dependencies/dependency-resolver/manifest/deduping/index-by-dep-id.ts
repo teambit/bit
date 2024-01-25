@@ -63,7 +63,9 @@ export function indexByDepId(
 }
 
 function addPreservedFromRoot(index: PackageNameIndex, rootPolicy: WorkspacePolicy): void {
-  const preserved = rootPolicy.filter((entry) => !!entry.value.preserve);
+  // In case the preserve is undefined we want it to be true by default
+  // to ensure workspace root policy versions are installed in the root node_modules by default
+  const preserved = rootPolicy.filter((entry) => entry.value.preserve ?? true);
   preserved.forEach((entry) => {
     const metadata: PackageNameIndexItemMetadata = {
       preservedVersion: entry.value.version,
