@@ -13,7 +13,8 @@ import {
 import { LaneComponentDiff } from '@teambit/lanes.entities.lane-diff';
 import { ComponentID } from '@teambit/component-id';
 import { LaneCompareContext, LaneCompareContextModel } from './lane-compare.context';
-import { LaneFilter, extractCompsToDiff, filterDepKey } from './lane-compare';
+import { LaneFilter } from './lane-compare.models';
+import { extractCompsToDiff, filterDepKey } from './lane-compare.utils';
 
 export type LaneCompareGroupBy = 'scope' | 'status';
 
@@ -52,7 +53,7 @@ export type LaneCompareProviderProps = {
   tabs?: MaybeLazyLoaded<TabItem[]>;
 };
 
-function _LaneCompareProvider({
+function LaneCompareProviderImpl({
   defaultComponentCompareState,
   tabs,
   children,
@@ -80,15 +81,15 @@ function _LaneCompareProvider({
 
   const defaultLaneState = useCallback(
     (compId?: string) => {
-      const _tabs = extractLazyLoadedData(tabs)?.sort(sortTabs);
+      const sortedTabs = extractLazyLoadedData(tabs)?.sort(sortTabs);
 
       const defaultState = (compId && defaultComponentCompareState?.get(compId)) || {};
 
       const value: ComponentCompareState = {
         tabs: {
           controlled: true,
-          id: _tabs && _tabs[0].id,
-          element: _tabs && _tabs[0].element,
+          id: sortedTabs && sortedTabs[0].id,
+          element: sortedTabs && sortedTabs[0].element,
         },
         code: {
           controlled: true,
@@ -237,4 +238,4 @@ function _LaneCompareProvider({
   return <LaneCompareContext.Provider value={laneCompareContextModel}>{children}</LaneCompareContext.Provider>;
 }
 
-export const LaneCompareProvider = React.memo(_LaneCompareProvider);
+export const LaneCompareProvider = React.memo(LaneCompareProviderImpl);

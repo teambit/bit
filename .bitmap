@@ -923,7 +923,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/jest",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.24": {}
+            "teambit.harmony/envs/core-aspect-env@0.0.24": {},
+            "teambit.dependencies/dependency-resolver": {
+                "policy": {
+                    "peerDependencies": {
+                        "jest": "-"
+                    }
+                }
+            }
         }
     },
     "lanes": {
@@ -1788,16 +1795,22 @@
     "ui/buttons/collapser": {
         "name": "ui/buttons/collapser",
         "scope": "teambit.ui-foundation",
-        "version": "0.0.216",
+        "version": "16b5ac0ac185cae37dd611cf215da595c55882ef",
         "mainFile": "index.ts",
         "rootDir": "components/ui/buttons/collapser"
     },
     "ui/code-compare": {
         "name": "ui/code-compare",
         "scope": "teambit.code",
-        "version": "0.0.288",
+        "version": "259a4be31935028bb15db2197668e2305e4e27d9",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/code-compare"
+        "rootDir": "components/ui/code-compare",
+        "config": {
+            "teambit.envs/envs": {
+                "env": "teambit.react/v17/react-env"
+            },
+            "teambit.react/v17/react-env@1.0.33": {}
+        }
     },
     "ui/code-tab-page": {
         "name": "ui/code-tab-page",
@@ -1809,16 +1822,28 @@
     "ui/compare/lane-compare": {
         "name": "ui/compare/lane-compare",
         "scope": "teambit.lanes",
-        "version": "0.0.171",
+        "version": "582ab3fa6f29cfa0d7686ced67d68bd8a3f82db5",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare"
+        "rootDir": "components/ui/compare/lane-compare",
+        "config": {
+            "teambit.envs/envs": {
+                "env": "teambit.react/v17/react-env"
+            },
+            "teambit.react/v17/react-env@1.0.33": {}
+        }
     },
     "ui/compare/lane-compare-drawer": {
         "name": "ui/compare/lane-compare-drawer",
         "scope": "teambit.lanes",
-        "version": "0.0.150",
+        "version": "d996a5a26a992e8bb23bc146df62c092b7bbd7ca",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare-drawer"
+        "rootDir": "components/ui/compare/lane-compare-drawer",
+        "config": {
+            "teambit.envs/envs": {
+                "env": "teambit.react/v17/react-env"
+            },
+            "teambit.react/v17/react-env@1.0.33": {}
+        }
     },
     "ui/compare/lane-compare-hooks/use-lane-diff-status": {
         "name": "ui/compare/lane-compare-hooks/use-lane-diff-status",
@@ -1837,14 +1862,20 @@
     "ui/compare/lane-compare-page": {
         "name": "ui/compare/lane-compare-page",
         "scope": "teambit.lanes",
-        "version": "0.0.153",
+        "version": "1cda1017acfbeaf62f4aa13bc54f0e026c58097a",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare-page"
+        "rootDir": "components/ui/compare/lane-compare-page",
+        "config": {
+            "teambit.envs/envs": {
+                "env": "teambit.react/v17/react-env"
+            },
+            "teambit.react/v17/react-env@1.0.33": {}
+        }
     },
     "ui/compare/lane-compare-state": {
         "name": "ui/compare/lane-compare-state",
         "scope": "teambit.lanes",
-        "version": "0.0.10",
+        "version": "15fdc7e869733001ff018e74d164f79c2c677482",
         "mainFile": "index.ts",
         "rootDir": "components/ui/compare/lane-compare-state"
     },
@@ -1858,21 +1889,41 @@
     "ui/component-compare/component-compare": {
         "name": "ui/component-compare/component-compare",
         "scope": "teambit.component",
-        "version": "0.0.175",
+        "version": "f0811699af55a4c4720f5774fecff2f053b96aa2",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/component-compare"
+        "rootDir": "components/ui/component-compare/component-compare",
+        "config": {
+            "teambit.envs/envs": {
+                "env": "teambit.react/v17/react-env"
+            },
+            "teambit.react/v17/react-env@1.0.33": {}
+        }
+    },
+    "ui/component-compare/context": {
+        "name": "ui/component-compare/context",
+        "scope": "teambit.component",
+        "version": "0bad1419359e7da5e28eb6da50240eb2fdf21382",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/context"
     },
     "ui/component-compare/models/component-compare-props": {
         "name": "ui/component-compare/models/component-compare-props",
         "scope": "teambit.component",
-        "version": "0.0.102",
+        "version": "9189cae77570eec76d1010530bc171753f5e0162",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/models/component-compare-props"
+    },
+    "ui/component-compare/utils/lazy-loading": {
+        "name": "ui/component-compare/utils/lazy-loading",
+        "scope": "teambit.component",
+        "version": "0.0.6",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/utils/lazy-loading"
     },
     "ui/component-compare/version-picker": {
         "name": "ui/component-compare/version-picker",
         "scope": "teambit.component",
-        "version": "0.0.172",
+        "version": "7001692aa4c4151657040bad5fee0b7c628bb953",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/version-picker"
     },
@@ -2005,7 +2056,7 @@
     "ui/inputs/lane-selector": {
         "name": "ui/inputs/lane-selector",
         "scope": "teambit.lanes",
-        "version": "0.0.215",
+        "version": "765c8ebd6c2a17ab65419714628b3f4b0ff2b743",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inputs/lane-selector_1"
     },
@@ -2047,9 +2098,15 @@
     "ui/navigation/lane-switcher": {
         "name": "ui/navigation/lane-switcher",
         "scope": "teambit.lanes",
-        "version": "0.0.216",
+        "version": "badfe5b4fcf815ac1070cf6d0c7d55678042c791",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/navigation/lane-switcher"
+        "rootDir": "components/ui/navigation/lane-switcher",
+        "config": {
+            "teambit.envs/envs": {
+                "env": "teambit.react/v17/react-env"
+            },
+            "teambit.react/v17/react-env@1.0.33": {}
+        }
     },
     "ui/preview-placeholder": {
         "name": "ui/preview-placeholder",
@@ -2065,13 +2122,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs"
     },
-    "ui/side-bar": {
-        "name": "ui/side-bar",
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.874",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/side-bar"
-    },
     "ui/test-compare": {
         "name": "ui/test-compare",
         "scope": "teambit.defender",
@@ -2085,13 +2135,6 @@
         "version": "0.0.35",
         "mainFile": "index.ts",
         "rootDir": "components/ui/test-page"
-    },
-    "ui/tree/drawer": {
-        "name": "ui/tree/drawer",
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.518",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/tree/drawer"
     },
     "ui/user-bar": {
         "name": "ui/user-bar",

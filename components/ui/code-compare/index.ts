@@ -1,20 +1,21 @@
-export { CodeCompare, CodeCompareProps } from './code-compare';
-export { CodeCompareTree, CodeCompareTreeProps } from './code-compare-tree/code-compare-tree';
-export { CodeCompareView, CodeCompareViewProps } from './code-compare-view/code-compare-view';
+export { CodeCompare } from './code-compare';
+export type { CodeCompareProps } from './code-compare';
+export { CodeCompareTree } from './code-compare-tree/code-compare-tree';
+export type { CodeCompareTreeProps } from './code-compare-tree/code-compare-tree';
+export { CodeCompareView } from './code-compare-view/code-compare-view';
+export type { CodeCompareViewProps } from './code-compare-view/code-compare-view';
 export { Widget as CodeCompareWidget } from './code-compare.widgets';
-export {
-  EditorViewMode,
-  CodeCompareEditorSettings,
-  CodeCompareEditorSettingsProps,
+export { CodeCompareEditorSettings } from './code-compare-editor-settings';
+export type {
   EditorSettings,
-  EditorSettingsState,
   EditorSettingsHooks,
+  EditorSettingsState,
+  EditorViewMode,
+  CodeCompareEditorSettingsProps,
 } from './code-compare-editor-settings';
-export { CodeCompareNavigation, CodeCompareNavigationProps } from './code-compare-navigation';
-export { useCodeCompare, useCodeCompareProps, useCodeCompareResult } from './use-code-compare';
-export {
-  CodeCompareEditorProps,
-  CodeCompareEditor,
-  useCodeCompareEditor,
-  CodeCompareEditorProvider,
-} from './code-compare-editor';
+export { CodeCompareNavigation } from './code-compare-navigation';
+export type { CodeCompareNavigationProps } from './code-compare-navigation';
+export { useCodeCompare } from './use-code-compare';
+export type { useCodeCompareProps, useCodeCompareResult } from './use-code-compare';
+export { CodeCompareEditor, useCodeCompareEditor, CodeCompareEditorProvider } from './code-compare-editor';
+export type { CodeCompareEditorProps } from './code-compare-editor';

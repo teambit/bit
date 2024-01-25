@@ -22,6 +22,39 @@ export type CodeCompareTreeProps = {
   open?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
 
+function CompareFileTreeNode(props: TreeNodeProps<any>) {
+  const { node } = props;
+  const { id } = node;
+  const fileTreeContext = useFileTreeContext();
+  const { selected, onSelect } = useContext(TreeContext);
+  const href = fileTreeContext?.getHref?.(node);
+  const widgets = fileTreeContext?.widgets;
+  const icon = fileTreeContext?.getIcon?.(node);
+  const isActive = id === selected;
+
+  if (!node?.children) {
+    return (
+      <Node
+        {...props}
+        className={classNames(styles.node)}
+        activeClassName={styles.active}
+        href={href}
+        isActive={isActive}
+        icon={icon}
+        widgets={widgets}
+        onClick={onSelect && ((e) => onSelect(node.id, e))}
+      />
+    );
+  }
+  return <FolderTreeNode className={classNames(styles.node)} {...props} />;
+}
+
+function getIcon(fileIconMatchers: FileIconMatch[]) {
+  return function Icon({ id }: TreeNode) {
+    return getFileIcon(fileIconMatchers, id);
+  };
+}
+
 export function CodeCompareTree({
   currentFile,
   fileIconSlot,
@@ -73,37 +106,4 @@ export function CodeCompareTree({
       </DrawerUI>
     </div>
   );
-}
-
-function getIcon(fileIconMatchers: FileIconMatch[]) {
-  return function Icon({ id }: TreeNode) {
-    return getFileIcon(fileIconMatchers, id);
-  };
-}
-
-function CompareFileTreeNode(props: TreeNodeProps<any>) {
-  const { node } = props;
-  const { id } = node;
-  const fileTreeContext = useFileTreeContext();
-  const { selected, onSelect } = useContext(TreeContext);
-  const href = fileTreeContext?.getHref?.(node);
-  const widgets = fileTreeContext?.widgets;
-  const icon = fileTreeContext?.getIcon?.(node);
-  const isActive = id === selected;
-
-  if (!node?.children) {
-    return (
-      <Node
-        {...props}
-        className={classNames(styles.node)}
-        activeClassName={styles.active}
-        href={href}
-        isActive={isActive}
-        icon={icon}
-        widgets={widgets}
-        onClick={onSelect && ((e) => onSelect(node.id, e))}
-      />
-    );
-  }
-  return <FolderTreeNode className={classNames(styles.node)} {...props} />;
 }

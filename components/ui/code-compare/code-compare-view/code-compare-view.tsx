@@ -33,6 +33,10 @@ const languageOverrides = {
   md: 'markdown',
 };
 
+export function CodeCompareViewLoader({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
+  return <LineSkeleton {...rest} className={classNames(styles.loader, className)} count={50} />;
+}
+
 export function CodeCompareView({
   className,
   fileName,
@@ -51,6 +55,7 @@ export function CodeCompareView({
     useCodeCompare({
       fileName,
     });
+
   const componentCompareContext = useComponentCompare();
   const DiffEditor = useCodeCompareEditor();
 
@@ -58,7 +63,12 @@ export function CodeCompareView({
     if (!baseId) return 'inline';
     if (baseId && compareId && baseId.isEqual(compareId)) return 'inline';
     if (!originalFileContent || !modifiedFileContent) return 'inline';
-    if (componentCompareContext?.fileCompareDataByName?.get(fileName)?.status === 'UNCHANGED') return 'inline';
+    if (
+      !componentCompareContext?.fileCompareDataByName?.get(fileName)?.status ||
+      componentCompareContext?.fileCompareDataByName?.get(fileName)?.status === 'UNCHANGED'
+    )
+      return 'inline';
+
     return 'split';
   };
 
@@ -192,11 +202,19 @@ export function CodeCompareView({
       return undefined;
     }
 
-    modifiedDomNode.style.height = `${maxHeight}px`;
-    monacoRef.current.editor.layout();
     setContainerHeight(() => `${maxHeight}px`);
     return undefined;
   };
+
+  useEffect(() => {
+    const modifiedEditor = monacoRef.current?.editor.getModifiedEditor();
+    const modifiedDomNode = modifiedEditor.getDomNode()?.parentElement;
+    const modifiedDomNodeHeight = modifiedDomNode?.style.height;
+    if (modifiedDomNodeHeight !== containerHeight) {
+      modifiedDomNode.style.height = containerHeight;
+      monacoRef.current?.editor.layout();
+    }
+  }, [containerHeight]);
 
   useEffect(() => {
     if (containerHeight !== '100%' && isFullScreen) {
@@ -242,7 +260,9 @@ export function CodeCompareView({
 
       if (containerElement) {
         resizeObserver = new ResizeObserver(() => {
-          setTimeout(() => updateEditorHeight());
+          setTimeout(() => {
+            updateEditorHeight();
+          });
         });
         resizeObserver.observe(containerElement);
       }
@@ -253,22 +273,21 @@ export function CodeCompareView({
   );
 
   const diffEditor = useMemo(
-    () =>
-      loading || files.length === 0 ? null : (
-        <CodeCompareEditor
-          DiffEditor={DiffEditor}
-          language={language}
-          modifiedPath={modifiedPath}
-          originalPath={originalPath}
-          originalFileContent={originalFileContent}
-          modifiedFileContent={modifiedFileContent}
-          handleEditorDidMount={handleEditorDidMount}
-          ignoreWhitespace={ignoreWhitespace}
-          editorViewMode={view}
-          wordWrap={wrap}
-          Loader={<CodeCompareViewLoader />}
-        />
-      ),
+    () => (
+      <CodeCompareEditor
+        DiffEditor={DiffEditor}
+        language={language}
+        modifiedPath={modifiedPath}
+        originalPath={originalPath}
+        originalFileContent={originalFileContent}
+        modifiedFileContent={modifiedFileContent}
+        handleEditorDidMount={handleEditorDidMount}
+        ignoreWhitespace={ignoreWhitespace}
+        editorViewMode={view}
+        wordWrap={wrap}
+        Loader={<CodeCompareViewLoader />}
+      />
+    ),
     [
       modifiedFileContent,
       originalFileContent,
@@ -292,19 +311,15 @@ export function CodeCompareView({
     : (!!containerHeight && `calc(${containerHeight} + 30px)`) || '250px';
 
   const codeContainerHeightStyle = isFullScreen ? 'calc(100% - 30px)' : containerHeight ?? '220px';
-
   const fileCompareDataByName = componentCompareContext?.fileCompareDataByName;
-
-  const codeNavFiles = React.useMemo(() => {
-    return files.filter((file) => {
-      if (file === fileName) return true;
-      const codeCompareDataForFile = fileCompareDataByName?.get(file) ?? null;
-      const status = codeCompareDataForFile?.status;
-      if (componentCompareContext?.compare && !componentCompareContext.base && !status) return true;
-      if (status && status !== 'UNCHANGED') return true;
-      return false;
-    });
-  }, [files.length, fileName, fileCompareDataByName?.size]);
+  const codeNavFiles = files.filter((file) => {
+    const codeCompareDataForFile = fileCompareDataByName?.get(fileName) ?? null;
+    const status = codeCompareDataForFile?.status;
+    if (componentCompareContext?.compare && !componentCompareContext.base && !status) return true;
+    if (file === fileName) return true;
+    if (status && status !== 'UNCHANGED') return true;
+    return false;
+  });
 
   return (
     <div
@@ -351,12 +366,8 @@ export function CodeCompareView({
             isFullScreen && styles.isFullScreen
           )}
         />
-        {diffEditor}
+        {loading ? null : diffEditor}
       </div>
     </div>
   );
-}
-
-export function CodeCompareViewLoader({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
-  return <LineSkeleton {...rest} className={classNames(styles.loader, className)} count={50} />;
 }

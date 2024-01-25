@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { HTMLAttributes, useCallback, useMemo, useEffect } from 'react';
 import classnames from 'classnames';
 import { ComponentID, UseComponentType } from '@teambit/component';
@@ -22,55 +23,15 @@ import {
   useLaneDiffStatus as defaultUseLaneDiffStatus,
   UseLaneDiffStatus,
 } from '@teambit/lanes.ui.compare.lane-compare-hooks.use-lane-diff-status';
-import { ChangeType, LaneDiff } from '@teambit/lanes.entities.lane-diff';
+import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { useLocation, Location } from '@teambit/base-react.navigation.link';
 import { Icon } from '@teambit/design.elements.icon';
 import { LaneCompareContextModel, useLaneCompareContext } from './lane-compare.context';
 import { LaneCompareProvider } from './lane-compare.provider';
+import { ChangeTypeGroupOrder, DrawerWidgetProps } from './lane-compare.models';
+import { displayChangeType } from './lane-compare.utils';
 
 import styles from './lane-compare.module.scss';
-
-export type DefaultLaneState = (
-  compId?: string
-) => Partial<Record<ComponentCompareStateKey, ComponentCompareStateData>>;
-export type LaneFilterType = ChangeType | 'ALL';
-export const ChangeTypeGroupOrder = [
-  ChangeType.NEW,
-  ChangeType.SOURCE_CODE,
-  ChangeType.ASPECTS,
-  ChangeType.DEPENDENCY,
-  ChangeType.NONE,
-];
-
-export type DrawerWidgetProps = {
-  drawerProps: {
-    isOpen: boolean;
-  };
-  compareProps: ComponentCompareProps;
-  isFullScreen?: boolean;
-  base: LaneModel;
-  compare: LaneModel;
-};
-
-export type LaneFilter = {
-  type: string;
-  values: string[];
-};
-
-export const filterDepKey: (filters?: Array<LaneFilter>) => string | undefined = (filters) => {
-  return filters?.map((f) => `${f.type}-${f.values.join()}`).join();
-};
-
-export function extractCompsToDiff(laneDiff?: LaneDiff): [ComponentID | undefined, ComponentID | undefined][] {
-  return (
-    (laneDiff?.diff &&
-      laneDiff.diff.map((componentDiff) => [
-        (componentDiff.targetHead && componentDiff.componentId.changeVersion(componentDiff.targetHead)) || undefined,
-        componentDiff.componentId.changeVersion(componentDiff.sourceHead),
-      ])) ||
-    []
-  );
-}
 
 export type LaneCompareProps = {
   base: LaneModel;
@@ -129,136 +90,138 @@ export type LaneCompareProps = {
   groupBy?: 'scope' | 'status';
 } & HTMLAttributes<HTMLDivElement>;
 
-const _LaneCompareMemoized = React.memo(_LaneCompare);
-
-export const LaneCompare = React.memo(function LaneCompareWrapper({ ...props }: LaneCompareProps) {
-  const laneCompareContext = useLaneCompareContext();
-  if (laneCompareContext) {
-    return <_LaneCompare {...props} />;
-  }
-  return (
-    <LaneCompareProvider
-      {...{ ...props, base: props.base.id, compare: props.compare.id, useLaneDiffStatus: props.customUseLaneDiff }}
-    >
-      <_LaneCompareMemoized {...props} />
-    </LaneCompareProvider>
-  );
-});
-
-function _LaneCompare({
-  host,
-  compare,
-  base,
+function GroupedComponentCompareDrawer({
+  baseId,
+  compareId,
+  open,
+  changes,
+  fullScreenDrawerKey,
   tabs,
-  customUseComponent,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  customUseLaneDiff: useLaneDiffStatus = defaultUseLaneDiffStatus,
-  Drawer = LaneCompareDrawer,
+  host,
+  hooks,
   DrawerWidgets,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  LaneCompareLoader = DefaultLaneCompareLoader,
+  base,
+  compare,
+  handleDrawerToggle,
+  onFullScreenClicked,
+  Drawer,
+  customUseComponent,
   ComponentCompareLoader,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  className,
-  onFullScreenChanged,
-  onStateChanged,
-  onDrawerToggled,
-  ...rest
-}: LaneCompareProps) {
-  const {
-    openDrawerList = [],
-    // setFullScreen,
-    // setOpenDrawerList,
-    fullScreenDrawerKey,
-    // laneCompareState,
-    setLaneCompareState,
-    defaultLaneState,
-    loadingLaneDiff,
-    // groupedComponentsToDiff,
-    // laneComponentDiffByCompId,
-  } = useLaneCompareContext() as LaneCompareContextModel;
+  drawerKey,
+}) {
+  const { laneCompareState } = useLaneCompareContext() as LaneCompareContextModel;
+  const compKey = computeStateKey(baseId, compareId);
+  const state = laneCompareState.get(compKey);
+  const compareIdOverride = state?.drawer?.compareOverride
+    ? ComponentID.tryFromString(state?.drawer?.compareOverride)
+    : undefined;
+  const isFullScreen = fullScreenDrawerKey === drawerKey;
 
-  useEffect(() => {
-    onDrawerToggled?.(openDrawerList);
-  }, [openDrawerList.length]);
+  const compareProps: ComponentCompareProps = {
+    host,
+    tabs,
+    baseId,
+    compareId,
+    changes,
+    compareIdOverride,
+    className: classnames(
+      styles.componentCompareContainer,
+      isFullScreen && styles.fullScreen,
+      fullScreenDrawerKey && styles.hasFullScreen
+    ),
+    state,
+    hooks: hooks(baseId, compareId),
+    baseContext: {
+      state: laneCompareState.get(computeStateKey(baseId)),
+      hooks: hooks(baseId),
+    },
+    compareContext: {
+      state: laneCompareState.get(computeStateKey(undefined, compareId)),
+      hooks: hooks(undefined, compareId),
+    },
+    customUseComponent,
+    Loader: ComponentCompareLoader,
+    isFullScreen,
+  };
 
-  const hooks = useCallback((_base?: ComponentID, _compare?: ComponentID) => {
-    const key = computeStateKey(_base, _compare);
-    const _tabs = extractLazyLoadedData(tabs);
+  // eslint-disable-next-line react/prop-types
+  const LeftWidget = DrawerWidgets?.Left ? (
+    <DrawerWidgets.Left
+      key={`left-widget-${compKey}`}
+      base={base}
+      compare={compare}
+      drawerProps={{ isOpen: open }}
+      compareProps={compareProps}
+    />
+  ) : null;
 
-    const onClicked = (prop: ComponentCompareStateKey) => (id, e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setLaneCompareState((value) => {
-        let existingState = value.get(key);
-        const propState = existingState?.[prop];
-        if (propState) {
-          propState.id = id;
-          propState.element = _tabs?.find((_tab) => _tab.id === id)?.element;
-        } else {
-          existingState = defaultLaneState(_compare?.toStringWithoutVersion());
-        }
-        const update = new Map(value);
-        onStateChanged?.({ drawerKey: key, stateKey: prop, data: existingState?.[prop] }, update);
-        return update;
-      });
-    };
+  // eslint-disable-next-line react/prop-types
+  const RightWidget = DrawerWidgets?.Right ? (
+    <DrawerWidgets.Right
+      key={`right-widget-${compKey}`}
+      base={base}
+      compare={compare}
+      drawerProps={{ isOpen: open }}
+      compareProps={compareProps}
+    />
+  ) : null;
 
-    const _hooks: ComponentCompareHooks = {
-      code: {
-        onClick: onClicked('code'),
-      },
-      aspects: {
-        onClick: onClicked('aspects'),
-      },
-      tabs: {
-        onClick: onClicked('tabs'),
-      },
-      preview: {
-        onClick: onClicked('preview'),
-      },
-    };
-
-    return _hooks;
-  }, []);
-
-  const Loading = useMemo(() => {
-    if (!loadingLaneDiff) return null;
-    return <LaneCompareLoader />;
-  }, [base.id.toString(), compare.id.toString(), loadingLaneDiff]);
+  const drawerProps = {
+    isOpen: open,
+    onToggle: () => handleDrawerToggle(drawerKey),
+    name: (
+      <LaneCompareDrawerName
+        compareId={compareId}
+        baseId={baseId}
+        open={open}
+        leftWidget={LeftWidget}
+        compareIdOverride={compareIdOverride}
+      />
+    ),
+    Widgets: [
+      RightWidget,
+      <div
+        key="full-screen-icon"
+        className={styles.fullScreenIcon}
+        onClick={onFullScreenClicked(drawerKey)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === 'Space') {
+            onFullScreenClicked(drawerKey);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+      >
+        <Icon of={fullScreenDrawerKey ? 'reduce' : 'expand'} />
+      </div>,
+    ],
+    className: classnames(
+      styles.componentCompareDrawer,
+      isFullScreen && styles.fullScreen,
+      fullScreenDrawerKey && styles.hasFullScreen
+    ),
+    contentClass: classnames(
+      styles.componentCompareDrawerContent,
+      isFullScreen && styles.fullScreen,
+      fullScreenDrawerKey && styles.hasFullScreen
+    ),
+  };
 
   return (
-    <div className={classnames(styles.rootLaneCompare)}>
-      <div {...rest} className={classnames(styles.laneCompareContainer, !!fullScreenDrawerKey && styles.fullScreen)}>
-        {Loading}
-        {/* {...ComponentCompares} */}
-        <GroupedComponentCompare
-          base={base}
-          compare={compare}
-          Drawer={Drawer}
-          host={host}
-          customUseComponent={customUseComponent}
-          tabs={tabs}
-          hooks={hooks}
-          onFullScreenChanged={onFullScreenChanged}
-          ComponentCompareLoader={ComponentCompareLoader}
-          DrawerWidgets={DrawerWidgets}
-          loading={loadingLaneDiff}
-        />
-      </div>
-    </div>
+    <LaneCompareDrawerProvider
+      key={`${compKey}-provider`}
+      compareProps={compareProps}
+      drawerProps={drawerProps}
+      isFullScreen={isFullScreen}
+    >
+      <Drawer
+        key={`${compKey}-drawer`}
+        isFullScreen={isFullScreen}
+        drawerProps={drawerProps}
+        compareProps={compareProps}
+      />
+    </LaneCompareDrawerProvider>
   );
-}
-
-export function displayChangeType(changeType: ChangeType): string {
-  switch (changeType) {
-    case ChangeType.SOURCE_CODE:
-      return 'code';
-    case ChangeType.NONE:
-      return 'no changes';
-    default:
-      return changeType.toLowerCase();
-  }
 }
 
 function GroupedComponentCompare({
@@ -380,125 +343,123 @@ function GroupedComponentCompare({
   );
 }
 
-function GroupedComponentCompareDrawer({
-  baseId,
-  compareId,
-  open,
-  changes,
-  fullScreenDrawerKey,
-  tabs,
+function LaneCompareImpl({
   host,
-  hooks,
-  DrawerWidgets,
-  base,
   compare,
-  handleDrawerToggle,
-  onFullScreenClicked,
-  Drawer,
+  base,
+  tabs,
   customUseComponent,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  customUseLaneDiff: useLaneDiffStatus = defaultUseLaneDiffStatus,
+  Drawer = LaneCompareDrawer,
+  DrawerWidgets,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  LaneCompareLoader = DefaultLaneCompareLoader,
   ComponentCompareLoader,
-  drawerKey,
-}) {
-  const { laneCompareState } = useLaneCompareContext() as LaneCompareContextModel;
-  const compKey = computeStateKey(baseId, compareId);
-  const state = laneCompareState.get(compKey);
-  const compareIdOverride = state?.drawer?.compareOverride
-    ? ComponentID.tryFromString(state?.drawer?.compareOverride)
-    : undefined;
-  const isFullScreen = fullScreenDrawerKey === drawerKey;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  className,
+  onFullScreenChanged,
+  onStateChanged,
+  onDrawerToggled,
+  ...rest
+}: LaneCompareProps) {
+  const {
+    openDrawerList = [],
+    // setFullScreen,
+    // setOpenDrawerList,
+    fullScreenDrawerKey,
+    // laneCompareState,
+    setLaneCompareState,
+    defaultLaneState,
+    loadingLaneDiff,
+    // groupedComponentsToDiff,
+    // laneComponentDiffByCompId,
+  } = useLaneCompareContext() as LaneCompareContextModel;
 
-  const compareProps: ComponentCompareProps = {
-    host,
-    tabs,
-    baseId,
-    compareId,
-    changes,
-    compareIdOverride,
-    className: classnames(
-      styles.componentCompareContainer,
-      isFullScreen && styles.fullScreen,
-      fullScreenDrawerKey && styles.hasFullScreen
-    ),
-    state,
-    hooks: hooks(baseId, compareId),
-    baseContext: {
-      state: laneCompareState.get(computeStateKey(baseId)),
-      hooks: hooks(baseId),
-    },
-    compareContext: {
-      state: laneCompareState.get(computeStateKey(undefined, compareId)),
-      hooks: hooks(undefined, compareId),
-    },
-    customUseComponent,
-    Loader: ComponentCompareLoader,
-    isFullScreen,
-  };
+  useEffect(() => {
+    onDrawerToggled?.(openDrawerList);
+  }, [openDrawerList.length]);
 
-  // eslint-disable-next-line react/prop-types
-  const LeftWidget = DrawerWidgets?.Left ? (
-    <DrawerWidgets.Left
-      key={`left-widget-${compKey}`}
-      base={base}
-      compare={compare}
-      drawerProps={{ isOpen: open }}
-      compareProps={compareProps}
-    />
-  ) : null;
+  const hooks = useCallback((_base?: ComponentID, _compare?: ComponentID) => {
+    const key = computeStateKey(_base, _compare);
+    const extractedTabs = extractLazyLoadedData(tabs);
 
-  // eslint-disable-next-line react/prop-types
-  const RightWidget = DrawerWidgets?.Right ? (
-    <DrawerWidgets.Right
-      key={`right-widget-${compKey}`}
-      base={base}
-      compare={compare}
-      drawerProps={{ isOpen: open }}
-      compareProps={compareProps}
-    />
-  ) : null;
+    const onClicked = (prop: ComponentCompareStateKey) => (id, e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setLaneCompareState((value) => {
+        let existingState = value.get(key);
+        const propState = existingState?.[prop];
+        if (propState) {
+          propState.id = id;
+          propState.element = extractedTabs?.find((_tab) => _tab.id === id)?.element;
+        } else {
+          existingState = defaultLaneState(_compare?.toStringWithoutVersion());
+        }
+        const update = new Map(value);
+        onStateChanged?.({ drawerKey: key, stateKey: prop, data: existingState?.[prop] }, update);
+        return update;
+      });
+    };
 
-  const drawerProps = {
-    isOpen: open,
-    onToggle: () => handleDrawerToggle(drawerKey),
-    name: (
-      <LaneCompareDrawerName
-        compareId={compareId}
-        baseId={baseId}
-        open={open}
-        leftWidget={LeftWidget}
-        compareIdOverride={compareIdOverride}
-      />
-    ),
-    Widgets: [
-      RightWidget,
-      <div key={'full-screen-icon'} className={styles.fullScreenIcon} onClick={onFullScreenClicked(drawerKey)}>
-        <Icon of={fullScreenDrawerKey ? 'reduce' : 'expand'} />
-      </div>,
-    ],
-    className: classnames(
-      styles.componentCompareDrawer,
-      isFullScreen && styles.fullScreen,
-      fullScreenDrawerKey && styles.hasFullScreen
-    ),
-    contentClass: classnames(
-      styles.componentCompareDrawerContent,
-      isFullScreen && styles.fullScreen,
-      fullScreenDrawerKey && styles.hasFullScreen
-    ),
-  };
+    const hooksWithClickHandlers: ComponentCompareHooks = {
+      code: {
+        onClick: onClicked('code'),
+      },
+      aspects: {
+        onClick: onClicked('aspects'),
+      },
+      tabs: {
+        onClick: onClicked('tabs'),
+      },
+      preview: {
+        onClick: onClicked('preview'),
+      },
+    };
+
+    return hooksWithClickHandlers;
+  }, []);
+
+  const Loading = useMemo(() => {
+    if (!loadingLaneDiff) return null;
+    return <LaneCompareLoader />;
+  }, [base.id.toString(), compare.id.toString(), loadingLaneDiff]);
 
   return (
-    <LaneCompareDrawerProvider
-      key={`${compKey}-provider`}
-      compareProps={compareProps}
-      drawerProps={drawerProps}
-      isFullScreen={isFullScreen}
-    >
-      <Drawer
-        key={`${compKey}-drawer`}
-        isFullScreen={isFullScreen}
-        drawerProps={drawerProps}
-        compareProps={compareProps}
-      />
-    </LaneCompareDrawerProvider>
+    <div className={classnames(styles.rootLaneCompare)}>
+      <div {...rest} className={classnames(styles.laneCompareContainer, !!fullScreenDrawerKey && styles.fullScreen)}>
+        {Loading}
+        {/* {...ComponentCompares} */}
+        <GroupedComponentCompare
+          base={base}
+          compare={compare}
+          Drawer={Drawer}
+          host={host}
+          customUseComponent={customUseComponent}
+          tabs={tabs}
+          hooks={hooks}
+          onFullScreenChanged={onFullScreenChanged}
+          ComponentCompareLoader={ComponentCompareLoader}
+          DrawerWidgets={DrawerWidgets}
+          loading={loadingLaneDiff}
+        />
+      </div>
+    </div>
   );
 }
+
+const LaneCompareMemoized = React.memo(LaneCompareImpl);
+
+export const LaneCompare = React.memo(function LaneCompareWrapper({ ...props }: LaneCompareProps) {
+  const laneCompareContext = useLaneCompareContext();
+  if (laneCompareContext) {
+    return <LaneCompareImpl {...props} />;
+  }
+  return (
+    <LaneCompareProvider
+      {...{ ...props, base: props.base.id, compare: props.compare.id, useLaneDiffStatus: props.customUseLaneDiff }}
+    >
+      <LaneCompareMemoized {...props} />
+    </LaneCompareProvider>
+  );
+});
