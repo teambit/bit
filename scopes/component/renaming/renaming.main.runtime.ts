@@ -8,6 +8,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
+import { compact } from 'lodash';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
@@ -16,6 +17,7 @@ import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
 import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import pMapSeries from 'p-map-series';
 import { importTransformer, exportTransformer } from '@teambit/typescript';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { isValidIdChunk, InvalidName } from '@teambit/legacy-bit-id';
@@ -28,6 +30,9 @@ import { OldScopeNotFound } from './exceptions/old-scope-not-found';
 import { OldScopeExported } from './exceptions/old-scope-exported';
 import { OldScopeTagged } from './exceptions/old-scope-tagged';
 import { ScopeRenameOwnerCmd } from './scope-rename-owner.cmd';
+import { RenamingTagged } from './exceptions/renaming-tagged';
+
+type RenameId = { sourceId: ComponentID; targetId: ComponentID };
 
 export class RenamingMain {
   constructor(
@@ -52,61 +57,133 @@ make sure this argument is the name only, without the scope-name. to change the 
       throw new InvalidName(targetName);
     }
     const sourceId = await this.workspace.resolveComponentId(sourceIdStr);
-    const isTagged = sourceId.hasVersion();
-    const sourceComp = await this.workspace.get(sourceId);
-    const sourcePackageName = this.workspace.componentPackageName(sourceComp);
     const targetId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope || sourceId.scope);
-    if (!options.preserve) {
-      await this.refactoring.refactorVariableAndClasses(sourceComp, sourceId, targetId);
-      this.refactoring.refactorFilenames(sourceComp, sourceId, targetId);
-    }
-    if (isTagged) {
-      const config = await this.getConfig(sourceComp);
-      await this.newComponentHelper.writeAndAddNewComp(sourceComp, targetId, options, config);
-      options.delete
-        ? await this.remove.deleteComps(sourceId.toString())
-        : await this.deprecation.deprecate(sourceId, targetId);
-    } else {
-      this.workspace.bitMap.renameNewComponent(sourceId, targetId);
-      await this.workspace.bitMap.write(`rename (${sourceIdStr} to ${targetName})`);
-      await this.deleteLinkFromNodeModules(sourcePackageName);
-    }
-    await this.renameAspectIdInWorkspaceConfig(sourceId, targetId);
-    await this.workspace._reloadConsumer(); // in order to reload .bitmap file and clear all caches.
-    const targetComp = await this.workspace.get(targetId);
-    if (options.refactor) {
-      const allComponents = await this.workspace.list();
-      const targetPackageName = this.workspace.componentPackageName(targetComp);
-      const { changedComponents } = await this.refactoring.refactorDependencyName(
-        allComponents,
-        sourcePackageName,
-        targetPackageName
-      );
-      await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
-    }
-
-    // only write if it is not tagged, since we writeAndAddNewComp for tagged components
-    if (!isTagged && !options.preserve) {
-      await this.refactoring.refactorVariableAndClasses(targetComp, sourceId, targetId, options);
-      this.refactoring.refactorFilenames(targetComp, sourceId, targetId);
-      await this.componentWriter.writeMany({
-        components: [targetComp.state._consumer],
-        skipDependencyInstallation: true,
-        writeToPath: this.newComponentHelper.getNewComponentPath(targetId),
-        reasonForBitmapChange: 'rename',
-      });
-    }
-
-    this.workspace.bitMap.renameAspectInConfig(sourceId, targetId);
-    await this.workspace.bitMap.write(`rename (${sourceIdStr} to ${targetName})`);
-
-    await linkToNodeModulesByComponents([targetComp], this.workspace); // link the new-name to node-modules
-    await this.compileGracefully([targetComp.id]);
+    await this.renameMultiple([{ sourceId, targetId }], options);
 
     return {
       sourceId,
       targetId,
     };
+  }
+
+  async renameMultiple(multipleIds: RenameId[], options: RenameOptions) {
+    const renameData: Array<
+      RenameId & {
+        sourcePkg: string;
+        isTagged: boolean;
+        targetPkg?: string;
+        targetComp?: Component;
+        compIdsUsingItAsEnv?: ComponentID[];
+      }
+    > = [];
+
+    const stagedComps = multipleIds.filter(
+      ({ sourceId }) => sourceId.hasVersion() && !this.workspace.isExported(sourceId)
+    );
+
+    if (stagedComps.length) {
+      const idsStr = stagedComps.map(({ sourceId }) => sourceId.toString());
+      throw new RenamingTagged(idsStr);
+    }
+
+    await pMapSeries(multipleIds, async ({ sourceId, targetId }) => {
+      const isTagged = sourceId.hasVersion();
+      const sourceComp = await this.workspace.get(sourceId);
+      const isEnv = this.envs.isEnv(sourceComp);
+      const sourcePackageName = this.workspace.componentPackageName(sourceComp);
+      renameData.push({
+        sourceId,
+        targetId,
+        sourcePkg: sourcePackageName,
+        isTagged,
+        compIdsUsingItAsEnv: isEnv
+          ? (await this.workspace.getComponentsUsingEnv(sourceId.toString(), true)).map((c) => c.id)
+          : undefined,
+      });
+    });
+
+    await pMapSeries(renameData, async ({ sourceId, targetId, isTagged, sourcePkg }) => {
+      const sourceComp = await this.workspace.get(sourceId);
+      if (!options.preserve) {
+        await this.refactoring.refactorVariableAndClasses(sourceComp, sourceId, targetId);
+        this.refactoring.refactorFilenames(sourceComp, sourceId, targetId);
+      }
+      if (isTagged) {
+        const config = await this.getConfig(sourceComp);
+        await this.newComponentHelper.writeAndAddNewComp(sourceComp, targetId, options, config);
+        options.delete
+          ? await this.remove.deleteComps(sourceId.toString())
+          : await this.deprecation.deprecate(sourceId, targetId);
+      } else {
+        this.workspace.bitMap.renameNewComponent(sourceId, targetId);
+        await this.deleteLinkFromNodeModules(sourcePkg);
+      }
+    });
+
+    await this.workspace.bitMap.write(`rename`);
+    await this.renameAspectIdsInWorkspaceConfig(multipleIds);
+    await this.workspace._reloadConsumer(); // in order to reload .bitmap file and clear all caches.
+    await pMapSeries(renameData, async (itemData) => {
+      itemData.targetComp = await this.workspace.get(itemData.targetId);
+      itemData.targetPkg = this.workspace.componentPackageName(itemData.targetComp);
+    });
+
+    const refactoredIds: ComponentID[] = [];
+    if (options.refactor) {
+      const allComponents = await this.workspace.list();
+      const packagesToReplace: MultipleStringsReplacement = renameData.map(({ sourcePkg, targetPkg }) => {
+        if (!targetPkg) throw new Error(`renameMultiple, targetPkg is missing`);
+        return {
+          // replace only packages ending with slash, quote or double-quote. otherwise, it could replace part of other packages.
+          oldStr: `${sourcePkg}(['"/])`,
+          newStr: `${targetPkg}$1`,
+        };
+      });
+
+      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace);
+      await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
+      refactoredIds.push(...changedComponents.map((c) => c.id));
+    }
+
+    if (!options.preserve) {
+      await pMapSeries(renameData, async ({ sourceId, targetId, targetComp, isTagged }) => {
+        if (isTagged) {
+          // we have done this logic already for tagged components before. (search for refactorVariableAndClasses).
+          return;
+        }
+        if (!targetComp) throw new Error(`renameMultiple, targetComp is missing`);
+        await this.refactoring.refactorVariableAndClasses(targetComp, sourceId, targetId, options);
+        this.refactoring.refactorFilenames(targetComp, sourceId, targetId);
+        await this.componentWriter.writeMany({
+          components: [targetComp.state._consumer],
+          skipDependencyInstallation: true,
+          writeToPath: this.newComponentHelper.getNewComponentPath(targetId),
+          reasonForBitmapChange: 'rename',
+        });
+      });
+    }
+
+    multipleIds.forEach(({ sourceId, targetId }) => {
+      this.workspace.bitMap.renameAspectInConfig(sourceId, targetId);
+    });
+    await pMapSeries(renameData, async (renameItem) => {
+      const componentIds = renameItem.compIdsUsingItAsEnv;
+      if (!componentIds?.length) return;
+      const newEnvId = renameItem.targetId;
+      const newComponentIds = componentIds.map((id) => {
+        const found = renameData.find((r) => r.sourceId.isEqualWithoutVersion(id));
+        return found ? found.targetId : id;
+      });
+      await this.workspace.setEnvToComponents(newEnvId, newComponentIds);
+    });
+
+    await this.workspace.bitMap.write(`rename`);
+
+    const targetComps = compact(renameData.map(({ targetComp }) => targetComp));
+    await linkToNodeModulesByComponents(targetComps, this.workspace); // link the new-name to node-modules
+    await this.compileGracefully(targetComps.map((c) => c.id));
+
+    return { refactoredIds, renameData };
   }
 
   getRenamingInfo(component: Component): RenamingInfo | null {
@@ -124,80 +201,21 @@ make sure this argument is the name only, without the scope-name. to change the 
    * thrown in such cases in this method.
    */
   async renameScope(oldScope: string, newScope: string, options: { refactor?: boolean }): Promise<RenameScopeResult> {
-    const allComponents = await this.workspace.list();
-    const componentsUsingOldScope = allComponents.filter((comp) => comp.id.scope === oldScope);
+    const allComponentsIds = await this.workspace.listIds();
+    const componentsUsingOldScope = allComponentsIds.filter((compId) => compId.scope === oldScope);
     if (!componentsUsingOldScope.length && this.workspace.defaultScope !== oldScope) {
       throw new OldScopeNotFound(oldScope);
-    }
-    const envs = componentsUsingOldScope.filter((c) => this.envs.isEnv(c));
-    const compsUsingEnv: { [envIdStr: string]: ComponentID[] } = {};
-    await Promise.all(
-      envs.map(async (env) => {
-        const components = await this.workspace.getComponentsUsingEnv(env.id.toString(), true);
-        if (!components.length) return;
-        const componentIds = components.map((comp) => comp.id);
-        compsUsingEnv[env.id.toString()] = componentIds;
-      })
-    );
-
-    // verify they're all new.
-    const exported = componentsUsingOldScope.filter((comp) => this.workspace.isExported(comp.id));
-    if (exported.length) {
-      const idsStr = exported.map((comp) => comp.id.toString());
-      throw new OldScopeExported(idsStr);
-    }
-    const tagged = componentsUsingOldScope.filter((comp) => comp.id.hasVersion());
-    if (tagged.length) {
-      const idsStr = tagged.map((comp) => comp.id.toString());
-      throw new OldScopeTagged(idsStr);
     }
     if (this.workspace.defaultScope === oldScope) {
       await this.workspace.setDefaultScope(newScope);
     }
-    componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.setDefaultScope(comp.id, newScope));
-    await this.workspace.bitMap.write(`rename-scope (${oldScope} to ${newScope})`);
-    await this.workspace.clearCache();
+    const multipleIds: RenameId[] = componentsUsingOldScope.map((compId) => {
+      const targetId = compId.hasScope() ? compId.changeScope(newScope) : compId.changeDefaultScope(newScope);
+      return { sourceId: compId, targetId };
+    });
+    const { refactoredIds } = await this.renameMultiple(multipleIds, options);
 
-    await Promise.all(
-      envs.map(async (env) => {
-        const componentIds = compsUsingEnv[env.id.toString()];
-        if (!componentIds?.length) return;
-        const newEnvId = env.id.changeDefaultScope(newScope);
-        const newComponentIds = componentIds.map((id) => id.changeDefaultScope(newScope));
-        await this.workspace.setEnvToComponents(newEnvId, newComponentIds);
-      })
-    );
-
-    const refactoredIds: ComponentID[] = [];
-    if (options.refactor) {
-      const legacyComps = componentsUsingOldScope.map((c) => c.state._consumer);
-      const packagesToReplace: MultipleStringsReplacement = legacyComps.map((comp) => {
-        return {
-          oldStr: componentIdToPackageName(comp),
-          newStr: componentIdToPackageName({
-            ...comp,
-            bindingPrefix: getBindingPrefixByDefaultScope(newScope),
-            id: comp.id.changeScope(newScope),
-          }),
-        };
-      });
-
-      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace, [
-        importTransformer,
-        exportTransformer,
-      ]);
-      await this.renameScopeOfAspectIdsInWorkspaceConfig(
-        componentsUsingOldScope.map((c) => c.id),
-        newScope
-      );
-      await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
-      refactoredIds.push(...changedComponents.map((c) => c.id));
-    }
-
-    const newIds = componentsUsingOldScope.map((comp) => new ComponentID(comp.id._legacy, newScope));
-    await this.relinkAndCompile(componentsUsingOldScope, newIds);
-
-    return { scopeRenamedComponentIds: componentsUsingOldScope.map((comp) => comp.id), refactoredIds };
+    return { scopeRenamedComponentIds: componentsUsingOldScope, refactoredIds };
   }
 
   private async relinkAndCompile(componentsUsingOldScope: Component[], newIds: ComponentID[]) {
@@ -296,27 +314,15 @@ make sure this argument is the name only, without the scope-name. to change the 
     return { scopeRenamedComponentIds: componentsUsingOldScope.map((comp) => comp.id), refactoredIds };
   }
 
-  private async renameAspectIdInWorkspaceConfig(sourceId: ComponentID, targetId: ComponentID) {
+  private async renameAspectIdsInWorkspaceConfig(ids: RenameId[]) {
     const config = this.config.workspaceConfig;
     if (!config) throw new Error('unable to get workspace config');
-    const hasChanged = config.renameExtensionInRaw(
-      sourceId.toStringWithoutVersion(),
-      targetId.toStringWithoutVersion()
+    const hasChanged = ids.some((renameId) =>
+      config.renameExtensionInRaw(
+        renameId.sourceId.toStringWithoutVersion(),
+        renameId.targetId.toStringWithoutVersion()
+      )
     );
-    if (hasChanged) await config.write({ reasonForChange: 'rename' });
-  }
-
-  private async renameScopeOfAspectIdsInWorkspaceConfig(ids: ComponentID[], newScope: string) {
-    const config = this.config.workspaceConfig;
-    if (!config) throw new Error('unable to get workspace config');
-    let hasChanged = false;
-    ids.forEach((id) => {
-      const changed = config.renameExtensionInRaw(
-        id.toStringWithoutVersion(),
-        id.changeScope(newScope).toStringWithoutVersion()
-      );
-      if (changed) hasChanged = true;
-    });
     if (hasChanged) await config.write({ reasonForChange: 'rename' });
   }
 

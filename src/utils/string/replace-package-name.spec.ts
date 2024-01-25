@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import replacePackageName from './replace-package-name';
 
-describe('replacePackageName', () => {
+describe.only('replacePackageName', () => {
   it('should replace package surrounded with single quotes', () => {
     const str = "require('@bit/old-scope.is-string');";
     const result = replacePackageName(str, '@bit/old-scope.is-string', '@bit/new-scope.is-string');
