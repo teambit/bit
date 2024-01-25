@@ -21,7 +21,7 @@ function mockfs(obj: any) {
     // @ts-ignore
     Object.entries(value).forEach(([file, content]) => {
       const filePath = path.join(key, file);
-      fs.writeFileSync(filePath, content);
+      fs.writeFileSync(filePath, content as string);
     });
   });
 }
