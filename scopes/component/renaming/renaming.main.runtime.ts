@@ -213,7 +213,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       const targetId = compId.hasScope() ? compId.changeScope(newScope) : compId.changeDefaultScope(newScope);
       return { sourceId: compId, targetId };
     });
-    const { refactoredIds } = await this.renameMultiple(multipleIds, options);
+    const { refactoredIds } = await this.renameMultiple(multipleIds, { ...options, preserve: true });
 
     return { scopeRenamedComponentIds: componentsUsingOldScope, refactoredIds };
   }

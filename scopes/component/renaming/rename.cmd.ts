@@ -14,7 +14,7 @@ export type RenameOptions = {
 export class RenameCmd implements Command {
   name = 'rename <current-name> <new-name>';
   description =
-    'rename component. if tagged/exported, create a new component and deprecate the original component. otherwise just renames current component';
+    'rename component. if exported, create a new component and deprecate the original component. otherwise just renames current component';
   helpUrl = 'reference/components/renaming-components';
   arguments = [
     {
