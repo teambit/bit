@@ -189,6 +189,7 @@ export async function install(
     dedupeInjectedDeps?: boolean;
   } & Pick<
     InstallOptions,
+    | 'autoInstallPeers'
     | 'publicHoistPattern'
     | 'hoistPattern'
     | 'lockfileOnly'
@@ -244,7 +245,7 @@ export async function install(
   });
   const opts: InstallOptions = {
     allProjects,
-    autoInstallPeers: true,
+    autoInstallPeers: options.autoInstallPeers,
     confirmModulesPurge: false,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
