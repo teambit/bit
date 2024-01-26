@@ -15,7 +15,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { LaneId } from '@teambit/lane-id';
-import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
+import { AutoTagResult } from '@teambit/workspace.modules.auto-tag';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
