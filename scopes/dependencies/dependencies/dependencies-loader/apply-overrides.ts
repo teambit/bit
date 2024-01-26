@@ -276,13 +276,6 @@ export class ApplyOverrides {
         delete this.allPackagesDependencies.packageDependencies[peerName];
       }
     }
-    const componentPeers = new Set<string>(components.dependencies?.map(({ packageName }) => packageName) ?? []);
-    this.allDependencies.dependencies = this.allDependencies.dependencies.filter(
-      ({ packageName }) => !packageName || !componentPeers.has(packageName)
-    );
-    for (const compPeer of Array.from(componentPeers)) {
-      delete this.allPackagesDependencies.peerPackageDependencies[compPeer];
-    }
   }
 
   /**
