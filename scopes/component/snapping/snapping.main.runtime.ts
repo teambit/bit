@@ -20,12 +20,6 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-
 import pMap from 'p-map';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
-import {
-  removeLocalVersionsForAllComponents,
-  untagResult,
-  getComponentsWithOptionToUntag,
-  removeLocalVersionsForMultipleComponents,
-} from '@teambit/legacy/dist/scope/component-ops/untag-component';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
@@ -61,6 +55,12 @@ import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scop
 import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
 import { FlattenedEdgesGetter } from './flattened-edges';
 import { SnapDistanceCmd } from './snap-distance-cmd';
+import {
+  removeLocalVersionsForAllComponents,
+  untagResult,
+  getComponentsWithOptionToUntag,
+  removeLocalVersionsForMultipleComponents,
+} from './reset-component';
 
 const HooksManagerInstance = HooksManager.getInstance();
 

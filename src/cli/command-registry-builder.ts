@@ -23,7 +23,6 @@ import Init from './commands/public-cmds/init-cmd';
 import Dependents from './commands/public-cmds/dependents-cmd';
 import Remote from './commands/public-cmds/remote-cmd';
 import ScopeConfig from './commands/public-cmds/scope-config-cmd';
-import Untag from './commands/public-cmds/untag-cmd';
 import RunAction from './commands/private-cmds/run-action.cmd';
 
 export default function registerCommands(): CommandRegistry {
@@ -53,8 +52,6 @@ export default function registerCommands(): CommandRegistry {
     new CatVersionHistoryCmd(),
     new ScopeConfig(),
     new DependencyStatus(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    new Untag(),
     new Delete(),
     new Latest(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

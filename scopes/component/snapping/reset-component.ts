@@ -1,12 +1,11 @@
 import { BitError } from '@teambit/bit-error';
 import { ComponentID } from '@teambit/component-id';
-import { Scope } from '..';
-import { Consumer } from '../../consumer';
-import ComponentsList from '../../consumer/component/components-list';
-import GeneralError from '../../error/general-error';
-import logger from '../../logger/logger';
-import { Lane } from '../models';
-import ModelComponent from '../models/model-component';
+import { Scope } from '@teambit/legacy/dist/scope';
+import { Consumer } from '@teambit/legacy/dist/consumer';
+import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import GeneralError from '@teambit/legacy/dist/error/general-error';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 
 export type untagResult = { id: ComponentID; versions: string[]; component?: ModelComponent };
 
