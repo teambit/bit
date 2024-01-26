@@ -25,7 +25,7 @@ export type UserBarProps = {
 };
 
 export function UserBar({ sections = [], items = [] }: UserBarProps) {
-  const { currentUser: currentUserFromAPI, loginUrl, loading, isLoggedIn } = useCurrentUser();
+  const { currentUser, loginUrl, loading, isLoggedIn } = useCurrentUser();
   const { logout, loading: loadingLoggingOut, loggedOut } = useLogout();
 
   const navigate = useNavigate();
@@ -34,16 +34,9 @@ export function UserBar({ sections = [], items = [] }: UserBarProps) {
     return <CircleSkeleton className={styles.loader} />;
   }
 
-  if (!currentUserFromAPI || !isLoggedIn || loggedOut) {
+  if (!currentUser || !isLoggedIn || loggedOut) {
     return <Login loginUrl={loginUrl} />;
   }
-
-  const currentUser = {
-    ...currentUserFromAPI,
-    displayName: currentUserFromAPI?.displayName ?? undefined,
-    username: currentUserFromAPI?.username ?? undefined,
-    profileImage: currentUserFromAPI?.profileImage ?? undefined,
-  };
 
   const itemList: MenuItemType[] = items
     .filter((item) => !item.category)
