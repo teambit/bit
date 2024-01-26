@@ -9,7 +9,7 @@ export type CurrentUserProps = {
   handleClick: (event: React.SyntheticEvent) => void;
 } & Omit<React.HTMLAttributes<HTMLDivElement>, 'onClick'>;
 
-export function CurrentUser({ currentUser: currentUserFromProps, handleClick, className, ...rest }: CurrentUserProps) {
+export function CurrentUser({ currentUser, handleClick, className, ...rest }: CurrentUserProps) {
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
       handleClick?.(event);
@@ -17,12 +17,6 @@ export function CurrentUser({ currentUser: currentUserFromProps, handleClick, cl
   };
   const handleOnClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     handleClick?.(event);
-  };
-  const currentUser = {
-    ...currentUserFromProps,
-    displayName: currentUserFromProps.displayName ?? undefined,
-    username: currentUserFromProps.username ?? undefined,
-    profileImage: currentUserFromProps.profileImage ?? undefined,
   };
   return (
     <div
