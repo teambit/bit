@@ -341,8 +341,8 @@ export class Workspace implements ComponentFactory {
     const modifiedComponents = (await this.modified()).map((c) => c.id);
     const newComponents = (await componentsList.listNewComponents()) as ComponentIdList;
     if (!modifiedComponents || !modifiedComponents.length) return [];
-    const autoTagPending = await getAutoTagPending(this.consumer, ComponentIdList.fromArray(modifiedComponents));
-    const comps = autoTagPending.filter((autoTagComp) => !newComponents.has(autoTagComp.componentId));
+    const autoTagPending = await getAutoTagPending(this, ComponentIdList.fromArray(modifiedComponents));
+    const comps = autoTagPending.filter((autoTagComp) => !newComponents.has(autoTagComp.id));
     return comps.map((c) => c.id);
   }
 

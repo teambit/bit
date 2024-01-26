@@ -2,27 +2,34 @@ import graphlib, { Graph } from 'graphlib';
 import semver from 'semver';
 import { ComponentIdList } from '@teambit/component-id';
 import { isTag } from '@teambit/component-version';
-import { Consumer } from '@teambit/legacy/dist/consumer';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+// import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
+import { Workspace } from '@teambit/workspace';
+import { Component } from '@teambit/component';
 
-export async function getAutoTagPending(consumer: Consumer, changedComponents: ComponentIdList): Promise<Component[]> {
-  const autoTagInfo = await getAutoTagInfo(consumer, changedComponents);
+export async function getAutoTagPending(
+  workspace: Workspace,
+  changedComponents: ComponentIdList
+): Promise<Component[]> {
+  const autoTagInfo = await getAutoTagInfo(workspace, changedComponents);
   return autoTagInfo.map((a) => a.component);
 }
 
 export type AutoTagResult = { component: Component; triggeredBy: ComponentIdList };
 
-export async function getAutoTagInfo(consumer: Consumer, changedComponents: ComponentIdList): Promise<AutoTagResult[]> {
+export async function getAutoTagInfo(
+  workspace: Workspace,
+  changedComponents: ComponentIdList
+): Promise<AutoTagResult[]> {
   if (!changedComponents.length) return [];
-  const potentialComponents = potentialComponentsForAutoTagging(consumer, changedComponents);
+  const potentialComponents = potentialComponentsForAutoTagging(workspace, changedComponents);
   const idsToLoad = new ComponentIdList(...potentialComponents, ...changedComponents);
-  const { components } = await consumer.loadComponents(idsToLoad, false);
+  const { components } = await workspace.componentLoader.getMany(idsToLoad, undefined, false);
   const graph = buildGraph(components);
 
   const autoTagResults: AutoTagResult[] = [];
   components.forEach((component) => {
-    const bitId = component.componentId;
+    const bitId = component.id;
     const idStr = bitId.toStringWithoutVersion();
     if (!graph.hasNode(idStr)) return;
     // preorder gets all dependencies and dependencies of dependencies and so on.
@@ -70,7 +77,7 @@ function buildGraph(components: Component[]): Graph {
 
   components.forEach((component) => {
     const idStr = component.id.toStringWithoutVersion();
-    component.getAllDependencies().forEach((dependency: Dependency) => {
+    component.state._consumer.getAllDependencies().forEach((dependency: Dependency) => {
       if (componentsIds.searchWithoutVersion(dependency.id)) {
         const depId = dependency.id.toStringWithoutVersion();
         // save the full ComponentID of a string id to be able to retrieve it later with no confusion
@@ -83,8 +90,8 @@ function buildGraph(components: Component[]): Graph {
   return graph;
 }
 
-function potentialComponentsForAutoTagging(consumer: Consumer, modifiedComponents: ComponentIdList): ComponentIdList {
-  const candidateComponentsIds = consumer.bitMap.getAllBitIds();
+function potentialComponentsForAutoTagging(workspace: Workspace, modifiedComponents: ComponentIdList): ComponentIdList {
+  const candidateComponentsIds = workspace.consumer.bitMap.getAllBitIds();
   // if a modified component is in candidates array, remove it from the array as it will be already
   // tagged with the correct version
   const idsWithoutModified = candidateComponentsIds.filter(

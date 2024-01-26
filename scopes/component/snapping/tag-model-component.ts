@@ -234,9 +234,11 @@ export async function tagModelComponent({
   // them as dependencies.
   const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
   const autoTagData =
-    skipAutoTag || !consumer ? [] : await getAutoTagInfo(consumer, ComponentIdList.fromArray(idsToTriggerAutoTag));
+    skipAutoTag || !workspace ? [] : await getAutoTagInfo(workspace, ComponentIdList.fromArray(idsToTriggerAutoTag));
   const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
-  const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
+  const autoTagConsumerComponents = autoTagComponents.map((c) => c.state._consumer) as ConsumerComponent[];
+  const autoTagComponentsFiltered = autoTagConsumerComponents.filter((c) => !idsToTag.has(c.id));
+
   const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
   const allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
 
@@ -296,7 +298,14 @@ export async function tagModelComponent({
   // go through all dependencies and update their versions
   updateDependenciesVersions(allComponentsToTag, dependencyResolver);
 
-  await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId, copyLogFromPreviousSnap);
+  await addLogToComponents(
+    componentsToTag,
+    autoTagConsumerComponents,
+    persist,
+    message,
+    messagePerId,
+    copyLogFromPreviousSnap
+  );
   // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
   // (it's being deleted in snapping.main.runtime - `_addCompToObjects` method)
   const unmergedComps = workspace ? await workspace.listComponentsDuringMerge() : [];
