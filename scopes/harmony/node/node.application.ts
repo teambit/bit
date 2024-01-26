@@ -27,7 +27,7 @@ export class NodeApp implements Application {
       if (error) {
         // @todo: this is causing uncaughtException in the main process. a better way to handle this would be to use promise.
         // however, since it expects to return a number, it would require a bigger refactor.
-        throw error;
+        throw error as Error;
       }
     });
     child.stdout?.on('data', function (data) {
