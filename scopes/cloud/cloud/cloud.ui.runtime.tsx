@@ -156,7 +156,7 @@ export class CloudUI {
     workspace.registerMenuWidget([CloudUserBar]);
     if (workspace) {
       lanes.registerMenuWidget(CloudUserBar);
-      component.registerRightSideMenuItem({ item: <CloudUserBar />, order: 100 });
+      component.registerRightSideMenuItem({ item: <CloudUserBar key={'cloud-user-bar-comp-menu'} />, order: 100 });
     }
     return cloudUI;
   }

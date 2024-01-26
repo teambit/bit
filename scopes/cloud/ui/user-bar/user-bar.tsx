@@ -44,7 +44,7 @@ export function UserBar({ sections = [], items = [] }: UserBarProps) {
       return {
         ...rest,
         link: href,
-        component: Component ? <Component key={index} user={currentUser} /> : undefined,
+        component: Component ? <Component key={`user-bar-item-${index}`} user={currentUser} /> : undefined,
       };
     });
 
@@ -91,7 +91,7 @@ export function UserBar({ sections = [], items = [] }: UserBarProps) {
       <CurrentUser
         className={styles.currentUser}
         currentUser={currentUser}
-        onClick={() => {
+        handleClick={() => {
           window.open(`https://bit.cloud/${currentUser.username}`, '_blank');
         }}
       />
