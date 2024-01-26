@@ -177,6 +177,24 @@ describe('custom aspects', function () {
       });
     });
   });
+  describe('use aspect in one lane then switch to another lane', () => {
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.create('bit-aspect', 'my-aspect');
+      helper.command.compile();
+      helper.command.install();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(1);
+      helper.command.use('my-aspect');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+    });
+    it('bit install should not throw', () => {
+      expect(() => helper.command.install()).to.not.throw();
+    });
+  });
 });
 
 function getEnvRuntimeMain(remoteScope: string) {
