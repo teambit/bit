@@ -1,6 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { RenamingMain } from './renaming.main.runtime';
+import { RenameResult, RenamingMain } from './renaming.main.runtime';
 
 export class ScopeRenameCmd implements Command {
   name = 'rename <current-scope-name> <new-scope-name>';
@@ -25,16 +25,27 @@ as a result of this change`;
   constructor(private renaming: RenamingMain) {}
 
   async report([oldName, newName]: [string, string], { refactor }: { refactor?: boolean }) {
-    const { scopeRenamedComponentIds, refactoredIds } = await this.renaming.renameScope(oldName, newName, { refactor });
+    const result = await this.renaming.renameScope(oldName, newName, { refactor });
     const title = chalk.green(`successfully replaced "${oldName}" scope with "${newName}"`);
-    const renamedIdsStr = scopeRenamedComponentIds.length
-      ? `\n${chalk.bold(
-          'the following components were affected by this scope-name change:'
-        )}\n${scopeRenamedComponentIds.map((c) => c.changeScope(newName)).join('\n')}`
-      : '';
-    const refactoredStr = refactoredIds.length
-      ? `\n\n${chalk.bold('the following components have been refactored:')}\n${refactoredIds.join('\n')}`
-      : '';
-    return `${title}\n${renamedIdsStr}${refactoredStr}`;
+    const renameOutput = renameScopeOutput(result);
+    return `${title}\n${renameOutput}`;
   }
+}
+
+export function renameScopeOutput(renameResult: RenameResult): string {
+  const { renameData, refactoredIds } = renameResult;
+  const renamedIdsStr = renameData.length
+    ? `\n${chalk.bold('the following components were affected by this scope-name change:')}\n${renameData
+        .map(
+          (item) =>
+            `${item.sourceId.toStringWithoutVersion()} ${
+              item.isTagged ? '(deprecated) ' : ''
+            }-> ${item.targetId.toString()}`
+        )
+        .join('\n')}`
+    : '';
+  const refactoredStr = refactoredIds.length
+    ? `\n\n${chalk.bold('the following components have been refactored:')}\n${refactoredIds.join('\n')}`
+    : '';
+  return renamedIdsStr + refactoredStr;
 }

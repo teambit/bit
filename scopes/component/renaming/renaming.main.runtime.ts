@@ -28,6 +28,14 @@ import { ScopeRenameOwnerCmd } from './scope-rename-owner.cmd';
 import { RenamingTagged } from './exceptions/renaming-tagged';
 
 type RenameId = { sourceId: ComponentID; targetId: ComponentID };
+type RenameData = RenameId & {
+  sourcePkg: string;
+  isTagged: boolean;
+  targetPkg?: string;
+  targetComp?: Component;
+  compIdsUsingItAsEnv?: ComponentID[];
+};
+export type RenameResult = { renameData: RenameData[]; refactoredIds: ComponentID[] };
 
 export class RenamingMain {
   constructor(
@@ -61,16 +69,8 @@ make sure this argument is the name only, without the scope-name. to change the 
     };
   }
 
-  async renameMultiple(multipleIds: RenameId[], options: RenameOptions) {
-    const renameData: Array<
-      RenameId & {
-        sourcePkg: string;
-        isTagged: boolean;
-        targetPkg?: string;
-        targetComp?: Component;
-        compIdsUsingItAsEnv?: ComponentID[];
-      }
-    > = [];
+  async renameMultiple(multipleIds: RenameId[], options: RenameOptions): Promise<RenameResult> {
+    const renameData: RenameData[] = [];
 
     const stagedComps = multipleIds.filter(
       ({ sourceId }) => sourceId.hasVersion() && !this.workspace.isExported(sourceId)
@@ -195,7 +195,7 @@ make sure this argument is the name only, without the scope-name. to change the 
    * keep in mind that this is working for new components only, for tagged/exported it's impossible. See the errors
    * thrown in such cases in this method.
    */
-  async renameScope(oldScope: string, newScope: string, options: { refactor?: boolean }): Promise<RenameScopeResult> {
+  async renameScope(oldScope: string, newScope: string, options: { refactor?: boolean }): Promise<RenameResult> {
     const allComponentsIds = await this.workspace.listIds();
     const componentsUsingOldScope = allComponentsIds.filter((compId) => compId.scope === oldScope);
     if (!componentsUsingOldScope.length && this.workspace.defaultScope !== oldScope) {
@@ -205,29 +205,10 @@ make sure this argument is the name only, without the scope-name. to change the 
       await this.workspace.setDefaultScope(newScope);
     }
     const multipleIds: RenameId[] = componentsUsingOldScope.map((compId) => {
-      const targetId = compId.hasScope() ? compId.changeScope(newScope) : compId.changeDefaultScope(newScope);
+      const targetId = ComponentID.fromObject({ name: compId.name }, newScope);
       return { sourceId: compId, targetId };
     });
-    const { refactoredIds } = await this.renameMultiple(multipleIds, { ...options, preserve: true });
-
-    return { scopeRenamedComponentIds: componentsUsingOldScope, refactoredIds };
-  }
-
-  private async relinkAndCompile(componentsUsingOldScope: Component[], newIds: ComponentID[]) {
-    this.logger.debug(`the scope has been renamed, re-linking to node-modules`);
-    await Promise.all(
-      componentsUsingOldScope.map(async (comp) => {
-        const pkgName = this.workspace.componentPackageName(comp);
-        await this.deleteLinkFromNodeModules(pkgName);
-      })
-    );
-
-    await this.workspace.clearCache();
-    await this.workspace._reloadConsumer();
-
-    const newComps = await this.workspace.getMany(newIds);
-    await linkToNodeModulesByComponents(newComps, this.workspace); // link the new-name to node-modules
-    await this.compileGracefully(newIds);
+    return this.renameMultiple(multipleIds, { ...options, preserve: true });
   }
 
   /**
@@ -240,7 +221,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     oldOwner: string,
     newOwner: string,
     options: { refactor?: boolean; ast?: boolean }
-  ): Promise<RenameScopeResult> {
+  ): Promise<RenameResult> {
     const isScopeUsesOldOwner = (scope: string) => scope.startsWith(`${oldOwner}.`);
 
     const allComponentsIds = await this.workspace.listIds();
@@ -260,9 +241,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       const targetId = compId.hasScope() ? compId.changeScope(newScope) : compId.changeDefaultScope(newScope);
       return { sourceId: compId, targetId };
     });
-    const { refactoredIds } = await this.renameMultiple(multipleIds, { ...options, preserve: true });
-
-    return { scopeRenamedComponentIds: componentsUsingOldScope, refactoredIds };
+    return this.renameMultiple(multipleIds, { ...options, preserve: true });
   }
 
   private async renameAspectIdsInWorkspaceConfig(ids: RenameId[]) {
@@ -274,21 +253,6 @@ make sure this argument is the name only, without the scope-name. to change the 
         renameId.targetId.toStringWithoutVersion()
       )
     );
-    if (hasChanged) await config.write({ reasonForChange: 'rename' });
-  }
-
-  private async renameOwnerOfAspectIdsInWorkspaceConfig(ids: ComponentID[], oldOwner: string, newOwner: string) {
-    const config = this.config.workspaceConfig;
-    if (!config) throw new Error('unable to get workspace config');
-    let hasChanged = false;
-    ids.forEach((id) => {
-      const newScope = this.renameOwnerInScopeName(id.scope, oldOwner, newOwner);
-      const changed = config.renameExtensionInRaw(
-        id.toStringWithoutVersion(),
-        id.changeScope(newScope).toStringWithoutVersion()
-      );
-      if (changed) hasChanged = true;
-    });
     if (hasChanged) await config.write({ reasonForChange: 'rename' });
   }
 
@@ -400,5 +364,3 @@ export type RenameDependencyNameResult = { sourceId: ComponentID; targetId: Comp
 export type RenamingInfo = {
   renamedFrom: ComponentID;
 };
-
-export type RenameScopeResult = { scopeRenamedComponentIds: ComponentID[]; refactoredIds: ComponentID[] };
