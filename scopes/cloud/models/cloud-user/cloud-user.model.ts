@@ -1,7 +1,7 @@
 export type CloudUser = {
-  displayName?: string | null;
-  username?: string | null;
-  profileImage?: string | null;
+  displayName?: string;
+  username?: string;
+  profileImage?: string;
   isLoggedIn?: boolean;
 };
 
