@@ -7,8 +7,8 @@ export type CloudUser = {
 
 export type CloudUserAPIResponse = {
   payload?: {
-    displayName?: string;
-    username?: string;
-    profileImage?: string;
+    displayName?: string | null;
+    username?: string | null;
+    profileImage?: string | null;
   };
 };
