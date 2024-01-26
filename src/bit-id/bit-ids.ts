@@ -1,26 +1,11 @@
-import R from 'ramda';
-import { forEach } from 'lodash';
-
+import { forEach, uniqBy } from 'lodash';
+import { LATEST_VERSION } from '@teambit/component-version';
 import BitId, { BitIdStr } from '../bit-id/bit-id';
-import { LATEST_BIT_VERSION } from '../constants';
-// import getLatestVersionNumber from '../utils/resolveLatestVersion';
 
 export default class BitIds extends Array<BitId> {
   serialize(): string[] {
     return this.map((bitId) => bitId.toString());
   }
-
-  /**
-   * Resolve an id with latest to specific version
-   * This used to get the real version from the flatten deps by the deps ids
-   *
-   * @param {BitId} idWithLatest - A bit id object with latest version
-   * @returns {BitId} - The bit id found in the array (with actual version)
-   * @memberof BitIds
-   */
-  // resolveVersion(idWithLatest: BitId) {
-  //   return getLatestVersionNumber(this, idWithLatest);
-  // }
 
   has(bitId: BitId): boolean {
     return Boolean(this.search(bitId));
@@ -122,18 +107,6 @@ export default class BitIds extends Array<BitId> {
     return this.map((id) => id.toString()).join(', ');
   }
 
-  // removeMultipleVersionsKeepLatest(): BitId[] {
-  //   const grouped = this.toGroupByIdWithoutVersion();
-  //   const latestVersions = Object.keys(grouped).map((key) => {
-  //     const ids = grouped[key];
-  //     if (ids.length === 1) return ids[0];
-  //     const latest = getLatestVersionNumber(ids, ids[0].changeVersion(LATEST_BIT_VERSION));
-  //     return latest;
-  //   });
-
-  //   return latestVersions;
-  // }
-
   toGroupByIdWithoutVersion(): { [idStrWithoutVer: string]: BitIds } {
     return this.reduce((acc, current) => {
       const idStrWithoutVer = current.toStringWithoutVersion();
@@ -197,7 +170,7 @@ export default class BitIds extends Array<BitId> {
   }
 
   static uniqFromArray(bitIds: BitId[]): BitIds {
-    const uniq = R.uniqBy(JSON.stringify, bitIds);
+    const uniq = uniqBy(bitIds, (id) => id.toString());
     return BitIds.fromArray(uniq);
   }
 
@@ -212,7 +185,7 @@ ${found.map((id) => id.toString()).join('\n')}`);
   }
 
   toVersionLatest(): BitIds {
-    return BitIds.uniqFromArray(this.map((id) => id.changeVersion(LATEST_BIT_VERSION)));
+    return BitIds.uniqFromArray(this.map((id) => id.changeVersion(LATEST_VERSION)));
   }
 
   clone(): BitIds {
