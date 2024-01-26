@@ -57,6 +57,7 @@ export class HttpHelper {
   killHttp() {
     const isWin = process.platform === 'win32';
     if (isWin) {
+      if (!this.httpProcess.pid) throw new Error(`httpProcess.pid is undefined`);
       childProcess.execSync(`taskkill /pid ${this.httpProcess.pid.toString()} /f /t`);
     } else {
       this.httpProcess.kill('SIGINT');

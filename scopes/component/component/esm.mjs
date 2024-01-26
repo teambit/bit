@@ -25,5 +25,8 @@ export const useIdFromLocation = cjsModule.useIdFromLocation;
 export const useComponentLogs = cjsModule.useComponentLogs;
 export const Config = cjsModule.Config;
 export const ComponentModel = cjsModule.ComponentModel;
+export const CollapsibleMenuNav = cjsModule.CollapsibleMenuNav;
+export const ComponentMenu = cjsModule.ComponentMenu;
+export const VersionRelatedDropdowns = cjsModule.VersionRelatedDropdowns;
 
 export default cjsModule;

@@ -62,6 +62,7 @@ export default class WatchRunner {
   }
   killWatcher() {
     const isWin = process.platform === 'win32';
+    if (!this.watchProcess.pid) throw new Error(`watchProcess.pid is undefined`);
     const pid = this.watchProcess.pid.toString();
     if (this.helper.debugMode) console.log(`going to kill watcher process, pid: ${pid}`);
     if (isWin) {

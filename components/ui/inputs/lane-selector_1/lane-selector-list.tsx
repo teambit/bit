@@ -30,6 +30,10 @@ export type LaneSelectorListProps = {
   forwardedRef?: React.Ref<HTMLDivElement>;
 } & HTMLAttributes<HTMLDivElement>;
 
+export const LaneSelectorList = React.forwardRef<HTMLDivElement, LaneSelectorListProps>(function _(props, ref) {
+  return <_LaneSelectorList {...props} forwardedRef={ref} />;
+});
+
 export function _LaneSelectorList({
   selectedLaneId: selectedLaneIdFromProps,
   mainLane,
@@ -263,14 +267,9 @@ export function _LaneSelectorList({
             selected={selectedLaneId}
             current={lane}
             timestamp={lane.updatedAt || lane.createdAt}
-            // timestamp={sortOptions?.includes(LaneSelectorSortBy.UPDATED) ? lane.updatedAt : lane.createdAt}
             icon={(lane.id.isDefault() && mainIcon) || undefined}
           ></LaneMenuItem>
         ))}
     </div>
   );
 }
-
-export const LaneSelectorList = React.forwardRef<HTMLDivElement, LaneSelectorListProps>(function _(props, ref) {
-  return <_LaneSelectorList {...props} forwardedRef={ref} />;
-});

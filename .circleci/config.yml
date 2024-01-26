@@ -472,7 +472,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.24-v1
+          key: core-aspect-env-v0.0.24-v2
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
@@ -502,7 +502,7 @@ jobs:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.0.24-v1
+          key: core-aspect-env-v0.0.24-v2
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088
       - run: cd bit && npm run link-bit-legacy
@@ -547,7 +547,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.24-v1
+          key: core-aspect-env-v0.0.24-v2
       # - update_ssh_agent
       # temporary, check if we can remove it
       - run: cd bit && bit cc
@@ -583,7 +583,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.24-v1
+          key: core-aspect-env-v0.0.24-v2
       - bit_config:
           env: "hub"
       - restore_cache:
@@ -607,7 +607,7 @@ jobs:
       - run: cd bit && npm run generate-cli-reference-docs
       - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
       - run: cd bit && bit checkout head teambit.harmony/content/cli-reference --auto-merge-resolve ours --skip-dependency-installation
-      # - run: cd bit && bit checkout head --skip-dependency-installation
+      - run: cd bit && bit checkout head --skip-dependency-installation
       - run: cd bit && git diff
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
       # - run: cd bit && bbit checkout head
@@ -894,7 +894,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.24-v1
+          key: core-aspect-env-v0.0.24-v2
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
