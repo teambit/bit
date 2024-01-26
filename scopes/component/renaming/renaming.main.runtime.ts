@@ -1,4 +1,3 @@
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import fs from 'fs-extra';
 import path from 'path';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
@@ -15,10 +14,8 @@ import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-c
 import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
-import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import pMapSeries from 'p-map-series';
-import { importTransformer, exportTransformer } from '@teambit/typescript';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { isValidIdChunk, InvalidName } from '@teambit/legacy-bit-id';
 import { RenameCmd, RenameOptions } from './rename.cmd';
@@ -27,8 +24,6 @@ import { RenamingFragment } from './renaming.fragment';
 import { renamingSchema } from './renaming.graphql';
 import { ScopeRenameCmd } from './scope-rename.cmd';
 import { OldScopeNotFound } from './exceptions/old-scope-not-found';
-import { OldScopeExported } from './exceptions/old-scope-exported';
-import { OldScopeTagged } from './exceptions/old-scope-tagged';
 import { ScopeRenameOwnerCmd } from './scope-rename-owner.cmd';
 import { RenamingTagged } from './exceptions/renaming-tagged';
 
@@ -246,22 +241,12 @@ make sure this argument is the name only, without the scope-name. to change the 
     newOwner: string,
     options: { refactor?: boolean; ast?: boolean }
   ): Promise<RenameScopeResult> {
-    const allComponents = await this.workspace.list();
     const isScopeUsesOldOwner = (scope: string) => scope.startsWith(`${oldOwner}.`);
-    const componentsUsingOldScope = allComponents.filter((comp) => isScopeUsesOldOwner(comp.id.scope));
+
+    const allComponentsIds = await this.workspace.listIds();
+    const componentsUsingOldScope = allComponentsIds.filter((compId) => isScopeUsesOldOwner(compId.scope));
     if (!componentsUsingOldScope.length && !isScopeUsesOldOwner(this.workspace.defaultScope)) {
       throw new OldScopeNotFound(oldOwner);
-    }
-    // verify they're all new.
-    const exported = componentsUsingOldScope.filter((comp) => this.workspace.isExported(comp.id));
-    if (exported.length) {
-      const idsStr = exported.map((comp) => comp.id.toString());
-      throw new OldScopeExported(idsStr);
-    }
-    const tagged = componentsUsingOldScope.filter((comp) => comp.id.hasVersion());
-    if (tagged.length) {
-      const idsStr = tagged.map((comp) => comp.id.toString());
-      throw new OldScopeTagged(idsStr);
     }
     const oldWorkspaceDefaultScope = this.workspace.defaultScope;
     const newWorkspaceDefaultScope = isScopeUsesOldOwner(oldWorkspaceDefaultScope)
@@ -270,48 +255,14 @@ make sure this argument is the name only, without the scope-name. to change the 
     if (newWorkspaceDefaultScope) {
       await this.workspace.setDefaultScope(newWorkspaceDefaultScope);
     }
-    const newIds = componentsUsingOldScope.map((comp) => {
-      if (newWorkspaceDefaultScope && comp.id.scope === oldWorkspaceDefaultScope) {
-        this.workspace.bitMap.removeDefaultScope(comp.id);
-        return new ComponentID(comp.id._legacy, newWorkspaceDefaultScope);
-      }
-      const newCompScope = this.renameOwnerInScopeName(comp.id.scope, oldOwner, newOwner);
-      this.workspace.bitMap.setDefaultScope(comp.id, newCompScope);
-      return new ComponentID(comp.id._legacy, newCompScope);
+    const multipleIds: RenameId[] = componentsUsingOldScope.map((compId) => {
+      const newScope = this.renameOwnerInScopeName(compId.scope, oldOwner, newOwner);
+      const targetId = compId.hasScope() ? compId.changeScope(newScope) : compId.changeDefaultScope(newScope);
+      return { sourceId: compId, targetId };
     });
-    await this.workspace.bitMap.write(`rename-owner (${oldOwner} to ${newOwner})`);
-    const refactoredIds: ComponentID[] = [];
-    if (options.refactor) {
-      const legacyComps = componentsUsingOldScope.map((c) => c.state._consumer);
-      const packagesToReplace: MultipleStringsReplacement = legacyComps.map((comp) => {
-        const newScope = this.renameOwnerInScopeName(comp.id.scope, oldOwner, newOwner);
-        return {
-          oldStr: componentIdToPackageName(comp),
-          newStr: componentIdToPackageName({
-            ...comp,
-            bindingPrefix: getBindingPrefixByDefaultScope(newScope),
-            id: comp.id,
-            defaultScope: newScope,
-          }),
-        };
-      });
-      const { changedComponents } = await this.refactoring.replaceMultipleStrings(
-        allComponents,
-        packagesToReplace,
-        options.ast ? [importTransformer, exportTransformer] : undefined
-      );
-      await this.renameOwnerOfAspectIdsInWorkspaceConfig(
-        componentsUsingOldScope.map((c) => c.id),
-        oldOwner,
-        newOwner
-      );
-      await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
-      refactoredIds.push(...changedComponents.map((c) => c.id));
-    }
+    const { refactoredIds } = await this.renameMultiple(multipleIds, { ...options, preserve: true });
 
-    await this.relinkAndCompile(componentsUsingOldScope, newIds);
-
-    return { scopeRenamedComponentIds: componentsUsingOldScope.map((comp) => comp.id), refactoredIds };
+    return { scopeRenamedComponentIds: componentsUsingOldScope, refactoredIds };
   }
 
   private async renameAspectIdsInWorkspaceConfig(ids: RenameId[]) {
