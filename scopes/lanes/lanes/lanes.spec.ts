@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
+import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { LaneId } from '@teambit/lane-id';
 import { SUPPORT_LANE_HISTORY, addFeature, removeFeature } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
@@ -11,7 +12,6 @@ import { mockComponents, modifyMockedComponents } from '@teambit/component.testi
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { LanesAspect } from './lanes.aspect';
 import { LanesMain } from './lanes.main.runtime';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 
 describe('LanesAspect', function () {
   this.timeout(0);
