@@ -17396,6 +17396,9 @@ importers:
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
+      '@teambit/component-version':
+        specifier: ^1.0.3
+        version: 1.0.3
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -17435,6 +17438,9 @@ importers:
       react-router-dom:
         specifier: 6.8.1
         version: 6.8.1(react-dom@17.0.2)(react@17.0.2)
+      semver:
+        specifier: 7.5.2
+        version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 0.0.24
@@ -17445,6 +17451,9 @@ importers:
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
+      '@types/semver':
+        specifier: 7.3.4
+        version: 7.3.4
       chai:
         specifier: 4.3.0
         version: 4.3.0
@@ -73250,6 +73259,7 @@ packages:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
+      '@teambit/component-version': 1.0.3
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@types/react': 17.0.75
@@ -73263,6 +73273,7 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
       react-router-dom: 6.8.1(react-dom@17.0.2)(react@17.0.2)
+      semver: 7.5.2
     dev: false
 
   file:scopes/component/graph(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2):
