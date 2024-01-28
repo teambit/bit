@@ -4,7 +4,7 @@ import { v4 } from 'uuid';
 import * as path from 'path';
 import R from 'ramda';
 import { IssuesList } from '@teambit/component-issues';
-import BitId from '../../bit-id/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { getCloudDomain, BIT_WORKSPACE_TMP_DIRNAME, BuildStatus, DEFAULT_LANGUAGE, Extensions } from '../../constants';
 import GeneralError from '../../error/general-error';
 import docsParser from '../../jsdoc/parser';
