@@ -261,7 +261,12 @@ export class CloudMain {
           return null;
         }
         const response: CloudUserAPIResponse = await res.json();
-        return { ...(response.payload || {}) };
+        return {
+          isLoggedIn,
+          displayName: response.payload?.displayName ?? undefined,
+          username: response.payload?.username ?? undefined,
+          profileImage: response.payload?.profileImage ?? undefined,
+        };
       })
       .catch((err) => {
         this.logger.error(`failed to get current user, err: ${err}`);

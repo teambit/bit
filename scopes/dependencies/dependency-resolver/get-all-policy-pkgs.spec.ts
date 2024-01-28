@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import { ComponentID } from '@teambit/component';
 import { getAllPolicyPkgs } from './get-all-policy-pkgs';
 import { WorkspacePolicy } from './policy';
@@ -21,8 +22,7 @@ describe('getAllPolicyPkgs()', () => {
       componentPolicies: [],
       componentModelVersions: [],
     });
-    // @ts-ignore
-    expect(outdatedPkgs).toStrictEqual([
+    expect(outdatedPkgs).to.deep.equal([
       {
         currentRange: '1',
         name: 'foo',
@@ -61,7 +61,7 @@ describe('getAllPolicyPkgs()', () => {
       ],
     });
     // @ts-ignore
-    expect(outdatedPkgs).toStrictEqual([
+    expect(outdatedPkgs).to.deep.equal([
       {
         currentRange: '1',
         name: 'foo',

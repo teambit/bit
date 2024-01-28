@@ -6,6 +6,7 @@ import { LaneId } from '@teambit/lane-id';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
 import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { InputText as SearchInput } from '@teambit/design.inputs.input-text';
+import Fuse from 'fuse.js';
 // import { ToggleButton } from '@teambit/design.inputs.toggle-button';
 import { Icon } from '@teambit/design.elements.icon';
 // import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
@@ -25,14 +26,13 @@ export type LaneSelectorProps = {
   getHref?: (laneId: LaneId) => string;
   onLaneSelected?: (laneId: LaneId, lane: LaneModel) => void;
   mainIcon?: React.ReactNode;
-  // sortBy?: LaneSelectorSortBy;
-  // sortOptions?: LaneSelectorSortBy[];
   scopeIconLookup?: Map<string, React.ReactNode>;
   loading?: boolean;
   hasMore?: boolean;
   fetchMoreLanes?: FetchMoreLanes;
   initialOffset?: number;
   searchLanes?: (search?: string) => LanesModel | undefined | null;
+  placeholderText?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
 export type GroupedLaneDropdownItem = [scope: string, lanes: LaneModel[]];
@@ -59,19 +59,17 @@ export function LaneSelector(props: LaneSelectorProps) {
     groupByScope = true,
     getHref,
     onLaneSelected,
-    // sortBy: sortByFromProps = LaneSelectorSortBy.ALPHABETICAL,
-    // sortOptions = [LaneSelectorSortBy.ALPHABETICAL, LaneSelectorSortBy.CREATED],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mainIcon,
     scopeIconLookup,
     loading,
     hasMore,
     fetchMoreLanes,
-    searchLanes,
+    searchLanes: searchLanesFromProps,
     initialOffset = 0,
+    placeholderText,
     ...rest
   } = props;
-
   // const compareFn = useCallback((_sortBy: LaneSelectorSortBy) => {
   //   switch (_sortBy) {
   //     case LaneSelectorSortBy.UPDATED:
@@ -98,8 +96,37 @@ export function LaneSelector(props: LaneSelectorProps) {
   const [allLanes, setAllLanes] = useState<LaneModel[]>([]);
   const [loadingState, setLoading] = useState<boolean>(loading ?? false);
 
+  const defaultSearchLanes = React.useCallback(
+    (searchParam?: string) => {
+      if (!searchParam)
+        return new LanesModel({
+          lanes: allLanes,
+          defaultLane: allLanes.find((lane) => lane.id.isDefault()),
+        });
+
+      const fuseOptions = {
+        keys: ['id.name', 'id.scope', 'log.username', 'log.email', 'log.displayName'],
+        threshold: searchParam.length === 1 ? 0 : 0.3,
+        findAllMatches: true,
+        location: 0,
+        distance: searchParam.length === 1 ? 0 : 100,
+        minMatchCharLength: 1,
+        ignoreLocation: true,
+        shouldSort: false,
+        includeScore: true,
+      };
+
+      const fuse = new Fuse(allLanes, fuseOptions);
+      const lanes = fuse.search(searchParam).map((result) => result.item);
+      return new LanesModel({ lanes, defaultLane: lanes.find((lane) => lane.id.isDefault()) });
+    },
+    [allLanes]
+  );
+
+  const searchLanes = searchLanesFromProps ?? defaultSearchLanes;
+
   useEffect(() => {
-    if (hasMore !== hasMoreState) setHasMore(!!hasMore);
+    if (hasMore !== hasMoreState) setHasMore(Boolean(hasMore));
   }, [hasMore]);
 
   useEffect(() => {
@@ -180,7 +207,7 @@ export function LaneSelector(props: LaneSelectorProps) {
     setSearch(searchTerm || '');
   };
 
-  const handleSearchIconClicked = (e: React.MouseEvent) => {
+  const handleSearchIconClicked = (e) => {
     // prevent dropdown from closing
     e.stopPropagation();
     if (searchIconRef.current !== CLEAR_SEARCH_ICON) return;
@@ -189,7 +216,7 @@ export function LaneSelector(props: LaneSelectorProps) {
     setFilteredLanes(allLanes);
   };
 
-  const handleSearchOnClick = (e: React.MouseEvent) => {
+  const handleSearchOnClick = (e) => {
     // prevent dropdown from closing
     e.stopPropagation();
   };
@@ -331,6 +358,7 @@ export function LaneSelector(props: LaneSelectorProps) {
         dropClass={styles.menu}
         position="bottom"
         clickPlaceholderToggles={multipleLanes}
+        onClickOutside={() => setDropdownOpen(false)}
         clickToggles={multipleLanes}
         open={dropdownOpen}
         onPlaceholderToggle={React.useCallback(() => {
@@ -343,6 +371,7 @@ export function LaneSelector(props: LaneSelectorProps) {
             disabled={!multipleLanes}
             selectedLaneId={selectedLaneId}
             showScope={groupByScope}
+            placeholderText={placeholderText}
           />
         }
         className={classnames(styles.dropdown, !multipleLanes && styles.disabled)}

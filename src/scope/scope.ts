@@ -2,12 +2,11 @@ import fs from 'fs-extra';
 import * as pathLib from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import R from 'ramda';
+import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
 import { isTag } from '@teambit/component-version';
 import { Analytics } from '../analytics/analytics';
-import { BitId } from '../bit-id';
-import { BitIdStr } from '../bit-id/bit-id';
 import {
   BIT_GIT_DIR,
   BIT_HIDDEN_DIR,

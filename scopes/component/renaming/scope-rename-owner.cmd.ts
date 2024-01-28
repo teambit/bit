@@ -1,6 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { RenamingMain } from './renaming.main.runtime';
+import { renameScopeOutput } from './scope-rename.cmd';
 
 export class ScopeRenameOwnerCmd implements Command {
   name = 'rename-owner <current-owner-name> <new-owner-name>';
@@ -22,16 +23,9 @@ export class ScopeRenameOwnerCmd implements Command {
   constructor(private renaming: RenamingMain) {}
 
   async report([oldName, newName]: [string, string], { refactor }: { refactor?: boolean }) {
-    const { scopeRenamedComponentIds, refactoredIds } = await this.renaming.renameOwner(oldName, newName, { refactor });
+    const results = await this.renaming.renameOwner(oldName, newName, { refactor });
     const title = chalk.green(`successfully replaced "${oldName}" owner with "${newName}"`);
-    const renamedIdsStr = scopeRenamedComponentIds.length
-      ? `\n${chalk.bold(
-          'the following components were affected by this scope-name change:'
-        )}\n${scopeRenamedComponentIds.map((c) => c.changeScope(newName)).join('\n')}`
-      : '';
-    const refactoredStr = refactoredIds.length
-      ? `\n\n${chalk.bold('the following components have been refactored:')}\n${refactoredIds.join('\n')}`
-      : '';
-    return `${title}\n${renamedIdsStr}${refactoredStr}`;
+    const renameOutput = renameScopeOutput(results);
+    return `${title}\n${renameOutput}`;
   }
 }

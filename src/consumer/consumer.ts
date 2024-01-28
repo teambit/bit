@@ -4,8 +4,8 @@ import R from 'ramda';
 import { compact } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
+import { BitIdStr } from '@teambit/legacy-bit-id';
 import { Analytics } from '../analytics/analytics';
-import { BitIdStr } from '../bit-id/bit-id';
 import {
   BIT_GIT_DIR,
   BIT_HIDDEN_DIR,

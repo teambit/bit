@@ -1,4 +1,4 @@
-import { EdgeType } from '@teambit/graph';
+import { EdgeType } from '../../edge-type';
 import { RawEdge } from './get-graph.query';
 
 export class EdgeModel {

@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 import { LaneCompareState } from '@teambit/lanes.ui.compare.lane-compare-state';
 import { LaneComponentDiff, LaneDiff } from '@teambit/lanes.entities.lane-diff';
 import { ComponentID } from '@teambit/component-id';
-import { DefaultLaneState, LaneFilter } from './lane-compare';
+import { DefaultLaneState, LaneFilter } from './lane-compare.models';
 
 export type LaneCompareContextModel = {
   laneCompareState: LaneCompareState;

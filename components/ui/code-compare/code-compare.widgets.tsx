@@ -19,7 +19,7 @@ export function Widget({ node }: WidgetProps<any>) {
   const codeCompareDataForFile = fileCompareDataByName?.get(fileName) ?? null;
 
   if (componentCompareContext?.compare && !componentCompareContext.base && !codeCompareDataForFile?.status)
-    return <CompareStatusResolver status={'new'} />;
+    return <CompareStatusResolver status="new" />;
 
   if (!codeCompareDataForFile || !codeCompareDataForFile.status || codeCompareDataForFile.status === 'UNCHANGED')
     return null;

@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import ts from 'typescript';
 import {
   transformSourceFile,
@@ -32,7 +33,7 @@ describe('transformSourceFile', () => {
       const normalizedResult = normalizeFormatting(result);
       const normalizedExpectedCode = normalizeFormatting(expectedCode);
 
-      expect(normalizedResult).toBe(normalizedExpectedCode);
+      expect(normalizedResult).to.equal(normalizedExpectedCode);
     });
   };
 
@@ -138,7 +139,7 @@ describe('transformSourceFile', () => {
     const result = await transformSourceFile('test.ts', sourceCode, []);
     const normalizedResult = normalizeFormatting(result);
     const normalizedSourceCode = normalizeFormatting(sourceCode);
-    expect(normalizedResult).toBe(normalizedSourceCode);
+    expect(normalizedResult).to.equal(normalizedSourceCode);
   });
 
   it('should handle multiple transformers', async () => {
@@ -150,6 +151,6 @@ describe('transformSourceFile', () => {
     ]);
     const normalizedResult = normalizeFormatting(result);
     const normalizedExpectedCode = normalizeFormatting(expectedCode);
-    expect(normalizedResult).toBe(normalizedExpectedCode);
+    expect(normalizedResult).to.equal(normalizedExpectedCode);
   });
 });

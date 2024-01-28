@@ -1,7 +1,7 @@
 import React from 'react';
 import { DiffEditorProps, DiffOnMount } from '@monaco-editor/react';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
-import { EditorSettingsState } from '@teambit/code.ui.code-compare';
+import { EditorSettingsState } from '../code-compare-editor-settings';
 
 export type CodeCompareEditorProps = {
   language: string;
@@ -35,10 +35,10 @@ export function CodeCompareEditor({
         language={language}
         originalModelPath={originalPath}
         modifiedModelPath={modifiedPath}
-        height={'100%'}
+        height="100%"
         onMount={handleEditorDidMount}
         className={darkMode}
-        theme={'vs-dark'}
+        theme="vs-dark"
         options={{
           ignoreTrimWhitespace: ignoreWhitespace,
           readOnly: true,

@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import { generatePeerLink } from './create-peers-link';
 
 const guardSnapshot = `function guard(property, expected) {
@@ -28,6 +29,6 @@ describe('peers link', () => {
   it('should output snapshot', () => {
     const result = generatePeerLink(['foo-bar', '@buz/qux']);
 
-    expect(result).toEqual(snapshot);
+    expect(result).to.equal(snapshot);
   });
 });

@@ -11,8 +11,6 @@ import styles from './lane-switcher.module.scss';
 
 export type LaneSwitcherProps = {
   groupByScope?: boolean;
-  // sortBy?: LaneSelectorSortBy;
-  // sortOptions?: LaneSelectorSortBy[];
   mainIcon?: () => React.ReactNode;
   scopeIcon?: (scopeName: string) => React.ReactNode;
   useLanes?: UseLanes;
@@ -21,7 +19,7 @@ export type LaneSwitcherProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 function defaultSearchLanes(useLanes: UseLanes) {
-  return function (search?: string) {
+  return function searchFn(search?: string) {
     const { searchResult } = useLanes(undefined, undefined, { search });
     if (searchResult?.loading) return undefined;
     if (!searchResult?.lanesModel) return null;
@@ -34,8 +32,6 @@ export function LaneSwitcher({
   groupByScope = false,
   mainIcon,
   scopeIcon,
-  // sortBy,
-  // sortOptions,
   useLanes = defaultUseLanes,
   searchLanes = defaultSearchLanes(useLanes),
   getHref = LanesModel.getLaneUrl,
@@ -60,35 +56,34 @@ export function LaneSwitcher({
 
   const selectedLane = lanesModel?.viewedLane || mainLane;
   const selectedLaneGalleryHref = selectedLane && getHref(selectedLane.id);
+  const MainIcon = mainIcon?.();
 
   return (
     <div className={classnames(styles.laneSwitcherContainer, className)}>
       <div className={styles.laneSelectorContainer}>
-        {loading && <WordSkeleton className={styles.loader} length={24} />}
-        {
-          <LaneSelector
-            selectedLaneId={selectedLane?.id}
-            nonMainLanes={nonMainLanes}
-            mainLane={mainLane}
-            mainIcon={mainIcon?.()}
-            groupByScope={groupByScope}
-            // sortBy={sortBy}
-            // sortOptions={sortOptions}
-            scopeIconLookup={scopeIconLookup}
-            getHref={getHref}
-            loading={loading}
-            fetchMoreLanes={fetchMoreLanes}
-            hasMore={hasMore}
-            initialOffset={(offset ?? 0) + (limit ?? 0)}
-            searchLanes={searchLanes}
-            {...rest}
-          />
-        }
+        {loading && <WordSkeleton className={styles.loader} length={20} />}
+        <LaneSelector
+          selectedLaneId={selectedLane?.id}
+          nonMainLanes={nonMainLanes}
+          mainLane={mainLane}
+          mainIcon={MainIcon}
+          groupByScope={groupByScope}
+          // sortBy={sortBy}
+          // sortOptions={sortOptions}
+          scopeIconLookup={scopeIconLookup}
+          getHref={getHref}
+          loading={loading}
+          fetchMoreLanes={fetchMoreLanes}
+          hasMore={hasMore}
+          initialOffset={(offset ?? 0) + (limit ?? 0)}
+          searchLanes={searchLanes}
+          {...rest}
+        />
       </div>
       {!loading && (
         <div className={styles.laneIconContainer}>
-          <MenuLinkItem exact={true} className={styles.laneGalleryIcon} href={selectedLaneGalleryHref}>
-            <img src="https://static.bit.dev/bit-icons/corner-up-left.svg" />
+          <MenuLinkItem exact className={styles.laneGalleryIcon} href={selectedLaneGalleryHref}>
+            <img src="https://static.bit.dev/bit-icons/corner-up-left.svg" alt="corner-up-left" />
           </MenuLinkItem>
         </div>
       )}
