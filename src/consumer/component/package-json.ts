@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { BitId } from '../../bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { PACKAGE_JSON } from '../../constants';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import ConsumerComponent from '.';

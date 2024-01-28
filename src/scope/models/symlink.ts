@@ -1,5 +1,5 @@
 import { ComponentID } from '@teambit/component-id';
-import { BitId } from '../../bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { getStringifyArgs } from '../../utils';
 import BitObject from '../objects/object';
 

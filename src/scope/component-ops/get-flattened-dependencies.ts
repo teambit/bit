@@ -1,9 +1,9 @@
 import graphlib, { Graph as GraphLib } from 'graphlib';
 import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { BitIdStr } from '@teambit/legacy-bit-id';
 import R from 'ramda';
 import { Scope } from '..';
-import { BitIdStr } from '../../bit-id/bit-id';
 import Component from '../../consumer/component/consumer-component';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
