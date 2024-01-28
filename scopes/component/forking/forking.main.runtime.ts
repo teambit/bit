@@ -5,14 +5,17 @@ import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { ComponentDependency, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ComponentConfig } from '@teambit/generator';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
+import { isHash } from '@teambit/component-version';
 import { InstallAspect, InstallMain } from '@teambit/install';
 import { ComponentID, ComponentIdObj, ComponentIdList } from '@teambit/component-id';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import PkgAspect, { PkgMain } from '@teambit/pkg';
 import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { snapToSemver } from '@teambit/component-package-version';
 import { uniqBy } from 'lodash';
 import pMapSeries from 'p-map-series';
+import { parse } from 'semver';
 import { ForkCmd, ForkOptions } from './fork.cmd';
 import { ForkingAspect } from './forking.aspect';
 import { ForkingFragment } from './forking.fragment';
@@ -281,13 +284,20 @@ the reason is that the refactor changes the components using ${sourceId.toString
         }
         return !excludePackages.includes(dep.id);
       })
-      .map((dep) => ({
-        dependencyId: dep.getPackageName?.() || dep.id,
-        lifecycleType: dep.lifecycle === 'dev' ? 'runtime' : dep.lifecycle,
-        value: {
-          version: this.dependencyResolver.getVersionWithSavePrefix({ version: dep.version }),
-        },
-      }));
+      .map((dep) => {
+        const parsedVersion = parse(dep.version);
+        const versionWithPrefix = parsedVersion
+          ? this.dependencyResolver.getVersionWithSavePrefix({ version: dep.version })
+          : dep.version;
+        const version = isHash(versionWithPrefix) ? snapToSemver(versionWithPrefix) : versionWithPrefix;
+        return {
+          dependencyId: dep.getPackageName?.() || dep.id,
+          lifecycleType: dep.lifecycle === 'dev' ? 'runtime' : dep.lifecycle,
+          value: {
+            version,
+          },
+        };
+      });
   }
 
   private async getConfig(comp: Component, options?: ForkOptions) {
