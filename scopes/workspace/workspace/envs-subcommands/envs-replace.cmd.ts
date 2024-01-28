@@ -26,6 +26,7 @@ export class EnvsReplaceCmd implements Command {
     const componentIds = components.map((comp) => comp.id);
     await this.workspace.setEnvToComponents(envId, componentIds);
     return `added ${chalk.bold(envId.toString())} env to the following component(s):
-${componentIds.map((compId) => compId.toString()).join('\n')}`;
+${componentIds.map((compId) => compId.toString()).join('\n')}\n
+please run 'bit install' for env replace changes to take effect`;
   }
 }

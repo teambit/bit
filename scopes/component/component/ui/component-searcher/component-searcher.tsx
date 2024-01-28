@@ -1,9 +1,8 @@
 import React from 'react';
-
-import { ComponentModel } from '@teambit/component';
 import { SearchResult, FuzzySearchItem, FuzzySearcher } from '@teambit/explorer.ui.command-bar';
 import type { SearchProvider } from '@teambit/command-bar';
 import { ComponentResult, ComponentResultPlugin } from './component-result';
+import { ComponentModel } from '../component-model';
 
 export type { ComponentResultPlugin };
 

@@ -1,10 +1,10 @@
 import React, { ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
-import { UseLaneOptions, useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { useLocation, Location } from '@teambit/base-react.navigation.link';
 import { LaneId } from '@teambit/lane-id';
 import { LanesContext, LanesContextModel } from './lanes-context';
+import { useLanes, UseLanesOptions as UseLaneOptions } from './use-lanes';
 
 export type IgnoreDerivingFromUrl = (location?: Location) => boolean;
 

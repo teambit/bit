@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import { pickBy } from 'lodash';
 import R from 'ramda';
-import { BitIds } from '../../bit-id';
+import { BitIds } from '@teambit/legacy-bit-id';
 import { DEFAULT_EXTENSIONS, DEFAULT_LANGUAGE, PACKAGE_JSON } from '../../constants';
 import { PathLinux, PathOsBased } from '../../utils/path';
 import { ExtensionDataList } from './extension-data';

@@ -79,6 +79,40 @@ describe('bit scope command', function () {
       expect(workspaceJsonc).not.to.have.property(`my-scope/comp2`);
     });
   });
+  describe('bit scope rename, some components are exported some are new', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagWithoutBuild('comp3', '--skip-auto-tag');
+      helper.command.export();
+      helper.command.renameScope(helper.scopes.remote, 'my-scope', '--refactor');
+    });
+    it('should deprecate the exported one (comp3)', () => {
+      const showDeprecation = helper.command.showAspectConfig(`${helper.scopes.remote}/comp3`, Extensions.deprecation);
+      expect(showDeprecation.config.deprecate).to.be.true;
+      expect(showDeprecation.config).to.have.property('newId');
+      expect(showDeprecation.config.newId.name).to.equal('comp3');
+      expect(showDeprecation.config.newId.scope).to.equal('my-scope');
+    });
+    it('should rename the new ones', () => {
+      const list = helper.command.listParsed();
+      const ids = list.map((c) => c.id);
+      expect(ids).to.have.members([
+        'my-scope/comp1',
+        'my-scope/comp2',
+        'my-scope/comp3',
+        `${helper.scopes.remote}/comp3`,
+      ]);
+    });
+    it('bit status should not have issues', () => {
+      helper.command.expectStatusToNotHaveIssues();
+    });
+    it('bit status should show 3 new components and one modified (comp3 due to deprecation)', () => {
+      const status = helper.command.statusJson();
+      expect(status.newComponents).to.have.lengthOf(3);
+      expect(status.modifiedComponents).to.have.lengthOf(1);
+    });
+  });
   describe('bit scope rename-owner', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();

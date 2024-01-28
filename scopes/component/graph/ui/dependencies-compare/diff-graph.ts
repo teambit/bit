@@ -1,5 +1,5 @@
 import { ComponentID } from '@teambit/component';
-import { EdgeModel, GraphModel, NodeModel } from '@teambit/graph';
+import { EdgeModel, GraphModel, NodeModel } from '../query';
 import { CompareGraphModel } from './compare-graph-model';
 import { CompareNodeModel } from './compare-node-model';
 
