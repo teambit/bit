@@ -14,6 +14,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import { MergeStrategy, MergeOptions } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
+import { HistoryItem } from '@teambit/legacy/dist/scope/models/lane-history';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
@@ -55,6 +56,7 @@ import {
   LaneHistoryCmd,
   LaneCheckoutCmd,
   LaneCheckoutOpts,
+  LaneRevertCmd,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
@@ -193,6 +195,31 @@ export class LanesMain {
   }
 
   async checkoutHistory(historyId: string, options?: LaneCheckoutOpts) {
+    const historyItem = await this.getHistoryItemOfCurrentLane(historyId);
+    const ids = historyItem.components.map((id) => ComponentID.fromString(id));
+    const results = await this.checkout.checkout({
+      ids: ids.map((id) => id.changeVersion(undefined)),
+      versionPerId: ids,
+      allowAddingComponentsFromScope: true,
+      skipNpmInstall: options?.skipDependencyInstallation,
+    });
+    return results;
+  }
+
+  async revertHistory(historyId: string, options?: LaneCheckoutOpts) {
+    const historyItem = await this.getHistoryItemOfCurrentLane(historyId);
+    const ids = historyItem.components.map((id) => ComponentID.fromString(id));
+    const results = await this.checkout.checkout({
+      ids: ids.map((id) => id.changeVersion(undefined)),
+      versionPerId: ids,
+      allowAddingComponentsFromScope: true,
+      revert: true,
+      skipNpmInstall: options?.skipDependencyInstallation,
+    });
+    return results;
+  }
+
+  private async getHistoryItemOfCurrentLane(historyId: string): Promise<HistoryItem> {
     const laneId = this.getCurrentLaneId();
     if (!laneId || laneId.isDefault()) {
       throw new BitError(`unable to checkout history "${historyId}" while on main`);
@@ -204,14 +231,7 @@ export class LanesMain {
     if (!historyItem) {
       throw new BitError(`unable to find history "${historyId}" in lane "${laneId.toString()}"`);
     }
-    const ids = historyItem.components.map((id) => ComponentID.fromString(id));
-    const results = await this.checkout.checkout({
-      ids: ids.map((id) => id.changeVersion(undefined)),
-      versionPerId: ids,
-      allowAddingComponentsFromScope: true,
-      skipNpmInstall: options?.skipDependencyInstallation,
-    });
-    return results;
+    return historyItem;
   }
 
   async importLaneHistory(laneId: LaneId) {
@@ -1201,6 +1221,7 @@ please create a new lane instead, which will include all components of this lane
     if (isFeatureEnabled(SUPPORT_LANE_HISTORY)) {
       laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
       laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
+      laneCmd.commands.push(new LaneRevertCmd(lanesMain));
     }
     cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));
     cli.registerOnStart(async () => {

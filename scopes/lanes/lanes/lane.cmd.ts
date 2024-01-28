@@ -274,7 +274,7 @@ export type LaneCheckoutOpts = { skipDependencyInstallation?: boolean };
 
 export class LaneCheckoutCmd implements Command {
   name = 'checkout <history-id>';
-  description = 'checkout to a previous history of the current lane';
+  description = 'EXPERIMENTAL. checkout to a previous history of the current lane. see also "bit lane revert"';
   arguments = [
     { name: 'history-id', description: 'the history-id to checkout to. run "bit lane history" to list the ids' },
   ];
@@ -289,6 +289,30 @@ export class LaneCheckoutCmd implements Command {
   async report([historyId]: [string], opts: LaneCheckoutOpts): Promise<string> {
     const result = await this.lanes.checkoutHistory(historyId, opts);
     return checkoutOutput(result, {}, `successfully checked out according to history-id: ${historyId}`);
+  }
+}
+
+export class LaneRevertCmd implements Command {
+  name = 'revert <history-id>';
+  description = 'EXPERIMENTAL. revert to a previous history of the current lane. see also "bit lane checkout"';
+  extendedDescription = `revert is similar to "lane checkout", but it keeps the versions and only change the files.
+choose one or the other based on your needs.
+if you want to continue working on this lane and needs the changes from the history to be the head, then use "lane revert".
+if you want to fork the lane from a certain point in history, use "lane checkout" and create a new lane from it.`;
+  arguments = [
+    { name: 'history-id', description: 'the history-id to checkout to. run "bit lane history" to list the ids' },
+  ];
+  alias = '';
+  options = [
+    ['x', 'skip-dependency-installation', 'do not install dependencies of the checked out components'],
+  ] as CommandOptions;
+  loader = true;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([historyId]: [string], opts: LaneCheckoutOpts): Promise<string> {
+    const result = await this.lanes.revertHistory(historyId, opts);
+    return checkoutOutput(result, {}, `successfully reverted according to history-id: ${historyId}`);
   }
 }
 
