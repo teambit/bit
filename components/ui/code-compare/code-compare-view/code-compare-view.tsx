@@ -47,8 +47,8 @@ export function CodeCompareView({
   widgets,
 }: CodeCompareViewProps) {
   const monacoRef = useRef<{
-    editor: any;
-    monaco: Monaco;
+    editor?: any;
+    monaco?: Monaco;
   }>();
 
   const { baseId, compareId, modifiedFileContent, originalFileContent, modifiedPath, originalPath, loading } =
@@ -207,6 +207,7 @@ export function CodeCompareView({
   };
 
   useEffect(() => {
+    if (!monacoRef.current?.editor) return;
     const modifiedEditor = monacoRef.current?.editor.getModifiedEditor();
     const modifiedDomNode = modifiedEditor.getDomNode()?.parentElement;
     const modifiedDomNodeHeight = modifiedDomNode?.style.height;
@@ -233,7 +234,7 @@ export function CodeCompareView({
        */
       monacoRef.current = { monaco, editor };
       if (monacoRef.current) {
-        monacoRef.current.monaco.languages?.typescript?.typescriptDefaults?.setDiagnosticsOptions({
+        monacoRef.current?.monaco?.languages?.typescript?.typescriptDefaults?.setDiagnosticsOptions({
           noSemanticValidation: true,
           noSyntaxValidation: true,
         });

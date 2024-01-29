@@ -6,18 +6,22 @@ import styles from './current-user.module.scss';
 
 export type CurrentUserProps = {
   currentUser: CloudUser;
-} & React.HTMLAttributes<HTMLDivElement>;
+  handleClick: (event: React.SyntheticEvent) => void;
+} & Omit<React.HTMLAttributes<HTMLDivElement>, 'onClick'>;
 
-export function CurrentUser({ currentUser, onClick, className, ...rest }: CurrentUserProps) {
+export function CurrentUser({ currentUser, handleClick, className, ...rest }: CurrentUserProps) {
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
-      onClick?.(event as unknown as React.MouseEvent<HTMLDivElement, MouseEvent>);
+      handleClick?.(event);
     }
+  };
+  const handleOnClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    handleClick?.(event);
   };
   return (
     <div
       tabIndex={0}
-      onClick={onClick}
+      onClick={handleOnClick}
       onKeyDown={handleKeyDown}
       role="button"
       className={classNames(styles.user, className)}
