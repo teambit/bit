@@ -204,9 +204,12 @@ export class ApplyOverrides {
     return packageObject;
   }
 
-  private _getComponentIdToAdd(dependency: string): { componentId?: ComponentID; packageName?: string } | undefined {
+  private _getComponentIdToAdd(
+    dependency: string,
+    versionPolicy: string
+  ): { componentId?: ComponentID; packageName?: string; versionPolicy: string } {
     const packageData = this._resolvePackageData(dependency);
-    return { componentId: packageData?.componentId, packageName: packageData?.name };
+    return { componentId: packageData?.componentId, packageName: packageData?.name, versionPolicy };
   }
 
   getDependenciesToAddManually(
@@ -221,7 +224,7 @@ export class ApplyOverrides {
       if (!overrides[depField]) return;
       Object.keys(overrides[depField]).forEach((dependency) => {
         const dependencyValue = overrides[depField][dependency];
-        const componentData = this._getComponentIdToAdd(dependency);
+        const componentData = this._getComponentIdToAdd(dependency, dependencyValue);
         if (componentData?.componentId) {
           const dependencyExist = existingDependencies[depField].find((d) =>
             d.id.isEqualWithoutVersion(componentData.componentId)
@@ -257,7 +260,9 @@ export class ApplyOverrides {
     DEPENDENCIES_FIELDS.forEach((depField) => {
       if (components[depField] && components[depField].length) {
         components[depField].forEach((depData) =>
-          this.allDependencies[depField].push(new Dependency(depData.componentId, [], depData.packageName))
+          this.allDependencies[depField].push(
+            new Dependency(depData.componentId, [], depData.packageName, depData.versionPolicy)
+          )
         );
       }
       if (packages[depField] && !isEmpty(packages[depField])) {
@@ -275,6 +280,12 @@ export class ApplyOverrides {
       for (const peerName of Object.keys(packages.peerPackageDependencies)) {
         delete this.allPackagesDependencies.packageDependencies[peerName];
       }
+    }
+    if (components.peerDependencies) {
+      const componentPeers = new Set(components.peerDependencies.map(({ packageName }) => packageName));
+      this.allDependencies.dependencies = this.allDependencies.dependencies.filter(
+        (dep) => !dep.packageName || !componentPeers.has(dep.packageName)
+      );
     }
   }
 

@@ -26,10 +26,11 @@ export default class Dependency {
   packageName?: string;
   versionPolicy?: string;
 
-  constructor(id: ComponentID, relativePaths: RelativePath[], packageName?: string) {
+  constructor(id: ComponentID, relativePaths: RelativePath[], packageName?: string, versionPolicy?: string) {
     this.id = id;
     this.relativePaths = relativePaths;
     this.packageName = packageName;
+    this.versionPolicy = versionPolicy;
   }
 
   serialize() {

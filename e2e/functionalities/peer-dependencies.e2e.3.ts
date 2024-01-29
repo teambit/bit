@@ -1,6 +1,7 @@
 import path from 'path';
 import { expect } from 'chai';
 import fs from 'fs-extra';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('peer-dependencies functionality', function () {
@@ -189,4 +190,63 @@ describe('peer-dependencies functionality', function () {
       });
     });
   });
+
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'a component is a peer dependency added by an dep set',
+    function () {
+      let workspaceCapsulesRootDir: string;
+      let npmCiRegistry: NpmCiRegistry;
+      let peerName: string;
+      before(async () => {
+        helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        npmCiRegistry = new NpmCiRegistry(helper);
+        await npmCiRegistry.init();
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+        helper.command.create('module', 'peer-dep');
+        helper.command.tagAllComponents('--build');
+        helper.command.export();
+
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+
+        helper.fixtures.populateComponents(1);
+        peerName = `@ci/${helper.scopes.remoteWithoutOwner}.peer-dep`;
+        helper.fs.outputFile(`comp1/index.js`, `const peerDep = require("${peerName}"); // eslint-disable-line`);
+        helper.command.dependenciesSet('comp1', `${peerName}@*`, '--peer');
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+        helper.command.install('--add-missing-deps');
+        helper.command.build('--skip-tests');
+        workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
+      });
+      after(() => {
+        helper.scopeHelper.destroy();
+        npmCiRegistry.destroy();
+      });
+      it('should save the peer dependency in the model', () => {
+        const output = helper.command.showComponentParsed(`${helper.scopes.remote}/comp1`);
+        expect(output.peerDependencies[0]).to.deep.equal({
+          id: `${helper.scopes.remote}/peer-dep@0.0.1`,
+          relativePaths: [],
+          packageName: peerName,
+          versionPolicy: '*',
+        });
+        const depResolver = output.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
+        const peerDep = depResolver.data.dependencies[0];
+        expect(peerDep.packageName).to.eq(peerName);
+        expect(peerDep.lifecycle).to.eq('peer');
+        expect(peerDep.version).to.eq('0.0.1');
+        expect(peerDep.versionPolicy).to.eq('*');
+      });
+      it('adds peer dependency to the generated package.json', () => {
+        const pkgJson = fs.readJsonSync(
+          path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1/package.json`)
+        );
+        expect(pkgJson.peerDependencies).to.deep.equal({
+          [peerName]: '*',
+        });
+      });
+    }
+  );
 });
