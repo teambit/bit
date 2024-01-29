@@ -14,6 +14,7 @@ import ComponentLoader, { DependencyLoaderOpts } from '@teambit/legacy/dist/cons
 import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import { snapToSemver } from '@teambit/component-package-version';
 import { DependenciesLoader } from './dependencies-loader/dependencies-loader';
 import { DependenciesData, OverridesDependenciesData } from './dependencies-loader/dependencies-data';
 import {
@@ -35,7 +36,7 @@ import { DependenciesAspect } from './dependencies.aspect';
 import { DebugDependencies } from './dependencies-loader/auto-detect-deps';
 
 export type RemoveDependencyResult = { id: ComponentID; removedPackages: string[] };
-
+export type SetDependenciesResult = { changedComps: string[]; addedPackages: Record<string, string> };
 export type DependenciesResultsDebug = DebugDependencies &
   OverridesDependenciesData & { coreAspects: string[]; sources: { id: string; source: string }[] };
 
@@ -65,8 +66,8 @@ export class DependenciesMain {
   async setDependency(
     componentPattern: string,
     packages: string[],
-    options: SetDependenciesFlags
-  ): Promise<{ changedComps: string[]; addedPackages: Record<string, string> }> {
+    options: SetDependenciesFlags = {}
+  ): Promise<SetDependenciesResult> {
     const compIds = await this.workspace.idsByPattern(componentPattern);
     const getDepField = () => {
       if (options.dev) return 'devDependencies';
@@ -330,7 +331,7 @@ export class DependenciesMain {
     };
     const [name, version] = this.splitPkgToNameAndVer(pkg);
     const versionResolved = !version || version === 'latest' ? await resolveLatest(name) : version;
-    return [name, versionResolved];
+    return [name, snapToSemver(versionResolved)];
   }
 
   private splitPkgToNameAndVer(pkg: string): [string, string | undefined] {
