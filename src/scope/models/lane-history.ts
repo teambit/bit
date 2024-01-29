@@ -6,7 +6,7 @@ import { getBasicLog } from '../../utils/bit/basic-log';
 
 type Log = { date: string; username?: string; email?: string; message?: string };
 
-type HistoryItem = {
+export type HistoryItem = {
   log: Log;
   components: string[];
 };
