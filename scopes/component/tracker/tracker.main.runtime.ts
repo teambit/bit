@@ -1,5 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import path from 'path';
+import { ComponentID } from '@teambit/component-id';
 import EnvsAspect from '@teambit/envs';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -8,7 +9,7 @@ import { AddCmd } from './add-cmd';
 import AddComponents, { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
 import { TrackerAspect } from './tracker.aspect';
 
-export type TrackResult = { componentName: string; files: string[]; warnings: Warnings };
+export type TrackResult = { files: string[]; warnings: Warnings; componentId: ComponentID };
 
 export type TrackData = {
   rootDir: PathOsBasedRelative | PathOsBasedAbsolute; // path relative to the workspace or absolute path
@@ -44,9 +45,8 @@ export class TrackerMain {
     );
     const result = await addComponent.add();
     const addedComponent = result.addedComponents[0];
-    const componentName = addedComponent?.id.fullName || (trackData.componentName as string);
     const files = addedComponent?.files.map((f) => f.relativePath) || [];
-    return { componentName, files, warnings: result.warnings };
+    return { files, warnings: result.warnings, componentId: result.addedComponents[0].id };
   }
 
   async addForCLI(addProps: AddProps): Promise<AddActionResults> {

@@ -199,6 +199,9 @@ export class CheckoutMain {
    * returns the restored component ids.
    */
   async restoreMissingComponents(checkoutProps: CheckoutProps): Promise<ComponentID[] | undefined> {
+    if (checkoutProps.reset) {
+      checkoutProps.restoreMissingComponents = true;
+    }
     if (!checkoutProps.restoreMissingComponents) return undefined;
     const ids = checkoutProps.ids || [];
     const missing: ComponentID[] = [];
