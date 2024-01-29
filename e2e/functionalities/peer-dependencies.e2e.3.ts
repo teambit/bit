@@ -124,6 +124,13 @@ describe('peer-dependencies functionality', function () {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.command.create('module', 'peer-dep');
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('peer-dep');
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -131,9 +138,9 @@ describe('peer-dependencies functionality', function () {
           policy: {
             peers: [
               {
-                name: `@${helper.scopes.remote}/comp2`,
+                name: `@${helper.scopes.remote}/peer-dep`,
                 supportedRange: '*',
-                version: '0.0.0',
+                version: '0.0.1',
               },
             ],
           },
@@ -143,7 +150,11 @@ describe('peer-dependencies functionality', function () {
         'custom-env/env1'
       );
 
-      helper.fixtures.populateComponents(2);
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile(
+        `comp1/index.js`,
+        `const peerDep = require("@${helper.scopes.remote}/peer-dep"); // eslint-disable-line`
+      );
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-env/env1`, {});
       helper.extensions.addExtensionToVariant('custom-env', 'teambit.envs/env', {});
@@ -157,16 +168,16 @@ describe('peer-dependencies functionality', function () {
     it('should save the peer dependency in the model', () => {
       const output = helper.command.showComponentParsed(`${helper.scopes.remote}/comp1`);
       expect(output.peerDependencies[0]).to.deep.equal({
-        id: `${helper.scopes.remote}/comp2`,
+        id: `${helper.scopes.remote}/peer-dep@0.0.1`,
         relativePaths: [],
-        packageName: `@${helper.scopes.remote}/comp2`,
+        packageName: `@${helper.scopes.remote}/peer-dep`,
         versionPolicy: '*',
       });
       const depResolver = output.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
       const peerDep = depResolver.data.dependencies[0];
-      expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/comp2`);
+      expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/peer-dep`);
       expect(peerDep.lifecycle).to.eq('peer');
-      expect(peerDep.version).to.eq('latest');
+      expect(peerDep.version).to.eq('0.0.1');
       expect(peerDep.versionPolicy).to.eq('*');
     });
     it('adds peer dependency to the generated package.json', () => {
@@ -174,7 +185,7 @@ describe('peer-dependencies functionality', function () {
         path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1/package.json`)
       );
       expect(pkgJson.peerDependencies).to.deep.equal({
-        [`@${helper.scopes.remote}/comp2`]: '*',
+        [`@${helper.scopes.remote}/peer-dep`]: '*',
       });
     });
   });
