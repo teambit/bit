@@ -25,7 +25,8 @@ export function calcElements(graph: GraphModel<NodeModel, EdgeModel> | undefined
         type: 'ComponentNode',
         data: {
           node: x,
-          type: rootNode && x.component.id.isEqual(rootNode, { ignoreVersion: true }) ? 'root' : undefined,
+          // type: rootNode && x.component.id.isEqual(rootNode, { ignoreVersion: true }) ? 'root' : undefined,
+          type: undefined,
         },
         position: positions.get(x.id) || { x: 0, y: 0 },
       };

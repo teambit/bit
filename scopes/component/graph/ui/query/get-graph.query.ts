@@ -8,23 +8,6 @@ export const GET_GRAPH = gql`
     graph(ids: $ids, filter: $filter) {
       nodes {
         id
-        component {
-          id {
-            name
-            version
-            scope
-          }
-          displayName
-
-          deprecation {
-            isDeprecate
-          }
-
-          env {
-            id
-            icon
-          }
-        }
       }
       edges {
         sourceId

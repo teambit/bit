@@ -20,7 +20,6 @@ export function graphSchema(graphBuilder: GraphBuilder, componentAspect: Compone
 
       type ComponentGraphNode {
         id: String
-        component: Component
       }
 
       enum DependencyLifecycleType {
@@ -72,7 +71,7 @@ export function graphSchema(graphBuilder: GraphBuilder, componentAspect: Compone
             ? await componentsHost.resolveMultipleComponentIds(ids)
             : (await componentsHost.list()).map((x) => x.id);
 
-          const graph = await graphBuilder.getGraph(resolvedIds);
+          const graph = await graphBuilder.getGraphIds(resolvedIds);
           if (!graph) return undefined;
 
           if (filter === 'runtimeOnly') {
