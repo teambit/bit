@@ -493,7 +493,6 @@ export class PreviewMain {
 
   async isSupportSkipIncludes(component: Component) {
     if (!this.config.onlyOverview && !isFeatureEnabled(ONLY_OVERVIEW)) return false;
-    console.log('\n\nisSupportSkipIncludes');
     const isCore = this.envs.isUsingCoreEnv(component);
     if (isCore) return false;
 
@@ -507,7 +506,6 @@ export class PreviewMain {
    */
   async getOnlyOverview(component: Component): Promise<boolean> {
     if (!this.config.onlyOverview && !isFeatureEnabled(ONLY_OVERVIEW)) return false;
-    console.log('\n\ngetOnlyOverview');
     const previewData = this.getPreviewData(component);
     return previewData?.onlyOverview ?? false;
   }
