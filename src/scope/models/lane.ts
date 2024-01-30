@@ -1,4 +1,5 @@
 import { v4 } from 'uuid';
+import { gte } from 'semver';
 import { cloneDeep, isEqual, pickBy } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { isSnap } from '@teambit/component-version';
@@ -22,17 +23,23 @@ export type LaneProps = {
   log: Log;
   components?: LaneComponent[];
   hash: string;
+  schema?: string;
   readmeComponent?: LaneReadmeComponent;
   forkedFrom?: LaneId;
 };
 
-export type LaneComponent = { id: ComponentID; head: Ref };
+const OLD_LANE_SCHEMA = '0.0.0';
+const SCHEMA_INCLUDING_DELETED_COMPONENTS_DATA = '1.0.0';
+const CURRENT_LANE_SCHEMA = SCHEMA_INCLUDING_DELETED_COMPONENTS_DATA;
+
+export type LaneComponent = { id: ComponentID; head: Ref; isDeleted?: boolean };
 export type LaneReadmeComponent = { id: ComponentID; head: Ref | null };
 export default class Lane extends BitObject {
   name: string;
   scope: string;
   components: LaneComponent[];
   log: Log;
+  schema: string;
   readmeComponent?: LaneReadmeComponent;
   forkedFrom?: LaneId;
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
@@ -48,6 +55,7 @@ export default class Lane extends BitObject {
     this._hash = props.hash;
     this.readmeComponent = props.readmeComponent;
     this.forkedFrom = props.forkedFrom;
+    this.schema = props.schema || OLD_LANE_SCHEMA;
   }
   id(): string {
     return this.scope + LANE_REMOTE_DELIMITER + this.name;
@@ -82,6 +90,7 @@ export default class Lane extends BitObject {
         components: this.components.map((component) => ({
           id: { scope: component.id.scope, name: component.id.fullName },
           head: component.head.toString(),
+          ...(component.isDeleted && { isDeleted: component.isDeleted }),
         })),
         log: this.log,
         readmeComponent: this.readmeComponent && {
@@ -89,6 +98,7 @@ export default class Lane extends BitObject {
           head: this.readmeComponent.head?.toString() ?? null,
         },
         forkedFrom: this.forkedFrom && this.forkedFrom.toObject(),
+        schema: this.schema,
       },
       (val) => !!val
     );
@@ -113,7 +123,7 @@ export default class Lane extends BitObject {
       email: bitCloudUser?.email || globalConfig.getSync(CFG_USER_EMAIL_KEY),
       profileImage: bitCloudUser?.profileImage,
     };
-    const lane = new Lane({ name, scope, hash: sha1(v4()), log, forkedFrom });
+    const lane = new Lane({ name, scope, hash: sha1(v4()), log, forkedFrom, schema: CURRENT_LANE_SCHEMA });
     lane.isNew = true;
     lane.hasChanged = true;
     return lane;
@@ -127,6 +137,7 @@ export default class Lane extends BitObject {
       components: laneObject.components.map((component) => ({
         id: ComponentID.fromObject({ scope: component.id.scope, name: component.id.name }),
         head: new Ref(component.head),
+        isDeleted: component.isDeleted,
       })),
       readmeComponent: laneObject.readmeComponent && {
         id: ComponentID.fromObject({
@@ -137,6 +148,7 @@ export default class Lane extends BitObject {
       },
       forkedFrom: laneObject.forkedFrom && LaneId.from(laneObject.forkedFrom.name, laneObject.forkedFrom.scope),
       hash: laneObject.hash || hash,
+      schema: laneObject.schema,
     });
   }
   toBuffer(pretty?: boolean) {
@@ -152,6 +164,7 @@ export default class Lane extends BitObject {
       if (!existsComponent.head.isEqual(component.head)) this.hasChanged = true;
       existsComponent.id = component.id;
       existsComponent.head = component.head;
+      existsComponent.isDeleted = component.isDeleted;
     } else {
       logger.debug(`Lane.addComponent, adding component ${component.id.toString()} to lane ${this.id()}`);
       this.components.push(component);
@@ -244,9 +257,16 @@ export default class Lane extends BitObject {
       })
     );
   }
+  includeDeletedData(): boolean {
+    return gte(this.schema, SCHEMA_INCLUDING_DELETED_COMPONENTS_DATA);
+  }
+  setSchemaToSupportDeletedData() {
+    this.schema = SCHEMA_INCLUDING_DELETED_COMPONENTS_DATA;
+    this.hasChanged = true;
+  }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;
-    const bitIds = this.toBitIds();
+    const bitIds = this.toComponentIds();
     this.components.forEach((component) => {
       if (bitIds.filterWithoutVersion(component.id).length > 1) {
         throw new ValidationError(`${message}, the following component is duplicated "${component.id.fullName}"`);
