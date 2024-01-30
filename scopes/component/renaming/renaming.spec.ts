@@ -1,5 +1,8 @@
 import chai, { expect } from 'chai';
-import { ConfigAspect, ConfigMain } from '@teambit/config';
+import {
+  ConfigAspect,
+  // ConfigMain
+} from '@teambit/config';
 import { loadManyAspects } from '@teambit/harmony.testing.load-aspect';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
