@@ -256,7 +256,10 @@ export class BuilderMain {
         const artifactObj = artifact.toObject();
         if (!builderData.artifacts) builderData.artifacts = [];
         if (
-          builderData.artifacts.find((a) => a.task.id === artifactObj.task.id && a.task.name === artifactObj.task.name)
+          builderData.artifacts.find(
+            (a) =>
+              a.task.id === artifactObj.task.id && a.task.name === artifactObj.task.name && a.name === artifactObj.name
+          )
         ) {
           return;
         }
