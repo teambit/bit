@@ -40,7 +40,7 @@ import {
   getArtifactsFiles,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { VersionNotFound, ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
-import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
+import { AutoTagResult } from '@teambit/workspace.modules.auto-tag';
 import DependenciesAspect, { DependenciesMain } from '@teambit/dependencies';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';

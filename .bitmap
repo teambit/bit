@@ -863,6 +863,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/models/scope-model"
     },
+    "modules/auto-tag": {
+        "name": "modules/auto-tag",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/modules/auto-tag"
+    },
     "modules/babel-compiler": {
         "name": "modules/babel-compiler",
         "scope": "teambit.compilation",
