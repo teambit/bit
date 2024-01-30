@@ -23,7 +23,7 @@ type LaneOptions = {
 
 export class LaneListCmd implements Command {
   name = 'list';
-  description = `list local lanes`;
+  description = `list local or remote lanes`;
   alias = '';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
@@ -65,8 +65,9 @@ export class LaneListCmd implements Command {
     const laneDataOfCurrentLane = currentLane ? lanes.find((l) => currentLane.isEqual(l.id)) : undefined;
     const currentAlias = laneDataOfCurrentLane ? laneDataOfCurrentLane.alias : undefined;
     const currentLaneReadmeComponentStr = outputReadmeComponent(laneDataOfCurrentLane?.readmeComponent);
-    let currentLaneStr = `current lane - ${chalk.green.green(laneIdStr(currentLane, currentAlias))}`;
-    currentLaneStr += currentLaneReadmeComponentStr;
+    let currentLaneStr = remote
+      ? ''
+      : `current lane - ${chalk.green.green(laneIdStr(currentLane, currentAlias))}${currentLaneReadmeComponentStr}`;
 
     if (details) {
       const currentLaneComponents = laneDataOfCurrentLane ? outputComponents(laneDataOfCurrentLane.components) : '';

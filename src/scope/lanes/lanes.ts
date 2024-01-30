@@ -19,9 +19,6 @@ export default class Lanes {
   }
 
   async listLanes(): Promise<Lane[]> {
-    return this.listLanesBackwardCompatible();
-
-    // @todo: remove the above after all the lanes are migrated to the new format (2022-06-01 will be a good time to do so)
     return (await this.objects.listObjectsFromIndex(IndexType.lanes)) as Lane[];
   }
 
@@ -223,27 +220,6 @@ export default class Lanes {
     const lanes: LaneData[] = await Promise.all(lanesObjects.map((laneObject: Lane) => getLaneDataOfLane(laneObject)));
 
     return lanes;
-  }
-
-  private async listLanesBackwardCompatible(): Promise<Lane[]> {
-    const lanes = (await this.objects.listObjectsFromIndex(IndexType.lanes)) as Lane[];
-    const oldLanes = lanes.filter((lane) => !lane.scope);
-    if (oldLanes.length) await this.fixOldLanesToIncludeScope(oldLanes);
-    return lanes;
-  }
-
-  private async fixOldLanesToIncludeScope(lanes: Lane[]) {
-    logger.warn(`lanes, fixOldLanesToIncludeScope: ${lanes.map((l) => l.id.toString()).join(', ')}`);
-    lanes.forEach((lane) => {
-      const trackLaneData = this.getRemoteTrackedDataByLocalLane(lane.name);
-      if (trackLaneData) {
-        lane.scope = trackLaneData.remoteScope;
-      } else {
-        lane.scope = this.scopeJson.name;
-      }
-    });
-    await this.objects.deleteObjectsFromFS(lanes.map((l) => l.hash()));
-    await this.objects.writeObjectsToTheFS(lanes);
   }
 }
 
