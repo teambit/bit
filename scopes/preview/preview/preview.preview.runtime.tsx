@@ -82,6 +82,7 @@ export class PreviewPreview {
    * render the preview.
    */
   render = async (rootExt?: string) => {
+    console.log('in redner function');
     // fit content always.
     window.document.body.style.width = 'fit-content';
 

@@ -22,7 +22,7 @@ function createPreBundleConfig(outputDir: string, entryFile: string) {
       children: true,
       errorDetails: true,
     },
-    mode: 'production',
+    mode: 'development',
     entry: {
       main: entryFile,
     },
@@ -50,9 +50,10 @@ function createPreBundleConfig(outputDir: string, entryFile: string) {
       path: outputDir,
       publicPath: '/',
       chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
-      filename: 'static/js/[name].[contenthash:8].js',
+      filename: 'static/js/[name].gilad.js',
       library: {
-        type: 'commonjs2',
+        name: 'BitPreview',
+        type: 'umd',
       },
     },
     externalsType: 'commonjs',

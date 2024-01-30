@@ -684,6 +684,7 @@ export class PreviewMain {
 
     const previewRuntime = await this.writePreviewEntry(context);
     const linkFiles = await this.updateLinkFiles(context.components, context);
+    console.log('🚀 ~ file: preview.main.runtime.ts:687 ~ PreviewMain ~ linkFiles:', linkFiles);
 
     return [...linkFiles, previewRuntime];
   }

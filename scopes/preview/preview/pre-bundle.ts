@@ -21,7 +21,8 @@ export const UIROOT_ASPECT_ID = 'teambit.workspace/workspace';
 
 const ENTRY_CONTENT_TEMPLATE = `__IMPORTS__
 
-export const run = (config, customAspects = []) => {
+window.BitPreviewRun = (config, customAspects = []) => {
+// export const run = (config, customAspects = []) => {
   const isBrowser = typeof window !== "undefined";
   const windowConfig = isBrowser ? window.harmonyAppConfig : undefined;
   const mergedConfig = { ...config, ...windowConfig };
@@ -98,6 +99,7 @@ export const generatePreBundlePreviewEntry = (
 
 export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[], customOutputDir?: string) {
   const outputDir = customOutputDir || resolve(PUBLIC_DIR);
+  console.log('🚀 ~ file: pre-bundle.ts:101 ~ buildPreBundlePreview ~ outputDir:', outputDir);
   const mainEntry = generatePreBundlePreviewEntry(
     resolvedAspects,
     UIROOT_ASPECT_ID,
@@ -105,10 +107,13 @@ export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[],
     PreviewAspect.id,
     __dirname
   );
+  console.log('🚀 ~ file: pre-bundle.ts:126 ~ buildPreBundlePreview ~ mainEntry:', mainEntry);
   const config = createWebpackConfig(outputDir, mainEntry);
+  console.log('🚀 ~ file: pre-bundle.ts:111 ~ buildPreBundlePreview ~ config:', config);
   const compiler = webpack(config);
   const compilerRun = promisify(compiler.run.bind(compiler));
   const results = await compilerRun();
+  // throw new Error('gilad')
   if (!results) throw new Error();
   if (results?.hasErrors()) {
     clearConsole();
@@ -128,9 +133,23 @@ export async function generateBundlePreviewEntry(rootAspectId: string, previewPr
     .join('\n');
   config['teambit.harmony/bit'] = rootAspectId;
 
-  const contents = [imports, `run(${JSON.stringify(config, null, 2)});`].join('\n');
+  // const contents = [imports, `run(${JSON.stringify(config, null, 2)});`].join('\n');
+  const contents = `
+  const script = document.createElement('script');
+
+  script.setAttribute('defer', 'defer');
+  script.src = "/static/js/main.gilad.js";
+
+  script.onload = () => {
+    BitPreviewRun(${JSON.stringify(config, null, 2)});
+  };
+  // script.onerror = (message, _, _1, _2, error) => reject(error || new Error('some error');
+
+  document.head.appendChild(script);
+  `;
   const previewRuntime = resolve(join(__dirname, `preview.entry.${sha1(contents)}.js`));
 
+  console.log('🚀 ~ file: pre-bundle.ts:151 ~ generateBundlePreviewEntry ~ previewRuntime:', previewRuntime);
   if (!existsSync(previewRuntime)) {
     outputFileSync(previewRuntime, contents);
   }

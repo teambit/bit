@@ -101,6 +101,7 @@ export class UIServer {
     const publicDir = `/${this.publicDir}`;
     const defaultRoot = join(this.uiRoot.path, publicDir);
     const root = bundleUiRoot || defaultRoot;
+    console.log('🚀 ~ file: ui-server.ts:104 ~ UIServer ~ start ~ root:', root);
     this.logger.debug(`UiServer, start from ${root}`);
     const server = await this.graphql.createServer({ app });
 
@@ -110,6 +111,8 @@ export class UIServer {
     // pass through files from public /folder:
     // setting `index: false` so index.html will be served by the fallback() middleware
     app.use(express.static(root, { index: false }));
+    const previewRoot = '/private/tmp/preview-external/public/bit-preview';
+    app.use(express.static(previewRoot, { index: false }));
 
     const port = await Port.getPortFromRange(portRange || [3100, 3200]);
 
