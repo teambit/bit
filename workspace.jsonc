@@ -295,7 +295,7 @@
         "@teambit/ui-foundation.ui.react-router.slot-router": "^0.0.506",
         "@teambit/ui-foundation.ui.react-router.use-query": "^0.0.501",
         "@teambit/ui-foundation.ui.rendering.html": "^0.0.85",
-        "@teambit/ui-foundation.ui.side-bar": "^0.0.874",
+        "@teambit/ui-foundation.ui.side-bar": "^0.0.875",
         "@teambit/ui-foundation.ui.top-bar": "^0.0.514",
         "@teambit/ui-foundation.ui.tree.drawer": "^0.0.518",
         "@teambit/ui-foundation.ui.tree.file-tree": "^0.0.522",
