@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import yesno from 'yesno';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
@@ -7,7 +6,6 @@ import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/li
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { BEFORE_IMPORT_ACTION } from '@teambit/legacy/dist/cli/loader/loader-messages';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
 import { getLatestVersionNumber, pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
@@ -615,12 +613,10 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       .filter(({ status }) => status.modified || status.newlyCreated)
       .map((c) => c.id);
     if (modifiedComponents.length) {
-      throw new GeneralError(
-        chalk.yellow(
-          `unable to import the following components due to local changes, use --merge flag to merge your local changes or --override to override them\n${modifiedComponents.join(
-            '\n'
-          )} `
-        )
+      throw new BitError(
+        `unable to import the following components due to local changes, use --merge flag to merge your local changes or --override to override them\n${modifiedComponents.join(
+          '\n'
+        )} `
       );
     }
   }
@@ -634,7 +630,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     ids.forEach((id: ComponentID) => {
       const existingId = this.consumer.getParsedIdIfExist(id.toStringWithoutVersion());
       if (existingId && !existingId.hasScope()) {
-        throw new GeneralError(`unable to import ${id.toString()}. the component name conflicted with your local component with the same name.
+        throw new BitError(`unable to import ${id.toString()}. the component name conflicted with your local component with the same name.
         it's fine to have components with the same name as long as their scope names are different.
         Make sure to export your component first to get a scope and then try importing again`);
       }

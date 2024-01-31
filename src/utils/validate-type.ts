@@ -1,4 +1,4 @@
-import GeneralError from '../error/general-error';
+import { BitError } from '@teambit/bit-error';
 import ValidationError from '../error/validation-error';
 
 type Value = 'string' | 'number' | 'array' | 'object' | 'boolean' | 'undefined';
@@ -17,7 +17,7 @@ function validate(message: string, value: any, fieldName: string, expectedType: 
   if ((expectedType === 'array' || expectedType === 'object') && Array.isArray(value)) type = 'array';
   if (type !== expectedType) {
     const errorMessage = `${message}, expected ${fieldName} to be ${expectedType}, got ${type}`;
-    if (isUserInput) throw new GeneralError(errorMessage);
+    if (isUserInput) throw new BitError(errorMessage);
     throw new ValidationError(`${message}, expected ${fieldName} to be ${expectedType}, got ${type}`);
   }
 }

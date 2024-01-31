@@ -9,7 +9,6 @@ import R from 'ramda';
 import { compact, flatten, partition, uniq } from 'lodash';
 import { Scope } from '..';
 import ConsumerComponent from '../../consumer/component';
-import GeneralError from '../../error/general-error';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
@@ -604,7 +603,7 @@ export default class ScopeComponentsImporter {
     logger.debugAndAddBreadCrumb('ScopeComponentsImporter', 'loadComponent {id}', { id: id.toString() });
 
     if (localOnly && !this.scope.isLocal(id)) {
-      throw new GeneralError('cannot load a component from remote scope, please import first');
+      throw new BitError('cannot load a component from remote scope, please import first');
     }
     return this.loadRemoteComponent(id);
   }
@@ -914,7 +913,7 @@ export default class ScopeComponentsImporter {
       const compDefs: ComponentDef[] = await this.sources.getMany([id]);
       const componentVersions = this.componentsDefToComponentsVersion(compDefs, false, true);
 
-      if (!componentVersions.length) throw new GeneralError(`unable to find ${id.toString()} in its remote`);
+      if (!componentVersions.length) throw new BitError(`unable to find ${id.toString()} in its remote`);
       return componentVersions[0];
     }
 

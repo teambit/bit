@@ -1,11 +1,11 @@
 import graphlib, { Graph as GraphLib } from 'graphlib';
 import mapSeries from 'p-map-series';
+import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
 import R from 'ramda';
 import { Scope } from '..';
 import Component from '../../consumer/component/consumer-component';
-import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import { buildComponentsGraphCombined } from '../graph/components-graph';
 import Graph from '../graph/graph';
@@ -108,7 +108,7 @@ if this is an external env/extension/aspect configured in workspace.jsonc, make 
 
 function throwWhenDepNotIncluded(componentId: ComponentID, dependencyId: ComponentID) {
   if (!dependencyId.hasScope() && !dependencyId.hasVersion()) {
-    throw new GeneralError(`fatal: "${componentId.toString()}" has a dependency "${dependencyId.toString()}".
+    throw new BitError(`fatal: "${componentId.toString()}" has a dependency "${dependencyId.toString()}".
 this dependency was not included in the tag command.`);
   }
 }

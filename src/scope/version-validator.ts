@@ -3,6 +3,7 @@ import R from 'ramda';
 import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { BitError } from '@teambit/bit-error';
 import { isSnap } from '@teambit/component-version';
 import { DEPENDENCIES_FIELDS } from '../constants';
 import { SchemaName } from '../consumer/component/component-schema';
@@ -12,7 +13,6 @@ import PackageJsonFile from '../consumer/component/package-json-file';
 import { getArtifactsFiles } from '../consumer/component/sources/artifact-files';
 import { componentOverridesForbiddenFields, nonPackageJsonFields } from '../consumer/config/component-overrides';
 import { ExtensionDataEntry, ExtensionDataList } from '../consumer/config/extension-data';
-import GeneralError from '../error/general-error';
 import { isValidPath } from '../utils';
 import { PathLinux } from '../utils/path';
 import validateType from '../utils/validate-type';
@@ -211,7 +211,7 @@ export default function validateVersionInstance(version: Version): void {
         (id) => `"${id}" shows as the following: ${depsDuplications[id].map((depId) => depId.toString()).join(', ')} `
       )
       .join('\n');
-    throw new GeneralError(`some dependencies are duplicated, see details below.
+    throw new BitError(`some dependencies are duplicated, see details below.
 if you added a dependency to "overrides" configuration with a plus sign, make sure to add it with a minus sign in the other dependency type
 for example, { dependencies: { "bar/foo": "+" }, devDependencies: { "bar/foo": "-" } }
 

@@ -29,7 +29,6 @@ import ComponentMap, {
 } from './component-map';
 import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
-import GeneralError from '../../error/general-error';
 
 export type PathChangeResult = { id: ComponentID; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
@@ -105,14 +104,14 @@ export default class BitMap {
     this.components.forEach((existingComponentMap) => {
       if (!existingComponentMap.rootDir) return;
       if (isParentDir(existingComponentMap.rootDir, rootDir)) {
-        throw new GeneralError(
+        throw new BitError(
           `unable to add "${id.toString()}", its rootDir ${rootDir} is inside ${
             existingComponentMap.rootDir
           } which used by another component "${existingComponentMap.id.toString()}"`
         );
       }
       if (isParentDir(rootDir, existingComponentMap.rootDir)) {
-        throw new GeneralError(
+        throw new BitError(
           `unable to add "${id.toString()}", its rootDir ${rootDir} is used by another component ${existingComponentMap.id.toString()}`
         );
       }

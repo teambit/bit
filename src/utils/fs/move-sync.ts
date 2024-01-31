@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import { isAbsolute } from 'path';
 
-import GeneralError from '../../error/general-error';
+import { BitError } from '@teambit/bit-error';
 import { PathOsBasedAbsolute } from '../path';
 
 export default function moveSync(src: PathOsBasedAbsolute, dest: PathOsBasedAbsolute, options?: Record<string, any>) {
@@ -12,7 +12,7 @@ export default function moveSync(src: PathOsBasedAbsolute, dest: PathOsBasedAbso
     fs.moveSync(src, dest, options);
   } catch (err: any) {
     if (err.message.includes('Cannot move') && err.message.includes('into itself')) {
-      throw new GeneralError(`unable to move '${src}' into itself '${dest}'`);
+      throw new BitError(`unable to move '${src}' into itself '${dest}'`);
     }
     throw err;
   }

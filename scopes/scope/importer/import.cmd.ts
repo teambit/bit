@@ -8,7 +8,7 @@ import {
   MergeStrategy,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
+import { BitError } from '@teambit/bit-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
 import { ImporterMain } from './importer.main.runtime';
@@ -211,28 +211,28 @@ export class ImportCmd implements Command {
     }: ImportFlags
   ): Promise<ImportResult> {
     if (objects && merge) {
-      throw new GeneralError(' --objects and --merge flags cannot be used together');
+      throw new BitError(' --objects and --merge flags cannot be used together');
     }
     if (override && merge) {
-      throw new GeneralError('--override and --merge cannot be used together');
+      throw new BitError('--override and --merge cannot be used together');
     }
     if (!ids.length && dependencies) {
-      throw new GeneralError('you have to specify ids to use "--dependencies" flag');
+      throw new BitError('you have to specify ids to use "--dependencies" flag');
     }
     if (!ids.length && dependents) {
-      throw new GeneralError('you have to specify ids to use "--dependents" flag');
+      throw new BitError('you have to specify ids to use "--dependents" flag');
     }
     if (!ids.length && dependentsDryRun) {
-      throw new GeneralError('you have to specify ids to use "--dependents-dry-run" flag');
+      throw new BitError('you have to specify ids to use "--dependents-dry-run" flag');
     }
     if (!ids.length && trackOnly) {
-      throw new GeneralError('you have to specify ids to use "--track-only" flag');
+      throw new BitError('you have to specify ids to use "--track-only" flag');
     }
     let mergeStrategy;
     if (merge && typeof merge === 'string') {
       const options = Object.keys(MergeOptions);
       if (!options.includes(merge)) {
-        throw new GeneralError(`merge must be one of the following: ${options.join(', ')}`);
+        throw new BitError(`merge must be one of the following: ${options.join(', ')}`);
       }
       mergeStrategy = merge;
     }

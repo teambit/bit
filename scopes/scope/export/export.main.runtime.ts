@@ -19,7 +19,6 @@ import {
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
 import HooksManager from '@teambit/legacy/dist/hooks';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { Lane, ModelComponent, Symlink, Version } from '@teambit/legacy/dist/scope/models';
@@ -784,7 +783,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     };
     if (isUserTryingToExportLanes(consumer)) {
       if (ids.length) {
-        throw new GeneralError(`when checked out to a lane, all its components are exported. please omit the ids`);
+        throw new BitError(`when checked out to a lane, all its components are exported. please omit the ids`);
       }
       const { componentsToExport, laneObject } = await this.getLaneCompIdsToExport(consumer, includeNonStaged);
       const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;

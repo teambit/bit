@@ -28,7 +28,7 @@ export class Manifest {
 
   // Should be implemented on sub classes
   // get dir(): string {
-  //   throw new GeneralError('not implemented');
+  //   throw new BitError('not implemented');
   // }
 
   toJson(options: ManifestToJsonOptions = {}): Record<string, any> {

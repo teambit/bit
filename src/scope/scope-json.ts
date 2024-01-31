@@ -1,10 +1,10 @@
 import fs from 'fs-extra';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import pathlib from 'path';
+import { BitError } from '@teambit/bit-error';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { SCOPE_JSON, SCOPE_JSONC } from '../constants';
-import GeneralError from '../error/general-error';
 import { Remote } from '../remotes';
 import { cleanObject, writeFile } from '../utils';
 import { ScopeJsonNotFound } from './exceptions';
@@ -84,20 +84,20 @@ export class ScopeJson {
 
   set(key: string, val: string) {
     // eslint-disable-next-line no-prototype-builtins
-    if (!this.hasOwnProperty(key)) throw new GeneralError(`unknown key ${key}`);
+    if (!this.hasOwnProperty(key)) throw new BitError(`unknown key ${key}`);
     this[key] = val;
     return this;
   }
 
   get(key: string): string {
     // eslint-disable-next-line no-prototype-builtins
-    if (!this.hasOwnProperty(key)) throw new GeneralError(`unknown key ${key}`);
+    if (!this.hasOwnProperty(key)) throw new BitError(`unknown key ${key}`);
     return this[key];
   }
 
   del(key: string): string {
     // eslint-disable-next-line no-prototype-builtins
-    if (!this.hasOwnProperty(key)) throw new GeneralError(`unknown key ${key}`);
+    if (!this.hasOwnProperty(key)) throw new BitError(`unknown key ${key}`);
     return this[key];
   }
 
@@ -157,7 +157,7 @@ export class ScopeJson {
     try {
       jsonParsed = JSON.parse(json);
     } catch (err) {
-      throw new GeneralError(`unable to parse the scope.json file located at "${scopeJsonPath}".
+      throw new BitError(`unable to parse the scope.json file located at "${scopeJsonPath}".
 edit the file to fix the error, or delete it and run "bit init" to recreate it`);
     }
     return new ScopeJson(jsonParsed);

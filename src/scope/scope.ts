@@ -5,6 +5,7 @@ import R from 'ramda';
 import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
+import { BitError } from '@teambit/bit-error';
 import { isTag } from '@teambit/component-version';
 import { Analytics } from '../analytics/analytics';
 import {
@@ -23,7 +24,6 @@ import {
 import Component from '../consumer/component/consumer-component';
 import { ExtensionDataEntry } from '../consumer/config';
 import Consumer from '../consumer/consumer';
-import GeneralError from '../error/general-error';
 import logger from '../logger/logger';
 import { pathHasAll, findScopePath, readDirSyncIgnoreDsStore } from '../utils';
 import { PathOsBasedAbsolute } from '../utils/path';
@@ -715,7 +715,7 @@ once done, to continue working, please run "bit cc"`
   ): ScopeJson {
     if (!name) name = pathLib.basename(process.cwd());
     if (name === CURRENT_UPSTREAM) {
-      throw new GeneralError(`the name "${CURRENT_UPSTREAM}" is a reserved word, please use another name`);
+      throw new BitError(`the name "${CURRENT_UPSTREAM}" is a reserved word, please use another name`);
     }
     const scopeJson = new ScopeJson({ name, groupName, version: BIT_VERSION });
     return scopeJson;
