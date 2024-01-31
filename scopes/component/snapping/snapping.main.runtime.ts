@@ -39,7 +39,7 @@ import {
   ArtifactSource,
   getArtifactsFiles,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import { VersionNotFound, ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import { VersionNotFound, ComponentNotFound, HeadNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import DependenciesAspect, { DependenciesMain } from '@teambit/dependencies';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
@@ -769,7 +769,7 @@ there are matching among unmodified components thought. consider using --unmodif
             : await this.scope.legacyScope.isPartOfMainHistory(dep.id);
         } catch (err) {
           if (throwForMissingObjects) throw err;
-          if (err instanceof VersionNotFound || err instanceof ComponentNotFound) {
+          if (err instanceof VersionNotFound || err instanceof ComponentNotFound || err instanceof HeadNotFound) {
             missingDeps.push(dep.id);
             return;
           }

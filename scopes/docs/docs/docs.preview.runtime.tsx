@@ -31,7 +31,12 @@ export class DocsPreview {
     const docsModule = this.selectPreviewModel(componentId.fullName, modules);
 
     const mainModule = modules.modulesMap[envId] || modules.modulesMap.default;
-    const defaultExports = mainModule.default;
+    let defaultExports = mainModule.default;
+    // Sometime when using ESM (package.json with type:"module") the default export is nested under "default"
+    if (typeof defaultExports !== 'function' && defaultExports.default) {
+      defaultExports = defaultExports.default;
+    }
+    // @ts-ignore Gilad - to fix.
     const isObject = !!defaultExports.apiObject;
 
     /**
@@ -45,6 +50,7 @@ export class DocsPreview {
         compositions,
         context,
       ];
+      // @ts-ignore Gilad - to fix. it happens because defaultExports might be a func or an object (handled above)
       defaultExports(...docsPropsArray);
       return;
     }
@@ -56,7 +62,7 @@ export class DocsPreview {
       compositions,
       context,
     };
-
+    // @ts-ignore Gilad - to fix. it happens because defaultExports might be a func or an object (handled above)
     defaultExports(docsProps);
   };
 

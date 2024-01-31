@@ -164,7 +164,7 @@ export class CheckoutMain {
         skipDependencyInstallation: checkoutProps.skipNpmInstall || leftUnresolvedConflicts,
         verbose: checkoutProps.verbose,
         resetConfig: checkoutProps.reset,
-        skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap,
+        skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap || checkoutProps.revert,
         reasonForBitmapChange: 'checkout',
       };
       componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
@@ -199,6 +199,9 @@ export class CheckoutMain {
    * returns the restored component ids.
    */
   async restoreMissingComponents(checkoutProps: CheckoutProps): Promise<ComponentID[] | undefined> {
+    if (checkoutProps.reset) {
+      checkoutProps.restoreMissingComponents = true;
+    }
     if (!checkoutProps.restoreMissingComponents) return undefined;
     const ids = checkoutProps.ids || [];
     const missing: ComponentID[] = [];
@@ -278,9 +281,6 @@ export class CheckoutMain {
     }
     if (checkoutProps.workspaceOnly && !checkoutProps.head) {
       throw new BitError(`--workspace-only flag can only be used with "head" (bit checkout head --workspace-only)`);
-    }
-    if (checkoutProps.revert) {
-      checkoutProps.skipUpdatingBitmap = true;
     }
     if (checkoutProps.reset || checkoutProps.head) {
       checkoutProps.includeLocallyDeleted = true;
