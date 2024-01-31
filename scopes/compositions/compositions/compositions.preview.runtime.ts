@@ -34,6 +34,7 @@ export class CompositionsPreview {
       defaultExports = defaultExports.default;
     }
 
+    // @ts-ignore Gilad - to fix.
     defaultExports(active, context);
   }
 
