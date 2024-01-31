@@ -978,8 +978,8 @@ importers:
         specifier: ^0.0.85
         version: 0.0.85(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.side-bar':
-        specifier: ^0.0.874
-        version: 0.0.874(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.875
+        version: 0.0.875(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.top-bar':
         specifier: ^0.0.514
         version: 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
@@ -3956,8 +3956,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/ui-foundation.ui.side-bar':
-        specifier: ^0.0.874
-        version: 0.0.874(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.875
+        version: 0.0.875(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.drawer':
         specifier: ^0.0.518
         version: 0.0.518(react-dom@17.0.2)(react@17.0.2)
@@ -5115,7 +5115,7 @@ importers:
         version: file:scopes/component/changelog(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)(typescript@4.7.4)
       '@teambit/checkout':
         specifier: workspace:*
-        version: file:scopes/component/checkout
+        version: file:scopes/component/checkout(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/clear-cache':
         specifier: workspace:*
         version: file:scopes/workspace/clear-cache(@types/react@17.0.75)(react@17.0.2)
@@ -5298,7 +5298,7 @@ importers:
         version: file:components/ui/test-page(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
       '@teambit/dependencies':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependencies
+        version: file:scopes/dependencies/dependencies(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/dependencies.aspect-docs.dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/dependency-resolver(react-dom@17.0.2)(react@17.0.2)
@@ -6533,7 +6533,7 @@ importers:
         version: file:scopes/component/changelog(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)(typescript@4.7.4)
       '@teambit/checkout':
         specifier: workspace:*
-        version: file:scopes/component/checkout
+        version: file:scopes/component/checkout(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/clear-cache':
         specifier: workspace:*
         version: file:scopes/workspace/clear-cache(@types/react@17.0.75)(react@17.0.2)
@@ -6716,7 +6716,7 @@ importers:
         version: file:components/ui/test-page(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
       '@teambit/dependencies':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependencies
+        version: file:scopes/dependencies/dependencies(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/dependencies.aspect-docs.dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/dependency-resolver(react-dom@17.0.2)(react@17.0.2)
@@ -7972,7 +7972,7 @@ importers:
         version: file:scopes/component/changelog(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)(typescript@4.7.4)
       '@teambit/checkout':
         specifier: workspace:*
-        version: file:scopes/component/checkout
+        version: file:scopes/component/checkout(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/clear-cache':
         specifier: workspace:*
         version: file:scopes/workspace/clear-cache(@types/react@17.0.75)(react@17.0.2)
@@ -8155,7 +8155,7 @@ importers:
         version: file:components/ui/test-page(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
       '@teambit/dependencies':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependencies
+        version: file:scopes/dependencies/dependencies(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/dependencies.aspect-docs.dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/dependency-resolver(react-dom@17.0.2)(react@17.0.2)
@@ -9408,7 +9408,7 @@ importers:
         version: file:scopes/component/changelog(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)(typescript@4.7.4)
       '@teambit/checkout':
         specifier: workspace:*
-        version: file:scopes/component/checkout
+        version: file:scopes/component/checkout(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/clear-cache':
         specifier: workspace:*
         version: file:scopes/workspace/clear-cache(@types/react@17.0.75)(react@17.0.2)
@@ -9591,7 +9591,7 @@ importers:
         version: file:components/ui/test-page(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
       '@teambit/dependencies':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependencies
+        version: file:scopes/dependencies/dependencies(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/dependencies.aspect-docs.dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/dependency-resolver(react-dom@17.0.2)(react@17.0.2)
@@ -10817,7 +10817,7 @@ importers:
         version: file:scopes/component/changelog(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)(typescript@4.7.4)
       '@teambit/checkout':
         specifier: workspace:*
-        version: file:scopes/component/checkout
+        version: file:scopes/component/checkout(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/clear-cache':
         specifier: workspace:*
         version: file:scopes/workspace/clear-cache(@types/react@17.0.75)(react@17.0.2)
@@ -11000,7 +11000,7 @@ importers:
         version: file:components/ui/test-page(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
       '@teambit/dependencies':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependencies
+        version: file:scopes/dependencies/dependencies(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/dependencies.aspect-docs.dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/dependency-resolver(react-dom@17.0.2)(react@17.0.2)
@@ -12232,7 +12232,7 @@ importers:
         version: file:scopes/component/changelog(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)(typescript@4.7.4)
       '@teambit/checkout':
         specifier: workspace:*
-        version: file:scopes/component/checkout
+        version: file:scopes/component/checkout(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/clear-cache':
         specifier: workspace:*
         version: file:scopes/workspace/clear-cache(@types/react@17.0.75)(react@17.0.2)
@@ -12415,7 +12415,7 @@ importers:
         version: file:components/ui/test-page(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
       '@teambit/dependencies':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependencies
+        version: file:scopes/dependencies/dependencies(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/dependencies.aspect-docs.dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/dependency-resolver(react-dom@17.0.2)(react@17.0.2)
@@ -13650,7 +13650,7 @@ importers:
         version: file:scopes/component/changelog(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)(typescript@4.7.4)
       '@teambit/checkout':
         specifier: workspace:*
-        version: file:scopes/component/checkout
+        version: file:scopes/component/checkout(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/clear-cache':
         specifier: workspace:*
         version: file:scopes/workspace/clear-cache(@types/react@17.0.75)(react@17.0.2)
@@ -13833,7 +13833,7 @@ importers:
         version: file:components/ui/test-page(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
       '@teambit/dependencies':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependencies
+        version: file:scopes/dependencies/dependencies(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/dependencies.aspect-docs.dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/dependency-resolver(react-dom@17.0.2)(react@17.0.2)
@@ -18205,6 +18205,12 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 0.0.24
         version: 0.0.24(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+      '@types/chai':
+        specifier: 4.2.15
+        version: 4.2.15
+      '@types/chai-fs':
+        specifier: 2.0.2
+        version: 2.0.2
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -18217,6 +18223,9 @@ importers:
       chai:
         specifier: 4.3.0
         version: 4.3.0
+      chai-fs:
+        specifier: 1.0.0
+        version: 1.0.0(chai@4.3.0)
 
   scopes/component/snapping:
     dependencies:
@@ -24676,8 +24685,8 @@ importers:
         specifier: ^0.0.506
         version: 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/ui-foundation.ui.side-bar':
-        specifier: ^0.0.874
-        version: 0.0.874(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.875
+        version: 0.0.875(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.top-bar':
         specifier: ^0.0.514
         version: 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
@@ -26920,8 +26929,8 @@ importers:
         specifier: ^0.0.506
         version: 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/ui-foundation.ui.side-bar':
-        specifier: ^0.0.874
-        version: 0.0.874(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.875
+        version: 0.0.875(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.top-bar':
         specifier: ^0.0.514
         version: 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
@@ -45627,8 +45636,8 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/ui-foundation.ui.side-bar@0.0.874(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-TyY0V/xvomDfFPciq12OqS2XoScMzcb3ClDb2KKtSRHKeJEQrNPgripDsX8oCbTSTTgOMAtOWxzghsjJjjQvhA==}
+  /@teambit/ui-foundation.ui.side-bar@0.0.875(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-6i+sbu7fusNEwOIYc4CfmvS2M7wIG93IQNP1vwyh/90CZC+RkkNJm11KrlwzSrg608yPwy/7kvXVFD1WSS4H2Q==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -71680,7 +71689,7 @@ packages:
       '@teambit/lanes.hooks.use-lanes': file:components/hooks/use-lanes(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model': file:components/ui/models/lanes-model(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/scope.models.scope-model': file:scopes/scope/models/scope-model
-      '@teambit/ui-foundation.ui.side-bar': 0.0.874(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.side-bar': 0.0.875(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.drawer': 0.0.518(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
@@ -72913,15 +72922,19 @@ packages:
       - typescript
     dev: false
 
-  file:scopes/component/checkout:
+  file:scopes/component/checkout(@teambit/legacy@node_modules+@teambit+legacy):
     resolution: {directory: scopes/component/checkout, type: directory}
+    id: file:scopes/component/checkout
     name: '@teambit/checkout'
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
+      '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
+      '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
       chalk: 2.4.2
@@ -72932,6 +72945,8 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
       react-router-dom: 6.8.1(react-dom@17.0.2)(react@17.0.2)
+    transitivePeerDependencies:
+      - '@teambit/legacy'
     dev: false
 
   file:scopes/component/code(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/node@20.2.5)(@types/react@17.0.75)(monaco-editor@0.33.0)(react@17.0.2):
@@ -74164,16 +74179,21 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/dependencies/dependencies:
+  file:scopes/dependencies/dependencies(@teambit/legacy@node_modules+@teambit+legacy):
     resolution: {directory: scopes/dependencies/dependencies, type: directory}
+    id: file:scopes/dependencies/dependencies
     name: '@teambit/dependencies'
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/component-id': 1.2.0
       '@teambit/component-issues': file:components/component-issues
+      '@teambit/component-package-version': file:scopes/component/component-package-version
       '@teambit/component-version': 1.0.3
+      '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
+      '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
       archy: 1.0.0
@@ -74189,6 +74209,8 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
       react-router-dom: 6.8.1(react-dom@17.0.2)(react@17.0.2)
       semver: 7.5.2
+    transitivePeerDependencies:
+      - '@teambit/legacy'
     dev: false
 
   file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.13)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5):
@@ -76552,7 +76574,7 @@ packages:
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.502(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.menu': 0.0.502(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
-      '@teambit/ui-foundation.ui.side-bar': 0.0.874(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.side-bar': 0.0.875(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.top-bar': 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.drawer': 0.0.518(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.dropdown': 0.0.142(react-dom@17.0.2)(react@17.0.2)
@@ -77488,7 +77510,7 @@ packages:
       '@teambit/ui-foundation.ui.menu': 0.0.502(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.notifications.notification-context': 0.0.501(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.506(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
-      '@teambit/ui-foundation.ui.side-bar': 0.0.874(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.side-bar': 0.0.875(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.top-bar': 0.0.514(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.drawer': 0.0.518(react-dom@17.0.2)(react@17.0.2)
       '@teambit/workspace.modules.match-pattern': file:scopes/workspace/modules/match-pattern
