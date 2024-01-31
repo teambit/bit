@@ -13,7 +13,6 @@ import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { LaneId } from '@teambit/lane-id';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
@@ -603,13 +602,13 @@ export class MergingMain {
       componentIds.forEach((id) => {
         const entry = this.workspace.consumer.scope.objects.unmergedComponents.getEntry(id);
         if (!entry) {
-          throw new GeneralError(`unable to merge-resolve ${id.toString()}, it is not marked as unresolved`);
+          throw new BitError(`unable to merge-resolve ${id.toString()}, it is not marked as unresolved`);
         }
       });
       return componentIds;
     }
     const unresolvedComponents = this.workspace.consumer.scope.objects.unmergedComponents.getComponents();
-    if (!unresolvedComponents.length) throw new GeneralError(`all components are resolved already, nothing to do`);
+    if (!unresolvedComponents.length) throw new BitError(`all components are resolved already, nothing to do`);
     return unresolvedComponents.map((u) => ComponentID.fromObject(u.id));
   }
 

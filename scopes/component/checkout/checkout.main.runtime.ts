@@ -14,7 +14,6 @@ import {
   MergeStrategy,
   threeWayMerge,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
 import mapSeries from 'p-map-series';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Version, ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
@@ -115,7 +114,7 @@ export class CheckoutMain {
     );
     if (componentWithConflict) {
       if (!promptMergeOptions && !checkoutProps.mergeStrategy) {
-        throw new GeneralError(
+        throw new BitError(
           `automatic merge has failed for component ${componentWithConflict.id.toStringWithoutVersion()}.\nplease use "--auto-merge-resolve" with 'manual', 'ours' or 'theirs' to resolve the conflict/s`
         );
       }
@@ -274,10 +273,10 @@ export class CheckoutMain {
       checkoutProps.all = true;
     }
     if (componentPattern && checkoutProps.all) {
-      throw new GeneralError('please specify either [component-pattern] or --all, not both');
+      throw new BitError('please specify either [component-pattern] or --all, not both');
     }
     if (!componentPattern && !checkoutProps.all) {
-      throw new GeneralError('please specify [component-pattern] or use --all flag');
+      throw new BitError('please specify [component-pattern] or use --all flag');
     }
     if (checkoutProps.workspaceOnly && !checkoutProps.head) {
       throw new BitError(`--workspace-only flag can only be used with "head" (bit checkout head --workspace-only)`);

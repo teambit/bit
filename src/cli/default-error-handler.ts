@@ -46,7 +46,6 @@ import {
 } from '../consumer/exceptions';
 import { LanesIsDisabled } from '../consumer/lanes/exceptions/lanes-is-disabled';
 import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
-import GeneralError from '../error/general-error';
 import hashErrorIfNeeded from '../error/hash-error-object';
 import ValidationError from '../error/validation-error';
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
@@ -77,6 +76,7 @@ import RemoteResolverError from '../scope/network/exceptions/remote-resolver-err
 import GitNotFound from '../utils/git/exceptions/git-not-found';
 import RemoteUndefined from './commands/exceptions/remote-undefined';
 import newerVersionTemplate from './templates/newer-version-template';
+import GeneralError from '../error/general-error';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';

@@ -4,7 +4,7 @@ import { Workspace } from '@teambit/workspace';
 import { ComponentIdList } from '@teambit/component-id';
 import { isEmpty } from 'lodash';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
+import { BitError } from '@teambit/bit-error';
 import enrichContextFromGlobal from '@teambit/legacy/dist/hooks/utils/enrich-context-from-global';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
@@ -53,7 +53,7 @@ export async function removeComponents({
   );
   const [localIds, remoteIds] = partition(bitIdsLatest, (id) => id.isLocal());
   if (remote && localIds.length) {
-    throw new GeneralError(
+    throw new BitError(
       `unable to remove the remote components: ${localIds.join(',')} as they don't contain a scope-name`
     );
   }

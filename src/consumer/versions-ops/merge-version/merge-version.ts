@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import GeneralError from '../../../error/general-error';
+import { BitError } from '@teambit/bit-error';
 import { resolveConflictPrompt } from '../../../prompts';
 
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
@@ -26,13 +26,13 @@ export async function getMergeStrategyInteractive(): Promise<MergeStrategy> {
     return mergeOptionsCli[result.mergeStrategy];
   } catch (err: any) {
     // probably user clicked ^C
-    throw new GeneralError('the action has been canceled');
+    throw new BitError('the action has been canceled');
   }
 }
 
 export function getMergeStrategy(ours: boolean, theirs: boolean, manual: boolean): MergeStrategy | null | undefined {
   if ((ours && theirs) || (ours && manual) || (theirs && manual)) {
-    throw new GeneralError('please choose only one of the following: ours, theirs or manual');
+    throw new BitError('please choose only one of the following: ours, theirs or manual');
   }
   if (ours) return MergeOptions.ours as any;
   if (theirs) return MergeOptions.theirs as any;

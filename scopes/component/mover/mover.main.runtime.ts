@@ -3,7 +3,6 @@ import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { isEmpty } from 'lodash';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { isDir } from '@teambit/legacy/dist/utils';
 import moveSync from '@teambit/legacy/dist/utils/fs/move-sync';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
@@ -24,7 +23,7 @@ export class MoverMain {
     if (fromExists && toExists) {
       throw new BitError(`unable to move because both paths from (${from}) and to (${to}) already exist`);
     }
-    if (!fromExists && !toExists) throw new GeneralError(`both paths from (${from}) and to (${to}) do not exist`);
+    if (!fromExists && !toExists) throw new BitError(`both paths from (${from}) and to (${to}) do not exist`);
     if (!consumer.isLegacy && fromExists && !isDir(from)) {
       throw new BitError(`bit move supports moving directories only, not files.
   files withing a component dir are automatically tracked, no action is needed.
@@ -51,7 +50,7 @@ export class MoverMain {
   moveExistingComponent(component: Component, oldPath: PathOsBasedAbsolute, newPath: PathOsBasedAbsolute) {
     const consumer = this.workspace.consumer;
     if (fs.existsSync(newPath)) {
-      throw new GeneralError(
+      throw new BitError(
         `could not move the component ${component.id.toString()} from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }

@@ -1,5 +1,6 @@
 import { v4 } from 'uuid';
 import { cloneDeep, isEqual, pickBy } from 'lodash';
+import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { isSnap } from '@teambit/component-version';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
@@ -12,7 +13,6 @@ import { hasVersionByRef } from '../component-ops/traverse-versions';
 import { BitObject, Ref, Repository } from '../objects';
 import { Version } from '.';
 import * as globalConfig from '../../api/consumer/lib/global-config';
-import GeneralError from '../../error/general-error';
 
 export type Log = { date: string; username?: string; email?: string; profileImage?: string };
 
@@ -260,10 +260,10 @@ export default class Lane extends BitObject {
       }
     });
     if (this.name === DEFAULT_LANE) {
-      throw new GeneralError(`${message}, this name is reserved as the default lane`);
+      throw new BitError(`${message}, this name is reserved as the default lane`);
     }
     if (this.name === PREVIOUS_DEFAULT_LANE) {
-      throw new GeneralError(`${message}, this name is reserved as the old default lane`);
+      throw new BitError(`${message}, this name is reserved as the old default lane`);
     }
   }
   isEqual(lane: Lane): boolean {
