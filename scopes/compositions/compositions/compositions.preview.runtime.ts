@@ -28,7 +28,11 @@ export class CompositionsPreview {
     const active = this.getActiveComposition(compositions, metadata);
 
     const mainModule = modules.modulesMap[envId] || modules.modulesMap.default;
-    const defaultExports = mainModule.default;
+    let defaultExports = mainModule.default;
+    // Sometime when using ESM (package.json with type:"module") the default export is nested under "default"
+    if (typeof defaultExports !== 'function' && defaultExports.default) {
+      defaultExports = defaultExports.default;
+    }
 
     defaultExports(active, context);
   }

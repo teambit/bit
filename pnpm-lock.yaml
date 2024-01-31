@@ -810,8 +810,8 @@ importers:
         specifier: 1.95.9
         version: 1.95.9(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/preview.modules.preview-modules':
-        specifier: ^1.0.2
-        version: 1.0.2
+        specifier: ^1.0.3
+        version: 1.0.3
       '@teambit/react.content.react-overview':
         specifier: 1.95.0
         version: 1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -5514,7 +5514,7 @@ importers:
         version: file:scopes/component/merging(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mocha':
         specifier: workspace:*
-        version: file:scopes/defender/mocha(@types/react@17.0.75)(mocha@9.2.0)(react@17.0.2)
+        version: file:scopes/defender/mocha(react@17.0.2)
       '@teambit/mover':
         specifier: workspace:*
         version: file:scopes/component/mover(@teambit/legacy@node_modules+@teambit+legacy)
@@ -6938,7 +6938,7 @@ importers:
         version: file:scopes/component/merging(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mocha':
         specifier: workspace:*
-        version: file:scopes/defender/mocha(@types/react@17.0.75)(mocha@10.2.0)(react@17.0.2)
+        version: file:scopes/defender/mocha(react@17.0.2)
       '@teambit/mover':
         specifier: workspace:*
         version: file:scopes/component/mover(@teambit/legacy@node_modules+@teambit+legacy)
@@ -8377,7 +8377,7 @@ importers:
         version: file:scopes/component/merging(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mocha':
         specifier: workspace:*
-        version: file:scopes/defender/mocha(@types/react@17.0.75)(mocha@10.2.0)(react@17.0.2)
+        version: file:scopes/defender/mocha(react@17.0.2)
       '@teambit/mover':
         specifier: workspace:*
         version: file:scopes/component/mover(@teambit/legacy@node_modules+@teambit+legacy)
@@ -9807,7 +9807,7 @@ importers:
         version: file:scopes/component/merging(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mocha':
         specifier: workspace:*
-        version: file:scopes/defender/mocha(@types/react@17.0.75)(mocha@9.2.0)(react@17.0.2)
+        version: file:scopes/defender/mocha(react@17.0.2)
       '@teambit/mover':
         specifier: workspace:*
         version: file:scopes/component/mover(@teambit/legacy@node_modules+@teambit+legacy)
@@ -11216,7 +11216,7 @@ importers:
         version: file:scopes/component/merging(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mocha':
         specifier: workspace:*
-        version: file:scopes/defender/mocha(@types/react@17.0.75)(mocha@9.2.0)(react@17.0.2)
+        version: file:scopes/defender/mocha(react@17.0.2)
       '@teambit/mover':
         specifier: workspace:*
         version: file:scopes/component/mover(@teambit/legacy@node_modules+@teambit+legacy)
@@ -12631,7 +12631,7 @@ importers:
         version: file:scopes/component/merging(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mocha':
         specifier: workspace:*
-        version: file:scopes/defender/mocha(@types/react@17.0.75)(mocha@9.2.0)(react@17.0.2)
+        version: file:scopes/defender/mocha(react@17.0.2)
       '@teambit/mover':
         specifier: workspace:*
         version: file:scopes/component/mover(@teambit/legacy@node_modules+@teambit+legacy)
@@ -14052,7 +14052,7 @@ importers:
         version: file:scopes/component/merging(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mocha':
         specifier: workspace:*
-        version: file:scopes/defender/mocha(@types/react@17.0.75)(mocha@9.2.0)(react@17.0.2)
+        version: file:scopes/defender/mocha(react@17.0.2)
       '@teambit/mover':
         specifier: workspace:*
         version: file:scopes/component/mover(@teambit/legacy@node_modules+@teambit+legacy)
@@ -23213,8 +23213,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/preview.modules.preview-modules':
-        specifier: ^1.0.2
-        version: 1.0.2
+        specifier: ^1.0.3
+        version: 1.0.3
       '@teambit/react.webpack.react-webpack':
         specifier: ^1.0.23
         version: 1.0.23(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(less@4.2.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
@@ -42772,8 +42772,8 @@ packages:
       - react
       - react-dom
 
-  /@teambit/preview.modules.preview-modules@1.0.2:
-    resolution: {integrity: sha512-1H0a5Ivsz8JAPmmgrHHUDjMQoiVGS/dzPt45O73EOD+ZPCKo75K1kbSbLt3uCBcTv+5lVkasaSjpGZnoAbSq7A==}
+  /@teambit/preview.modules.preview-modules@1.0.3:
+    resolution: {integrity: sha512-XirvCPuO/OS2RLRKMvBXVLq5RZqucDJjumuDD6aceqwUm5AIR6rOP4ACCl8/lOZBcE29NMXehfszQ/UvfoXAgQ==}
     dev: false
 
   /@teambit/preview.react-preview@1.0.20(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(graphql@15.8.0)(less@4.2.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5):
@@ -74013,13 +74013,11 @@ packages:
       - utf-8-validate
     dev: false
 
-  file:scopes/defender/mocha(@types/react@17.0.75)(mocha@10.2.0)(react@17.0.2):
+  file:scopes/defender/mocha(react@17.0.2):
     resolution: {directory: scopes/defender/mocha, type: directory}
     id: file:scopes/defender/mocha
     name: '@teambit/mocha'
     peerDependencies:
-      '@types/react': ^17.0.67
-      mocha: 10.2.0
       react: ^17.0.0 || ^18.0.0
     dependencies:
       '@babel/core': 7.19.6
@@ -74033,34 +74031,6 @@ packages:
       graphql: 15.8.0
       lodash: 4.17.21
       mocha: 10.2.0
-      p-map-series: 2.1.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-      react-router-dom: 6.8.1(react-dom@17.0.2)(react@17.0.2)
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
-  file:scopes/defender/mocha(@types/react@17.0.75)(mocha@9.2.0)(react@17.0.2):
-    resolution: {directory: scopes/defender/mocha, type: directory}
-    id: file:scopes/defender/mocha
-    name: '@teambit/mocha'
-    peerDependencies:
-      '@types/react': ^17.0.67
-      mocha: 10.2.0
-      react: ^17.0.0 || ^18.0.0
-    dependencies:
-      '@babel/core': 7.19.6
-      '@babel/register': 7.18.9(@babel/core@7.19.6)
-      '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/harmony': 0.4.6
-      '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/tests-results': 1.0.4
-      '@types/react': 17.0.75
-      '@types/react-dom': 17.0.25
-      graphql: 15.8.0
-      lodash: 4.17.21
-      mocha: 9.2.0
       p-map-series: 2.1.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -75753,7 +75723,7 @@ packages:
       '@teambit/preview.aspect-docs.preview': file:scopes/preview/aspect-docs/preview(react-dom@17.0.2)(react@17.0.2)
       '@teambit/preview.cli.preview-server-status': file:scopes/preview/cli/preview-server-status(@types/react@17.0.75)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/preview.cli.webpack-events-listener': file:scopes/preview/cli/webpack-events-listener
-      '@teambit/preview.modules.preview-modules': 1.0.2
+      '@teambit/preview.modules.preview-modules': 1.0.3
       '@teambit/preview.ui.component-preview': file:scopes/preview/ui/component-preview(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.webpack.react-webpack': 1.0.23(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(eslint@7.32.0)(less@4.2.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/toolbox.path.to-windows-compatible-path': file:scopes/toolbox/path/to-windows-compatible-path

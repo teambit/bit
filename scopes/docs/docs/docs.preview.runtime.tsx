@@ -31,7 +31,11 @@ export class DocsPreview {
     const docsModule = this.selectPreviewModel(componentId.fullName, modules);
 
     const mainModule = modules.modulesMap[envId] || modules.modulesMap.default;
-    const defaultExports = mainModule.default;
+    let defaultExports = mainModule.default;
+    // Sometime when using ESM (package.json with type:"module") the default export is nested under "default"
+    if (typeof defaultExports !== 'function' && defaultExports.default) {
+      defaultExports = defaultExports.default;
+    }
     const isObject = !!defaultExports.apiObject;
 
     /**
