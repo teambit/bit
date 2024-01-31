@@ -36,6 +36,7 @@ export class DocsPreview {
     if (typeof defaultExports !== 'function' && defaultExports.default) {
       defaultExports = defaultExports.default;
     }
+    // @ts-ignore Gilad - to fix.
     const isObject = !!defaultExports.apiObject;
 
     /**
