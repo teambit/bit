@@ -539,7 +539,11 @@
     "savePrefix": "",
     "extraArgs": [],
     "peerDependencyRules": {
-      "allowAny": ["react", "react-dom", "@testing-library/react"],
+      "allowAny": [
+        "react",
+        "react-dom",
+        "@testing-library/react"
+      ],
       "ignoreMissing": []
     },
     "hoistPatterns": [
