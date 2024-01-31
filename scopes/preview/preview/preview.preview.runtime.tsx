@@ -3,7 +3,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';
 import crossFetch from 'cross-fetch';
 import memoize from 'memoizee';
-import { debounce, difference, intersection, isObject } from 'lodash';
+import { debounce, intersection, isObject } from 'lodash';
 
 import { PreviewNotFound } from './exceptions';
 import { PreviewType } from './preview-type';
