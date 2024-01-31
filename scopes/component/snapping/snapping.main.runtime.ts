@@ -777,6 +777,11 @@ there are matching among unmodified components thought. consider using --unmodif
         }
 
         if (!isPartOfHistory) {
+          if (!throwForMissingObjects) {
+            // it's possible that the dependency wasn't imported recently and the head is stale.
+            missingDeps.push(dep.id);
+            return;
+          }
           const laneOrMainStr = lane ? `current lane "${lane.name}"` : 'main';
           throw new Error(
             `unable to tag/snap ${component.id.toString()}, it has a dependency ${dep.id.toString()} which is not part of ${laneOrMainStr} history.
