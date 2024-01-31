@@ -167,7 +167,7 @@ describe('bit export command', function () {
       });
     });
     describe('when the group exists and the current user has permission to that group', function () {
-      if (isWin || process.env.npm_config_with_ssh) {
+      if (isWin) {
         // @ts-ignore
         this.skip;
       } else {

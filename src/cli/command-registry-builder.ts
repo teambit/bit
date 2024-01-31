@@ -1,16 +1,5 @@
 import { BIT_DESCRIPTION, BIT_USAGE, BIT_VERSION } from '../constants';
 import CommandRegistry from './command-registry';
-import Delete from './commands/private-cmds/_delete-cmd';
-import _Fetch from './commands/private-cmds/_fetch-cmd';
-import Action from './commands/private-cmds/_action-cmd';
-import ScopeGraph from './commands/private-cmds/_graph-cmd';
-import ScopeLanesList from './commands/private-cmds/_lanes-cmd';
-import Latest from './commands/private-cmds/_latest-cmd';
-import ScopeList from './commands/private-cmds/_list-cmd';
-import ScopeLog from './commands/private-cmds/_log-cmd';
-import Put from './commands/private-cmds/_put-cmd';
-import DescribeScope from './commands/private-cmds/_scope-cmd';
-import ScopeShow from './commands/private-cmds/_show-cmd';
 import CatComponent from './commands/private-cmds/cat-component-cmd';
 import { CatVersionHistoryCmd } from './commands/private-cmds/cat-version-history-cmd';
 import CatLane from './commands/private-cmds/cat-lane-cmd';
@@ -27,37 +16,18 @@ import RunAction from './commands/private-cmds/run-action.cmd';
 
 export default function registerCommands(): CommandRegistry {
   return new CommandRegistry(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Init(),
     new Config(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Remote(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new CatObject(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new CatComponent(),
     new CatLane(),
     new Dependents(),
-    new ScopeLog(),
-    new Put(),
-    new ScopeList(),
-    new ScopeShow(),
-    new ScopeGraph(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    new _Fetch(),
-    new Action(),
-    new DescribeScope(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new CatScope(),
     new CatVersionHistoryCmd(),
     new ScopeConfig(),
     new DependencyStatus(),
-    new Delete(),
-    new Latest(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Doctor(),
     new RunAction(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    new ScopeLanesList(),
   ]);
 }
