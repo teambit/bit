@@ -5,8 +5,6 @@ import OldClientVersion from './old-client-version';
 import PermissionDenied from './permission-denied';
 import ProtocolNotSupported from './protocol-not-supported';
 import RemoteScopeNotFound from './remote-scope-not-found';
-import SSHConnectionError from './ssh-connection-error';
-import SSHInvalidResponse from './ssh-invalid-response';
 import UnexpectedNetworkError from './unexpected-network-error';
 
 export {
@@ -17,7 +15,5 @@ export {
   PermissionDenied,
   FsScopeNotLoaded,
   RemoteScopeNotFound,
-  SSHConnectionError,
-  SSHInvalidResponse,
   OldClientVersion,
 };

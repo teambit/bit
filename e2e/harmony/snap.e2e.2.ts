@@ -131,7 +131,6 @@ describe('bit snap command', function () {
       });
     });
   });
-  // these tests are failing on ssh. to make them work, run `bit config set features lanes` on the ssh machine first
   describe('local and remote do not have the same head', () => {
     let scopeAfterFirstSnap: string;
     let firstSnap: string;

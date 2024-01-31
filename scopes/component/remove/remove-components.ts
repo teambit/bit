@@ -66,7 +66,7 @@ export async function removeComponents({
 }
 
 /**
- * Remove remote component from ssh server
+ * Remove remote component from the remote
  * this method groups remote components by remote name and deletes remote components together
  * @param {ComponentIdList} bitIds - list of remote component ids to delete
  * @param {boolean} force - delete component that are used by other components.
