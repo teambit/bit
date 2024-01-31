@@ -17,12 +17,13 @@ export function createWebpackConfig(outputDir: string, entryFile: string): Confi
 }
 
 function createPreBundleConfig(outputDir: string, entryFile: string) {
+  const mode = process.env.BIT_DEBUG_PREVIEW_BUNDLE ? 'development' : 'production';
   const preBundleConfig: Configuration = {
     stats: {
       children: true,
       errorDetails: true,
     },
-    mode: 'production',
+    mode,
     entry: {
       main: entryFile,
     },
@@ -49,10 +50,10 @@ function createPreBundleConfig(outputDir: string, entryFile: string) {
     output: {
       path: outputDir,
       publicPath: '/',
-      chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
-      filename: 'static/js/[name].[contenthash:8].js',
+      chunkFilename: 'static/js/[name].[contenthash:8].chunk.cjs',
+      filename: 'static/js/[name].[contenthash:8].cjs',
       library: {
-        type: 'commonjs2',
+        type: 'commonjs-static',
       },
     },
     externalsType: 'commonjs',
