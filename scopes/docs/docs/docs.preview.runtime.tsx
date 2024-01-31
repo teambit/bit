@@ -49,6 +49,7 @@ export class DocsPreview {
         compositions,
         context,
       ];
+      // @ts-ignore Gilad - to fix. it happens because defaultExports might be a func or an object (handled above)
       defaultExports(...docsPropsArray);
       return;
     }
@@ -60,7 +61,7 @@ export class DocsPreview {
       compositions,
       context,
     };
-
+    // @ts-ignore Gilad - to fix. it happens because defaultExports might be a func or an object (handled above)
     defaultExports(docsProps);
   };
 
