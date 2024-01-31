@@ -264,6 +264,10 @@ export default class Lane extends BitObject {
     this.schema = SCHEMA_INCLUDING_DELETED_COMPONENTS_DATA;
     this.hasChanged = true;
   }
+  setSchemaToNotSupportDeletedData() {
+    this.schema = OLD_LANE_SCHEMA;
+    this.hasChanged = true;
+  }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;
     const bitIds = this.toComponentIds();
