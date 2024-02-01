@@ -1,7 +1,0 @@
-[Bitsrc]
-name=Bitsrc
-baseurl=https://bitsrc.jfrog.io/bitsrc/bit-yum/stable
-enabled=1
-gpgcheck=0
-gpgkey=https://bitsrc.jfrog.io/bitsrc/bit-yum/stable/repodata/repomd.xml.key
-repo_gpgcheck=1
