@@ -208,43 +208,31 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
   logger.debug(`importMultipleDistsArtifacts: ${components.length} components. completed successfully`);
 }
 
-export async function importAllArtifacts(scope: Scope, components: Component[], lane: Lane) {
+export async function importAllArtifactsFromLane(scope: Scope, components: Component[], lane: Lane) {
   logger.debug(
-    `importAllArtifacts: ${components.length} components: ${components.map((c) => c.id.toString()).join(', ')}`
+    `importAllArtifactsFromLane: ${components.length} components: ${components.map((c) => c.id.toString()).join(', ')}`
   );
   const scopeComponentsImporter = scope.scopeImporter;
   const groupedHashes: { [scopeName: string]: string[] } = {};
   const debugHashesOrigin = {};
-  await Promise.all(
-    components.map(async (component) => {
-      const artifactsRefs = getRefsFromExtensions(component.extensions);
-      const isIdOnLane = await scope.isIdOnLane(component.id, lane);
-      const getScopes = () => {
-        if (isIdOnLane === null) {
-          // we're not sure wether it's on the lane or not. try to fetch from both.
-          return [lane?.scope as string, component.scope as string];
-        }
-        return isIdOnLane ? [lane?.scope as string] : [component.scope as string];
-      };
-      const scopes = getScopes();
-      const artifactsRefsStr = artifactsRefs.map((ref) => ref.hash);
-      scopes.forEach((scopeName) => (groupedHashes[scopeName] ||= []).push(...artifactsRefsStr));
-      artifactsRefsStr.forEach(
-        (hash) => (debugHashesOrigin[hash] = `id: ${component.id.toString()}. isIdOnLane: ${isIdOnLane}`)
-      );
-    })
-  );
+  groupedHashes[lane.scope] = [];
+  components.forEach((component) => {
+    const artifactsRefs = getRefsFromExtensions(component.extensions);
+    const artifactsRefsStr = artifactsRefs.map((ref) => ref.hash);
+    groupedHashes[lane.scope].push(...artifactsRefsStr);
+    artifactsRefsStr.forEach((hash) => (debugHashesOrigin[hash] = `id: ${component.id.toString()}. isIdOnLane: true`));
+  });
   try {
     await scopeComponentsImporter.importManyObjects(
       groupedHashes,
-      `to get all artifacts for ${components.length} components`
+      `to get all artifacts for ${components.length} components from lane ${lane.id.toString()}`
     );
   } catch (err) {
     logger.error('failed fetching the following hashes', { groupedHashes, debugHashesOrigin });
     throw err;
   }
 
-  logger.debug(`importAllArtifacts: ${components.length} components. completed successfully`);
+  logger.debug(`importAllArtifactsFromLane: ${components.length} components. completed successfully`);
 }
 
 export function refsToModelObjects(refs: ArtifactRef[]): ArtifactModel[] {

@@ -313,7 +313,7 @@ export class MergeLanesMain {
   async mergeFromScope(
     fromLane: string,
     toLane: string,
-    options: Partial<MergeLaneOptions> & { push?: boolean }
+    options: Partial<MergeLaneOptions> & { push?: boolean; reMerge?: boolean }
   ): Promise<{
     mergedPreviously: string[];
     mergedNow: string[];
@@ -370,7 +370,7 @@ export class MergeLanesMain {
       const fromLaneHead = modelComponent.getRef(id.version as string);
       if (!fromLaneHead) throw new Error(`lane head must be defined for ${id.toString()}`);
       const toLaneHead = toLaneObj ? toLaneObj.getComponent(id)?.head : modelComponent.head || null;
-      if (toLaneHead?.isEqual(fromLaneHead)) {
+      if (toLaneHead?.isEqual(fromLaneHead) && !options.reMerge) {
         mergedPreviously.push(id);
         return undefined;
       }
