@@ -82,7 +82,7 @@ export class ImportCmd implements Command {
     [
       '',
       'dependents-through <string>',
-      'same as --dependents except the traversal must go through the specified component',
+      'same as --dependents except the traversal must go through the specified component. to specify multiple components, wrap with quotes and separate by a comma',
     ],
     [
       '',
