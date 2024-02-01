@@ -30,6 +30,7 @@ type ImportFlags = {
   dependencies?: boolean;
   dependents?: boolean;
   dependentsDryRun?: boolean;
+  dependentsThrough?: string;
   allHistory?: boolean;
   fetchDeps?: boolean;
   trackOnly?: boolean;
@@ -77,6 +78,11 @@ export class ImportCmd implements Command {
       '',
       'dependents',
       'import components found while traversing from the imported components upwards to the workspace components',
+    ],
+    [
+      '',
+      'dependents-through <string>',
+      'same as --dependents except the traversal must go through the specified component',
     ],
     [
       '',
@@ -204,6 +210,7 @@ export class ImportCmd implements Command {
       dependencies = false,
       dependents = false,
       dependentsDryRun = false,
+      dependentsThrough,
       allHistory = false,
       fetchDeps = false,
       trackOnly = false,
@@ -224,6 +231,9 @@ export class ImportCmd implements Command {
     }
     if (!ids.length && dependentsDryRun) {
       throw new BitError('you have to specify ids to use "--dependents-dry-run" flag');
+    }
+    if (!ids.length && dependentsThrough) {
+      throw new BitError('you have to specify ids to use "--dependents-through" flag');
     }
     if (!ids.length && trackOnly) {
       throw new BitError('you have to specify ids to use "--track-only" flag');
@@ -255,6 +265,7 @@ export class ImportCmd implements Command {
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
       dependentsDryRun,
+      dependentsThrough,
       allHistory,
       fetchDeps,
       trackOnly,

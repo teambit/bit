@@ -51,6 +51,7 @@ export type ImportOptions = {
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages, not as imported
   importDependents?: boolean;
   dependentsDryRun?: boolean;
+  dependentsThrough?: string;
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
   saveInLane?: boolean; // save the imported component on the current lane (won't be available on main)
   lanes?: {
@@ -441,17 +442,26 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     const bitIds: ComponentID[] = this.options.lanes
       ? await this.getBitIdsForLanes()
       : await this.getBitIdsForNonLanes();
-    if (this.options.importDependenciesDirectly || this.options.importDependents || this.options.dependentsDryRun) {
+    const shouldImportDependents =
+      this.options.importDependents || this.options.dependentsDryRun || this.options.dependentsThrough;
+    if (this.options.importDependenciesDirectly || shouldImportDependents) {
       if (this.options.importDependenciesDirectly) {
         const dependenciesIds = await this.getFlattenedDepsUnique(bitIds);
         bitIds.push(...dependenciesIds);
       }
-      if (this.options.importDependents || this.options.dependentsDryRun) {
+      if (shouldImportDependents) {
         this.logger.setStatusLine('finding dependents');
         const graph = await this.graph.getGraphIds();
         const targetCompIds = await this.workspace.resolveMultipleComponentIds(bitIds);
         const sourceIds = await this.workspace.listIds();
-        const ids = graph.findIdsFromSourcesToTargets(sourceIds, targetCompIds);
+        const getIdsForThrough = () => {
+          if (!this.options.dependentsThrough) return undefined;
+          return this.options.dependentsThrough
+            .split(',')
+            .map((idStr) => idStr.trim())
+            .map((id) => ComponentID.fromString(id));
+        };
+        const ids = graph.findIdsFromSourcesToTargets(sourceIds, targetCompIds, getIdsForThrough());
         const idsStr = ids.map((id) => id.toString());
         this.logger.debug(`found ${ids.length} component for --dependents flag`, idsStr);
         if (this.options.dependentsDryRun) {
