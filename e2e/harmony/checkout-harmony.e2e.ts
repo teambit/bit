@@ -7,6 +7,7 @@ import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import { NewerVersionFound } from '../../src/consumer/exceptions';
 import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
 import { FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
+import { UPDATE_DEPS_ON_IMPORT } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -576,6 +577,58 @@ describe('bit checkout command', function () {
       const file = helper.fs.readFile('comp1/index.js');
       expect(file).to.include(`// first line modified
 `);
+    });
+  });
+  describe('checkout head with deps having different versions than workspace.jsonc', () => {
+    let beforeCheckout: string;
+    const initWsWithVer = (ver: string) => {
+      helper.scopeHelper.getClonedLocalScope(beforeCheckout);
+      helper.workspaceJsonc.addPolicyToDependencyResolver({
+        dependencies: {
+          'lodash.get': ver,
+        },
+      });
+      helper.npm.addFakeNpmPackage('lodash.get', ver.replace('^', '').replace('~', ''));
+      helper.command.checkoutHead(undefined, '-x');
+    };
+
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.setFeatures(UPDATE_DEPS_ON_IMPORT);
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      beforeCheckout = helper.scopeHelper.cloneLocalScope();
+
+      helper.fs.outputFile('comp1/foo.js', `const get = require('lodash.get'); console.log(get);`);
+      helper.workspaceJsonc.addPolicyToDependencyResolver({
+        dependencies: {
+          'lodash.get': '^4.4.2',
+        },
+      });
+      helper.npm.addFakeNpmPackage('lodash.get', '4.4.2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+    });
+    it('if the ws has a lower range, it should update workspace.jsonc with the new range', () => {
+      initWsWithVer('^4.4.1');
+      const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+      expect(policy.dependencies['lodash.get']).to.equal('^4.4.2');
+    });
+
+    it('if the ws has a higher range, it should not update', () => {
+      initWsWithVer('^4.4.3');
+      const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+      expect(policy.dependencies['lodash.get']).to.equal('^4.4.3');
+    });
+
+    it('if the ws has a lower exact version, it should write a conflict', () => {
+      initWsWithVer('4.4.1');
+      const policy = helper.workspaceJsonc.readRaw();
+      expect(policy).to.have.string('<<<<<<< ours');
+      expect(policy).to.have.string('"lodash.get": "4.4.1"');
+      expect(policy).to.have.string('"lodash.get": "^4.4.2"');
+      expect(policy).to.have.string('>>>>>>> theirs');
     });
   });
 });
