@@ -11,6 +11,7 @@ import { pathNormalizeToLinux } from '../../../utils';
 import { ExtensionDataList } from '../../config';
 import Component from '../consumer-component';
 import { ArtifactVinyl } from './artifact';
+import { MissingObjects } from '../../../scope/exceptions/missing-objects';
 
 export type ArtifactRef = { relativePath: string; ref: Ref; url?: string };
 export type ArtifactModel = { relativePath: string; file: string; url?: string };
@@ -213,23 +214,64 @@ export async function importAllArtifactsFromLane(scope: Scope, components: Compo
     `importAllArtifactsFromLane: ${components.length} components: ${components.map((c) => c.id.toString()).join(', ')}`
   );
   const scopeComponentsImporter = scope.scopeImporter;
-  const groupedHashes: { [scopeName: string]: string[] } = {};
+  const groupedHashesOnLane: { [scopeName: string]: string[] } = {};
+  const groupedHashesFromMain: { [scopeName: string]: string[] } = {};
   const debugHashesOrigin = {};
-  groupedHashes[lane.scope] = [];
+  groupedHashesOnLane[lane.scope] = [];
   components.forEach((component) => {
     const artifactsRefs = getRefsFromExtensions(component.extensions);
     const artifactsRefsStr = artifactsRefs.map((ref) => ref.hash);
-    groupedHashes[lane.scope].push(...artifactsRefsStr);
-    artifactsRefsStr.forEach((hash) => (debugHashesOrigin[hash] = `id: ${component.id.toString()}. isIdOnLane: true`));
+    groupedHashesOnLane[lane.scope].push(...artifactsRefsStr);
+    if (lane.scope !== component.scope) {
+      (groupedHashesFromMain[component.scope as string] ||= []).push(...artifactsRefsStr);
+    }
+    artifactsRefsStr.forEach(
+      (hash) => (debugHashesOrigin[hash] = `id: ${component.id.toString()}. will try both lane and main`)
+    );
   });
+  let errorFromLane: MissingObjects | undefined;
   try {
     await scopeComponentsImporter.importManyObjects(
-      groupedHashes,
+      groupedHashesOnLane,
       `to get all artifacts for ${components.length} components from lane ${lane.id.toString()}`
     );
-  } catch (err) {
-    logger.error('failed fetching the following hashes', { groupedHashes, debugHashesOrigin });
-    throw err;
+  } catch (err: any) {
+    logger.error('failed fetching the following hashes from the lane', {
+      groupedHashes: groupedHashesOnLane,
+      debugHashesOrigin,
+    });
+    if (err instanceof MissingObjects) {
+      errorFromLane = err;
+    } else throw err;
+  }
+
+  if (errorFromLane) {
+    if (!Object.keys(groupedHashesFromMain).length) throw errorFromLane;
+    const groupHashesFallBack: { [scopeName: string]: string[] } = {};
+    const missing = errorFromLane.hashesPerRemotes;
+    Object.keys(groupedHashesFromMain).forEach((scopeName) => {
+      groupHashesFallBack[scopeName] = groupedHashesFromMain[scopeName].filter((hash) => missing[hash]);
+    });
+    try {
+      await scopeComponentsImporter.importManyObjects(
+        groupHashesFallBack,
+        `to get all artifacts for ${components.length} components from main`
+      );
+    } catch (err) {
+      logger.error('failed fetching the following hashes from both lane and main', {
+        groupedHashes: groupedHashesOnLane,
+        debugHashesOrigin,
+      });
+      if (err instanceof MissingObjects) {
+        const currentMissing = err.hashesPerRemotes;
+        const hashesPerRemotes = Object.keys(currentMissing).reduce((acc, curr) => {
+          acc[curr] = [...missing[curr], ...currentMissing[curr]];
+          return acc;
+        }, {});
+        throw new MissingObjects(hashesPerRemotes);
+      }
+      throw err;
+    }
   }
 
   logger.debug(`importAllArtifactsFromLane: ${components.length} components. completed successfully`);
