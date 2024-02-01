@@ -23,6 +23,9 @@ function getPackageName(aspect: any, id: ComponentID) {
 }
 
 /**
+ * ! important ! prefer using `loadManyAspects` instead of this function. otherwise, you may end up with
+ * different instances of "Workspace" aspect for example for each one of the aspects you load.
+ *
  * to make this work, export the main also as default (e.g. `export default LanesMain;`).
  * otherwise, it'll show an error "TypeError: Cannot read property 'runtime' of undefined".
  */
