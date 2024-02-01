@@ -384,16 +384,22 @@ describe('import functionality on Harmony', function () {
     // comp1 -> comp-a -> comp4
     // comp1 -> comp-b
     before(() => {
-      // helper = new Helper();
+      helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(4);
-      helper.fs.outputFile('comp-a/index.js', `require('${helper.general.getPackageNameByCompName('comp4')}');`);
+      helper.fs.outputFile('comp-a/index.js', `require('${helper.general.getPackageNameByCompName('comp4', false)}');`);
       helper.fs.outputFile('comp-b/index.js');
       helper.command.addComponent('comp-a');
       helper.command.addComponent('comp-b');
       helper.command.compile();
-      helper.fs.appendFile('comp1/index.js', `\nrequire('${helper.general.getPackageNameByCompName('comp-a')}');`);
-      helper.fs.appendFile('comp1/index.js', `\nrequire('${helper.general.getPackageNameByCompName('comp-b')}');`);
+      helper.fs.appendFile(
+        'comp1/index.js',
+        `\nrequire('${helper.general.getPackageNameByCompName('comp-a', false)}');`
+      );
+      helper.fs.appendFile(
+        'comp1/index.js',
+        `\nrequire('${helper.general.getPackageNameByCompName('comp-b', false)}');`
+      );
 
       helper.command.tagAllWithoutBuild();
       helper.command.export();
