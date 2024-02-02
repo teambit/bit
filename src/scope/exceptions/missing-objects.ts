@@ -3,7 +3,7 @@ import { BitError } from '@teambit/bit-error';
 export type HashesPerRemotes = { [hash: string]: string[] };
 
 export class MissingObjects extends BitError {
-  constructor(hashesPerRemotes: HashesPerRemotes) {
+  constructor(readonly hashesPerRemotes: HashesPerRemotes) {
     const hashesPerRemotesStr = Object.keys(hashesPerRemotes)
       .map((hash) => `${hash}: ${hashesPerRemotes[hash].join(', ')}`)
       .join('\n');
