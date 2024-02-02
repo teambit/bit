@@ -13,6 +13,7 @@ type Flags = {
   includeDeps?: boolean;
   title?: string;
   titleBase64?: string;
+  reMerge?: boolean;
 };
 
 /**
@@ -47,6 +48,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
     ['', 'no-squash', 'relevant for merging lanes into main, which by default squash.'],
     ['', 'include-deps', 'relevant for "--pattern". merge also dependencies of the given components'],
+    ['', 're-merge', 'helpful when last merge failed during export. do not skip components that seemed to be merged'],
     ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;
@@ -57,7 +59,16 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
 
   async report(
     [fromLane, toLane]: [string, string],
-    { pattern, push = false, keepReadme = false, noSquash = false, includeDeps = false, title, titleBase64 }: Flags
+    {
+      pattern,
+      push = false,
+      keepReadme = false,
+      noSquash = false,
+      includeDeps = false,
+      title,
+      titleBase64,
+      reMerge,
+    }: Flags
   ): Promise<string> {
     if (includeDeps && !pattern) {
       throw new BitError(`"--include-deps" flag is relevant only for --pattern flag`);
@@ -75,6 +86,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
         pattern,
         includeDeps,
         snapMessage: titleBase64Decoded || title,
+        reMerge,
       }
     );
 
@@ -95,7 +107,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
   }
   async json(
     [fromLane, toLane]: [string, string],
-    { pattern, push = false, keepReadme = false, noSquash = false, includeDeps = false }: Flags
+    { pattern, push = false, keepReadme = false, noSquash = false, includeDeps = false, reMerge }: Flags
   ) {
     if (includeDeps && !pattern) {
       throw new BitError(`"--include-deps" flag is relevant only for --pattern flag`);
@@ -108,6 +120,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
         noSquash,
         pattern,
         includeDeps,
+        reMerge,
       });
       return {
         code: 0,

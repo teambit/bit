@@ -5,6 +5,7 @@ import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import RemoveAspect, { RemoveMain } from '@teambit/remove';
+import { UPDATE_DEPS_ON_IMPORT, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { ApplyVersionResults, FailedComponents } from '@teambit/merging';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
@@ -164,6 +165,7 @@ export class CheckoutMain {
         verbose: checkoutProps.verbose,
         resetConfig: checkoutProps.reset,
         skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap || checkoutProps.revert,
+        shouldUpdateWorkspaceConfig: isFeatureEnabled(UPDATE_DEPS_ON_IMPORT),
         reasonForBitmapChange: 'checkout',
       };
       componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
@@ -188,6 +190,7 @@ export class CheckoutMain {
       leftUnresolvedConflicts,
       newFromLane: newFromLane?.map((n) => n.toString()),
       newFromLaneAdded,
+      workspaceConfigUpdateResult: componentWriterResults?.workspaceConfigUpdateResult,
       installationError: componentWriterResults?.installationError,
       compilationError: componentWriterResults?.compilationError,
     };
