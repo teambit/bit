@@ -128,7 +128,7 @@ describe('update-dependencies command', function () {
         expect(compB.dependencies[0].id.version).to.equal('1.1.0');
       });
     });
-    describe('running from a new bare scope using --simulate and --tag flags', () => {
+    describe('running from a new bare scope using --simulation and --tag flags', () => {
       let updateDepsOutput: string;
       let updateRemote;
       before(() => {
