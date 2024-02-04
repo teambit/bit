@@ -60,8 +60,8 @@ importers:
         specifier: 7.22.3
         version: 7.22.3
       '@bitdev/harmony.generators.harmony-templates':
-        specifier: ~0.0.26
-        version: 0.0.26
+        specifier: ~0.0.27
+        version: 0.0.27
       '@bitdev/node.generators.node-templates':
         specifier: ^1.0.9
         version: 1.0.9
@@ -20887,8 +20887,8 @@ importers:
         specifier: 7.22.15
         version: 7.22.15(@babel/core@7.19.6)
       '@bitdev/harmony.generators.harmony-templates':
-        specifier: ~0.0.26
-        version: 0.0.26
+        specifier: ~0.0.27
+        version: 0.0.27
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
@@ -31158,8 +31158,8 @@ packages:
   /@bcoe/v8-coverage@0.2.3:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  /@bitdev/harmony.generators.harmony-templates@0.0.26:
-    resolution: {integrity: sha512-5Crwm0rV9VxU4SDnz4zSCNe/tIKctpsmaLqhYO+lUgPqtRvUTXAQ/CheXf2OEHF3qQZlU/XuZfY30bkcFCa2rQ==}
+  /@bitdev/harmony.generators.harmony-templates@0.0.27:
+    resolution: {integrity: sha512-Bvxbz7mHMJak18BRL+RAuKlCzBoM4g9/JuY2oyN22YHH72+/WtoMFOIODZUMKAkU/AjqZrzmYbH6YC2UjTbAdg==}
     dependencies:
       '@teambit/component-id': 1.2.0
       lodash: 4.17.21
@@ -75015,7 +75015,7 @@ packages:
       '@babel/preset-env': 7.23.2(@babel/core@7.19.6)
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
-      '@bitdev/harmony.generators.harmony-templates': 0.0.26
+      '@bitdev/harmony.generators.harmony-templates': 0.0.27
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/bit-error': 0.0.404
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table

@@ -458,6 +458,7 @@ export default class Consumer {
       existingGitHooks,
     });
     await consumer.setBitMap();
+    // understands why tests break with gilad and david.
     // await Consumer.ensurePackageJson(projectPath);
     return consumer;
   }
