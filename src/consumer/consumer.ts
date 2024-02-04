@@ -467,7 +467,6 @@ export default class Consumer {
     const exists = fs.existsSync(packageJsonPath);
     if (exists) return;
     fs.writeFileSync(packageJsonPath, `{\n  "type": "module"  \n}`);
-    return;
   }
 
   /**
