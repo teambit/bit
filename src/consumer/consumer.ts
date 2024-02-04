@@ -458,7 +458,16 @@ export default class Consumer {
       existingGitHooks,
     });
     await consumer.setBitMap();
+    // understands why tests break with gilad and david.
+    // await Consumer.ensurePackageJson(projectPath);
     return consumer;
+  }
+
+  static async ensurePackageJson(projectPath: string) {
+    const packageJsonPath = path.join(projectPath, 'package.json');
+    const exists = fs.existsSync(packageJsonPath);
+    if (exists) return;
+    fs.writeFileSync(packageJsonPath, `{\n  "type": "module"  \n}`);
   }
 
   /**
