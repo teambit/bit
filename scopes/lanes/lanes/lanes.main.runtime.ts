@@ -33,7 +33,6 @@ import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import CheckoutAspect, { CheckoutMain } from '@teambit/checkout';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
-import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
@@ -143,6 +142,10 @@ export class LanesMain {
     readonly checkout: CheckoutMain
   ) {}
 
+  /**
+   * return the lane data without the deleted components.
+   * the deleted components are filtered out in legacyScope.lanes.getLanesData()
+   */
   async getLanes({
     name,
     remote,
@@ -163,7 +166,8 @@ export class LanesMain {
       const laneId = name ? LaneId.from(name, remote) : undefined;
       const remoteObj = await getRemoteByName(remote, consumer);
       const lanes = await remoteObj.listLanes(laneId?.toString(), showMergeData);
-      // no need to filter soft-removed here. it was filtered already in the remote
+      // if the remote is http, it eventually calls this method from the remote without the "remote" param.
+      // again, the deleted components are filtered out.
       return lanes;
     }
 
@@ -179,7 +183,7 @@ export class LanesMain {
       if (defaultLane) lanes.push(defaultLane);
     }
 
-    return this.filterSoftRemovedLaneComps(lanes);
+    return lanes;
   }
 
   async parseLaneId(idStr: string): Promise<LaneId> {
@@ -238,45 +242,6 @@ export class LanesMain {
     const existingLane = await this.loadLane(laneId);
     if (existingLane?.isNew) return;
     await this.importer.importLaneObject(laneId, undefined, true);
-  }
-
-  private async filterSoftRemovedLaneComps(lanes: LaneData[]): Promise<LaneData[]> {
-    return Promise.all(
-      lanes.map(async (lane) => {
-        if (lane.id.isDefault()) return lane;
-
-        const componentIds = compact(
-          await Promise.all(
-            (
-              await this.getLaneComponentIds(lane)
-            ).map(async (laneCompId) => {
-              try {
-                if (await this.scope.isComponentRemoved(laneCompId)) return undefined;
-              } catch (err) {
-                // if (err instanceof ComponentNotFound)
-                // throw new Error(
-                //   `component "${laneCompId.toString()}" from the lane "${lane.id.toString()}" not found`
-                // );
-                // throw err;
-                if (err instanceof ComponentNotFound)
-                  this.logger.warn(
-                    `component "${laneCompId.toString()}" from the lane "${lane.id.toString()}" not found`
-                  );
-
-                return undefined;
-              }
-              return { id: laneCompId, head: laneCompId.version as string };
-            })
-          )
-        );
-
-        const laneData: LaneData = {
-          ...lane,
-          components: componentIds,
-        };
-        return laneData;
-      })
-    );
   }
 
   getCurrentLaneName(): string | null {

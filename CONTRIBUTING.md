@@ -117,13 +117,6 @@ Keep in mind that running the e2e-tests locally may take hours to complete, it's
   npm run e2e-test:debug
 ```
 
-- run e2e-tests for SSH (switch from exporting by using file-system to SSH approach). Make sure you are able to run 'ssh `whoami`@127.0.0.1' on your local.
-
-```bash
-  npm run e2e-test:ssh
-  npm run e2e-test:ssh-debug
-```
-
 ### Debugging
 
 The code is heavy on promises, as such, some errors don't have a useful stack trace. Bluebird enables the long stack trace when the env is development or when `BLUEBIRD_DEBUG` is set. Normally, the full stack trace is not shown on the console but logged in the debug.log file. (located at /Users/your-use/Library/Caches/Bit/logs/debug.log on Mac).

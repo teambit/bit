@@ -1,7 +1,7 @@
+import { BitError } from '@teambit/bit-error';
 import { show } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import ConsumerComponent from '../../../consumer/component/consumer-component';
-import GeneralError from '../../../error/general-error';
 import { DependenciesInfo } from '../../../scope/graph/scope-graph';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
@@ -51,13 +51,13 @@ export default class Show implements LegacyCommand {
     }
   ): Promise<any> {
     if (versions && (compare || outdated)) {
-      throw new GeneralError('the [--compare] or [--outdated] flag cannot be used along with --versions');
+      throw new BitError('the [--compare] or [--outdated] flag cannot be used along with --versions');
     }
     if (versions && remote) {
-      throw new GeneralError('the [--versions] and [--remote] flags cannot be used together');
+      throw new BitError('the [--versions] and [--remote] flags cannot be used together');
     }
     if (compare && outdated) {
-      throw new GeneralError('the [--compare] and [--outdated] flags cannot be used together');
+      throw new BitError('the [--compare] and [--outdated] flags cannot be used together');
     }
 
     return show({

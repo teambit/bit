@@ -5,7 +5,6 @@ import { ComponentID } from '@teambit/component-id';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import BuilderAspect from '@teambit/builder';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import DependencyResolverAspect, {
@@ -57,7 +56,7 @@ export class ComponentCompareMain {
     const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(compareCompId);
 
     if (!modelComponent) {
-      throw new GeneralError(`component ${compareCompId.toString()} doesn't have any version yet`);
+      throw new BitError(`component ${compareCompId.toString()} doesn't have any version yet`);
     }
 
     const baseVersion = baseCompId.version as string;
@@ -180,7 +179,7 @@ export class ComponentCompareMain {
       const diffResult: DiffResults = { id: component.id, hasDiff: false };
       const modelComponent = await consumer.scope.getModelComponentIfExist(component.id);
       if (!modelComponent) {
-        throw new GeneralError(`component ${component.id.toString()} doesn't have any version yet`);
+        throw new BitError(`component ${component.id.toString()} doesn't have any version yet`);
       }
       const repository = consumer.scope.objects;
       const fromVersionObject: Version = await modelComponent.loadVersion(version, repository);
@@ -202,7 +201,7 @@ export class ComponentCompareMain {
       const diffResult: DiffResults = { id, hasDiff: false };
       const modelComponent = await consumer.scope.getModelComponentIfExist(id);
       if (!modelComponent) {
-        throw new GeneralError(`component ${id.toString()} doesn't have any version yet`);
+        throw new BitError(`component ${id.toString()} doesn't have any version yet`);
       }
       const repository = consumer.scope.objects;
 

@@ -4,11 +4,12 @@ import { ComponentID } from '@teambit/component-id';
 import { Scope } from '..';
 import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
 import logger from '../../logger/logger';
-import { Lane, LaneHistory } from '../models';
+import { Lane, LaneHistory, Version } from '../models';
 import { BitObject, Repository } from '../objects';
 import { IndexType, LaneItem } from '../objects/scope-index';
 import { ScopeJson, TrackLane } from '../scope-json';
-import { Log } from '../models/lane';
+import { LaneComponent, Log } from '../models/lane';
+import { pMapPool } from '../../utils/promise-with-concurrent';
 
 export default class Lanes {
   objects: Repository;
@@ -190,16 +191,55 @@ export default class Lanes {
     return foundWithSameName[0].toLaneId();
   }
 
-  async getLanesData(scope: Scope, name?: string, mergeData?: boolean): Promise<LaneData[]> {
+  async getLanesData(scope: Scope, name?: string, mergeData = false, includeDeleted = false): Promise<LaneData[]> {
     const getLaneDataOfLane = async (laneObject: Lane): Promise<LaneData> => {
       const laneName = laneObject.name;
       const alias = this.getLocalTrackedLaneByRemoteName(laneName, laneObject.scope);
+      const filterDeletedComponents = async () => {
+        const format = (c: LaneComponent) => ({ id: c.id, head: c.head.toString() });
+        if (includeDeleted) {
+          return laneObject.components.map(format);
+        }
+        if (laneObject.includeDeletedData()) {
+          return laneObject.components.filter((c) => !c.isDeleted).map(format);
+        }
+        // migrate the object to include the deleted data
+        let foundErrors = false;
+        const comps = await pMapPool(
+          laneObject.components,
+          async ({ id, head, isDeleted }) => {
+            if (isDeleted) return format({ id, head });
+            let versionObj: Version;
+            try {
+              const modelComponent = await scope.getModelComponent(id);
+              versionObj = await modelComponent.loadVersion(head.toString(), scope.objects);
+            } catch (err) {
+              foundErrors = true;
+              logger.warn(
+                `getLanesData: failed loading version ${head.toString()} of ${id.toString()} in lane ${laneName}, error: ${err}`
+              );
+              return format({ id, head });
+            }
+            const isRemoved = versionObj.isRemoved();
+            if (isRemoved) {
+              laneObject.addComponent({ id, head, isDeleted: true });
+            }
+            return format({ id, head });
+          },
+          { concurrency: 50 }
+        );
+        if (!foundErrors) {
+          laneObject.setSchemaToSupportDeletedData();
+          await this.saveLane(laneObject, { laneHistoryMsg: 'migrate lane to support including deleted data' });
+        }
+        return comps;
+      };
       return {
         name: laneName,
         remote: laneObject.toLaneId().toString(),
         id: laneObject.toLaneId(),
         alias: alias !== laneName ? alias : null,
-        components: laneObject.components.map((c) => ({ id: c.id, head: c.head.toString() })),
+        components: await filterDeletedComponents(),
         log: laneObject.log,
         isMerged: mergeData ? await laneObject.isFullyMerged(scope) : null,
         readmeComponent: laneObject.readmeComponent && {
@@ -217,7 +257,9 @@ export default class Lanes {
     }
 
     const lanesObjects = await this.listLanes();
-    const lanes: LaneData[] = await Promise.all(lanesObjects.map((laneObject: Lane) => getLaneDataOfLane(laneObject)));
+    const lanes: LaneData[] = await pMapPool(lanesObjects, (laneObject: Lane) => getLaneDataOfLane(laneObject), {
+      concurrency: 10,
+    });
 
     return lanes;
   }

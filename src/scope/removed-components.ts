@@ -56,7 +56,7 @@ export default class RemovedObjects {
     removedFromLane: string[];
     removedLanes: string[];
   }): RemovedObjects {
-    // this function being called from an ssh, so the ids must have a remote scope
+    // this function being called from a remote, so the ids must have a remote scope
     const missingComponents = ComponentIdList.fromStringArray(payload.missingComponents);
     const removedComponentIds = ComponentIdList.fromStringArray(payload.removedComponentIds);
     const removedFromLane = payload.removedFromLane

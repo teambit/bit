@@ -1,7 +1,6 @@
 import * as path from 'path';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ComponentID } from '@teambit/component-id';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
 import Version from '@teambit/legacy/dist/scope/models/version';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { pathNormalizeToLinux, PathOsBased } from '@teambit/legacy/dist/utils/path';
@@ -79,7 +78,7 @@ export async function applyVersion(
   }
   const component = await consumer.loadComponentFromModelImportIfNeeded(id);
   const componentMap = componentFromFS && componentFromFS.componentMap;
-  if (componentFromFS && !componentMap) throw new GeneralError('applyVersion: componentMap was not found');
+  if (componentFromFS && !componentMap) throw new BitError('applyVersion: componentMap was not found');
 
   const files = component.files;
   updateFileStatus(files, filesStatus, componentFromFS || undefined);
@@ -160,7 +159,7 @@ export function applyModifiedVersion(
   mergeResults.modifiedFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     const foundFile = modifiedFiles.find((componentFile) => componentFile.relative === filePath);
-    if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
+    if (!foundFile) throw new BitError(`file ${filePath} not found`);
     if (file.conflict) {
       foundFile.contents = Buffer.from(file.conflict);
       filesStatus[file.filePath] = FileStatus.manual;
@@ -172,7 +171,7 @@ export function applyModifiedVersion(
       foundFile.contents = file.fsFile.contents;
       filesStatus[file.filePath] = FileStatus.binaryConflict;
     } else {
-      throw new GeneralError(`file ${filePath} does not have output nor conflict`);
+      throw new BitError(`file ${filePath} does not have output nor conflict`);
     }
   });
 
@@ -206,14 +205,14 @@ export function applyModifiedVersion(
   mergeResults.overrideFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     const foundFile = modifiedFiles.find((componentFile) => componentFile.relative === filePath);
-    if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
+    if (!foundFile) throw new BitError(`file ${filePath} not found`);
     foundFile.contents = file.fsFile.contents;
     filesStatus[file.filePath] = FileStatus.overridden;
   });
   mergeResults.updatedFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     const foundFile = modifiedFiles.find((componentFile) => componentFile.relative === filePath);
-    if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
+    if (!foundFile) throw new BitError(`file ${filePath} not found`);
     foundFile.contents = file.content;
     filesStatus[file.filePath] = FileStatus.updated;
   });

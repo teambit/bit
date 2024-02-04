@@ -3,7 +3,6 @@ import { ComponentID } from '@teambit/component-id';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 
@@ -22,7 +21,7 @@ export async function removeLocalVersion(
   const component: ModelComponent = await scope.getModelComponent(id);
   const idStr = id.toString();
   const localVersions = await component.getLocalHashes(scope.objects);
-  if (!localVersions.length) throw new GeneralError(`unable to untag ${idStr}, the component is not staged`);
+  if (!localVersions.length) throw new BitError(`unable to untag ${idStr}, the component is not staged`);
   const headRef = component.getHeadRegardlessOfLane();
   if (!headRef) {
     throw new Error(`unable to reset ${idStr}, it has not head`);
@@ -73,7 +72,7 @@ export async function removeLocalVersionsForMultipleComponents(
   scope: Scope
 ) {
   if (!componentsToUntag.length) {
-    throw new GeneralError(`no components found to reset on your workspace`);
+    throw new BitError(`no components found to reset on your workspace`);
   }
   // if only head is removed, there is risk of deleting dependencies version without their dependents.
   if (!force && head) {
@@ -92,7 +91,7 @@ export async function removeLocalVersionsForMultipleComponents(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependentsNotCandidates = dependents.filter((dependent) => !candidateComponentsIdsStr.includes(dependent));
       if (dependentsNotCandidates.length) {
-        throw new GeneralError( // $FlowFixMe
+        throw new BitError( // $FlowFixMe
           `unable to untag ${bitId}, the version ${bitId.version} has the following dependent(s) ${dependents.join(
             ', '
           )}`

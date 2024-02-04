@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import * as pathlib from 'path';
 import R from 'ramda';
-
+import { BitError } from '@teambit/bit-error';
 import { init } from '../../../api/consumer';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import { initScope } from '../../../api/scope';
@@ -12,7 +12,6 @@ import {
   CFG_INIT_DEFAULT_DIRECTORY,
 } from '../../../constants';
 import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
-import GeneralError from '../../../error/general-error';
 import { initInteractive } from '../../../interactive';
 import shouldShowInteractive from '../../../interactive/utils/should-show-interactive';
 import clean from '../../../utils/object-clean';
@@ -85,7 +84,7 @@ export default class Init implements LegacyCommand {
     } = flags;
     if (path) path = pathlib.resolve(path);
     if (bare) {
-      if (reset || resetHard) throw new GeneralError('--reset and --reset-hard flags are not available for bare scope');
+      if (reset || resetHard) throw new BitError('--reset and --reset-hard flags are not available for bare scope');
       // Handle both cases init --bare and init --bare [scopeName]
       const bareVal = bare === true ? '' : bare;
       return initScope(path, bareVal, shared).then(({ created }) => {
@@ -96,7 +95,7 @@ export default class Init implements LegacyCommand {
       });
     }
     if (reset && resetHard) {
-      throw new GeneralError('cannot use both --reset and --reset-hard, please use only one of them');
+      throw new BitError('cannot use both --reset and --reset-hard, please use only one of them');
     }
     const workspaceConfigFileProps: WorkspaceConfigProps = {
       componentsDefaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),

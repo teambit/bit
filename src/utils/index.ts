@@ -1,5 +1,4 @@
 // @TODO refactor this file to include only exports
-import { buildCommandMessage } from './build-command-message';
 import sha1 from './encryption/sha1';
 import * as eol from './eol';
 import writeFile from './fs-write-file';
@@ -27,14 +26,10 @@ import objectToStringifiedTupleArray from './object-to-stringified-tuple-array';
 import sortObject from './object/sort';
 import resolveGroupId from './os-resolve-group-id';
 import resolveHomePath from './os-resolve-home-path';
-import { packCommand } from './pack-command';
 import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, pathResolveToLinux } from './path';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import { pathIsInside } from './path-is-inside';
 import prependBang from './prepend-bang';
 import getLatestVersionNumber from './resolveLatestVersion';
-import identityFile from './ssh/identity-file';
-import parseSSHUrl from './ssh/parse-url';
 import cleanBang from './string/clean-bang';
 import cleanChar from './string/clean-char';
 import fromBase64 from './string/from-base64';
@@ -44,13 +39,10 @@ import removeChalkCharacters from './string/remove-chalk-characters';
 import stripTrailingChar from './string/strip-trailing-char';
 import toBase64 from './string/to-base64';
 import toBase64ArrayBuffer from './string/to-base64-array-buffer';
-import { unpackCommand } from './unpack-command';
 import deflate from './zlib-deflate';
 import inflate from './zlib-inflate';
 
 export {
-  identityFile,
-  parseSSHUrl,
   sha1,
   objectToStringifiedTupleArray,
   resolveGroupId,
@@ -84,9 +76,6 @@ export {
   isDirEmpty,
   isDirEmptySync,
   immutableUnshift,
-  packCommand,
-  unpackCommand,
-  buildCommandMessage,
   stripTrailingChar,
   getLatestVersionNumber,
   calculateFileInfo,

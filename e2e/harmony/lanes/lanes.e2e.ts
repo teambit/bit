@@ -777,7 +777,6 @@ describe('bit lane command', function () {
             helper.scopeHelper.getClonedLocalScope(afterExport);
             helper.command.switchLocalLane('main', '-x');
             helper.command.import();
-            helper.command.mergeLane('dev');
           });
           it('should merge successfully without throwing errors about missing objects', () => {
             expect(() => helper.command.mergeLane('dev')).to.not.throw();

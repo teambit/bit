@@ -133,7 +133,8 @@ export default class GeneralHelper {
     return fs.readJSONSync(this.getStagedConfigPath(laneName));
   }
 
-  getPackageNameByCompName(compName: string) {
+  getPackageNameByCompName(compName: string, includeOwner = true) {
+    if (!includeOwner) return `@${this.scopes.remote}/${compName.replaceAll('/', '.')}`;
     return `@${DEFAULT_OWNER}/${this.scopes.remoteWithoutOwner}.${compName.replaceAll('/', '.')}`;
   }
 

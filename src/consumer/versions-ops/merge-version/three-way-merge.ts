@@ -1,7 +1,6 @@
 import R from 'ramda';
-
+import { BitError } from '@teambit/bit-error';
 import { Consumer } from '../..';
-import GeneralError from '../../../error/general-error';
 import { Source, Version } from '../../../scope/models';
 import { SourceFileModel } from '../../../scope/models/version';
 import { Tmp } from '../../../scope/repositories';
@@ -197,7 +196,7 @@ export default async function threeWayMergeVersions({
   const conflictResults = await getMergeResults(consumer, results.modifiedFiles);
   conflictResults.forEach((conflictResult: MergeFileResult) => {
     const modifiedFile = results.modifiedFiles.find((file) => file.filePath === conflictResult.filePath);
-    if (!modifiedFile) throw new GeneralError(`unable to find ${conflictResult.filePath} in modified files array`);
+    if (!modifiedFile) throw new BitError(`unable to find ${conflictResult.filePath} in modified files array`);
     modifiedFile.output = conflictResult.output;
     modifiedFile.conflict = conflictResult.conflict;
     modifiedFile.isBinaryConflict = conflictResult.isBinaryConflict;

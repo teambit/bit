@@ -26,7 +26,7 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
   group = 'development';
   options = [
     ['', 'tag', 'tag once the build is completed (by default it snaps)'],
-    ['', 'simulation', 'simulation purpose. should never be pushed (otherwise, flattened-deps are invalid)'],
+    ['', 'simulation', 'simulation purpose. should never be pushed'],
     ['', 'push', 'export the updated objects to the original scopes once tagged/snapped'],
     ['', 'message <string>', 'message to be saved as part of the version log'],
     ['', 'username <string>', 'username to be saved as part of the version log'],

@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import yesno from 'yesno';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
@@ -7,7 +6,6 @@ import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/li
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { BEFORE_IMPORT_ACTION } from '@teambit/legacy/dist/cli/loader/loader-messages';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
 import { getLatestVersionNumber, pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
@@ -53,6 +51,7 @@ export type ImportOptions = {
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages, not as imported
   importDependents?: boolean;
   dependentsDryRun?: boolean;
+  dependentsThrough?: string;
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
   saveInLane?: boolean; // save the imported component on the current lane (won't be available on main)
   lanes?: {
@@ -443,17 +442,26 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     const bitIds: ComponentID[] = this.options.lanes
       ? await this.getBitIdsForLanes()
       : await this.getBitIdsForNonLanes();
-    if (this.options.importDependenciesDirectly || this.options.importDependents || this.options.dependentsDryRun) {
+    const shouldImportDependents =
+      this.options.importDependents || this.options.dependentsDryRun || this.options.dependentsThrough;
+    if (this.options.importDependenciesDirectly || shouldImportDependents) {
       if (this.options.importDependenciesDirectly) {
         const dependenciesIds = await this.getFlattenedDepsUnique(bitIds);
         bitIds.push(...dependenciesIds);
       }
-      if (this.options.importDependents || this.options.dependentsDryRun) {
+      if (shouldImportDependents) {
         this.logger.setStatusLine('finding dependents');
         const graph = await this.graph.getGraphIds();
         const targetCompIds = await this.workspace.resolveMultipleComponentIds(bitIds);
         const sourceIds = await this.workspace.listIds();
-        const ids = graph.findIdsFromSourcesToTargets(sourceIds, targetCompIds);
+        const getIdsForThrough = () => {
+          if (!this.options.dependentsThrough) return undefined;
+          return this.options.dependentsThrough
+            .split(',')
+            .map((idStr) => idStr.trim())
+            .map((id) => ComponentID.fromString(id));
+        };
+        const ids = graph.findIdsFromSourcesToTargets(sourceIds, targetCompIds, getIdsForThrough());
         const idsStr = ids.map((id) => id.toString());
         this.logger.debug(`found ${ids.length} component for --dependents flag`, idsStr);
         if (this.options.dependentsDryRun) {
@@ -615,12 +623,10 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       .filter(({ status }) => status.modified || status.newlyCreated)
       .map((c) => c.id);
     if (modifiedComponents.length) {
-      throw new GeneralError(
-        chalk.yellow(
-          `unable to import the following components due to local changes, use --merge flag to merge your local changes or --override to override them\n${modifiedComponents.join(
-            '\n'
-          )} `
-        )
+      throw new BitError(
+        `unable to import the following components due to local changes, use --merge flag to merge your local changes or --override to override them\n${modifiedComponents.join(
+          '\n'
+        )} `
       );
     }
   }
@@ -634,7 +640,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     ids.forEach((id: ComponentID) => {
       const existingId = this.consumer.getParsedIdIfExist(id.toStringWithoutVersion());
       if (existingId && !existingId.hasScope()) {
-        throw new GeneralError(`unable to import ${id.toString()}. the component name conflicted with your local component with the same name.
+        throw new BitError(`unable to import ${id.toString()}. the component name conflicted with your local component with the same name.
         it's fine to have components with the same name as long as their scope names are different.
         Make sure to export your component first to get a scope and then try importing again`);
       }

@@ -24,9 +24,12 @@ export class ComponentIdGraph extends Graph<ComponentID, DepEdgeType> {
    * A -> B -> C -> N.
    * A -> E -> N.
    * B -> F -> G.
-   * given source: A, targets: N. The results will be: B, C, E
+   * given source: A, targets: N. The results will be: [B, C, E].
+   *
+   * if through is provided, it will only return the components that are connected to the through components.
+   * with the example above, if through is B, the results will be: [B, C].
    */
-  findIdsFromSourcesToTargets(sources: ComponentID[], targets: ComponentID[]): ComponentID[] {
+  findIdsFromSourcesToTargets(sources: ComponentID[], targets: ComponentID[], through?: ComponentID[]): ComponentID[] {
     const removeVerFromIdStr = (idStr: string) => idStr.split('@')[0];
     const sourcesStr = sources.map((s) => s.toStringWithoutVersion());
     const targetsStr = targets.map((t) => t.toStringWithoutVersion());
@@ -42,7 +45,19 @@ export class ComponentIdGraph extends Graph<ComponentID, DepEdgeType> {
     });
     const componentIds = this.getNodes(results).map((n) => n.attr);
 
-    return componentIds;
+    if (!through?.length) {
+      return componentIds;
+    }
+
+    const resultsWithThrough: ComponentID[] = [];
+    const throughStr = through.map((t) => t.toStringWithoutVersion());
+    componentIds.forEach((id) => {
+      const allGraph = this.subgraph(id.toString()).nodes.map((n) => n.id); // successors and predecessors
+      const allGraphWithNoVersion = allGraph.map((s) => removeVerFromIdStr(s));
+      if (throughStr.every((t) => allGraphWithNoVersion.includes(t))) resultsWithThrough.push(id);
+    });
+
+    return resultsWithThrough;
   }
 
   /**

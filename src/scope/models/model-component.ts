@@ -13,7 +13,6 @@ import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extens
 import ConsumerComponent from '../../consumer/component';
 import { License, SourceFile } from '../../consumer/component/sources';
 import ComponentOverrides from '../../consumer/config/component-overrides';
-import GeneralError from '../../error/general-error';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
 import { getStringifyArgs } from '../../utils';
@@ -623,7 +622,7 @@ export default class Component extends BitObject {
   ): string {
     if (lane) {
       if (isTag(versionToAdd)) {
-        throw new GeneralError(
+        throw new BitError(
           'unable to tag when checked out to a lane, please switch to main, merge the lane and then tag again'
         );
       }
@@ -642,7 +641,7 @@ export default class Component extends BitObject {
       if (parent && !parent.isEqual(versionToAddRef)) {
         version.addAsOnlyParent(parent);
       }
-      lane.addComponent({ id: currentBitId, head: versionToAddRef });
+      lane.addComponent({ id: currentBitId, head: versionToAddRef, isDeleted: version.isRemoved() });
 
       if (lane.readmeComponent && lane.readmeComponent.id.fullName === currentBitId.fullName) {
         lane.setReadmeComponent(currentBitId);
@@ -1235,7 +1234,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
 
   validate(): void {
     const message = `unable to save Component object "${this.id()}"`;
-    if (!this.name) throw new GeneralError(`${message} the name is missing`);
+    if (!this.name) throw new BitError(`${message} the name is missing`);
     if (this.state && this.state.versions) {
       Object.keys(this.state.versions).forEach((version) => {
         if (isTag(version) && !this.hasTag(version)) {

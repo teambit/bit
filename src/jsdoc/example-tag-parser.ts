@@ -1,4 +1,4 @@
-import GeneralError from '../error/general-error';
+import { BitError } from '@teambit/bit-error';
 
 export type Example = {
   raw: string;
@@ -70,7 +70,7 @@ function parseToken(currentToken, line, currentStatus, example): Status {
       else if (currentStatus === status.IN_DESCRIPTION) {
         currentStatus = status.NONE;
       } else {
-        throw new GeneralError(
+        throw new BitError(
           `${
             currentToken // end desc block
           } can't appear after code or returns block`
@@ -82,7 +82,7 @@ function parseToken(currentToken, line, currentStatus, example): Status {
       else if (currentStatus === status.IN_RETURNS) {
         currentStatus = status.NONE;
       } else {
-        throw new GeneralError(
+        throw new BitError(
           `${
             currentToken // end returns block
           } must appear after code block`
@@ -91,15 +91,15 @@ function parseToken(currentToken, line, currentStatus, example): Status {
       break;
     case token.CODE:
       if (currentStatus === status.NONE || currentStatus === status.IN_CODE) updateExample(line, 'code', example);
-      else throw new GeneralError(`${currentToken} can't appear inside desc or returns block`);
+      else throw new BitError(`${currentToken} can't appear inside desc or returns block`);
       break;
     case token.COMMENT:
       if (currentStatus === status.IN_DESCRIPTION) updateExample(line, 'description', example);
       else if (currentStatus === status.IN_RETURNS) updateExample(line, 'returns', example);
-      else throw new GeneralError(`${currentToken} must appear inside desc or returns block`);
+      else throw new BitError(`${currentToken} must appear inside desc or returns block`);
       break;
     default:
-      throw new GeneralError('Unrecognized token');
+      throw new BitError('Unrecognized token');
   }
   return currentStatus;
 }
