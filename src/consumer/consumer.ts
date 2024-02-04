@@ -458,7 +458,17 @@ export default class Consumer {
       existingGitHooks,
     });
     await consumer.setBitMap();
+    await Consumer.ensurePackageJson(projectPath);
     return consumer;
+  }
+
+  static async ensurePackageJson(projectPath: string) {
+    const packageJsonPath = path.join(projectPath, 'package.json');
+    console.log(projectPath, packageJsonPath);
+    const exists = fs.existsSync(packageJsonPath);
+    if (exists) return;
+    fs.writeFileSync(packageJsonPath, `{\n  "type": "module"  \n}`);
+    return;
   }
 
   /**

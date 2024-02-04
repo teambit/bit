@@ -60,13 +60,13 @@ importers:
         specifier: 7.22.3
         version: 7.22.3
       '@bitdev/harmony.generators.harmony-templates':
-        specifier: ^0.0.11
-        version: 0.0.11
+        specifier: ~0.0.26
+        version: 0.0.26
       '@bitdev/node.generators.node-templates':
-        specifier: ^1.0.4
-        version: 1.0.8
+        specifier: ^1.0.9
+        version: 1.0.9
       '@bitdev/react.generators.react-templates':
-        specifier: ^1.1.12
+        specifier: ^1.1.16
         version: 1.1.16
       '@graphql-modules/core':
         specifier: 0.7.17
@@ -20887,8 +20887,8 @@ importers:
         specifier: 7.22.15
         version: 7.22.15(@babel/core@7.19.6)
       '@bitdev/harmony.generators.harmony-templates':
-        specifier: ^0.0.11
-        version: 0.0.11
+        specifier: ~0.0.26
+        version: 0.0.26
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
@@ -21925,8 +21925,8 @@ importers:
         specifier: 7.20.0
         version: 7.20.0
       '@bitdev/node.generators.node-templates':
-        specifier: ^1.0.4
-        version: 1.0.8
+        specifier: ^1.0.9
+        version: 1.0.9
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
@@ -23669,7 +23669,7 @@ importers:
         specifier: 7.23.2
         version: 7.23.2
       '@bitdev/react.generators.react-templates':
-        specifier: ^1.1.12
+        specifier: ^1.1.16
         version: 1.1.16
       '@mdx-js/react':
         specifier: 1.6.22
@@ -26176,9 +26176,15 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
+      assert:
+        specifier: ^2.1.0
+        version: 2.1.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
+      buffer:
+        specifier: 6.0.3
+        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -26233,6 +26239,9 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
+      punycode:
+        specifier: ^2.3.1
+        version: 2.3.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -26254,12 +26263,21 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
+      string_decoder:
+        specifier: ^1.3.0
+        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
+      url:
+        specifier: ^0.11.3
+        version: 0.11.3
+      util:
+        specifier: ^0.12.5
+        version: 0.12.5
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -31140,15 +31158,16 @@ packages:
   /@bcoe/v8-coverage@0.2.3:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  /@bitdev/harmony.generators.harmony-templates@0.0.11:
-    resolution: {integrity: sha512-QFgl6mezQh6Q0S8S9y48th31CCeAyR4vUuKPyfgUjOsPwkQcxWam0H7WrpzIVkuA5Pcll0MrbZ+EvGtOqa/4QQ==}
+  /@bitdev/harmony.generators.harmony-templates@0.0.26:
+    resolution: {integrity: sha512-5Crwm0rV9VxU4SDnz4zSCNe/tIKctpsmaLqhYO+lUgPqtRvUTXAQ/CheXf2OEHF3qQZlU/XuZfY30bkcFCa2rQ==}
     dependencies:
+      '@teambit/component-id': 1.2.0
       lodash: 4.17.21
       prompts: 2.4.2
     dev: false
 
-  /@bitdev/node.generators.node-templates@1.0.8:
-    resolution: {integrity: sha512-sgFJN9Rqd5FzyEWNX1cG8roGW6ddLp28OuNICXHQvmuhkscJz5Pe+Np4o4E+EdASGY49eUbjvixqXyfvJtxYfg==}
+  /@bitdev/node.generators.node-templates@1.0.9:
+    resolution: {integrity: sha512-Btidt3eb/evQJzoopycnhcMk1op4cmgMR6sukD4er/I1r13xQH3kM8hz7iGX3hqQNVA+8ipN5W/CgT6ptN8vLQ==}
     dependencies:
       lodash: 4.17.21
     dev: false
@@ -51113,7 +51132,7 @@ packages:
     resolution: {integrity: sha512-xq+q3SRMOxGivLhBNaUdC64hDTQwejJ+H0T/NB1XMtTVEwNTrfFF3gAxiyW0Bu/xWEGhjVKgUcMhCrUy2+uCWg==}
     dependencies:
       base64-js: 1.5.1
-      ieee754: 1.1.13
+      ieee754: 1.2.1
       isarray: 1.0.0
     dev: false
 
@@ -74996,7 +75015,7 @@ packages:
       '@babel/preset-env': 7.23.2(@babel/core@7.19.6)
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
-      '@bitdev/harmony.generators.harmony-templates': 0.0.11
+      '@bitdev/harmony.generators.harmony-templates': 0.0.26
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/bit-error': 0.0.404
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
@@ -75473,7 +75492,7 @@ packages:
       react-dom: '*'
     dependencies:
       '@babel/runtime': 7.20.0
-      '@bitdev/node.generators.node-templates': 1.0.8
+      '@bitdev/node.generators.node-templates': 1.0.9
       '@teambit/component-id': 1.2.0
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
