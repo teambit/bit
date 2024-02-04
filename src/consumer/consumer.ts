@@ -458,7 +458,7 @@ export default class Consumer {
       existingGitHooks,
     });
     await consumer.setBitMap();
-    await Consumer.ensurePackageJson(projectPath);
+    // await Consumer.ensurePackageJson(projectPath);
     return consumer;
   }
 
