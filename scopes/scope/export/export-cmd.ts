@@ -137,7 +137,13 @@ export class ExportCmd implements Command {
       const shouldOpenBrowser = openBrowser && !process.env.CI;
       const prefix = shouldOpenBrowser ? 'Your browser has been opened to the following link' : 'Visit the link below';
       const msg = `\n\n${prefix} to track the progress of building the components in the cloud\n`;
-      const fullUrls = rippleJobs.map((job) => `https://${getCloudDomain()}/ripple-ci/job/${job}`);
+      const lane = exportedLanes.length ? exportedLanes?.[0] : undefined;
+      const fullUrls = lane
+        ? rippleJobs.map(
+            (job) =>
+              `https://${getCloudDomain()}/${lane.scope.replace('.', '/')}/~lane/${lane.name}/~ripple-ci/job/${job}`
+          )
+        : rippleJobs.map((job) => `https://${getCloudDomain()}/ripple-ci/job/${job}`);
       if (shouldOpenBrowser) {
         open(fullUrls[0], { url: true }).catch(() => {
           /** it's ok, the user is instructed to open the browser manually */

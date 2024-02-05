@@ -31,9 +31,13 @@ export class NewCmd implements Command {
       'aspect <aspect-id>',
       'id of the aspect that registered the template, mandatory for non-core aspects. helpful for core aspects in case of a name collision',
     ],
-    ['t', 'template <env-id>', "env-id of the template's owner. Alias for --env."],
-    ['', 'env <env-id>', 'env-id of the template. Alias -t'],
-    ['d', 'default-scope <scope-name>', `set defaultScope in the new workspace's workspace.jsonc`],
+    ['t', 'template <env-id>', 'id of the dev environment to use for the template. Alias for --env.'],
+    ['', 'env <env-id>', 'id of the dev environment to use for the template. Alias -t'],
+    [
+      'd',
+      'default-scope <scope-name>',
+      `set the default scope for the workspace. used in the generated workspace.jsonc`,
+    ],
     ['', 'standalone', 'DEPRECATED. use --skip-git instead'],
     ['s', 'skip-git', 'skip generation of Git repository in the new workspace'],
     [

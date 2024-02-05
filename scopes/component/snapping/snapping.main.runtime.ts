@@ -686,6 +686,7 @@ there are matching among unmodified components thought. consider using --unmodif
 
   async _addFlattenedDependenciesToComponents(components: ConsumerComponent[], rebuildDepsGraph = false) {
     loader.start('importing missing dependencies...');
+    this.logger.profile('snap._addFlattenedDependenciesToComponents');
     const getLane = async () => {
       const lane = await this.scope.legacyScope.getCurrentLaneObject();
       if (!lane) return undefined;
@@ -714,6 +715,7 @@ there are matching among unmodified components thought. consider using --unmodif
     components.forEach((component) => {
       flattenedEdgesGetter.populateFlattenedAndEdgesForComp(component);
     });
+    this.logger.profile('snap._addFlattenedDependenciesToComponents');
   }
 
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
