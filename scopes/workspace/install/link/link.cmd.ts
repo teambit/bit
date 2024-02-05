@@ -95,7 +95,7 @@ export class LinkCommand implements Command {
       fetchObject: !opts.skipFetchingObjects,
       includePeers: opts.peers,
     };
-    const linkResults = await this.install.link(linkOpts);
+    const linkResults = await this.install.link(ids ?? [], linkOpts);
     return linkResults;
   }
 }
