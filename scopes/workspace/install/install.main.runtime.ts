@@ -988,7 +988,7 @@ export class InstallMain {
       return;
     }
     if (needLink) {
-      await this.link();
+      await this.link([]);
     }
   }
 
