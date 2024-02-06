@@ -1,7 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { isBinaryFile } from 'isbinaryfile';
 import camelCase from 'camelcase';
-import { compact, update } from 'lodash';
+import { compact } from 'lodash';
 import replacePackageName from '@teambit/legacy/dist/utils/string/replace-package-name';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
