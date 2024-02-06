@@ -1,10 +1,11 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { isBinaryFile } from 'isbinaryfile';
 import camelCase from 'camelcase';
-import { compact } from 'lodash';
+import { compact, update } from 'lodash';
 import replacePackageName from '@teambit/legacy/dist/utils/string/replace-package-name';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import PkgAspect, { PkgMain } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import {
@@ -280,45 +281,53 @@ export class RefactoringMain {
   ): Promise<boolean> {
     const updates = stringsToReplace.reduce((acc, { oldStr, newStr }) => ({ ...acc, [oldStr]: newStr }), {});
 
-    const changed = await Promise.all(
-      comp.filesystem.files.map(async (file) => {
-        const isBinary = await isBinaryFile(file.contents);
-        if (isBinary) return false;
-        const strContent = file.contents.toString();
-        let newContent = strContent;
-        if (transformers?.length) {
-          const transformerFactories = transformers.map((t) => t(updates));
-          newContent = await transformSourceFile(file.path, strContent, transformerFactories, undefined, updates);
-        } else {
-          stringsToReplace.forEach(({ oldStr, newStr }) => {
-            const oldStringRegex = new RegExp(oldStr, 'g');
-            if (shouldAvoidPackageNames) {
-              // this is a super ugly hack to avoid replacing package names in import/require statements.
-              // obviously, the AST parsing is the way to go, but it's not stable yet.
-              const newContentSplit = newContent.split('\n');
-              newContentSplit.forEach((line, index) => {
-                if ((line.startsWith('import ') || line.startsWith('export ')) && line.includes(' from ')) {
-                  const [rest, pkgName] = line.split(' from ');
-                  const newRest = rest.replace(oldStringRegex, newStr);
-                  const newPkgName = pkgName.includes('@') ? pkgName : pkgName.replace(oldStringRegex, newStr);
-                  newContentSplit[index] = [newRest, newPkgName].join(' from ');
-                } else {
-                  newContentSplit[index] = line.replace(oldStringRegex, newStr);
-                }
-              });
-              newContent = newContentSplit.join('\n');
-            } else {
-              newContent = newContent.replace(oldStringRegex, newStr);
-            }
-          });
+    const getContent = (newContent: string) => {
+      stringsToReplace.forEach(({ oldStr, newStr }) => {
+        const oldStringRegex = new RegExp(oldStr, 'g');
+        if (!shouldAvoidPackageNames) {
+          newContent = newContent.replace(oldStringRegex, newStr);
+          return;
         }
-        if (strContent !== newContent) {
-          file.contents = Buffer.from(newContent);
-          return true;
-        }
-        return false;
-      })
-    );
+        // this is a super ugly hack to avoid replacing package names in import/require statements.
+        // obviously, the AST parsing is the way to go, but it's not stable yet.
+        // the reason to avoid package names is that when replacing variable/classes we can by mistake replace part
+        // of a package-name which is not intended.
+        // normally the package-names are replaced before that and are replaced by the entire name.
+        const newContentSplit = newContent.split('\n');
+        newContentSplit.forEach((line, index) => {
+          if ((line.startsWith('import ') || line.startsWith('export ')) && line.includes(' from ')) {
+            const [rest, pkgName] = line.split(' from ');
+            const newRest = rest.replace(oldStringRegex, newStr);
+            const newPkgName = pkgName.includes('@') ? pkgName : pkgName.replace(oldStringRegex, newStr);
+            newContentSplit[index] = [newRest, newPkgName].join(' from ');
+          } else {
+            newContentSplit[index] = line.replace(oldStringRegex, newStr);
+          }
+        });
+        newContent = newContentSplit.join('\n');
+      });
+      return newContent;
+    };
+
+    const updateFile = async (file: AbstractVinyl) => {
+      const isBinary = await isBinaryFile(file.contents);
+      if (isBinary) return false;
+      const strContent = file.contents.toString();
+      let newContent = strContent;
+      if (transformers?.length) {
+        const transformerFactories = transformers.map((t) => t(updates));
+        newContent = await transformSourceFile(file.path, strContent, transformerFactories, undefined, updates);
+      } else {
+        newContent = getContent(newContent);
+      }
+      if (strContent !== newContent) {
+        file.contents = Buffer.from(newContent);
+        return true;
+      }
+      return false;
+    };
+
+    const changed = await Promise.all(comp.filesystem.files.map(async (file) => updateFile(file)));
     return changed.some((c) => c);
   }
 
