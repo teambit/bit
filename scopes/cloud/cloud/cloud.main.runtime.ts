@@ -239,41 +239,6 @@ export class CloudMain {
     };
   }
 
-  async getCurrentUser(): Promise<CloudUser | null> {
-    const isLoggedIn = this.isLoggedIn();
-    if (!isLoggedIn) {
-      return null;
-    }
-    const route = 'user/user';
-    this.logger.debug(`getCurrentUser, url: ${this.getCloudApi()}/${route}`);
-    const url = `https://${this.getCloudApi()}/${route}`;
-    const opts = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.getAuthHeader(),
-      },
-    };
-
-    return fetch(url, opts)
-      .then(async (res) => {
-        if (res.status === 401) {
-          return null;
-        }
-        const response: CloudUserAPIResponse = await res.json();
-        return {
-          isLoggedIn,
-          displayName: response.payload?.displayName ?? undefined,
-          username: response.payload?.username ?? undefined,
-          profileImage: response.payload?.profileImage ?? undefined,
-        };
-      })
-      .catch((err) => {
-        this.logger.error(`failed to get current user, err: ${err}`);
-        return null;
-      });
-  }
-
   getUsername(): string | undefined {
     return this.globalConfig.getSync(CFG_USER_NAME_KEY);
   }
@@ -393,6 +358,17 @@ export class CloudMain {
       }
     `;
 
+  static GET_CURRENT_USER = `
+    query GET_ME {
+      me {
+        id
+        username
+        image
+        displayName
+      }
+    }
+  `;
+
   async getCloudScopes(scopes: string[]): Promise<ScopeDescriptor[]> {
     const remotes = await this.scope._legacyRemotes();
     const filteredScopesToFetch = scopes.filter((scope) => {
@@ -409,6 +385,18 @@ export class CloudMain {
         id: ScopeID.fromString(scope.id),
       };
       return ScopeDescriptor.fromObject(scopeDescriptorObj);
+    });
+  }
+
+  async getCurrentUser(): Promise<CloudUser | null> {
+    return this.fetchFromSymphonyViaGQL<CloudUserAPIResponse>(CloudMain.GET_CURRENT_USER).then((response) => {
+      if (!response) return null;
+      return {
+        isLoggedIn: true,
+        displayName: response.data.me.displayName,
+        username: response.data.me.username,
+        profileImage: response.data.me.image,
+      };
     });
   }
 
@@ -429,7 +417,6 @@ export class CloudMain {
         headers,
         body,
       });
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
