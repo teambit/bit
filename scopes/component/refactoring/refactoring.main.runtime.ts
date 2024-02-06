@@ -291,24 +291,23 @@ export class RefactoringMain {
           newContent = await transformSourceFile(file.path, strContent, transformerFactories, undefined, updates);
         } else {
           stringsToReplace.forEach(({ oldStr, newStr }) => {
+            const oldStringRegex = new RegExp(oldStr, 'g');
             if (shouldAvoidPackageNames) {
               // this is a super ugly hack to avoid replacing package names in import/require statements.
               // obviously, the AST parsing is the way to go, but it's not stable yet.
               const newContentSplit = newContent.split('\n');
               newContentSplit.forEach((line, index) => {
-                if (line.startsWith('import ') || line.startsWith('export ')) {
+                if ((line.startsWith('import ') || line.startsWith('export ')) && line.includes(' from ')) {
                   const [rest, pkgName] = line.split(' from ');
-                  if (!pkgName) return;
-                  const newRest = rest.replace(oldStr, newStr);
-                  const newPkgName = pkgName.includes('@') ? pkgName : pkgName.replace(oldStr, newStr);
+                  const newRest = rest.replace(oldStringRegex, newStr);
+                  const newPkgName = pkgName.includes('@') ? pkgName : pkgName.replace(oldStringRegex, newStr);
                   newContentSplit[index] = [newRest, newPkgName].join(' from ');
                 } else {
-                  newContentSplit[index] = line.replace(oldStr, newStr);
+                  newContentSplit[index] = line.replace(oldStringRegex, newStr);
                 }
               });
               newContent = newContentSplit.join('\n');
             } else {
-              const oldStringRegex = new RegExp(oldStr, 'g');
               newContent = newContent.replace(oldStringRegex, newStr);
             }
           });
