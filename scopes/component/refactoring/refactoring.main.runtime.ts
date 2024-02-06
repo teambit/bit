@@ -74,22 +74,29 @@ export class RefactoringMain {
     } else {
       await this.replaceMultipleStrings(
         [component],
-        [
-          {
-            oldStr: sourceId.name,
-            newStr: targetId.name,
-          },
-          {
-            oldStr: camelCase(sourceId.name),
-            newStr: camelCase(targetId.name),
-          },
-          {
-            oldStr: camelCase(sourceId.name, { pascalCase: true }),
-            newStr: camelCase(targetId.name, { pascalCase: true }),
-          },
-        ]
+        this.getStringReplacementsForVariablesAndClasses(sourceId, targetId)
       );
     }
+  }
+
+  getStringReplacementsForVariablesAndClasses(
+    sourceId: ComponentID,
+    targetId: ComponentID
+  ): MultipleStringsReplacement {
+    return [
+      {
+        oldStr: sourceId.name,
+        newStr: targetId.name,
+      },
+      {
+        oldStr: camelCase(sourceId.name),
+        newStr: camelCase(targetId.name),
+      },
+      {
+        oldStr: camelCase(sourceId.name, { pascalCase: true }),
+        newStr: camelCase(targetId.name, { pascalCase: true }),
+      },
+    ];
   }
 
   async refactorVariableAndClassesUsingAST(component: Component, sourceId: ComponentID, targetId: ComponentID) {
@@ -161,13 +168,19 @@ export class RefactoringMain {
   async replaceMultipleStrings(
     components: Component[],
     stringsToReplace: MultipleStringsReplacement = [],
-    transformers?: SourceFileTransformer[]
+    transformers?: SourceFileTransformer[],
+    shouldAvoidPackageNames = false
   ): Promise<{
     changedComponents: Component[];
   }> {
     const changedComponents = await Promise.all(
       components.map(async (comp) => {
-        const hasChanged = await this.replaceMultipleStringsInOneComp(comp, stringsToReplace, transformers);
+        const hasChanged = await this.replaceMultipleStringsInOneComp(
+          comp,
+          stringsToReplace,
+          transformers,
+          shouldAvoidPackageNames
+        );
         return hasChanged ? comp : null;
       })
     );
@@ -262,7 +275,8 @@ export class RefactoringMain {
   private async replaceMultipleStringsInOneComp(
     comp: Component,
     stringsToReplace: MultipleStringsReplacement,
-    transformers?: SourceFileTransformer[]
+    transformers?: SourceFileTransformer[],
+    shouldAvoidPackageNames = false
   ): Promise<boolean> {
     const updates = stringsToReplace.reduce((acc, { oldStr, newStr }) => ({ ...acc, [oldStr]: newStr }), {});
 
@@ -277,8 +291,26 @@ export class RefactoringMain {
           newContent = await transformSourceFile(file.path, strContent, transformerFactories, undefined, updates);
         } else {
           stringsToReplace.forEach(({ oldStr, newStr }) => {
-            const oldStringRegex = new RegExp(oldStr, 'g');
-            newContent = newContent.replace(oldStringRegex, newStr);
+            if (shouldAvoidPackageNames) {
+              // this is a super ugly hack to avoid replacing package names in import/require statements.
+              // obviously, the AST parsing is the way to go, but it's not stable yet.
+              const newContentSplit = newContent.split('\n');
+              newContentSplit.forEach((line, index) => {
+                if (line.startsWith('import ') || line.startsWith('export ')) {
+                  const [rest, pkgName] = line.split(' from ');
+                  if (!pkgName) return;
+                  const newRest = rest.replace(oldStr, newStr);
+                  const newPkgName = pkgName.includes('@') ? pkgName : pkgName.replace(oldStr, newStr);
+                  newContentSplit[index] = [newRest, newPkgName].join(' from ');
+                } else {
+                  newContentSplit[index] = line.replace(oldStr, newStr);
+                }
+              });
+              newContent = newContentSplit.join('\n');
+            } else {
+              const oldStringRegex = new RegExp(oldStr, 'g');
+              newContent = newContent.replace(oldStringRegex, newStr);
+            }
           });
         }
         if (strContent !== newContent) {
