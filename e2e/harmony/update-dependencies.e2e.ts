@@ -128,15 +128,16 @@ describe('update-dependencies command', function () {
         expect(compB.dependencies[0].id.version).to.equal('1.1.0');
       });
     });
-    describe('running from a new bare scope using --simulate and --tag flags', () => {
+    describe('running from a new bare scope using --simulation and --tag flags', () => {
       let updateDepsOutput: string;
       let updateRemote;
       before(() => {
         helper.scopeHelper.getClonedScope(secondScopeBeforeUpdate, secondRemotePath);
         updateRemote = helper.scopeHelper.getNewBareScope('-remote-update');
+        // edit: this is not the case anymore. now it calculates the flattened-deps, so it does import the minimal possible
         // delete the remote from the update-remote scope. it should not reach the remote
         // for the dependencies, it should only install via registry.
-        helper.scopeHelper.removeRemoteScope(helper.scopes.remote, false, updateRemote.scopePath);
+        // helper.scopeHelper.removeRemoteScope(helper.scopes.remote, false, updateRemote.scopePath);
         helper.scopeHelper.addRemoteScope(secondRemotePath, updateRemote.scopePath);
         const data = [
           {

@@ -6,7 +6,6 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
-import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
 import { generateNodeModulesPattern, PatternTarget } from '@teambit/dependencies.modules.packages-excluder';
 import {
   AspectEntry,
@@ -158,7 +157,7 @@ export class Workspace implements ComponentFactory {
    * This is important to know to ignore missing modules across different places
    */
   inInstallContext = false;
-  private _cachedListIds?: ComponentID[];
+  private _cachedListIds?: ComponentIdList;
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
   private componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized;
@@ -398,13 +397,14 @@ export class Workspace implements ComponentFactory {
 
   /**
    * get ids of all workspace components.
+   * @todo: remove the "async", it's not a promise anymore.
    */
-  async listIds(): Promise<ComponentID[]> {
+  async listIds(): Promise<ComponentIdList> {
     if (this._cachedListIds && this.bitMap.hasChanged()) {
       delete this._cachedListIds;
     }
     if (!this._cachedListIds) {
-      this._cachedListIds = await this.resolveMultipleComponentIds(this.consumer.bitmapIdsFromCurrentLane);
+      this._cachedListIds = this.consumer.bitmapIdsFromCurrentLane;
     }
     return this._cachedListIds;
   }
@@ -625,14 +625,16 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   /**
    * given component ids, find their dependents in the workspace
    */
-  async getDependentsIds(ids: ComponentID[]): Promise<ComponentID[]> {
-    const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(this.consumer, true);
-    const workspaceDependencyGraph = new DependencyGraph(workspaceGraph);
-    const workspaceDependents = ids.map((id) => workspaceDependencyGraph.getDependentsInfo(id));
-    const dependentsLegacyIds = workspaceDependents.flat().map((_) => _.id);
-    const dependentsLegacyNoDup = ComponentIdList.uniqFromArray(dependentsLegacyIds);
-    const dependentsIds = await this.resolveMultipleComponentIds(dependentsLegacyNoDup);
-    return dependentsIds;
+  async getDependentsIds(ids: ComponentID[], filterOutNowWorkspaceIds = true): Promise<ComponentID[]> {
+    const graph = await this.getGraphIds();
+    const dependents = ids
+      .map((id) => graph.predecessors(id.toString()))
+      .flat()
+      .map((node) => node.attr);
+    const uniq = ComponentIdList.uniqFromArray(dependents);
+    if (!filterOutNowWorkspaceIds) return uniq;
+    const workspaceIds = await this.listIds();
+    return uniq.filter((id) => workspaceIds.has(id));
   }
 
   public async createAspectList(extensionDataList: ExtensionDataList) {
