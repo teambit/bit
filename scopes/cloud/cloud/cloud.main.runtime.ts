@@ -389,15 +389,7 @@ export class CloudMain {
   }
 
   async getCurrentUser(): Promise<CloudUser | null> {
-    return this.fetchFromSymphonyViaGQL<{
-      data: {
-        me: {
-          username: string;
-          displayName: string;
-          image: string;
-        };
-      };
-    }>(CloudMain.GET_CURRENT_USER).then((response) => {
+    return this.fetchFromSymphonyViaGQL<CloudUserAPIResponse>(CloudMain.GET_CURRENT_USER).then((response) => {
       if (!response) return null;
       return {
         isLoggedIn: true,
