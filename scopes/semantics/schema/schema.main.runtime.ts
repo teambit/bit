@@ -186,6 +186,10 @@ export class SchemaMain {
     };
   }
 
+  isSchemaTaskDisabled(component: Component) {
+    return component.state.aspects.get(SchemaAspect.id)?.data?.disabled;
+  }
+
   static runtime = MainRuntime;
   static dependencies = [
     EnvsAspect,
