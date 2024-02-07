@@ -1,4 +1,4 @@
-import { prompt, AutoComplete } from 'enquirer';
+import { prompt } from 'enquirer';
 import yesno from 'yesno';
 import { compact, uniq } from 'lodash';
 import chalk from 'chalk';
@@ -141,9 +141,11 @@ export class DependentsGetter {
 the following prompts will guide you to choose the desired path to import.`);
 
     const getPrompt = (choices: string[], level: number, totalPaths: number) => {
-      return new AutoComplete({
+      return prompt({
+        type: 'autocomplete',
         name: 'comp',
         message: `Choose which component to include`,
+        // @ts-ignore the limit prop is there. probably d.ts is not updated
         limit: SCROLL_LIMIT,
         footer() {
           return choices.length >= SCROLL_LIMIT ? chalk.dim('(Scroll up and down to reveal more choices)') : '';
