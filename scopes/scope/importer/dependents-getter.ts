@@ -1,5 +1,6 @@
-import { prompt } from 'enquirer';
 import yesno from 'yesno';
+// @ts-ignore AutoComplete is actually there, the d.ts is probably outdated
+import { prompt, AutoComplete } from 'enquirer';
 import { compact, uniq } from 'lodash';
 import chalk from 'chalk';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -27,8 +28,8 @@ export class DependentsGetter {
     const targetCompIds = await this.workspace.resolveMultipleComponentIds(compIds);
     const sourceIds = await this.workspace.listIds();
     const getIdsForThrough = () => {
-      if (!this.options.dependentsThrough) return undefined;
-      return this.options.dependentsThrough
+      if (!this.options.dependentsVia) return undefined;
+      return this.options.dependentsVia
         .split(',')
         .map((idStr) => idStr.trim())
         .map((id) => ComponentID.fromString(id));
@@ -83,7 +84,7 @@ export class DependentsGetter {
     const tooManyPathsMsg =
       allPaths.length > totalToShow
         ? `${chalk.yellow(
-            `\nfound ${allPaths.length} paths, showing the shortest ${totalToShow}. if the desired path is not shown, use the --dependents-through flag`
+            `\nfound ${allPaths.length} paths, showing the shortest ${totalToShow}. if the desired path is not shown, use the --dependents-via flag`
           )}`
         : '';
     const result = await prompt<{ selectDependents: Record<string, string[]> }>({
@@ -141,11 +142,9 @@ export class DependentsGetter {
 the following prompts will guide you to choose the desired path to import.`);
 
     const getPrompt = (choices: string[], level: number, totalPaths: number) => {
-      return prompt({
-        type: 'autocomplete',
+      return new AutoComplete({
         name: 'comp',
         message: `Choose which component to include`,
-        // @ts-ignore the limit prop is there. probably d.ts is not updated
         limit: SCROLL_LIMIT,
         footer() {
           return choices.length >= SCROLL_LIMIT ? chalk.dim('(Scroll up and down to reveal more choices)') : '';

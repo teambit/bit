@@ -409,7 +409,7 @@ describe('import functionality on Harmony', function () {
       helper.command.importComponent('comp1', '-x');
     });
     it('without "through" should import all graphs between the given component and the workspace', () => {
-      helper.command.importComponent('comp4', '--dependents -x');
+      helper.command.importComponent('comp4', '--dependents -x --silent');
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('comp2');
       expect(bitMap).to.have.property('comp3');
@@ -417,12 +417,12 @@ describe('import functionality on Harmony', function () {
       expect(bitMap).to.have.property('comp-a');
       expect(bitMap).to.not.have.property('comp-b');
     });
-    it('with --dependents-through should limit to graph traversing through the given id', () => {
+    it('with --dependents-via should limit to graph traversing through the given id', () => {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1', '-x');
 
-      helper.command.importComponent('comp4', `--dependents-through ${helper.scopes.remote}/comp2 -x`);
+      helper.command.importComponent('comp4', `--dependents-via ${helper.scopes.remote}/comp2 -x --silent`);
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('comp2');
       expect(bitMap).to.have.property('comp3');
