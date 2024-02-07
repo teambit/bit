@@ -180,14 +180,18 @@ export class SchemaMain {
     return this;
   }
 
-  async getSchemaData(): Promise<{ disabled?: boolean }> {
+  async calcSchemaData(): Promise<{ disabled?: boolean }> {
     return {
       disabled: this.config.disabled,
     };
   }
 
+  getSchemaData(component: Component) {
+    return component.state.aspects.get(SchemaAspect.id)?.data;
+  }
+
   isSchemaTaskDisabled(component: Component) {
-    return component.state.aspects.get(SchemaAspect.id)?.data?.disabled;
+    return this.getSchemaData(component)?.disabled;
   }
 
   static runtime = MainRuntime;
@@ -230,10 +234,10 @@ export class SchemaMain {
     graphql.register(schemaSchema(schema));
     envs.registerService(new SchemaService());
     if (workspace) {
-      workspace.registerOnComponentLoad(async () => schema.getSchemaData());
+      workspace.registerOnComponentLoad(async () => schema.calcSchemaData());
     }
     if (scope) {
-      scope.registerOnCompAspectReCalc(async () => schema.getSchemaData());
+      scope.registerOnCompAspectReCalc(async () => schema.calcSchemaData());
     }
     // register all default schema classes
     Object.values(Schemas).forEach((Schema) => {
