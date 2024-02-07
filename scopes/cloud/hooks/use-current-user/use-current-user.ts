@@ -26,7 +26,12 @@ export function useCurrentUser(): {
     },
   });
   return {
-    currentUser: data?.getCurrentUser,
+    currentUser: {
+      username: data?.getCurrentUser?.username ?? undefined,
+      displayName: data?.getCurrentUser?.displayName ?? undefined,
+      profileImage: data?.getCurrentUser?.profileImage ?? undefined,
+      isLoggedIn: data?.isLoggedIn,
+    },
     loginUrl: data?.loginUrl,
     isLoggedIn: data?.isLoggedIn,
     loading,
