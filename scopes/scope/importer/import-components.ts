@@ -1,4 +1,3 @@
-import yesno from 'yesno';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
@@ -35,6 +34,7 @@ import { compact, difference, fromPairs } from 'lodash';
 import { FilesStatus } from '@teambit/merging';
 import { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import { Logger } from '@teambit/logger';
+import { DependentsGetter } from './dependents-getter';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -50,8 +50,8 @@ export type ImportOptions = {
   objectsOnly?: boolean;
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages, not as imported
   importDependents?: boolean;
-  dependentsDryRun?: boolean;
-  dependentsThrough?: string;
+  dependentsVia?: string;
+  silent?: boolean; // don't show prompt for --dependents flag
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
   saveInLane?: boolean; // save the imported component on the current lane (won't be available on main)
   lanes?: {
@@ -442,41 +442,16 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     const bitIds: ComponentID[] = this.options.lanes
       ? await this.getBitIdsForLanes()
       : await this.getBitIdsForNonLanes();
-    const shouldImportDependents =
-      this.options.importDependents || this.options.dependentsDryRun || this.options.dependentsThrough;
+    const shouldImportDependents = this.options.importDependents || this.options.dependentsVia;
     if (this.options.importDependenciesDirectly || shouldImportDependents) {
       if (this.options.importDependenciesDirectly) {
         const dependenciesIds = await this.getFlattenedDepsUnique(bitIds);
         bitIds.push(...dependenciesIds);
       }
       if (shouldImportDependents) {
-        this.logger.setStatusLine('finding dependents');
-        const graph = await this.graph.getGraphIds();
-        const targetCompIds = await this.workspace.resolveMultipleComponentIds(bitIds);
-        const sourceIds = await this.workspace.listIds();
-        const getIdsForThrough = () => {
-          if (!this.options.dependentsThrough) return undefined;
-          return this.options.dependentsThrough
-            .split(',')
-            .map((idStr) => idStr.trim())
-            .map((id) => ComponentID.fromString(id));
-        };
-        const ids = graph.findIdsFromSourcesToTargets(sourceIds, targetCompIds, getIdsForThrough());
-        const idsStr = ids.map((id) => id.toString());
-        this.logger.debug(`found ${ids.length} component for --dependents flag`, idsStr);
-        if (this.options.dependentsDryRun) {
-          this.logger.clearStatusLine();
-          const ok = await yesno({
-            question: `found the following ${ids.length} components for --dependents flag:\n${idsStr.join(
-              '\n'
-            )}\nWould you like to continue with the import?`,
-          });
-          if (!ok) {
-            throw new BitError('import was aborted');
-          }
-        }
-
-        bitIds.push(...ids);
+        const dependentsGetter = new DependentsGetter(this.logger, this.workspace, this.graph, this.options);
+        const dependents = await dependentsGetter.getDependents(bitIds);
+        bitIds.push(...dependents);
       }
     }
     return ComponentIdList.uniqFromArray(bitIds);
