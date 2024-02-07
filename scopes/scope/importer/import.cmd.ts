@@ -31,6 +31,7 @@ type ImportFlags = {
   dependents?: boolean;
   dependentsDryRun?: boolean;
   dependentsThrough?: string;
+  silent?: boolean;
   allHistory?: boolean;
   fetchDeps?: boolean;
   trackOnly?: boolean;
@@ -87,8 +88,9 @@ export class ImportCmd implements Command {
     [
       '',
       'dependents-dry-run',
-      'same as --dependents, except it prints the found dependents and wait for confirmation before importing them',
+      'DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and wait for confirmation before importing them',
     ],
+    ['', 'silent', 'no prompt for --dependents/--dependents-through flags'],
     [
       '',
       'filter-envs <envs>',
@@ -210,6 +212,7 @@ export class ImportCmd implements Command {
       dependencies = false,
       dependents = false,
       dependentsDryRun = false,
+      silent,
       dependentsThrough,
       allHistory = false,
       fetchDeps = false,
@@ -217,6 +220,9 @@ export class ImportCmd implements Command {
       includeDeprecated = false,
     }: ImportFlags
   ): Promise<ImportResult> {
+    if (dependentsDryRun) {
+      this.importer.logger.warn(`the "--dependents-dry-run" flag is deprecated and is now the default behavior`);
+    }
     if (objects && merge) {
       throw new BitError(' --objects and --merge flags cannot be used together');
     }
@@ -228,9 +234,6 @@ export class ImportCmd implements Command {
     }
     if (!ids.length && dependents) {
       throw new BitError('you have to specify ids to use "--dependents" flag');
-    }
-    if (!ids.length && dependentsDryRun) {
-      throw new BitError('you have to specify ids to use "--dependents-dry-run" flag');
     }
     if (!ids.length && dependentsThrough) {
       throw new BitError('you have to specify ids to use "--dependents-through" flag');
@@ -264,8 +267,8 @@ export class ImportCmd implements Command {
       saveInLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
-      dependentsDryRun,
       dependentsThrough,
+      silent,
       allHistory,
       fetchDeps,
       trackOnly,

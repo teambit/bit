@@ -1,6 +1,6 @@
-import { prompt } from 'enquirer';
+import { prompt, AutoComplete } from 'enquirer';
 import yesno from 'yesno';
-import { uniq } from 'lodash';
+import { compact, uniq } from 'lodash';
 import chalk from 'chalk';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { GraphMain } from '@teambit/graph';
@@ -8,6 +8,9 @@ import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import { ImportOptions } from './import-components';
+
+const SHOW_ALL_PATHS_LIMIT = 10;
+const SCROLL_LIMIT = 20;
 
 export class DependentsGetter {
   constructor(
@@ -19,6 +22,7 @@ export class DependentsGetter {
 
   async getDependents(compIds: ComponentID[]): Promise<ComponentID[]> {
     this.logger.setStatusLine('finding dependents');
+    const { silent } = this.options;
     const graph = await this.graph.getGraphIds();
     const targetCompIds = await this.workspace.resolveMultipleComponentIds(compIds);
     const sourceIds = await this.workspace.listIds();
@@ -30,8 +34,8 @@ export class DependentsGetter {
         .map((id) => ComponentID.fromString(id));
     };
     const allPaths = graph.findAllPathsFromSourcesToTargets(sourceIds, targetCompIds, getIdsForThrough());
-    const selectedPaths = await this.promptDependents(allPaths);
-    const uniqAsStrings = uniq(selectedPaths.map((path) => path.map((id) => id.toString())).flat());
+    const selectedPaths = silent ? allPaths : await this.promptDependents(allPaths);
+    const uniqAsStrings = uniq(selectedPaths.flat());
 
     const ids: ComponentID[] = [];
     const idsToFilterOut = ComponentIdList.fromArray([...sourceIds, ...targetCompIds]);
@@ -47,13 +51,13 @@ export class DependentsGetter {
     const idsStr = ids.map((id) => id.toString());
 
     this.logger.debug(`found ${ids.length} component for --dependents flag`, idsStr);
-    if (this.options.dependentsDryRun) {
+    if (!this.options.silent) {
       this.logger.clearStatusLine();
       const question = idsStr.length
         ? `found the following ${ids.length} components for --dependents flag:\n${idsStr.join('\n')}`
         : 'unable to find dependents for the given component (probably the workspace components using it directly)';
       const ok = await yesno({
-        question: `${question}\nWould you like to continue with the import?`,
+        question: `${question}\nWould you like to continue with the import? [yes(y)/no(n)]`,
       });
       if (!ok) {
         throw new BitError('import was aborted');
@@ -63,16 +67,18 @@ export class DependentsGetter {
     return ids;
   }
 
-  private async promptDependents(allPaths: string[][]): Promise<ComponentID[][]> {
+  private async promptDependents(allPaths: string[][]): Promise<string[][]> {
     if (!allPaths.length) return [];
     this.logger.clearStatusLine();
 
-    const totalToShow = 30;
+    const totalToShow = SHOW_ALL_PATHS_LIMIT;
+    if (allPaths.length >= totalToShow) {
+      return this.promptLevelByLevel(allPaths);
+    }
     const firstItems = allPaths.slice(0, totalToShow);
     const choices = firstItems.map((path) => {
       const name = path.join(' -> ');
-      const value = path.map((id) => ComponentID.fromString(id));
-      return { name, value };
+      return { name, value: path };
     });
     const tooManyPathsMsg =
       allPaths.length > totalToShow
@@ -80,7 +86,7 @@ export class DependentsGetter {
             `\nfound ${allPaths.length} paths, showing the shortest ${totalToShow}. if the desired path is not shown, use the --dependents-through flag`
           )}`
         : '';
-    const result = await prompt<{ selectDependents: Record<string, ComponentID[]> }>({
+    const result = await prompt<{ selectDependents: Record<string, string[]> }>({
       choices,
       footer: '\nEnter to start importing. Ctrl+C to cancel.',
       indicator: (state: any, choice: any) => ` ${choice.enabled ? '●' : '○'}`,
@@ -123,5 +129,62 @@ export class DependentsGetter {
     } as any);
 
     return Object.values(result.selectDependents);
+  }
+
+  private async promptLevelByLevel(allPaths: string[][]): Promise<string[][]> {
+    if (allPaths.length < SHOW_ALL_PATHS_LIMIT) {
+      throw new Error(`expected to have at least ${SHOW_ALL_PATHS_LIMIT} paths`);
+    }
+    const finalPath: string[] = [];
+    this.logger
+      .console(`found ${allPaths.length} available paths from the workspace components to the target components.
+the following prompts will guide you to choose the desired path to import.`);
+
+    const getPrompt = (choices: string[], level: number, totalPaths: number) => {
+      return new AutoComplete({
+        name: 'comp',
+        message: `Choose which component to include`,
+        limit: SCROLL_LIMIT,
+        footer() {
+          return choices.length >= SCROLL_LIMIT ? chalk.dim('(Scroll up and down to reveal more choices)') : '';
+        },
+        header() {
+          if (level === 1) return '';
+          return `total ${totalPaths} paths left (out of ${allPaths.length})`;
+        },
+        cancel() {
+          // By default, canceling the prompt via Ctrl+c throws an empty string.
+          // The custom cancel function prevents that behavior.
+          // Otherwise, Bit CLI would print an error and confuse users.
+          // See related issue: https://github.com/enquirer/enquirer/issues/225
+        },
+        choices,
+      });
+    };
+
+    const getLevel = (level: number, withinPaths: string[][]): string[] => {
+      return compact(uniq(withinPaths.map((path) => path[level]))).sort();
+    };
+
+    const processLevel = async (level: number, paths: string[][], previousLevel?: string): Promise<string[]> => {
+      const pathsWithinThisLevel = previousLevel ? paths.filter((path) => path[level] === previousLevel) : paths;
+      const nextLevel = getLevel(level + 1, pathsWithinThisLevel);
+      if (!nextLevel.length) {
+        return finalPath;
+      }
+      if (nextLevel.length === 1) {
+        finalPath.push(nextLevel[0]);
+        this.logger.consoleSuccess(`${nextLevel[0]} (auto-selected)`);
+        return processLevel(level + 1, pathsWithinThisLevel, nextLevel[0]);
+      }
+      const promptNextLevel = getPrompt(nextLevel, level + 1, pathsWithinThisLevel.length);
+      const resultNextLevel = await promptNextLevel.run();
+      finalPath.push(resultNextLevel);
+      return processLevel(level + 1, pathsWithinThisLevel, resultNextLevel);
+    };
+
+    const result = await processLevel(0, allPaths);
+
+    return [result];
   }
 }
