@@ -61,6 +61,76 @@ export class ComponentIdGraph extends Graph<ComponentID, DepEdgeType> {
   }
 
   /**
+   * check all the routes from the sources to targets and return the components found during this traversal.
+   * e.g.
+   * A -> B -> C -> N.
+   * A -> E -> N.
+   * B -> F -> G.
+   * given source: A, targets: N. The results will be: [B, C, E].
+   *
+   * if through is provided, it will only return the components that are connected to the through components.
+   * with the example above, if through is B, the results will be: [B, C].
+   */
+  findAllPathsFromSourcesToTargets(
+    sources: ComponentID[],
+    targets: ComponentID[],
+    through?: ComponentID[]
+  ): string[][] {
+    const removeVerFromIdStr = (idStr: string) => idStr.split('@')[0];
+    const targetsStr = targets.map((t) => t.toStringWithoutVersion());
+
+    const traverseDFS = (
+      node: string,
+      visitedInPath: string[],
+      visitedInGraph: string[] = [],
+      allPaths: string[][]
+    ) => {
+      if (visitedInPath.includes(node)) return;
+      visitedInPath.push(node);
+      if (targetsStr.includes(removeVerFromIdStr(node))) {
+        allPaths.push(visitedInPath);
+        return;
+      }
+      if (visitedInGraph.includes(node)) return;
+      visitedInGraph.push(node);
+      const successors = Array.from(this.successorMap(node).values());
+      successors.forEach((s) => {
+        traverseDFS(s.id, [...visitedInPath], visitedInGraph, allPaths);
+      });
+    };
+
+    let allPaths: string[][] = [];
+    sources.forEach((source) => {
+      traverseDFS(source.toString(), [], [], allPaths);
+    });
+
+    if (through?.length) {
+      allPaths = allPaths.filter((pathWithVer) => {
+        const pathWithoutVer = pathWithVer.map((p) => removeVerFromIdStr(p));
+        return through.every((t) => pathWithoutVer.includes(t.toStringWithoutVersion()));
+      });
+    }
+
+    const sourcesStr = sources.map((s) => s.toString());
+    const filtered = allPaths.filter((path) => {
+      if (path.length < 3) {
+        // if length is 1, the source and target are the same.
+        // if length is 2, the target is a direct dependency of the source. we don't care about it.
+        return false;
+      }
+      const [, firstDep] = path;
+      if (sourcesStr.includes(firstDep)) {
+        // the first item is the source. the second item "firstDep" can be a direct dependency of one of the sources.
+        // if this is the case, we have already an exact path without this firstDep.
+        return true;
+      }
+      return true;
+    });
+
+    return filtered.sort((a, b) => a.length - b.length);
+  }
+
+  /**
    * overrides the super class to eliminate non-seeders components
    */
   findCycles(graph?: this, includeDeps = false): string[][] {

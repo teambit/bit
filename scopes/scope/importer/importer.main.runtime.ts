@@ -34,7 +34,7 @@ export class ImporterMain {
     private scope: ScopeMain,
     private componentWriter: ComponentWriterMain,
     private envs: EnvsMain,
-    private logger: Logger
+    readonly logger: Logger
   ) {}
 
   async import(importOptions: ImportOptions, packageManagerArgs: string[] = []): Promise<ImportResult> {

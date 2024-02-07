@@ -30,7 +30,8 @@ type ImportFlags = {
   dependencies?: boolean;
   dependents?: boolean;
   dependentsDryRun?: boolean;
-  dependentsThrough?: string;
+  dependentsVia?: string;
+  silent?: boolean;
   allHistory?: boolean;
   fetchDeps?: boolean;
   trackOnly?: boolean;
@@ -81,14 +82,15 @@ export class ImportCmd implements Command {
     ],
     [
       '',
-      'dependents-through <string>',
+      'dependents-via <string>',
       'same as --dependents except the traversal must go through the specified component. to specify multiple components, wrap with quotes and separate by a comma',
     ],
     [
       '',
       'dependents-dry-run',
-      'same as --dependents, except it prints the found dependents and wait for confirmation before importing them',
+      'DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and wait for confirmation before importing them',
     ],
+    ['', 'silent', 'no prompt for --dependents/--dependents-via flags'],
     [
       '',
       'filter-envs <envs>',
@@ -210,13 +212,17 @@ export class ImportCmd implements Command {
       dependencies = false,
       dependents = false,
       dependentsDryRun = false,
-      dependentsThrough,
+      silent,
+      dependentsVia,
       allHistory = false,
       fetchDeps = false,
       trackOnly = false,
       includeDeprecated = false,
     }: ImportFlags
   ): Promise<ImportResult> {
+    if (dependentsDryRun) {
+      this.importer.logger.warn(`the "--dependents-dry-run" flag is deprecated and is now the default behavior`);
+    }
     if (objects && merge) {
       throw new BitError(' --objects and --merge flags cannot be used together');
     }
@@ -229,11 +235,8 @@ export class ImportCmd implements Command {
     if (!ids.length && dependents) {
       throw new BitError('you have to specify ids to use "--dependents" flag');
     }
-    if (!ids.length && dependentsDryRun) {
-      throw new BitError('you have to specify ids to use "--dependents-dry-run" flag');
-    }
-    if (!ids.length && dependentsThrough) {
-      throw new BitError('you have to specify ids to use "--dependents-through" flag');
+    if (!ids.length && dependentsVia) {
+      throw new BitError('you have to specify ids to use "--dependents-via" flag');
     }
     if (!ids.length && trackOnly) {
       throw new BitError('you have to specify ids to use "--track-only" flag');
@@ -264,8 +267,8 @@ export class ImportCmd implements Command {
       saveInLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
-      dependentsDryRun,
-      dependentsThrough,
+      dependentsVia,
+      silent,
       allHistory,
       fetchDeps,
       trackOnly,
