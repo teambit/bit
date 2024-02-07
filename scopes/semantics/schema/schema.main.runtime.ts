@@ -180,7 +180,7 @@ export class SchemaMain {
     return this;
   }
 
-  async calcSchemaData(): Promise<{ disabled?: boolean }> {
+  async getSchemaData(): Promise<{ disabled?: boolean }> {
     return {
       disabled: this.config.disabled,
     };
@@ -230,10 +230,10 @@ export class SchemaMain {
     graphql.register(schemaSchema(schema));
     envs.registerService(new SchemaService());
     if (workspace) {
-      workspace.registerOnComponentLoad(async () => schema.calcSchemaData());
+      workspace.registerOnComponentLoad(async () => schema.getSchemaData());
     }
     if (scope) {
-      scope.registerOnCompAspectReCalc(async () => schema.calcSchemaData());
+      scope.registerOnCompAspectReCalc(async () => schema.getSchemaData());
     }
     // register all default schema classes
     Object.values(Schemas).forEach((Schema) => {
