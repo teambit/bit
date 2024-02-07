@@ -6,9 +6,11 @@ export type CloudUser = {
 };
 
 export type CloudUserAPIResponse = {
-  payload?: {
-    displayName?: string | null;
-    username?: string | null;
-    profileImage?: string | null;
+  data: {
+    me: {
+      username: string;
+      displayName: string;
+      image: string;
+    };
   };
 };
