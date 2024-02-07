@@ -38,7 +38,7 @@ export class ComponentCompareUI {
     return (
       <ComponentCompare
         {...(props || {})}
-        tabs={tabs} // @ts-ignore
+        tabs={tabs}
         routes={routes}
         host={host}
         isFullScreen={props?.isFullScreen ?? true}
