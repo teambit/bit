@@ -27,9 +27,9 @@ import {
   DependenciesSetCmd,
   DependenciesUnsetCmd,
   DependenciesUsageCmd,
-  DependenciesSetPeerCmd,
   RemoveDependenciesFlags,
   SetDependenciesFlags,
+  SetPeerCmd,
   WhyCmd,
 } from './dependencies-cmd';
 import { DependenciesAspect } from './dependencies.aspect';
@@ -380,10 +380,10 @@ export class DependenciesMain {
       new DependenciesEjectCmd(depsMain),
       new DependenciesBlameCmd(depsMain),
       new DependenciesUsageCmd(depsMain),
-      new DependenciesSetPeerCmd(depsMain),
     ];
     const whyCmd = new WhyCmd(depsMain);
-    cli.register(depsCmd, whyCmd);
+    const setPeerCmd = new SetPeerCmd(depsMain);
+    cli.register(depsCmd, whyCmd, setPeerCmd);
 
     ComponentLoader.loadDeps = depsMain.loadDependencies.bind(depsMain);
 

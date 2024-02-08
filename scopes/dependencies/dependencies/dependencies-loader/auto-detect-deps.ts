@@ -399,7 +399,12 @@ export class AutoDetectDeps {
       }
       this.addImportNonMainIssueIfNeeded(originFile, compDep);
       const currentComponentsDeps = new Dependency(existingId, [], compDep.name);
-      this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, depDebug);
+      this._pushToDependenciesIfNotExist(
+        currentComponentsDeps,
+        fileType,
+        depDebug,
+        compDep.packageJsonContent?.bit?.peer
+      );
     });
   }
 
@@ -592,7 +597,8 @@ export class AutoDetectDeps {
   private _pushToDependenciesIfNotExist(
     dependency: Dependency,
     fileType: FileType,
-    depDebug: DebugComponentsDependency
+    depDebug: DebugComponentsDependency,
+    isPeer?: boolean
   ) {
     const existingDependency = this.getExistingDependency(this.allDependencies.dependencies, dependency.id);
     const existingDevDependency = this.getExistingDependency(this.allDependencies.devDependencies, dependency.id);
@@ -603,16 +609,19 @@ export class AutoDetectDeps {
     // at this point, either, it doesn't exist at all and should be entered.
     // or it exists in devDependencies but now it comes from non-dev file, which should be entered
     // as non-dev.
-    this.pushToDependenciesArray(dependency, fileType, depDebug);
+    this.pushToDependenciesArray(dependency, fileType, depDebug, isPeer);
   }
 
   private pushToDependenciesArray(
     currentComponentsDeps: Dependency,
     fileType: FileType,
-    depDebug: DebugComponentsDependency
+    depDebug: DebugComponentsDependency,
+    isPeer?: boolean
   ) {
     if (fileType.isTestFile) {
       this.allDependencies.devDependencies.push(currentComponentsDeps);
+    } else if (isPeer) {
+      this.allDependencies.peerDependencies.push(currentComponentsDeps);
     } else {
       this.allDependencies.dependencies.push(currentComponentsDeps);
     }
