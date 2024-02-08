@@ -10,7 +10,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
 import pMapSeries from 'p-map-series';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
-import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { FileStatus, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { ConfigMergeResult } from '@teambit/config-merger';
@@ -50,12 +50,17 @@ export type MergeLaneOptions = {
   ignoreConfigChanges?: boolean;
   skipFetch?: boolean;
   excludeNonLaneComps?: boolean;
-  push?: boolean; // relevant only when merging from scope
 };
 export type MergeFromScopeResult = {
-  mergedPreviously: ComponentID[];
   mergedNow: ComponentID[];
   exportedIds: ComponentID[];
+  unmerged: { id: ComponentID; reason: string }[]; // reasons currently are: ahead / already-merge / removed
+  conflicts?: Array<{ id: ComponentID; files: string[] }>; // relevant in case of diverge (currently possible only when merging from main to a lane)
+  snappedIds?: ComponentID[]; // relevant in case of diverge (currently possible only when merging from main to a lane)
+  /**
+   * @deprecated use `unmerged` instead
+   */
+  mergedPreviously: ComponentID[];
 };
 
 export class MergeLanesMain {
@@ -242,7 +247,6 @@ export class MergeLanesMain {
       snapMessage,
       build,
       skipDependencyInstallation,
-      shouldExport: options.push,
     });
 
     if (snapshot) await lastMerged?.persistSnapshot(snapshot);
@@ -365,6 +369,28 @@ export class MergeLanesMain {
     });
     await this.importer.importHeadArtifactsFromLane(fromLaneObj || (toLaneObj as Lane), undefined, true);
 
+    const shouldSquash = !toLaneObj && !options.noSquash; // only when merging to main we squash.
+
+    const exportIfNeeded = async (idsToExport: ComponentID[], laneToExport?: Lane): Promise<ComponentID[]> => {
+      if (!options.push) return [];
+      const compIdsList = ComponentIdList.fromArray(idsToExport);
+      const { exported } = await this.exporter.exportMany({
+        scope: this.scope.legacyScope,
+        ids: compIdsList,
+        idsWithFutureScope: compIdsList,
+        laneObject: laneToExport,
+        allVersions: false,
+        // no need to export anything else other than the head. the normal calculation of what to export won't apply here
+        // as it is done from the scope.
+        exportHeadsOnly: shouldSquash,
+        // all artifacts must be pushed. they're all considered "external" in this case, because it's running from a
+        // bare-scope, but we don't want to ignore them, otherwise, they'll be missing from the component-scopes.
+        ignoreMissingExternalArtifacts: false,
+        exportOrigin: 'lane-merge',
+      });
+      return exported;
+    };
+
     if (fromLaneId.isDefault()) {
       // current -> target (to)
       // other -> source (from)
@@ -375,12 +401,35 @@ export class MergeLanesMain {
       this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
 
       const result = await this.mergeLane(fromLaneId, toLaneId, options as MergeLaneOptions);
-      const { mergeSnapResults } = result.mergeResults;
+      const { mergeSnapResults, leftUnresolvedConflicts, failedComponents, components } = result.mergeResults;
+
+      const conflicts: Array<{ id: ComponentID; files: string[] }> = [];
+      const merged: ComponentID[] = [];
+      if (leftUnresolvedConflicts) {
+        components?.forEach((c) => {
+          const files = Object.keys(c.filesStatus).filter(
+            (f) => c.filesStatus[f] === FileStatus.manual || c.filesStatus[f] === FileStatus.binaryConflict
+          );
+          if (files.length) conflicts.push({ id: c.id, files });
+          else merged.push(c.id);
+        });
+      }
+
+      const laneToExport = await this.lanes.loadLane(toLaneId);
+      const exportedIds = leftUnresolvedConflicts
+        ? [] // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        : await exportIfNeeded(
+            idsToMerge.map((id) => id.changeVersion(undefined)),
+            laneToExport!
+          );
 
       return {
-        mergedNow: mergeSnapResults?.snappedComponents.map((c) => c.id) || [],
-        mergedPreviously: [],
-        exportedIds: mergeSnapResults?.exportedIds || [],
+        mergedNow: merged,
+        mergedPreviously: failedComponents?.map((c) => c.id) || [],
+        exportedIds,
+        unmerged: failedComponents?.map((c) => ({ id: c.id, reason: c.unchangedMessage })) || [],
+        conflicts,
+        snappedIds: mergeSnapResults?.snappedComponents.map((c) => c.id) || [],
       };
     }
 
@@ -391,7 +440,6 @@ export class MergeLanesMain {
     // then, change the component object head to point to this changed version
     const mergedPreviously: ComponentID[] = [];
     const mergedNow: ComponentID[] = [];
-    const shouldSquash = !toLaneObj && !options.noSquash; // only when merging to main we squash.
     const log = await getLogForSquash(fromLaneId);
     const bitObjectsPerComp = await pMapSeries(idsToMerge, async (id) => {
       const modelComponent = await this.scope.legacyScope.getModelComponent(id);
@@ -439,31 +487,14 @@ export class MergeLanesMain {
     const bitObjectsFlat = bitObjects.flat();
     if (toLaneObj) bitObjectsFlat.push(toLaneObj);
     await repo.writeObjectsToTheFS(bitObjectsFlat);
-    let exportedIds: ComponentID[] = [];
-    if (options.push) {
-      const ids = compact(bitObjectsPerComp).map((b) => b.id);
-      const bitIds = ComponentIdList.fromArray(ids);
-      const { exported } = await this.exporter.exportMany({
-        scope: this.scope.legacyScope,
-        ids: shouldSquash ? bitIds : new ComponentIdList(),
-        idsWithFutureScope: shouldSquash ? bitIds : new ComponentIdList(),
-        laneObject: toLaneObj,
-        allVersions: false,
-        // no need to export anything else other than the head. the normal calculation of what to export won't apply here
-        // as it is done from the scope.
-        exportHeadsOnly: shouldSquash,
-        // all artifacts must be pushed. they're all considered "external" in this case, because it's running from a
-        // bare-scope, but we don't want to ignore them, otherwise, they'll be missing from the component-scopes.
-        ignoreMissingExternalArtifacts: false,
-        exportOrigin: 'lane-merge',
-      });
-      exportedIds = exported;
-    }
+    const ids = compact(bitObjectsPerComp).map((b) => b.id);
+    const exportedIds = await exportIfNeeded(ids, toLaneObj);
 
     return {
       mergedPreviously,
       mergedNow,
       exportedIds,
+      unmerged: mergedPreviously.map((id) => ({ id, reason: 'already merged' })),
     };
   }
   private async throwIfNotUpToDate(fromLaneId: LaneId, toLaneId: LaneId) {

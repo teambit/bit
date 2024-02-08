@@ -214,7 +214,6 @@ export class MergingMain {
     snapMessage,
     build,
     skipDependencyInstallation,
-    shouldExport,
   }: {
     mergeStrategy: MergeStrategy;
     allComponentsStatus: ComponentMergeStatus[];
@@ -225,7 +224,6 @@ export class MergingMain {
     snapMessage: string;
     build: boolean;
     skipDependencyInstallation?: boolean;
-    shouldExport?: boolean; // relevant only when executed from scope
   }): Promise<ApplyVersionResults> {
     const consumer = this.workspace?.consumer;
     const legacyScope = this.scope.legacyScope;
@@ -313,7 +311,7 @@ export class MergingMain {
         const { taggedComponents, autoTaggedResults, removedComponents } = results;
         return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults, removedComponents };
       }
-      return this.snapResolvedComponents(snapMessage, build, currentLane?.toLaneId(), shouldExport);
+      return this.snapResolvedComponents(snapMessage, build, currentLane?.toLaneId());
     };
     let mergeSnapResults: MergeSnapResults = null;
     let mergeSnapError: Error | undefined;
@@ -579,8 +577,7 @@ export class MergingMain {
   private async snapResolvedComponents(
     snapMessage: string,
     build: boolean,
-    laneId?: LaneId,
-    shouldExport?: boolean
+    laneId?: LaneId
   ): Promise<MergeSnapResults> {
     const unmergedComponents = this.scope.legacyScope.objects.unmergedComponents.getComponents();
     this.logger.debug(`merge-snaps, snapResolvedComponents, total ${unmergedComponents.length.toString()} components`);
@@ -592,7 +589,6 @@ export class MergingMain {
         {
           message: snapMessage,
           build,
-          push: shouldExport,
           lane: laneId?.toString(),
         }
       );

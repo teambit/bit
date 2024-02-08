@@ -281,10 +281,7 @@ other:   ${otherLaneHead.toString()}`);
     });
     if (divergeData.err) {
       if (!(divergeData.err instanceof NoCommonSnap) || !this.options?.resolveUnrelated) {
-        return this.returnUnmerged(
-          id,
-          `unable to traverse ${currentComponent.id.toString()} history. error: ${divergeData.err.message}`
-        );
+        return this.returnUnmerged(id, `unable to traverse history. error: ${divergeData.err.message}`);
       }
       return this.handleNoCommonSnap(
         modelComponent,
@@ -298,7 +295,7 @@ other:   ${otherLaneHead.toString()}`);
     if (!divergeData.isDiverged()) {
       if (divergeData.isSourceAhead()) {
         // do nothing!
-        return this.returnUnmerged(id, `component ${currentComponent.id.toString()} is ahead, nothing to merge`, true);
+        return this.returnUnmerged(id, `component is ahead, nothing to merge`, true);
       }
       if (divergeData.isTargetAhead()) {
         // just override with the model data
@@ -310,7 +307,7 @@ other:   ${otherLaneHead.toString()}`);
         };
       }
       // we know that localHead and remoteHead are set, so if none of them is ahead they must be equal
-      return this.returnUnmerged(id, `component ${currentComponent.id.toString()} is already merged`, true);
+      return this.returnUnmerged(id, `component is already merged`, true);
     }
 
     // it's diverged and needs merge operation

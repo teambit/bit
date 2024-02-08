@@ -79,7 +79,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
 
     const titleBase64Decoded = titleBase64 ? fromBase64(titleBase64) : undefined;
 
-    const { mergedNow, mergedPreviously, exportedIds } = await this.mergeLanes.mergeFromScope(
+    const { mergedNow, unmerged, exportedIds, conflicts } = await this.mergeLanes.mergeFromScope(
       fromLane,
       toLane || DEFAULT_LANE,
       {
@@ -98,15 +98,22 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     );
     const mergedOutput = mergedNow.length ? `${mergedTitle}\n${mergedNow.join('\n')}` : '';
 
-    const nonMergedTitle = chalk.bold(
-      `the following ${mergedPreviously.length} components were already merged before, they were left intact`
+    const nonMergedTitle = chalk.bold(`the following ${unmerged.length} components were not merged`);
+    const nonMergedOutput = unmerged.length
+      ? `\n${nonMergedTitle}\n${unmerged.map((u) => `${u.id} (${u.reason})`).join('\n')}`
+      : '';
+
+    const conflictsTitle = chalk.bold(
+      `the following ${conflicts?.length} components have conflicts, the merge was not completed`
     );
-    const nonMergedOutput = mergedPreviously.length ? `\n${nonMergedTitle}\n${mergedPreviously.join('\n')}` : '';
+    const conflictsOutput = conflicts?.length
+      ? `\n${conflictsTitle}\n${conflicts.map((u) => `${u.id} (${u.files.join(', ')})`).join('\n')}`
+      : '';
 
     const exportedTitle = chalk.green(`successfully exported ${exportedIds.length} components`);
     const exportedOutput = exportedIds.length ? `\n${exportedTitle}\n${exportedIds.join('\n')}` : '';
 
-    return mergedOutput + nonMergedOutput + exportedOutput;
+    return mergedOutput + nonMergedOutput + conflictsOutput + exportedOutput;
   }
   async json(
     [fromLane, toLane]: [string, string],
@@ -132,6 +139,9 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
           mergedNow: results.mergedNow.map((id) => id.toString()),
           mergedPreviously: results.mergedPreviously.map((id) => id.toString()),
           exportedIds: results.exportedIds.map((id) => id.toString()),
+          unmerged: results.unmerged.map(({ id, reason }) => ({ id: id.toString(), reason })),
+          conflicts: results.conflicts?.map(({ id, files }) => ({ id: id.toString(), files })),
+          snappedIds: results.snappedIds?.map((id) => id.toString()),
         },
       };
     } catch (err: any) {
