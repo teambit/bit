@@ -149,7 +149,7 @@ other:   ${otherLaneHead.toString()}`);
       id,
       mergeResults,
       divergeData,
-      configMergeResult: this.workspace ? configMergeResult : undefined,
+      configMergeResult,
     };
   }
 

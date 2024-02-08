@@ -262,6 +262,63 @@ describe('merge lanes from scope', function () {
       });
     });
   });
+  describe('merge from scope, main to lane when they are diverged with config conflicts', () => {
+    let bareMerge;
+    let comp1OnLane: string;
+    let beforeMerging: string;
+    let mergeResultsParsed: Record<string, any>;
+    let envName: string;
+    let envId: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+
+      envName = helper.env.setCustomEnv();
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.setEnv('comp1', envId);
+
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.2
+      helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.3
+      helper.command.export();
+
+      helper.command.createLane();
+      helper.command.setEnv('comp1', `${envId}@0.0.2`);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      comp1OnLane = helper.command.getHeadOfLane('dev', 'comp1');
+
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.tagAllWithoutBuild(); // auto-update env to 0.0.3
+      helper.command.export();
+
+      bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+      beforeMerging = helper.scopeHelper.cloneScope(bareMerge.scopePath);
+      mergeResultsParsed = helper.command.mergeLaneFromScopeParsed(
+        bareMerge.scopePath,
+        'main',
+        `${helper.scopes.remote}/dev`
+      );
+    });
+    it('should indicate that there is a conflict with the config', () => {
+      expect(mergeResultsParsed).to.have.property('conflicts');
+      expect(mergeResultsParsed.conflicts[0].config).to.be.true;
+    });
+    describe('running with --push flag', () => {
+      before(() => {
+        helper.scopeHelper.getClonedScope(beforeMerging, bareMerge.scopePath);
+        helper.command.mergeLaneFromScopeParsed(bareMerge.scopePath, 'main', `${helper.scopes.remote}/dev --push`);
+      });
+      it('should not export because of the conflicts', () => {
+        expect(helper.command.getHeadOfLane(`${helper.scopes.remote}/dev`, `comp1`, helper.scopes.remotePath)).to.equal(
+          comp1OnLane
+        );
+      });
+    });
+  });
   describe('merge from scope, main to lane when the main is ahead', () => {
     let bareMerge;
     let comp1HeadOnMain: string;

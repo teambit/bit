@@ -60,7 +60,7 @@ export type MergeFromScopeResult = {
   mergedNow: ComponentID[];
   exportedIds: ComponentID[];
   unmerged: { id: ComponentID; reason: string }[]; // reasons currently are: ahead / already-merge / removed
-  conflicts?: Array<{ id: ComponentID; files: string[] }>; // relevant in case of diverge (currently possible only when merging from main to a lane)
+  conflicts?: Array<{ id: ComponentID; files: string[]; config?: boolean }>; // relevant in case of diverge (currently possible only when merging from main to a lane)
   snappedIds?: ComponentID[]; // relevant in case of diverge (currently possible only when merging from main to a lane)
   mergedPreviously: ComponentID[];
 };
@@ -405,15 +405,21 @@ export class MergeLanesMain {
       const result = await this.mergeLane(fromLaneId, toLaneId, options as MergeLaneOptions);
       const { mergeSnapResults, leftUnresolvedConflicts, failedComponents, components } = result.mergeResults;
 
-      const conflicts: Array<{ id: ComponentID; files: string[] }> = [];
+      const componentsWithConfigConflicts = result.configMergeResults
+        .filter((c) => c.hasConflicts())
+        .map((c) => c.compIdStr);
+      const conflicts: Array<{ id: ComponentID; files: string[]; config?: boolean }> = [];
       const merged: ComponentID[] = [];
       components?.forEach((c) => {
         const files = Object.keys(c.filesStatus).filter(
           (f) => c.filesStatus[f] === FileStatus.manual || c.filesStatus[f] === FileStatus.binaryConflict
         );
-        if (files.length) conflicts.push({ id: c.id, files });
-        else merged.push(c.id);
+        const config = componentsWithConfigConflicts.includes(c.id.toStringWithoutVersion());
+        if (files.length || config) {
+          conflicts.push({ id: c.id, files, config });
+        } else merged.push(c.id);
       });
+
       const snappedIds = mergeSnapResults?.snappedComponents.map((c) => c.id) || [];
 
       const laneToExport = await this.lanes.loadLane(toLaneId); // needs to be loaded again after the merge as it changed

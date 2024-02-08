@@ -107,7 +107,9 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
       `the following ${conflicts?.length} components have conflicts, the merge was not completed`
     );
     const conflictsOutput = conflicts?.length
-      ? `\n${conflictsTitle}\n${conflicts.map((u) => `${u.id} (${u.files.join(', ')})`).join('\n')}`
+      ? `\n${conflictsTitle}\n${conflicts
+          .map((u) => `${u.id} (files: ${u.files.join(', ') || 'N/A'}) (config: ${u.config})`)
+          .join('\n')}`
       : '';
 
     const exportedTitle = chalk.green(`successfully exported ${exportedIds.length} components`);
@@ -140,7 +142,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
           mergedPreviously: results.mergedPreviously.map((id) => id.toString()),
           exportedIds: results.exportedIds.map((id) => id.toString()),
           unmerged: results.unmerged.map(({ id, reason }) => ({ id: id.toString(), reason })),
-          conflicts: results.conflicts?.map(({ id, files }) => ({ id: id.toString(), files })),
+          conflicts: results.conflicts?.map(({ id, ...rest }) => ({ id: id.toString(), ...rest })),
           snappedIds: results.snappedIds?.map((id) => id.toString()),
         },
       };
