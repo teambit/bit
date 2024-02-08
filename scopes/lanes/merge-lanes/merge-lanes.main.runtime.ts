@@ -415,7 +415,7 @@ export class MergeLanesMain {
         });
       }
 
-      const laneToExport = await this.lanes.loadLane(toLaneId);
+      const laneToExport = await this.lanes.loadLane(toLaneId); // needs to be loaded again after the merge as it changed
       const exportedIds = leftUnresolvedConflicts
         ? []
         : await exportIfNeeded(
