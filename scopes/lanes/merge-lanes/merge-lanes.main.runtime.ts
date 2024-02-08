@@ -3,7 +3,12 @@ import path from 'path';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { LanesAspect, LanesMain } from '@teambit/lanes';
-import MergingAspect, { MergingMain, ComponentMergeStatus, ApplyVersionResults } from '@teambit/merging';
+import MergingAspect, {
+  MergingMain,
+  ComponentMergeStatus,
+  ApplyVersionResults,
+  compIsAlreadyMergedMsg,
+} from '@teambit/merging';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { getBasicLog } from '@teambit/legacy/dist/utils/bit/basic-log';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -57,9 +62,6 @@ export type MergeFromScopeResult = {
   unmerged: { id: ComponentID; reason: string }[]; // reasons currently are: ahead / already-merge / removed
   conflicts?: Array<{ id: ComponentID; files: string[] }>; // relevant in case of diverge (currently possible only when merging from main to a lane)
   snappedIds?: ComponentID[]; // relevant in case of diverge (currently possible only when merging from main to a lane)
-  /**
-   * @deprecated use `unmerged` instead
-   */
   mergedPreviously: ComponentID[];
 };
 
@@ -424,7 +426,10 @@ export class MergeLanesMain {
 
       return {
         mergedNow: merged,
-        mergedPreviously: failedComponents?.map((c) => c.id) || [],
+        mergedPreviously:
+          failedComponents
+            ?.filter(({ unchangedMessage }) => unchangedMessage === compIsAlreadyMergedMsg)
+            .map((c) => c.id) || [],
         exportedIds,
         unmerged: failedComponents?.map((c) => ({ id: c.id, reason: c.unchangedMessage })) || [],
         conflicts,

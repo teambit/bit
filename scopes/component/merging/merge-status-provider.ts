@@ -25,6 +25,7 @@ export type MergeStatusProviderOptions = {
   shouldSquash?: boolean;
 };
 
+export const compIsAlreadyMergedMsg = 'component is already merged';
 export class MergeStatusProvider {
   constructor(
     private scope: ScopeMain,
@@ -294,8 +295,8 @@ other:   ${otherLaneHead.toString()}`);
     }
     if (!divergeData.isDiverged()) {
       if (divergeData.isSourceAhead()) {
-        // do nothing!
-        return this.returnUnmerged(id, `component is ahead, nothing to merge`, true);
+        // component is ahead nothing to merge.
+        return this.returnUnmerged(id, compIsAlreadyMergedMsg, true);
       }
       if (divergeData.isTargetAhead()) {
         // just override with the model data
@@ -307,7 +308,7 @@ other:   ${otherLaneHead.toString()}`);
         };
       }
       // we know that localHead and remoteHead are set, so if none of them is ahead they must be equal
-      return this.returnUnmerged(id, `component is already merged`, true);
+      return this.returnUnmerged(id, compIsAlreadyMergedMsg, true);
     }
 
     // it's diverged and needs merge operation
