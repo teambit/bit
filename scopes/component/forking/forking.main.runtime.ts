@@ -271,7 +271,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
     );
     if (!options?.preserve) {
       if (shouldRefactorVariablesAndClasses) {
-        await this.refactoring.refactorVariableAndClasses(component, sourceId, targetCompId);
+        await this.refactoring.refactorVariableAndClasses(component, sourceId, targetCompId, options);
       }
       this.refactoring.refactorFilenames(component, sourceId, targetCompId);
     }
