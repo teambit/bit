@@ -489,7 +489,7 @@ export class CheckoutMain {
     const baseComponent: Version = await componentModel.loadVersion(baseVersion, repo);
     const otherComponent: Version = await componentModel.loadVersion(newVersion, repo);
     const mergeResults = await threeWayMerge({
-      consumer,
+      scope: consumer.scope,
       otherComponent,
       otherLabel: newVersion,
       currentComponent: componentFromFS,
