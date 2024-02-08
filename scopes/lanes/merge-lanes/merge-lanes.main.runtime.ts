@@ -405,6 +405,12 @@ export class MergeLanesMain {
       const result = await this.mergeLane(fromLaneId, toLaneId, options as MergeLaneOptions);
       const { mergeSnapResults, leftUnresolvedConflicts, failedComponents, components } = result.mergeResults;
 
+      this.logger.debug(
+        `found the following config conflicts: ${result.configMergeResults
+          .map((c) => `\n${c.compIdStr}\n${c.generateMergeConflictFile()}`)
+          .join('\n')}`
+      );
+
       const componentsWithConfigConflicts = result.configMergeResults
         .filter((c) => c.hasConflicts())
         .map((c) => c.compIdStr);
