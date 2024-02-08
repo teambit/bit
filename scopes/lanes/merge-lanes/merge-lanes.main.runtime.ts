@@ -405,15 +405,14 @@ export class MergeLanesMain {
 
       const conflicts: Array<{ id: ComponentID; files: string[] }> = [];
       const merged: ComponentID[] = [];
-      if (leftUnresolvedConflicts) {
-        components?.forEach((c) => {
-          const files = Object.keys(c.filesStatus).filter(
-            (f) => c.filesStatus[f] === FileStatus.manual || c.filesStatus[f] === FileStatus.binaryConflict
-          );
-          if (files.length) conflicts.push({ id: c.id, files });
-          else merged.push(c.id);
-        });
-      }
+      components?.forEach((c) => {
+        const files = Object.keys(c.filesStatus).filter(
+          (f) => c.filesStatus[f] === FileStatus.manual || c.filesStatus[f] === FileStatus.binaryConflict
+        );
+        if (files.length) conflicts.push({ id: c.id, files });
+        else merged.push(c.id);
+      });
+      const snappedIds = mergeSnapResults?.snappedComponents.map((c) => c.id) || [];
 
       const laneToExport = await this.lanes.loadLane(toLaneId); // needs to be loaded again after the merge as it changed
       const exportedIds = leftUnresolvedConflicts
@@ -429,7 +428,7 @@ export class MergeLanesMain {
         exportedIds,
         unmerged: failedComponents?.map((c) => ({ id: c.id, reason: c.unchangedMessage })) || [],
         conflicts,
-        snappedIds: mergeSnapResults?.snappedComponents.map((c) => c.id) || [],
+        snappedIds,
       };
     }
 
