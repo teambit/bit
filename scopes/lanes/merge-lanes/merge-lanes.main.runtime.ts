@@ -417,10 +417,10 @@ export class MergeLanesMain {
 
       const laneToExport = await this.lanes.loadLane(toLaneId);
       const exportedIds = leftUnresolvedConflicts
-        ? [] // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        ? []
         : await exportIfNeeded(
             idsToMerge.map((id) => id.changeVersion(undefined)),
-            laneToExport!
+            laneToExport as Lane
           );
 
       return {
