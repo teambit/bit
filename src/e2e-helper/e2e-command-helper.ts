@@ -283,6 +283,9 @@ export default class CommandHelper {
   dependenciesUsage(depName: string) {
     return this.runCmd(`bit dependencies usage ${depName}`);
   }
+  setPeer(componentId: string, range: string = '') {
+    return this.runCmd(`bit set-peer ${componentId} ${range}`);
+  }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
   }

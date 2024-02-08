@@ -322,17 +322,17 @@ export class DependenciesCmd implements Command {
   }
 }
 
-export class DependenciesSetPeerCmd implements Command {
+export class SetPeerCmd implements Command {
   name = 'set-peer <component-id> <range>';
   arguments = [
-    { name: 'component-id', description: 'xx' },
+    { name: 'component-id', description: 'the component to set as always peer' },
     {
       name: 'range',
-      description: 'xx',
+      description: 'the default range to use for the componnent, when added to peerDependencies',
     },
   ];
   group = 'info';
-  description = 'set a dependency to component(s)';
+  description = 'set a component as always peer';
   alias = '';
   options = [];
 
