@@ -1077,7 +1077,9 @@ export class IsolatorMain {
         devDependencies: {},
         peerDependencies: {},
       };
+      console.log('dependencies', dependencies);
       const compDeps = dependencies.toTypeArray<ComponentDependency>('component');
+      console.log(compDeps);
       const promises = compDeps.map(async (dep) => {
         const depCapsule = capsules.getCapsule(dep.componentId);
         let version = dep.version;
@@ -1088,6 +1090,8 @@ export class IsolatorMain {
         }
         const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
         const entry = dep.toManifest();
+        console.log('dep', dep);
+        console.log(entry);
         if (entry) {
           manifest[keyName][entry.packageName] = keyName === 'peerDependencies' ? dep.versionRange : version;
         }
