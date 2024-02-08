@@ -333,3 +333,25 @@ export class DependenciesCmd implements Command {
     );
   }
 }
+
+export class DependenciesSetPeerCmd implements Command {
+  name = 'set-peer <component-id> <range>';
+  arguments = [
+    { name: 'component-id', description: 'xx' },
+    {
+      name: 'range',
+      description: 'xx',
+    },
+  ];
+  group = 'info';
+  description = 'set a dependency to component(s)';
+  alias = '';
+  options = [];
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([componentId, range]: [string, string[]], setDepsFlags: SetDependenciesFlags) {
+    await this.deps.setPeer(componentId, range != null ? range.toString() : range);
+    return '';
+  }
+}

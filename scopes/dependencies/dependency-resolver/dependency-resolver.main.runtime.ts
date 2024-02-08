@@ -1492,10 +1492,20 @@ export class DependencyResolverMain {
     };
     ExtensionDataList.toModelObjectsHook.push(serializeDepResolverDataBeforePersist);
     PackageJsonTransformer.registerPackageJsonTransformer(async (component, packageJsonObject) => {
-      const deps = await dependencyResolver.getDependencies(component);
+      const deps = dependencyResolver.getDependencies(component);
       const { optionalDependencies, peerDependenciesMeta } = deps.toDependenciesManifest();
       packageJsonObject.optionalDependencies = optionalDependencies;
       packageJsonObject.peerDependenciesMeta = peerDependenciesMeta;
+      const entry = component.get(DependencyResolverAspect.id);
+      if (entry?.config.peer) {
+        if (!packageJsonObject.bit) {
+          packageJsonObject.bit = {};
+        }
+        packageJsonObject.bit.peer = true;
+        if (entry.config.defaultPeerRange) {
+          packageJsonObject.bit.defaultPeerRange = entry.config.defaultPeerRange;
+        }
+      }
       return packageJsonObject;
     });
 
