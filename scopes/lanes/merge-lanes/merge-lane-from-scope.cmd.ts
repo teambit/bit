@@ -3,7 +3,7 @@ import { DEFAULT_LANE } from '@teambit/lane-id';
 import { Command, CommandOptions } from '@teambit/cli';
 import { fromBase64 } from '@teambit/legacy/dist/utils';
 import { BitError } from '@teambit/bit-error';
-import { MergeLanesMain } from './merge-lanes.main.runtime';
+import { MergeFromScopeResult, MergeLanesMain } from './merge-lanes.main.runtime';
 
 type Flags = {
   pattern?: string;
@@ -28,7 +28,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
   arguments = [
     {
       name: 'from-lane',
-      description: 'lane-id to merge from',
+      description: `lane-id to merge from or "${DEFAULT_LANE}"`,
     },
     {
       name: 'to-lane',
@@ -73,6 +73,9 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     if (includeDeps && !pattern) {
       throw new BitError(`"--include-deps" flag is relevant only for --pattern flag`);
     }
+    if (fromLane === DEFAULT_LANE && !toLane) {
+      throw new BitError('to merge from the main lane, specify the target lane');
+    }
 
     const titleBase64Decoded = titleBase64 ? fromBase64(titleBase64) : undefined;
 
@@ -112,7 +115,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     if (includeDeps && !pattern) {
       throw new BitError(`"--include-deps" flag is relevant only for --pattern flag`);
     }
-    let results: any;
+    let results: MergeFromScopeResult;
     try {
       results = await this.mergeLanes.mergeFromScope(fromLane, toLane || DEFAULT_LANE, {
         push,
@@ -124,7 +127,12 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
       });
       return {
         code: 0,
-        data: results,
+        data: {
+          ...results,
+          mergedNow: results.mergedNow.map((id) => id.toString()),
+          mergedPreviously: results.mergedPreviously.map((id) => id.toString()),
+          exportedIds: results.exportedIds.map((id) => id.toString()),
+        },
       };
     } catch (err: any) {
       return {

@@ -499,9 +499,6 @@ please create a new lane instead, which will include all components of this lane
    */
   async fetchLaneWithItsComponents(laneId: LaneId): Promise<Lane> {
     this.logger.debug(`fetching lane ${laneId.toString()}`);
-    if (!this.workspace) {
-      throw new BitError('unable to fetch lanes outside of Bit workspace');
-    }
     const lane = await this.importer.importLaneObject(laneId);
     if (!lane) throw new Error(`unable to import lane ${laneId.toString()} from the remote`);
 
