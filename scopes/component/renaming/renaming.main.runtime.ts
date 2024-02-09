@@ -110,9 +110,9 @@ make sure this argument is the name only, without the scope-name. to change the 
       if (isTagged) {
         const config = await this.getConfig(sourceComp);
         await this.newComponentHelper.writeAndAddNewComp(sourceComp, targetId, options, config);
-        options.delete
-          ? await this.remove.deleteComps(sourceId.toString())
-          : await this.deprecation.deprecate(sourceId, targetId);
+        options.deprecate
+          ? await this.deprecation.deprecate(sourceId, targetId)
+          : await this.remove.deleteComps(sourceId.toString());
       } else {
         this.workspace.bitMap.renameNewComponent(sourceId, targetId);
         await this.deleteLinkFromNodeModules(sourcePkg);
