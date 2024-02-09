@@ -60,6 +60,8 @@ export const LEGACY_SHARED_DIR_FEATURE = 'legacy-shared-dir';
 
 export const NO_FS_CACHE_FEATURE = 'no-fs-cache';
 
+export const ONLY_OVERVIEW = 'only-overview';
+
 export const CLOUD_IMPORTER = 'cloud-importer';
 export const CLOUD_IMPORTER_V2 = 'cloud-importer-v2';
 

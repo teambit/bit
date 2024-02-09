@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.641",
+  "version": "1.0.647",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -216,7 +216,6 @@
     "sass": "1.63.6",
     "semver": "7.5.2",
     "serialize-error": "5.0.0",
-    "ssh2": "1.4.0",
     "string-format": "0.5.0",
     "stringify-package": "1.0.1",
     "stylus-lookup": "3.0.2",

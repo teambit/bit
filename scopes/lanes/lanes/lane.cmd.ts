@@ -23,7 +23,7 @@ type LaneOptions = {
 
 export class LaneListCmd implements Command {
   name = 'list';
-  description = `list local lanes`;
+  description = `list local or remote lanes`;
   alias = '';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
@@ -65,8 +65,9 @@ export class LaneListCmd implements Command {
     const laneDataOfCurrentLane = currentLane ? lanes.find((l) => currentLane.isEqual(l.id)) : undefined;
     const currentAlias = laneDataOfCurrentLane ? laneDataOfCurrentLane.alias : undefined;
     const currentLaneReadmeComponentStr = outputReadmeComponent(laneDataOfCurrentLane?.readmeComponent);
-    let currentLaneStr = `current lane - ${chalk.green.green(laneIdStr(currentLane, currentAlias))}`;
-    currentLaneStr += currentLaneReadmeComponentStr;
+    let currentLaneStr = remote
+      ? ''
+      : `current lane - ${chalk.green.green(laneIdStr(currentLane, currentAlias))}${currentLaneReadmeComponentStr}`;
 
     if (details) {
       const currentLaneComponents = laneDataOfCurrentLane ? outputComponents(laneDataOfCurrentLane.components) : '';
@@ -317,16 +318,17 @@ if you want to fork the lane from a certain point in history, use "lane checkout
 }
 
 export class LaneHistoryCmd implements Command {
-  name = 'history <lane-name> [id]';
-  description = 'EXPERIMENTAL. show lane history';
+  name = 'history [lane-name]';
+  description = 'EXPERIMENTAL. show lane history, default to the current lane';
   alias = '';
-  options = [] as CommandOptions;
+  options = [['', 'id <string>', 'show a specific history item']] as CommandOptions;
   loader = true;
 
   constructor(private lanes: LanesMain) {}
 
-  async report([laneName, id]: [string, string]): Promise<string> {
-    const laneId = await this.lanes.parseLaneId(laneName);
+  async report([laneName]: [string], { id }: { id?: string }): Promise<string> {
+    const laneId = laneName ? await this.lanes.parseLaneId(laneName) : this.lanes.getCurrentLaneId();
+    if (!laneId || laneId.isDefault()) throw new BitError(`unable to show history of the default lane (main)`);
     await this.lanes.importLaneHistory(laneId);
     const laneHistory = await this.lanes.getLaneHistory(laneId);
     const history = laneHistory.getHistory();

@@ -137,11 +137,7 @@ export class CLIMain {
     command.commands = command.commands || [];
     command.name = command.name.trim();
     if (command.loader === undefined) {
-      if (command.internal) {
-        command.loader = false;
-      } else {
-        command.loader = true;
-      }
+      command.loader = true;
     }
     if (command.helpUrl && !isFullUrl(command.helpUrl)) {
       command.helpUrl = `https://bit.dev/${command.helpUrl}`;

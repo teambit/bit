@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { loadAspect } from '@teambit/harmony.testing.load-aspect';
+import { loadAspect, loadManyAspects } from '@teambit/harmony.testing.load-aspect';
+import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ExportAspect, ExportMain } from '@teambit/export';
@@ -351,6 +352,57 @@ describe('LanesAspect', function () {
       expect(currentLanes.length).to.equal(2);
       expect(currentLanes[0].id.name).to.equal('stage');
       expect(currentLanes[1].id.name).to.equal('stage');
+    });
+  });
+
+  // @todo: the last `await snapping.snap({ build: false });` fails with the following error. try to fix it.
+  // EnvNotConfiguredForComponent: environment with ID: "teambit.envs/env" is not configured as extension for the component teambit.harmony/envs/core-aspect-env@0.0.24.
+  // you probably need to set this environment to your component(s). for example, "bit env set <component-pattern> teambit.envs/env"
+  describe.skip('delete component on a lane after export', () => {
+    let lanes: LanesMain;
+    let workspaceData: WorkspaceData;
+    let snapping: SnappingMain;
+    let laneId: LaneId;
+    before(async () => {
+      addFeature(SUPPORT_LANE_HISTORY);
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      await mockComponents(workspacePath);
+      const harmony = await loadManyAspects(
+        [SnappingAspect, ExportAspect, RemoveAspect, WorkspaceAspect, LanesAspect],
+        workspaceData.workspacePath
+      );
+      lanes = harmony.get(LanesAspect.id);
+      await lanes.createLane('stage');
+      // snapping = await loadAspect(SnappingAspect, workspacePath);
+      const currentLaneId = lanes.getCurrentLaneId();
+      if (!currentLaneId) throw new Error('unable to get the current lane-id');
+      laneId = currentLaneId;
+
+      snapping = harmony.get(SnappingAspect.id);
+      await snapping.snap({ build: false });
+      const exporter: ExportMain = harmony.get(ExportAspect.id);
+      await exporter.export();
+
+      const remove: RemoveMain = harmony.get(RemoveAspect.id);
+      await remove.deleteComps('comp1');
+
+      await snapping.snap({ build: false });
+    });
+    after(async () => {
+      removeFeature(SUPPORT_LANE_HISTORY);
+      await destroyWorkspace(workspaceData);
+    });
+    it('should save the deleted data into the lane object', async () => {
+      const lane = await lanes.getCurrentLane();
+      expect(lane?.components[0].isDeleted).to.be.true;
+    });
+    it('should save the deleted data into lane history', async () => {
+      const laneHistory = await lanes.getLaneHistory(laneId);
+      const history = laneHistory.getHistory();
+      expect(Object.keys(history).length).to.equal(2);
+      const snapHistory = history[Object.keys(history)[1]];
+      expect(snapHistory.deleted?.length).to.equal(1);
     });
   });
 });

@@ -15,6 +15,7 @@ import threeWayMerge from '@teambit/legacy/dist/consumer/versions-ops/merge-vers
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { ComponentConfigMerger } from '@teambit/config-merger';
+import { ScopeMain } from '@teambit/scope';
 import { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } from './merging.main.runtime';
 
 export type MergeStatusProviderOptions = {
@@ -24,12 +25,14 @@ export type MergeStatusProviderOptions = {
   shouldSquash?: boolean;
 };
 
+export const compIsAlreadyMergedMsg = 'component is already merged';
 export class MergeStatusProvider {
   constructor(
-    private workspace: Workspace,
+    private scope: ScopeMain,
     private logger: Logger,
     private importer: ImporterMain,
     private options: MergeStatusProviderOptions,
+    private workspace?: Workspace,
     private currentLane?: Lane, // currently checked out lane. if on main, then it's undefined.
     private otherLane?: Lane // the lane we want to merged to our lane. (undefined if it's "main").
   ) {}
@@ -62,7 +65,7 @@ export class MergeStatusProvider {
     const reason = shouldImportHistoryOfOtherLane
       ? `for filling the gap between the common-snap and the head of ${this.otherLane?.id() || 'main'}`
       : `for getting the common-snap between ${this.currentLane?.id() || 'main'} and ${this.otherLane?.id() || 'main'}`;
-    await this.workspace.consumer.scope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(toImport), {
+    await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(toImport), {
       lane: this.otherLane,
       cache: true,
       includeVersionHistory: false,
@@ -75,7 +78,7 @@ export class MergeStatusProvider {
     const compStatusNeedMerge = componentStatusBeforeMergeAttempt.filter((c) => c.mergeProps);
 
     const getComponentsStatusNeedMerge = async (): Promise<ComponentMergeStatus[]> => {
-      const tmp = new Tmp(this.workspace.consumer.scope);
+      const tmp = new Tmp(this.scope.legacyScope);
       try {
         const componentsStatus = await Promise.all(
           compStatusNeedMerge.map((compStatus) => this.getComponentMergeStatus(compStatus))
@@ -99,7 +102,7 @@ export class MergeStatusProvider {
     const { id, divergeData, currentComponent, mergeProps } = componentMergeStatusBeforeMergeAttempt;
     if (!mergeProps) throw new Error(`getDivergedMergeStatus, mergeProps is missing for ${id.toString()}`);
     const { otherLaneHead, currentId, modelComponent } = mergeProps;
-    const repo = this.workspace.consumer.scope.objects;
+    const repo = this.scope.legacyScope.objects;
     if (!divergeData) throw new Error(`getDivergedMergeStatus, divergeData is missing for ${id.toString()}`);
     if (!currentComponent) throw new Error(`getDivergedMergeStatus, currentComponent is missing for ${id.toString()}`);
 
@@ -118,7 +121,7 @@ other:   ${otherLaneHead.toString()}`);
     const otherLabel = `${otherLaneHead.toString()} (${
       otherLaneName === currentLaneName ? 'incoming' : otherLaneName
     })`;
-    const workspaceIds = await this.workspace.listIds();
+    const workspaceIds = (await this.workspace?.listIds()) || this.currentLane?.toComponentIds() || [];
     const configMerger = new ComponentConfigMerger(
       id.toStringWithoutVersion(),
       workspaceIds,
@@ -134,14 +137,20 @@ other:   ${otherLaneHead.toString()}`);
     const configMergeResult = configMerger.merge();
 
     const mergeResults = await threeWayMerge({
-      consumer: this.workspace.consumer,
+      scope: this.scope.legacyScope,
       otherComponent,
       otherLabel,
       currentComponent,
       currentLabel,
       baseComponent,
     });
-    return { currentComponent, id, mergeResults, divergeData, configMergeResult };
+    return {
+      currentComponent,
+      id,
+      mergeResults,
+      divergeData,
+      configMergeResult,
+    };
   }
 
   private returnUnmerged(
@@ -158,27 +167,27 @@ other:   ${otherLaneHead.toString()}`);
   private async getComponentStatusBeforeMergeAttempt(
     id: ComponentID // the id.version is the version we want to merge to the current component
   ): Promise<ComponentMergeStatusBeforeMergeAttempt> {
-    const consumer = this.workspace.consumer;
+    const consumer = this.workspace?.consumer;
     const componentStatus: ComponentMergeStatusBeforeMergeAttempt = { id };
-    const modelComponent = await consumer.scope.getModelComponentIfExist(id);
+    const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id);
     if (!modelComponent) {
       return this.returnUnmerged(
         id,
         `component ${id.toString()} is on the lane/main but its objects were not found, please re-import the lane`
       );
     }
-    const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id);
+    const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(id);
     if (unmerged) {
       return this.returnUnmerged(
         id,
         `component ${id.toStringWithoutVersion()} is in during-merge state a previous merge, please snap/tag it first (or use bit merge --resolve/--abort/ bit lane merge-abort)`
       );
     }
-    const repo = consumer.scope.objects;
+    const repo = this.scope.legacyScope.objects;
     const version = id.version as string;
     const otherLaneHead = modelComponent.getRef(version);
-    const existingBitMapId = consumer.bitMap.getComponentIdIfExist(id, { ignoreVersion: true });
-    const componentOnOther: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
+    const existingBitMapId = consumer?.bitMap.getComponentIdIfExist(id, { ignoreVersion: true });
+    const componentOnOther: Version = await modelComponent.loadVersion(version, this.scope.legacyScope.objects);
     const idOnCurrentLane = this.currentLane?.getComponent(id);
 
     if (componentOnOther.isRemoved()) {
@@ -213,8 +222,9 @@ other:   ${otherLaneHead.toString()}`);
       return { ...componentStatus, componentFromModel: componentOnOther, divergeData };
     }
     const getCurrentComponent = () => {
-      if (existingBitMapId) return consumer.loadComponent(existingBitMapId);
-      return consumer.scope.getConsumerComponent(currentId);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      if (existingBitMapId) return consumer!.loadComponent(existingBitMapId);
+      return this.scope.legacyScope.getConsumerComponent(currentId);
     };
     const currentComponent = await getCurrentComponent();
     if (currentComponent.isRemoved()) {
@@ -236,6 +246,7 @@ other:   ${otherLaneHead.toString()}`);
     }
 
     const isModified = async (): Promise<undefined | 'code' | 'config'> => {
+      if (!consumer || !this.workspace) return undefined;
       const componentModificationStatus = await this.workspace.getComponentStatusById(currentComponent.id);
       if (!componentModificationStatus.modified) return undefined;
       if (!existingBitMapId) return undefined;
@@ -265,15 +276,13 @@ other:   ${otherLaneHead.toString()}`);
     const divergeData = await getDivergeData({
       repo,
       modelComponent,
+      sourceHead: this.workspace ? undefined : modelComponent.getRef(currentId.version as string), // not sure if needs to check for this.workspace
       targetHead: otherLaneHead,
       throws: false,
     });
     if (divergeData.err) {
       if (!(divergeData.err instanceof NoCommonSnap) || !this.options?.resolveUnrelated) {
-        return this.returnUnmerged(
-          id,
-          `unable to traverse ${currentComponent.id.toString()} history. error: ${divergeData.err.message}`
-        );
+        return this.returnUnmerged(id, `unable to traverse history. error: ${divergeData.err.message}`);
       }
       return this.handleNoCommonSnap(
         modelComponent,
@@ -286,8 +295,8 @@ other:   ${otherLaneHead.toString()}`);
     }
     if (!divergeData.isDiverged()) {
       if (divergeData.isSourceAhead()) {
-        // do nothing!
-        return this.returnUnmerged(id, `component ${currentComponent.id.toString()} is ahead, nothing to merge`, true);
+        // component is ahead nothing to merge.
+        return this.returnUnmerged(id, compIsAlreadyMergedMsg, true);
       }
       if (divergeData.isTargetAhead()) {
         // just override with the model data
@@ -299,7 +308,7 @@ other:   ${otherLaneHead.toString()}`);
         };
       }
       // we know that localHead and remoteHead are set, so if none of them is ahead they must be equal
-      return this.returnUnmerged(id, `component ${currentComponent.id.toString()} is already merged`, true);
+      return this.returnUnmerged(id, compIsAlreadyMergedMsg, true);
     }
 
     // it's diverged and needs merge operation
@@ -325,8 +334,7 @@ other:   ${otherLaneHead.toString()}`);
       resolveUnrelated = 'theirs';
     }
     if (!resolveUnrelated) throw new Error(`handleNoCommonSnap expects resolveUnrelated to be set`);
-    const consumer = this.workspace.consumer;
-    const repo = consumer.scope.objects;
+    const repo = this.scope.legacyScope.objects;
     const mainHead = modelComponent.head;
 
     const returnAccordingToOurs = (

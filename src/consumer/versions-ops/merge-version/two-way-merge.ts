@@ -1,6 +1,6 @@
 import R from 'ramda';
 
-import GeneralError from '../../../error/general-error';
+import { BitError } from '@teambit/bit-error';
 import Tmp from '../../../scope/repositories/tmp';
 import { pathNormalizeToLinux, sha1 } from '../../../utils';
 import mergeFiles, { MergeFileParams, MergeFileResult } from '../../../utils/merge-files';
@@ -89,7 +89,7 @@ export default (async function twoWayMergeVersions({
   const conflictResults = await getMergeResults(consumer, results.modifiedFiles);
   conflictResults.forEach((conflictResult: MergeFileResult) => {
     const modifiedFile = results.modifiedFiles.find((file) => file.filePath === conflictResult.filePath);
-    if (!modifiedFile) throw new GeneralError(`unable to find ${conflictResult.filePath} in modified files array`);
+    if (!modifiedFile) throw new BitError(`unable to find ${conflictResult.filePath} in modified files array`);
     modifiedFile.output = conflictResult.output;
     modifiedFile.conflict = conflictResult.conflict;
     if (conflictResult.conflict) results.hasConflicts = true;

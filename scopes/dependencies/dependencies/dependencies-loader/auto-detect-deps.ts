@@ -12,6 +12,7 @@ import logger from '@teambit/legacy/dist/logger/logger';
 import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/legacy/dist/utils';
 import { PathLinux, PathLinuxRelative, PathOsBased, removeFileExtension } from '@teambit/legacy/dist/utils/path';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { RelativePath } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
@@ -741,6 +742,12 @@ export class AutoDetectDeps {
 export function getValidVersion(version: string | undefined) {
   if (!version) {
     return null;
+  }
+  if (version.startsWith(SNAP_VERSION_PREFIX)) {
+    const versionWithoutSnapPrefix = version.replace(SNAP_VERSION_PREFIX, '');
+    if (isSnap(versionWithoutSnapPrefix)) {
+      return versionWithoutSnapPrefix;
+    }
   }
   if (semver.valid(version)) {
     // this takes care of pre-releases as well, as they're considered valid semver.

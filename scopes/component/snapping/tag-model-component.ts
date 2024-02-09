@@ -430,25 +430,17 @@ async function addComponentsToScope(
   consumer?: Consumer,
   tagDataPerComp?: TagDataPerComp[]
 ) {
-  if (consumer) {
-    await mapSeries(components, async (component) => {
-      await snapping._addCompToObjects({
-        source: component,
-        consumer,
-        lane,
-        shouldValidateVersion,
-      });
+  await mapSeries(components, async (component) => {
+    const results = await snapping._addCompToObjects({
+      source: component,
+      lane,
+      shouldValidateVersion,
     });
-  } else {
-    await mapSeries(components, async (component) => {
-      const results = await snapping._addCompFromScopeToObjects(component, lane);
-
-      // in case "tagData.isNew", the version object has "parents" that should not be there.
-      // they got created as a workaround to generate a new component from the scope without having a workspace.
+    if (!consumer) {
       const tagData = tagDataPerComp?.find((t) => t.componentId.isEqualWithoutVersion(component.id));
       if (tagData?.isNew) results.version.removeAllParents();
-    });
-  }
+    }
+  });
 }
 
 /**

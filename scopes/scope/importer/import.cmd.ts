@@ -8,7 +8,7 @@ import {
   MergeStrategy,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
+import { BitError } from '@teambit/bit-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
 import { ImporterMain } from './importer.main.runtime';
@@ -30,6 +30,8 @@ type ImportFlags = {
   dependencies?: boolean;
   dependents?: boolean;
   dependentsDryRun?: boolean;
+  dependentsVia?: string;
+  silent?: boolean;
   allHistory?: boolean;
   fetchDeps?: boolean;
   trackOnly?: boolean;
@@ -80,9 +82,15 @@ export class ImportCmd implements Command {
     ],
     [
       '',
-      'dependents-dry-run',
-      'same as --dependents, except it prints the found dependents and wait for confirmation before importing them',
+      'dependents-via <string>',
+      'same as --dependents except the traversal must go through the specified component. to specify multiple components, wrap with quotes and separate by a comma',
     ],
+    [
+      '',
+      'dependents-dry-run',
+      'DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and wait for confirmation before importing them',
+    ],
+    ['', 'silent', 'no prompt for --dependents/--dependents-via flags'],
     [
       '',
       'filter-envs <envs>',
@@ -204,35 +212,40 @@ export class ImportCmd implements Command {
       dependencies = false,
       dependents = false,
       dependentsDryRun = false,
+      silent,
+      dependentsVia,
       allHistory = false,
       fetchDeps = false,
       trackOnly = false,
       includeDeprecated = false,
     }: ImportFlags
   ): Promise<ImportResult> {
+    if (dependentsDryRun) {
+      this.importer.logger.warn(`the "--dependents-dry-run" flag is deprecated and is now the default behavior`);
+    }
     if (objects && merge) {
-      throw new GeneralError(' --objects and --merge flags cannot be used together');
+      throw new BitError(' --objects and --merge flags cannot be used together');
     }
     if (override && merge) {
-      throw new GeneralError('--override and --merge cannot be used together');
+      throw new BitError('--override and --merge cannot be used together');
     }
     if (!ids.length && dependencies) {
-      throw new GeneralError('you have to specify ids to use "--dependencies" flag');
+      throw new BitError('you have to specify ids to use "--dependencies" flag');
     }
     if (!ids.length && dependents) {
-      throw new GeneralError('you have to specify ids to use "--dependents" flag');
+      throw new BitError('you have to specify ids to use "--dependents" flag');
     }
-    if (!ids.length && dependentsDryRun) {
-      throw new GeneralError('you have to specify ids to use "--dependents-dry-run" flag');
+    if (!ids.length && dependentsVia) {
+      throw new BitError('you have to specify ids to use "--dependents-via" flag');
     }
     if (!ids.length && trackOnly) {
-      throw new GeneralError('you have to specify ids to use "--track-only" flag');
+      throw new BitError('you have to specify ids to use "--track-only" flag');
     }
     let mergeStrategy;
     if (merge && typeof merge === 'string') {
       const options = Object.keys(MergeOptions);
       if (!options.includes(merge)) {
-        throw new GeneralError(`merge must be one of the following: ${options.join(', ')}`);
+        throw new BitError(`merge must be one of the following: ${options.join(', ')}`);
       }
       mergeStrategy = merge;
     }
@@ -254,7 +267,8 @@ export class ImportCmd implements Command {
       saveInLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
-      dependentsDryRun,
+      dependentsVia,
+      silent,
       allHistory,
       fetchDeps,
       trackOnly,

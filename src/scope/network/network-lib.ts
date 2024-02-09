@@ -1,23 +1,11 @@
-import logger from '../../logger/logger';
-import { parseSSHUrl } from '../../utils';
 import { ProtocolNotSupported } from './exceptions';
 import Fs from './fs';
 import { Network } from './network';
-import SSH from './ssh';
-import { SSHConnectionStrategyName } from './ssh/ssh';
 import { Http } from './http';
 
-export default function connect(
-  host: string,
-  name: string,
-  strategiesNames?: SSHConnectionStrategyName[],
-  localScopeName?: string
-): Promise<Network> {
+export default function connect(host: string, name: string, localScopeName?: string): Promise<Network> {
   if (host.startsWith('ssh://') || host.startsWith('bit://')) {
-    logger.debug(`Establishing a new SSH connection to ${host}`);
-    const sshProps = parseSSHUrl(host);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new SSH(sshProps).connect(strategiesNames);
+    throw new Error('ssh protocol is not supported anymore, please use http or fs protocols');
   }
 
   if (host.startsWith('file://')) {

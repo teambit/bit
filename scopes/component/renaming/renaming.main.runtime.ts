@@ -52,7 +52,11 @@ export class RenamingMain {
     private remove: RemoveMain
   ) {}
 
-  async rename(sourceIdStr: string, targetName: string, options: RenameOptions): Promise<RenameDependencyNameResult> {
+  async rename(
+    sourceIdStr: string,
+    targetName: string,
+    options: RenameOptions = {}
+  ): Promise<RenameDependencyNameResult> {
     if (!isValidIdChunk(targetName)) {
       if (targetName.includes('.'))
         throw new Error(`error: new-name argument "${targetName}" includes a dot.
@@ -114,10 +118,10 @@ make sure this argument is the name only, without the scope-name. to change the 
         await this.deleteLinkFromNodeModules(sourcePkg);
       }
     });
-
     await this.workspace.bitMap.write(`rename`);
     await this.renameAspectIdsInWorkspaceConfig(multipleIds);
     await this.workspace._reloadConsumer(); // in order to reload .bitmap file and clear all caches.
+    await this.changeEnvsAccordingToNewIds(renameData);
     await pMapSeries(renameData, async (itemData) => {
       itemData.targetComp = await this.workspace.get(itemData.targetId);
       itemData.targetPkg = this.workspace.componentPackageName(itemData.targetComp);
@@ -161,16 +165,6 @@ make sure this argument is the name only, without the scope-name. to change the 
     multipleIds.forEach(({ sourceId, targetId }) => {
       this.workspace.bitMap.renameAspectInConfig(sourceId, targetId);
     });
-    await pMapSeries(renameData, async (renameItem) => {
-      const componentIds = renameItem.compIdsUsingItAsEnv;
-      if (!componentIds?.length) return;
-      const newEnvId = renameItem.targetId;
-      const newComponentIds = componentIds.map((id) => {
-        const found = renameData.find((r) => r.sourceId.isEqualWithoutVersion(id));
-        return found ? found.targetId : id;
-      });
-      await this.workspace.setEnvToComponents(newEnvId, newComponentIds);
-    });
 
     await this.workspace.bitMap.write(`rename`);
 
@@ -195,7 +189,7 @@ make sure this argument is the name only, without the scope-name. to change the 
    * keep in mind that this is working for new components only, for tagged/exported it's impossible. See the errors
    * thrown in such cases in this method.
    */
-  async renameScope(oldScope: string, newScope: string, options: { refactor?: boolean }): Promise<RenameResult> {
+  async renameScope(oldScope: string, newScope: string, options: { refactor?: boolean } = {}): Promise<RenameResult> {
     const allComponentsIds = await this.workspace.listIds();
     const componentsUsingOldScope = allComponentsIds.filter((compId) => compId.scope === oldScope);
     if (!componentsUsingOldScope.length && this.workspace.defaultScope !== oldScope) {
@@ -205,7 +199,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       await this.workspace.setDefaultScope(newScope);
     }
     const multipleIds: RenameId[] = componentsUsingOldScope.map((compId) => {
-      const targetId = ComponentID.fromObject({ name: compId.name }, newScope);
+      const targetId = ComponentID.fromObject({ name: compId.fullName }, newScope);
       return { sourceId: compId, targetId };
     });
     return this.renameMultiple(multipleIds, { ...options, preserve: true });
@@ -255,7 +249,18 @@ make sure this argument is the name only, without the scope-name. to change the 
     );
     if (hasChanged) await config.write({ reasonForChange: 'rename' });
   }
-
+  private async changeEnvsAccordingToNewIds(renameData: RenameData[]) {
+    await pMapSeries(renameData, async (renameItem) => {
+      const componentIds = renameItem.compIdsUsingItAsEnv;
+      if (!componentIds?.length) return;
+      const newEnvId = renameItem.targetId;
+      const newComponentIds = componentIds.map((id) => {
+        const found = renameData.find((r) => r.sourceId.isEqualWithoutVersion(id));
+        return found ? found.targetId : id;
+      });
+      await this.workspace.setEnvToComponents(newEnvId, newComponentIds);
+    });
+  }
   private async deleteLinkFromNodeModules(packageName: string) {
     await fs.remove(path.join(this.workspace.path, 'node_modules', packageName));
   }
@@ -364,3 +369,5 @@ export type RenameDependencyNameResult = { sourceId: ComponentID; targetId: Comp
 export type RenamingInfo = {
   renamedFrom: ComponentID;
 };
+
+export default RenamingMain;

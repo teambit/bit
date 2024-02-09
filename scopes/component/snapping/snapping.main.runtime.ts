@@ -39,7 +39,7 @@ import {
   ArtifactSource,
   getArtifactsFiles,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import { VersionNotFound, ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import { VersionNotFound, ComponentNotFound, HeadNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import DependenciesAspect, { DependenciesMain } from '@teambit/dependencies';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
@@ -95,8 +95,9 @@ export type SnapResults = BasicTagResults & {
 };
 
 export type SnapFromScopeResults = {
-  snappedIds: string[];
-  exportedIds?: string[];
+  snappedIds: ComponentID[];
+  exportedIds?: ComponentID[];
+  snappedComponents: ConsumerComponent[];
 };
 
 export type TagResults = BasicTagResults & {
@@ -477,7 +478,7 @@ if you're willing to lose the history from the head to the specified version, us
     });
 
     const { taggedComponents } = results;
-    let exportedIds: string[] | undefined;
+    let exportedIds: ComponentIdList | undefined;
     if (params.push) {
       const updatedLane = lane ? await this.scope.legacyScope.loadLane(lane.toLaneId()) : undefined;
       const { exported } = await this.exporter.exportMany({
@@ -491,11 +492,12 @@ if you're willing to lose the history from the head to the specified version, us
         // (see the e2e - "snap on a lane when the component is new to the lane and the scope")
         exportHeadsOnly: true,
       });
-      exportedIds = exported.map((e) => e.toString());
+      exportedIds = exported;
     }
 
     return {
-      snappedIds: taggedComponents.map((comp) => comp.id.toString()),
+      snappedComponents: taggedComponents,
+      snappedIds: taggedComponents.map((comp) => comp.id),
       exportedIds,
     };
   }
@@ -686,6 +688,7 @@ there are matching among unmodified components thought. consider using --unmodif
 
   async _addFlattenedDependenciesToComponents(components: ConsumerComponent[], rebuildDepsGraph = false) {
     loader.start('importing missing dependencies...');
+    this.logger.profile('snap._addFlattenedDependenciesToComponents');
     const getLane = async () => {
       const lane = await this.scope.legacyScope.getCurrentLaneObject();
       if (!lane) return undefined;
@@ -714,6 +717,7 @@ there are matching among unmodified components thought. consider using --unmodif
     components.forEach((component) => {
       flattenedEdgesGetter.populateFlattenedAndEdgesForComp(component);
     });
+    this.logger.profile('snap._addFlattenedDependenciesToComponents');
   }
 
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
@@ -769,7 +773,7 @@ there are matching among unmodified components thought. consider using --unmodif
             : await this.scope.legacyScope.isPartOfMainHistory(dep.id);
         } catch (err) {
           if (throwForMissingObjects) throw err;
-          if (err instanceof VersionNotFound || err instanceof ComponentNotFound) {
+          if (err instanceof VersionNotFound || err instanceof ComponentNotFound || err instanceof HeadNotFound) {
             missingDeps.push(dep.id);
             return;
           }
@@ -777,6 +781,11 @@ there are matching among unmodified components thought. consider using --unmodif
         }
 
         if (!isPartOfHistory) {
+          if (!throwForMissingObjects) {
+            // it's possible that the dependency wasn't imported recently and the head is stale.
+            missingDeps.push(dep.id);
+            return;
+          }
           const laneOrMainStr = lane ? `current lane "${lane.name}"` : 'main';
           throw new Error(
             `unable to tag/snap ${component.id.toString()}, it has a dependency ${dep.id.toString()} which is not part of ${laneOrMainStr} history.
@@ -877,17 +886,18 @@ another option, in case this dependency is not in main yet is to remove all refe
 
   async _addCompToObjects({
     source,
-    consumer,
     lane,
     shouldValidateVersion = false,
   }: {
     source: ConsumerComponent;
-    consumer: Consumer;
     lane: Lane | null;
     shouldValidateVersion?: boolean;
-  }): Promise<ModelComponent> {
+  }): Promise<{
+    component: ModelComponent;
+    version: Version;
+  }> {
     const { component, version } = await this._addCompFromScopeToObjects(source, lane);
-    const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.toComponentId());
+    const unmergedComponent = this.scope.legacyScope.objects.unmergedComponents.getEntry(component.toComponentId());
     if (unmergedComponent) {
       if (unmergedComponent.unrelated) {
         this.logger.debug(
@@ -916,10 +926,10 @@ another option, in case this dependency is not in main yet is to remove all refe
         );
         version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
       }
-      consumer.scope.objects.unmergedComponents.removeComponent(component.toComponentId());
+      this.scope.legacyScope.objects.unmergedComponents.removeComponent(component.toComponentId());
     }
     if (shouldValidateVersion) version.validate();
-    return component;
+    return { component, version };
   }
 
   async _addCompFromScopeToObjects(

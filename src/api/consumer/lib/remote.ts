@@ -1,4 +1,4 @@
-import GeneralError from '../../../error/general-error';
+import { BitError } from '@teambit/bit-error';
 import { GlobalRemotes } from '../../../global-config';
 import { Remote } from '../../../remotes';
 import { loadScope } from '../../../scope';
@@ -38,7 +38,7 @@ export async function remove(name: string, global: boolean) {
     const globalRemotes = await GlobalRemotes.load();
     const hasRemoved = globalRemotes.rmRemote(name);
     if (!hasRemoved) {
-      throw new GeneralError(
+      throw new BitError(
         `remote "${name}" was not found globally, to remove a local remote, please omit the "--global" flag`
       );
     }
@@ -50,9 +50,7 @@ export async function remove(name: string, global: boolean) {
   const scope = await loadScope();
   const hasRemoved = scope.scopeJson.rmRemote(name);
   if (!hasRemoved) {
-    throw new GeneralError(
-      `remote "${name}" was not found locally, to remove a global remote, please use "--global" flag`
-    );
+    throw new BitError(`remote "${name}" was not found locally, to remove a global remote, please use "--global" flag`);
   }
   await scope.scopeJson.write(scope.getPath());
   return name;

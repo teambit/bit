@@ -153,7 +153,7 @@ export function updateDependenciesVersions(
     return depsResolver.getWorkspacePolicyManifest().dependencies?.[pkgName];
   }
 
-  function resolveFromMergeConfig(id: ComponentID, pkgName: string) {
+  function resolveFromMergeConfig(id: ComponentID, pkgName: string): ComponentID | undefined {
     let foundVersion: string | undefined | null;
     DEPENDENCIES_FIELDS.forEach((field) => {
       if (autoDetectConfigMerge[field]?.[pkgName]) {

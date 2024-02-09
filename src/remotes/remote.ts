@@ -11,7 +11,6 @@ import { LaneData } from '../scope/lanes/lanes';
 import { ComponentLog } from '../scope/models/model-component';
 import { connect } from '../scope/network';
 import { Network } from '../scope/network/network';
-import { DEFAULT_READ_STRATEGIES, SSHConnectionStrategyName } from '../scope/network/ssh/ssh';
 import { ObjectItemsStream, ObjectList } from '../scope/objects/object-list';
 import RemovedObjects from '../scope/removed-components';
 import { cleanBang, isBitUrl } from '../utils';
@@ -35,8 +34,8 @@ export default class Remote {
     this.primary = primary;
   }
 
-  connect(strategiesNames?: SSHConnectionStrategyName[]): Promise<Network> {
-    return connect(this.host, this.name, strategiesNames, this.localScopeName);
+  connect(): Promise<Network> {
+    return connect(this.host, this.name, this.localScopeName);
   }
 
   toPlainObject() {
@@ -52,44 +51,26 @@ export default class Remote {
     });
   }
 
-  list(
-    namespacesUsingWildcards?: string,
-    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
-  ): Promise<ListScopeResult[]> {
-    return this.connect(strategiesNames).then((network) => network.list(namespacesUsingWildcards));
+  list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
+    return this.connect().then((network) => network.list(namespacesUsingWildcards));
   }
 
-  show(
-    bitId: ComponentID,
-    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
-  ): Promise<Component | null | undefined> {
-    return this.connect(strategiesNames).then((network) => network.show(bitId));
+  show(bitId: ComponentID): Promise<Component | null | undefined> {
+    return this.connect().then((network) => network.show(bitId));
   }
 
-  graph(
-    bitId?: ComponentID,
-    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
-  ): Promise<DependencyGraph> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.connect(strategiesNames).then((network) => network.graph(bitId));
+  graph(bitId?: ComponentID): Promise<DependencyGraph> {
+    return this.connect().then((network) => network.graph(bitId));
   }
 
-  fetch(
-    ids: string[],
-    fetchOptions: FETCH_OPTIONS,
-    context?: Record<string, any>,
-    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
-  ): Promise<ObjectItemsStream> {
+  fetch(ids: string[], fetchOptions: FETCH_OPTIONS, context?: Record<string, any>): Promise<ObjectItemsStream> {
     fetchOptions.fetchSchema = CURRENT_FETCH_SCHEMA;
-    return this.connect(strategiesNames).then((network) => network.fetch(ids, fetchOptions, context));
+    return this.connect().then((network) => network.fetch(ids, fetchOptions, context));
   }
 
-  latestVersions(
-    bitIds: ComponentID[],
-    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
-  ): Promise<string[]> {
+  latestVersions(bitIds: ComponentID[]): Promise<string[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.connect(strategiesNames).then((network) => network.latestVersions(bitIds));
+    return this.connect().then((network) => network.latestVersions(bitIds));
   }
 
   validate() {
