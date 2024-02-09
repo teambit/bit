@@ -43,11 +43,10 @@ export class LaneSwitcher {
     await this.populateSwitchProps();
     const bitMapIds = this.workspace.consumer.bitmapIdsFromCurrentLaneIncludeRemoved;
     const idsToSwitch = this.switchProps.ids || [];
-    const idsWithVersion = idsToSwitch.map((id) => {
+    const ids = idsToSwitch.map((id) => {
       const bitMapId = bitMapIds.searchWithoutVersion(id);
       return bitMapId || id;
     });
-    const ids = await this.workspace.resolveMultipleComponentIds(idsWithVersion);
 
     const checkoutProps: CheckoutProps = {
       ...this.checkoutProps,
