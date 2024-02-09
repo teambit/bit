@@ -334,12 +334,12 @@ export default class CommandHelper {
     return this.runCmd(`bit snap ${id} ${options}`);
   }
   snapAllComponents(options = '', assertSnapped = true) {
-    const result = this.runCmd(`bit snap -a ${options} --build`);
+    const result = this.runCmd(`bit snap ${options} --build`);
     if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
     return result;
   }
   snapAllComponentsWithoutBuild(options = '', assertSnapped = true) {
-    const result = this.runCmd(`bit snap -a ${options} `);
+    const result = this.runCmd(`bit snap ${options} `);
     if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
     return result;
   }
