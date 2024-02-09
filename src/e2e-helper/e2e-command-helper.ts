@@ -718,8 +718,12 @@ export default class CommandHelper {
   mergeAbortLane(options = '') {
     return this.runCmd(`bit lane merge-abort ${options} --silent`);
   }
-  mergeLaneFromScope(cwd: string, laneName: string, options = '') {
-    return this.runCmd(`bit _merge-lane ${laneName} ${options}`, cwd);
+  mergeLaneFromScope(cwd: string, fromLane: string, options = '') {
+    return this.runCmd(`bit _merge-lane ${fromLane} ${options}`, cwd);
+  }
+  mergeLaneFromScopeParsed(cwd: string, fromLane: string, options = ''): Record<string, any> {
+    const output = this.mergeLaneFromScope(cwd, fromLane, `${options} --json`);
+    return JSON.parse(output);
   }
   tagFromScope(cwd: string, data: Record<string, any>, options = '') {
     return this.runCmd(`bit _tag '${JSON.stringify(data)}' ${options}`, cwd);

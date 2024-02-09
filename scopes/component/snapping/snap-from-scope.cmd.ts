@@ -127,7 +127,11 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       rebuildDepsGraph,
     });
 
-    return results;
+    return {
+      ...results,
+      exportedIds: results.exportedIds?.map((id) => id.toString()),
+      snappedIds: results.snappedIds.map((id) => id.toString()),
+    };
   }
   private parseData(data: string): SnapDataPerCompRaw[] {
     let dataParsed: unknown;
