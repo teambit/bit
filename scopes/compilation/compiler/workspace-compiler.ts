@@ -382,10 +382,7 @@ export class WorkspaceCompiler {
     return grouped as { envs: Component[]; other: Component[] };
   }
 
-  private async getIdsToCompile(
-    componentsIds: Array<string | ComponentID | ComponentID>,
-    changed = false
-  ): Promise<ComponentID[]> {
+  private async getIdsToCompile(componentsIds: Array<string | ComponentID>, changed = false): Promise<ComponentID[]> {
     if (componentsIds.length) {
       const componentIds = await this.workspace.resolveMultipleComponentIds(componentsIds);
       return this.workspace.filterIds(componentIds);

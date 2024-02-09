@@ -242,16 +242,15 @@ export async function linkToNodeModulesWithCodemod(
 
 export async function linkToNodeModulesByIds(
   workspace: Workspace,
-  bitIds: ComponentID[],
+  componentsIds: ComponentID[],
   loadFromScope = false
 ): Promise<NodeModulesLinksResult[]> {
-  const componentsIds = await workspace.resolveMultipleComponentIds(bitIds);
   if (!componentsIds.length) return [];
   const getComponents = async () => {
     if (loadFromScope) {
       return workspace.scope.getMany(componentsIds);
     }
-    return workspace.getMany(componentsIds, { idsToNotLoadAsAspects: bitIds.map((id) => id.toString()) });
+    return workspace.getMany(componentsIds, { idsToNotLoadAsAspects: componentsIds.map((id) => id.toString()) });
   };
   const components = await getComponents();
   const nodeModuleLinker = new NodeModuleLinker(components, workspace);
