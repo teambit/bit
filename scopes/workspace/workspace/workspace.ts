@@ -836,7 +836,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   async triggerOnWorkspaceConfigChange(): Promise<void> {
     this.logger.debug('triggerOnWorkspaceConfigChange, reloading workspace config');
     const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
-    await config.reloadWorkspaceConfig();
+    await config.reloadWorkspaceConfig(this.path);
     const workspaceConfig = config.workspaceConfig;
     if (!workspaceConfig) throw new Error('workspace config is missing from Config aspect');
     const configOfWorkspaceAspect = workspaceConfig.extensions.findExtension(WorkspaceAspect.id);
