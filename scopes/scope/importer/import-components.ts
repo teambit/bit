@@ -638,7 +638,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       this.consumer.scope.objects
     );
     const mergeResults = await threeWayMerge({
-      consumer: this.consumer,
+      scope: this.consumer.scope,
       otherComponent,
       otherLabel: component.id.version as string,
       currentComponent: fsComponent,

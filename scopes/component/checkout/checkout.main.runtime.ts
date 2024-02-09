@@ -300,7 +300,7 @@ export class CheckoutMain {
     const idsOnWorkspace = await getIds();
 
     const currentLane = await this.workspace.consumer.getCurrentLaneObject();
-    const currentLaneIds = currentLane?.toBitIds();
+    const currentLaneIds = currentLane?.toComponentIds();
     const ids = currentLaneIds ? idsOnWorkspace.filter((id) => currentLaneIds.hasWithoutVersion(id)) : idsOnWorkspace;
     checkoutProps.ids = ids.map((id) => (checkoutProps.head || checkoutProps.latest ? id.changeVersion(LATEST) : id));
   }
@@ -311,9 +311,8 @@ export class CheckoutMain {
     if (!lane) {
       return [];
     }
-    const laneBitIds = lane.toBitIds();
-    const newIds = laneBitIds.filter((bitId) => !ids.find((id) => id.isEqualWithoutVersion(bitId)));
-    const newComponentIds = await this.workspace.resolveMultipleComponentIds(newIds);
+    const laneBitIds = lane.toComponentIds();
+    const newComponentIds = laneBitIds.filter((bitId) => !ids.find((id) => id.isEqualWithoutVersion(bitId)));
     const nonRemovedNewIds: ComponentID[] = [];
     await Promise.all(
       newComponentIds.map(async (id) => {
@@ -489,7 +488,7 @@ export class CheckoutMain {
     const baseComponent: Version = await componentModel.loadVersion(baseVersion, repo);
     const otherComponent: Version = await componentModel.loadVersion(newVersion, repo);
     const mergeResults = await threeWayMerge({
-      consumer,
+      scope: consumer.scope,
       otherComponent,
       otherLabel: newVersion,
       currentComponent: componentFromFS,

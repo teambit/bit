@@ -173,7 +173,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     if (resolveUnrelated && typeof resolveUnrelated === 'boolean') {
       resolveUnrelated = 'ours';
     }
-    const { mergeResults, deleteResults, configMergeResults } = await this.mergeLanes.mergeLane(name, {
+    const { mergeResults, deleteResults, configMergeResults } = await this.mergeLanes.mergeLaneByCLI(name, {
       build,
       // @ts-ignore
       mergeStrategy,

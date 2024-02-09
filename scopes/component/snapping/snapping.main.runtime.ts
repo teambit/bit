@@ -95,8 +95,9 @@ export type SnapResults = BasicTagResults & {
 };
 
 export type SnapFromScopeResults = {
-  snappedIds: string[];
-  exportedIds?: string[];
+  snappedIds: ComponentID[];
+  exportedIds?: ComponentID[];
+  snappedComponents: ConsumerComponent[];
 };
 
 export type TagResults = BasicTagResults & {
@@ -197,10 +198,10 @@ export class SnappingMain {
     );
     if (!bitIds.length) return null;
 
-    const legacyBitIds = ComponentIdList.fromArray(bitIds);
+    const compIds = ComponentIdList.fromArray(bitIds);
 
-    this.logger.debug(`tagging the following components: ${legacyBitIds.toString()}`);
-    const components = await this.loadComponentsForTagOrSnap(legacyBitIds, !soft);
+    this.logger.debug(`tagging the following components: ${compIds.toString()}`);
+    const components = await this.loadComponentsForTagOrSnap(compIds, !soft);
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     await this.throwForVariousIssues(components, ignoreIssues);
 
@@ -211,7 +212,7 @@ export class SnappingMain {
         snapping: this,
         builder: this.builder,
         consumerComponents,
-        ids: legacyBitIds,
+        ids: compIds,
         message,
         editor,
         exactVersion: validExactVersion,
@@ -477,7 +478,7 @@ if you're willing to lose the history from the head to the specified version, us
     });
 
     const { taggedComponents } = results;
-    let exportedIds: string[] | undefined;
+    let exportedIds: ComponentIdList | undefined;
     if (params.push) {
       const updatedLane = lane ? await this.scope.legacyScope.loadLane(lane.toLaneId()) : undefined;
       const { exported } = await this.exporter.exportMany({
@@ -491,11 +492,12 @@ if you're willing to lose the history from the head to the specified version, us
         // (see the e2e - "snap on a lane when the component is new to the lane and the scope")
         exportHeadsOnly: true,
       });
-      exportedIds = exported.map((e) => e.toString());
+      exportedIds = exported;
     }
 
     return {
-      snappedIds: taggedComponents.map((comp) => comp.id.toString()),
+      snappedComponents: taggedComponents,
+      snappedIds: taggedComponents.map((comp) => comp.id),
       exportedIds,
     };
   }
@@ -884,17 +886,18 @@ another option, in case this dependency is not in main yet is to remove all refe
 
   async _addCompToObjects({
     source,
-    consumer,
     lane,
     shouldValidateVersion = false,
   }: {
     source: ConsumerComponent;
-    consumer: Consumer;
     lane: Lane | null;
     shouldValidateVersion?: boolean;
-  }): Promise<ModelComponent> {
+  }): Promise<{
+    component: ModelComponent;
+    version: Version;
+  }> {
     const { component, version } = await this._addCompFromScopeToObjects(source, lane);
-    const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.toComponentId());
+    const unmergedComponent = this.scope.legacyScope.objects.unmergedComponents.getEntry(component.toComponentId());
     if (unmergedComponent) {
       if (unmergedComponent.unrelated) {
         this.logger.debug(
@@ -923,10 +926,10 @@ another option, in case this dependency is not in main yet is to remove all refe
         );
         version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
       }
-      consumer.scope.objects.unmergedComponents.removeComponent(component.toComponentId());
+      this.scope.legacyScope.objects.unmergedComponents.removeComponent(component.toComponentId());
     }
     if (shouldValidateVersion) version.validate();
-    return component;
+    return { component, version };
   }
 
   async _addCompFromScopeToObjects(
@@ -989,14 +992,13 @@ another option, in case this dependency is not in main yet is to remove all refe
   }
 
   private async loadComponentsForTagOrSnap(ids: ComponentIdList, shouldClearCacheFirst = true): Promise<Component[]> {
-    const compIds = await this.workspace.resolveMultipleComponentIds(ids);
     if (shouldClearCacheFirst) {
       await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
       // don't clear only the cache of these ids. we need also the auto-tag. so it's safer to just clear all.
       this.workspace.clearAllComponentsCache();
     }
 
-    return this.workspace.getMany(compIds.map((id) => id.changeVersion(undefined)));
+    return this.workspace.getMany(ids.map((id) => id.changeVersion(undefined)));
   }
 
   private async throwForComponentIssues(components: Component[], ignoreIssues?: string) {

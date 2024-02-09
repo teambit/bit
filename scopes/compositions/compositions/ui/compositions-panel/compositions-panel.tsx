@@ -1,5 +1,6 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import classNames from 'classnames';
+import { useSearchParams } from 'react-router-dom';
 import React, { useCallback } from 'react';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import { useNavigate, useLocation } from '@teambit/base-react.navigation.link';
@@ -54,15 +55,21 @@ export function CompositionsPanel({
   );
 
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const versionFromQueryParams = searchParams.get('version');
   const navigate = useNavigate();
 
   const onCompositionCodeClicked = useCallback(
     (composition: Composition) => (e: React.MouseEvent<HTMLDivElement>) => {
       e.preventDefault();
+      const queryParams = new URLSearchParams();
+      if (versionFromQueryParams) {
+        queryParams.set('version', versionFromQueryParams);
+      }
       const basePath = location?.pathname.split('/~compositions')[0];
-      navigate(`${basePath}/~code/${composition.filepath}#search=${composition.identifier}`);
+      navigate(`${basePath}/~code/${composition.filepath}?${queryParams.toString()}#search=${composition.identifier}`);
     },
-    [location?.pathname]
+    [location?.pathname, versionFromQueryParams]
   );
 
   return (

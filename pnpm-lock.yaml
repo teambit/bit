@@ -24535,6 +24535,9 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
+      enquirer:
+        specifier: 2.3.6
+        version: 2.3.6
       graphql:
         specifier: 15.8.0
         version: 15.8.0
@@ -65446,6 +65449,7 @@ packages:
     dependencies:
       envify: 3.4.1
       fbjs: 0.6.1
+    bundledDependencies: false
 
   /react@17.0.2:
     resolution: {integrity: sha512-gnhPt75i/dq/z3/6q/0asP78D0u592D5L1pd7M8P+dck6Fu/jJeL6iVVK23fptSUZj8Vjf++7wXA8UNclGQcbA==}
@@ -76527,6 +76531,7 @@ packages:
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
       chalk: 2.4.2
+      enquirer: 2.3.6
       graphql: 15.8.0
       lodash: 4.17.21
       mocha: 10.2.0
