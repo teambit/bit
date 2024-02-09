@@ -131,7 +131,7 @@ describe('tag components on Harmony', function () {
     });
     describe('soft tag with specific version and message', () => {
       before(() => {
-        helper.command.softTag('-a -s 2.0.0 -m "my custom message"');
+        helper.command.softTag('--ver 2.0.0 -m "my custom message"');
       });
       it('should save the version and the message into the .bitmap file', () => {
         const bitMap = helper.bitMap.readComponentsMapOnly();
@@ -159,8 +159,8 @@ describe('tag components on Harmony', function () {
     describe('soft tag after soft tag', () => {
       let tagOutput;
       before(() => {
-        helper.command.softTag('-a -s 2.0.0');
-        tagOutput = helper.command.softTag('-a -s 3.0.0');
+        helper.command.softTag('--ver 2.0.0');
+        tagOutput = helper.command.softTag('--ver 3.0.0');
       });
       it('should show the output according to the new soft-tag', () => {
         expect(tagOutput).to.have.string('3.0.0');
@@ -176,7 +176,7 @@ describe('tag components on Harmony', function () {
     });
     describe('untag', () => {
       before(() => {
-        helper.command.softTag('-a -s 3.0.0');
+        helper.command.softTag('--ver 3.0.0');
         helper.command.resetSoft('--all');
       });
       it('should remove the nextVersion from the .bitmap file', () => {

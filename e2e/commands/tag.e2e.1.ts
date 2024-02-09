@@ -131,7 +131,7 @@ describe('bit tag command', function () {
       helper.command.addComponent('bar/', { i: 'bar/foo' });
       helper.fs.deletePath('bar/foo.js');
       try {
-        helper.command.runCmd('bit tag -a');
+        helper.command.runCmd('bit tag');
       } catch (err: any) {
         errMsg = err.message;
       }

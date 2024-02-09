@@ -102,7 +102,7 @@ describe('extensions config diff', function () {
     describe.skip('change extension version', () => {
       before(() => {
         reEjectAndCheckStatusBefore(helper);
-        helper.command.tagComponent('ext1', 'sss', '-f');
+        helper.command.tagComponent('ext1', 'sss', '--unmodified');
         helper.componentJson.removeExtension('my-scope/ext1@0.0.21');
         helper.componentJson.setExtension('my-scope/ext1@0.0.2', { key: 'val' });
       });
