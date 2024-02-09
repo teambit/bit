@@ -38,7 +38,7 @@ describe('tag components on Harmony', function () {
     });
     describe('tag without build after full tag', () => {
       before(() => {
-        helper.command.tagAllWithoutBuild('-s 1.0.0');
+        helper.command.tagAllWithoutBuild('--ver 1.0.0 --unmodified');
       });
       it('should not save the builder data from the previous version', () => {
         const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
@@ -86,7 +86,7 @@ describe('tag components on Harmony', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents();
-      helper.command.softTag('--all');
+      helper.command.softTag();
     });
     it('should add a property of nextVersion in .bitmap file', () => {
       const bitMap = helper.bitMap.readComponentsMapOnly();
@@ -367,7 +367,7 @@ describe('tag components on Harmony', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.workspaceJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
-      tagOutput = helper.command.softTag('--all --pre-release dev');
+      tagOutput = helper.command.softTag('--pre-release dev');
     });
     it('should save the pre-release name in the .bitmap file', () => {
       const bitMap = helper.bitMap.read();
