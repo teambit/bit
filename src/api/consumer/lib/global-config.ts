@@ -1,12 +1,12 @@
 import gitconfig from 'gitconfig';
 import R from 'ramda';
+import { BitError } from '@teambit/bit-error';
 import { BASE_DOCS_DOMAIN, ENV_VARIABLE_CONFIG_PREFIX } from '../../../constants';
-import GeneralError from '../../../error/general-error';
 import Config from '../../../global-config/config';
 
 export function set(key: string, val: string): Promise<Config> {
   if (!key || !val) {
-    throw new GeneralError(`missing a configuration key and value. ${BASE_DOCS_DOMAIN}config/bit-config`);
+    throw new BitError(`missing a configuration key and value. ${BASE_DOCS_DOMAIN}config/bit-config`);
   }
   return Config.load().then((config) => {
     config.set(key, val);

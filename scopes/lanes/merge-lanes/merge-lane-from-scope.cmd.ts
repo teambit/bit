@@ -3,7 +3,7 @@ import { DEFAULT_LANE } from '@teambit/lane-id';
 import { Command, CommandOptions } from '@teambit/cli';
 import { fromBase64 } from '@teambit/legacy/dist/utils';
 import { BitError } from '@teambit/bit-error';
-import { MergeLanesMain } from './merge-lanes.main.runtime';
+import { MergeFromScopeResult, MergeLanesMain } from './merge-lanes.main.runtime';
 
 type Flags = {
   pattern?: string;
@@ -13,6 +13,7 @@ type Flags = {
   includeDeps?: boolean;
   title?: string;
   titleBase64?: string;
+  reMerge?: boolean;
 };
 
 /**
@@ -27,7 +28,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
   arguments = [
     {
       name: 'from-lane',
-      description: 'lane-id to merge from',
+      description: `lane-id to merge from or "${DEFAULT_LANE}"`,
     },
     {
       name: 'to-lane',
@@ -47,6 +48,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
     ['', 'no-squash', 'relevant for merging lanes into main, which by default squash.'],
     ['', 'include-deps', 'relevant for "--pattern". merge also dependencies of the given components'],
+    ['', 're-merge', 'helpful when last merge failed during export. do not skip components that seemed to be merged'],
     ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;
@@ -57,15 +59,27 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
 
   async report(
     [fromLane, toLane]: [string, string],
-    { pattern, push = false, keepReadme = false, noSquash = false, includeDeps = false, title, titleBase64 }: Flags
+    {
+      pattern,
+      push = false,
+      keepReadme = false,
+      noSquash = false,
+      includeDeps = false,
+      title,
+      titleBase64,
+      reMerge,
+    }: Flags
   ): Promise<string> {
     if (includeDeps && !pattern) {
       throw new BitError(`"--include-deps" flag is relevant only for --pattern flag`);
     }
+    if (fromLane === DEFAULT_LANE && !toLane) {
+      throw new BitError('to merge from the main lane, specify the target lane');
+    }
 
     const titleBase64Decoded = titleBase64 ? fromBase64(titleBase64) : undefined;
 
-    const { mergedNow, mergedPreviously, exportedIds } = await this.mergeLanes.mergeFromScope(
+    const { mergedNow, unmerged, exportedIds, conflicts } = await this.mergeLanes.mergeFromScope(
       fromLane,
       toLane || DEFAULT_LANE,
       {
@@ -75,6 +89,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
         pattern,
         includeDeps,
         snapMessage: titleBase64Decoded || title,
+        reMerge,
       }
     );
 
@@ -83,24 +98,33 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     );
     const mergedOutput = mergedNow.length ? `${mergedTitle}\n${mergedNow.join('\n')}` : '';
 
-    const nonMergedTitle = chalk.bold(
-      `the following ${mergedPreviously.length} components were already merged before, they were left intact`
+    const nonMergedTitle = chalk.bold(`the following ${unmerged.length} components were not merged`);
+    const nonMergedOutput = unmerged.length
+      ? `\n${nonMergedTitle}\n${unmerged.map((u) => `${u.id} (${u.reason})`).join('\n')}`
+      : '';
+
+    const conflictsTitle = chalk.bold(
+      `the following ${conflicts?.length} components have conflicts, the merge was not completed`
     );
-    const nonMergedOutput = mergedPreviously.length ? `\n${nonMergedTitle}\n${mergedPreviously.join('\n')}` : '';
+    const conflictsOutput = conflicts?.length
+      ? `\n${conflictsTitle}\n${conflicts
+          .map((u) => `${u.id} (files: ${u.files.join(', ') || 'N/A'}) (config: ${u.config})`)
+          .join('\n')}`
+      : '';
 
     const exportedTitle = chalk.green(`successfully exported ${exportedIds.length} components`);
     const exportedOutput = exportedIds.length ? `\n${exportedTitle}\n${exportedIds.join('\n')}` : '';
 
-    return mergedOutput + nonMergedOutput + exportedOutput;
+    return mergedOutput + nonMergedOutput + conflictsOutput + exportedOutput;
   }
   async json(
     [fromLane, toLane]: [string, string],
-    { pattern, push = false, keepReadme = false, noSquash = false, includeDeps = false }: Flags
+    { pattern, push = false, keepReadme = false, noSquash = false, includeDeps = false, reMerge }: Flags
   ) {
     if (includeDeps && !pattern) {
       throw new BitError(`"--include-deps" flag is relevant only for --pattern flag`);
     }
-    let results: any;
+    let results: MergeFromScopeResult;
     try {
       results = await this.mergeLanes.mergeFromScope(fromLane, toLane || DEFAULT_LANE, {
         push,
@@ -108,10 +132,19 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
         noSquash,
         pattern,
         includeDeps,
+        reMerge,
       });
       return {
         code: 0,
-        data: results,
+        data: {
+          ...results,
+          mergedNow: results.mergedNow.map((id) => id.toString()),
+          mergedPreviously: results.mergedPreviously.map((id) => id.toString()),
+          exportedIds: results.exportedIds.map((id) => id.toString()),
+          unmerged: results.unmerged.map(({ id, reason }) => ({ id: id.toString(), reason })),
+          conflicts: results.conflicts?.map(({ id, ...rest }) => ({ id: id.toString(), ...rest })),
+          snappedIds: results.snappedIds?.map((id) => id.toString()),
+        },
       };
     } catch (err: any) {
       return {

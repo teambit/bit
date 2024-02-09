@@ -378,4 +378,57 @@ describe('import functionality on Harmony', function () {
       expect(policy).to.have.string('>>>>>>> theirs');
     });
   });
+  describe('import with --dependents', () => {
+    // create the following graph:
+    // comp1 -> comp2 -> comp3 -> comp4
+    // comp1 -> comp-a -> comp4
+    // comp1 -> comp-b
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(4);
+      helper.fs.outputFile('comp-a/index.js', `require('${helper.general.getPackageNameByCompName('comp4', false)}');`);
+      helper.fs.outputFile('comp-b/index.js');
+      helper.command.addComponent('comp-a');
+      helper.command.addComponent('comp-b');
+      helper.command.compile();
+      helper.fs.appendFile(
+        'comp1/index.js',
+        `\nrequire('${helper.general.getPackageNameByCompName('comp-a', false)}');`
+      );
+      helper.fs.appendFile(
+        'comp1/index.js',
+        `\nrequire('${helper.general.getPackageNameByCompName('comp-b', false)}');`
+      );
+
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp1', '-x');
+    });
+    it('without "through" should import all graphs between the given component and the workspace', () => {
+      helper.command.importComponent('comp4', '--dependents -x --silent');
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('comp2');
+      expect(bitMap).to.have.property('comp3');
+      expect(bitMap).to.have.property('comp4');
+      expect(bitMap).to.have.property('comp-a');
+      expect(bitMap).to.not.have.property('comp-b');
+    });
+    it('with --dependents-via should limit to graph traversing through the given id', () => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp1', '-x');
+
+      helper.command.importComponent('comp4', `--dependents-via ${helper.scopes.remote}/comp2 -x --silent`);
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('comp2');
+      expect(bitMap).to.have.property('comp3');
+      expect(bitMap).to.have.property('comp4');
+      expect(bitMap).to.not.have.property('comp-a');
+      expect(bitMap).to.not.have.property('comp-b');
+    });
+  });
 });

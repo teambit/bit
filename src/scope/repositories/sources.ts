@@ -674,7 +674,7 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
       }
       if (divergeResults.isTargetAhead()) {
         if (!existingLane) throw new Error(`mergeLane, existingLane must be set if target is ahead`);
-        existingLane.addComponent({ id: component.id, head: component.head });
+        existingLane.addComponent(component);
         mergeResults.push({
           mergedComponent: modelComponent,
           mergedVersions: divergeResults.snapsOnTargetOnly.map((h) => h.toString()),
@@ -692,6 +692,12 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
       },
       { concurrency: concurrentComponentsLimit() }
     );
+    // downgrade the schema if the incoming lane has a lower schema because it's possible that components are deleted
+    // in the incoming lane but because it has an old schema, it doesn't have the "isDeleted" prop. leaving the schema
+    // of current lane as 1.0.0 will mistakenly think that the component is not deleted.
+    if (existingLane?.hasChanged && existingLane.includeDeletedData() && !lane.includeDeletedData()) {
+      existingLane.setSchemaToNotSupportDeletedData();
+    }
 
     return { mergeResults, mergeErrors, mergeLane: existingLane || lane };
   }

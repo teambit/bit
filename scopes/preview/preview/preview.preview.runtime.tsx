@@ -3,7 +3,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';
 import crossFetch from 'cross-fetch';
 import memoize from 'memoizee';
-import { debounce } from 'lodash';
+import { debounce, intersection, isObject } from 'lodash';
 
 import { PreviewNotFound } from './exceptions';
 import { PreviewType } from './preview-type';
@@ -107,7 +107,21 @@ export class PreviewPreview {
     const query = this.getQuery();
     const onlyOverview = this.getParam(query, 'onlyOverview');
 
-    const includes = onlyOverview === 'true' ? [] : includesAll.filter((module) => !!module);
+    const includes =
+      onlyOverview === 'true'
+        ? []
+        : includesAll
+            .filter((module) => !!module)
+            .map((module) => {
+              if (!module.default || !isObject(module.default)) return module;
+              // This aims to handle use cases where we have package.json with type:"module" in the root
+              // in that case sometime we might get the props both under default and in the object root
+              const keysWithoutDefault = Object.keys(module).filter((key) => key !== 'default');
+              const defaultKeys = Object.keys(module.default);
+              if (intersection(keysWithoutDefault, defaultKeys).length === defaultKeys.length) return module.default;
+              return module;
+            });
+
     // during build / tag, the component is isolated, so all aspects are relevant, and do not require filtering
     const componentAspects = this.isDev ? await this.getComponentAspects(componentId.toString()) : undefined;
     const previewModule = await this.getPreviewModule(name, componentId);

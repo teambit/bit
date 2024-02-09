@@ -97,12 +97,17 @@ export class ForkingMain {
       async ({ sourceId, targetId, path, env, config, targetScope }) => {
         const sourceCompId = await this.workspace.resolveComponentId(sourceId);
         const sourceIdWithScope = sourceCompId._legacy.scope ? sourceCompId : ComponentID.fromString(sourceId);
-        const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, {
-          scope: targetScope || scope,
-          path,
-          env,
-          config,
-        });
+        const { targetCompId, component } = await this.forkRemoteComponent(
+          sourceIdWithScope,
+          targetId,
+          {
+            scope: targetScope || scope,
+            path,
+            env,
+            config,
+          },
+          false
+        );
         return { targetCompId, sourceId, component };
       }
     );
@@ -138,6 +143,15 @@ export class ForkingMain {
         ];
       })
       .flat();
+
+    const stringsToReplaceForVariable: MultipleStringsReplacement = results
+      .map(({ targetCompId, sourceId }) => {
+        const sourceCompId = ComponentID.fromString(sourceId);
+        if (sourceCompId.name === targetCompId.name) return [];
+        return this.refactoring.getStringReplacementsForVariablesAndClasses(sourceCompId, targetCompId);
+      })
+      .flat();
+
     const allComponents = await this.workspace.list();
     if (options.refactor) {
       const { changedComponents } = await this.refactoring.replaceMultipleStrings(
@@ -146,6 +160,15 @@ export class ForkingMain {
         options.ast ? [importTransformer, exportTransformer] : undefined
       );
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
+
+      const { changedComponents: changedComponentsVariables } = await this.refactoring.replaceMultipleStrings(
+        allComponents,
+        stringsToReplaceForVariable,
+        options.ast ? [importTransformer, exportTransformer] : undefined,
+        true
+      );
+
+      await Promise.all(changedComponentsVariables.map((comp) => this.workspace.write(comp)));
     }
     const forkedComponents = results.map((result) => result.component);
     const policy = await Promise.all(forkedComponents.map((comp) => this.extractDeps(comp)));
@@ -223,7 +246,8 @@ export class ForkingMain {
   private async forkRemoteComponent(
     sourceId: ComponentID,
     targetId?: string,
-    options?: ForkOptions
+    options?: ForkOptions,
+    shouldRefactorVariablesAndClasses = true
   ): Promise<{
     targetCompId: ComponentID;
     component: Component;
@@ -246,7 +270,9 @@ the reason is that the refactor changes the components using ${sourceId.toString
       options?.ast ? [importTransformer, exportTransformer] : undefined
     );
     if (!options?.preserve) {
-      await this.refactoring.refactorVariableAndClasses(component, sourceId, targetCompId);
+      if (shouldRefactorVariablesAndClasses) {
+        await this.refactoring.refactorVariableAndClasses(component, sourceId, targetCompId, options);
+      }
       this.refactoring.refactorFilenames(component, sourceId, targetCompId);
     }
     const config = await this.getConfig(component, options);

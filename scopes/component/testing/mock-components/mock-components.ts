@@ -7,18 +7,32 @@ import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import path from 'path';
 import TrackerAspect, { TrackerMain } from '@teambit/tracker';
+import { ComponentID } from '@teambit/component-id';
+
+type CompDirs = {
+  id: ComponentID;
+  /**
+   * absolute path to the component dir
+   */
+  dir: string;
+};
 
 /**
  * create dummy components, add, link and compile them.
  * if `numOfComponents` is more than one, the components will depend on each other. by default, it's one.
  */
-export async function mockComponents(workspacePath: string, { numOfComponents = 1, additionalStr = '' } = {}) {
+export async function mockComponents(
+  workspacePath: string,
+  { numOfComponents = 1, additionalStr = '' } = {}
+): Promise<CompDirs[]> {
   const compsDirs = await createComponents(workspacePath, { numOfComponents, additionalStr });
   const harmony = await loadManyAspects([WorkspaceAspect, TrackerAspect, InstallAspect, CompilerAspect], workspacePath);
   const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
   const tracker = harmony.get<TrackerMain>(TrackerAspect.id);
+  const results: CompDirs[] = [];
   await pMapSeries(compsDirs, async (compDir) => {
-    await tracker.track({ rootDir: compDir });
+    const { componentId } = await tracker.track({ rootDir: compDir });
+    results.push({ id: componentId, dir: compDir });
   });
   await workspace.bitMap.write();
   const install = harmony.get<InstallMain>(InstallAspect.id);
@@ -26,6 +40,8 @@ export async function mockComponents(workspacePath: string, { numOfComponents = 
 
   const compiler = harmony.get<CompilerMain>(CompilerAspect.id);
   await compiler.compileOnWorkspace();
+
+  return results;
 }
 
 /**

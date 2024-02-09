@@ -14,6 +14,7 @@ import {
 } from '@teambit/semantics.entities.semantic-schema';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { Formatter } from '@teambit/formatter';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
@@ -30,6 +31,10 @@ export type SchemaConfig = {
    * default parser
    */
   defaultParser: string;
+  /**
+   * disable extracting schema
+   */
+  disabled?: boolean;
 };
 
 /**
@@ -107,6 +112,10 @@ export class SchemaMain {
     contextPath?: string,
     skipInternals?: boolean
   ): Promise<APISchema> {
+    if (this.config.disabled) {
+      return APISchema.empty(component.id as any);
+    }
+
     if (alwaysRunExtractor || this.workspace) {
       const env = this.envs.getEnv(component).env;
       // types need to be fixed
@@ -171,6 +180,20 @@ export class SchemaMain {
     return this;
   }
 
+  async calcSchemaData(): Promise<{ disabled?: boolean }> {
+    return {
+      disabled: this.config.disabled,
+    };
+  }
+
+  getSchemaData(component: Component) {
+    return component.state.aspects.get(SchemaAspect.id)?.data;
+  }
+
+  isSchemaTaskDisabled(component: Component) {
+    return this.getSchemaData(component)?.disabled;
+  }
+
   static runtime = MainRuntime;
   static dependencies = [
     EnvsAspect,
@@ -180,22 +203,25 @@ export class SchemaMain {
     LoggerAspect,
     BuilderAspect,
     WorkspaceAspect,
+    ScopeAspect,
   ];
   static slots = [Slot.withType<Parser>()];
 
   static defaultConfig = {
     defaultParser: 'teambit.typescript/typescript',
+    disabled: false,
   };
 
   static async provider(
-    [envs, cli, component, graphql, loggerMain, builder, workspace]: [
+    [envs, cli, component, graphql, loggerMain, builder, workspace, scope]: [
       EnvsMain,
       CLIMain,
       ComponentMain,
       GraphqlMain,
       LoggerMain,
       BuilderMain,
-      Workspace
+      Workspace,
+      ScopeMain
     ],
     config: SchemaConfig,
     [parserSlot]: [ParserSlot]
@@ -207,7 +233,12 @@ export class SchemaMain {
     cli.register(new SchemaCommand(schema, component, logger));
     graphql.register(schemaSchema(schema));
     envs.registerService(new SchemaService());
-
+    if (workspace) {
+      workspace.registerOnComponentLoad(async () => schema.calcSchemaData());
+    }
+    if (scope) {
+      scope.registerOnCompAspectReCalc(async () => schema.calcSchemaData());
+    }
     // register all default schema classes
     Object.values(Schemas).forEach((Schema) => {
       schema.registerSchemaClass(Schema);

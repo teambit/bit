@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useMemo, useRef, ReactNode } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import head from 'lodash.head';
 import queryString from 'query-string';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
@@ -38,30 +38,21 @@ export type CompositionsProp = { menuBarWidgets?: CompositionsMenuSlot; emptySta
 
 export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
   const component = useContext(ComponentContext);
-  // const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const params = useParams();
+  const versionFromQueryParams = searchParams.get('version');
   const navigate = useNavigate();
   const location = useLocation();
   const currentCompositionName = params['*'];
-  // console.log(routes);
   const currentComposition =
     component.compositions.find((composition) => composition.identifier.toLowerCase() === currentCompositionName) ||
     head(component.compositions);
 
-  // const [selected, selectComposition] = useState(head(component.compositions));
   const selectedRef = useRef(currentComposition);
   selectedRef.current = currentComposition;
 
   const properties = useDocs(component.id);
 
-  // reset selected composition when component changes.
-  // this does trigger renderer, but perf seems to be ok
-  // useEffect(() => {
-  //   const prevId = selectedRef.current?.identifier;
-  //   const next = component.compositions.find((c) => c.identifier === prevId) || component.compositions[0];
-
-  //   navigate(next.displayName.toLowerCase().replaceAll(' ', '-'));
-  // }, [component]);
   const isMobile = useIsMobile();
   const showSidebar = !isMobile && component.compositions.length > 0;
   const [isSidebarOpen, setSidebarOpenness] = useState(showSidebar);
@@ -138,8 +129,12 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
                       pathSegments[pathSegments.length - 1] = composition.identifier.toLowerCase();
                     }
 
+                    const urlParams = new URLSearchParams();
+                    if (versionFromQueryParams) {
+                      urlParams.set('version', versionFromQueryParams);
+                    }
                     const newPath = pathSegments.join('/');
-                    navigate(`/${newPath}`);
+                    navigate(`/${newPath}?${urlParams.toString()}`);
                   }}
                   url={compositionUrl}
                   compositions={component.compositions}

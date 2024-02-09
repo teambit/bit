@@ -123,7 +123,9 @@ export async function generateBundlePreviewEntry(rootAspectId: string, previewPr
   const imports = manifest.entrypoints
     .map((entry: string) => {
       const entryPath = toWindowsCompatiblePath(join(previewPreBundlePath, entry));
-      return entry.endsWith('.js') ? `import { run } from '${entryPath}';` : `import '${entryPath}';`;
+      return entry.endsWith('.js') || entry.endsWith('.cjs') || entry.endsWith('.mjs')
+        ? `import { run } from '${entryPath}';`
+        : `import '${entryPath}';`;
     })
     .join('\n');
   config['teambit.harmony/bit'] = rootAspectId;

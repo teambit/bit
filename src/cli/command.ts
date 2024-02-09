@@ -40,15 +40,9 @@ export interface Command {
 
   /**
    * should a command be exposed to the user (by bit help).
-   * e.g. experimental commands or commands created for the ssh communication should not be exposed
+   * e.g. experimental or plumbing commands should be hidden.
    */
   private?: boolean;
-
-  /**
-   * command that is not running on the terminal, such as "_fetch", "_put".
-   * in case an error is thrown, it is serialized so it's easier to parse it later
-   */
-  internal?: boolean;
 
   /**
    * should turn on Loader.

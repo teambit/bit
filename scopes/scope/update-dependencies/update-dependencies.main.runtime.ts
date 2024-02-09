@@ -86,9 +86,13 @@ export class UpdateDependenciesMain {
     await this.updateFutureVersion();
     await this.updateAllDeps();
     this.addLogToComponents();
-    if (!updateDepsOptions.simulation) {
-      await this.snapping._addFlattenedDependenciesToComponents(this.legacyComponents);
-    }
+    // note - in the past it was skipping the flattened for performance issues. Now that flattened are calculated
+    // using the flattened-edges, it's ok to add them.
+    // the issue with not adding them is that in case of updating envs/aspects, the version-validator throws
+    // an error saying "the extension ${extensionId.toString()} is missing from the flattenedDependencies"
+    // if (!updateDepsOptions.simulation) {
+    await this.snapping._addFlattenedDependenciesToComponents(this.legacyComponents);
+    // }
     this.addBuildStatus();
     await this.addComponentsToScope();
     await this.updateComponents();

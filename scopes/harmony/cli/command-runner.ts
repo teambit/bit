@@ -31,7 +31,7 @@ export class CommandRunner {
         return await this.runReportHandler();
       }
     } catch (err: any) {
-      return handleErrorAndExit(err, this.commandName, this.command.internal);
+      return handleErrorAndExit(err, this.commandName);
     }
 
     throw new Error(`command "${this.commandName}" doesn't implement "render" nor "report" methods`);
