@@ -198,10 +198,10 @@ export class SnappingMain {
     );
     if (!bitIds.length) return null;
 
-    const legacyBitIds = ComponentIdList.fromArray(bitIds);
+    const compIds = ComponentIdList.fromArray(bitIds);
 
-    this.logger.debug(`tagging the following components: ${legacyBitIds.toString()}`);
-    const components = await this.loadComponentsForTagOrSnap(legacyBitIds, !soft);
+    this.logger.debug(`tagging the following components: ${compIds.toString()}`);
+    const components = await this.loadComponentsForTagOrSnap(compIds, !soft);
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     await this.throwForVariousIssues(components, ignoreIssues);
 
@@ -212,7 +212,7 @@ export class SnappingMain {
         snapping: this,
         builder: this.builder,
         consumerComponents,
-        ids: legacyBitIds,
+        ids: compIds,
         message,
         editor,
         exactVersion: validExactVersion,
@@ -992,14 +992,13 @@ another option, in case this dependency is not in main yet is to remove all refe
   }
 
   private async loadComponentsForTagOrSnap(ids: ComponentIdList, shouldClearCacheFirst = true): Promise<Component[]> {
-    const compIds = await this.workspace.resolveMultipleComponentIds(ids);
     if (shouldClearCacheFirst) {
       await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
       // don't clear only the cache of these ids. we need also the auto-tag. so it's safer to just clear all.
       this.workspace.clearAllComponentsCache();
     }
 
-    return this.workspace.getMany(compIds.map((id) => id.changeVersion(undefined)));
+    return this.workspace.getMany(ids.map((id) => id.changeVersion(undefined)));
   }
 
   private async throwForComponentIssues(components: Component[], ignoreIssues?: string) {

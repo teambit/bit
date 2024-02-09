@@ -571,8 +571,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const consumer: Consumer = this.workspace.consumer;
     let ejectResults: EjectResults;
     try {
-      const componentIds = await this.workspace.resolveMultipleComponentIds(componentsIds);
-      ejectResults = await this.eject.eject(componentIds, { force: true });
+      ejectResults = await this.eject.eject(componentsIds, { force: true });
     } catch (err: any) {
       const ejectErr = `The components ${componentsIds.map((c) => c.toString()).join(', ')} were exported successfully.
       However, the eject operation has failed due to an error: ${err.msg || err}`;
@@ -752,9 +751,8 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
 
   private async removeFromStagedConfig(ids: ComponentID[]) {
     this.logger.debug(`removeFromStagedConfig, ${ids.length} ids`);
-    const componentIds = await this.workspace.resolveMultipleComponentIds(ids);
     const stagedConfig = await this.workspace.scope.getStagedConfig();
-    componentIds.map((compId) => stagedConfig.removeComponentConfig(compId));
+    ids.map((compId) => stagedConfig.removeComponentConfig(compId));
     await stagedConfig.write();
   }
 
