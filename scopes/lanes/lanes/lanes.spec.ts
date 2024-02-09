@@ -355,10 +355,7 @@ describe('LanesAspect', function () {
     });
   });
 
-  // @todo: the last `await snapping.snap({ build: false });` fails with the following error. try to fix it.
-  // EnvNotConfiguredForComponent: environment with ID: "teambit.envs/env" is not configured as extension for the component teambit.harmony/envs/core-aspect-env@0.0.24.
-  // you probably need to set this environment to your component(s). for example, "bit env set <component-pattern> teambit.envs/env"
-  describe.skip('delete component on a lane after export', () => {
+  describe('delete component on a lane after export', () => {
     let lanes: LanesMain;
     let workspaceData: WorkspaceData;
     let snapping: SnappingMain;
@@ -374,7 +371,7 @@ describe('LanesAspect', function () {
       );
       lanes = harmony.get(LanesAspect.id);
       await lanes.createLane('stage');
-      // snapping = await loadAspect(SnappingAspect, workspacePath);
+
       const currentLaneId = lanes.getCurrentLaneId();
       if (!currentLaneId) throw new Error('unable to get the current lane-id');
       laneId = currentLaneId;
@@ -400,8 +397,8 @@ describe('LanesAspect', function () {
     it('should save the deleted data into lane history', async () => {
       const laneHistory = await lanes.getLaneHistory(laneId);
       const history = laneHistory.getHistory();
-      expect(Object.keys(history).length).to.equal(2);
-      const snapHistory = history[Object.keys(history)[1]];
+      expect(Object.keys(history).length).to.equal(3);
+      const snapHistory = history[Object.keys(history)[2]];
       expect(snapHistory.deleted?.length).to.equal(1);
     });
   });
