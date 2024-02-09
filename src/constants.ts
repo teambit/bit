@@ -206,7 +206,7 @@ export const SEARCH_DOMAIN = `api.${getCloudDomain()}`;
 
 export const RELEASE_SERVER = `https://api.${getCloudDomain()}/release`;
 
-export const DEFAULT_REGISTRY_URL = `https://node.${getCloudDomain()}`;
+export const DEFAULT_REGISTRY_URL = `https://node-registry.${DEFAULT_CLOUD_DOMAIN}`;
 
 export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_WEB_DOMAIN}`;
 

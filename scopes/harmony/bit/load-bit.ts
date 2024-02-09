@@ -295,7 +295,7 @@ function clearGlobalsIfNeeded() {
   globalsState.loadDeps = ComponentLoader.loadDeps;
   // @ts-ignore
   ComponentLoader.loadDeps = undefined;
-  ExtensionDataList.coreExtensionsNames = new Map();
+  // ExtensionDataList.coreExtensionsNames = new Map();
   ExtensionDataList.toModelObjectsHook = [];
   // @ts-ignore
   WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;

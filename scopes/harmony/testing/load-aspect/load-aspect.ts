@@ -12,7 +12,6 @@ import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-l
 import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import DependenciesAspect from '@teambit/dependencies';
 
@@ -125,7 +124,9 @@ function clearGlobalsIfNeeded() {
   PackageJsonTransformer.packageJsonTransformersRegistry = [];
   // @ts-ignore
   ComponentLoader.loadDeps = undefined;
-  ExtensionDataList.coreExtensionsNames = new Map();
+  // don't clear this one. it's a static list of core-ids. if you delete it, you'll have to call
+  // registerCoreExtensions() from @teambit/bit, which as far as I remember should not be a dependency of this aspect.
+  // ExtensionDataList.coreExtensionsNames = new Map();
   // @ts-ignore
   WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;
   // @ts-ignore
