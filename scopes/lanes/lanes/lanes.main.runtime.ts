@@ -129,7 +129,7 @@ export type CreateLaneResult = {
 
 export class LanesMain {
   constructor(
-    private workspace: Workspace | undefined,
+    readonly workspace: Workspace | undefined,
     private scope: ScopeMain,
     private merging: MergingMain,
     private componentAspect: ComponentMain,
