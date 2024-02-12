@@ -69,7 +69,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
     ],
     [
       'i',
-      'ignore-issues [issues]',
+      'ignore-issues <issues>',
       `ignore component issues (shown in "bit status" as "issues found"), issues to ignore:
 [${Object.keys(IssuesClasses).join(', ')}]
 to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
@@ -85,18 +85,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
     ['b', 'build', 'locally run the build pipeline (i.e. not via rippleCI) and complete the tag'],
-    [
-      'a',
-      'all [version]',
-      'DEPRECATED (not needed anymore, it is the default now). tag all new and modified components',
-    ],
-    ['s', 'scope [version]', 'DEPRECATED (use "--unmodified" instead). tag all components of the local scope'],
-    [
-      'f',
-      'force',
-      'DEPRECATED (use "--skip-tests", "--ignore-build-errors" or "--unmodified" instead). force-tag even if tests are failing and even when component has not changed',
-    ],
-    ['', 'disable-deploy-pipeline', 'DEPRECATED. use --disable-tag-pipeline instead'],
   ] as CommandOptions;
   remoteOp = true; // In case a compiler / tester is not installed
   examples = [{ cmd: 'tag --ver 1.0.0', description: 'tag all components to version 1.0.0' }];
@@ -109,7 +97,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     {
       message = '',
       ver,
-      all = false,
       editor = '',
       snapped = false,
       unmerged = false,
@@ -119,18 +106,14 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       preRelease,
       increment,
       prereleaseId,
-      force = false,
-      ignoreUnresolvedDependencies,
       ignoreIssues,
       ignoreNewestVersion = false,
       skipTests = false,
       skipAutoTag = false,
-      scope,
       unmodified = false,
       build,
       soft = false,
       persist = false,
-      disableDeployPipeline = false,
       disableTagPipeline = false,
       forceDeploy = false,
       ignoreBuildErrors = false,
@@ -138,11 +121,9 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       failFast = false,
       incrementBy = 1,
     }: {
-      all?: boolean | string;
       snapped?: boolean;
       unmerged?: boolean;
       ver?: string;
-      force?: boolean;
       patch?: boolean;
       minor?: boolean;
       major?: boolean;
@@ -151,48 +132,16 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       prereleaseId?: string;
       ignoreUnresolvedDependencies?: boolean;
       ignoreIssues?: string;
-      scope?: string | boolean;
       incrementBy?: number;
-      disableDeployPipeline?: boolean;
       failFast?: boolean;
       disableTagPipeline?: boolean;
       forceDeploy?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<string> {
-    if (typeof ignoreUnresolvedDependencies === 'boolean') {
-      throw new BitError(`--ignore-unresolved-dependencies has been removed, please use --ignore-issues instead`);
-    }
-    if (ignoreIssues && typeof ignoreIssues === 'boolean') {
-      throw new BitError(`--ignore-issues expects issues to be ignored, please run "bit tag -h" for the issues list`);
-    }
-    if (disableDeployPipeline) {
-      this.logger.consoleWarning(`--disable-deploy-pipeline is deprecated, please use --disable-tag-pipeline instead`);
-    }
     if (!message && !persist && !editor) {
       this.logger.consoleWarning(
         `--message will be mandatory in the next few releases. make sure to add a message with your tag`
       );
-    }
-    if (all) {
-      this.logger.consoleWarning(
-        `--all is deprecated, please omit it. "bit tag" will by default tag all new and modified components`
-      );
-      if (typeof all === 'string') {
-        ver = all;
-      }
-    }
-    if (scope) {
-      this.logger.consoleWarning(`--scope is deprecated, use --unmodified instead`);
-      unmodified = true;
-      if (typeof scope === 'string') {
-        ver = scope;
-      }
-    }
-    if (force) {
-      this.logger.consoleWarning(
-        `--force is deprecated, use either --skip-tests, --ignore-build-errors or --unmodified depending on the use case`
-      );
-      if (patterns.length) unmodified = true;
     }
     if (prereleaseId && (!increment || increment === 'major' || increment === 'minor' || increment === 'patch')) {
       throw new BitError(
@@ -233,7 +182,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       return undefined;
     };
 
-    const disableTagAndSnapPipelines = disableTagPipeline || disableDeployPipeline;
+    const disableTagAndSnapPipelines = disableTagPipeline;
     build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
     if (persist) {
       if (persist === true) build = true;
