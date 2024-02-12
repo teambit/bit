@@ -19,13 +19,17 @@ as a result of this change`;
       'refactor',
       'update the import statements in all dependent components to the new package name (i.e. with the new scope name)',
     ],
+    ['', 'deprecate', 'for exported components, instead of deleting the original components, deprecating them'],
   ] as CommandOptions;
   group = 'development';
 
   constructor(private renaming: RenamingMain) {}
 
-  async report([oldName, newName]: [string, string], { refactor }: { refactor?: boolean }) {
-    const result = await this.renaming.renameScope(oldName, newName, { refactor });
+  async report(
+    [oldName, newName]: [string, string],
+    { refactor, deprecate }: { refactor?: boolean; deprecate?: boolean }
+  ) {
+    const result = await this.renaming.renameScope(oldName, newName, { refactor, deprecate });
     const title = chalk.green(`successfully replaced "${oldName}" scope with "${newName}"`);
     const renameOutput = renameScopeOutput(result);
     return `${title}\n${renameOutput}`;
