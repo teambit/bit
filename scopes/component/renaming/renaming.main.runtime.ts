@@ -189,7 +189,11 @@ make sure this argument is the name only, without the scope-name. to change the 
    * keep in mind that this is working for new components only, for tagged/exported it's impossible. See the errors
    * thrown in such cases in this method.
    */
-  async renameScope(oldScope: string, newScope: string, options: { refactor?: boolean } = {}): Promise<RenameResult> {
+  async renameScope(
+    oldScope: string,
+    newScope: string,
+    options: { refactor?: boolean; deprecate?: boolean } = {}
+  ): Promise<RenameResult> {
     const allComponentsIds = await this.workspace.listIds();
     const componentsUsingOldScope = allComponentsIds.filter((compId) => compId.scope === oldScope);
     if (!componentsUsingOldScope.length && this.workspace.defaultScope !== oldScope) {
