@@ -37,6 +37,7 @@ import { CloudAspect } from './cloud.aspect';
 import { LoginCmd } from './login.cmd';
 import { LogoutCmd } from './logout.cmd';
 import { WhoamiCmd } from './whoami.cmd';
+import { NpmrcCmd, NpmrcGenerateCmd } from './npmrc.cmd';
 
 export interface CloudWorkspaceConfig {
   cloudDomain: string;
@@ -103,7 +104,24 @@ export class CloudMain {
     public onSuccessLoginSlot: OnSuccessLoginSlot
   ) {}
 
-  async updateNpmrcOnLogin({ authToken, username }: { authToken: string; username: string }): Promise<string> {
+  async generateNpmrc({ dryRun }: { dryRun?: boolean } = {}): Promise<string> {
+    const authToken = this.getAuthToken();
+    const username = this.getUsername();
+    if (!authToken || !username) {
+      throw new Error('user is not logged in');
+    }
+    return this.updateNpmConfig({ authToken, username, dryRun });
+  }
+
+  async updateNpmConfig({
+    authToken,
+    username,
+    dryRun,
+  }: {
+    authToken: string;
+    username: string;
+    dryRun?: boolean;
+  }): Promise<string> {
     const orgs = (await this.getUserOrganizations()) ?? [];
     const orgNames = orgs.map((org) => org.name);
     const allOrgs = [...CloudMain.PRESET_ORGS, ...orgNames, username].sort();
@@ -111,7 +129,8 @@ export class CloudMain {
     const scopeConfig = allOrgs.map((org) => `@${org}:registry="${registryUrl}"`).join(' ');
     const authConfig = `//${new URL(registryUrl).host}/:_authToken="${authToken}"`;
     const configUpdates = `${scopeConfig} ${authConfig}`;
-    execSync(`npm config set ${configUpdates}`, { stdio: 'ignore' });
+    if (!dryRun) execSync(`npm config set ${configUpdates}`, { stdio: 'ignore' });
+    if (dryRun) return configUpdates.replace(/ /g, '\n');
     return configUpdates;
   }
 
@@ -200,7 +219,7 @@ export class CloudMain {
 
           const onLoggedInFns = this.onSuccessLoginSlot.values();
 
-          this.updateNpmrcOnLogin({ authToken: token as string, username: username as string })
+          this.updateNpmConfig({ authToken: token as string, username: username as string })
             .then((configUpdates) => {
               onLoggedInFns.forEach((fn) =>
                 fn({ username, token: token as string, npmrcUpdateResult: { success: true, configUpdates } })
@@ -547,10 +566,13 @@ export class CloudMain {
   ) {
     const logger = loggerMain.createLogger(CloudAspect.id);
     const cloudMain = new CloudMain(config, logger, express, workspace, scope, globalConfig, onSuccessLoginSlot);
-    const loginCmd = new LoginCmd(cloudMain);
+    const loginCmd = new LoginCmd(cloudMain, 8889);
     const logoutCmd = new LogoutCmd(cloudMain);
     const whoamiCmd = new WhoamiCmd(cloudMain);
-    cli.register(loginCmd, logoutCmd, whoamiCmd);
+    const npmrcGenerateCmd = new NpmrcGenerateCmd(cloudMain, 8889);
+    const npmrc = new NpmrcCmd();
+    npmrc.commands = [npmrcGenerateCmd];
+    cli.register(loginCmd, logoutCmd, whoamiCmd, npmrc);
     graphql.register(cloudSchema(cloudMain));
     if (workspace) {
       ui.registerOnStart(async () => {

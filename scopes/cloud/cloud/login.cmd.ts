@@ -22,13 +22,17 @@ export class LoginCmd implements Command {
   remoteOp = true;
   skipWorkspace = true;
 
-  constructor(private cloud: CloudMain) {}
+  private port?: string;
+
+  constructor(private cloud: CloudMain, _port?: number) {
+    this.port = _port?.toString();
+  }
 
   async report(
     [], // eslint-disable-line no-empty-pattern
     {
       cloudDomain,
-      port = '8889',
+      port,
       suppressBrowserLaunch,
       noBrowser,
       machineName,
@@ -43,7 +47,7 @@ export class LoginCmd implements Command {
     if (suppressBrowserLaunch) {
       noBrowser = true;
     }
-    const result = await this.cloud.login(port, noBrowser, machineName, cloudDomain, undefined);
+    const result = await this.cloud.login(port || this.port, noBrowser, machineName, cloudDomain, undefined);
     if (result?.isAlreadyLoggedIn) {
       return chalk.yellow(`already logged in as ${result?.username}`);
     }
