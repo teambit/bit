@@ -711,7 +711,7 @@ describe('bit snap command', function () {
       let localHeadV3: string;
       before(() => {
         localHeadV3 = helper.command.getHead('comp1');
-        helper.command.tagAllWithoutBuild('-ver 0.0.4 --unmodified');
+        helper.command.tagAllWithoutBuild('--ver 0.0.4 --unmodified');
         beforeUntag = helper.scopeHelper.cloneLocalScope();
       });
       describe('reset all local versions', () => {

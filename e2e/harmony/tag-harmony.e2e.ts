@@ -131,7 +131,7 @@ describe('tag components on Harmony', function () {
     });
     describe('soft tag with specific version and message', () => {
       before(() => {
-        helper.command.softTag('--ver 2.0.0 -m "my custom message"');
+        helper.command.softTag('--ver 2.0.0 --unmodified -m "my custom message"');
       });
       it('should save the version and the message into the .bitmap file', () => {
         const bitMap = helper.bitMap.readComponentsMapOnly();
