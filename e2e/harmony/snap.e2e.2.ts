@@ -61,8 +61,8 @@ describe('bit snap command', function () {
       describe('then snap and tag again', () => {
         let secondTagOutput;
         before(() => {
-          helper.command.snapComponent('bar/foo -f');
-          secondTagOutput = helper.command.tagComponent('bar/foo -f');
+          helper.command.snapComponent('bar/foo', undefined, '--unmodified');
+          secondTagOutput = helper.command.tagComponent('bar/foo', undefined, '--unmodified');
         });
         it('should tag the next version', () => {
           expect(secondTagOutput).to.have.string('0.0.2');
@@ -112,10 +112,10 @@ describe('bit snap command', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
-      helper.command.snapComponent('bar/foo');
+      helper.command.snapComponent('bar/foo', undefined, '--unmodified');
       const compAfterSnap1 = helper.command.catComponent('bar/foo');
       firstSnap = compAfterSnap1.head;
-      helper.command.snapComponent('bar/foo -f');
+      helper.command.snapComponent('bar/foo', undefined, '--unmodified');
     });
     describe('untag the head snap', () => {
       before(() => {
@@ -687,7 +687,7 @@ describe('bit snap command', function () {
       helper.command.export();
       helper.scopeHelper.getClonedLocalScope(authorFirstTag);
       helper.fixtures.populateComponents(1, false, ' v3');
-      helper.command.tagAllWithoutBuild('-s 0.0.3');
+      helper.command.tagAllWithoutBuild('--ver 0.0.3');
       helper.command.importAllComponents();
     });
     it('should prevent exporting the component', () => {
@@ -711,7 +711,7 @@ describe('bit snap command', function () {
       let localHeadV3: string;
       before(() => {
         localHeadV3 = helper.command.getHead('comp1');
-        helper.command.tagAllWithoutBuild('-s 0.0.4');
+        helper.command.tagAllWithoutBuild('--ver 0.0.4 --unmodified');
         beforeUntag = helper.scopeHelper.cloneLocalScope();
       });
       describe('reset all local versions', () => {

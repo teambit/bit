@@ -26,7 +26,7 @@ describe('relative paths flow (components requiring each other by relative paths
       helper.command.statusComponentHasIssues('comp1');
     });
     it('should block bit tag', () => {
-      const output = helper.general.runWithTryCatch('bit tag -a');
+      const output = helper.general.runWithTryCatch('bit tag');
       const RelativeComponentAuthoredClass = IssuesClasses.RelativeComponentsAuthored;
       expect(output).to.have.string(new RelativeComponentAuthoredClass().description);
       expect(output).to.have.string(`index.js -> "../comp2" (${helper.scopes.remote}/comp2)`);
