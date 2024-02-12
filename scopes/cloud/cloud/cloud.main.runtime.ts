@@ -106,7 +106,7 @@ export class CloudMain {
   async updateNpmrcOnLogin({ authToken, username }: { authToken: string; username: string }): Promise<string> {
     const orgs = (await this.getUserOrganizations()) ?? [];
     const orgNames = orgs.map((org) => org.name);
-    const allOrgs = [...CloudMain.PRESET_ORGS, ...orgNames, username];
+    const allOrgs = [...CloudMain.PRESET_ORGS, ...orgNames, username].sort();
     const registryUrl = this.getRegistryUrl();
     const scopeConfig = allOrgs.map((org) => `@${org}:registry="${registryUrl}"`).join(' ');
     const authConfig = `//${new URL(registryUrl).host}/:_authToken="${authToken}"`;
