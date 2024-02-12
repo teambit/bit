@@ -85,7 +85,7 @@ describe('bit scope command', function () {
       helper.fixtures.populateComponents(3);
       helper.command.tagWithoutBuild('comp3', '--skip-auto-tag');
       helper.command.export();
-      helper.command.renameScope(helper.scopes.remote, 'my-scope', '--refactor');
+      helper.command.renameScope(helper.scopes.remote, 'my-scope', '--refactor --deprecate');
     });
     it('should deprecate the exported one (comp3)', () => {
       const showDeprecation = helper.command.showAspectConfig(`${helper.scopes.remote}/comp3`, Extensions.deprecation);
