@@ -10,7 +10,7 @@ import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnos
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
-import { BASE_DOCS_DOMAIN, BASE_LEGACY_DOCS_DOMAIN, DEBUG_LOG } from '../constants';
+import { BASE_DOCS_DOMAIN, BASE_LEGACY_DOCS_DOMAIN } from '../constants';
 import { InvalidBitMap, MissingMainFile } from '../consumer/bit-map/exceptions';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import {
@@ -46,7 +46,6 @@ import {
 } from '../consumer/exceptions';
 import { LanesIsDisabled } from '../consumer/lanes/exceptions/lanes-is-disabled';
 import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
-import GeneralError from '../error/general-error';
 import hashErrorIfNeeded from '../error/hash-error-object';
 import ValidationError from '../error/validation-error';
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
@@ -70,7 +69,6 @@ import {
   NetworkError,
   ProtocolNotSupported,
   RemoteScopeNotFound,
-  SSHInvalidResponse,
   UnexpectedNetworkError,
 } from '../scope/network/exceptions';
 import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
@@ -78,18 +76,18 @@ import RemoteResolverError from '../scope/network/exceptions/remote-resolver-err
 import GitNotFound from '../utils/git/exceptions/git-not-found';
 import RemoteUndefined from './commands/exceptions/remote-undefined';
 import newerVersionTemplate from './templates/newer-version-template';
+import GeneralError from '../error/general-error';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
 
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     RemoteUndefined,
     () =>
       chalk.red(
-        'error: remote url must be defined. please use: `ssh://`, `file://` or `bit://` protocols to define remote access'
+        'error: remote url must be defined. please use: `file://` or `http(s)://` protocols to define remote access'
       ),
   ],
   [ConsumerAlreadyExists, () => 'workspace already exists'],
@@ -98,11 +96,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [VersionAlreadyExists, (err) => `error: version ${err.version} already exists for ${err.componentId}`],
   [ConsumerNotFound, () => 'workspace not found. to initiate a new workspace, please use `bit init`'],
   [LoginFailed, () => 'error: there was a problem with web authentication'],
-
-  // [
-  //   PluginNotFound,
-  //   err => `error: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`
-  // ],
   [FileSourceNotFound, (err) => `file or directory "${err.path}" was not found`],
   [LanesIsDisabled, () => `lanes/snaps features are disabled. upgrade your workspace to Harmony to enable them`],
   [
@@ -115,8 +108,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [
     ProtocolNotSupported,
-    () =>
-      'error: remote scope protocol is not supported, please use: `ssh://`, `file://`, `http://`, `https://` or `bit://`',
+    () => 'error: remote scope protocol is not supported, please use: `file://`, `http://`, `https://`',
   ],
   [RemoteScopeNotFound, (err) => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
   [InjectNonEjected, () => 'error: could not inject config for already injected component'],
@@ -192,11 +184,6 @@ ${err.message ? `server responded with: "${err.message}"` : ''}`,
 bit does not allow setting dependencies between components in private collections managed by different owners.
 
 see troubleshooting at ${BASE_DOCS_DOMAIN}docs/bit-dev#permissions-for-collections`,
-  ],
-  [
-    SSHInvalidResponse,
-    () => `error: received an invalid response from the remote SSH server.
-to see the invalid response, have a look at the log, located at ${DEBUG_LOG}`,
   ],
   [
     InvalidIndexJson,

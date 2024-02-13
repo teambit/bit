@@ -12,7 +12,6 @@ import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-l
 import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import DependenciesAspect from '@teambit/dependencies';
 
@@ -23,6 +22,9 @@ function getPackageName(aspect: any, id: ComponentID) {
 }
 
 /**
+ * ! important ! prefer using `loadManyAspects` instead of this function. otherwise, you may end up with
+ * different instances of "Workspace" aspect for example for each one of the aspects you load.
+ *
  * to make this work, export the main also as default (e.g. `export default LanesMain;`).
  * otherwise, it'll show an error "TypeError: Cannot read property 'runtime' of undefined".
  */
@@ -122,7 +124,9 @@ function clearGlobalsIfNeeded() {
   PackageJsonTransformer.packageJsonTransformersRegistry = [];
   // @ts-ignore
   ComponentLoader.loadDeps = undefined;
-  ExtensionDataList.coreExtensionsNames = new Map();
+  // don't clear this one. it's a static list of core-ids. if you delete it, you'll have to call
+  // registerCoreExtensions() from @teambit/bit, which as far as I remember should not be a dependency of this aspect.
+  // ExtensionDataList.coreExtensionsNames = new Map();
   // @ts-ignore
   WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;
   // @ts-ignore

@@ -15,7 +15,7 @@ describe('bit rename command', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('rename an exported component', () => {
+  describe('rename an exported component with --deprecate', () => {
     let scopeAfterExport: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -26,7 +26,7 @@ describe('bit rename command', function () {
     });
     describe('rename with no flag', () => {
       before(() => {
-        helper.command.rename('comp1', 'comp2');
+        helper.command.rename('comp1', 'comp2', '--deprecate');
       });
       it('should create a new component', () => {
         const status = helper.command.statusJson();
@@ -247,7 +247,7 @@ describe('bit rename command', function () {
       helper.command.install();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.command.rename('my-aspect', 'foo');
+      helper.command.rename('my-aspect', 'foo', '--deprecate');
     });
     it('should rename the files', () => {
       expect(path.join(helper.scopes.localPath, `${helper.scopes.remote}/foo`, 'foo.aspect.ts')).to.be.a.file();

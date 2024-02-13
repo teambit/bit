@@ -1,3 +1,4 @@
+import retry from 'async-retry';
 import { GraphQLClient, gql } from 'graphql-request';
 import { InvalidScopeName, isValidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import { getSync } from '../../api/consumer/lib/global-config';
@@ -36,9 +37,20 @@ async function getScope(name: string) {
   const client = new GraphQLClient(graphQlUrl, { headers, fetch: graphQlFetcher });
 
   try {
-    const res = await client.request(SCOPE_GET, {
-      id: name,
-    });
+    const res = await retry(
+      async () => {
+        const _res = await client.request(SCOPE_GET, {
+          id: name,
+        });
+        return _res;
+      },
+      {
+        retries: 3,
+        onRetry: (e: any) => {
+          logger.debug(`failed to getScope with error: ${e?.message || ''}`);
+        },
+      }
+    );
     scopeCache[name] = res;
     return res;
   } catch (err: any) {

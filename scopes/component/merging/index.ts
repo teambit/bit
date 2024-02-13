@@ -10,6 +10,7 @@ export {
   getAddedOutput,
   getWorkspaceConfigUpdateOutput,
 } from './merge-cmd';
+export { compIsAlreadyMergedMsg } from './merge-status-provider';
 export type {
   MergingMain,
   ComponentMergeStatus,

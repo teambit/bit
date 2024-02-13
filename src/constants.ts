@@ -206,7 +206,7 @@ export const SEARCH_DOMAIN = `api.${getCloudDomain()}`;
 
 export const RELEASE_SERVER = `https://api.${getCloudDomain()}/release`;
 
-export const DEFAULT_REGISTRY_URL = `https://node.${getCloudDomain()}`;
+export const DEFAULT_REGISTRY_URL = `https://node-registry.${DEFAULT_CLOUD_DOMAIN}`;
 
 export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_WEB_DOMAIN}`;
 
@@ -222,13 +222,7 @@ export const CENTRAL_BIT_HUB_NAME = getCloudDomain();
 
 export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
 
-export const DEFAULT_SSH_KEY_FILE = `${homedir()}/.ssh/id_rsa`;
-
 export const DEFAULT_BIT_ENV = 'production';
-
-// Setting this to 99999 to prevent this issue:
-// https://github.com/mscdex/ssh2/issues/142
-export const DEFAULT_SSH_READY_TIMEOUT = 99999;
 
 export const MergeConfigFilename = 'merge-conflict';
 
@@ -288,8 +282,6 @@ export const CFG_USER_NAME_KEY = 'user.name';
 
 export const CFG_REGISTRY_URL_KEY = 'registry';
 
-export const CFG_SSH_KEY_FILE_KEY = 'ssh_key_file';
-
 export const CFG_HUB_DOMAIN_KEY = 'hub_domain';
 
 export const CFG_ANALYTICS_DOMAIN_KEY = 'analytics_domain';
@@ -332,8 +324,6 @@ export const CFG_COMMAND_INTERACTIVE_TEMPLATE = 'interactive.{commandName}';
 export const CFG_INIT_INTERACTIVE = format(CFG_COMMAND_INTERACTIVE_TEMPLATE, { commandName: INIT_COMMAND });
 export const CFG_INIT_DEFAULT_SCOPE = 'default_scope';
 export const CFG_INIT_DEFAULT_DIRECTORY = 'default_directory';
-
-export const CFG_SSH_NO_COMPRESS = 'ssh_no_compress';
 
 export const CFG_FEATURE_TOGGLE = 'features';
 

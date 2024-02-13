@@ -30,7 +30,7 @@ describe('components that are not synced between the scope and the consumer', fu
     });
     describe('bit tag', () => {
       it('should tag the component to the next version of what the scope has', () => {
-        const output = helper.command.runCmd('bit tag bar/foo --force --patch');
+        const output = helper.command.runCmd('bit tag bar/foo --unmodified --patch');
         expect(output).to.have.string('0.0.2');
       });
     });

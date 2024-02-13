@@ -30,7 +30,7 @@ describe('bit export command', function () {
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
-      helper.command.tagComponent('bar/foo -f');
+      helper.command.tagComponent('bar/foo --unmodified');
       helper.command.exportIds('bar/foo');
     });
     it('should export it with no errors', () => {
@@ -167,7 +167,7 @@ describe('bit export command', function () {
       });
     });
     describe('when the group exists and the current user has permission to that group', function () {
-      if (isWin || process.env.npm_config_with_ssh) {
+      if (isWin) {
         // @ts-ignore
         this.skip;
       } else {
@@ -228,9 +228,9 @@ describe('bit export command', function () {
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllComponents();
       helper.command.export();
-      helper.command.tagComponent('bar/foo -f');
+      helper.command.tagComponent('bar/foo --unmodified');
       helper.command.export();
-      helper.command.tagComponent('bar/foo -f');
+      helper.command.tagComponent('bar/foo --unmodified');
       output = helper.command.exportIds('bar/foo');
     });
     // this was a bug where on the third export, it parses the id "bar/foo" as: { scope: bar, name: foo }

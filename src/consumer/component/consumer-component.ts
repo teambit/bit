@@ -5,8 +5,8 @@ import * as path from 'path';
 import R from 'ramda';
 import { IssuesList } from '@teambit/component-issues';
 import { BitId } from '@teambit/legacy-bit-id';
+import { BitError } from '@teambit/bit-error';
 import { getCloudDomain, BIT_WORKSPACE_TMP_DIRNAME, BuildStatus, DEFAULT_LANGUAGE, Extensions } from '../../constants';
-import GeneralError from '../../error/general-error';
 import docsParser from '../../jsdoc/parser';
 import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
@@ -222,7 +222,7 @@ export default class Component {
     const nonEmptyFields = ['name', 'mainFile'];
     nonEmptyFields.forEach((field) => {
       if (!this[field]) {
-        throw new GeneralError(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
+        throw new BitError(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
       }
     });
   }

@@ -1,7 +1,7 @@
 import { ComponentID } from '@teambit/component-id';
+import { BitError } from '@teambit/bit-error';
 import { loadConsumerIfExist, Consumer } from '../../../consumer';
 import ConsumerNotFound from '../../../consumer/exceptions/consumer-not-found';
-import GeneralError from '../../../error/general-error';
 import DependencyGraph, { DependenciesInfo } from '../../../scope/graph/scope-graph';
 
 export type DependentsResults = {
@@ -28,6 +28,6 @@ function throwForNewComponent(id: string, consumer: Consumer) {
   const bitId = consumer.bitMap.getExistingBitId(id, false);
   if (!bitId) return;
   if (!bitId._legacy.hasScope()) {
-    throw new GeneralError(`${id} is a new component, there is no data about it in the scope`);
+    throw new BitError(`${id} is a new component, there is no data about it in the scope`);
   }
 }

@@ -6,9 +6,10 @@ import { getBasicLog } from '../../utils/bit/basic-log';
 
 type Log = { date: string; username?: string; email?: string; message?: string };
 
-type HistoryItem = {
+export type HistoryItem = {
   log: Log;
   components: string[];
+  deleted?: string[];
 };
 
 type History = { [uuid: string]: HistoryItem };
@@ -73,7 +74,10 @@ export class LaneHistory extends BitObject {
     const log: Log = await getBasicLog();
     if (msg) log.message = msg;
     const components = laneObj.toComponentIds().toStringArray();
-    this.history[v4()] = { log, components };
+    const deleted = laneObj.components
+      .filter((c) => c.isDeleted)
+      .map((c) => c.id.changeVersion(c.head.toString()).toString());
+    this.history[v4()] = { log, components, ...(deleted.length && { deleted }) };
   }
 
   merge(laneHistory: LaneHistory) {

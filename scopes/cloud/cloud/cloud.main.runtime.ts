@@ -30,12 +30,14 @@ import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
+import { execSync } from 'child_process';
 import UIAspect, { UiMain } from '@teambit/ui';
 import { cloudSchema } from './cloud.graphql';
 import { CloudAspect } from './cloud.aspect';
 import { LoginCmd } from './login.cmd';
 import { LogoutCmd } from './logout.cmd';
 import { WhoamiCmd } from './whoami.cmd';
+import { NpmrcCmd, NpmrcGenerateCmd } from './npmrc.cmd';
 
 export interface CloudWorkspaceConfig {
   cloudDomain: string;
@@ -58,8 +60,32 @@ type CloudAuthListener = {
   expressApp?: Express | null;
 };
 
-export type OnSuccessLogin = ({ username, token }: { username?: string; token?: string }) => void;
+type CloudOrganization = {
+  id: string;
+  name: string;
+};
+
+type CloudOrganizationAPIResponse = {
+  data: {
+    getUserOrganizations: CloudOrganization[];
+  };
+};
+
+export type OnSuccessLogin = ({
+  username,
+  token,
+  npmrcUpdateResult,
+}: {
+  username?: string;
+  token?: string;
+  npmrcUpdateResult?: {
+    success?: boolean;
+    error?: Error;
+    configUpdates?: string;
+  };
+}) => void;
 export type OnSuccessLoginSlot = SlotRegistry<OnSuccessLogin>;
+
 export class CloudMain {
   static ERROR_RESPONSE = 500;
   static DEFAULT_PORT = 8888;
@@ -77,6 +103,36 @@ export class CloudMain {
     public globalConfig: GlobalConfigMain,
     public onSuccessLoginSlot: OnSuccessLoginSlot
   ) {}
+
+  async generateNpmrc({ dryRun }: { dryRun?: boolean } = {}): Promise<string> {
+    const authToken = this.getAuthToken();
+    const username = this.getUsername();
+    if (!authToken || !username) {
+      throw new Error('user is not logged in');
+    }
+    return this.updateNpmConfig({ authToken, username, dryRun });
+  }
+
+  async updateNpmConfig({
+    authToken,
+    username,
+    dryRun,
+  }: {
+    authToken: string;
+    username: string;
+    dryRun?: boolean;
+  }): Promise<string> {
+    const orgs = (await this.getUserOrganizations()) ?? [];
+    const orgNames = orgs.map((org) => org.name);
+    const allOrgs = [...CloudMain.PRESET_ORGS, ...orgNames, username].sort();
+    const registryUrl = this.getRegistryUrl();
+    const scopeConfig = allOrgs.map((org) => `@${org}:registry="${registryUrl}"`).join(' ');
+    const authConfig = `//${new URL(registryUrl).host}/:_authToken="${authToken}"`;
+    const configUpdates = `${scopeConfig} ${authConfig}`;
+    if (!dryRun) execSync(`npm config set ${configUpdates}`, { stdio: 'ignore' });
+    if (dryRun) return configUpdates.replace(/ /g, '\n');
+    return configUpdates;
+  }
 
   setupAuthListener({
     port: portFromParams,
@@ -152,9 +208,6 @@ export class CloudMain {
           this.globalConfig.setSync(CFG_USER_TOKEN_KEY, token);
           if (username) this.globalConfig.setSync(CFG_USER_NAME_KEY, username);
 
-          const onLoggedInFns = this.onSuccessLoginSlot.values();
-          onLoggedInFns.forEach((fn) => fn({ username, token: token as string }));
-
           const existing = this.authListenerByPort.get(port) ?? {};
           this.authListenerByPort.set(port, {
             port,
@@ -163,6 +216,28 @@ export class CloudMain {
             ...existing,
             username,
           });
+
+          const onLoggedInFns = this.onSuccessLoginSlot.values();
+
+          this.updateNpmConfig({ authToken: token as string, username: username as string })
+            .then((configUpdates) => {
+              onLoggedInFns.forEach((fn) =>
+                fn({ username, token: token as string, npmrcUpdateResult: { success: true, configUpdates } })
+              );
+            })
+            .catch((error) => {
+              onLoggedInFns.forEach((fn) =>
+                fn({
+                  username,
+                  token: token as string,
+                  npmrcUpdateResult: {
+                    success: false,
+                    error: new Error(`failed to update npmrc. error ${error?.toString}`),
+                  },
+                })
+              );
+            });
+
           if (this.REDIRECT_URL) return res.redirect(this.REDIRECT_URL);
           if (typeof redirectUri === 'string' && redirectUri) return res.redirect(redirectUri);
           return res.status(200).send('Login successful');
@@ -239,41 +314,6 @@ export class CloudMain {
     };
   }
 
-  async getCurrentUser(): Promise<CloudUser | null> {
-    const isLoggedIn = this.isLoggedIn();
-    if (!isLoggedIn) {
-      return null;
-    }
-    const route = 'user/user';
-    this.logger.debug(`getCurrentUser, url: ${this.getCloudApi()}/${route}`);
-    const url = `https://${this.getCloudApi()}/${route}`;
-    const opts = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.getAuthHeader(),
-      },
-    };
-
-    return fetch(url, opts)
-      .then(async (res) => {
-        if (res.status === 401) {
-          return null;
-        }
-        const response: CloudUserAPIResponse = await res.json();
-        return {
-          isLoggedIn,
-          displayName: response.payload?.displayName ?? undefined,
-          username: response.payload?.username ?? undefined,
-          profileImage: response.payload?.profileImage ?? undefined,
-        };
-      })
-      .catch((err) => {
-        this.logger.error(`failed to get current user, err: ${err}`);
-        return null;
-      });
-  }
-
   getUsername(): string | undefined {
     return this.globalConfig.getSync(CFG_USER_NAME_KEY);
   }
@@ -329,6 +369,11 @@ export class CloudMain {
     isAlreadyLoggedIn?: boolean;
     username?: string;
     token?: string;
+    npmrcUpdateResult?: {
+      success?: boolean;
+      error?: Error;
+      configUpdates?: string;
+    };
   } | null> {
     return new Promise((resolve, reject) => {
       if (this.isLoggedIn()) {
@@ -342,12 +387,13 @@ export class CloudMain {
 
       const promptLogin = async () => {
         this.REDIRECT_URL = redirectUrl;
-        this.registerOnSuccessLogin((loggedInParams) =>
+        this.registerOnSuccessLogin((loggedInParams) => {
           resolve({
             username: loggedInParams.username,
             token: loggedInParams.token,
-          })
-        );
+            npmrcUpdateResult: loggedInParams.npmrcUpdateResult,
+          });
+        });
 
         const loginUrl = await this.getLoginUrl({
           machineName,
@@ -392,6 +438,26 @@ export class CloudMain {
         }
       }
     `;
+  static GET_CURRENT_USER = `
+    query GET_ME {
+      me {
+        id
+        username
+        image
+        displayName
+      }
+    }
+  `;
+  static GET_USER_ORGANIZATIONS = `
+    query GET_USER_ORGANIZATIONS {
+      getUserOrganizations {
+        id
+        name
+      }    
+    }
+  `;
+
+  static PRESET_ORGS = ['bitdev', 'teambit', 'bitdesign', 'frontend', 'backend'];
 
   async getCloudScopes(scopes: string[]): Promise<ScopeDescriptor[]> {
     const remotes = await this.scope._legacyRemotes();
@@ -412,6 +478,27 @@ export class CloudMain {
     });
   }
 
+  async getCurrentUser(): Promise<CloudUser | null> {
+    return this.fetchFromSymphonyViaGQL<CloudUserAPIResponse>(CloudMain.GET_CURRENT_USER).then((response) => {
+      if (!response) return null;
+      return {
+        isLoggedIn: true,
+        displayName: response.data.me.displayName,
+        username: response.data.me.username,
+        profileImage: response.data.me.image,
+      };
+    });
+  }
+
+  async getUserOrganizations(): Promise<CloudOrganization[] | null> {
+    return this.fetchFromSymphonyViaGQL<CloudOrganizationAPIResponse>(CloudMain.GET_USER_ORGANIZATIONS).then(
+      (response) => {
+        if (!response) return null;
+        return response.data.getUserOrganizations;
+      }
+    );
+  }
+
   async fetchFromSymphonyViaGQL<T>(query: string, variables?: Record<string, any>): Promise<T | null> {
     if (!this.isLoggedIn()) return null;
     const graphqlUrl = `https://${this.getCloudApi()}${CloudMain.GRAPHQL_ENDPOINT}`;
@@ -429,7 +516,6 @@ export class CloudMain {
         headers,
         body,
       });
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -480,10 +566,13 @@ export class CloudMain {
   ) {
     const logger = loggerMain.createLogger(CloudAspect.id);
     const cloudMain = new CloudMain(config, logger, express, workspace, scope, globalConfig, onSuccessLoginSlot);
-    const loginCmd = new LoginCmd(cloudMain);
+    const loginCmd = new LoginCmd(cloudMain, 8889);
     const logoutCmd = new LogoutCmd(cloudMain);
     const whoamiCmd = new WhoamiCmd(cloudMain);
-    cli.register(loginCmd, logoutCmd, whoamiCmd);
+    const npmrcGenerateCmd = new NpmrcGenerateCmd(cloudMain, 8889);
+    const npmrc = new NpmrcCmd();
+    npmrc.commands = [npmrcGenerateCmd];
+    cli.register(loginCmd, logoutCmd, whoamiCmd, npmrc);
     graphql.register(cloudSchema(cloudMain));
     if (workspace) {
       ui.registerOnStart(async () => {

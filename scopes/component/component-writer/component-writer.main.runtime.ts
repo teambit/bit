@@ -10,7 +10,6 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 import MoverAspect, { MoverMain } from '@teambit/mover';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { isDir, isDirEmptySync } from '@teambit/legacy/dist/utils';
 import { PathLinuxRelative, pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
@@ -257,7 +256,7 @@ export class ComponentWriterMain {
       opts.components.forEach((component) => {
         const componentMap = component.componentMap as ComponentMap;
         if (!componentMap.rootDir) {
-          throw new GeneralError(`unable to use "--path" flag.
+          throw new BitError(`unable to use "--path" flag.
 to move individual files, use bit move.
 to move all component files to a different directory, run bit remove and then bit import --path`);
         }

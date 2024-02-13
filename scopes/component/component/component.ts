@@ -4,7 +4,7 @@ import { SemVer } from 'semver';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { BuildStatus } from '@teambit/legacy/dist/constants';
-import { type ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 
 import { slice } from 'lodash';
 import { ComponentFactory } from './component-factory';
@@ -39,6 +39,8 @@ export class Component implements IComponent {
 
     /**
      * head version of the component. can be `null` for new components.
+     * if on main, returns the head on main.
+     * if on a lane, returns the head on the lane.
      */
     readonly head: Snap | null = null,
 
@@ -115,9 +117,13 @@ export class Component implements IComponent {
     return this.state.aspects.get(id)?.serialize();
   }
 
-  async getLogs(
-    filter?: { type?: string; offset?: number; limit?: number; head?: string; sort?: string }
-  ): Promise<ComponentLog[]> {
+  async getLogs(filter?: {
+    type?: string;
+    offset?: number;
+    limit?: number;
+    head?: string;
+    sort?: string;
+  }): Promise<ComponentLog[]> {
     const allLogs = await this.factory.getLogs(this.id, false, filter?.head);
 
     if (!filter) return allLogs;
@@ -282,6 +288,16 @@ export class Component implements IComponent {
       return tagsHashMap.get(hashOfLastSnap);
     }
     return undefined;
+  }
+
+  /**
+   * id.version can be either a version or a hash.
+   * if it's a hash, it may have a tag point to it. if it does, return the tag.
+   */
+  getTag(): Tag | undefined {
+    const currentVersion = this.id.version;
+    if (!currentVersion) return undefined;
+    return this.tags.byVersion(currentVersion) || this.tags.byHash(currentVersion);
   }
 
   /**

@@ -13,7 +13,6 @@ import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extens
 import ConsumerComponent from '../../consumer/component';
 import { License, SourceFile } from '../../consumer/component/sources';
 import ComponentOverrides from '../../consumer/config/component-overrides';
-import GeneralError from '../../error/general-error';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
 import { getStringifyArgs } from '../../utils';
@@ -563,6 +562,12 @@ export default class Component extends BitObject {
     return Object.keys(allTags).find((versionRef) => allTags[versionRef].isEqual(ref));
   }
 
+  getTag(version: string): string | undefined {
+    if (isTag(version)) return version;
+    const ref = Ref.from(version);
+    return this.getTagOfRefIfExists(ref);
+  }
+
   switchHashesWithTagsIfExist(refs: Ref[]): string[] {
     // cache the this.versionsIncludeOrphaned results into "allTags", looks strange but it improved
     // the performance on bit-bin with 188 components during source.merge in 4 seconds.
@@ -623,7 +628,7 @@ export default class Component extends BitObject {
   ): string {
     if (lane) {
       if (isTag(versionToAdd)) {
-        throw new GeneralError(
+        throw new BitError(
           'unable to tag when checked out to a lane, please switch to main, merge the lane and then tag again'
         );
       }
@@ -642,7 +647,7 @@ export default class Component extends BitObject {
       if (parent && !parent.isEqual(versionToAddRef)) {
         version.addAsOnlyParent(parent);
       }
-      lane.addComponent({ id: currentBitId, head: versionToAddRef });
+      lane.addComponent({ id: currentBitId, head: versionToAddRef, isDeleted: version.isRemoved() });
 
       if (lane.readmeComponent && lane.readmeComponent.id.fullName === currentBitId.fullName) {
         lane.setReadmeComponent(currentBitId);
@@ -888,7 +893,10 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return new ComponentVersion(this, versionNum);
   }
 
-  async isDeprecated(repo: Repository) {
+  /**
+   * if no "specificVersion" is given, it returns according to the head
+   */
+  async isDeprecated(repo: Repository, specificVersion?: string) {
     // backward compatibility
     if (this.deprecated) {
       return true;
@@ -899,16 +907,24 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       // have the answer.
       return false;
     }
-    const version = (await repo.load(head)) as Version;
-    if (!version) {
+    const headVersion = (await repo.load(head)) as Version;
+    if (!headVersion) {
       // the head Version doesn't exist locally, there is no way to know whether it's deprecated
       return null;
     }
-    const deprecationAspect = version.extensions.findCoreExtension(Extensions.deprecation);
+    const deprecationAspect = headVersion.extensions.findCoreExtension(Extensions.deprecation);
     if (!deprecationAspect) {
       return false;
     }
-    return deprecationAspect.config.deprecate;
+    if (deprecationAspect.config.deprecate) {
+      return true;
+    }
+    if (specificVersion && deprecationAspect.config.range) {
+      const tag = this.getTag(specificVersion);
+      if (!tag) return false; // it's a snap. "range" doesn't support deprecating snaps. only semver.
+      return semver.satisfies(tag, deprecationAspect.config.range);
+    }
+    return false;
   }
 
   async isRemoved(repo: Repository): Promise<boolean> {
@@ -1235,7 +1251,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
 
   validate(): void {
     const message = `unable to save Component object "${this.id()}"`;
-    if (!this.name) throw new GeneralError(`${message} the name is missing`);
+    if (!this.name) throw new BitError(`${message} the name is missing`);
     if (this.state && this.state.versions) {
       Object.keys(this.state.versions).forEach((version) => {
         if (isTag(version) && !this.hasTag(version)) {

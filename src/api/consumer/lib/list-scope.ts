@@ -1,14 +1,13 @@
 import R from 'ramda';
+import { BitError } from '@teambit/bit-error';
 import { ComponentID } from '@teambit/component-id';
 import loader from '../../../cli/loader';
 import { BEFORE_LOCAL_LIST, BEFORE_REMOTE_LIST } from '../../../cli/loader/loader-messages';
 import { Consumer, loadConsumerIfExist } from '../../../consumer';
 import ComponentsList, { ListScopeResult } from '../../../consumer/component/components-list';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
-import GeneralError from '../../../error/general-error';
 import getRemoteByName from '../../../remotes/get-remote-by-name';
 import Remote from '../../../remotes/remote';
-import { SSHConnectionStrategyName } from '../../../scope/network/ssh/ssh';
 import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
 
 export async function listScope({
@@ -16,13 +15,11 @@ export async function listScope({
   showAll = false, // include nested
   showRemoteVersion = false,
   namespacesUsingWildcards,
-  strategiesNames,
 }: {
   scopeName?: string;
   showAll?: boolean;
   showRemoteVersion?: boolean;
   namespacesUsingWildcards?: string;
-  strategiesNames?: SSHConnectionStrategyName[];
 }): Promise<ListScopeResult[]> {
   const consumer: Consumer | undefined = await loadConsumerIfExist();
   if (scopeName) {
@@ -33,7 +30,7 @@ export async function listScope({
   async function remoteList(): Promise<ListScopeResult[]> {
     const remote: Remote = await getRemoteByName(scopeName as string, consumer);
     loader.start(BEFORE_REMOTE_LIST);
-    return remote.list(`${scopeName}/${namespacesUsingWildcards}`, strategiesNames);
+    return remote.list(`${scopeName}/${namespacesUsingWildcards}`);
   }
 
   async function localList(): Promise<ListScopeResult[]> {
@@ -48,9 +45,7 @@ export async function listScope({
 
 export async function getRemoteBitIdsByWildcards(idStr: string, includeDeprecated = true): Promise<ComponentID[]> {
   if (!idStr.includes('/')) {
-    throw new GeneralError(
-      `import with wildcards expects full scope-name before the wildcards, instead, got "${idStr}"`
-    );
+    throw new BitError(`import with wildcards expects full scope-name before the wildcards, instead, got "${idStr}"`);
   }
   const idSplit = idStr.split('/');
   const scopeName = idSplit[0];

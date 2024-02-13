@@ -157,9 +157,6 @@ export default class ScopeHelper {
     isGlobal = false
   ) {
     const globalArg = isGlobal ? '-g' : '';
-    if (process.env.npm_config_with_ssh) {
-      return this.command.runCmd(`bit remote add ssh://\`whoami\`@127.0.0.1:/${remoteScopePath} ${globalArg}`, cwd);
-    }
     return this.command.runCmd(`bit remote add file://${remoteScopePath} ${globalArg}`, cwd);
   }
 

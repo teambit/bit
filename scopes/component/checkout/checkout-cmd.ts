@@ -9,6 +9,7 @@ import {
   compilationErrorOutput,
   getRemovedOutput,
   getAddedOutput,
+  getWorkspaceConfigUpdateOutput,
 } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP, HEAD, LATEST } from '@teambit/legacy/dist/constants';
 import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
@@ -149,6 +150,7 @@ export function checkoutOutput(
     removedComponents,
     addedComponents,
     leftUnresolvedConflicts,
+    workspaceConfigUpdateResult,
     newFromLane,
     newFromLaneAdded,
     installationError,
@@ -179,6 +181,16 @@ export function checkoutOutput(
       .map((failedComponent) => `${failedComponent.id.toString()} - ${failedComponent.unchangedMessage}`)
       .join('\n');
     return `${chalk.underline(title)}\n${body}`;
+  };
+  const getWsConfigUpdateLogs = () => {
+    // @TODO: uncomment the line below once UPDATE_DEPS_ON_IMPORT is enabled by default
+    // if (!importFlags.verbose) return '';
+    const logs = workspaceConfigUpdateResult?.logs;
+    if (!logs || !logs.length) return '';
+    const logsStr = logs.join('\n');
+    return `${chalk.underline(
+      'verbose logs of workspace config update'
+    )}\n(this is temporarily. once this feature is enabled, use --verbose to see these logs)\n${logsStr}`;
   };
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
@@ -246,11 +258,13 @@ once ready, snap/tag the components to persist the changes`;
   };
 
   return compact([
+    getWsConfigUpdateLogs(),
     getNotCheckedOutOutput(),
     getSuccessfulOutput(),
     getRemovedOutput(removedComponents),
     getAddedOutput(addedComponents),
     getNewOnLaneOutput(),
+    getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult),
     getConflictSummary(),
     getSummary(),
     installationErrorOutput(installationError),

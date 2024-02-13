@@ -334,12 +334,12 @@ export default class CommandHelper {
     return this.runCmd(`bit snap ${id} ${options}`);
   }
   snapAllComponents(options = '', assertSnapped = true) {
-    const result = this.runCmd(`bit snap -a ${options} --build`);
+    const result = this.runCmd(`bit snap ${options} --build`);
     if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
     return result;
   }
   snapAllComponentsWithoutBuild(options = '', assertSnapped = true) {
-    const result = this.runCmd(`bit snap -a ${options} `);
+    const result = this.runCmd(`bit snap ${options} `);
     if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
     return result;
   }
@@ -718,8 +718,12 @@ export default class CommandHelper {
   mergeAbortLane(options = '') {
     return this.runCmd(`bit lane merge-abort ${options} --silent`);
   }
-  mergeLaneFromScope(cwd: string, laneName: string, options = '') {
-    return this.runCmd(`bit _merge-lane ${laneName} ${options}`, cwd);
+  mergeLaneFromScope(cwd: string, fromLane: string, options = '') {
+    return this.runCmd(`bit _merge-lane ${fromLane} ${options}`, cwd);
+  }
+  mergeLaneFromScopeParsed(cwd: string, fromLane: string, options = ''): Record<string, any> {
+    const output = this.mergeLaneFromScope(cwd, fromLane, `${options} --json`);
+    return JSON.parse(output);
   }
   tagFromScope(cwd: string, data: Record<string, any>, options = '') {
     return this.runCmd(`bit _tag '${JSON.stringify(data)}' ${options}`, cwd);

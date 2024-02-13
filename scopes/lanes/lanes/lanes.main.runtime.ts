@@ -14,6 +14,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import { MergeStrategy, MergeOptions } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
+import { HistoryItem } from '@teambit/legacy/dist/scope/models/lane-history';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
@@ -32,7 +33,6 @@ import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import CheckoutAspect, { CheckoutMain } from '@teambit/checkout';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
-import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
@@ -55,6 +55,7 @@ import {
   LaneHistoryCmd,
   LaneCheckoutCmd,
   LaneCheckoutOpts,
+  LaneRevertCmd,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
@@ -128,7 +129,7 @@ export type CreateLaneResult = {
 
 export class LanesMain {
   constructor(
-    private workspace: Workspace | undefined,
+    readonly workspace: Workspace | undefined,
     private scope: ScopeMain,
     private merging: MergingMain,
     private componentAspect: ComponentMain,
@@ -141,6 +142,10 @@ export class LanesMain {
     readonly checkout: CheckoutMain
   ) {}
 
+  /**
+   * return the lane data without the deleted components.
+   * the deleted components are filtered out in legacyScope.lanes.getLanesData()
+   */
   async getLanes({
     name,
     remote,
@@ -161,7 +166,8 @@ export class LanesMain {
       const laneId = name ? LaneId.from(name, remote) : undefined;
       const remoteObj = await getRemoteByName(remote, consumer);
       const lanes = await remoteObj.listLanes(laneId?.toString(), showMergeData);
-      // no need to filter soft-removed here. it was filtered already in the remote
+      // if the remote is http, it eventually calls this method from the remote without the "remote" param.
+      // again, the deleted components are filtered out.
       return lanes;
     }
 
@@ -177,7 +183,7 @@ export class LanesMain {
       if (defaultLane) lanes.push(defaultLane);
     }
 
-    return this.filterSoftRemovedLaneComps(lanes);
+    return lanes;
   }
 
   async parseLaneId(idStr: string): Promise<LaneId> {
@@ -193,6 +199,31 @@ export class LanesMain {
   }
 
   async checkoutHistory(historyId: string, options?: LaneCheckoutOpts) {
+    const historyItem = await this.getHistoryItemOfCurrentLane(historyId);
+    const ids = historyItem.components.map((id) => ComponentID.fromString(id));
+    const results = await this.checkout.checkout({
+      ids: ids.map((id) => id.changeVersion(undefined)),
+      versionPerId: ids,
+      allowAddingComponentsFromScope: true,
+      skipNpmInstall: options?.skipDependencyInstallation,
+    });
+    return results;
+  }
+
+  async revertHistory(historyId: string, options?: LaneCheckoutOpts) {
+    const historyItem = await this.getHistoryItemOfCurrentLane(historyId);
+    const ids = historyItem.components.map((id) => ComponentID.fromString(id));
+    const results = await this.checkout.checkout({
+      ids: ids.map((id) => id.changeVersion(undefined)),
+      versionPerId: ids,
+      allowAddingComponentsFromScope: true,
+      revert: true,
+      skipNpmInstall: options?.skipDependencyInstallation,
+    });
+    return results;
+  }
+
+  private async getHistoryItemOfCurrentLane(historyId: string): Promise<HistoryItem> {
     const laneId = this.getCurrentLaneId();
     if (!laneId || laneId.isDefault()) {
       throw new BitError(`unable to checkout history "${historyId}" while on main`);
@@ -204,59 +235,13 @@ export class LanesMain {
     if (!historyItem) {
       throw new BitError(`unable to find history "${historyId}" in lane "${laneId.toString()}"`);
     }
-    const ids = historyItem.components.map((id) => ComponentID.fromString(id));
-    const results = await this.checkout.checkout({
-      ids: ids.map((id) => id.changeVersion(undefined)),
-      versionPerId: ids,
-      allowAddingComponentsFromScope: true,
-      skipNpmInstall: options?.skipDependencyInstallation,
-    });
-    return results;
+    return historyItem;
   }
 
   async importLaneHistory(laneId: LaneId) {
     const existingLane = await this.loadLane(laneId);
     if (existingLane?.isNew) return;
     await this.importer.importLaneObject(laneId, undefined, true);
-  }
-
-  private async filterSoftRemovedLaneComps(lanes: LaneData[]): Promise<LaneData[]> {
-    return Promise.all(
-      lanes.map(async (lane) => {
-        if (lane.id.isDefault()) return lane;
-
-        const componentIds = compact(
-          await Promise.all(
-            (
-              await this.getLaneComponentIds(lane)
-            ).map(async (laneCompId) => {
-              try {
-                if (await this.scope.isComponentRemoved(laneCompId)) return undefined;
-              } catch (err) {
-                // if (err instanceof ComponentNotFound)
-                // throw new Error(
-                //   `component "${laneCompId.toString()}" from the lane "${lane.id.toString()}" not found`
-                // );
-                // throw err;
-                if (err instanceof ComponentNotFound)
-                  this.logger.warn(
-                    `component "${laneCompId.toString()}" from the lane "${lane.id.toString()}" not found`
-                  );
-
-                return undefined;
-              }
-              return { id: laneCompId, head: laneCompId.version as string };
-            })
-          )
-        );
-
-        const laneData: LaneData = {
-          ...lane,
-          components: componentIds,
-        };
-        return laneData;
-      })
-    );
   }
 
   getCurrentLaneName(): string | null {
@@ -514,9 +499,6 @@ please create a new lane instead, which will include all components of this lane
    */
   async fetchLaneWithItsComponents(laneId: LaneId): Promise<Lane> {
     this.logger.debug(`fetching lane ${laneId.toString()}`);
-    if (!this.workspace) {
-      throw new BitError('unable to fetch lanes outside of Bit workspace');
-    }
     const lane = await this.importer.importLaneObject(laneId);
     if (!lane) throw new Error(`unable to import lane ${laneId.toString()} from the remote`);
 
@@ -1201,6 +1183,7 @@ please create a new lane instead, which will include all components of this lane
     if (isFeatureEnabled(SUPPORT_LANE_HISTORY)) {
       laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
       laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
+      laneCmd.commands.push(new LaneRevertCmd(lanesMain));
     }
     cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));
     cli.registerOnStart(async () => {

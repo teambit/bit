@@ -560,8 +560,6 @@ export class AspectLoaderMain {
     const globalScopeHarmony = await loadBit(globalScope.path);
     const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
     const aspectLoader = globalScopeHarmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
-    // @todo: Gilad make this work
-    // const ids = await scope.resolveMultipleComponentIds(aspectIds);
     const ids = aspectIds.map((id) => ComponentID.fromString(id));
     const hasVersions = ids.every((id) => id.hasVersion());
     const useCache = hasVersions; // if all components has versions, try to use the cached aspects

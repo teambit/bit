@@ -41,12 +41,3 @@ export default function enrichContextFromGlobal(context: Record<string, any> = {
   const contextToEnrich = getContextToEnrich();
   Object.assign(context, contextToEnrich);
 }
-
-// function _getSshPubKey(pubSshKeyFile = `${DEFAULT_SSH_KEY_FILE}.pub`) {
-//   logger.debug(`reading ssh public key from ${pubSshKeyFile}`);
-//   if (!fs.pathExistsSync(pubSshKeyFile)) {
-//     return null;
-//   }
-//   const buf = fs.readFileSync(pubSshKeyFile);
-//   return buf.toString();
-// }

@@ -19,7 +19,6 @@ import {
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
 import HooksManager from '@teambit/legacy/dist/hooks';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { Lane, ModelComponent, Symlink, Version } from '@teambit/legacy/dist/scope/models';
@@ -572,8 +571,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const consumer: Consumer = this.workspace.consumer;
     let ejectResults: EjectResults;
     try {
-      const componentIds = await this.workspace.resolveMultipleComponentIds(componentsIds);
-      ejectResults = await this.eject.eject(componentIds, { force: true });
+      ejectResults = await this.eject.eject(componentsIds, { force: true });
     } catch (err: any) {
       const ejectErr = `The components ${componentsIds.map((c) => c.toString()).join(', ')} were exported successfully.
       However, the eject operation has failed due to an error: ${err.msg || err}`;
@@ -753,9 +751,8 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
 
   private async removeFromStagedConfig(ids: ComponentID[]) {
     this.logger.debug(`removeFromStagedConfig, ${ids.length} ids`);
-    const componentIds = await this.workspace.resolveMultipleComponentIds(ids);
     const stagedConfig = await this.workspace.scope.getStagedConfig();
-    componentIds.map((compId) => stagedConfig.removeComponentConfig(compId));
+    ids.map((compId) => stagedConfig.removeComponentConfig(compId));
     await stagedConfig.write();
   }
 
@@ -784,7 +781,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     };
     if (isUserTryingToExportLanes(consumer)) {
       if (ids.length) {
-        throw new GeneralError(`when checked out to a lane, all its components are exported. please omit the ids`);
+        throw new BitError(`when checked out to a lane, all its components are exported. please omit the ids`);
       }
       const { componentsToExport, laneObject } = await this.getLaneCompIdsToExport(consumer, includeNonStaged);
       const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;

@@ -76,18 +76,16 @@ export class YargsAdapter implements CommandModule {
         group: GLOBAL_GROUP,
       };
     }
-    if (!command.internal) {
-      globalOptions.log = {
-        describe:
-          'print log messages to the screen, options are: [trace, debug, info, warn, error, fatal], the default is info',
-        group: GLOBAL_GROUP,
-      };
-      globalOptions['safe-mode'] = {
-        describe:
-          'bootstrap the bare-minimum with only the CLI aspect. useful mainly for low-level commands when bit refuses to load',
-        group: GLOBAL_GROUP,
-      };
-    }
+    globalOptions.log = {
+      describe:
+        'print log messages to the screen, options are: [trace, debug, info, warn, error, fatal], the default is info',
+      group: GLOBAL_GROUP,
+    };
+    globalOptions['safe-mode'] = {
+      describe:
+        'bootstrap the bare-minimum with only the CLI aspect. useful mainly for low-level commands when bit refuses to load',
+      group: GLOBAL_GROUP,
+    };
     return globalOptions;
   }
 }

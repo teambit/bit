@@ -33,6 +33,8 @@ export class SchemaTask implements BuildTask {
     const rootDir = context.capsuleNetwork.capsulesRootDir;
     await pMapSeries(capsules, async (capsule) => {
       const component = capsule.component;
+      const isTaskDisabled = this.schema.isSchemaTaskDisabled(component);
+      if (isTaskDisabled) return;
       try {
         const schema = await this.schema.getSchema(component, false, true, rootDir, capsule.path);
         const schemaObj = schema.toObject();

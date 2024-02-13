@@ -4,7 +4,7 @@ import yn from 'yn';
 import { ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { checkoutOutput } from '@teambit/checkout';
-import { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
 import { LaneData, serializeLaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { BitError } from '@teambit/bit-error';
@@ -23,7 +23,7 @@ type LaneOptions = {
 
 export class LaneListCmd implements Command {
   name = 'list';
-  description = `list local lanes`;
+  description = `list local or remote lanes`;
   alias = '';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
@@ -65,8 +65,9 @@ export class LaneListCmd implements Command {
     const laneDataOfCurrentLane = currentLane ? lanes.find((l) => currentLane.isEqual(l.id)) : undefined;
     const currentAlias = laneDataOfCurrentLane ? laneDataOfCurrentLane.alias : undefined;
     const currentLaneReadmeComponentStr = outputReadmeComponent(laneDataOfCurrentLane?.readmeComponent);
-    let currentLaneStr = `current lane - ${chalk.green.green(laneIdStr(currentLane, currentAlias))}`;
-    currentLaneStr += currentLaneReadmeComponentStr;
+    let currentLaneStr = remote
+      ? ''
+      : `current lane - ${chalk.green.green(laneIdStr(currentLane, currentAlias))}${currentLaneReadmeComponentStr}`;
 
     if (details) {
       const currentLaneComponents = laneDataOfCurrentLane ? outputComponents(laneDataOfCurrentLane.components) : '';
@@ -218,6 +219,7 @@ a lane created from another lane contains all the components of the original lan
   constructor(private lanes: LanesMain) {}
 
   async report([name]: [string], createLaneOptions: CreateLaneOptions & { remoteScope?: string }): Promise<string> {
+    if (!this.lanes.workspace) throw new OutsideWorkspaceError();
     const currentLane = await this.lanes.getCurrentLane();
     if (createLaneOptions.remoteScope) createLaneOptions.scope = createLaneOptions.remoteScope;
     const result = await this.lanes.createLane(name, createLaneOptions);
@@ -274,7 +276,7 @@ export type LaneCheckoutOpts = { skipDependencyInstallation?: boolean };
 
 export class LaneCheckoutCmd implements Command {
   name = 'checkout <history-id>';
-  description = 'checkout to a previous history of the current lane';
+  description = 'EXPERIMENTAL. checkout to a previous history of the current lane. see also "bit lane revert"';
   arguments = [
     { name: 'history-id', description: 'the history-id to checkout to. run "bit lane history" to list the ids' },
   ];
@@ -292,17 +294,42 @@ export class LaneCheckoutCmd implements Command {
   }
 }
 
-export class LaneHistoryCmd implements Command {
-  name = 'history <lane-name> [id]';
-  description = 'EXPERIMENTAL. show lane history';
+export class LaneRevertCmd implements Command {
+  name = 'revert <history-id>';
+  description = 'EXPERIMENTAL. revert to a previous history of the current lane. see also "bit lane checkout"';
+  extendedDescription = `revert is similar to "lane checkout", but it keeps the versions and only change the files.
+choose one or the other based on your needs.
+if you want to continue working on this lane and needs the changes from the history to be the head, then use "lane revert".
+if you want to fork the lane from a certain point in history, use "lane checkout" and create a new lane from it.`;
+  arguments = [
+    { name: 'history-id', description: 'the history-id to checkout to. run "bit lane history" to list the ids' },
+  ];
   alias = '';
-  options = [] as CommandOptions;
+  options = [
+    ['x', 'skip-dependency-installation', 'do not install dependencies of the checked out components'],
+  ] as CommandOptions;
   loader = true;
 
   constructor(private lanes: LanesMain) {}
 
-  async report([laneName, id]: [string, string]): Promise<string> {
-    const laneId = await this.lanes.parseLaneId(laneName);
+  async report([historyId]: [string], opts: LaneCheckoutOpts): Promise<string> {
+    const result = await this.lanes.revertHistory(historyId, opts);
+    return checkoutOutput(result, {}, `successfully reverted according to history-id: ${historyId}`);
+  }
+}
+
+export class LaneHistoryCmd implements Command {
+  name = 'history [lane-name]';
+  description = 'EXPERIMENTAL. show lane history, default to the current lane';
+  alias = '';
+  options = [['', 'id <string>', 'show a specific history item']] as CommandOptions;
+  loader = true;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([laneName]: [string], { id }: { id?: string }): Promise<string> {
+    const laneId = laneName ? await this.lanes.parseLaneId(laneName) : this.lanes.getCurrentLaneId();
+    if (!laneId || laneId.isDefault()) throw new BitError(`unable to show history of the default lane (main)`);
     await this.lanes.importLaneHistory(laneId);
     const laneHistory = await this.lanes.getLaneHistory(laneId);
     const history = laneHistory.getHistory();

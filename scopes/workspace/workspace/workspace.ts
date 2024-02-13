@@ -6,7 +6,6 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
-import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
 import { generateNodeModulesPattern, PatternTarget } from '@teambit/dependencies.modules.packages-excluder';
 import {
   AspectEntry,
@@ -158,7 +157,7 @@ export class Workspace implements ComponentFactory {
    * This is important to know to ignore missing modules across different places
    */
   inInstallContext = false;
-  private _cachedListIds?: ComponentID[];
+  private _cachedListIds?: ComponentIdList;
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
   private componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized;
@@ -375,8 +374,7 @@ export class Workspace implements ComponentFactory {
    */
   async list(filter?: { offset: number; limit: number }, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(loadOpts || {});
-    const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
-    const ids = await this.resolveMultipleComponentIds(legacyIds);
+    const ids = this.consumer.bitMap.getAllIdsAvailableOnLane();
     const idsToGet = filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids;
     return this.getMany(idsToGet, loadOptsWithDefaults);
   }
@@ -391,20 +389,20 @@ export class Workspace implements ComponentFactory {
    * (see the invalid criteria in ConsumerComponent.isComponentInvalidByErrorType())
    */
   async listInvalid(): Promise<InvalidComponent[]> {
-    const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
-    const ids = await this.resolveMultipleComponentIds(legacyIds);
+    const ids = this.consumer.bitMap.getAllIdsAvailableOnLane();
     return this.componentLoader.getInvalid(ids);
   }
 
   /**
    * get ids of all workspace components.
+   * @todo: remove the "async", it's not a promise anymore.
    */
-  async listIds(): Promise<ComponentID[]> {
+  async listIds(): Promise<ComponentIdList> {
     if (this._cachedListIds && this.bitMap.hasChanged()) {
       delete this._cachedListIds;
     }
     if (!this._cachedListIds) {
-      this._cachedListIds = await this.resolveMultipleComponentIds(this.consumer.bitmapIdsFromCurrentLane);
+      this._cachedListIds = this.consumer.bitmapIdsFromCurrentLane;
     }
     return this._cachedListIds;
   }
@@ -477,8 +475,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async locallyDeletedIds(): Promise<ComponentID[]> {
-    const locallyDeleted = await this.componentList.listLocallySoftRemoved();
-    return this.resolveMultipleComponentIds(locallyDeleted);
+    return this.componentList.listLocallySoftRemoved();
   }
 
   async duringMergeIds(): Promise<ComponentID[]> {
@@ -491,8 +488,7 @@ export class Workspace implements ComponentFactory {
    * get all workspace component-ids
    */
   getAllComponentIds(): Promise<ComponentID[]> {
-    const bitIds = this.consumer.bitMap.getAllBitIds();
-    return this.resolveMultipleComponentIds(bitIds);
+    return this.listIds();
   }
 
   async listTagPendingIds(): Promise<ComponentID[]> {
@@ -564,7 +560,7 @@ export class Workspace implements ComponentFactory {
         if (modelComp && modelComp.head) compsWithHead.push(id);
       })
     );
-    return this.resolveMultipleComponentIds(compsWithHead);
+    return compsWithHead;
   }
 
   async getSavedGraphOfComponentIfExist(component: Component) {
@@ -625,14 +621,16 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   /**
    * given component ids, find their dependents in the workspace
    */
-  async getDependentsIds(ids: ComponentID[]): Promise<ComponentID[]> {
-    const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(this.consumer, true);
-    const workspaceDependencyGraph = new DependencyGraph(workspaceGraph);
-    const workspaceDependents = ids.map((id) => workspaceDependencyGraph.getDependentsInfo(id));
-    const dependentsLegacyIds = workspaceDependents.flat().map((_) => _.id);
-    const dependentsLegacyNoDup = ComponentIdList.uniqFromArray(dependentsLegacyIds);
-    const dependentsIds = await this.resolveMultipleComponentIds(dependentsLegacyNoDup);
-    return dependentsIds;
+  async getDependentsIds(ids: ComponentID[], filterOutNowWorkspaceIds = true): Promise<ComponentID[]> {
+    const graph = await this.getGraphIds();
+    const dependents = ids
+      .map((id) => graph.predecessors(id.toString()))
+      .flat()
+      .map((node) => node.attr);
+    const uniq = ComponentIdList.uniqFromArray(dependents);
+    if (!filterOutNowWorkspaceIds) return uniq;
+    const workspaceIds = await this.listIds();
+    return uniq.filter((id) => workspaceIds.has(id));
   }
 
   public async createAspectList(extensionDataList: ExtensionDataList) {
@@ -838,7 +836,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   async triggerOnWorkspaceConfigChange(): Promise<void> {
     this.logger.debug('triggerOnWorkspaceConfigChange, reloading workspace config');
     const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
-    await config.reloadWorkspaceConfig();
+    await config.reloadWorkspaceConfig(this.path);
     const workspaceConfig = config.workspaceConfig;
     if (!workspaceConfig) throw new Error('workspace config is missing from Config aspect');
     const configOfWorkspaceAspect = workspaceConfig.extensions.findExtension(WorkspaceAspect.id);
