@@ -106,6 +106,9 @@ export const externals = [
   '@teambit/react.ui.compositions-app',
   'babel-preset-react-app',
   'tippy.js',
+  '@babel/plugin-transform-object-rest-spread',
+  '@babel/plugin-transform-class-properties',
+  '@bitdev/react.webpack.refresh-overlay',
   // 'esbuild'
   // 'mime'
 ];
