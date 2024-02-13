@@ -221,6 +221,14 @@ other:   ${otherLaneHead.toString()}`);
       const divergeData = await getDivergeData({ repo, modelComponent, targetHead: otherLaneHead, throws: false });
       return { ...componentStatus, componentFromModel: componentOnOther, divergeData };
     }
+    const componentMap = consumer?.bitMap.getComponentIfExist(currentId, { ignoreVersion: true });
+    const isLocallyRemoved = componentMap?.isRemoved();
+    if (isLocallyRemoved) {
+      return this.returnUnmerged(
+        id,
+        `component is locally deleted, please snap and export first or undo by bit recover`
+      );
+    }
     const getCurrentComponent = () => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (existingBitMapId) return consumer!.loadComponent(existingBitMapId);
