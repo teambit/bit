@@ -338,7 +338,7 @@ export class SetPeerCmd implements Command {
 
   constructor(private deps: DependenciesMain) {}
 
-  async report([componentId, range]: [string, string[]]) {
+  async report([componentId, range]: [string, string]) {
     await this.deps.setPeer(componentId, range != null ? range.toString() : range);
     return '';
   }
