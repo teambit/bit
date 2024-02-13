@@ -197,4 +197,9 @@ export interface DependencyResolverWorkspaceConfig {
    * you can use this option to exclusively hoist the phantom dependencies (recommended).
    */
   hoistPatterns?: string[];
+
+  /**
+   * Tells pnpm to automatically install peer dependencies. It is true by default.
+   */
+  autoInstallPeers?: boolean;
 }

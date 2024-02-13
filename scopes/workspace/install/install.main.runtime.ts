@@ -309,6 +309,7 @@ export class InstallMain {
 
     const pmInstallOptions: PackageManagerInstallOptions = {
       ...calcManifestsOpts,
+      autoInstallPeers: this.dependencyResolver.config.autoInstallPeers,
       includeOptionalDeps: options?.includeOptionalDeps,
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
       overrides: this.dependencyResolver.config.overrides,
