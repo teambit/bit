@@ -186,6 +186,9 @@ export const configFilesEsbuildPlugin = (bundleDir: string) => {
       build.onResolve({ filter: /file-transform$/ }, (args) => {
         return handleConfigFile(args, bundleDir);
       });
+      build.onResolve({ filter: /cjs-transformer$/ }, (args) => {
+        return handleConfigFile(args, bundleDir);
+      });
     },
   };
 };
