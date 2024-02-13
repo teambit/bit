@@ -64,7 +64,6 @@ export class ForkingMain {
    * if refactor option is enable, change the source-code to update all dependencies with the new name.
    */
   async fork(sourceId: string, targetId?: string, options?: ForkOptions): Promise<ComponentID> {
-    console.log('🚀 ~ ForkingMain ~ fork ~ options:', options);
     if (!this.workspace) throw new OutsideWorkspaceError();
     const sourceCompId = await this.workspace.resolveComponentId(sourceId);
     const exists = this.workspace.exists(sourceCompId);
