@@ -78,13 +78,14 @@ export type OnSuccessLogin = ({
 }: {
   username?: string;
   token?: string;
-  npmrcUpdateResult?: {
-    success?: boolean;
-    error?: Error;
-    configUpdates?: string;
-  };
+  npmrcUpdateResult?: NpmConfigUpdateResult;
 }) => void;
 export type OnSuccessLoginSlot = SlotRegistry<OnSuccessLogin>;
+export type NpmConfigUpdateResult = {
+  conflicts?: { original: string; modifications: string }[];
+  configUpdates?: string;
+  error?: Error;
+};
 
 export class CloudMain {
   static ERROR_RESPONSE = 500;
@@ -104,34 +105,96 @@ export class CloudMain {
     public onSuccessLoginSlot: OnSuccessLoginSlot
   ) {}
 
-  async generateNpmrc({ dryRun }: { dryRun?: boolean } = {}): Promise<string> {
+  getNpmConfig(): Record<string, string> {
+    try {
+      const output = execSync(`npm config list --json`, { encoding: 'utf8' });
+      return JSON.parse(output);
+    } catch (error) {
+      throw new Error(`failed to get npm config. error: ${error}`);
+    }
+  }
+
+  async generateNpmrc({ dryRun, force }: { dryRun?: boolean; force?: boolean } = {}): Promise<{
+    conflicts?: { original: string; modifications: string }[];
+    configUpdates?: string;
+  }> {
     const authToken = this.getAuthToken();
     const username = this.getUsername();
     if (!authToken || !username) {
       throw new Error('user is not logged in');
     }
-    return this.updateNpmConfig({ authToken, username, dryRun });
+    return this.updateNpmConfig({ authToken, username, dryRun, force });
+  }
+
+  detectConfigConflicts({
+    newConfigs,
+    registryDomain,
+  }: {
+    newConfigs: string;
+    registryDomain: string;
+  }): { original: string; modifications: string }[] {
+    const existingConfigs = this.getNpmConfig();
+    const conflicts: { original: string; modifications: string }[] = [];
+
+    newConfigs.split('\n').forEach((line) => {
+      const [key, newValue] = line.split('=');
+      if (key && newValue) {
+        const trimmedKey = key.trim();
+        const existingValue = existingConfigs[trimmedKey];
+        const isRegistryConflict = existingValue && !existingValue.includes(registryDomain);
+
+        if (existingValue && isRegistryConflict) {
+          conflicts.push({
+            original: `${trimmedKey}=${existingValue}`,
+            modifications: `${trimmedKey}=${newValue.trim()}`,
+          });
+        }
+      }
+    });
+
+    return conflicts;
   }
 
   async updateNpmConfig({
     authToken,
     username,
     dryRun,
+    force,
   }: {
     authToken: string;
     username: string;
     dryRun?: boolean;
-  }): Promise<string> {
+    force?: boolean;
+  }): Promise<{ conflicts?: { original: string; modifications: string }[]; configUpdates?: string }> {
     const orgs = (await this.getUserOrganizations()) ?? [];
     const orgNames = orgs.map((org) => org.name);
-    const allOrgs = [...CloudMain.PRESET_ORGS, ...orgNames, username].sort();
-    const registryUrl = this.getRegistryUrl();
-    const scopeConfig = allOrgs.map((org) => `@${org}:registry="${registryUrl}"`).join(' ');
-    const authConfig = `//${new URL(registryUrl).host}/:_authToken="${authToken}"`;
-    const configUpdates = `${scopeConfig} ${authConfig}`;
-    if (!dryRun) execSync(`npm config set ${configUpdates}`, { stdio: 'ignore' });
-    if (dryRun) return configUpdates.replace(/ /g, '\n');
-    return configUpdates;
+    const allOrgs = Array.from(new Set([...CloudMain.PRESET_ORGS, ...orgNames, username])).sort();
+    const registryUrlStr = this.getRegistryUrl();
+    const registryUrl = new URL(registryUrlStr);
+    const scopeConfig = allOrgs.map((org) => `@${org}:registry="${registryUrlStr}"`).join('\n');
+    const authConfig = `//${registryUrl.host}/:_authToken="${authToken}"`;
+    const configUpdates = `${scopeConfig}\n${authConfig}`;
+
+    if (!force) {
+      const conflicts = this.detectConfigConflicts({
+        newConfigs: configUpdates,
+        registryDomain: this.getCloudDomain(),
+      });
+
+      if (conflicts.length > 0) {
+        return { conflicts, configUpdates };
+      }
+    }
+
+    if (dryRun) {
+      return { configUpdates };
+    }
+
+    const configToUpdate = configUpdates.replace(/\n/g, ' ');
+
+    execSync(`npm config set ${configToUpdate}`, { stdio: 'ignore' });
+
+    return { configUpdates };
   }
 
   setupAuthListener({
@@ -221,9 +284,7 @@ export class CloudMain {
 
           this.updateNpmConfig({ authToken: token as string, username: username as string })
             .then((configUpdates) => {
-              onLoggedInFns.forEach((fn) =>
-                fn({ username, token: token as string, npmrcUpdateResult: { success: true, configUpdates } })
-              );
+              onLoggedInFns.forEach((fn) => fn({ username, token: token as string, npmrcUpdateResult: configUpdates }));
             })
             .catch((error) => {
               onLoggedInFns.forEach((fn) =>
@@ -231,7 +292,6 @@ export class CloudMain {
                   username,
                   token: token as string,
                   npmrcUpdateResult: {
-                    success: false,
                     error: new Error(`failed to update npmrc. error ${error?.toString}`),
                   },
                 })
@@ -369,11 +429,7 @@ export class CloudMain {
     isAlreadyLoggedIn?: boolean;
     username?: string;
     token?: string;
-    npmrcUpdateResult?: {
-      success?: boolean;
-      error?: Error;
-      configUpdates?: string;
-    };
+    npmrcUpdateResult?: NpmConfigUpdateResult;
   } | null> {
     return new Promise((resolve, reject) => {
       if (this.isLoggedIn()) {
