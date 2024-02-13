@@ -86,8 +86,7 @@ export class LaneDiffGenerator {
 
     let idsToCheckDiff: ComponentIdList | undefined;
     if (pattern) {
-      const allIds = this.toLaneData.components.map((c) => c.id);
-      const compIds = await (this.workspace || this.scope).resolveMultipleComponentIds(allIds);
+      const compIds = this.toLaneData.components.map((c) => c.id);
       idsToCheckDiff = ComponentIdList.fromArray(await this.scope.filterIdsFromPoolIdsByPattern(pattern, compIds));
     }
 

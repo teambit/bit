@@ -510,8 +510,7 @@ export class ScopeMain implements ComponentFactory {
       cache: true,
       reason: `which are unique flattened dependencies to get the graph of ${ids.length} ids`,
     });
-    const allFlattenedCompIds = await this.resolveMultipleComponentIds(allFlattenedUniq);
-    const dependencies = await this.getMany(allFlattenedCompIds);
+    const dependencies = await this.getMany(allFlattenedUniq);
     const allComponents: Component[] = [...components, ...dependencies];
 
     // build the graph
@@ -1221,10 +1220,9 @@ export class ScopeMain implements ComponentFactory {
 
     const onPostExportHook = async (ids: ComponentID[], lanes: Lane[]): Promise<void> => {
       logger.debug(`onPostExportHook, started. (${ids.length} components)`);
-      const componentIds = await scope.resolveMultipleComponentIds(ids);
       const fns = postExportSlot.values();
       const data = {
-        ids: componentIds,
+        ids,
         lanes,
       };
       const metadata = { auth: getAuthData() };

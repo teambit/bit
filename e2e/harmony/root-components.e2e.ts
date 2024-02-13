@@ -816,18 +816,13 @@ module.exports.default = {
         ).to.match(/^16\./);
       });
       it('should link build side-effects to all instances of the component in the capsule directory', () => {
-        expect(
-          path.join(
-            workspaceCapsulesRootDir,
-            `${helper.scopes.remote}_comp3/node_modules/@${helper.scopes.remote}/comp2/dist/index.js`
-          )
-        ).to.be.a.path();
-        expect(
-          path.join(
-            workspaceCapsulesRootDir,
-            `${helper.scopes.remote}_comp3/node_modules/@${helper.scopes.remote}/comp2/types/asset.d.ts`
-          )
-        ).to.be.a.path();
+        const comp2DepDir = path.dirname(
+          resolveFrom(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp3`), [
+            `@${helper.scopes.remote}/comp2/package.json`,
+          ])
+        );
+        expect(path.join(comp2DepDir, 'dist/index.js')).to.be.a.path();
+        expect(path.join(comp2DepDir, 'types/asset.d.ts')).to.be.a.path();
       });
     });
   });

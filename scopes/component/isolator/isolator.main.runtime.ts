@@ -779,6 +779,7 @@ export class IsolatorMain {
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {
+      autoInstallPeers: this.dependencyResolver.config.autoInstallPeers,
       dedupe: isolateInstallOptions.dedupe,
       copyPeerToRuntimeOnComponents: isolateInstallOptions.copyPeerToRuntimeOnComponents,
       copyPeerToRuntimeOnRoot: isolateInstallOptions.copyPeerToRuntimeOnRoot,

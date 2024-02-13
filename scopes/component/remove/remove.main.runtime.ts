@@ -295,11 +295,12 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
   private async getRemovedStagedFromLane(): Promise<ComponentID[]> {
     const currentLane = await this.workspace.getCurrentLaneObject();
     if (!currentLane) return [];
-    const laneIds = currentLane.toBitIds();
+    const laneIds = currentLane.toComponentIds();
     const workspaceIds = await this.workspace.listIds();
-    const laneIdsNotInWorkspace = laneIds.filter((id) => !workspaceIds.find((wId) => wId.isEqualWithoutVersion(id)));
-    if (!laneIdsNotInWorkspace.length) return [];
-    const laneCompIdsNotInWorkspace = await this.workspace.scope.resolveMultipleComponentIds(laneIdsNotInWorkspace);
+    const laneCompIdsNotInWorkspace = laneIds.filter(
+      (id) => !workspaceIds.find((wId) => wId.isEqualWithoutVersion(id))
+    );
+    if (!laneCompIdsNotInWorkspace.length) return [];
     const comps = await this.workspace.scope.getMany(laneCompIdsNotInWorkspace);
     const removed = comps.filter((c) => this.isRemoved(c));
     const staged = await Promise.all(

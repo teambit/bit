@@ -392,7 +392,7 @@ export default class ComponentsList {
         const deprecated = await component?.isDeprecated(this.scope.objects);
         return {
           id: component ? component.toComponentIdWithLatestVersion() : id,
-          deprecated,
+          deprecated: Boolean(deprecated),
           laneReadmeOf,
         };
       })
@@ -454,7 +454,7 @@ export default class ComponentsList {
       componentsSorted.map(async (component: ModelComponent) => {
         return {
           id: component.toComponentIdWithLatestVersion(),
-          deprecated: await component.isDeprecated(scope.objects),
+          deprecated: Boolean(await component.isDeprecated(scope.objects)),
           removed: await component.isRemoved(scope.objects),
           laneReadmeOf: await component.isLaneReadmeOf(scope.objects),
         };

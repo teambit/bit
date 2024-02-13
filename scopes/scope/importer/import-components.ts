@@ -564,7 +564,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
         return 'updated';
       };
       const filesStatus = this.mergeStatus && this.mergeStatus[idStr] ? this.mergeStatus[idStr] : null;
-      const deprecated = await modelComponent.isDeprecated(this.scope.objects);
+      const deprecated = Boolean(await modelComponent.isDeprecated(this.scope.objects, id.version));
       const removed = await component.component.component.isRemoved(this.scope.objects);
       const latestVersion = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
       return {
