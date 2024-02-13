@@ -1,31 +1,26 @@
-import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode, SchemaRegistry } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaLocation } from '../schema-node';
 
-interface ObjectLiteralProperty {
-  key: string;
-  value: any;
-}
-
 export class ObjectLiteralExpressionSchema extends SchemaNode {
-  constructor(readonly properties: ObjectLiteralProperty[], readonly location: SchemaLocation) {
+  constructor(readonly members: SchemaNode[], readonly location: SchemaLocation) {
     super();
+  }
+
+  toString(): string {
+    return this.members.map((member) => member.toString()).join('\n');
   }
 
   toObject() {
     return {
-      type: 'ObjectLiteralExpression',
-      properties: this.properties.map(({ key, value }) => ({ key, value })),
+      ...super.toObject(),
+      members: this.members.map((element) => element.toObject()),
       location: this.location,
     };
   }
 
   static fromObject(obj: Record<string, any>): ObjectLiteralExpressionSchema {
-    const properties = obj.properties.map(({ key, value }) => ({ key, value }));
+    const members = obj.members.map((member) => SchemaRegistry.fromObject(member));
     const location = obj.location;
-    return new ObjectLiteralExpressionSchema(properties, location);
-  }
-
-  toString(): string {
-    return `ObjectLiteralExpression`;
+    return new ObjectLiteralExpressionSchema(members, location);
   }
 }

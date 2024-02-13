@@ -1,5 +1,6 @@
-import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { DecoratorSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import ts, { Decorator, Node } from 'typescript';
+import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
 import { Identifier } from '../identifier';
@@ -19,8 +20,8 @@ export class DecoratorTransformer implements SchemaTransformer {
     const location = context.getLocation(node);
     const doc = await context.jsDocToDocSchema(node);
     const args = ts.isCallExpression(node.expression)
-      ? node.expression.arguments?.map((arg) => context.computeSchema(arg))
-      : [];
-    return new DecoratorSchema(location, name, doc);
+      ? await pMapSeries(node.expression.arguments, (arg) => context.computeSchema(arg))
+      : undefined;
+    return new DecoratorSchema(location, name, doc, args);
   }
 }

@@ -1,8 +1,13 @@
 import { SchemaLocation, SchemaNode } from '../schema-node';
 import { DocSchema } from './docs';
 
-export class Decorator extends SchemaNode {
-  constructor(readonly location: SchemaLocation, readonly name: string, readonly doc?: DocSchema) {
+export class DecoratorSchema extends SchemaNode {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly name: string,
+    readonly doc?: DocSchema,
+    readonly args?: SchemaNode[]
+  ) {
     super();
   }
 
@@ -15,13 +20,15 @@ export class Decorator extends SchemaNode {
       ...super.toObject(),
       name: this.name,
       doc: this.doc?.toObject(),
+      args: this.args?.map((arg) => arg.toObject()),
     };
   }
 
-  static fromObject(obj: Record<string, any>): Decorator {
+  static fromObject(obj: Record<string, any>): DecoratorSchema {
     const location = obj.location;
     const name = obj.name;
     const doc = obj.doc ? DocSchema.fromObject(obj.doc) : undefined;
-    return new Decorator(location, name, doc);
+    const args = obj.args ? obj.args.map((arg: any) => SchemaNode.fromObject(arg)) : undefined;
+    return new DecoratorSchema(location, name, doc, args);
   }
 }

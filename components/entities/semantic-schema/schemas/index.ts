@@ -39,4 +39,8 @@ export { ConditionalTypeSchema } from './conditional-type';
 export { ExpressionWithTypeArgumentsSchema } from './expression-with-arguments';
 export { NamedTupleSchema } from './named-tuple';
 export { UnImplementedSchema } from './unimplemented-schema';
+export { ObjectLiteralExpressionSchema } from './object-literal-expression';
+export { ArrayLiteralExpressionSchema } from './array-literal-expression';
+export { PropertyAssignmentSchema } from './property-assignment';
+export { DecoratorSchema } from './decorator';
 export * from './docs';

@@ -101,6 +101,8 @@ export class RefactoringMain {
   }
 
   async refactorVariableAndClassesUsingAST(component: Component, sourceId: ComponentID, targetId: ComponentID) {
+    console.log('🚀 ~ RefactoringMain ~ refactorVariableAndClassesUsingAST ~ targetId:', targetId);
+    console.log('🚀 ~ RefactoringMain ~ refactorVariableAndClassesUsingAST ~ sourceId:', sourceId);
     // transform kebabCase importPaths and PascalCase importNames
     await this.replaceMultipleStrings(
       [component],
@@ -174,6 +176,7 @@ export class RefactoringMain {
   ): Promise<{
     changedComponents: Component[];
   }> {
+    console.log('🚀 ~ RefactoringMain ~ transformers:', transformers);
     const changedComponents = await Promise.all(
       components.map(async (comp) => {
         const hasChanged = await this.replaceMultipleStringsInOneComp(
