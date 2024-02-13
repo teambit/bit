@@ -21,11 +21,10 @@ export class DependentsGetter {
     private options: ImportOptions
   ) {}
 
-  async getDependents(compIds: ComponentID[]): Promise<ComponentID[]> {
+  async getDependents(targetCompIds: ComponentID[]): Promise<ComponentID[]> {
     this.logger.setStatusLine('finding dependents');
     const { silent } = this.options;
     const graph = await this.graph.getGraphIds();
-    const targetCompIds = await this.workspace.resolveMultipleComponentIds(compIds);
     const sourceIds = await this.workspace.listIds();
     const getIdsForThrough = () => {
       if (!this.options.dependentsVia) return undefined;

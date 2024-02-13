@@ -4,7 +4,7 @@ import yn from 'yn';
 import { ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { checkoutOutput } from '@teambit/checkout';
-import { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
 import { LaneData, serializeLaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { BitError } from '@teambit/bit-error';
@@ -219,6 +219,7 @@ a lane created from another lane contains all the components of the original lan
   constructor(private lanes: LanesMain) {}
 
   async report([name]: [string], createLaneOptions: CreateLaneOptions & { remoteScope?: string }): Promise<string> {
+    if (!this.lanes.workspace) throw new OutsideWorkspaceError();
     const currentLane = await this.lanes.getCurrentLane();
     if (createLaneOptions.remoteScope) createLaneOptions.scope = createLaneOptions.remoteScope;
     const result = await this.lanes.createLane(name, createLaneOptions);

@@ -22,13 +22,17 @@ export class LoginCmd implements Command {
   remoteOp = true;
   skipWorkspace = true;
 
-  constructor(private cloud: CloudMain) {}
+  private port?: string;
+
+  constructor(private cloud: CloudMain, _port?: number) {
+    this.port = _port?.toString();
+  }
 
   async report(
     [], // eslint-disable-line no-empty-pattern
     {
       cloudDomain,
-      port = '8889',
+      port,
       suppressBrowserLaunch,
       noBrowser,
       machineName,
@@ -43,11 +47,16 @@ export class LoginCmd implements Command {
     if (suppressBrowserLaunch) {
       noBrowser = true;
     }
-    const result = await this.cloud.login(port, noBrowser, machineName, cloudDomain, undefined);
+    const result = await this.cloud.login(port || this.port, noBrowser, machineName, cloudDomain, undefined);
     if (result?.isAlreadyLoggedIn) {
       return chalk.yellow(`already logged in as ${result?.username}`);
     }
-    return chalk.green(`success! logged in as ${result?.username}`);
+    const npmrcUpdateResultMsg = result?.npmrcUpdateResult?.success
+      ? ' and .npmrc updated'
+      : chalk.red(
+          ` but failed to update .npmrc. Visit https://bit.dev/reference/packages/npmrc for instructions on how to update it manually`
+        );
+    return chalk.green(`success! logged in as ${result?.username}${npmrcUpdateResultMsg}`);
   }
 
   async json(
@@ -65,11 +74,15 @@ export class LoginCmd implements Command {
       noBrowser?: boolean;
       machineName?: string;
     }
-  ): Promise<{ username?: string; token?: string }> {
+  ): Promise<{ username?: string; token?: string; successfullyUpdatedNpmrc?: boolean }> {
     if (suppressBrowserLaunch) {
       noBrowser = true;
     }
     const result = await this.cloud.login(port, noBrowser, machineName, cloudDomain);
-    return { username: result?.username, token: result?.token };
+    return {
+      username: result?.username,
+      token: result?.token,
+      successfullyUpdatedNpmrc: result?.npmrcUpdateResult?.success,
+    };
   }
 }

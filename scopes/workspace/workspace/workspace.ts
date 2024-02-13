@@ -374,8 +374,7 @@ export class Workspace implements ComponentFactory {
    */
   async list(filter?: { offset: number; limit: number }, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(loadOpts || {});
-    const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
-    const ids = await this.resolveMultipleComponentIds(legacyIds);
+    const ids = this.consumer.bitMap.getAllIdsAvailableOnLane();
     const idsToGet = filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids;
     return this.getMany(idsToGet, loadOptsWithDefaults);
   }
@@ -390,8 +389,7 @@ export class Workspace implements ComponentFactory {
    * (see the invalid criteria in ConsumerComponent.isComponentInvalidByErrorType())
    */
   async listInvalid(): Promise<InvalidComponent[]> {
-    const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
-    const ids = await this.resolveMultipleComponentIds(legacyIds);
+    const ids = this.consumer.bitMap.getAllIdsAvailableOnLane();
     return this.componentLoader.getInvalid(ids);
   }
 
@@ -477,8 +475,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async locallyDeletedIds(): Promise<ComponentID[]> {
-    const locallyDeleted = await this.componentList.listLocallySoftRemoved();
-    return this.resolveMultipleComponentIds(locallyDeleted);
+    return this.componentList.listLocallySoftRemoved();
   }
 
   async duringMergeIds(): Promise<ComponentID[]> {
@@ -491,8 +488,7 @@ export class Workspace implements ComponentFactory {
    * get all workspace component-ids
    */
   getAllComponentIds(): Promise<ComponentID[]> {
-    const bitIds = this.consumer.bitMap.getAllBitIds();
-    return this.resolveMultipleComponentIds(bitIds);
+    return this.listIds();
   }
 
   async listTagPendingIds(): Promise<ComponentID[]> {
@@ -564,7 +560,7 @@ export class Workspace implements ComponentFactory {
         if (modelComp && modelComp.head) compsWithHead.push(id);
       })
     );
-    return this.resolveMultipleComponentIds(compsWithHead);
+    return compsWithHead;
   }
 
   async getSavedGraphOfComponentIfExist(component: Component) {
@@ -840,7 +836,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   async triggerOnWorkspaceConfigChange(): Promise<void> {
     this.logger.debug('triggerOnWorkspaceConfigChange, reloading workspace config');
     const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
-    await config.reloadWorkspaceConfig();
+    await config.reloadWorkspaceConfig(this.path);
     const workspaceConfig = config.workspaceConfig;
     if (!workspaceConfig) throw new Error('workspace config is missing from Config aspect');
     const configOfWorkspaceAspect = workspaceConfig.extensions.findExtension(WorkspaceAspect.id);
