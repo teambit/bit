@@ -192,9 +192,11 @@ export class DependenciesMain {
   async getDependencies(id: string, scope?: boolean): Promise<DependenciesResults> {
     const factory = this.workspace && !scope ? this.workspace : this.scope;
     const compId = await (this.workspace || this.scope).resolveComponentId(id);
-    const graph = await this.graph.getGraphIds([compId], { host: factory as any });
+    const comp = await (this.workspace || this.scope).get(compId);
+    const compIdWithVer = comp.id;
+    const graph = await this.graph.getGraphIds([compIdWithVer], { host: factory as any });
 
-    return { graph, id: graph.seederIds[0] };
+    return { graph, id: compIdWithVer };
   }
 
   async loadDependencies(component: ConsumerComponent, opts: DependencyLoaderOpts) {
