@@ -564,6 +564,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async getSavedGraphOfComponentIfExist(component: Component) {
+    if (!component.id.hasVersion()) return null;
     const flattenedEdges = await this.scope.getFlattenedEdges(component.id);
     const versionObj = await this.scope.getBitObjectVersionById(component.id);
     if (!flattenedEdges || !versionObj) return null;
