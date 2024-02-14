@@ -63,6 +63,10 @@ import {
   ConstructorTransformer,
   ExpressionStatementTransformer,
   ModuleDeclarationTransformer,
+  ObjectLiteralExpressionTransformer,
+  ArrayLiteralExpressionTransformer,
+  PropertyAssignmentTransformer,
+  DecoratorTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
@@ -405,6 +409,10 @@ export class TypescriptMain {
       new ImportDeclarationTransformer(),
       new ExpressionStatementTransformer(),
       new ModuleDeclarationTransformer(),
+      new DecoratorTransformer(),
+      new ObjectLiteralExpressionTransformer(),
+      new ArrayLiteralExpressionTransformer(),
+      new PropertyAssignmentTransformer(),
     ]);
 
     if (workspace) {

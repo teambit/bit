@@ -1,5 +1,5 @@
-import { SchemaNode, SchemaRegistry } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaLocation } from '../schema-node';
+import { SchemaLocation, SchemaNode } from '../schema-node';
+import { SchemaRegistry } from '../schema-registry';
 
 export class ObjectLiteralExpressionSchema extends SchemaNode {
   constructor(readonly members: SchemaNode[], readonly location: SchemaLocation) {

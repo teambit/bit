@@ -1,6 +1,6 @@
 import ts, { Node, ObjectLiteralExpression } from 'typescript';
 import pMapSeries from 'p-map-series';
-import { ObjectLiteralExpressionSchema } from '@teambit/semantics.entities.semantic-schema/schemas/object-literal-expression';
+import { ObjectLiteralExpressionSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaExtractorContext, SchemaTransformer } from '..';
 
 export class ObjectLiteralExpressionTransformer implements SchemaTransformer {
