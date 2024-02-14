@@ -1,8 +1,8 @@
 import { ComponentID } from '@teambit/component-id';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
+import type { DependenciesInfo } from '@teambit/legacy/dist/scope/graph/scope-graph';
 import GraphLib from 'graphlib';
 import { uniq } from 'lodash';
-import { DependenciesInfo } from '../../../src/scope/graph/scope-graph';
 
 export type DepEdgeType = 'prod' | 'dev' | 'ext';
 
