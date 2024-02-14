@@ -9,7 +9,10 @@ export class NpmrcGenerateCmd implements Command {
   description = 'update npmrc file with scope, registry, and token information from bit.cloud';
   group = 'cloud';
   alias = '';
-  options = [['', 'dry-run', 'show the .npmrc file content that will be written']] as CommandOptions;
+  options = [
+    ['', 'dry-run', 'show the .npmrc file content that will be written'],
+    ['f', 'force', 'force update the .npmrc file even if there are conflicts'],
+  ] as CommandOptions;
   skipWorkspace = false;
 
   private port?: string;
@@ -30,16 +33,55 @@ export class NpmrcGenerateCmd implements Command {
       }
       await this.cloud.login(this.port);
     }
-    const config = await this.cloud.generateNpmrc({ dryRun: flags.dryRun });
+
+    const updateResult = await this.cloud.generateNpmrc({ force: flags.force, dryRun: flags.dryRun });
+
     if (flags.dryRun) {
-      return chalk.green(`.npmrc file content that will be written:\n${config}`);
+      let message = chalk.green(`.npmrc file content that would be written:\n\n${updateResult.configUpdates}`);
+      if (updateResult.conflicts && updateResult.conflicts.length > 0) {
+        const conflictDetails = this.extractConflictDetails(updateResult.conflicts);
+        message += `\n\n${chalk.yellow('Conflicts detected:')} \n${conflictDetails}\n${chalk.yellow(
+          'Use --force to override these conflicts.'
+        )}`;
+      }
+      return message;
     }
-    return chalk.green(`.npmrc file has been updated successfully`);
+    if (updateResult.conflicts && updateResult.conflicts.length > 0) {
+      return this.handleNpmrcConflicts(updateResult.conflicts);
+    }
+    return chalk.green('The .npmrc file has been updated successfully.');
   }
 
   async json() {
     const config = await this.cloud.generateNpmrc();
     return { config };
+  }
+
+  extractConflictDetails(conflicts) {
+    return conflicts
+      .map(
+        (conflict, index) =>
+          `${chalk.yellow(`Conflict #${index + 1}:`)}
+Original: ${chalk.red(conflict.original)}
+Modification: ${chalk.green(conflict.modifications)}`
+      )
+      .join('\n\n');
+  }
+
+  async handleNpmrcConflicts(conflicts): Promise<string> {
+    const conflictDetails = this.extractConflictDetails(conflicts);
+    const question = `\n${chalk.yellow(
+      'Conflict detected in .npmrc file with the following configurations:'
+    )}\n${conflictDetails}\n${chalk.yellow(
+      'Do you want to override these configurations and continue? [yes(y)/no(n)]'
+    )}`;
+
+    const ok = await yesno({ question });
+    if (!ok) {
+      return chalk.red('Updating .npmrc was aborted due to conflicts.');
+    }
+    await this.cloud.generateNpmrc({ force: true });
+    return chalk.green('.npmrc has been updated successfully after resolving conflicts.');
   }
 }
 
