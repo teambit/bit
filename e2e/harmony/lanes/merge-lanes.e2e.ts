@@ -172,6 +172,25 @@ describe('merge lanes', function () {
       expect(mergeOutput).to.not.have.string('unable to switch to "main", the lane was not found');
     });
   });
+  describe('merge main into a lane when it is locally deleted on the lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane('dev');
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.mergeLane('dev');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('dev');
+      helper.command.softRemoveOnLane('comp1');
+    });
+    it('should show a descriptive error explaining why it cannot be merged', () => {
+      const cmd = () => helper.command.mergeLane('main', '-x');
+      expect(cmd).to.throw('component is locally deleted');
+    });
+  });
   describe('merging main into local lane when main has tagged versions', () => {
     let mergeOutput: string;
     before(() => {

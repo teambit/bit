@@ -557,10 +557,10 @@ export class ScopeMain implements ComponentFactory {
       { reFetchUnBuiltVersion: false, lane, reason: `to build graph-ids from the scope` }
     );
 
-    const allFlattened = componentsWithoutSavedGraph
+    const allFlattened: ComponentID[] = componentsWithoutSavedGraph
       .map((component) => component.state._consumer.getAllFlattenedDependencies())
       .flat();
-    const allFlattenedUniq = ComponentIdList.uniqFromArray(allFlattened);
+    const allFlattenedUniq = ComponentIdList.uniqFromArray(allFlattened.concat(ids));
 
     const addEdges = (compId: ComponentID, dependencies: ConsumerComponent['dependencies'], label: DepEdgeType) => {
       dependencies.get().forEach((dep) => {

@@ -1,5 +1,7 @@
-import { ComponentID } from '@teambit/component';
+import { ComponentID } from '@teambit/component-id';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
+import type { DependenciesInfo } from '@teambit/legacy/dist/scope/graph/scope-graph';
+import GraphLib from 'graphlib';
 import { uniq } from 'lodash';
 
 export type DepEdgeType = 'prod' | 'dev' | 'ext' | 'peer';
@@ -9,9 +11,24 @@ type DependencyEdge = Edge<DepEdgeType>;
 export type CompIdGraph = Graph<ComponentID, DepEdgeType>;
 
 export class ComponentIdGraph extends Graph<ComponentID, DepEdgeType> {
+  private _graphLib: GraphLib.Graph;
   seederIds: ComponentID[] = []; // component IDs that started the graph. (if from workspace, the .bitmap ids normally)
   constructor(nodes: ComponentIdNode[] = [], edges: DependencyEdge[] = []) {
     super(nodes, edges);
+  }
+
+  get graphLib() {
+    if (!this._graphLib) {
+      // convert clearGraph to graphLib
+      this._graphLib = new GraphLib.Graph();
+      this.nodes.forEach((node) => {
+        this._graphLib.setNode(node.id.toString());
+      });
+      this.edges.forEach((edge) => {
+        this._graphLib.setEdge(edge.sourceId.toString(), edge.targetId.toString(), edge.attr);
+      });
+    }
+    return this._graphLib;
   }
 
   protected create(nodes: ComponentIdNode[] = [], edges: DependencyEdge[] = []): this {
@@ -153,6 +170,40 @@ export class ComponentIdGraph extends Graph<ComponentID, DepEdgeType> {
     return this.successorsSubgraph(componentIds, {
       edgeFilter: (edge: DependencyEdge) => edge.attr === 'prod',
     });
+  }
+
+  getDependenciesInfo(id: ComponentID): DependenciesInfo[] {
+    const dijkstraResults = GraphLib.alg.dijkstra(this.graphLib, id.toString());
+    const dependencies: DependenciesInfo[] = [];
+    Object.keys(dijkstraResults).forEach((idStr) => {
+      const distance = dijkstraResults[idStr].distance;
+      if (distance === Infinity || distance === 0) {
+        // there is no dependency or it's the same component (distance zero)
+        return;
+      }
+      const predecessor = dijkstraResults[idStr].predecessor;
+      const dependencyType = this.edge(predecessor, idStr);
+      dependencies.push({
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        id: this.node(idStr)!.attr,
+        depth: distance,
+        parent: predecessor,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        dependencyType: dependencyType!.attr,
+      });
+    });
+    dependencies.sort((a, b) => a.depth - b.depth);
+    return dependencies;
+  }
+
+  getDependenciesAsObjectTree(id: string): Record<string, any> {
+    const label = id;
+    const children = this.outEdges(id);
+    if (!children || children.length === 0) {
+      return { label };
+    }
+    const nodes = children.map((child) => this.getDependenciesAsObjectTree(child.targetId.toString()));
+    return { label, nodes };
   }
 
   private shouldLimitToSeedersOnly() {
