@@ -564,14 +564,9 @@ export class Workspace implements ComponentFactory {
   }
 
   async getSavedGraphOfComponentIfExist(component: Component) {
-    let versionObj: Version;
-    try {
-      versionObj = await this.scope.legacyScope.getVersionInstance(component.id);
-    } catch (err) {
-      return null;
-    }
-
-    const flattenedEdges = await versionObj.getFlattenedEdges(this.scope.legacyScope.objects);
+    const flattenedEdges = await this.scope.getFlattenedEdges(component.id);
+    const versionObj = await this.scope.getBitObjectVersionById(component.id);
+    if (!flattenedEdges || !versionObj) return null;
     if (!flattenedEdges.length && versionObj.flattenedDependencies.length) {
       // there are flattenedDependencies, so must be edges, if they're empty, it's because the component was tagged
       // with a version < ~0.0.901, so this flattenedEdges wasn't exist.
