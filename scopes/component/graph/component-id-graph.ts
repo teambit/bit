@@ -196,14 +196,26 @@ export class ComponentIdGraph extends Graph<ComponentID, DepEdgeType> {
     return dependencies;
   }
 
-  getDependenciesAsObjectTree(id: string): Record<string, any> {
-    const label = id;
-    const children = this.outEdges(id);
-    if (!children || children.length === 0) {
-      return { label };
-    }
-    const nodes = children.map((child) => this.getDependenciesAsObjectTree(child.targetId.toString()));
-    return { label, nodes };
+  getDependenciesAsObjectTree(idStr: string): Record<string, any> {
+    const depsInfo = this.getDependenciesInfo(ComponentID.fromString(idStr));
+    const populateTreeItems = (id: string, treeItems: Array<{ label: string; nodes?: Array<Record<string, any>> }>) => {
+      const children = depsInfo.filter((depInfo) => depInfo.parent === id);
+      if (!children || children.length === 0) {
+        return;
+      }
+      children.forEach((child) => {
+        const { id: compId } = child;
+        const label = compId.toString();
+        const currentNodes = [];
+        treeItems.push({ label, nodes: currentNodes });
+        populateTreeItems(label, currentNodes);
+      });
+    };
+
+    const currentNodes = [];
+    const tree = { label: idStr, nodes: currentNodes };
+    populateTreeItems(idStr, currentNodes);
+    return tree;
   }
 
   private shouldLimitToSeedersOnly() {
