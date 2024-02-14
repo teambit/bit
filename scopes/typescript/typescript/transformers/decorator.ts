@@ -19,9 +19,10 @@ export class DecoratorTransformer implements SchemaTransformer {
     const name = node.expression.getFirstToken()?.getText() || '';
     const location = context.getLocation(node);
     const doc = await context.jsDocToDocSchema(node);
-    const args = ts.isCallExpression(node.expression)
-      ? await pMapSeries(node.expression.arguments, (arg) => context.computeSchema(arg))
-      : undefined;
+    const args =
+      ts.isCallExpression(node.expression) && node.expression.arguments.length
+        ? await pMapSeries(node.expression.arguments, (arg) => context.computeSchema(arg))
+        : undefined;
     return new DecoratorSchema(location, name, doc, args);
   }
 }
