@@ -24,7 +24,8 @@ export class LiteralValueTransformer implements SchemaTransformer {
       node.kind === ts.SyntaxKind.UndefinedKeyword ||
       node.kind === ts.SyntaxKind.BigIntLiteral ||
       node.kind === ts.SyntaxKind.RegularExpressionLiteral ||
-      node.kind === ts.SyntaxKind.NewExpression
+      node.kind === ts.SyntaxKind.NewExpression ||
+      node.kind === ts.SyntaxKind.NoSubstitutionTemplateLiteral
     );
   }
   async getIdentifiers(): Promise<Identifier[]> {

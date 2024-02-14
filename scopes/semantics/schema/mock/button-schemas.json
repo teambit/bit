@@ -2032,8 +2032,8 @@
                   "__schema": "VariableLikeSchema",
                   "location": {
                     "filePath": "index.ts",
-                    "line": 145,
-                    "character": 48
+                    "line": 146,
+                    "character": 3
                   },
                   "signature": "(property) name: string",
                   "name": "name",
@@ -2041,8 +2041,8 @@
                     "__schema": "KeywordTypeSchema",
                     "location": {
                       "filePath": "index.ts",
-                      "line": 145,
-                      "character": 54
+                      "line": 146,
+                      "character": 9
                     },
                     "name": "string"
                   },
@@ -2052,8 +2052,8 @@
                   "__schema": "VariableLikeSchema",
                   "location": {
                     "filePath": "index.ts",
-                    "line": 145,
-                    "character": 62
+                    "line": 147,
+                    "character": 3
                   },
                   "signature": "(property) description: string",
                   "name": "description",
@@ -2061,8 +2061,8 @@
                     "__schema": "KeywordTypeSchema",
                     "location": {
                       "filePath": "index.ts",
-                      "line": 145,
-                      "character": 75
+                      "line": 147,
+                      "character": 16
                     },
                     "name": "string"
                   },
@@ -2072,8 +2072,8 @@
                   "__schema": "VariableLikeSchema",
                   "location": {
                     "filePath": "index.ts",
-                    "line": 145,
-                    "character": 83
+                    "line": 148,
+                    "character": 3
                   },
                   "signature": "(property) fn?: (() => string) | undefined",
                   "name": "fn",
@@ -2081,8 +2081,8 @@
                     "__schema": "FunctionLikeSchema",
                     "location": {
                       "filePath": "index.ts",
-                      "line": 145,
-                      "character": 88
+                      "line": 148,
+                      "character": 8
                     },
                     "signature": "(): string",
                     "name": "",
@@ -2091,8 +2091,8 @@
                       "__schema": "KeywordTypeSchema",
                       "location": {
                         "filePath": "index.ts",
-                        "line": 145,
-                        "character": 94
+                        "line": 148,
+                        "character": 14
                       },
                       "name": "string"
                     },
@@ -2104,8 +2104,8 @@
                   "__schema": "VariableLikeSchema",
                   "location": {
                     "filePath": "index.ts",
-                    "line": 145,
-                    "character": 102
+                    "line": 149,
+                    "character": 3
                   },
                   "signature": "(property) class?: ClassSomething | undefined",
                   "name": "class",
@@ -2113,8 +2113,8 @@
                     "__schema": "TypeRefSchema",
                     "location": {
                       "filePath": "index.ts",
-                      "line": 145,
-                      "character": 110
+                      "line": 149,
+                      "character": 11
                     },
                     "name": "ClassSomething"
                   },
@@ -2124,7 +2124,7 @@
                   "__schema": "VariableLikeSchema",
                   "location": {
                     "filePath": "index.ts",
-                    "line": 146,
+                    "line": 150,
                     "character": 3
                   },
                   "signature": "(property) arr?: [string, number, boolean, boolean, number | undefined, (a: string) => void, {\n    a: string;\n    b: number;\n}, ClassSomething] | undefined",
@@ -2133,7 +2133,7 @@
                     "__schema": "TupleTypeSchema",
                     "location": {
                       "filePath": "index.ts",
-                      "line": 146,
+                      "line": 150,
                       "character": 9
                     },
                     "elements": [
@@ -2141,7 +2141,7 @@
                         "__schema": "KeywordTypeSchema",
                         "location": {
                           "filePath": "index.ts",
-                          "line": 147,
+                          "line": 151,
                           "character": 5
                         },
                         "name": "string"
@@ -2150,7 +2150,7 @@
                         "__schema": "KeywordTypeSchema",
                         "location": {
                           "filePath": "index.ts",
-                          "line": 148,
+                          "line": 152,
                           "character": 5
                         },
                         "name": "number"
@@ -2159,7 +2159,7 @@
                         "__schema": "KeywordTypeSchema",
                         "location": {
                           "filePath": "index.ts",
-                          "line": 149,
+                          "line": 153,
                           "character": 5
                         },
                         "name": "boolean"
@@ -2168,7 +2168,7 @@
                         "__schema": "KeywordTypeSchema",
                         "location": {
                           "filePath": "index.ts",
-                          "line": 150,
+                          "line": 154,
                           "character": 5
                         },
                         "name": "boolean"
@@ -2177,7 +2177,7 @@
                         "__schema": "TypeUnionSchema",
                         "location": {
                           "filePath": "index.ts",
-                          "line": 151,
+                          "line": 155,
                           "character": 5
                         },
                         "types": [
@@ -2185,7 +2185,7 @@
                             "__schema": "KeywordTypeSchema",
                             "location": {
                               "filePath": "index.ts",
-                              "line": 151,
+                              "line": 155,
                               "character": 5
                             },
                             "name": "number"
@@ -2194,7 +2194,7 @@
                             "__schema": "KeywordTypeSchema",
                             "location": {
                               "filePath": "index.ts",
-                              "line": 151,
+                              "line": 155,
                               "character": 14
                             },
                             "name": "undefined"
@@ -2205,7 +2205,7 @@
                         "__schema": "FunctionLikeSchema",
                         "location": {
                           "filePath": "index.ts",
-                          "line": 152,
+                          "line": 156,
                           "character": 5
                         },
                         "signature": "(a: string): void",
@@ -2215,7 +2215,7 @@
                             "__schema": "ParameterSchema",
                             "location": {
                               "filePath": "index.ts",
-                              "line": 152,
+                              "line": 156,
                               "character": 6
                             },
                             "name": "a",
@@ -2223,7 +2223,7 @@
                               "__schema": "KeywordTypeSchema",
                               "location": {
                                 "filePath": "index.ts",
-                                "line": 152,
+                                "line": 156,
                                 "character": 9
                               },
                               "name": "string"
@@ -2236,7 +2236,7 @@
                           "__schema": "KeywordTypeSchema",
                           "location": {
                             "filePath": "index.ts",
-                            "line": 152,
+                            "line": 156,
                             "character": 20
                           },
                           "name": "void"
@@ -2247,7 +2247,7 @@
                         "__schema": "TypeLiteralSchema",
                         "location": {
                           "filePath": "index.ts",
-                          "line": 153,
+                          "line": 157,
                           "character": 5
                         },
                         "members": [
@@ -2255,7 +2255,7 @@
                             "__schema": "VariableLikeSchema",
                             "location": {
                               "filePath": "index.ts",
-                              "line": 153,
+                              "line": 157,
                               "character": 7
                             },
                             "signature": "(property) a: string",
@@ -2264,7 +2264,7 @@
                               "__schema": "KeywordTypeSchema",
                               "location": {
                                 "filePath": "index.ts",
-                                "line": 153,
+                                "line": 157,
                                 "character": 10
                               },
                               "name": "string"
@@ -2275,7 +2275,7 @@
                             "__schema": "VariableLikeSchema",
                             "location": {
                               "filePath": "index.ts",
-                              "line": 153,
+                              "line": 157,
                               "character": 18
                             },
                             "signature": "(property) b: number",
@@ -2284,7 +2284,7 @@
                               "__schema": "KeywordTypeSchema",
                               "location": {
                                 "filePath": "index.ts",
-                                "line": 153,
+                                "line": 157,
                                 "character": 21
                               },
                               "name": "number"
@@ -2297,7 +2297,7 @@
                         "__schema": "TypeRefSchema",
                         "location": {
                           "filePath": "index.ts",
-                          "line": 154,
+                          "line": 158,
                           "character": 5
                         },
                         "name": "ClassSomething"
@@ -2329,7 +2329,7 @@
         "__schema": "ClassSchema",
         "location": {
           "filePath": "index.ts",
-          "line": 163,
+          "line": 166,
           "character": 1
         },
         "signature": "class ExampleDecoratorOne",
@@ -2339,7 +2339,7 @@
             "__schema": "FunctionLikeSchema",
             "location": {
               "filePath": "index.ts",
-              "line": 165,
+              "line": 168,
               "character": 3
             },
             "signature": "(method) ExampleDecoratorOne.exampleMethod(): void",
@@ -2349,7 +2349,7 @@
               "__schema": "InferenceTypeSchema",
               "location": {
                 "filePath": "index.ts",
-                "line": 165,
+                "line": 168,
                 "character": 3
               },
               "type": "void"
@@ -2364,7 +2364,7 @@
             "__schema": "DecoratorSchema",
             "location": {
               "filePath": "index.ts",
-              "line": 163,
+              "line": 166,
               "character": 1
             },
             "name": "CustomClassDecorator",
@@ -2373,7 +2373,7 @@
                 "__schema": "ObjectLiteralExpressionSchema",
                 "location": {
                   "filePath": "index.ts",
-                  "line": 163,
+                  "line": 166,
                   "character": 23
                 },
                 "members": [
@@ -2381,7 +2381,7 @@
                     "__schema": "PropertyAssignmentSchema",
                     "location": {
                       "filePath": "index.ts",
-                      "line": 163,
+                      "line": 166,
                       "character": 25
                     },
                     "name": "name",
@@ -2389,7 +2389,7 @@
                       "__schema": "LiteralValueSchema",
                       "location": {
                         "filePath": "index.ts",
-                        "line": 163,
+                        "line": 166,
                         "character": 31
                       },
                       "value": "ExampleClass2"
@@ -2399,7 +2399,7 @@
                     "__schema": "PropertyAssignmentSchema",
                     "location": {
                       "filePath": "index.ts",
-                      "line": 163,
+                      "line": 166,
                       "character": 48
                     },
                     "name": "description",
@@ -2407,7 +2407,7 @@
                       "__schema": "LiteralValueSchema",
                       "location": {
                         "filePath": "index.ts",
-                        "line": 163,
+                        "line": 166,
                         "character": 61
                       },
                       "value": "This is an example class 2"
@@ -2423,7 +2423,7 @@
         "__schema": "FunctionLikeSchema",
         "location": {
           "filePath": "index.ts",
-          "line": 171,
+          "line": 174,
           "character": 1
         },
         "signature": "function ValidateArgs(config: {\n    type: string;\n    required: boolean;\n}): (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void",
@@ -2433,7 +2433,7 @@
             "__schema": "ParameterSchema",
             "location": {
               "filePath": "index.ts",
-              "line": 171,
+              "line": 174,
               "character": 30
             },
             "name": "config",
@@ -2441,7 +2441,7 @@
               "__schema": "TypeLiteralSchema",
               "location": {
                 "filePath": "index.ts",
-                "line": 171,
+                "line": 174,
                 "character": 38
               },
               "members": [
@@ -2449,7 +2449,7 @@
                   "__schema": "VariableLikeSchema",
                   "location": {
                     "filePath": "index.ts",
-                    "line": 171,
+                    "line": 174,
                     "character": 40
                   },
                   "signature": "(property) type: string",
@@ -2458,7 +2458,7 @@
                     "__schema": "KeywordTypeSchema",
                     "location": {
                       "filePath": "index.ts",
-                      "line": 171,
+                      "line": 174,
                       "character": 46
                     },
                     "name": "string"
@@ -2469,7 +2469,7 @@
                   "__schema": "VariableLikeSchema",
                   "location": {
                     "filePath": "index.ts",
-                    "line": 171,
+                    "line": 174,
                     "character": 54
                   },
                   "signature": "(property) required: boolean",
@@ -2478,7 +2478,7 @@
                     "__schema": "KeywordTypeSchema",
                     "location": {
                       "filePath": "index.ts",
-                      "line": 171,
+                      "line": 174,
                       "character": 64
                     },
                     "name": "boolean"
@@ -2495,7 +2495,7 @@
           "__schema": "InferenceTypeSchema",
           "location": {
             "filePath": "index.ts",
-            "line": 171,
+            "line": 174,
             "character": 1
           },
           "type": "(target: any, propertyKey: string, descriptor: PropertyDescriptor) => void"
@@ -2508,7 +2508,7 @@
         "__schema": "ClassSchema",
         "location": {
           "filePath": "index.ts",
-          "line": 186,
+          "line": 189,
           "character": 1
         },
         "signature": "class ExampleDecoratorTwo",
@@ -2518,7 +2518,7 @@
             "__schema": "FunctionLikeSchema",
             "location": {
               "filePath": "index.ts",
-              "line": 190,
+              "line": 197,
               "character": 3
             },
             "signature": "(method) ExampleDecoratorTwo.exampleMethod(input: string): void",
@@ -2528,7 +2528,7 @@
                 "__schema": "ParameterSchema",
                 "location": {
                   "filePath": "index.ts",
-                  "line": 191,
+                  "line": 198,
                   "character": 17
                 },
                 "name": "input",
@@ -2536,7 +2536,7 @@
                   "__schema": "KeywordTypeSchema",
                   "location": {
                     "filePath": "index.ts",
-                    "line": 191,
+                    "line": 198,
                     "character": 24
                   },
                   "name": "string"
@@ -2549,7 +2549,7 @@
               "__schema": "InferenceTypeSchema",
               "location": {
                 "filePath": "index.ts",
-                "line": 190,
+                "line": 197,
                 "character": 3
               },
               "type": "void"
@@ -2564,7 +2564,7 @@
             "__schema": "DecoratorSchema",
             "location": {
               "filePath": "index.ts",
-              "line": 186,
+              "line": 189,
               "character": 1
             },
             "name": "CustomClassDecorator",
@@ -2573,7 +2573,7 @@
                 "__schema": "ObjectLiteralExpressionSchema",
                 "location": {
                   "filePath": "index.ts",
-                  "line": 186,
+                  "line": 189,
                   "character": 23
                 },
                 "members": [
@@ -2581,16 +2581,16 @@
                     "__schema": "PropertyAssignmentSchema",
                     "location": {
                       "filePath": "index.ts",
-                      "line": 186,
-                      "character": 25
+                      "line": 190,
+                      "character": 3
                     },
                     "name": "name",
                     "value": {
                       "__schema": "LiteralValueSchema",
                       "location": {
                         "filePath": "index.ts",
-                        "line": 186,
-                        "character": 31
+                        "line": 190,
+                        "character": 9
                       },
                       "value": "ExampleClass"
                     }
@@ -2599,16 +2599,16 @@
                     "__schema": "PropertyAssignmentSchema",
                     "location": {
                       "filePath": "index.ts",
-                      "line": 186,
-                      "character": 47
+                      "line": 191,
+                      "character": 3
                     },
                     "name": "description",
                     "value": {
                       "__schema": "LiteralValueSchema",
                       "location": {
                         "filePath": "index.ts",
-                        "line": 186,
-                        "character": 60
+                        "line": 191,
+                        "character": 16
                       },
                       "value": "This is an example class"
                     }
@@ -2617,16 +2617,16 @@
                     "__schema": "PropertyAssignmentSchema",
                     "location": {
                       "filePath": "index.ts",
-                      "line": 186,
-                      "character": 88
+                      "line": 192,
+                      "character": 3
                     },
                     "name": "fn",
                     "value": {
                       "__schema": "FunctionLikeSchema",
                       "location": {
                         "filePath": "index.ts",
-                        "line": 186,
-                        "character": 92
+                        "line": 192,
+                        "character": 7
                       },
                       "signature": "function(): string",
                       "name": "",
@@ -2635,8 +2635,8 @@
                         "__schema": "InferenceTypeSchema",
                         "location": {
                           "filePath": "index.ts",
-                          "line": 186,
-                          "character": 92
+                          "line": 192,
+                          "character": 7
                         },
                         "type": "string"
                       },
@@ -2647,16 +2647,16 @@
                     "__schema": "PropertyAssignmentSchema",
                     "location": {
                       "filePath": "index.ts",
-                      "line": 186,
-                      "character": 104
+                      "line": 193,
+                      "character": 3
                     },
                     "name": "class",
                     "value": {
                       "__schema": "LiteralValueSchema",
                       "location": {
                         "filePath": "index.ts",
-                        "line": 186,
-                        "character": 111
+                        "line": 193,
+                        "character": 10
                       },
                       "value": "new ClassSomething('dsa')"
                     }
@@ -2665,7 +2665,7 @@
                     "__schema": "PropertyAssignmentSchema",
                     "location": {
                       "filePath": "index.ts",
-                      "line": 187,
+                      "line": 194,
                       "character": 3
                     },
                     "name": "arr",
@@ -2673,7 +2673,7 @@
                       "__schema": "ArrayLiteralExpressionSchema",
                       "location": {
                         "filePath": "index.ts",
-                        "line": 187,
+                        "line": 194,
                         "character": 8
                       },
                       "members": [
@@ -2681,7 +2681,7 @@
                           "__schema": "LiteralValueSchema",
                           "location": {
                             "filePath": "index.ts",
-                            "line": 187,
+                            "line": 194,
                             "character": 9
                           },
                           "value": "hi"
@@ -2690,7 +2690,7 @@
                           "__schema": "LiteralValueSchema",
                           "location": {
                             "filePath": "index.ts",
-                            "line": 187,
+                            "line": 194,
                             "character": 15
                           },
                           "value": "5"
@@ -2699,7 +2699,7 @@
                           "__schema": "LiteralValueSchema",
                           "location": {
                             "filePath": "index.ts",
-                            "line": 187,
+                            "line": 194,
                             "character": 18
                           },
                           "value": "true"
@@ -2708,26 +2708,25 @@
                           "__schema": "LiteralValueSchema",
                           "location": {
                             "filePath": "index.ts",
-                            "line": 187,
+                            "line": 194,
                             "character": 24
                           },
                           "value": "false"
                         },
                         {
-                          "__schema": "UnImplementedSchema",
+                          "__schema": "InferenceTypeSchema",
                           "location": {
                             "filePath": "index.ts",
-                            "line": 187,
+                            "line": 194,
                             "character": 31
                           },
-                          "name": "undefined",
-                          "type": "Identifier"
+                          "type": "undefined"
                         },
                         {
                           "__schema": "FunctionLikeSchema",
                           "location": {
                             "filePath": "index.ts",
-                            "line": 187,
+                            "line": 194,
                             "character": 42
                           },
                           "signature": "function(): void",
@@ -2737,7 +2736,7 @@
                             "__schema": "InferenceTypeSchema",
                             "location": {
                               "filePath": "index.ts",
-                              "line": 187,
+                              "line": 194,
                               "character": 42
                             },
                             "type": "void"
@@ -2748,24 +2747,24 @@
                           "__schema": "ObjectLiteralExpressionSchema",
                           "location": {
                             "filePath": "index.ts",
-                            "line": 187,
-                            "character": 53
+                            "line": 194,
+                            "character": 52
                           },
                           "members": [
                             {
                               "__schema": "PropertyAssignmentSchema",
                               "location": {
                                 "filePath": "index.ts",
-                                "line": 187,
-                                "character": 55
+                                "line": 194,
+                                "character": 54
                               },
                               "name": "a",
                               "value": {
                                 "__schema": "LiteralValueSchema",
                                 "location": {
                                   "filePath": "index.ts",
-                                  "line": 187,
-                                  "character": 58
+                                  "line": 194,
+                                  "character": 57
                                 },
                                 "value": "hi"
                               }
@@ -2774,16 +2773,16 @@
                               "__schema": "PropertyAssignmentSchema",
                               "location": {
                                 "filePath": "index.ts",
-                                "line": 187,
-                                "character": 64
+                                "line": 194,
+                                "character": 63
                               },
                               "name": "b",
                               "value": {
                                 "__schema": "LiteralValueSchema",
                                 "location": {
                                   "filePath": "index.ts",
-                                  "line": 187,
-                                  "character": 67
+                                  "line": 194,
+                                  "character": 66
                                 },
                                 "value": "5"
                               }
@@ -2794,8 +2793,8 @@
                           "__schema": "LiteralValueSchema",
                           "location": {
                             "filePath": "index.ts",
-                            "line": 187,
-                            "character": 72
+                            "line": 194,
+                            "character": 71
                           },
                           "value": "new ClassSomething('dsa')"
                         }

@@ -1,4 +1,5 @@
 import { SchemaLocation, SchemaNode } from '../schema-node';
+import { SchemaRegistry } from '../schema-registry';
 import { DocSchema } from './docs';
 
 export class DecoratorSchema extends SchemaNode {
@@ -28,7 +29,7 @@ export class DecoratorSchema extends SchemaNode {
     const location = obj.location;
     const name = obj.name;
     const doc = obj.doc ? DocSchema.fromObject(obj.doc) : undefined;
-    const args = obj.args ? obj.args.map((arg: any) => SchemaNode.fromObject(arg)) : undefined;
+    const args = obj.args ? obj.args.map((arg) => SchemaRegistry.fromObject(arg)) : undefined;
     return new DecoratorSchema(location, name, doc, args);
   }
 }

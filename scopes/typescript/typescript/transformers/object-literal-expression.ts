@@ -1,6 +1,6 @@
 import ts, { Node, ObjectLiteralExpression } from 'typescript';
 import pMapSeries from 'p-map-series';
-import { ObjectLiteralExpressionSchema } from '@teambit/semantics.entities.semantic-schema';
+import { ObjectLiteralExpressionSchema, UnImplementedSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaExtractorContext, SchemaTransformer } from '..';
 
 export class ObjectLiteralExpressionTransformer implements SchemaTransformer {
@@ -13,8 +13,13 @@ export class ObjectLiteralExpressionTransformer implements SchemaTransformer {
   }
 
   async transform(node: ObjectLiteralExpression, context: SchemaExtractorContext) {
-    const properties = await pMapSeries(node.properties, (prop) => {
-      return context.computeSchema(prop);
+    const properties = await pMapSeries(node.properties, async (prop) => {
+      const schema = await context.computeSchema(prop);
+      if (schema instanceof UnImplementedSchema) {
+        const typeRef = await context.resolveType(prop, prop.getText());
+        return typeRef;
+      }
+      return schema;
     });
     const location = context.getLocation(node);
     return new ObjectLiteralExpressionSchema(properties, location);
