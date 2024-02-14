@@ -58,7 +58,7 @@ export async function bitObjectListToGraph(bitObjectsList: BitObjectList): Promi
         const peer = new Dependency('peer');
         dependencies.forEach((depId) => addDep(depId, runTime));
         [...devDependencies, ...extensionDependencies].forEach((depId) => addDep(depId, dev));
-        [...peerDependencies].forEach((depId) => addDep(depId, peer));
+        peerDependencies.forEach((depId) => addDep(depId, peer));
       });
     })
   );
