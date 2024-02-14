@@ -246,6 +246,7 @@ export async function install(
   const opts: InstallOptions = {
     allProjects,
     autoInstallPeers: options.autoInstallPeers,
+    autoInstallPeersFromHighestMatch: options.autoInstallPeers,
     confirmModulesPurge: false,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
