@@ -1957,6 +1957,856 @@
         },
         "isOptional": false,
         "defaultValue": "genericFunction<string>('')"
+      },
+      {
+        "__schema": "FunctionLikeSchema",
+        "location": {
+          "filePath": "index.ts",
+          "line": 135,
+          "character": 1
+        },
+        "signature": "function LogMethod(message: string): (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void",
+        "name": "LogMethod",
+        "params": [
+          {
+            "__schema": "ParameterSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 135,
+              "character": 27
+            },
+            "name": "message",
+            "type": {
+              "__schema": "KeywordTypeSchema",
+              "location": {
+                "filePath": "index.ts",
+                "line": 135,
+                "character": 36
+              },
+              "name": "string"
+            },
+            "isOptional": false,
+            "isSpread": false
+          }
+        ],
+        "returnType": {
+          "__schema": "InferenceTypeSchema",
+          "location": {
+            "filePath": "index.ts",
+            "line": 135,
+            "character": 1
+          },
+          "type": "(target: any, propertyKey: string, descriptor: PropertyDescriptor) => void"
+        },
+        "modifiers": [
+          "export"
+        ]
+      },
+      {
+        "__schema": "FunctionLikeSchema",
+        "location": {
+          "filePath": "index.ts",
+          "line": 145,
+          "character": 1
+        },
+        "signature": "function CustomClassDecorator(config: {\n    name: string;\n    description: string;\n    fn?: (() => string) | undefined;\n    class?: ClassSomething | undefined;\n    arr?: [string, number, boolean, boolean, number | undefined, (a: string) => void, {\n        a: string;\n        b: number;\n    }, ClassSomething] | undefined;\n}): (target: any) => void",
+        "name": "CustomClassDecorator",
+        "params": [
+          {
+            "__schema": "ParameterSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 145,
+              "character": 38
+            },
+            "name": "config",
+            "type": {
+              "__schema": "TypeLiteralSchema",
+              "location": {
+                "filePath": "index.ts",
+                "line": 145,
+                "character": 46
+              },
+              "members": [
+                {
+                  "__schema": "VariableLikeSchema",
+                  "location": {
+                    "filePath": "index.ts",
+                    "line": 145,
+                    "character": 48
+                  },
+                  "signature": "(property) name: string",
+                  "name": "name",
+                  "type": {
+                    "__schema": "KeywordTypeSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 145,
+                      "character": 54
+                    },
+                    "name": "string"
+                  },
+                  "isOptional": false
+                },
+                {
+                  "__schema": "VariableLikeSchema",
+                  "location": {
+                    "filePath": "index.ts",
+                    "line": 145,
+                    "character": 62
+                  },
+                  "signature": "(property) description: string",
+                  "name": "description",
+                  "type": {
+                    "__schema": "KeywordTypeSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 145,
+                      "character": 75
+                    },
+                    "name": "string"
+                  },
+                  "isOptional": false
+                },
+                {
+                  "__schema": "VariableLikeSchema",
+                  "location": {
+                    "filePath": "index.ts",
+                    "line": 145,
+                    "character": 83
+                  },
+                  "signature": "(property) fn?: (() => string) | undefined",
+                  "name": "fn",
+                  "type": {
+                    "__schema": "FunctionLikeSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 145,
+                      "character": 88
+                    },
+                    "signature": "(): string",
+                    "name": "",
+                    "params": [],
+                    "returnType": {
+                      "__schema": "KeywordTypeSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 145,
+                        "character": 94
+                      },
+                      "name": "string"
+                    },
+                    "modifiers": []
+                  },
+                  "isOptional": true
+                },
+                {
+                  "__schema": "VariableLikeSchema",
+                  "location": {
+                    "filePath": "index.ts",
+                    "line": 145,
+                    "character": 102
+                  },
+                  "signature": "(property) class?: ClassSomething | undefined",
+                  "name": "class",
+                  "type": {
+                    "__schema": "TypeRefSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 145,
+                      "character": 110
+                    },
+                    "name": "ClassSomething"
+                  },
+                  "isOptional": true
+                },
+                {
+                  "__schema": "VariableLikeSchema",
+                  "location": {
+                    "filePath": "index.ts",
+                    "line": 146,
+                    "character": 3
+                  },
+                  "signature": "(property) arr?: [string, number, boolean, boolean, number | undefined, (a: string) => void, {\n    a: string;\n    b: number;\n}, ClassSomething] | undefined",
+                  "name": "arr",
+                  "type": {
+                    "__schema": "TupleTypeSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 146,
+                      "character": 9
+                    },
+                    "elements": [
+                      {
+                        "__schema": "KeywordTypeSchema",
+                        "location": {
+                          "filePath": "index.ts",
+                          "line": 147,
+                          "character": 5
+                        },
+                        "name": "string"
+                      },
+                      {
+                        "__schema": "KeywordTypeSchema",
+                        "location": {
+                          "filePath": "index.ts",
+                          "line": 148,
+                          "character": 5
+                        },
+                        "name": "number"
+                      },
+                      {
+                        "__schema": "KeywordTypeSchema",
+                        "location": {
+                          "filePath": "index.ts",
+                          "line": 149,
+                          "character": 5
+                        },
+                        "name": "boolean"
+                      },
+                      {
+                        "__schema": "KeywordTypeSchema",
+                        "location": {
+                          "filePath": "index.ts",
+                          "line": 150,
+                          "character": 5
+                        },
+                        "name": "boolean"
+                      },
+                      {
+                        "__schema": "TypeUnionSchema",
+                        "location": {
+                          "filePath": "index.ts",
+                          "line": 151,
+                          "character": 5
+                        },
+                        "types": [
+                          {
+                            "__schema": "KeywordTypeSchema",
+                            "location": {
+                              "filePath": "index.ts",
+                              "line": 151,
+                              "character": 5
+                            },
+                            "name": "number"
+                          },
+                          {
+                            "__schema": "KeywordTypeSchema",
+                            "location": {
+                              "filePath": "index.ts",
+                              "line": 151,
+                              "character": 14
+                            },
+                            "name": "undefined"
+                          }
+                        ]
+                      },
+                      {
+                        "__schema": "FunctionLikeSchema",
+                        "location": {
+                          "filePath": "index.ts",
+                          "line": 152,
+                          "character": 5
+                        },
+                        "signature": "(a: string): void",
+                        "name": "",
+                        "params": [
+                          {
+                            "__schema": "ParameterSchema",
+                            "location": {
+                              "filePath": "index.ts",
+                              "line": 152,
+                              "character": 6
+                            },
+                            "name": "a",
+                            "type": {
+                              "__schema": "KeywordTypeSchema",
+                              "location": {
+                                "filePath": "index.ts",
+                                "line": 152,
+                                "character": 9
+                              },
+                              "name": "string"
+                            },
+                            "isOptional": false,
+                            "isSpread": false
+                          }
+                        ],
+                        "returnType": {
+                          "__schema": "KeywordTypeSchema",
+                          "location": {
+                            "filePath": "index.ts",
+                            "line": 152,
+                            "character": 20
+                          },
+                          "name": "void"
+                        },
+                        "modifiers": []
+                      },
+                      {
+                        "__schema": "TypeLiteralSchema",
+                        "location": {
+                          "filePath": "index.ts",
+                          "line": 153,
+                          "character": 5
+                        },
+                        "members": [
+                          {
+                            "__schema": "VariableLikeSchema",
+                            "location": {
+                              "filePath": "index.ts",
+                              "line": 153,
+                              "character": 7
+                            },
+                            "signature": "(property) a: string",
+                            "name": "a",
+                            "type": {
+                              "__schema": "KeywordTypeSchema",
+                              "location": {
+                                "filePath": "index.ts",
+                                "line": 153,
+                                "character": 10
+                              },
+                              "name": "string"
+                            },
+                            "isOptional": false
+                          },
+                          {
+                            "__schema": "VariableLikeSchema",
+                            "location": {
+                              "filePath": "index.ts",
+                              "line": 153,
+                              "character": 18
+                            },
+                            "signature": "(property) b: number",
+                            "name": "b",
+                            "type": {
+                              "__schema": "KeywordTypeSchema",
+                              "location": {
+                                "filePath": "index.ts",
+                                "line": 153,
+                                "character": 21
+                              },
+                              "name": "number"
+                            },
+                            "isOptional": false
+                          }
+                        ]
+                      },
+                      {
+                        "__schema": "TypeRefSchema",
+                        "location": {
+                          "filePath": "index.ts",
+                          "line": 154,
+                          "character": 5
+                        },
+                        "name": "ClassSomething"
+                      }
+                    ]
+                  },
+                  "isOptional": true
+                }
+              ]
+            },
+            "isOptional": false,
+            "isSpread": false
+          }
+        ],
+        "returnType": {
+          "__schema": "InferenceTypeSchema",
+          "location": {
+            "filePath": "index.ts",
+            "line": 145,
+            "character": 1
+          },
+          "type": "(target: any) => void"
+        },
+        "modifiers": [
+          "export"
+        ]
+      },
+      {
+        "__schema": "ClassSchema",
+        "location": {
+          "filePath": "index.ts",
+          "line": 163,
+          "character": 1
+        },
+        "signature": "class ExampleDecoratorOne",
+        "name": "ExampleDecoratorOne",
+        "members": [
+          {
+            "__schema": "FunctionLikeSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 165,
+              "character": 3
+            },
+            "signature": "(method) ExampleDecoratorOne.exampleMethod(): void",
+            "name": "exampleMethod",
+            "params": [],
+            "returnType": {
+              "__schema": "InferenceTypeSchema",
+              "location": {
+                "filePath": "index.ts",
+                "line": 165,
+                "character": 3
+              },
+              "type": "void"
+            },
+            "modifiers": []
+          }
+        ],
+        "extendsNodes": [],
+        "implementNodes": [],
+        "decorators": [
+          {
+            "__schema": "DecoratorSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 163,
+              "character": 1
+            },
+            "name": "CustomClassDecorator",
+            "args": [
+              {
+                "__schema": "ObjectLiteralExpressionSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 163,
+                  "character": 23
+                },
+                "members": [
+                  {
+                    "__schema": "PropertyAssignmentSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 163,
+                      "character": 25
+                    },
+                    "name": "name",
+                    "value": {
+                      "__schema": "LiteralValueSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 163,
+                        "character": 31
+                      },
+                      "value": "ExampleClass2"
+                    }
+                  },
+                  {
+                    "__schema": "PropertyAssignmentSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 163,
+                      "character": 48
+                    },
+                    "name": "description",
+                    "value": {
+                      "__schema": "LiteralValueSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 163,
+                        "character": 61
+                      },
+                      "value": "This is an example class 2"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "__schema": "FunctionLikeSchema",
+        "location": {
+          "filePath": "index.ts",
+          "line": 171,
+          "character": 1
+        },
+        "signature": "function ValidateArgs(config: {\n    type: string;\n    required: boolean;\n}): (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void",
+        "name": "ValidateArgs",
+        "params": [
+          {
+            "__schema": "ParameterSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 171,
+              "character": 30
+            },
+            "name": "config",
+            "type": {
+              "__schema": "TypeLiteralSchema",
+              "location": {
+                "filePath": "index.ts",
+                "line": 171,
+                "character": 38
+              },
+              "members": [
+                {
+                  "__schema": "VariableLikeSchema",
+                  "location": {
+                    "filePath": "index.ts",
+                    "line": 171,
+                    "character": 40
+                  },
+                  "signature": "(property) type: string",
+                  "name": "type",
+                  "type": {
+                    "__schema": "KeywordTypeSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 171,
+                      "character": 46
+                    },
+                    "name": "string"
+                  },
+                  "isOptional": false
+                },
+                {
+                  "__schema": "VariableLikeSchema",
+                  "location": {
+                    "filePath": "index.ts",
+                    "line": 171,
+                    "character": 54
+                  },
+                  "signature": "(property) required: boolean",
+                  "name": "required",
+                  "type": {
+                    "__schema": "KeywordTypeSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 171,
+                      "character": 64
+                    },
+                    "name": "boolean"
+                  },
+                  "isOptional": false
+                }
+              ]
+            },
+            "isOptional": false,
+            "isSpread": false
+          }
+        ],
+        "returnType": {
+          "__schema": "InferenceTypeSchema",
+          "location": {
+            "filePath": "index.ts",
+            "line": 171,
+            "character": 1
+          },
+          "type": "(target: any, propertyKey: string, descriptor: PropertyDescriptor) => void"
+        },
+        "modifiers": [
+          "export"
+        ]
+      },
+      {
+        "__schema": "ClassSchema",
+        "location": {
+          "filePath": "index.ts",
+          "line": 186,
+          "character": 1
+        },
+        "signature": "class ExampleDecoratorTwo",
+        "name": "ExampleDecoratorTwo",
+        "members": [
+          {
+            "__schema": "FunctionLikeSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 190,
+              "character": 3
+            },
+            "signature": "(method) ExampleDecoratorTwo.exampleMethod(input: string): void",
+            "name": "exampleMethod",
+            "params": [
+              {
+                "__schema": "ParameterSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 191,
+                  "character": 17
+                },
+                "name": "input",
+                "type": {
+                  "__schema": "KeywordTypeSchema",
+                  "location": {
+                    "filePath": "index.ts",
+                    "line": 191,
+                    "character": 24
+                  },
+                  "name": "string"
+                },
+                "isOptional": false,
+                "isSpread": false
+              }
+            ],
+            "returnType": {
+              "__schema": "InferenceTypeSchema",
+              "location": {
+                "filePath": "index.ts",
+                "line": 190,
+                "character": 3
+              },
+              "type": "void"
+            },
+            "modifiers": []
+          }
+        ],
+        "extendsNodes": [],
+        "implementNodes": [],
+        "decorators": [
+          {
+            "__schema": "DecoratorSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 186,
+              "character": 1
+            },
+            "name": "CustomClassDecorator",
+            "args": [
+              {
+                "__schema": "ObjectLiteralExpressionSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 186,
+                  "character": 23
+                },
+                "members": [
+                  {
+                    "__schema": "PropertyAssignmentSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 186,
+                      "character": 25
+                    },
+                    "name": "name",
+                    "value": {
+                      "__schema": "LiteralValueSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 186,
+                        "character": 31
+                      },
+                      "value": "ExampleClass"
+                    }
+                  },
+                  {
+                    "__schema": "PropertyAssignmentSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 186,
+                      "character": 47
+                    },
+                    "name": "description",
+                    "value": {
+                      "__schema": "LiteralValueSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 186,
+                        "character": 60
+                      },
+                      "value": "This is an example class"
+                    }
+                  },
+                  {
+                    "__schema": "PropertyAssignmentSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 186,
+                      "character": 88
+                    },
+                    "name": "fn",
+                    "value": {
+                      "__schema": "FunctionLikeSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 186,
+                        "character": 92
+                      },
+                      "signature": "function(): string",
+                      "name": "",
+                      "params": [],
+                      "returnType": {
+                        "__schema": "InferenceTypeSchema",
+                        "location": {
+                          "filePath": "index.ts",
+                          "line": 186,
+                          "character": 92
+                        },
+                        "type": "string"
+                      },
+                      "modifiers": []
+                    }
+                  },
+                  {
+                    "__schema": "PropertyAssignmentSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 186,
+                      "character": 104
+                    },
+                    "name": "class",
+                    "value": {
+                      "__schema": "LiteralValueSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 186,
+                        "character": 111
+                      },
+                      "value": "new ClassSomething('dsa')"
+                    }
+                  },
+                  {
+                    "__schema": "PropertyAssignmentSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 187,
+                      "character": 3
+                    },
+                    "name": "arr",
+                    "value": {
+                      "__schema": "ArrayLiteralExpressionSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 187,
+                        "character": 8
+                      },
+                      "members": [
+                        {
+                          "__schema": "LiteralValueSchema",
+                          "location": {
+                            "filePath": "index.ts",
+                            "line": 187,
+                            "character": 9
+                          },
+                          "value": "hi"
+                        },
+                        {
+                          "__schema": "LiteralValueSchema",
+                          "location": {
+                            "filePath": "index.ts",
+                            "line": 187,
+                            "character": 15
+                          },
+                          "value": "5"
+                        },
+                        {
+                          "__schema": "LiteralValueSchema",
+                          "location": {
+                            "filePath": "index.ts",
+                            "line": 187,
+                            "character": 18
+                          },
+                          "value": "true"
+                        },
+                        {
+                          "__schema": "LiteralValueSchema",
+                          "location": {
+                            "filePath": "index.ts",
+                            "line": 187,
+                            "character": 24
+                          },
+                          "value": "false"
+                        },
+                        {
+                          "__schema": "UnImplementedSchema",
+                          "location": {
+                            "filePath": "index.ts",
+                            "line": 187,
+                            "character": 31
+                          },
+                          "name": "undefined",
+                          "type": "Identifier"
+                        },
+                        {
+                          "__schema": "FunctionLikeSchema",
+                          "location": {
+                            "filePath": "index.ts",
+                            "line": 187,
+                            "character": 42
+                          },
+                          "signature": "function(): void",
+                          "name": "",
+                          "params": [],
+                          "returnType": {
+                            "__schema": "InferenceTypeSchema",
+                            "location": {
+                              "filePath": "index.ts",
+                              "line": 187,
+                              "character": 42
+                            },
+                            "type": "void"
+                          },
+                          "modifiers": []
+                        },
+                        {
+                          "__schema": "ObjectLiteralExpressionSchema",
+                          "location": {
+                            "filePath": "index.ts",
+                            "line": 187,
+                            "character": 53
+                          },
+                          "members": [
+                            {
+                              "__schema": "PropertyAssignmentSchema",
+                              "location": {
+                                "filePath": "index.ts",
+                                "line": 187,
+                                "character": 55
+                              },
+                              "name": "a",
+                              "value": {
+                                "__schema": "LiteralValueSchema",
+                                "location": {
+                                  "filePath": "index.ts",
+                                  "line": 187,
+                                  "character": 58
+                                },
+                                "value": "hi"
+                              }
+                            },
+                            {
+                              "__schema": "PropertyAssignmentSchema",
+                              "location": {
+                                "filePath": "index.ts",
+                                "line": 187,
+                                "character": 64
+                              },
+                              "name": "b",
+                              "value": {
+                                "__schema": "LiteralValueSchema",
+                                "location": {
+                                  "filePath": "index.ts",
+                                  "line": 187,
+                                  "character": 67
+                                },
+                                "value": "5"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "__schema": "LiteralValueSchema",
+                          "location": {
+                            "filePath": "index.ts",
+                            "line": 187,
+                            "character": 72
+                          },
+                          "value": "new ClassSomething('dsa')"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     ],
     "internals": [

@@ -1,4 +1,4 @@
-import { ArrayLiteralExpressionSchema } from '@teambit/semantics.entities.semantic-schema';
+import { ArrayLiteralExpressionSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import ts, { ArrayLiteralExpression, Node } from 'typescript';
 import { SchemaExtractorContext, SchemaTransformer } from '..';
@@ -13,7 +13,7 @@ export class ArrayLiteralExpressionTransformer implements SchemaTransformer {
     return [];
   }
 
-  async transform(node: ArrayLiteralExpression, context: SchemaExtractorContext): Promise<any> {
+  async transform(node: ArrayLiteralExpression, context: SchemaExtractorContext): Promise<SchemaNode> {
     const members = await pMapSeries(node.elements, (element) => {
       return context.computeSchema(element);
     });

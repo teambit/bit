@@ -43,4 +43,5 @@ export { ObjectLiteralExpressionSchema } from './object-literal-expression';
 export { ArrayLiteralExpressionSchema } from './array-literal-expression';
 export { PropertyAssignmentSchema } from './property-assignment';
 export { DecoratorSchema } from './decorator';
+export { LiteralValueSchema } from './literal-value';
 export * from './docs';

@@ -40,3 +40,4 @@ export { DecoratorTransformer } from './decorator';
 export { ArrayLiteralExpressionTransformer } from './array-literal-expression';
 export { ObjectLiteralExpressionTransformer } from './object-literal-expression';
 export { PropertyAssignmentTransformer } from './property-assignment';
+export { LiteralValueTransformer } from './literal-value';
