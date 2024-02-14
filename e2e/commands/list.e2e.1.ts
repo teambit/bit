@@ -61,7 +61,7 @@ describe('bit list command', function () {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo@0.0.1');
-        helper.command.tagComponent('bar/foo', 'msg', '-f');
+        helper.command.tagComponent('bar/foo', 'msg', '--unmodified');
         helper.command.export();
 
         helper.scopeHelper.getClonedLocalScope(clonedScopePath);

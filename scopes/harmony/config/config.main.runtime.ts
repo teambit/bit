@@ -13,7 +13,7 @@ import LegacyWorkspaceConfig, {
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { findScopePath } from '@teambit/legacy/dist/utils';
 import { MainRuntime } from '@teambit/cli';
-import { GlobalConfig } from '@teambit/harmony';
+import { GlobalConfig, Harmony } from '@teambit/harmony';
 import path from 'path';
 import { transformLegacyPropsToExtensions, WorkspaceConfig, WorkspaceConfigFileProps } from './workspace-config';
 import { ConfigType, HostConfig } from './types';
@@ -50,8 +50,8 @@ export class ConfigMain {
     return this.scopeConfig;
   }
 
-  async reloadWorkspaceConfig() {
-    const workspaceConfig = await loadWorkspaceConfigIfExist();
+  async reloadWorkspaceConfig(cwd: string) {
+    const workspaceConfig = await loadWorkspaceConfigIfExist(cwd);
     if (workspaceConfig) this.workspaceConfig = workspaceConfig;
   }
 
@@ -99,12 +99,13 @@ export class ConfigMain {
   static slots = [];
   static dependencies = [];
   static config = {};
-  static async provider() {
+  static async provider(_deps, _config, _slots, harmony: Harmony) {
     LegacyWorkspaceConfig.registerOnWorkspaceConfigIsExist(onLegacyWorkspaceConfigIsExist());
     LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());
 
     let configMain: ConfigMain | any;
-    const workspaceConfig = await loadWorkspaceConfigIfExist();
+    const bitConfig = harmony.config.raw.get('teambit.harmony/bit') as any;
+    const workspaceConfig = await loadWorkspaceConfigIfExist(bitConfig?.cwd);
     if (workspaceConfig) {
       configMain = new ConfigMain(workspaceConfig, undefined);
     } else {
@@ -121,9 +122,9 @@ export class ConfigMain {
 
 ConfigAspect.addRuntime(ConfigMain);
 
-async function loadWorkspaceConfigIfExist(): Promise<WorkspaceConfig | undefined> {
-  const consumerInfo = await getConsumerInfo(process.cwd());
-  const configDirPath = consumerInfo?.path || process.cwd();
+async function loadWorkspaceConfigIfExist(cwd = process.cwd()): Promise<WorkspaceConfig | undefined> {
+  const consumerInfo = await getConsumerInfo(cwd);
+  const configDirPath = consumerInfo?.path || cwd;
   const scopePath = findScopePath(configDirPath);
   const workspaceConfig = await WorkspaceConfig.loadIfExist(configDirPath, scopePath);
   return workspaceConfig;

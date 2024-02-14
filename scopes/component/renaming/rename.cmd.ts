@@ -8,13 +8,13 @@ export type RenameOptions = {
   refactor?: boolean;
   preserve?: boolean;
   ast?: boolean;
-  delete?: boolean;
+  deprecate?: boolean;
 };
 
 export class RenameCmd implements Command {
   name = 'rename <current-name> <new-name>';
   description =
-    'rename component. if exported, create a new component and deprecate the original component. otherwise just renames current component';
+    'rename component. if exported, create a new component and delete the original component. otherwise just renames current component';
   helpUrl = 'reference/components/renaming-components';
   arguments = [
     {
@@ -34,7 +34,8 @@ export class RenameCmd implements Command {
     ['r', 'refactor', 'update the import/require statements in all dependent components (in the same workspace)'],
     ['', 'preserve', 'avoid renaming files and variables/classes according to the new component name'],
     ['', 'ast', 'EXPERIMENTAL. use ast to transform files instead of regex'],
-    ['', 'delete', 'EXPERIMENTAL. instead of deprecating the original component, delete it'],
+    ['', 'delete', 'DEPRECATED. this is now the default'],
+    ['', 'deprecate', 'instead of deleting the original component, deprecating it'],
     [
       'p',
       'path <relative-path>',

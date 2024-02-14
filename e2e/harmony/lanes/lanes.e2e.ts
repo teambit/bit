@@ -1107,7 +1107,7 @@ describe('bit lane command', function () {
     describe('add another snap and then untag only the last snap', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(afterFirstSnap);
-        helper.command.snapComponentWithoutBuild('comp1', '--force');
+        helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
         helper.command.reset('comp1', true);
       });
       it('should not show the component as new', () => {
