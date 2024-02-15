@@ -30,7 +30,8 @@ export class ClassSchema extends SchemaNode {
 
   toString() {
     const membersStr = this.members.map((m) => `* ${m.toString()}`).join('\n');
-    return `${chalk.bold.underline(this.name)}\n${membersStr}`;
+    const decoratorsStr = this.decorators?.map((decorator) => decorator.toString()).join('\n');
+    return `${this.decorators ? `${decoratorsStr}\n` : ''}${chalk.bold.underline(this.name)}\n${membersStr}`;
   }
 
   toObject() {

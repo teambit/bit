@@ -2354,7 +2354,29 @@
               },
               "type": "void"
             },
-            "modifiers": []
+            "modifiers": [],
+            "decorators": [
+              {
+                "__schema": "DecoratorSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 168,
+                  "character": 3
+                },
+                "name": "LogMethod",
+                "args": [
+                  {
+                    "__schema": "LiteralValueSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 168,
+                      "character": 14
+                    },
+                    "value": "This is a log message"
+                  }
+                ]
+              }
+            ]
           }
         ],
         "extendsNodes": [],
@@ -2554,7 +2576,66 @@
               },
               "type": "void"
             },
-            "modifiers": []
+            "modifiers": [],
+            "decorators": [
+              {
+                "__schema": "DecoratorSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 197,
+                  "character": 3
+                },
+                "name": "ValidateArgs",
+                "args": [
+                  {
+                    "__schema": "ObjectLiteralExpressionSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 197,
+                      "character": 17
+                    },
+                    "members": [
+                      {
+                        "__schema": "PropertyAssignmentSchema",
+                        "location": {
+                          "filePath": "index.ts",
+                          "line": 197,
+                          "character": 19
+                        },
+                        "name": "type",
+                        "value": {
+                          "__schema": "LiteralValueSchema",
+                          "location": {
+                            "filePath": "index.ts",
+                            "line": 197,
+                            "character": 25
+                          },
+                          "value": "string"
+                        }
+                      },
+                      {
+                        "__schema": "PropertyAssignmentSchema",
+                        "location": {
+                          "filePath": "index.ts",
+                          "line": 197,
+                          "character": 35
+                        },
+                        "name": "required",
+                        "value": {
+                          "__schema": "LiteralValueSchema",
+                          "location": {
+                            "filePath": "index.ts",
+                            "line": 197,
+                            "character": 45
+                          },
+                          "value": "true"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
           }
         ],
         "extendsNodes": [],
