@@ -49,6 +49,9 @@ export class FunctionLikeTransformer implements SchemaTransformer {
     const typeParameters = node.typeParameters?.map((typeParam) => typeParam.name.getText());
     const location = context.getLocation(node);
     const doc = await context.jsDocToDocSchema(node);
+    const decorators = node.decorators?.length
+      ? await pMapSeries(node.decorators, (decorator) => context.computeSchema(decorator))
+      : undefined;
 
     return new FunctionLikeSchema(
       location,
@@ -58,7 +61,8 @@ export class FunctionLikeTransformer implements SchemaTransformer {
       displaySig,
       modifiers as Modifier[],
       doc,
-      typeParameters
+      typeParameters,
+      decorators
     );
   }
 }

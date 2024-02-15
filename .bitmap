@@ -1220,6 +1220,20 @@
         "mainFile": "index.ts",
         "rootDir": "components/renderers/class"
     },
+    "renderers/decorator": {
+        "name": "renderers/decorator",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.api-reference",
+        "mainFile": "index.ts",
+        "rootDir": "components/renderers/decorator",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "renderers/enum": {
         "name": "renderers/enum",
         "scope": "teambit.api-reference",

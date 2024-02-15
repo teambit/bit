@@ -419,11 +419,14 @@ if you're willing to lose the history from the head to the specified version, us
     });
 
     // console.log('snapDataPerComp', JSON.stringify(snapDataPerComp, undefined, 2));
+
     const componentIds = compact(snapDataPerComp.map((t) => (t.isNew ? null : t.componentId)));
     const allCompIds = snapDataPerComp.map((s) => s.componentId);
     const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
     const newCompsData = compact(snapDataPerComp.map((t) => (t.isNew ? t : null)));
-    const newComponents = await Promise.all(newCompsData.map((newComp) => generateCompFromScope(this.scope, newComp)));
+    const newComponents = await Promise.all(
+      newCompsData.map((newComp) => generateCompFromScope(this.scope, newComp, this))
+    );
 
     await this.scope.import(componentIdsLatest, {
       preferDependencyGraph: false,
