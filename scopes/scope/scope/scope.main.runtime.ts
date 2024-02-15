@@ -50,6 +50,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { compact, slice, difference, partition } from 'lodash';
+import { DepEdge } from '@teambit/legacy/dist/scope/models/version';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
@@ -538,14 +539,16 @@ export class ScopeMain implements ComponentFactory {
     const componentsWithoutSavedGraph: Component[] = [];
 
     // try to add from saved graph
-    components.forEach((component) => {
-      const compGraph = this.getSavedGraphOfComponentIfExist(component);
-      if (!compGraph) {
-        componentsWithoutSavedGraph.push(component);
-        return;
-      }
-      graph.merge([graph]);
-    });
+    await Promise.all(
+      components.map(async (component) => {
+        const compGraph = await this.getSavedGraphOfComponentIfExist(component);
+        if (!compGraph) {
+          componentsWithoutSavedGraph.push(component);
+          return;
+        }
+        graph.merge([compGraph]);
+      })
+    );
     if (!componentsWithoutSavedGraph.length) {
       return graph;
     }
@@ -557,10 +560,10 @@ export class ScopeMain implements ComponentFactory {
       { reFetchUnBuiltVersion: false, lane, reason: `to build graph-ids from the scope` }
     );
 
-    const allFlattened = componentsWithoutSavedGraph
+    const allFlattened: ComponentID[] = componentsWithoutSavedGraph
       .map((component) => component.state._consumer.getAllFlattenedDependencies())
       .flat();
-    const allFlattenedUniq = ComponentIdList.uniqFromArray(allFlattened);
+    const allFlattenedUniq = ComponentIdList.uniqFromArray(allFlattened.concat(ids));
 
     const addEdges = (compId: ComponentID, dependencies: ConsumerComponent['dependencies'], label: DepEdgeType) => {
       dependencies.get().forEach((dep) => {
@@ -581,9 +584,25 @@ export class ScopeMain implements ComponentFactory {
     return graph;
   }
 
-  private getSavedGraphOfComponentIfExist(component: Component): Graph<ComponentID, DepEdgeType> | null {
+  async getFlattenedEdges(id: ComponentID): Promise<DepEdge[] | undefined> {
+    let versionObj: Version;
+    try {
+      versionObj = await this.legacyScope.getVersionInstance(id);
+    } catch (err) {
+      return undefined;
+    }
+
+    const flattenedEdges = await versionObj.getFlattenedEdges(this.legacyScope.objects);
+    return flattenedEdges;
+  }
+
+  private async getSavedGraphOfComponentIfExist(component: Component): Promise<Graph<ComponentID, DepEdgeType> | null> {
     const consumerComponent = component.state._consumer as ConsumerComponent;
-    const flattenedEdges = consumerComponent.flattenedEdges;
+    const flattenedEdges = await this.getFlattenedEdges(component.id);
+    if (!flattenedEdges)
+      throw new Error(
+        'getSavedGraphOfComponentIfExist failed to get flattenedEdges, it must not be undefined because the version object exists'
+      );
     if (!flattenedEdges.length && consumerComponent.flattenedDependencies.length) {
       // there are flattenedDependencies, so must be edges, if they're empty, it's because the component was tagged
       // with a version < ~0.0.901, so this flattenedEdges wasn't exist.
@@ -597,6 +616,7 @@ export class ScopeMain implements ComponentFactory {
     const nodes = consumerComponent.flattenedDependencies;
 
     const graph = new Graph<ComponentID, DepEdgeType>();
+    graph.setNode(new Node(component.id.toString(), component.id));
     nodes.forEach((node) => graph.setNode(new Node(node.toString(), node)));
     edges.forEach((edge) => graph.setEdge(new Edge(edge.source.toString(), edge.target.toString(), edge.type)));
     return graph;
@@ -1027,6 +1047,12 @@ export class ScopeMain implements ComponentFactory {
     throwIfNotExist = false
   ): Promise<Version | undefined> {
     return modelComponent.loadVersion(version, this.legacyScope.objects, throwIfNotExist);
+  }
+
+  async getBitObjectVersionById(id: ComponentID, throwIfNotExist = false): Promise<Version | undefined> {
+    const modelComponent = await this.getBitObjectModelComponent(id, throwIfNotExist);
+    if (!modelComponent) return undefined;
+    return this.getBitObjectVersion(modelComponent, id.version, throwIfNotExist);
   }
 
   /**

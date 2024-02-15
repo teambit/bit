@@ -11,10 +11,11 @@ import { cloneDeep, compact, set } from 'lodash';
 import pMapSeries from 'p-map-series';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import ComponentLoader, { DependencyLoaderOpts } from '@teambit/legacy/dist/consumer/component/component-loader';
-import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
+import GraphAspect, { ComponentIdGraph, GraphMain } from '@teambit/graph';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { snapToSemver } from '@teambit/component-package-version';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { DependenciesLoader } from './dependencies-loader/dependencies-loader';
 import { DependenciesData, OverridesDependenciesData } from './dependencies-loader/dependencies-data';
 import {
@@ -41,8 +42,7 @@ export type DependenciesResultsDebug = DebugDependencies &
   OverridesDependenciesData & { coreAspects: string[]; sources: { id: string; source: string }[] };
 
 export type DependenciesResults = {
-  scopeGraph: DependencyGraph;
-  workspaceGraph: DependencyGraph;
+  graph: ComponentIdGraph;
   id: ComponentID;
 };
 
@@ -58,9 +58,11 @@ export type BlameResult = {
 export class DependenciesMain {
   constructor(
     private workspace: Workspace,
+    private scope: ScopeMain,
     private dependencyResolver: DependencyResolverMain,
     private devFiles: DevFilesMain,
-    private aspectLoader: AspectLoaderMain
+    private aspectLoader: AspectLoaderMain,
+    private graph: GraphMain
   ) {}
 
   async setDependency(
@@ -187,18 +189,14 @@ export class DependenciesMain {
     return compIds;
   }
 
-  async getDependencies(id: string): Promise<DependenciesResults> {
-    // @todo: supports this on bare-scope.
-    if (!this.workspace) throw new OutsideWorkspaceError();
-    const compId = await this.workspace.resolveComponentId(id);
-    const consumer = this.workspace.consumer;
-    const scopeGraph = await DependencyGraph.buildGraphFromScope(consumer.scope);
-    const scopeDependencyGraph = new DependencyGraph(scopeGraph);
+  async getDependencies(id: string, scope?: boolean): Promise<DependenciesResults> {
+    const factory = this.workspace && !scope ? this.workspace : this.scope;
+    const compId = await (this.workspace || this.scope).resolveComponentId(id);
+    const comp = await (this.workspace || this.scope).get(compId);
+    const compIdWithVer = comp.id;
+    const graph = await this.graph.getGraphIds([compIdWithVer], { host: factory as any });
 
-    const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(consumer, true);
-    const workspaceDependencyGraph = new DependencyGraph(workspaceGraph);
-
-    return { scopeGraph: scopeDependencyGraph, workspaceGraph: workspaceDependencyGraph, id: compId };
+    return { graph, id: compIdWithVer };
   }
 
   async loadDependencies(component: ConsumerComponent, opts: DependencyLoaderOpts) {
@@ -346,18 +344,28 @@ export class DependenciesMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, DependencyResolverAspect, DevFilesAspect, AspectLoaderAspect];
+  static dependencies = [
+    CLIAspect,
+    WorkspaceAspect,
+    DependencyResolverAspect,
+    DevFilesAspect,
+    AspectLoaderAspect,
+    ScopeAspect,
+    GraphAspect,
+  ];
 
   static runtime = MainRuntime;
 
-  static async provider([cli, workspace, depsResolver, devFiles, aspectLoader]: [
+  static async provider([cli, workspace, depsResolver, devFiles, aspectLoader, scope, graph]: [
     CLIMain,
     Workspace,
     DependencyResolverMain,
     DevFilesMain,
-    AspectLoaderMain
+    AspectLoaderMain,
+    ScopeMain,
+    GraphMain
   ]) {
-    const depsMain = new DependenciesMain(workspace, depsResolver, devFiles, aspectLoader);
+    const depsMain = new DependenciesMain(workspace, scope, depsResolver, devFiles, aspectLoader, graph);
     const depsCmd = new DependenciesCmd();
     depsCmd.commands = [
       new DependenciesGetCmd(depsMain),
