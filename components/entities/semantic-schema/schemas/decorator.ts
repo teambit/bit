@@ -12,8 +12,14 @@ export class DecoratorSchema extends SchemaNode {
     super();
   }
 
+  getNodes() {
+    return this.args || [];
+  }
+
   toString() {
-    return `@${this.name}`;
+    // name and args
+    const argsStr = this.args?.map((arg) => arg.toString()).join(', ');
+    return `@${this.name}${argsStr ? `(${argsStr})` : ''}`;
   }
 
   toObject() {

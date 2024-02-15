@@ -6,8 +6,12 @@ export class ObjectLiteralExpressionSchema extends SchemaNode {
     super();
   }
 
+  getNodes() {
+    return this.members;
+  }
+
   toString(): string {
-    return this.members.map((member) => member.toString()).join('\n');
+    return `{\n${this.members.map((member) => `\t${member.toString()}`).join('\n')}\n}`;
   }
 
   toObject() {

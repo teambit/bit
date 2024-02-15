@@ -17,6 +17,7 @@ export class PropertyAssignmentTransformer implements SchemaTransformer {
     const name = node.name.getText();
     const value = await context.computeSchema(node.initializer);
     const location = context.getLocation(node);
-    return new PropertyAssignmentSchema(name, value, location);
+    const docs = await context.jsDocToDocSchema(node);
+    return new PropertyAssignmentSchema(name, value, location, docs);
   }
 }
