@@ -51,6 +51,9 @@ export class ClassDeclarationTransformer implements SchemaTransformer {
   }
 
   async transform(node: ClassDeclaration, context: SchemaExtractorContext) {
+    const decorators = node.decorators?.length
+      ? await pMapSeries(node.decorators, (decorator) => context.computeSchema(decorator))
+      : undefined;
     const className = this.getName(node);
     const extendsExpressionsWithTypeArgs = await this.getExpressionWithTypeArgs(
       node,
@@ -89,7 +92,8 @@ export class ClassDeclarationTransformer implements SchemaTransformer {
       doc,
       typeParameters,
       extendsExpressionsWithTypeArgs,
-      implementsExpressionsWithTypeArgs
+      implementsExpressionsWithTypeArgs,
+      decorators
     );
   }
 }
