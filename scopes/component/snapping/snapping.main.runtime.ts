@@ -408,8 +408,9 @@ if you're willing to lose the history from the head to the specified version, us
     const allCompIds = snapDataPerComp.map((s) => s.componentId);
     const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
     const newCompsData = compact(snapDataPerComp.map((t) => (t.isNew ? t : null)));
-    const newComponents = await Promise.all(newCompsData.map((newComp) => generateCompFromScope(this.scope, newComp)));
-
+    const newComponents = await Promise.all(
+      newCompsData.map((newComp) => generateCompFromScope(this.scope, newComp, this))
+    );
     let lane: Lane | undefined;
     const laneIdStr = params.lane;
     if (laneIdStr) {
