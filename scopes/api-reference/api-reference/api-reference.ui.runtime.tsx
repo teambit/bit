@@ -22,6 +22,7 @@ import { inferenceTypeRenderer } from '@teambit/api-reference.renderers.inferenc
 import { typeArrayRenderer } from '@teambit/api-reference.renderers.type-array';
 import { thisRenderer } from '@teambit/api-reference.renderers.this';
 import { APIRefRenderersProvider } from '@teambit/api-reference.hooks.use-api-renderers';
+import { decoratorRenderer } from '@teambit/api-reference.renderers.decorator';
 import { SchemaNodeConstructor, SchemaRegistry, Schemas } from '@teambit/semantics.entities.semantic-schema';
 import CodeAspect, { CodeUI } from '@teambit/code';
 import { TaggedExports } from '@teambit/tagged-exports';
@@ -81,6 +82,7 @@ export class APIReferenceUI {
     inferenceTypeRenderer,
     typeArrayRenderer,
     thisRenderer,
+    decoratorRenderer,
   ];
 
   static async provider(
