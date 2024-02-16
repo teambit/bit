@@ -30,6 +30,7 @@ type SnapFromScopeOptions = {
   ignoreIssues?: string;
   disableSnapPipeline?: boolean;
   forceDeploy?: boolean;
+  updateDependents?: boolean;
 } & BasicTagSnapParams;
 
 export class SnapFromScopeCmd implements Command {
@@ -72,6 +73,11 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "f
 [${Object.keys(IssuesClasses).join(', ')}]
 to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
     ],
+    [
+      '',
+      'update-dependents',
+      'EXPERIMENTAL. when snapped on a lane, mark it as update-dependents so it will be skipped from the workspace',
+    ],
     ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;
@@ -103,6 +109,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       ignoreBuildErrors = false,
       rebuildDepsGraph,
       forceDeploy = false,
+      updateDependents,
     }: SnapFromScopeOptions
   ) {
     const disableTagAndSnapPipelines = disableSnapPipeline;
@@ -125,6 +132,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       disableTagAndSnapPipelines,
       ignoreBuildErrors,
       rebuildDepsGraph,
+      updateDependents,
     });
 
     return {
