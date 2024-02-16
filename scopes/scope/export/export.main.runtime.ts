@@ -325,7 +325,8 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
 
     const getVersionsToExport = async (modelComponent: ModelComponent): Promise<Ref[]> => {
       if (exportHeadsOnly) {
-        const head = laneObject?.getComponent(modelComponent.toComponentId())?.head || modelComponent.head;
+        const head =
+          laneObject?.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId()) || modelComponent.head;
         if (!head)
           throw new Error(
             `getVersionsToExport should export the head only, but the head of ${modelComponent.id()} is missing`

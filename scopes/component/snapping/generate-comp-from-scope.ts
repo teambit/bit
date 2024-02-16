@@ -10,7 +10,7 @@ import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/componen
 import { DependenciesMain } from '@teambit/dependencies';
 import DependencyResolverAspect, { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { FileData } from './snap-from-scope.cmd';
-import { SnapDataParsed } from './snapping.main.runtime';
+import type { SnappingMain, SnapDataParsed } from './snapping.main.runtime';
 
 export type CompData = {
   componentId: ComponentID;
@@ -30,7 +30,11 @@ export type CompData = {
  * write the version and files into the scope as objects, so then it's possible to load Component object using the
  * ConsumerComponent.
  */
-export async function generateCompFromScope(scope: ScopeMain, compData: CompData): Promise<Component> {
+export async function generateCompFromScope(
+  scope: ScopeMain,
+  compData: CompData,
+  snapping: SnappingMain
+): Promise<Component> {
   if (!compData.files) throw new Error('generateComp: files are missing');
   const files = compData.files.map((file) => {
     return new SourceFile({ base: '.', path: file.path, contents: Buffer.from(file.content), test: false });
@@ -55,6 +59,10 @@ export async function generateCompFromScope(scope: ScopeMain, compData: CompData
       email: '',
     },
   });
+  // this is needed, otherwise in case of updating envs/aspects, the version-validator throws
+  // an error saying "the extension ${extensionId.toString()} is missing from the flattenedDependencies"
+  await snapping._addFlattenedDependenciesToComponents([consumerComponent]);
+
   const { version, files: filesBitObject } = await scope.legacyScope.sources.consumerComponentToVersion(
     consumerComponent
   );

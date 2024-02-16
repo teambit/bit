@@ -343,7 +343,10 @@ export class MergeLanesMain {
     const fromLaneObj = fromLaneId.isDefault() ? undefined : await this.lanes.importLaneObject(fromLaneId);
     const toLaneId = toLane === DEFAULT_LANE ? this.lanes.getDefaultLaneId() : LaneId.parse(toLane);
     const toLaneObj = toLaneId.isDefault() ? undefined : await this.lanes.importLaneObject(toLaneId);
-    const fromLaneBitIds = fromLaneObj?.toComponentIds();
+    const shouldIncludeUpdateDependents = toLaneId.isDefault();
+    const fromLaneBitIds = shouldIncludeUpdateDependents
+      ? fromLaneObj?.toComponentIdsIncludeUpdateDependents()
+      : fromLaneObj?.toComponentIds();
     const toLaneCompIds = toLaneObj?.toComponentIds();
     const laneIds = fromLaneBitIds || (toLaneCompIds as ComponentIdList); // one of them must be defined.
     const getIdsToMerge = async (): Promise<ComponentIdList> => {
@@ -358,6 +361,7 @@ export class MergeLanesMain {
       lane: fromLaneObj,
       ignoreMissingHead: true,
       includeVersionHistory: true,
+      includeUpdateDependents: shouldIncludeUpdateDependents,
       reason: `of "from" lane (${fromLaneId.name}) for lane-merge to get all version-history`,
     });
 

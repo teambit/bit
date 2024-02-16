@@ -362,6 +362,7 @@ export default class ScopeComponentsImporter {
       collectParents = false,
       fetchHeadIfLocalIsBehind = false,
       includeUnexported = false,
+      includeUpdateDependents = false,
       reason,
     }: {
       /**
@@ -391,6 +392,10 @@ export default class ScopeComponentsImporter {
        * the reason why this import is needed (shown during the import)
        */
       reason?: string;
+      /**
+       * whether to include the updateDependents components on a lane (needed only when merging lane to main)
+       */
+      includeUpdateDependents?: boolean;
     }
   ): Promise<void> {
     const idsWithoutNils = compact(ids);
@@ -435,6 +440,7 @@ export default class ScopeComponentsImporter {
       ignoreMissingHead,
       collectParents,
       delta: fetchHeadIfLocalIsBehind,
+      includeUpdateDependents,
       reason,
     });
   }
@@ -850,6 +856,7 @@ export default class ScopeComponentsImporter {
       ignoreMissingHead = false,
       collectParents = false,
       delta = false,
+      includeUpdateDependents,
       reason,
     }: {
       localFetch?: boolean;
@@ -858,6 +865,7 @@ export default class ScopeComponentsImporter {
       ignoreMissingHead?: boolean;
       collectParents?: boolean;
       delta?: boolean;
+      includeUpdateDependents?: boolean;
       reason?: string;
     }
   ): Promise<void> {
@@ -890,6 +898,7 @@ export default class ScopeComponentsImporter {
         laneId: lane?.id(),
         collectParents,
         returnNothingIfGivenVersionExists: delta,
+        includeUpdateDependents,
       },
       leftIds,
       lane,

@@ -66,6 +66,12 @@ export type FETCH_OPTIONS = {
    */
   includeLaneHistory?: boolean;
 
+  /**
+   * relevant when fetching components from a lane. it tells the remote to include the components in the
+   * updateDependents array.
+   */
+  includeUpdateDependents?: boolean;
+
   fetchSchema: string;
 };
 
@@ -223,7 +229,9 @@ async function fetchByType(
 
       const getBitIds = () => {
         if (!lane) return bitIds;
-        const laneIds = lane.toBitIds();
+        const laneIds = fetchOptions.includeUpdateDependents
+          ? lane.toComponentIdsIncludeUpdateDependents()
+          : lane.toComponentIds();
         return ComponentIdList.fromArray(
           bitIds.map((bitId) => {
             if (bitId.hasVersion()) return bitId;

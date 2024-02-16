@@ -194,6 +194,7 @@ export async function tagModelComponent({
   dependencyResolver,
   copyLogFromPreviousSnap = false,
   exitOnFirstFailedTask = false,
+  updateDependentsOnLane = false, // on lane, adds it into updateDependents prop
 }: {
   workspace?: Workspace;
   scope: ScopeMain;
@@ -211,6 +212,7 @@ export async function tagModelComponent({
   packageManagerConfigRootDir?: string;
   dependencyResolver: DependencyResolverMain;
   exitOnFirstFailedTask?: boolean;
+  updateDependentsOnLane?: boolean;
 } & BasicTagParams): Promise<{
   taggedComponents: ConsumerComponent[];
   autoTaggedResults: AutoTagResult[];
@@ -310,7 +312,15 @@ export async function tagModelComponent({
     await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
     if (!build) emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
-    await addComponentsToScope(snapping, allComponentsToTag, lane, Boolean(build), consumer, tagDataPerComp);
+    await addComponentsToScope(
+      snapping,
+      allComponentsToTag,
+      lane,
+      Boolean(build),
+      consumer,
+      tagDataPerComp,
+      updateDependentsOnLane
+    );
 
     if (workspace) {
       const modelComponents = await Promise.all(
@@ -428,13 +438,15 @@ async function addComponentsToScope(
   lane: Lane | null,
   shouldValidateVersion: boolean,
   consumer?: Consumer,
-  tagDataPerComp?: TagDataPerComp[]
+  tagDataPerComp?: TagDataPerComp[],
+  updateDependentsOnLane?: boolean
 ) {
   await mapSeries(components, async (component) => {
     const results = await snapping._addCompToObjects({
       source: component,
       lane,
       shouldValidateVersion,
+      updateDependentsOnLane,
     });
     if (!consumer) {
       const tagData = tagDataPerComp?.find((t) => t.componentId.isEqualWithoutVersion(component.id));
