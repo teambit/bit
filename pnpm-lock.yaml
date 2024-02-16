@@ -9,6 +9,7 @@ overrides:
   signal-exit@4: ^4.0.2
   '@types/react': ^17.0.67
   '@types/react-dom': ^17.0.21
+  minio@7.0: 7.1.1
 
 importers:
 
@@ -2566,9 +2567,6 @@ importers:
       '@teambit/documenter.ui.table-row':
         specifier: 4.1.13
         version: 4.1.13(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: ^0.0.65
-        version: 0.0.65
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -26263,9 +26261,15 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
+      assert:
+        specifier: ^2.1.0
+        version: 2.1.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
+      buffer:
+        specifier: 6.0.3
+        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -26320,6 +26324,9 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
+      punycode:
+        specifier: ^2.3.1
+        version: 2.3.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -26341,12 +26348,21 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
+      string_decoder:
+        specifier: ^1.3.0
+        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
+      url:
+        specifier: ^0.11.3
+        version: 0.11.3
+      util:
+        specifier: ^0.12.5
+        version: 0.12.5
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -32556,7 +32572,7 @@ packages:
   /@monaco-editor/react@4.4.6(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-Gr3uz3LYf33wlFE3eRnta4RxP5FSNxiIV9ENn2D2/rN8KgGAD8ecvcITRtsbbyuOuNkwbuHYxfeaz2Vr+CtyFA==}
     peerDependencies:
-      monaco-editor: '*'
+      monaco-editor: '>= 0.25.0 < 1'
       react: '*'
       react-dom: '*'
     dependencies:
@@ -33095,7 +33111,7 @@ packages:
     resolution: {integrity: sha512-5bKAIiu2HFrGHOkYXRKa9U/M/ssHDKmMM2d6t8w8kcc8WRZQ9Ep8l7sA55sP9YhJLMy9wFhXRYBvKKD8mx8lqQ==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/exec.files-include-install-scripts': 1.0.0
       '@pnpm/fetcher-base': 15.0.7
@@ -33952,7 +33968,7 @@ packages:
     resolution: {integrity: sha512-Zvmvdwiee2TEwUX+GM9xqa0HTFjTLvCVS5sk6n2Uf/CDm5u08wc7oREAhBLDKtnIzaK0AEIB9pwONK/GUcn9Gg==}
     engines: {node: '>=16.14'}
     peerDependencies:
-      '@pnpm/logger': '*'
+      '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/core-loggers': 9.0.6(@pnpm/logger@5.0.0)
       '@pnpm/error': 5.0.2
@@ -37547,7 +37563,7 @@ packages:
     resolution: {integrity: sha1-9dIl+N7tMk19y1KHuKigBn3Kd1o=}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      '@apollo/client': '*'
+      '@apollo/client': ^3.6.0
       react: '*'
       react-dom: '*'
     dependencies:
@@ -40377,7 +40393,7 @@ packages:
   /@teambit/defender.eslint-linter@1.0.16(@teambit/legacy@1.0.582):
     resolution: {integrity: sha512-RnlqKYALXAFMzBMOUD7KxCt4jKfLZ+vIRLPR9CDhHTQ7PauM/K6GX4CPquc9+X0EBRG3veDbNl9fo0FUIfxl3A==}
     peerDependencies:
-      '@teambit/legacy': '*'
+      '@teambit/legacy': ^1.0.520
     dependencies:
       '@teambit/bit-error': 0.0.402
       '@teambit/defender.linter-task': 1.0.5
@@ -40397,7 +40413,7 @@ packages:
   /@teambit/defender.eslint-linter@1.0.16(@teambit/legacy@1.0.650):
     resolution: {integrity: sha512-RnlqKYALXAFMzBMOUD7KxCt4jKfLZ+vIRLPR9CDhHTQ7PauM/K6GX4CPquc9+X0EBRG3veDbNl9fo0FUIfxl3A==}
     peerDependencies:
-      '@teambit/legacy': '*'
+      '@teambit/legacy': ^1.0.520
     dependencies:
       '@teambit/bit-error': 0.0.402
       '@teambit/defender.linter-task': 1.0.5
@@ -40417,7 +40433,7 @@ packages:
   /@teambit/defender.eslint-linter@1.0.16(@teambit/legacy@node_modules+@teambit+legacy):
     resolution: {integrity: sha512-RnlqKYALXAFMzBMOUD7KxCt4jKfLZ+vIRLPR9CDhHTQ7PauM/K6GX4CPquc9+X0EBRG3veDbNl9fo0FUIfxl3A==}
     peerDependencies:
-      '@teambit/legacy': '*'
+      '@teambit/legacy': ^1.0.520
     dependencies:
       '@teambit/bit-error': 0.0.402
       '@teambit/defender.linter-task': 1.0.5
@@ -40911,7 +40927,7 @@ packages:
   /@teambit/defender.prettier-formatter@1.0.8(@teambit/legacy@1.0.582):
     resolution: {integrity: sha512-YB8FJvds4SpRfWSWtclFWiRbifd35+EBzc0irjKE7K8M+Ad2QAoTV+nC8eLUW4DLtPbnLqJ6xvIU/HA61SJAlA==}
     peerDependencies:
-      '@teambit/legacy': '*'
+      '@teambit/legacy': ^1.0.383
     dependencies:
       '@teambit/bit-error': 0.0.402
       '@teambit/legacy': 1.0.582(@types/react@17.0.75)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(typescript@3.9.10)(utf-8-validate@5.0.5)
@@ -40924,7 +40940,7 @@ packages:
   /@teambit/defender.prettier-formatter@1.0.8(@teambit/legacy@1.0.650):
     resolution: {integrity: sha512-YB8FJvds4SpRfWSWtclFWiRbifd35+EBzc0irjKE7K8M+Ad2QAoTV+nC8eLUW4DLtPbnLqJ6xvIU/HA61SJAlA==}
     peerDependencies:
-      '@teambit/legacy': '*'
+      '@teambit/legacy': ^1.0.383
     dependencies:
       '@teambit/bit-error': 0.0.402
       '@teambit/legacy': 1.0.650(@types/react@17.0.75)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(typescript@3.9.10)(utf-8-validate@5.0.5)
@@ -40937,7 +40953,7 @@ packages:
   /@teambit/defender.prettier-formatter@1.0.8(@teambit/legacy@node_modules+@teambit+legacy):
     resolution: {integrity: sha512-YB8FJvds4SpRfWSWtclFWiRbifd35+EBzc0irjKE7K8M+Ad2QAoTV+nC8eLUW4DLtPbnLqJ6xvIU/HA61SJAlA==}
     peerDependencies:
-      '@teambit/legacy': '*'
+      '@teambit/legacy': ^1.0.383
     dependencies:
       '@teambit/bit-error': 0.0.402
       '@teambit/legacy': link:node_modules/@teambit/legacy
@@ -44539,7 +44555,7 @@ packages:
     engines: {node: '>=12.15.0'}
     dependencies:
       '@teambit/toolbox.network.agent': 0.0.540
-      minio: 7.0.32
+      minio: 7.1.1
       node-fetch: 2.6.7
     transitivePeerDependencies:
       - encoding
@@ -56453,7 +56469,7 @@ packages:
     resolution: {integrity: sha512-n8oxjeb5aIbPFEtmQxQYOLI0i9n5ySBEY/ZEHHZqKQSFnxio1rv6dthascc9dLuwrL0RC5mPCxB7vnAVGAYWAQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
-      eslint: '*'
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@7.32.0)
       '@types/json-schema': 7.0.15
@@ -56473,7 +56489,7 @@ packages:
     resolution: {integrity: sha512-n8oxjeb5aIbPFEtmQxQYOLI0i9n5ySBEY/ZEHHZqKQSFnxio1rv6dthascc9dLuwrL0RC5mPCxB7vnAVGAYWAQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
-      eslint: '*'
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@7.32.0)
       '@types/json-schema': 7.0.15
@@ -56492,7 +56508,7 @@ packages:
     resolution: {integrity: sha512-n8oxjeb5aIbPFEtmQxQYOLI0i9n5ySBEY/ZEHHZqKQSFnxio1rv6dthascc9dLuwrL0RC5mPCxB7vnAVGAYWAQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
-      eslint: '*'
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@7.32.0)
       '@types/json-schema': 7.0.15
@@ -59711,9 +59727,6 @@ packages:
   /brorand@1.1.0:
     resolution: {integrity: sha512-cKV8tMCEpQs4hK/ik71d6LrPOnpkpGBR0wzxqr68g2m/LB2GxVYQroAjMJZRVM1Y4BCjCKc3vAamxSzOY2RP+w==}
 
-  /browser-or-node@1.3.0:
-    resolution: {integrity: sha512-0F2z/VSnLbmEeBcUrSuDH5l0HxTXdQQzLjkmBR4cYfvg1zJrKSlmIZFqyFR8oX0NrwPhy3c3HQ6i3OxMbew4Tg==}
-
   /browser-or-node@2.1.1:
     resolution: {integrity: sha512-8CVjaLJGuSKMVTxJ2DpBl5XnlNDiT4cQFeuCJJrvJmts9YrTZDizTX7PjC2s6W4x+MBGZeEY6dGMrF04/6Hgqg==}
 
@@ -59838,7 +59851,7 @@ packages:
     resolution: {integrity: sha512-xq+q3SRMOxGivLhBNaUdC64hDTQwejJ+H0T/NB1XMtTVEwNTrfFF3gAxiyW0Bu/xWEGhjVKgUcMhCrUy2+uCWg==}
     dependencies:
       base64-js: 1.5.1
-      ieee754: 1.1.13
+      ieee754: 1.2.1
       isarray: 1.0.0
     dev: false
 
@@ -62798,9 +62811,6 @@ packages:
       es6-symbol: 3.1.3
       next-tick: 1.1.0
 
-  /es6-error@4.1.1:
-    resolution: {integrity: sha512-Um/+FxMr9CISWh0bi5Zv0iOD+4cFh5qLeks1qhAopKVAJw3drgKbKySikp7wGhDL0HPeaja0P5ULZrxLkniUVg==}
-
   /es6-iterator@2.0.3:
     resolution: {integrity: sha512-zw4SRzoUkd+cl+ZoE15A9o1oQd920Bb0iOJMQkQhl3jNc03YqVjAhG7scf9C5KWRU/R13Orf588uCC6525o02g==}
     dependencies:
@@ -64087,12 +64097,6 @@ packages:
 
   /fast-shallow-equal@1.0.0:
     resolution: {integrity: sha512-HPtaa38cPgWvaCFmRNhlc6NG7pv6NUHqjPgVAkWGoB9mQMwYB27/K0CvOM5Czy+qpT3e8XJ6Q4aPAnzpNpzNaw==}
-
-  /fast-xml-parser@3.21.1:
-    resolution: {integrity: sha512-FTFVjYoBOZTJekiUsawGsSYV9QL0A+zDYCRj7y34IO6Jg+2IMYEtQa+bbictpdpV8dHxXywqU7C0gRDEOFtBFg==}
-    hasBin: true
-    dependencies:
-      strnum: 1.0.5
 
   /fast-xml-parser@4.3.4:
     resolution: {integrity: sha512-utnwm92SyozgA3hhH2I8qldf2lBqm6qHOICawRNRFu1qMe3+oqr+GcXjGqTmXTMGE5T4eC03kr/rlh5C1IRdZA==}
@@ -65888,7 +65892,7 @@ packages:
     resolution: {integrity: sha512-sy88PC2cRTVxvETRgUHFrL4No3UxvcH8G1NepGhqaTT+GXN2kTamqasot0inS5hXeg1cMbFDt27zzo9p35lZVw==}
     engines: {node: '>=10.13.0'}
     peerDependencies:
-      webpack: '*'
+      webpack: ^5.20.0
     dependencies:
       '@types/html-minifier-terser': 6.1.0
       html-minifier-terser: 6.1.0
@@ -68145,7 +68149,7 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     hasBin: true
     peerDependencies:
-      node-notifier: '*'
+      node-notifier: ^8.0.1 || ^9.0.0 || ^10.0.0
     peerDependenciesMeta:
       node-notifier:
         optional: true
@@ -68166,7 +68170,7 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     hasBin: true
     peerDependencies:
-      node-notifier: '*'
+      node-notifier: ^8.0.1 || ^9.0.0 || ^10.0.0
     peerDependenciesMeta:
       node-notifier:
         optional: true
@@ -69921,28 +69925,6 @@ packages:
 
   /minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
-
-  /minio@7.0.32:
-    resolution: {integrity: sha512-txa7Vr0N24MKzeAybP/wY1jxbLnfGHXwZYyfFXuMW55HX2+HOcKEIgH4hU6Qj/kiMgyXs/ozHjAuLIDrR8nwLg==}
-    engines: {node: '>8  <=18'}
-    dependencies:
-      async: 3.2.5
-      block-stream2: 2.1.0
-      browser-or-node: 1.3.0
-      buffer-crc32: 0.2.13
-      crypto-browserify: 3.12.0
-      es6-error: 4.1.1
-      fast-xml-parser: 3.21.1
-      ipaddr.js: 2.1.0
-      json-stream: 1.0.0
-      lodash: 4.17.21
-      mime-types: 2.1.35
-      mkdirp: 0.5.6
-      query-string: 7.1.3
-      through2: 3.0.2
-      web-encoding: 1.1.5
-      xml: 1.0.1
-      xml2js: 0.4.23
 
   /minio@7.1.1:
     resolution: {integrity: sha512-HBLRFXs1CkNwAkahU+j1ilB9YS/Tmkdc6orpxVW1YN11NlEJyLjarIpBYu/inF+dj+tJIsA8PSKNnRmUNm+9qQ==}
@@ -77252,12 +77234,6 @@ packages:
       xtend: 4.0.2
     dev: false
 
-  /through2@3.0.2:
-    resolution: {integrity: sha512-enaDQ4MUyP2W6ZyT6EsMzqBPZaM/avg8iuo+l2d3QCs0J+6RaqkHV/2/lOwDTueBHeJ/2LG9lrLW3d5rWPucuQ==}
-    dependencies:
-      inherits: 2.0.4
-      readable-stream: 3.6.2
-
   /through2@4.0.2:
     resolution: {integrity: sha512-iOqSav00cVxEEICeD7TjLB1sueEL+81Wpzp2bY17uZjZN0pWZPuo4suZ/61VujxmqSGFfgOcNuTZ85QJwNZQpw==}
     dependencies:
@@ -79599,13 +79575,6 @@ packages:
       xmlbuilder: 9.0.7
     dev: false
 
-  /xml2js@0.4.23:
-    resolution: {integrity: sha512-ySPiMjM0+pLDftHgXY4By0uswI3SPKLDw/i3UXbnO8M/p28zqexCUoPmQFrYD+/1BzhGJSs2i1ERWKJAtiLrug==}
-    engines: {node: '>=4.0.0'}
-    dependencies:
-      sax: 1.3.0
-      xmlbuilder: 11.0.1
-
   /xml2js@0.5.0:
     resolution: {integrity: sha512-drPFnkQJik/O+uPKpqSgr22mpuFHqKdbS835iAQrUC73L2F5WkboIRd63ai/2Yg6I1jzifPFKH2NTK+cfglkIA==}
     engines: {node: '>=4.0.0'}
@@ -80022,6 +79991,8 @@ packages:
       react: '*'
       react-dom: '*'
     dependencies:
+      '@teambit/api-reference.models.api-node-renderer': file:components/models/api-node-renderer(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.grouped-schema-nodes-summary': file:scopes/api-reference/renderers/grouped-schema-nodes-summary(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.table-row': 4.1.13(react-dom@17.0.2)(react@17.0.2)
       '@teambit/semantics.entities.semantic-schema': 0.0.65
       core-js: 3.13.0
@@ -81174,6 +81145,7 @@ packages:
       '@teambit/api-reference.hooks.use-api-renderers': file:scopes/api-reference/hooks/use-api-renderers(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.models.api-node-renderer': file:components/models/api-node-renderer(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.class': file:components/renderers/class(@testing-library/react-hooks@8.0.1)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+      '@teambit/api-reference.renderers.decorator': file:components/renderers/decorator(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.enum': file:components/renderers/enum(@testing-library/react-hooks@8.0.1)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/api-reference.renderers.function': file:scopes/api-reference/renderers/function(@testing-library/react-hooks@8.0.1)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/api-reference.renderers.inference-type': file:components/renderers/inference-type(react-dom@17.0.2)(react@17.0.2)
@@ -86352,7 +86324,9 @@ packages:
       '@teambit/webpack.plugins.inject-head-webpack-plugin': file:scopes/webpack/plugins/inject-head-webpack-plugin(html-webpack-plugin@5.3.2)
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
+      assert: 2.1.0
       browserify-zlib: 0.2.0
+      buffer: 6.0.3
       camelcase: 6.2.0
       compression-webpack-plugin: 9.2.0(webpack@5.84.1)
       constants-browserify: 1.0.0
@@ -86371,6 +86345,7 @@ packages:
       p-map-series: 2.1.0
       path-browserify: 1.0.1
       process: 0.11.10
+      punycode: 2.3.1
       querystring-es3: 0.2.1
       react: 17.0.2
       react-dev-utils: 11.0.4(eslint@7.32.0)(typescript@3.9.10)(webpack@5.84.1)
@@ -86378,8 +86353,11 @@ packages:
       react-router-dom: 6.8.1(react-dom@17.0.2)(react@17.0.2)
       stream-browserify: 3.0.0
       stream-http: 3.2.0
+      string_decoder: 1.3.0
       timers-browserify: 2.0.12
       tty-browserify: 0.0.1
+      url: 0.11.3
+      util: 0.12.5
       vm-browserify: 1.1.2
       webpack: 5.84.1(esbuild@0.14.29)
       webpack-assets-manifest: 5.1.0(webpack@5.84.1)
