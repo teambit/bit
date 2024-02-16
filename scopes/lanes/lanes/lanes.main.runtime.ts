@@ -1068,6 +1068,25 @@ please create a new lane instead, which will include all components of this lane
     return compact(results);
   }
 
+  /**
+   * default to remove all of them.
+   * returns true if the lane has changed
+   */
+  async removeUpdateDependents(laneId: LaneId, ids?: ComponentID[]): Promise<Boolean> {
+    const lane = await this.loadLane(laneId);
+    if (!lane) throw new BitError(`unable to find a lane ${laneId.toString()}`);
+    if (ids?.length) {
+      ids.forEach((id) => lane.removeComponentFromUpdateDependents(id));
+    } else {
+      lane.removeAllUpdateDependents();
+    }
+    if (lane.hasChanged) {
+      await this.scope.legacyScope.lanes.saveLane(lane, { laneHistoryMsg: 'remove update-dependents' });
+      return true;
+    }
+    return false;
+  }
+
   private async getLaneDataOfDefaultLane(): Promise<LaneData | null> {
     const consumer = this.workspace?.consumer;
     let bitIds: ComponentID[] = [];

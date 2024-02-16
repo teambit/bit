@@ -1,5 +1,6 @@
 import { Schema } from '@teambit/graphql';
 import { LaneId } from '@teambit/lane-id';
+import { ComponentID } from '@teambit/component-id';
 import Fuse from 'fuse.js';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import gql from 'graphql-tag';
@@ -113,6 +114,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         default: Lane
         diff(from: String!, to: String!, options: DiffOptions): GetDiffResult
         diffStatus(source: String!, target: String, options: DiffStatusOptions): LaneDiffStatus!
+        removeUpdateDependents(laneId: String!, ids: [String!]): Boolean
         current: Lane
       }
 
@@ -243,6 +245,11 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
           const sourceLaneId = LaneId.parse(source);
           const targetLaneId = target ? LaneId.parse(target) : undefined;
           return lanesMain.diffStatus(sourceLaneId, targetLaneId, options);
+        },
+        removeUpdateDependents: async (lanesMain: LanesMain, { laneId, ids }: { laneId: string; ids?: string[] }) => {
+          const laneIdParsed = LaneId.parse(laneId);
+          const compIds = ids?.map((id) => ComponentID.fromString(id));
+          return lanesMain.removeUpdateDependents(laneIdParsed, compIds);
         },
       },
       LaneDiffStatus: {
