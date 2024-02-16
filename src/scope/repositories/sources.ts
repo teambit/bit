@@ -623,7 +623,10 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
       const existingComponent = existingLane ? existingLane.components.find((c) => c.id.isEqual(component.id)) : null;
       if (!existingComponent) {
         if (isExport) {
-          if (existingLane) existingLane.addComponent(component);
+          if (existingLane) {
+            existingLane.addComponent(component);
+            existingLane.removeComponentFromUpdateDependentsIfExist(component.id);
+          }
           if (!sentVersionHashes?.includes(component.head.toString())) {
             // during export, the remote might got a lane when some components were not sent from the client. ignore them.
             return;

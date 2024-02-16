@@ -1095,35 +1095,6 @@ export function groupByScopeName(ids: Array<ComponentID | LaneId>): { [scopeName
   return grouped;
 }
 
-export function groupByLanes(ids: ComponentID[], lanes: Lane[]): { [scopeName: string]: string[] } {
-  const lane = lanes[0];
-  if (!lane.scope) {
-    throw new Error(`can't group by Lane object, the scope is undefined for ${lane.id()}`);
-  }
-  const laneIds = lane.toBitIds();
-  if (lanes.length > 1) {
-    throw new Error(`groupByLanes does not support more than one lane`);
-  }
-  const grouped: { [scopeName: string]: string[] } = {};
-
-  const isLaneIncludeId = (id: ComponentID, laneBitIds: ComponentIdList) => {
-    if (laneBitIds.has(id)) return true;
-    const foundWithoutVersion = laneBitIds.searchWithoutVersion(id);
-    return foundWithoutVersion;
-  };
-
-  ids.forEach((id) => {
-    if (isLaneIncludeId(id, laneIds)) {
-      (grouped[lane.scope] ||= []).push(id.toString());
-    } else {
-      // if not found on a lane, fetch from main.
-      (grouped[id.scope] ||= []).push(id.toString());
-    }
-  });
-
-  return grouped;
-}
-
 export function errorIsTypeOfMissingObject(err: Error) {
   return err instanceof ParentNotFound || err instanceof VersionNotFound || err instanceof HeadNotFound;
 }
