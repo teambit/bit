@@ -54,7 +54,7 @@ export default class Lane extends BitObject {
    * otherwise, the user is not aware of it. it's not imported to the workspace and the objects are not fetched.
    */
   updateDependents?: ComponentID[];
-  overrideUpdateDependents?: boolean;
+  private overrideUpdateDependents?: boolean;
   constructor(props: LaneProps) {
     super();
     if (!props.name) throw new TypeError('Lane constructor expects to get a name parameter');
@@ -189,15 +189,34 @@ export default class Lane extends BitObject {
   }
   removeComponentFromUpdateDependents(componentId: ComponentID) {
     const updateDependentsList = ComponentIdList.fromArray(this.updateDependents || []);
-    this.updateDependents = updateDependentsList.filterWithoutVersion(componentId);
-    this.hasChanged = updateDependentsList.length !== this.updateDependents.length;
-    this.overrideUpdateDependents = true;
+    const exist = updateDependentsList.searchWithoutVersion(componentId);
+    if (!exist) return;
+    this.updateDependents = updateDependentsList.removeIfExist(exist);
+    this.hasChanged = true;
   }
   addComponentToUpdateDependents(componentId: ComponentID) {
     this.removeComponentFromUpdateDependents(componentId);
     (this.updateDependents ||= []).push(componentId);
     this.hasChanged = true;
-    this.overrideUpdateDependents = true;
+  }
+  removeAllUpdateDependents() {
+    if (this.updateDependents?.length) return;
+    this.updateDependents = undefined;
+    this.hasChanged = true;
+  }
+  shouldOverrideUpdateDependents() {
+    return this.overrideUpdateDependents;
+  }
+  /**
+   * !!! important !!!
+   * this should get called only on a "temp lane", such as running "bit _snap", which the scope gets destroys after the
+   * command is done. when _scope exports the lane, this "overrideUpdateDependents" is not saved to the remote-scope.
+   *
+   * on a user local lane object, this prop should never be true. otherwise, it'll override the remote-scope data.
+   */
+  setOverrideUpdateDependents(overrideUpdateDependents: boolean) {
+    this.overrideUpdateDependents = overrideUpdateDependents;
+    this.hasChanged = true;
   }
 
   removeComponent(id: ComponentID): boolean {
@@ -347,6 +366,7 @@ export default class Lane extends BitObject {
     return new Lane({
       ...this,
       hash: this._hash,
+      overrideUpdateDependents: this.overrideUpdateDependents,
       components: cloneDeep(this.components),
     });
   }

@@ -706,7 +706,7 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
     if (isImport && existingLane) {
       existingLane.updateDependents = lane.updateDependents;
     }
-    if (isExport && existingLane && lane.overrideUpdateDependents) {
+    if (isExport && existingLane && lane.shouldOverrideUpdateDependents()) {
       existingLane.updateDependents = lane.updateDependents;
     }
 
