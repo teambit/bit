@@ -187,15 +187,16 @@ export default class Lane extends BitObject {
       this.hasChanged = true;
     }
   }
-  removeComponentFromUpdateDependents(componentId: ComponentID) {
+  removeComponentFromUpdateDependentsIfExist(componentId: ComponentID) {
     const updateDependentsList = ComponentIdList.fromArray(this.updateDependents || []);
     const exist = updateDependentsList.searchWithoutVersion(componentId);
     if (!exist) return;
     this.updateDependents = updateDependentsList.removeIfExist(exist);
+    if (!this.updateDependents.length) this.updateDependents = undefined;
     this.hasChanged = true;
   }
   addComponentToUpdateDependents(componentId: ComponentID) {
-    this.removeComponentFromUpdateDependents(componentId);
+    this.removeComponentFromUpdateDependentsIfExist(componentId);
     (this.updateDependents ||= []).push(componentId);
     this.hasChanged = true;
   }
@@ -338,14 +339,6 @@ export default class Lane extends BitObject {
           `${message}, lane component ${component.id.toStringWithoutVersion()} head should be a hash, got ${
             component.head.hash
           }`
-        );
-      }
-    });
-    this.updateDependents?.forEach((updateDependent) => {
-      const existing = this.getComponent(updateDependent);
-      if (existing) {
-        throw new ValidationError(
-          `${message}, a component "${updateDependent.toStringWithoutVersion()}" is both in the lane and in the updateDependents list`
         );
       }
     });

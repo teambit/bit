@@ -1076,7 +1076,7 @@ please create a new lane instead, which will include all components of this lane
     const lane = await this.loadLane(laneId);
     if (!lane) throw new BitError(`unable to find a lane ${laneId.toString()}`);
     if (ids?.length) {
-      ids.forEach((id) => lane.removeComponentFromUpdateDependents(id));
+      ids.forEach((id) => lane.removeComponentFromUpdateDependentsIfExist(id));
     } else {
       lane.removeAllUpdateDependents();
     }

@@ -315,7 +315,7 @@ async function fetchByType(
       const scopeComponentsImporter = scope.scopeImporter;
       const laneId = fetchOptions.laneId ? LaneId.parse(fetchOptions.laneId) : null;
       const lane = laneId ? await scope.loadLane(laneId) : null;
-      const bitIdsLatest = bitIdsToLatest(bitIdsWithHashToStop, lane);
+      const bitIdsLatest = bitIdsToLatest(bitIdsWithHashToStop, fetchOptions, lane);
       const importedComponents = await scopeComponentsImporter.fetchWithoutDeps(
         bitIdsLatest,
         fetchOptions.allowExternal,
@@ -376,11 +376,13 @@ async function fetchByType(
   }
 }
 
-function bitIdsToLatest(bitIds: ComponentIdList, lane: Lane | null) {
+function bitIdsToLatest(bitIds: ComponentIdList, fetchOptions: FETCH_OPTIONS, lane: Lane | null) {
   if (!lane) {
     return bitIds.toVersionLatest();
   }
-  const laneIds = lane.toBitIds();
+  const laneIds = fetchOptions.includeUpdateDependents
+    ? lane.toComponentIdsIncludeUpdateDependents()
+    : lane.toComponentIds();
   return ComponentIdList.fromArray(
     bitIds.map((bitId) => {
       const inLane = laneIds.searchWithoutVersion(bitId);
