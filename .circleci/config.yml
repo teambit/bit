@@ -570,7 +570,7 @@ jobs:
           path: ~/Library/Caches/Bit/logs
 
   bit_tag:
-    resource_class: xlarge
+    resource_class: 2xlarge
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
