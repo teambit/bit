@@ -1594,6 +1594,12 @@ workflows:
             - bundle_version_macos
             - bundle_version_windows
             - checkout_code # This is needed to generate index.json
+      - symphony_docker_build:
+          filters:
+            branches:
+              only: publish-version
+          requires:
+            - checkout_code
   #     # - docker_build:
   #     #     requires:
   #     #       - checkout_code
