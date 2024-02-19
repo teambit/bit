@@ -257,26 +257,6 @@ jobs:
           paths:
             - bit
 
-  symphony_docker_build:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - attach_workspace:
-          at: ./
-      - run:
-          name: set bit.dev registry (@teambit)
-          # command: npm config set @teambit:registry https://node.bit.dev
-          command: npm config set @teambit:registry https://node-registry.bit.cloud
-      - run:
-          name: set bit.dev registry (@bitdev)
-          # command: npm config set @teambit:registry https://node.bit.dev
-          command: npm config set @bitdev:registry https://node-registry.bit.cloud
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:`npm show @teambit/bit version` .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:latest .
-      - run: cd bit && docker push bitcli/bit-symphony:`npm show @teambit/bit version`
-      - run: cd bit && docker push bitcli/bit-symphony:latest
-
   # docker_build:
   #   machine:
   #     image: ubuntu-2004:202111-02
@@ -1355,11 +1335,6 @@ workflows:
           <<: *master_only_filter
           requires:
             - bit_tag
-      - symphony_docker_build:
-          requires:
-            - bit_export
-            - bit_tag
-            - sleep_5_minutes
       # - docker_build:
       #     requires:
       #       - harmony_publish_to_gcloud
@@ -1503,12 +1478,6 @@ workflows:
           requires:
             - bit_tag
             - harmony_deploy_approval_job
-      - symphony_docker_build:
-          requires:
-            - harmony_deploy_approval_job
-            - bit_tag
-            - bit_export
-            - sleep_5_minutes
       # - docker_build:
       #     requires:
       #       - harmony_deploy_approval_job
@@ -1545,19 +1514,6 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - docker_build_node_20
-  # uncomment to debug symphony_docker_build
-  # symphony_docker_build_workflow:
-  #   jobs:
-  #     - checkout_code:
-  #         filters:
-  #           branches:
-  #             only: circle-docker-symphony
-  #     - symphony_docker_build:
-  #         filters:
-  #           branches:
-  #             only: circle-docker-symphony
-  #         requires:
-  #           - checkout_code
 
   # uncomment to update esbuild arm64 cache
   # get_arm64_workflow_packages:
@@ -1594,12 +1550,6 @@ workflows:
   #           - bundle_version_macos
   #           - bundle_version_windows
   #           - checkout_code # This is needed to generate index.json
-  #     - symphony_docker_build:
-  #        filters:
-  #          branches:
-  #            only: improve-bundling
-  #        requires:
-  #          - checkout_code
   #     # - docker_build:
   #     #     requires:
   #     #       - checkout_code
