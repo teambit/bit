@@ -353,4 +353,121 @@ export const BasicIdInput = () => {
       expect(devFiles.data.devPatterns).to.not.be.undefined;
     });
   });
+  describe('adding dependents to the lane with --update-dependents flag', () => {
+    let comp3HeadOnLane: string;
+    let comp2HeadOnMain: string;
+    let remoteScope: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      comp2HeadOnMain = helper.command.getHead('comp2');
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild('comp3', '--skip-auto-snap --unmodified');
+      comp3HeadOnLane = helper.command.getHeadOfLane('dev', 'comp3');
+      helper.command.export();
+      const bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+      const data = [
+        {
+          componentId: `${helper.scopes.remote}/comp2`,
+          dependencies: [`${helper.scopes.remote}/comp3@latest`],
+          message: 'msg',
+        },
+      ];
+      const flags = `--lane ${helper.scopes.remote}/dev --update-dependents --push`;
+      // console.log('data', JSON.stringify(data), 'flags', flags);
+      helper.command.snapFromScope(bareTag.scopePath, data, flags);
+      remoteScope = helper.scopeHelper.cloneRemoteScope();
+    });
+    it('should add the snapped component to the updateDependents prop and export it correctly to the remote', () => {
+      const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+      expect(lane).to.have.property('updateDependents');
+      expect(lane.updateDependents).to.have.lengthOf(1);
+
+      const updatedComp = lane.updateDependents[0];
+      const comp2 = helper.command.catComponent(updatedComp, helper.scopes.remotePath);
+      expect(comp2.dependencies[0].id.name).to.equal('comp3');
+      expect(comp2.dependencies[0].id.version).to.equal(comp3HeadOnLane);
+    });
+    it('should not add the snapped component to the components prop of the lane', () => {
+      const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+      expect(lane.components).to.have.lengthOf(1);
+      expect(lane.components[0].id.name).to.equal('comp3');
+    });
+    describe('running bit-sign', () => {
+      it('should not throw', () => {
+        const signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
+
+        const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+        const comp2OnLane = lane.updateDependents[0];
+        const signCmd = () =>
+          helper.command.sign(
+            [comp2OnLane, `${helper.scopes.remote}/comp3@${comp3HeadOnLane}`],
+            `--lane ${helper.scopes.remote}/dev`,
+            signRemote.scopePath
+          );
+        expect(signCmd).to.not.throw();
+      });
+    });
+    describe('merging the lane into main from the scope', () => {
+      let bareMerge;
+      before(() => {
+        bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+        helper.command.mergeLaneFromScope(bareMerge.scopePath, `${helper.scopes.remote}/dev`, '--push');
+      });
+      it('should merge also the updateDependents components and export them successfully', () => {
+        const comp2 = helper.command.catComponent(`${helper.scopes.remote}/comp2`, helper.scopes.remotePath);
+        expect(comp2.head).to.not.equal(comp2HeadOnMain);
+
+        const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+        const comp2OnLane = lane.updateDependents[0];
+        const comp2OnLaneVer = comp2OnLane.split('@')[1];
+        expect(comp2.head).to.equal(comp2OnLaneVer);
+      });
+    });
+    describe('importing the lane to a new workspace', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+        helper.scopeHelper.getClonedRemoteScope(remoteScope);
+        helper.command.importLane('dev', '-x');
+      });
+      it('should not import the updateDependents components', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.not.have.property('comp2');
+      });
+      it('should not import the objects of the components in the updateDependents prop', () => {
+        expect(() => helper.command.catComponent(`${helper.scopes.remote}/comp2`)).to.throw();
+      });
+      it('should import the lane with the updateDependents prop', () => {
+        const lane = helper.command.catLane('dev');
+        expect(lane).to.have.property('updateDependents');
+        expect(lane.updateDependents).to.have.lengthOf(1);
+      });
+      describe('importing the component of the updateDependents to the workspace', () => {
+        before(() => {
+          helper.command.importComponent('comp2');
+        });
+        it('should import the component from main, not from the lane', () => {
+          const bitmap = helper.bitMap.read();
+          expect(bitmap).to.have.property('comp2');
+          expect(bitmap.comp2.version).to.equal('0.0.1');
+        });
+        describe('snapping and exporting the component', () => {
+          before(() => {
+            helper.command.snapAllComponentsWithoutBuild(); // it's modified because the comp3 version is changed
+            helper.command.export();
+          });
+          it('on the remote, it should remove the component from the updateDependents array', () => {
+            const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+            expect(lane).to.not.have.property('updateDependents');
+          });
+        });
+      });
+    });
+  });
 });

@@ -55,7 +55,7 @@ import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { Lane, Version } from '@teambit/legacy/dist/scope/models';
+import { Lane } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { isHash } from '@teambit/component-version';
@@ -564,14 +564,10 @@ export class Workspace implements ComponentFactory {
   }
 
   async getSavedGraphOfComponentIfExist(component: Component) {
-    let versionObj: Version;
-    try {
-      versionObj = await this.scope.legacyScope.getVersionInstance(component.id);
-    } catch (err) {
-      return null;
-    }
-
-    const flattenedEdges = await versionObj.getFlattenedEdges(this.scope.legacyScope.objects);
+    if (!component.id.hasVersion()) return null;
+    const flattenedEdges = await this.scope.getFlattenedEdges(component.id);
+    const versionObj = await this.scope.getBitObjectVersionById(component.id);
+    if (!flattenedEdges || !versionObj) return null;
     if (!flattenedEdges.length && versionObj.flattenedDependencies.length) {
       // there are flattenedDependencies, so must be edges, if they're empty, it's because the component was tagged
       // with a version < ~0.0.901, so this flattenedEdges wasn't exist.

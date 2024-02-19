@@ -362,6 +362,7 @@ export default class ScopeComponentsImporter {
       collectParents = false,
       fetchHeadIfLocalIsBehind = false,
       includeUnexported = false,
+      includeUpdateDependents = false,
       reason,
     }: {
       /**
@@ -391,6 +392,10 @@ export default class ScopeComponentsImporter {
        * the reason why this import is needed (shown during the import)
        */
       reason?: string;
+      /**
+       * whether to include the updateDependents components on a lane (needed only when merging lane to main)
+       */
+      includeUpdateDependents?: boolean;
     }
   ): Promise<void> {
     const idsWithoutNils = compact(ids);
@@ -435,6 +440,7 @@ export default class ScopeComponentsImporter {
       ignoreMissingHead,
       collectParents,
       delta: fetchHeadIfLocalIsBehind,
+      includeUpdateDependents,
       reason,
     });
   }
@@ -850,6 +856,7 @@ export default class ScopeComponentsImporter {
       ignoreMissingHead = false,
       collectParents = false,
       delta = false,
+      includeUpdateDependents,
       reason,
     }: {
       localFetch?: boolean;
@@ -858,6 +865,7 @@ export default class ScopeComponentsImporter {
       ignoreMissingHead?: boolean;
       collectParents?: boolean;
       delta?: boolean;
+      includeUpdateDependents?: boolean;
       reason?: string;
     }
   ): Promise<void> {
@@ -890,6 +898,7 @@ export default class ScopeComponentsImporter {
         laneId: lane?.id(),
         collectParents,
         returnNothingIfGivenVersionExists: delta,
+        includeUpdateDependents,
       },
       leftIds,
       lane,
@@ -1083,35 +1092,6 @@ export function groupByScopeName(ids: Array<ComponentID | LaneId>): { [scopeName
   Object.keys(grouped).forEach((scopeName) => {
     grouped[scopeName] = grouped[scopeName].map((id) => id.toString());
   });
-  return grouped;
-}
-
-export function groupByLanes(ids: ComponentID[], lanes: Lane[]): { [scopeName: string]: string[] } {
-  const lane = lanes[0];
-  if (!lane.scope) {
-    throw new Error(`can't group by Lane object, the scope is undefined for ${lane.id()}`);
-  }
-  const laneIds = lane.toBitIds();
-  if (lanes.length > 1) {
-    throw new Error(`groupByLanes does not support more than one lane`);
-  }
-  const grouped: { [scopeName: string]: string[] } = {};
-
-  const isLaneIncludeId = (id: ComponentID, laneBitIds: ComponentIdList) => {
-    if (laneBitIds.has(id)) return true;
-    const foundWithoutVersion = laneBitIds.searchWithoutVersion(id);
-    return foundWithoutVersion;
-  };
-
-  ids.forEach((id) => {
-    if (isLaneIncludeId(id, laneIds)) {
-      (grouped[lane.scope] ||= []).push(id.toString());
-    } else {
-      // if not found on a lane, fetch from main.
-      (grouped[id.scope] ||= []).push(id.toString());
-    }
-  });
-
   return grouped;
 }
 
