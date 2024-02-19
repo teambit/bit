@@ -647,9 +647,12 @@ export default class Component extends BitObject {
       if (parent && !parent.isEqual(versionToAddRef)) {
         version.addAsOnlyParent(parent);
       }
-      addToUpdateDependentsInLane
-        ? lane.addComponentToUpdateDependents(currentBitId.changeVersion(versionToAddRef.toString()))
-        : lane.addComponent({ id: currentBitId, head: versionToAddRef, isDeleted: version.isRemoved() });
+      if (addToUpdateDependentsInLane) {
+        lane.addComponentToUpdateDependents(currentBitId.changeVersion(versionToAddRef.toString()));
+        lane.setOverrideUpdateDependents(true);
+      } else {
+        lane.addComponent({ id: currentBitId, head: versionToAddRef, isDeleted: version.isRemoved() });
+      }
 
       if (lane.readmeComponent && lane.readmeComponent.id.fullName === currentBitId.fullName) {
         lane.setReadmeComponent(currentBitId);

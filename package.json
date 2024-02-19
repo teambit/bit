@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.650",
+  "version": "1.0.651",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -124,7 +124,7 @@
     "@babel/core": "7.19.6",
     "@babel/runtime": "7.23.2",
     "@teambit/legacy-bit-id": "^1.1.1",
-    "@teambit/bvm.list": "0.1.10",
+    "@teambit/bvm.list": "0.1.13",
     "@teambit/node.deps-detectors.detective-es6": "^0.0.5",
     "@teambit/styling.deps-detectors.detective-css": "^0.0.2",
     "@teambit/styling.deps-detectors.detective-less": "^0.0.2",
