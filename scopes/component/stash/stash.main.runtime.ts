@@ -1,11 +1,11 @@
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import SnappingAspect, { SnappingMain } from '@teambit/snapping';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import { Component, ComponentID } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { compact } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import CheckoutAspect, { CheckoutMain } from '@teambit/checkout';
+import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { StashAspect } from './stash.aspect';
 import { StashCmd, StashLoadCmd, StashSaveCmd } from './stash.cmd';
 import { StashData } from './stash-data';

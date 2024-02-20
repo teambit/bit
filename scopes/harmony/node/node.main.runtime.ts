@@ -9,7 +9,7 @@ import { MainRuntime } from '@teambit/cli';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BuildTask } from '@teambit/builder';
 import { ComponentID } from '@teambit/component-id';
-import WorkerAspect, { WorkerMain } from '@teambit/worker';
+import { WorkerAspect, WorkerMain } from '@teambit/worker';
 import { Compiler } from '@teambit/compiler';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment, EnvContext } from '@teambit/envs';

@@ -5,7 +5,7 @@ import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import IssuesAspect, { IssuesMain } from '@teambit/issues';
+import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
@@ -15,7 +15,7 @@ import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/cons
 import { BitError } from '@teambit/bit-error';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { head, uniq } from 'lodash';
-import WorkerAspect, { WorkerMain } from '@teambit/worker';
+import { WorkerAspect, WorkerMain } from '@teambit/worker';
 import { ComponentID } from '@teambit/component-id';
 import { EnvService } from './services';
 import { Environment } from './environment';

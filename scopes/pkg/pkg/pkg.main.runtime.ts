@@ -2,7 +2,7 @@ import { compact, omit } from 'lodash';
 import { join } from 'path';
 import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMain, IComponent, Snap } from '@teambit/component';
+import { ComponentAspect, Component, ComponentMain, IComponent, Snap } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';

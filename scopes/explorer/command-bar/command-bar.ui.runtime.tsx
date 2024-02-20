@@ -2,7 +2,7 @@ import React, { useState, ComponentType } from 'react';
 import flatten from 'lodash.flatten';
 import Mousetrap from 'mousetrap';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import UIAspect, { UIRuntime, UiUI } from '@teambit/ui';
+import { UIAspect, UIRuntime, UiUI } from '@teambit/ui';
 import { PubsubAspect, PubsubUI } from '@teambit/pubsub';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';

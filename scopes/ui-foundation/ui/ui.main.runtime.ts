@@ -12,7 +12,7 @@ import { GraphqlAspect } from '@teambit/graphql';
 import chalk from 'chalk';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
+import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { sha1 } from '@teambit/legacy/dist/utils';
 import pMapSeries from 'p-map-series';
 import fs from 'fs-extra';

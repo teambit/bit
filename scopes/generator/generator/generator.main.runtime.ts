@@ -1,20 +1,20 @@
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config';
-import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 
-import ComponentAspect, { ComponentID } from '@teambit/component';
+import { ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain, Component } from '@teambit/component';
 
 import { isCoreAspect, loadBit, restoreGlobals } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import GitAspect, { GitMain } from '@teambit/git';
+import { GitAspect, GitMain } from '@teambit/git';
 import { BitError } from '@teambit/bit-error';
-import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
-import TrackerAspect, { TrackerMain } from '@teambit/tracker';
-import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
+import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
+import { TrackerAspect, TrackerMain } from '@teambit/tracker';
+import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-component-helper';
 import { compact } from 'lodash';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ComponentTemplate } from './component-template';
