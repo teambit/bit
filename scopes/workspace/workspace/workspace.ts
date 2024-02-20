@@ -665,17 +665,16 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       return SourceFile.load(filePath, compDirAbs, this.path, {});
     });
     const repo = this.scope.legacyScope.objects;
-    const getHeadFiles = async () => {
+    const getModelFiles = async () => {
       const modelComp = await this.scope.legacyScope.getModelComponentIfExist(id);
       if (!modelComp) return [];
-      const head = modelComp.getHeadRegardlessOfLane();
-      if (!head) return [];
+      if (!bitMapEntry.id.hasVersion()) return [];
 
-      const verObj = await modelComp.loadVersion(head.toString(), repo);
+      const verObj = await modelComp.loadVersion(bitMapEntry.id.version, repo);
       return verObj.files;
     };
 
-    return new CompFiles(id, repo, sourceFilesVinyls, compDir, await getHeadFiles());
+    return new CompFiles(id, repo, sourceFilesVinyls, compDir, await getModelFiles());
   }
 
   /**
