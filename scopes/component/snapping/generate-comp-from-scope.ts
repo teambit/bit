@@ -8,9 +8,9 @@ import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { Component } from '@teambit/component';
 import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/component-schema';
 import { DependenciesMain } from '@teambit/dependencies';
-import DependencyResolverAspect, { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { FileData } from './snap-from-scope.cmd';
-import { SnapDataParsed } from './snapping.main.runtime';
+import type { SnappingMain, SnapDataParsed } from './snapping.main.runtime';
 
 export type CompData = {
   componentId: ComponentID;
@@ -30,7 +30,11 @@ export type CompData = {
  * write the version and files into the scope as objects, so then it's possible to load Component object using the
  * ConsumerComponent.
  */
-export async function generateCompFromScope(scope: ScopeMain, compData: CompData): Promise<Component> {
+export async function generateCompFromScope(
+  scope: ScopeMain,
+  compData: CompData,
+  snapping: SnappingMain
+): Promise<Component> {
   if (!compData.files) throw new Error('generateComp: files are missing');
   const files = compData.files.map((file) => {
     return new SourceFile({ base: '.', path: file.path, contents: Buffer.from(file.content), test: false });
@@ -55,6 +59,10 @@ export async function generateCompFromScope(scope: ScopeMain, compData: CompData
       email: '',
     },
   });
+  // this is needed, otherwise in case of updating envs/aspects, the version-validator throws
+  // an error saying "the extension ${extensionId.toString()} is missing from the flattenedDependencies"
+  await snapping._addFlattenedDependenciesToComponents([consumerComponent]);
+
   const { version, files: filesBitObject } = await scope.legacyScope.sources.consumerComponentToVersion(
     consumerComponent
   );
@@ -97,19 +105,24 @@ export async function addDeps(
       return acc;
     }, {});
   };
-  const dependenciesData = {
-    allDependencies: {
-      dependencies: compDeps,
-      devDependencies: compDevDeps,
-    },
-    allPackagesDependencies: {
-      packageDependencies: toPackageObj(packageDeps.filter((dep) => dep.type === 'runtime')),
-      devPackageDependencies: toPackageObj(packageDeps.filter((dep) => dep.type === 'dev')),
-      peerPackageDependencies: toPackageObj(packageDeps.filter((dep) => dep.type === 'peer')),
-    },
+  const getPkgObj = (type: 'runtime' | 'dev' | 'peer') => {
+    return toPackageObj(packageDeps.filter((dep) => dep.type === type));
   };
 
   const consumerComponent = component.state._consumer as ConsumerComponent;
+
+  const dependenciesData = {
+    allDependencies: {
+      dependencies: [...compDeps, ...consumerComponent.dependencies.get()],
+      devDependencies: [...compDevDeps, ...consumerComponent.devDependencies.get()],
+    },
+    allPackagesDependencies: {
+      packageDependencies: { ...consumerComponent.packageDependencies, ...getPkgObj('runtime') },
+      devPackageDependencies: { ...consumerComponent.devPackageDependencies, ...getPkgObj('dev') },
+      peerPackageDependencies: { ...consumerComponent.peerPackageDependencies, ...getPkgObj('peer') },
+    },
+  };
+
   // add the dependencies to the legacy ConsumerComponent object
   // it takes care of both: given dependencies (from the cli) and the overrides, which are coming from the env.
   await deps.loadDependenciesFromScope(consumerComponent, dependenciesData);

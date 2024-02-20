@@ -6,16 +6,16 @@ import {
   DependencyResolverMain,
   KEY_NAME_BY_LIFECYCLE_TYPE,
 } from '@teambit/dependency-resolver';
-import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { cloneDeep, compact, set } from 'lodash';
 import pMapSeries from 'p-map-series';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import ComponentLoader, { DependencyLoaderOpts } from '@teambit/legacy/dist/consumer/component/component-loader';
-import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
-import GraphAspect, { ComponentIdGraph, GraphMain } from '@teambit/graph';
-import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
+import { GraphAspect, ComponentIdGraph, GraphMain } from '@teambit/graph';
+import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { snapToSemver } from '@teambit/component-package-version';
-import ScopeAspect, { ScopeMain } from '@teambit/scope';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { DependenciesLoader } from './dependencies-loader/dependencies-loader';
 import { DependenciesData, OverridesDependenciesData } from './dependencies-loader/dependencies-data';
 import {

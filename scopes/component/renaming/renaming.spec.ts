@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai';
 import { loadManyAspects } from '@teambit/harmony.testing.load-aspect';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents } from '@teambit/component.testing.mock-components';
 import { RenamingMain } from './renaming.main.runtime';

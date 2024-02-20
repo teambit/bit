@@ -16,7 +16,8 @@ export class ClassSchema extends SchemaNode {
     doc?: DocSchema,
     readonly typeParams?: string[],
     readonly extendsNodes?: ExpressionWithTypeArgumentsSchema[],
-    readonly implementNodes?: ExpressionWithTypeArgumentsSchema[]
+    readonly implementNodes?: ExpressionWithTypeArgumentsSchema[],
+    readonly decorators?: SchemaNode[]
   ) {
     super();
     this.members = members;
@@ -29,7 +30,8 @@ export class ClassSchema extends SchemaNode {
 
   toString() {
     const membersStr = this.members.map((m) => `* ${m.toString()}`).join('\n');
-    return `${chalk.bold.underline(this.name)}\n${membersStr}`;
+    const decoratorsStr = this.decorators?.map((decorator) => decorator.toString()).join('\n');
+    return `${this.decorators ? `${decoratorsStr}\n` : ''}${chalk.bold.underline(this.name)}\n${membersStr}`;
   }
 
   toObject() {
@@ -42,6 +44,7 @@ export class ClassSchema extends SchemaNode {
       typeParams: this.typeParams,
       extendsNodes: this.extendsNodes?.map((node) => node.toObject()),
       implementNodes: this.implementNodes?.map((node) => node.toObject()),
+      decorators: this.decorators?.map((decorator) => decorator.toObject()),
     };
   }
 
@@ -54,6 +57,17 @@ export class ClassSchema extends SchemaNode {
     const typeParams = obj.typeParams;
     const extendsNodes = obj.extendsNodes?.map((node: any) => ExpressionWithTypeArgumentsSchema.fromObject(node));
     const implementNodes = obj.implementNodes?.map((node: any) => ExpressionWithTypeArgumentsSchema.fromObject(node));
-    return new ClassSchema(name, members, location, signature, doc, typeParams, extendsNodes, implementNodes);
+    const decorators = obj.decorators?.map((decorator: any) => SchemaRegistry.fromObject(decorator));
+    return new ClassSchema(
+      name,
+      members,
+      location,
+      signature,
+      doc,
+      typeParams,
+      extendsNodes,
+      implementNodes,
+      decorators
+    );
   }
 }

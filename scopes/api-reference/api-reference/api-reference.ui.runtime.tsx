@@ -1,6 +1,6 @@
 import React from 'react';
 import { flatten } from 'lodash';
-import ComponentAspect, { ComponentUI } from '@teambit/component';
+import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
 import { APIRefPage } from '@teambit/api-reference.sections.api-reference-page';
 import { APIRefSection } from '@teambit/api-reference.sections.api-reference-section';
@@ -22,8 +22,9 @@ import { inferenceTypeRenderer } from '@teambit/api-reference.renderers.inferenc
 import { typeArrayRenderer } from '@teambit/api-reference.renderers.type-array';
 import { thisRenderer } from '@teambit/api-reference.renderers.this';
 import { APIRefRenderersProvider } from '@teambit/api-reference.hooks.use-api-renderers';
+import { decoratorRenderer } from '@teambit/api-reference.renderers.decorator';
 import { SchemaNodeConstructor, SchemaRegistry, Schemas } from '@teambit/semantics.entities.semantic-schema';
-import CodeAspect, { CodeUI } from '@teambit/code';
+import { CodeAspect, CodeUI } from '@teambit/code';
 import { TaggedExports } from '@teambit/tagged-exports';
 
 import { APIReferenceAspect } from './api-reference.aspect';
@@ -81,6 +82,7 @@ export class APIReferenceUI {
     inferenceTypeRenderer,
     typeArrayRenderer,
     thisRenderer,
+    decoratorRenderer,
   ];
 
   static async provider(

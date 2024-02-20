@@ -2,7 +2,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
-import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import semver, { ReleaseType } from 'semver';
 import { compact, difference, uniq } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -22,18 +22,18 @@ import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
-import IssuesAspect, { IssuesMain } from '@teambit/issues';
+import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { Component } from '@teambit/component';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { LaneId } from '@teambit/lane-id';
-import ImporterAspect, { ImporterMain } from '@teambit/importer';
+import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { isHash, isTag } from '@teambit/component-version';
 import { BitObject, Ref, Repository } from '@teambit/legacy/dist/scope/objects';
-import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
+import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import {
   ArtifactFiles,
   ArtifactSource,
@@ -41,7 +41,7 @@ import {
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { VersionNotFound, ComponentNotFound, HeadNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
-import DependenciesAspect, { DependenciesMain } from '@teambit/dependencies';
+import { DependenciesAspect, DependenciesMain } from '@teambit/dependencies';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';
 import { SnapCmd } from './snap-cmd';
@@ -376,6 +376,7 @@ if you're willing to lose the history from the head to the specified version, us
       push?: boolean;
       ignoreIssues?: string;
       lane?: string;
+      updateDependents?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<SnapFromScopeResults> {
     if (this.workspace) {
@@ -383,33 +384,6 @@ if you're willing to lose the history from the head to the specified version, us
         `unable to run this command from a workspace, please create a new bare-scope and run it from there`
       );
     }
-    const snapDataPerComp = await Promise.all(
-      snapDataPerCompRaw.map(async (snapData) => {
-        return {
-          componentId: await this.scope.resolveComponentId(snapData.componentId),
-          dependencies: snapData.dependencies
-            ? await this.scope.resolveMultipleComponentIds(snapData.dependencies)
-            : [],
-          aspects: snapData.aspects,
-          message: snapData.message,
-          files: snapData.files,
-          isNew: snapData.isNew,
-          mainFile: snapData.mainFile,
-          newDependencies: (snapData.newDependencies || []).map((dep) => ({
-            id: dep.id,
-            version: dep.version,
-            isComponent: dep.isComponent ?? true,
-            type: dep.type ?? 'runtime',
-          })),
-        };
-      })
-    );
-    const componentIds = compact(snapDataPerComp.map((t) => (t.isNew ? null : t.componentId)));
-    const allCompIds = snapDataPerComp.map((s) => s.componentId);
-    const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
-    const newCompsData = compact(snapDataPerComp.map((t) => (t.isNew ? t : null)));
-    const newComponents = await Promise.all(newCompsData.map((newComp) => generateCompFromScope(this.scope, newComp)));
-
     let lane: Lane | undefined;
     const laneIdStr = params.lane;
     if (laneIdStr) {
@@ -420,6 +394,39 @@ if you're willing to lose the history from the head to the specified version, us
       this.scope.legacyScope.setCurrentLaneId(laneId);
       this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
     }
+    const laneCompIds = lane?.toComponentIds();
+    const resolveDepVer = (dep: ComponentID) => {
+      if (dep.hasVersion()) return dep;
+      const fromLane = laneCompIds?.searchWithoutVersion(dep);
+      return fromLane || dep;
+    };
+    const snapDataPerComp = snapDataPerCompRaw.map((snapData) => {
+      return {
+        componentId: ComponentID.fromString(snapData.componentId),
+        dependencies: snapData.dependencies?.map((id) => ComponentID.fromString(id)).map(resolveDepVer) || [],
+        aspects: snapData.aspects,
+        message: snapData.message,
+        files: snapData.files,
+        isNew: snapData.isNew,
+        mainFile: snapData.mainFile,
+        newDependencies: (snapData.newDependencies || []).map((dep) => ({
+          id: dep.id,
+          version: dep.version,
+          isComponent: dep.isComponent ?? true,
+          type: dep.type ?? 'runtime',
+        })),
+      };
+    });
+
+    // console.log('snapDataPerComp', JSON.stringify(snapDataPerComp, undefined, 2));
+
+    const componentIds = compact(snapDataPerComp.map((t) => (t.isNew ? null : t.componentId)));
+    const allCompIds = snapDataPerComp.map((s) => s.componentId);
+    const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
+    const newCompsData = compact(snapDataPerComp.map((t) => (t.isNew ? t : null)));
+    const newComponents = await Promise.all(
+      newCompsData.map((newComp) => generateCompFromScope(this.scope, newComp, this))
+    );
 
     await this.scope.import(componentIdsLatest, {
       preferDependencyGraph: false,
@@ -449,12 +456,17 @@ if you're willing to lose the history from the head to the specified version, us
         }
       })
     );
+
+    // load the aspects user configured to set on the components. it creates capsules if needed.
+    // otherwise, when a user set a custom-env, it won't be loaded and the Version object will leave the
+    // teambit.envs/envs in a weird state. the config will be set correctly but the data will be set to the default
+    // node env.
+    await this.scope.loadManyCompsAspects(components);
+
+    // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
     await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
 
-    // run this for new components only.
-    // otherwise, running this for existing components, will override the existing dependencies unexpectedly.
-    // if this is needed for existing components, see how to merge the model data.
-    await pMapSeries(newComponents, async (component) => {
+    await pMapSeries(components, async (component) => {
       const snapData = getSnapData(component.id);
       // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
       await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver);
@@ -475,6 +487,7 @@ if you're willing to lose the history from the head to the specified version, us
       isSnap: true,
       ids,
       message: params.message as string,
+      updateDependentsOnLane: params.updateDependents,
     });
 
     const { taggedComponents } = results;
@@ -888,15 +901,17 @@ another option, in case this dependency is not in main yet is to remove all refe
     source,
     lane,
     shouldValidateVersion = false,
+    updateDependentsOnLane = false,
   }: {
     source: ConsumerComponent;
     lane: Lane | null;
     shouldValidateVersion?: boolean;
+    updateDependentsOnLane?: boolean;
   }): Promise<{
     component: ModelComponent;
     version: Version;
   }> {
-    const { component, version } = await this._addCompFromScopeToObjects(source, lane);
+    const { component, version } = await this._addCompFromScopeToObjects(source, lane, updateDependentsOnLane);
     const unmergedComponent = this.scope.legacyScope.objects.unmergedComponents.getEntry(component.toComponentId());
     if (unmergedComponent) {
       if (unmergedComponent.unrelated) {
@@ -934,7 +949,8 @@ another option, in case this dependency is not in main yet is to remove all refe
 
   async _addCompFromScopeToObjects(
     source: ConsumerComponent,
-    lane: Lane | null
+    lane: Lane | null,
+    updateDependentsOnLane = false
   ): Promise<{
     component: ModelComponent;
     version: Version;
@@ -953,7 +969,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     objectRepo.add(version);
     if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, lane, objectRepo, source.previouslyUsedVersion);
+    component.addVersion(version, source.version, lane, source.previouslyUsedVersion, updateDependentsOnLane);
     objectRepo.add(component);
     if (lane) objectRepo.add(lane);
     files.forEach((file) => objectRepo.add(file.file));

@@ -2,7 +2,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import { ComponentMain, ComponentAspect, Component, ComponentID } from '@teambit/component';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ComponentIdObj } from '@teambit/component-id';
 import { DeprecationAspect } from './deprecation.aspect';

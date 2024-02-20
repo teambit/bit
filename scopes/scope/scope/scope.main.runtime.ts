@@ -1,4 +1,4 @@
-import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
+import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
 import mapSeries from 'p-map-series';
 import path from 'path';
@@ -48,7 +48,7 @@ import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-sc
 import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
-import EnvsAspect, { EnvsMain } from '@teambit/envs';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { compact, slice, difference, partition } from 'lodash';
 import { DepEdge } from '@teambit/legacy/dist/scope/models/version';
 import { ComponentNotFound } from './exceptions';

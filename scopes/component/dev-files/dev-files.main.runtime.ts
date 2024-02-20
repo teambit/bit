@@ -1,10 +1,10 @@
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { MainRuntime } from '@teambit/cli';
 import { parse } from 'comment-json';
-import ScopeAspect, { ScopeMain } from '@teambit/scope';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { flatten, isFunction } from 'lodash';
 import { SlotRegistry, Slot } from '@teambit/harmony';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { Component, ComponentMain, ComponentAspect } from '@teambit/component';

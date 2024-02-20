@@ -18,7 +18,7 @@ import { HistoryItem } from '@teambit/legacy/dist/scope/models/lane-history';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
-import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane, LaneHistory, Version } from '@teambit/legacy/dist/scope/models';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
@@ -27,11 +27,11 @@ import { ExportAspect, ExportMain } from '@teambit/export';
 import { compact } from 'lodash';
 import { ComponentCompareMain, ComponentCompareAspect } from '@teambit/component-compare';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
-import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
+import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
-import RemoveAspect, { RemoveMain } from '@teambit/remove';
+import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { MergingMain, MergingAspect } from '@teambit/merging';
-import CheckoutAspect, { CheckoutMain } from '@teambit/checkout';
+import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
@@ -1066,6 +1066,25 @@ please create a new lane instead, which will include all components of this lane
     );
 
     return compact(results);
+  }
+
+  /**
+   * default to remove all of them.
+   * returns true if the lane has changed
+   */
+  async removeUpdateDependents(laneId: LaneId, ids?: ComponentID[]): Promise<Boolean> {
+    const lane = await this.loadLane(laneId);
+    if (!lane) throw new BitError(`unable to find a lane ${laneId.toString()}`);
+    if (ids?.length) {
+      ids.forEach((id) => lane.removeComponentFromUpdateDependentsIfExist(id));
+    } else {
+      lane.removeAllUpdateDependents();
+    }
+    if (lane.hasChanged) {
+      await this.scope.legacyScope.lanes.saveLane(lane, { laneHistoryMsg: 'remove update-dependents' });
+      return true;
+    }
+    return false;
   }
 
   private async getLaneDataOfDefaultLane(): Promise<LaneData | null> {

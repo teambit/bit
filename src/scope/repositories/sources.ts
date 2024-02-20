@@ -623,7 +623,10 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
       const existingComponent = existingLane ? existingLane.components.find((c) => c.id.isEqual(component.id)) : null;
       if (!existingComponent) {
         if (isExport) {
-          if (existingLane) existingLane.addComponent(component);
+          if (existingLane) {
+            existingLane.addComponent(component);
+            existingLane.removeComponentFromUpdateDependentsIfExist(component.id);
+          }
           if (!sentVersionHashes?.includes(component.head.toString())) {
             // during export, the remote might got a lane when some components were not sent from the client. ignore them.
             return;
@@ -697,6 +700,17 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
     // of current lane as 1.0.0 will mistakenly think that the component is not deleted.
     if (existingLane?.hasChanged && existingLane.includeDeletedData() && !lane.includeDeletedData()) {
       existingLane.setSchemaToNotSupportDeletedData();
+    }
+    // merging skipWorkspaceComps is tricky. the end user should never change it, only get it as is from the remote.
+    // this prop gets updated with snap-from-scope with --skip-workspace flag. and a graphql query should remove entries
+    // from there. other than these 2 places, it should never change. so when a user imports it, always override.
+    // if it is being exported, the remote should override it only when it comes from the snap-from-scope command, to
+    // indicate this, the lane should have the overrideSkipWorkspaceComps prop set to true.
+    if (isImport && existingLane) {
+      existingLane.updateDependents = lane.updateDependents;
+    }
+    if (isExport && existingLane && lane.shouldOverrideUpdateDependents()) {
+      existingLane.updateDependents = lane.updateDependents;
     }
 
     return { mergeResults, mergeErrors, mergeLane: existingLane || lane };

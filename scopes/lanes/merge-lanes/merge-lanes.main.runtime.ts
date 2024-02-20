@@ -1,15 +1,16 @@
 import { BitError } from '@teambit/bit-error';
 import path from 'path';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import ImporterAspect, { ImporterMain } from '@teambit/importer';
+import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { LanesAspect, LanesMain } from '@teambit/lanes';
-import MergingAspect, {
+import {
+  MergingAspect,
   MergingMain,
   ComponentMergeStatus,
   ApplyVersionResults,
   compIsAlreadyMergedMsg,
 } from '@teambit/merging';
-import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { getBasicLog } from '@teambit/legacy/dist/utils/bit/basic-log';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
@@ -21,12 +22,12 @@ import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { ConfigMergeResult } from '@teambit/config-merger';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import CheckoutAspect, { CheckoutMain, CheckoutProps, throwForFailures } from '@teambit/checkout';
+import { CheckoutAspect, CheckoutMain, CheckoutProps, throwForFailures } from '@teambit/checkout';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { compact, uniq } from 'lodash';
 import { ExportAspect, ExportMain } from '@teambit/export';
-import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
+import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { BitObject, Ref } from '@teambit/legacy/dist/scope/objects';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import { MergeLanesAspect } from './merge-lanes.aspect';
@@ -343,7 +344,10 @@ export class MergeLanesMain {
     const fromLaneObj = fromLaneId.isDefault() ? undefined : await this.lanes.importLaneObject(fromLaneId);
     const toLaneId = toLane === DEFAULT_LANE ? this.lanes.getDefaultLaneId() : LaneId.parse(toLane);
     const toLaneObj = toLaneId.isDefault() ? undefined : await this.lanes.importLaneObject(toLaneId);
-    const fromLaneBitIds = fromLaneObj?.toComponentIds();
+    const shouldIncludeUpdateDependents = toLaneId.isDefault();
+    const fromLaneBitIds = shouldIncludeUpdateDependents
+      ? fromLaneObj?.toComponentIdsIncludeUpdateDependents()
+      : fromLaneObj?.toComponentIds();
     const toLaneCompIds = toLaneObj?.toComponentIds();
     const laneIds = fromLaneBitIds || (toLaneCompIds as ComponentIdList); // one of them must be defined.
     const getIdsToMerge = async (): Promise<ComponentIdList> => {
@@ -358,6 +362,7 @@ export class MergeLanesMain {
       lane: fromLaneObj,
       ignoreMissingHead: true,
       includeVersionHistory: true,
+      includeUpdateDependents: shouldIncludeUpdateDependents,
       reason: `of "from" lane (${fromLaneId.name}) for lane-merge to get all version-history`,
     });
 

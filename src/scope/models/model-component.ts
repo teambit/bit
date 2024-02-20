@@ -623,8 +623,8 @@ export default class Component extends BitObject {
     version: Version,
     versionToAdd: string,
     lane: Lane | null,
-    repo: Repository,
-    previouslyUsedVersion?: string
+    previouslyUsedVersion?: string,
+    addToUpdateDependentsInLane = false
   ): string {
     if (lane) {
       if (isTag(versionToAdd)) {
@@ -647,7 +647,12 @@ export default class Component extends BitObject {
       if (parent && !parent.isEqual(versionToAddRef)) {
         version.addAsOnlyParent(parent);
       }
-      lane.addComponent({ id: currentBitId, head: versionToAddRef, isDeleted: version.isRemoved() });
+      if (addToUpdateDependentsInLane) {
+        lane.addComponentToUpdateDependents(currentBitId.changeVersion(versionToAddRef.toString()));
+        lane.setOverrideUpdateDependents(true);
+      } else {
+        lane.addComponent({ id: currentBitId, head: versionToAddRef, isDeleted: version.isRemoved() });
+      }
 
       if (lane.readmeComponent && lane.readmeComponent.id.fullName === currentBitId.fullName) {
         lane.setReadmeComponent(currentBitId);
