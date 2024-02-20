@@ -233,7 +233,7 @@ export async function importAllArtifactsFromLane(scope: Scope, components: Compo
   try {
     await scopeComponentsImporter.importManyObjects(
       groupedHashesOnLane,
-      `to get all artifacts for ${components.length} components from lane ${lane.id.toString()}`
+      `to get all artifacts for ${components.length} components from lane ${lane.id()}`
     );
   } catch (err: any) {
     logger.error('failed fetching the following hashes from the lane', {
