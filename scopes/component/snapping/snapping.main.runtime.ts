@@ -458,10 +458,7 @@ if you're willing to lose the history from the head to the specified version, us
     );
     await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
 
-    // run this for new components only.
-    // otherwise, running this for existing components, will override the existing dependencies unexpectedly.
-    // if this is needed for existing components, see how to merge the model data.
-    await pMapSeries(newComponents, async (component) => {
+    await pMapSeries(components, async (component) => {
       const snapData = getSnapData(component.id);
       // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
       await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver);
