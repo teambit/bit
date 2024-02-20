@@ -3,10 +3,10 @@ import { isBinaryFile } from 'isbinaryfile';
 import camelCase from 'camelcase';
 import { compact } from 'lodash';
 import replacePackageName from '@teambit/legacy/dist/utils/string/replace-package-name';
-import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
+import { ComponentAspect, Component, ComponentID, ComponentMain } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import PkgAspect, { PkgMain } from '@teambit/pkg';
+import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import {
   SourceFileTransformer,
@@ -21,7 +21,7 @@ import {
   expressionStatementTransformer,
   typeReferenceTransformer,
 } from '@teambit/typescript';
-import PrettierAspect, { PrettierMain } from '@teambit/prettier';
+import { PrettierAspect, PrettierMain } from '@teambit/prettier';
 import { Formatter } from '@teambit/formatter';
 import { RefactoringAspect } from './refactoring.aspect';
 import { DependencyNameRefactorCmd, RefactorCmd } from './refactor.cmd';

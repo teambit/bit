@@ -1,5 +1,5 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import CLIAspect, { CLIMain, MainRuntime } from '@teambit/cli';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { v4 } from 'uuid';
 import chalk from 'chalk';
 import os from 'os';
@@ -24,14 +24,14 @@ import {
   CFG_USER_TOKEN_KEY,
   CFG_USER_NAME_KEY,
 } from '@teambit/legacy/dist/constants';
-import ScopeAspect, { ScopeMain } from '@teambit/scope';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import globalFlags from '@teambit/legacy/dist/cli/global-flags';
-import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
-import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
+import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { execSync } from 'child_process';
-import UIAspect, { UiMain } from '@teambit/ui';
+import { UIAspect, UiMain } from '@teambit/ui';
 import { cloudSchema } from './cloud.graphql';
 import { CloudAspect } from './cloud.aspect';
 import { LoginCmd } from './login.cmd';

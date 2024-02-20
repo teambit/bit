@@ -5,8 +5,8 @@ import { SubMenu } from '@teambit/design.controls.menu';
 // import { useThemePicker, useNextTheme } from '@teambit/base-react.themes.theme-switcher';
 import { Slot } from '@teambit/harmony';
 import { UserBar, UserBarItem, UserBarItemSlot, UserBarSection, UserBarSectionSlot } from '@teambit/cloud.ui.user-bar';
-import LanesAspect, { LanesUI } from '@teambit/lanes';
-import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
+import { LanesAspect, LanesUI } from '@teambit/lanes';
+import { WorkspaceAspect, WorkspaceUI } from '@teambit/workspace';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { CloudAspect } from './cloud.aspect';
 

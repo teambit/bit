@@ -1,12 +1,12 @@
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { loadManyAspects } from '@teambit/harmony.testing.load-aspect';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { InstallAspect } from '@teambit/install';
 import type { InstallMain } from '@teambit/install';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import path from 'path';
-import TrackerAspect, { TrackerMain } from '@teambit/tracker';
+import { TrackerAspect, TrackerMain } from '@teambit/tracker';
 import { ComponentID } from '@teambit/component-id';
 
 type CompDirs = {

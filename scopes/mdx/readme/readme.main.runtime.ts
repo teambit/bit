@@ -1,7 +1,7 @@
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { MainRuntime } from '@teambit/cli';
-import MDXAspect, { MdxEnv, MDXMain } from '@teambit/mdx';
-import DocsAspect, { DocsMain } from '@teambit/docs';
+import { MDXAspect, MdxEnv, MDXMain } from '@teambit/mdx';
+import { DocsAspect, DocsMain } from '@teambit/docs';
 
 import { ReadmeAspect } from './readme.aspect';
 import { ReadmeEnv } from './readme.env';
