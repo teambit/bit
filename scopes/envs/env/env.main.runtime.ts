@@ -1,6 +1,6 @@
-import AspectAspect, { AspectMain } from '@teambit/aspect';
+import { AspectAspect, AspectMain } from '@teambit/aspect';
 import { MainRuntime } from '@teambit/cli';
-import EnvsAspect, { Environment, EnvsMain, EnvTransformer } from '@teambit/envs';
+import { EnvsAspect, Environment, EnvsMain, EnvTransformer } from '@teambit/envs';
 import { EnvAspect } from './env.aspect';
 import { EnvEnv } from './env.env';
 

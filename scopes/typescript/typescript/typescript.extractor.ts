@@ -10,7 +10,7 @@ import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { EnvContext } from '@teambit/envs';
 import { Formatter } from '@teambit/formatter';
 import { Logger } from '@teambit/logger';
-import AspectLoaderAspect, { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
+import { AspectLoaderAspect, AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
 import { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { compact, flatten } from 'lodash';

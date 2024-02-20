@@ -21,7 +21,7 @@ import {
   NodeModulesLinksResult,
 } from '@teambit/workspace.modules.node-modules-linker';
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
-import IpcEventsAspect, { IpcEventsMain } from '@teambit/ipc-events';
+import { IpcEventsAspect, IpcEventsMain } from '@teambit/ipc-events';
 import { IssuesClasses } from '@teambit/component-issues';
 import {
   GetComponentManifestsOptions,
@@ -40,7 +40,7 @@ import {
   WorkspacePolicy,
   UpdatedComponent,
 } from '@teambit/dependency-resolver';
-import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { snapToSemver } from '@teambit/component-package-version';

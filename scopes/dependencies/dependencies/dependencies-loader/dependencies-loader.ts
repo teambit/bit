@@ -8,7 +8,7 @@ import Component from '@teambit/legacy/dist/consumer/component/consumer-componen
 import { DependencyLoaderOpts } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
 import { Workspace } from '@teambit/workspace';
-import DependencyResolverAspect, { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DevFilesMain } from '@teambit/dev-files';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependenciesData } from './dependencies-data';

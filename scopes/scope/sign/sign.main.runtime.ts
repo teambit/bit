@@ -17,7 +17,7 @@ import { Remotes } from '@teambit/legacy/dist/remotes';
 import { ComponentIdList } from '@teambit/component-id';
 import Version, { Log } from '@teambit/legacy/dist/scope/models/version';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
-import LanesAspect, { LanesMain } from '@teambit/lanes';
+import { LanesAspect, LanesMain } from '@teambit/lanes';
 import { LaneId } from '@teambit/lane-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { SignCmd } from './sign.cmd';

@@ -18,7 +18,7 @@ import { ExtensionAlreadyConfigured } from './exceptions';
 import InvalidConfigFile from './exceptions/invalid-config-file';
 import { HostConfig } from './types';
 
-const INTERNAL_CONFIG_PROPS = ['$schema', '$schemaVersion'];
+const INTERNAL_CONFIG_PROPS = ['$schema', '$schemaVersion', 'require'];
 
 export type LegacyInitProps = {
   standAlone?: boolean;

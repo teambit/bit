@@ -30,7 +30,7 @@ import { LinterContext } from '@teambit/linter';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
 import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
-import WorkerAspect, { WorkerMain } from '@teambit/worker';
+import { WorkerAspect, WorkerMain } from '@teambit/worker';
 
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
