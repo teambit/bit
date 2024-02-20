@@ -4,7 +4,7 @@ import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-lo
 import path from 'path';
 import moment from 'moment';
 import pMap from 'p-map';
-import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { compact } from 'lodash';
 import pMapSeries from 'p-map-series';
 import { Version } from '@teambit/legacy/dist/scope/models';

@@ -4,13 +4,13 @@ import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambi
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { Menu, MenuWidgetSlot, MenuWidget } from '@teambit/ui-foundation.ui.menu';
-import SidebarAspect, { SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
+import { SidebarAspect, SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
 import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import { GraphAspect, GraphUI } from '@teambit/graph';
 import React, { ReactNode } from 'react';
 import { RouteProps } from 'react-router-dom';
-import CommandBarAspect, { CommandBarUI, CommandHandler } from '@teambit/command-bar';
+import { CommandBarAspect, CommandBarUI, CommandHandler } from '@teambit/command-bar';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { ComponentFilters } from '@teambit/component.ui.component-filters.component-filter-context';

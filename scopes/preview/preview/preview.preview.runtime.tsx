@@ -1,4 +1,4 @@
-import PubsubAspect, { PubsubPreview } from '@teambit/pubsub';
+import { PubsubAspect, PubsubPreview } from '@teambit/pubsub';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';
 import crossFetch from 'cross-fetch';

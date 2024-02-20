@@ -2,7 +2,7 @@ import path from 'path';
 import filenamify from 'filenamify';
 import fs from 'fs-extra';
 import { ComponentMain } from '@teambit/component';
-import ScopeAspect, { ScopeMain } from '@teambit/scope';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
 import minimatch from 'minimatch';

@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { isEmpty } from 'lodash';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { isDir } from '@teambit/legacy/dist/utils';
 import moveSync from '@teambit/legacy/dist/utils/fs/move-sync';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
