@@ -192,7 +192,7 @@ describe('peer-dependencies functionality', function () {
   });
 
   (supportNpmCiRegistryTesting ? describe : describe.skip)(
-    'a component is a peer dependency added by an dep set',
+    'a component is a peer dependency added by dep set',
     function () {
       let workspaceCapsulesRootDir: string;
       let npmCiRegistry: NpmCiRegistry;
@@ -249,4 +249,42 @@ describe('peer-dependencies functionality', function () {
       });
     }
   );
+
+  describe('peer dependency is not broken after snap', () => {
+    let workspaceCapsulesRootDir: string;
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.dependenciesSet('comp1', `@${helper.scopes.remote}/comp2@*`, '--peer');
+      helper.command.build();
+      helper.command.snapAllComponents();
+      helper.command.build();
+      workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
+    });
+    it('should save the peer dependency in the model', () => {
+      const output = helper.command.showComponentParsed(`${helper.scopes.remote}/comp1`);
+      const peerDepData = output.peerDependencies[0];
+      expect(peerDepData.id).to.startWith(`${helper.scopes.remote}/comp2`);
+      expect(peerDepData.packageName).to.startWith(`@${helper.scopes.remote}/comp2`);
+      expect(peerDepData.versionPolicy).to.startWith('*');
+      const depResolver = output.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
+      const peerDep = depResolver.data.dependencies[0];
+      expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/comp2`);
+      expect(peerDep.lifecycle).to.eq('peer');
+      expect(peerDep.versionPolicy).to.eq('*');
+    });
+    it('adds peer dependency to the generated package.json', () => {
+      const dirs = fs.readdirSync(workspaceCapsulesRootDir);
+      const pkgJson = fs.readJsonSync(
+        path.join(
+          workspaceCapsulesRootDir,
+          dirs.find((dir) => dir.includes(`${helper.scopes.remote}_comp1`))!,
+          'package.json'
+        )
+      );
+      expect(pkgJson.peerDependencies).to.deep.equal({
+        [`@${helper.scopes.remote}/comp2`]: '*',
+      });
+    });
+  });
 });
