@@ -24,13 +24,13 @@ export default class Dependency {
   id: ComponentID;
   relativePaths: RelativePath[];
   packageName?: string;
-  versionPolicy?: string;
+  versionRange?: string;
 
-  constructor(id: ComponentID, relativePaths: RelativePath[], packageName?: string, versionPolicy?: string) {
+  constructor(id: ComponentID, relativePaths: RelativePath[], packageName?: string, versionRange?: string) {
     this.id = id;
     this.relativePaths = relativePaths;
     this.packageName = packageName;
-    this.versionPolicy = versionPolicy;
+    this.versionRange = versionRange;
   }
 
   serialize() {
@@ -38,7 +38,7 @@ export default class Dependency {
       id: this.id.toObject(),
       relativePaths: this.relativePaths,
       packageName: this.packageName,
-      versionPolicy: this.versionPolicy,
+      versionRange: this.versionRange,
     };
   }
 
@@ -46,8 +46,8 @@ export default class Dependency {
     const id = ComponentID.fromObject(serialized.id);
     const relativePaths = serialized.relativePaths;
     const packageName = serialized.packageName;
-    const versionPolicy = serialized.versionPolicy;
-    return new Dependency(id, relativePaths, packageName, versionPolicy);
+    const versionRange = serialized.versionRange;
+    return new Dependency(id, relativePaths, packageName, versionRange);
   }
 
   static getClone(dependency: Dependency): Record<string, any> {
@@ -55,7 +55,7 @@ export default class Dependency {
       id: dependency.id,
       relativePaths: R.clone(dependency.relativePaths),
       packageName: dependency.packageName,
-      versionPolicy: dependency.versionPolicy,
+      versionRange: dependency.versionRange,
     };
   }
 }

@@ -206,10 +206,10 @@ export class ApplyOverrides {
 
   private _getComponentIdToAdd(
     dependency: string,
-    versionPolicy: string
-  ): { componentId?: ComponentID; packageName?: string; versionPolicy: string } {
+    versionRange: string
+  ): { componentId?: ComponentID; packageName?: string; versionRange: string } {
     const packageData = this._resolvePackageData(dependency);
-    return { componentId: packageData?.componentId, packageName: packageData?.name, versionPolicy };
+    return { componentId: packageData?.componentId, packageName: packageData?.name, versionRange };
   }
 
   getDependenciesToAddManually(
@@ -261,7 +261,7 @@ export class ApplyOverrides {
       if (components[depField] && components[depField].length) {
         components[depField].forEach((depData) =>
           this.allDependencies[depField].push(
-            new Dependency(depData.componentId, [], depData.packageName, depData.versionPolicy)
+            new Dependency(depData.componentId, [], depData.packageName, depData.versionRange)
           )
         );
       }
@@ -387,10 +387,10 @@ export class ApplyOverrides {
         const peerVersionFromWsPolicy = wsPeer[pkgName];
         const regularVersionFromWsPolicy = wsRegular[pkgName];
         if (peerVersionFromWsPolicy) {
-          dep.versionPolicy = peerVersionFromWsPolicy;
+          dep.versionRange = peerVersionFromWsPolicy;
           peerDeps.push(dep);
         } else if (regularVersionFromWsPolicy) {
-          dep.versionPolicy = regularVersionFromWsPolicy;
+          dep.versionRange = regularVersionFromWsPolicy;
         }
       }
       this.allDependencies[field] = this.allDependencies[field].filter(({ packageName }) => !wsPeer[packageName]);
@@ -512,13 +512,13 @@ export class ApplyOverrides {
         ) {
           if ((existsInCompsDeps || existsInCompsDevDeps) && field === 'peerDependencies') {
             const comp = (existsInCompsDeps ?? existsInCompsDevDeps) as Dependency;
-            comp.versionPolicy = pkgVal;
+            comp.versionRange = pkgVal;
             this.allDependencies.peerDependencies.push(comp);
           } else {
             this.allPackagesDependencies[key][pkgName] = pkgVal;
           }
           if (existsInCompsPeerDeps) {
-            existsInCompsPeerDeps.versionPolicy = pkgVal;
+            existsInCompsPeerDeps.versionRange = pkgVal;
           }
         }
       });

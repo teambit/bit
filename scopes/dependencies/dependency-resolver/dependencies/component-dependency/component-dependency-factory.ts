@@ -41,7 +41,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
       serialized.source,
       serialized.hidden,
       serialized.optional,
-      serialized.versionPolicy
+      serialized.versionRange
     ) as unknown as ComponentDependency;
   }
 
@@ -85,7 +85,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
       packageName,
       componentId: legacyDep.id.serialize(),
       version: legacyDep.id._legacy.getVersion().toString(),
-      versionPolicy: legacyDep.versionPolicy,
+      versionRange: legacyDep.versionRange,
       __type: TYPE,
       lifecycle,
     };
