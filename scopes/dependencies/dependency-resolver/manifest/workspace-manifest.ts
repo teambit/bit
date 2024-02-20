@@ -32,9 +32,7 @@ export class WorkspaceManifest extends Manifest {
     if (options.installPeersFromEnvs) {
       const peersManifest = this.envSelfPeersPolicy?.toVersionManifest();
       manifest.dependencies = manifest.dependencies || {};
-      for (const [peerName, peerVersion] of Object.entries(peersManifest ?? {})) {
-        manifest.dependencies[peerName] = peerVersion;
-      }
+      Object.assign(manifest.dependencies, peersManifest);
     }
     return manifest;
   }
