@@ -28,6 +28,12 @@ export function mockWorkspace(opts: { bareScopeName?: string } = {}): WorkspaceD
   };
 }
 
+export function mockBareScope(remoteToAdd: string, scopeNameSuffix?: string) {
+  const legacyHelper = new LegacyHelper();
+  const { scopeName, scopePath } = legacyHelper.scopeHelper.getNewBareScope(scopeNameSuffix, undefined, remoteToAdd);
+  return { scopeName, scopePath };
+}
+
 /**
  * deletes the paths created by mockWorkspace. pass the results you got from `mockWorkspace()`
  */
