@@ -206,13 +206,13 @@ export default class ScopeHelper {
     return this.command.runCmd('bit init --bare', this.scopes.envPath);
   }
 
-  getNewBareScope(scopeNameSuffix = '-remote2', addOwnerPrefix = false) {
+  getNewBareScope(scopeNameSuffix = '-remote2', addOwnerPrefix = false, remoteScopeToAdd = this.scopes.remotePath) {
     const prefix = addOwnerPrefix ? `${DEFAULT_OWNER}.` : '';
     const scopeName = prefix + generateRandomStr() + scopeNameSuffix;
     const scopePath = path.join(this.scopes.e2eDir, scopeName);
     fs.emptyDirSync(scopePath);
     this.command.runCmd('bit init --bare', scopePath);
-    this.addRemoteScope(this.scopes.remotePath, scopePath);
+    this.addRemoteScope(remoteScopeToAdd, scopePath);
     const scopeWithoutOwner = scopeName.replace(prefix, '');
     return { scopeName, scopePath, scopeWithoutOwner };
   }
