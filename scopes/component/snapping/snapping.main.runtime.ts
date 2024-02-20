@@ -456,6 +456,20 @@ if you're willing to lose the history from the head to the specified version, us
         }
       })
     );
+
+    // load the aspects user configured to set on the components. it creates capsules if needed.
+    // otherwise, when a user set a custom-env, it won't be loaded and the Version object will leave the
+    // teambit.envs/envs in a weird state. the config will be set correctly but the data will be set to the default
+    // node env.
+    await pMapSeries(components, async (comp) => {
+      const snapData = getSnapData(comp.id);
+      if (!snapData.aspects) return;
+      const aspectIds = Object.keys(snapData.aspects);
+      const aspectIdsParsed = aspectIds.map((id) => ComponentID.fromString(id));
+      await this.scope.loadMany(aspectIdsParsed);
+    });
+
+    // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
     await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
 
     // run this for new components only.
