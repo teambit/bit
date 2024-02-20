@@ -253,6 +253,7 @@ describe('peer-dependencies functionality', function () {
   describe('peer dependency is not broken after snap', () => {
     let workspaceCapsulesRootDir: string;
     before(() => {
+      helper = new Helper();
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(2);
       helper.command.dependenciesSet('comp1', `@${helper.scopes.remote}/comp2@*`, '--peer');
