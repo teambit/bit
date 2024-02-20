@@ -1,5 +1,5 @@
 import webpack, { Configuration } from 'webpack';
-import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
+import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import {
   BundlerAspect,
   BundlerContext,

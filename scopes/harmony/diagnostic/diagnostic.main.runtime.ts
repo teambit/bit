@@ -3,7 +3,7 @@ import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { MainRuntime } from '@teambit/cli';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
-import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { DiagnosticAspect } from './diagnostic.aspect';
 import { DiagnosticRoute } from './diagnostic.route';
 import { DiagnosticGraphql } from './diagnostic.graphql';

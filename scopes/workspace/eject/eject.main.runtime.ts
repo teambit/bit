@@ -1,7 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { InstallAspect, InstallMain } from '@teambit/install';
 import { EjectCmd } from './eject-cmd';
 import { EjectAspect } from './eject.aspect';

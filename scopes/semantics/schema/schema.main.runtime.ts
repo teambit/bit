@@ -1,7 +1,7 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
@@ -14,7 +14,7 @@ import {
 } from '@teambit/semantics.entities.semantic-schema';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import ScopeAspect, { ScopeMain } from '@teambit/scope';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Formatter } from '@teambit/formatter';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
