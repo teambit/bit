@@ -4,6 +4,8 @@ import fs from 'fs-extra';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
+chai.use(require('chai-string'));
+
 describe('peer-dependencies functionality', function () {
   this.timeout(0);
   let helper: Helper;
