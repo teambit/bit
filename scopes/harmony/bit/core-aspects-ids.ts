@@ -2,6 +2,7 @@
 export const coreAspectsIds = [
   'teambit.harmony/bit',
   'teambit.harmony/config',
+  'teambit.harmony/config-merger',
   'teambit.harmony/aspect-loader',
   'teambit.harmony/cli',
   'teambit.component/dev-files',
