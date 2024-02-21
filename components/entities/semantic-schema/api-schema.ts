@@ -35,10 +35,8 @@ export class APISchema extends SchemaNode {
     this.module = module;
     this.internals = internals;
     this.componentId = componentId;
-    this.taggedModuleExports = this.listTaggedExports(module);
-    if (taggedModuleExports.length > 0) {
-      this.taggedModuleExports = this.taggedModuleExports.concat(taggedModuleExports);
-    }
+    taggedModuleExports = (taggedModuleExports.length && taggedModuleExports) || this.listTaggedExports(module);
+    this.taggedModuleExports = taggedModuleExports;
   }
 
   listTaggedExports(module?: ModuleSchema) {
