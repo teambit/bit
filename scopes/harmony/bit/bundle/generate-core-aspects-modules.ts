@@ -31,6 +31,7 @@ async function handleOneAspect(bundleDir: string, name: string, packageName: str
   const dirPath = join(bundleDir, 'node_modules', packageName);
   await fs.ensureDir(dirPath);
   await generateIndexFile(dirPath, name, appName);
+  await generateEsmMjsFile(dirPath, packageName);
   await generatePackageJson(dirPath, packageName);
 }
 
@@ -40,11 +41,26 @@ async function generateIndexFile(dirPath: string, name: string, appName: string)
   return fs.outputFile(indexFilePath, indexFileContent);
 }
 
+async function generateEsmMjsFile(dirPath: string, packageName: string) {
+  const esmMjsPath = join(wsRootDir, 'node_modules', packageName, 'esm.mjs');
+  const exists = await fs.pathExists(esmMjsPath);
+  if (exists) {
+    const targetPath = join(dirPath, 'esm.mjs');
+    return fs.copyFile(esmMjsPath, targetPath);
+  }
+  return Promise.resolve();
+}
+
 async function generatePackageJson(dirPath: string, packageName: string) {
   const packageJsonPath = join(wsRootDir, 'node_modules', packageName, 'package.json');
   const targetPath = join(dirPath, 'package.json');
   const origPackageJson = await fs.readJson(packageJsonPath);
   origPackageJson.main = 'index.js';
+  if (origPackageJson.exports && origPackageJson.exports['.']) {
+    origPackageJson.exports['.'].node.require = './index.js';
+    origPackageJson.exports['.'].node.import = './esm.mjs';
+    origPackageJson.exports['.'].default = './index.js';
+  }
   return fs.writeJson(targetPath, origPackageJson, { spaces: 2 });
 }
 
