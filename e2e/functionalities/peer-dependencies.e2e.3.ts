@@ -259,7 +259,6 @@ describe('peer-dependencies functionality', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(2);
       helper.command.dependenciesSet('comp1', `@${helper.scopes.remote}/comp2@*`, '--peer');
-      helper.command.build();
       helper.command.snapAllComponents();
       helper.command.build();
       workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
@@ -271,6 +270,15 @@ describe('peer-dependencies functionality', function () {
       expect(peerDepData.packageName).to.startWith(`@${helper.scopes.remote}/comp2`);
       expect(peerDepData.versionRange).to.startWith('*');
       const depResolver = output.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
+      const peerDep = depResolver.data.dependencies[0];
+      expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/comp2`);
+      expect(peerDep.lifecycle).to.eq('peer');
+      expect(peerDep.versionRange).to.eq('*');
+    });
+    it('should save the peer dependency in the scope data', () => {
+      const { head } = helper.command.catComponent('comp1');
+      const comp = helper.command.catComponent(`comp1@${head}`);
+      const depResolver = comp.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
       const peerDep = depResolver.data.dependencies[0];
       expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/comp2`);
       expect(peerDep.lifecycle).to.eq('peer');
