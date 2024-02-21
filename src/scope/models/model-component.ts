@@ -796,8 +796,7 @@ export default class Component extends BitObject {
   async collectVersionsObjects(
     repo: Repository,
     versions: string[],
-    ignoreMissingLocalArtifacts = false,
-    ignoreMissingExternalArtifacts = true
+    ignoreMissingLocalArtifacts = true
   ): Promise<ObjectItem[]> {
     const refsWithoutArtifacts: Ref[] = [];
     const artifactsRefs: Ref[] = [];
@@ -816,7 +815,7 @@ export default class Component extends BitObject {
       const refs = versionObject.refsWithOptions(false, false);
       refsWithoutArtifacts.push(...refs);
       const refsFromExtensions = getRefsFromExtensions(versionObject.extensions);
-      locallyChangedHashes.includes(versionObject.hash.toString()) || !ignoreMissingExternalArtifacts
+      locallyChangedHashes.includes(versionObject.hash().toString())
         ? artifactsRefs.push(...refsFromExtensions)
         : artifactsRefsFromExportedVersions.push(...refsFromExtensions);
     });

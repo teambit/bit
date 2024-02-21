@@ -390,9 +390,10 @@ export class MergeLanesMain {
         // no need to export anything else other than the head. the normal calculation of what to export won't apply here
         // as it is done from the scope.
         exportHeadsOnly: shouldSquash,
-        // all artifacts must be pushed. they're all considered "external" in this case, because it's running from a
-        // bare-scope, but we don't want to ignore them, otherwise, they'll be missing from the component-scopes.
-        ignoreMissingExternalArtifacts: false,
+        // all artifacts must be pushed. otherwise, they'll be missing from the component-scopes.
+        // unless this is a merge from main to a lane, in which case it's not necessary to export the artifacts as
+        // the user importing them will get them from main.
+        ignoreMissingArtifacts: fromLaneId.isDefault(),
         exportOrigin: 'lane-merge',
       });
       return exported;
