@@ -17,6 +17,7 @@ import type { Component, ComponentID } from '@teambit/component';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
+import { flatten } from 'lodash';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
@@ -225,11 +226,23 @@ export class TypescriptMain {
   /**
    * create an instance of a typescript semantic schema extractor.
    */
-  createSchemaExtractor(tsconfig: any, tsserverPath?: string, contextPath?: string): SchemaExtractor {
+  createSchemaExtractor(
+    tsconfig: any,
+    tsserverPath?: string,
+    contextPath?: string,
+    schemaTransformers: SchemaTransformer[] = [],
+    apiTransformers: SchemaNodeTransformer[] = []
+  ): SchemaExtractor {
+    const schemaTransformersFromSlot = flatten(Array.from(this.schemaTransformerSlot.values()));
+    const apiTransformersFromSlot = flatten(Array.from(this.apiTransformerSlot.values()));
+
+    const allSchemaTransformers = [...schemaTransformers, ...flatten(schemaTransformersFromSlot)];
+    const allApiTransformers = [...apiTransformers, ...flatten(apiTransformersFromSlot)];
+
     return new TypeScriptExtractor(
       tsconfig,
-      this.schemaTransformerSlot,
-      this.apiTransformerSlot,
+      allSchemaTransformers,
+      allApiTransformers,
       this,
       tsserverPath || this.workspace?.path || '',
       contextPath || this.workspace?.path || '',
