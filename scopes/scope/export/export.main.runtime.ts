@@ -234,7 +234,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     originDirectly,
     idsWithFutureScope,
     resumeExportId,
-    ignoreMissingArtifacts,
+    throwForMissingArtifacts,
     isOnMain = true,
     exportHeadsOnly, // relevant when exporting from bare-scope, especially when re-exporting existing versions, the normal calculation based on getDivergeData won't work
     filterOutExistingVersions, // go to the remote and check whether the version exists there. if so, don't export it
@@ -247,7 +247,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     originDirectly?: boolean;
     idsWithFutureScope: ComponentIdList;
     resumeExportId?: string | undefined;
-    ignoreMissingArtifacts?: boolean;
+    throwForMissingArtifacts?: boolean;
     isOnMain?: boolean;
     exportHeadsOnly?: boolean;
     filterOutExistingVersions?: boolean;
@@ -417,7 +417,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         const objectItems = await modelComponent.collectVersionsObjects(
           scope.objects,
           refs.map((ref) => ref.toString()),
-          ignoreMissingArtifacts
+          throwForMissingArtifacts
         );
         const objectsList = await new ObjectList(objectItems).toBitObjects();
         const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };

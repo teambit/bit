@@ -796,7 +796,7 @@ export default class Component extends BitObject {
   async collectVersionsObjects(
     repo: Repository,
     versions: string[],
-    ignoreMissingLocalArtifacts = true
+    throwForMissingLocalArtifacts = false
   ): Promise<ObjectItem[]> {
     const refsWithoutArtifacts: Ref[] = [];
     const artifactsRefs: Ref[] = [];
@@ -831,9 +831,9 @@ for a component "${this.id()}", versions: ${versions.join(', ')}`);
       throw err;
     }
     try {
-      const loaded = ignoreMissingLocalArtifacts
-        ? await repo.loadManyRawIgnoreMissing(artifactsRefs)
-        : await repo.loadManyRaw(artifactsRefs);
+      const loaded = throwForMissingLocalArtifacts
+        ? await repo.loadManyRaw(artifactsRefs)
+        : await repo.loadManyRawIgnoreMissing(artifactsRefs);
       loadedRefs.push(...loaded);
       // ignore missing artifacts when exporting old versions that were exported in the past and are now exported to a
       // different scope. this is happening for example when exporting a lane that has components from different

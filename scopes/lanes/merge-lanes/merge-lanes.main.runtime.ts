@@ -393,7 +393,7 @@ export class MergeLanesMain {
         // all artifacts must be pushed. otherwise, they'll be missing from the component-scopes.
         // unless this is a merge from main to a lane, in which case it's not necessary to export the artifacts as
         // the user importing them will get them from main.
-        ignoreMissingArtifacts: fromLaneId.isDefault(),
+        throwForMissingArtifacts: !fromLaneId.isDefault(),
         exportOrigin: 'lane-merge',
       });
       return exported;
