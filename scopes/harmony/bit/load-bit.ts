@@ -175,11 +175,11 @@ export async function requireAspects(aspect: Extension, runtime: RuntimeDefiniti
 }
 
 function getMainAspect() {
-  const mainAspectDir = getAspectDir(BitAspect.id);
-  let version: string | undefined;
   const packageName = getCoreAspectPackageName(BitAspect.id);
-
+  let version: string | undefined;
+  let mainAspectDir = '';
   try {
+    mainAspectDir = getAspectDir(BitAspect.id);
     // eslint-disable-next-line global-require
     const packageJson = require(`${mainAspectDir}/package.json`);
     version = packageJson.version;

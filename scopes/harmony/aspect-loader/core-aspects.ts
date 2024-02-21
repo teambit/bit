@@ -1,8 +1,9 @@
 import { BitError } from '@teambit/bit-error';
-import { existsSync, readdir } from 'fs-extra';
+import { existsSync, pathExists, readdir } from 'fs-extra';
 import { basename, dirname, join, resolve } from 'path';
 import { Config } from '@teambit/bvm.config';
 import { findCurrentBvmDir } from '@teambit/bvm.path';
+import findRoot from 'find-root';
 
 let _bvmConfig;
 
@@ -75,7 +76,13 @@ export function getAspectDir(id: string): string {
     dirPath = resolve(__dirname, '../..', aspectName, 'dist');
   }
   if (!existsSync(dirPath)) {
-    throw new Error(`unable to find ${aspectName} in ${dirPath}`);
+    // Maybe it's bundle
+    const aspectPackage = getCoreAspectPackageName(id);
+    try {
+      dirPath = findRoot(require.resolve(aspectPackage));
+    } catch (err: any) {
+      throw new Error(`unable to find ${aspectName}`);
+    }
   }
   return dirPath;
 }
@@ -133,7 +140,9 @@ function getCoreAspectDirFromPath(resolvedModulesPath: string): string {
 }
 
 export function getAspectDistDir(id: string) {
-  return resolve(`${getAspectDir(id)}/dist`);
+  const aspectDir = getAspectDir(id);
+  // When running from bundle there won't be a dist folder
+  return resolve(`${aspectDir}/dist`);
 }
 
 export function getCoreAspectName(id: string): string {
@@ -148,9 +157,15 @@ export function getCoreAspectPackageName(id: string): string {
 }
 
 export async function getAspectDef(aspectName: string, runtime?: string) {
-  const dirPath = getAspectDistDir(aspectName);
+  let dirPath = getAspectDir(aspectName);
+  const distDirPath = getAspectDistDir(aspectName);
+  const isDistDirExists = await pathExists(distDirPath);
+  if (distDirPath && isDistDirExists) {
+    dirPath = join(dirPath, '..');
+  }
 
-  const files = await readdir(dirPath);
+  const filesDir = distDirPath && isDistDirExists ? distDirPath : dirPath;
+  const files = await readdir(filesDir);
   let runtimeFile;
   if (runtime) {
     runtimeFile = files.find((file) => file.includes(`.${runtime}.runtime.js`)) || null;
@@ -159,7 +174,7 @@ export async function getAspectDef(aspectName: string, runtime?: string) {
 
   return {
     id: aspectName,
-    aspectPath: join(dirPath, '..'),
+    aspectPath: dirPath,
     aspectFilePath: aspectFile ? resolve(`${dirPath}/${aspectFile}`) : null,
     runtimePath: runtimeFile ? resolve(`${dirPath}/${runtimeFile}`) : null,
   };
