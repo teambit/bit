@@ -121,77 +121,83 @@ describe('peer-dependencies functionality', function () {
     });
   });
 
-  describe('a component is a peer dependency added by an env', function () {
-    let workspaceCapsulesRootDir: string;
-    before(() => {
-      helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
-      helper.command.create('module', 'peer-dep');
-      helper.command.tagAllComponents();
-      helper.command.export();
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'a component is a peer dependency added by an env',
+    function () {
+      let workspaceCapsulesRootDir: string;
+      let peerPkgName: string;
+      let npmCiRegistry: NpmCiRegistry;
+      before(async () => {
+        helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        npmCiRegistry = new NpmCiRegistry(helper);
+        await npmCiRegistry.init();
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+        helper.command.create('module', 'peer-dep');
+        helper.command.tagAllComponents();
+        helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
-      helper.scopeHelper.addRemoteScope();
-      helper.command.importComponent('peer-dep');
-      helper.env.setCustomNewEnv(
-        undefined,
-        undefined,
-        {
-          policy: {
-            peers: [
-              {
-                name: `@${helper.scopes.remote}/peer-dep`,
-                supportedRange: '*',
-                version: '0.0.1',
-              },
-            ],
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('peer-dep');
+        peerPkgName = `@ci/${helper.scopes.remoteWithoutOwner}.peer-dep`;
+        helper.env.setCustomNewEnv(
+          undefined,
+          undefined,
+          {
+            policy: {
+              peers: [
+                {
+                  name: peerPkgName,
+                  supportedRange: '*',
+                  version: '0.0.1',
+                },
+              ],
+            },
           },
-        },
-        false,
-        'custom-env/env1',
-        'custom-env/env1'
-      );
+          false,
+          'custom-env/env1',
+          'custom-env/env1'
+        );
 
-      helper.fixtures.populateComponents(1);
-      helper.fs.outputFile(
-        `comp1/index.js`,
-        `const peerDep = require("@${helper.scopes.remote}/peer-dep"); // eslint-disable-line`
-      );
-      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
-      helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-env/env1`, {});
-      helper.extensions.addExtensionToVariant('custom-env', 'teambit.envs/env', {});
-      helper.command.install('--add-missing-deps');
-      helper.command.build('--skip-tests');
-      workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
-    });
-    after(() => {
-      helper.scopeHelper.destroy();
-    });
-    it('should save the peer dependency in the model', () => {
-      const output = helper.command.showComponentParsed(`${helper.scopes.remote}/comp1`);
-      expect(output.peerDependencies[0]).to.deep.equal({
-        id: `${helper.scopes.remote}/peer-dep@0.0.1`,
-        relativePaths: [],
-        packageName: `@${helper.scopes.remote}/peer-dep`,
-        versionRange: '*',
+        helper.fixtures.populateComponents(1);
+        helper.fs.outputFile(`comp1/index.js`, `const peerDep = require("${peerPkgName}"); // eslint-disable-line`);
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+        helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-env/env1`, {});
+        helper.extensions.addExtensionToVariant('custom-env', 'teambit.envs/env', {});
+        helper.command.install('--add-missing-deps');
+        helper.command.build('--skip-tests');
+        workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
       });
-      const depResolver = output.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
-      const peerDep = depResolver.data.dependencies[0];
-      expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/peer-dep`);
-      expect(peerDep.lifecycle).to.eq('peer');
-      expect(peerDep.version).to.eq('0.0.1');
-      expect(peerDep.versionRange).to.eq('*');
-    });
-    it('adds peer dependency to the generated package.json', () => {
-      const pkgJson = fs.readJsonSync(
-        path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1/package.json`)
-      );
-      expect(pkgJson.peerDependencies).to.deep.equal({
-        [`@${helper.scopes.remote}/peer-dep`]: '*',
+      after(() => {
+        helper.scopeHelper.destroy();
       });
-    });
-  });
+      it('should save the peer dependency in the model', () => {
+        const output = helper.command.showComponentParsed(`${helper.scopes.remote}/comp1`);
+        expect(output.peerDependencies[0]).to.deep.equal({
+          id: `${helper.scopes.remote}/peer-dep@0.0.1`,
+          relativePaths: [],
+          packageName: peerPkgName,
+          versionRange: '*',
+        });
+        const depResolver = output.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
+        const peerDep = depResolver.data.dependencies[0];
+        expect(peerDep.packageName).to.eq(peerPkgName);
+        expect(peerDep.lifecycle).to.eq('peer');
+        expect(peerDep.version).to.eq('0.0.1');
+        expect(peerDep.versionRange).to.eq('*');
+      });
+      it('adds peer dependency to the generated package.json', () => {
+        const pkgJson = fs.readJsonSync(
+          path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1/package.json`)
+        );
+        expect(pkgJson.peerDependencies).to.deep.equal({
+          [peerPkgName]: '*',
+        });
+      });
+    }
+  );
 
   (supportNpmCiRegistryTesting ? describe : describe.skip)(
     'a component is a peer dependency added by dep set',
