@@ -172,6 +172,7 @@ describe('peer-dependencies functionality', function () {
       });
       after(() => {
         helper.scopeHelper.destroy();
+        npmCiRegistry.destroy();
       });
       it('should save the peer dependency in the model', () => {
         const output = helper.command.showComponentParsed(`${helper.scopes.remote}/comp1`);
