@@ -25,7 +25,9 @@ import { TypescriptAspect } from './typescript.aspect';
 export class TypeScriptExtractor implements SchemaExtractor {
   constructor(
     private tsconfig: any,
+    // refactor to use a flatten list from slot
     private schemaTransformerSlot: SchemaTransformerSlot,
+    // refactor to use a flatten list from slot
     private apiTransformerSlot: APITransformerSlot,
     private tsMain: TypescriptMain,
     private rootTsserverPath: string,
@@ -200,8 +202,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
    * select the correct transformer for a node.
    */
   getTransformer(node: Node, context: SchemaExtractorContext) {
-    const transformers = flatten(this.schemaTransformerSlot.values());
-    const transformer = transformers.find((singleTransformer) => {
+    // const transformers = flatten(this.schemaTransformerSlot.values());
+    const transformer = this.transformers.find((singleTransformer) => {
       return singleTransformer.predicate(node);
     });
     if (!transformer) {
@@ -213,8 +215,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
   }
 
   getAPITransformer(node: SchemaNode) {
-    const transformers = flatten(this.apiTransformerSlot.values());
-    const transformer = transformers.find((singleTransformer) => {
+    // const transformers = flatten(this.apiTransformerSlot.values());
+    const transformer = this.transformers.find((singleTransformer) => {
       return singleTransformer.predicate(node);
     });
     if (!transformer) {
@@ -229,14 +231,17 @@ export class TypeScriptExtractor implements SchemaExtractor {
       const tsconfig = getTsconfig(options.tsconfig)?.config || { compilerOptions: options.compilerOptions };
       const tsMain = context.getAspect<TypescriptMain>(TypescriptAspect.id);
       const aspectLoaderMain = context.getAspect<AspectLoaderMain>(AspectLoaderAspect.id);
+      const transformerFromOptions = options.transformers || [];
 
+      // extract from slot
+      const transformers = options.transformers.concat(tsMain.apiTransformerSlot.values());
       // When loading the env from a scope you don't have a workspace
       const rootPath = tsMain.workspace?.path || tsMain.scope.path || '';
 
       return new TypeScriptExtractor(
         tsconfig,
         tsMain.schemaTransformerSlot,
-        tsMain.apiTransformerSlot,
+        transformers,
         tsMain,
         rootPath,
         rootPath,
