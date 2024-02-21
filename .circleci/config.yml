@@ -860,7 +860,6 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
-    parallelism: 25
     steps:
       - attach_workspace:
           at: ./
