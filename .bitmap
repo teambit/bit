@@ -1549,6 +1549,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-tab-page"
     },
+    "ui/code-view": {
+        "name": "ui/code-view",
+        "scope": "teambit.code",
+        "version": "0.0.519",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/code-view"
+    },
     "ui/compare/lane-compare": {
         "name": "ui/compare/lane-compare",
         "scope": "teambit.lanes",
