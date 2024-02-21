@@ -105,19 +105,24 @@ export async function addDeps(
       return acc;
     }, {});
   };
-  const dependenciesData = {
-    allDependencies: {
-      dependencies: compDeps,
-      devDependencies: compDevDeps,
-    },
-    allPackagesDependencies: {
-      packageDependencies: toPackageObj(packageDeps.filter((dep) => dep.type === 'runtime')),
-      devPackageDependencies: toPackageObj(packageDeps.filter((dep) => dep.type === 'dev')),
-      peerPackageDependencies: toPackageObj(packageDeps.filter((dep) => dep.type === 'peer')),
-    },
+  const getPkgObj = (type: 'runtime' | 'dev' | 'peer') => {
+    return toPackageObj(packageDeps.filter((dep) => dep.type === type));
   };
 
   const consumerComponent = component.state._consumer as ConsumerComponent;
+
+  const dependenciesData = {
+    allDependencies: {
+      dependencies: [...compDeps, ...consumerComponent.dependencies.get()],
+      devDependencies: [...compDevDeps, ...consumerComponent.devDependencies.get()],
+    },
+    allPackagesDependencies: {
+      packageDependencies: { ...consumerComponent.packageDependencies, ...getPkgObj('runtime') },
+      devPackageDependencies: { ...consumerComponent.devPackageDependencies, ...getPkgObj('dev') },
+      peerPackageDependencies: { ...consumerComponent.peerPackageDependencies, ...getPkgObj('peer') },
+    },
+  };
+
   // add the dependencies to the legacy ConsumerComponent object
   // it takes care of both: given dependencies (from the cli) and the overrides, which are coming from the env.
   await deps.loadDependenciesFromScope(consumerComponent, dependenciesData);
