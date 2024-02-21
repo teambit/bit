@@ -86,6 +86,7 @@ export type SnapDataParsed = {
     isComponent: boolean;
     type: 'runtime' | 'dev' | 'peer';
   }[];
+  removeDependencies?: string[];
 };
 
 export type SnapResults = BasicTagResults & {
@@ -415,6 +416,7 @@ if you're willing to lose the history from the head to the specified version, us
           isComponent: dep.isComponent ?? true,
           type: dep.type ?? 'runtime',
         })),
+        removeDependencies: snapData.removeDependencies,
       };
     });
 

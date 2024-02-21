@@ -108,18 +108,30 @@ export async function addDeps(
   const getPkgObj = (type: 'runtime' | 'dev' | 'peer') => {
     return toPackageObj(packageDeps.filter((dep) => dep.type === type));
   };
+  const filterRemovedPkgs = (pkgs: Record<string, string>) => {
+    snapData.removeDependencies?.forEach((pkg) => {
+      delete pkgs[pkg];
+    });
+    return pkgs;
+  };
+  const filterRemovedDeps = (currentCompDeps: Dependency[]) => {
+    return currentCompDeps.filter((dep) => !snapData.removeDependencies?.includes(dep.id.toStringWithoutVersion()));
+  };
 
   const consumerComponent = component.state._consumer as ConsumerComponent;
 
   const dependenciesData = {
     allDependencies: {
-      dependencies: [...compDeps, ...consumerComponent.dependencies.get()],
-      devDependencies: [...compDevDeps, ...consumerComponent.devDependencies.get()],
+      dependencies: [...compDeps, ...filterRemovedDeps(consumerComponent.dependencies.get())],
+      devDependencies: [...compDevDeps, ...filterRemovedDeps(consumerComponent.devDependencies.get())],
     },
     allPackagesDependencies: {
-      packageDependencies: { ...consumerComponent.packageDependencies, ...getPkgObj('runtime') },
-      devPackageDependencies: { ...consumerComponent.devPackageDependencies, ...getPkgObj('dev') },
-      peerPackageDependencies: { ...consumerComponent.peerPackageDependencies, ...getPkgObj('peer') },
+      packageDependencies: { ...filterRemovedPkgs(consumerComponent.packageDependencies), ...getPkgObj('runtime') },
+      devPackageDependencies: { ...filterRemovedPkgs(consumerComponent.devPackageDependencies), ...getPkgObj('dev') },
+      peerPackageDependencies: {
+        ...filterRemovedPkgs(consumerComponent.peerPackageDependencies),
+        ...getPkgObj('peer'),
+      },
     },
   };
 

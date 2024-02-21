@@ -22,6 +22,7 @@ export type SnapDataPerCompRaw = {
     isComponent?: boolean; // default true. if false, it's a package dependency
     type?: 'runtime' | 'dev' | 'peer'; // default "runtime".
   }>;
+  removeDependencies?: string[];
 };
 
 type SnapFromScopeOptions = {
@@ -40,7 +41,7 @@ export class SnapFromScopeCmd implements Command {
 the input data is a stringified JSON of an array of the following object.
 {
   componentId: string;     // ids always have scope, so it's safe to parse them from string
-  dependencies?: string[]; // dependencies to update their versions, e.g. [teambit/compiler@1.0.0, teambit/tester@1.0.0]
+  dependencies?: string[]; // dependencies component-ids to update their versions, e.g. [teambit.compilation/compiler@1.0.0, teambit.defender/tester@1.0.0]
   aspects?: Record<string,any> // e.g. { "teambit.react/react": {}, "teambit.envs/envs": { "env": "teambit.react/react" } }
   message?: string;       // tag-message.
   files?: Array<{path: string, content: string}>; // replace content of specified source-files. the content is base64 encoded.
@@ -52,6 +53,7 @@ the input data is a stringified JSON of an array of the following object.
     isComponent?: boolean;   // default true. if false, it's a package dependency
     type?: 'runtime' | 'dev' | 'peer'; // default "runtime".
   }>;
+  removeDependencies?: string[]; // component-id (for components) or package-name (for packages) to remove from the dependencies.
 }
 an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "first snap"}]'
 `;

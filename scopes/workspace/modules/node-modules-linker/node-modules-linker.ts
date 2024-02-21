@@ -48,6 +48,9 @@ export default class NodeModuleLinker {
     links.addBasePath(workspacePath);
     await links.persistAllToFS();
     await this.consumer?.componentFsCache.deleteAllDependenciesDataCache();
+    // if this cache is not cleared, then when asking workspace.get again to the same component, it returns it with
+    // component-issues like "MissingLinksFromNodeModulesToSrc" incorrectly.
+    this.workspace.clearAllComponentsCache();
     await linkPkgsToBitRoots(
       workspacePath,
       this.components.map((comp) => componentIdToPackageName(comp.state._consumer))
