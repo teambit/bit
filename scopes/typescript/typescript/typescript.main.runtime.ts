@@ -236,8 +236,8 @@ export class TypescriptMain {
     const schemaTransformersFromSlot = flatten(Array.from(this.schemaTransformerSlot.values()));
     const apiTransformersFromSlot = flatten(Array.from(this.apiTransformerSlot.values()));
 
-    const allSchemaTransformers = [...schemaTransformers, ...flatten(schemaTransformersFromSlot)];
-    const allApiTransformers = [...apiTransformers, ...flatten(apiTransformersFromSlot)];
+    const allSchemaTransformers = schemaTransformers.concat(schemaTransformersFromSlot);
+    const allApiTransformers = apiTransformers.concat(apiTransformersFromSlot);
 
     return new TypeScriptExtractor(
       tsconfig,
