@@ -14,6 +14,7 @@ import {
   InferenceTypeSchema,
   Location,
   DocSchema,
+  IgnoredSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import isRelativeImport from '@teambit/legacy/dist/utils/is-relative-import';
 import { ComponentDependency } from '@teambit/dependency-resolver';
@@ -492,7 +493,11 @@ export class SchemaExtractorContext {
     }
 
     const apiTransformer = this.extractor.getAPITransformer(schemaNode);
-    return apiTransformer ? apiTransformer.transform(schemaNode, this) : schemaNode;
+    let transformedApi = apiTransformer ? await apiTransformer.transform(schemaNode, this) : schemaNode;
+    if (!transformedApi) {
+      transformedApi = new IgnoredSchema(schemaNode);
+    }
+    return transformedApi;
   }
 
   private getCompIdByPkgName(pkgName: string): ComponentID | undefined {

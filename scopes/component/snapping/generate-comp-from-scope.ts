@@ -97,6 +97,7 @@ export async function addDeps(
   };
   const compDeps = compIdsDataParsed.filter((c) => c.type === 'runtime').map((dep) => toDependency(dep.id));
   const compDevDeps = compIdsDataParsed.filter((c) => c.type === 'dev').map((dep) => toDependency(dep.id));
+  const compPeerDeps = compIdsDataParsed.filter((c) => c.type === 'peer').map((dep) => toDependency(dep.id));
   const packageDeps = newDeps.filter((dep) => !dep.isComponent);
   const toPackageObj = (pkgs: Array<{ id: string; version?: string }>) => {
     return pkgs.reduce((acc, curr) => {
@@ -115,6 +116,7 @@ export async function addDeps(
     allDependencies: {
       dependencies: [...compDeps, ...consumerComponent.dependencies.get()],
       devDependencies: [...compDevDeps, ...consumerComponent.devDependencies.get()],
+      peerDependencies: [...compPeerDeps, ...consumerComponent.peerDependencies.get()],
     },
     allPackagesDependencies: {
       packageDependencies: { ...consumerComponent.packageDependencies, ...getPkgObj('runtime') },
