@@ -149,7 +149,7 @@ export default class Dependencies {
           `failed validating ${bitId.toString()}, one of the dependencies has the same id as the component`
         );
       }
-      const permittedProperties = ['id', 'relativePaths', 'packageName'];
+      const permittedProperties = ['id', 'relativePaths', 'packageName', 'versionRange'];
       const currentProperties = Object.keys(dependency);
       currentProperties.forEach((currentProp) => {
         if (!permittedProperties.includes(currentProp)) {

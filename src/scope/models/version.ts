@@ -45,7 +45,7 @@ export type Log = {
   email: string | undefined;
 };
 
-export type DepEdgeType = 'prod' | 'dev' | 'ext';
+export type DepEdgeType = 'prod' | 'dev' | 'peer' | 'ext';
 export type DepEdge = { source: ComponentID; target: ComponentID; type: DepEdgeType };
 
 type ExternalHead = { head: Ref; laneId: LaneId };
@@ -59,6 +59,7 @@ export type VersionProps = {
   docs?: Doclet[];
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
+  peerDependencies?: Dependency[];
   flattenedDependencies?: ComponentIdList;
   _flattenedEdges?: DepEdge[];
   flattenedEdges?: DepEdge[];
@@ -95,6 +96,7 @@ export default class Version extends BitObject {
   docs: Doclet[] | undefined;
   dependencies: Dependencies;
   devDependencies: Dependencies;
+  peerDependencies: Dependencies;
   flattenedDependencies: ComponentIdList;
   flattenedEdgesRef?: Ref; // ref to a BitObject Source file, which is a JSON object containing the flattened edge
   _flattenedEdges?: DepEdge[]; // caching for the flattenedEdges
@@ -138,6 +140,7 @@ export default class Version extends BitObject {
     this.log = props.log;
     this.dependencies = new Dependencies(props.dependencies);
     this.devDependencies = new Dependencies(props.devDependencies);
+    this.peerDependencies = new Dependencies(props.peerDependencies);
     this.docs = props.docs;
     this.flattenedDependencies = props.flattenedDependencies || new ComponentIdList();
     this.flattenedEdges = props.flattenedEdges || [];
@@ -294,11 +297,13 @@ export default class Version extends BitObject {
   get depsIdsGroupedByType(): {
     dependencies: ComponentIdList;
     devDependencies: ComponentIdList;
+    peerDependencies: ComponentIdList;
     extensionDependencies: ComponentIdList;
   } {
     return {
       dependencies: this.dependencies.getAllIds(),
       devDependencies: this.devDependencies.getAllIds(),
+      peerDependencies: this.peerDependencies.getAllIds(),
       extensionDependencies: this.extensions.extensionsBitIds,
     };
   }
