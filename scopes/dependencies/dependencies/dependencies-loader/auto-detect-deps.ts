@@ -401,7 +401,7 @@ export class AutoDetectDeps {
       this.addImportNonMainIssueIfNeeded(originFile, compDep);
       const currentComponentsDeps = new Dependency(existingId, [], compDep.name);
       if (compDep.packageJsonContent?.bit?.peer) {
-        currentComponentsDeps.versionPolicy = compDep.packageJsonContent?.bit?.defaultPeerRange ?? '*';
+        currentComponentsDeps.versionRange = compDep.packageJsonContent?.bit?.defaultPeerRange ?? '*';
       }
       this._pushToDependenciesIfNotExist(
         currentComponentsDeps,

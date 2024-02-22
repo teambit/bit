@@ -28,14 +28,14 @@ describe('set-peer', function () {
         id: `${helper.scopes.remote}/comp2`,
         relativePaths: [],
         packageName: `@${helper.scopes.remote}/comp2`,
-        versionPolicy: '0',
+        versionRange: '0',
       });
       const depResolver = output.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
       const peerDep = depResolver.data.dependencies[0];
       expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/comp2`);
       expect(peerDep.lifecycle).to.eq('peer');
       expect(peerDep.version).to.eq('latest');
-      expect(peerDep.versionPolicy).to.eq('0');
+      expect(peerDep.versionRange).to.eq('0');
     });
     it('adds peer dependency to the generated package.json', () => {
       const pkgJson = fs.readJsonSync(

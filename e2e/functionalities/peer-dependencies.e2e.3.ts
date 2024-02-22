@@ -367,14 +367,14 @@ describe('peer-dependencies functionality', function () {
         id: `${helper.scopes.remote}/peer-dep@0.0.1`,
         relativePaths: [],
         packageName: `@${helper.scopes.remote}/peer-dep`,
-        versionPolicy: '*',
+        versionRange: '*',
       });
       const depResolver = output.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
       const peerDep = depResolver.data.dependencies[0];
       expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/peer-dep`);
       expect(peerDep.lifecycle).to.eq('peer');
       expect(peerDep.version).to.eq('0.0.1');
-      expect(peerDep.versionPolicy).to.eq('*');
+      expect(peerDep.versionRange).to.eq('*');
     });
     it('adds peer dependency to the generated package.json', () => {
       const pkgJson = fs.readJsonSync(
@@ -425,14 +425,14 @@ describe('peer-dependencies functionality', function () {
           id: `${helper.scopes.remote}/peer-dep@0.0.1`,
           relativePaths: [],
           packageName: peerName,
-          versionPolicy: '*',
+          versionRange: '*',
         });
         const depResolver = output.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
         const peerDep = depResolver.data.dependencies[0];
         expect(peerDep.packageName).to.eq(peerName);
         expect(peerDep.lifecycle).to.eq('peer');
         expect(peerDep.version).to.eq('0.0.1');
-        expect(peerDep.versionPolicy).to.eq('*');
+        expect(peerDep.versionRange).to.eq('*');
       });
       it('adds peer dependency to the generated package.json', () => {
         const pkgJson = fs.readJsonSync(
