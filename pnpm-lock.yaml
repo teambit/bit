@@ -15342,6 +15342,9 @@ importers:
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
+      pluralize:
+        specifier: 8.0.0
+        version: 8.0.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15367,6 +15370,9 @@ importers:
       '@types/node':
         specifier: 12.20.4
         version: 12.20.4
+      '@types/pluralize':
+        specifier: 0.0.29
+        version: 0.0.29
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.75
@@ -26261,9 +26267,15 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
+      assert:
+        specifier: ^2.1.0
+        version: 2.1.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
+      buffer:
+        specifier: 6.0.3
+        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -26318,6 +26330,9 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
+      punycode:
+        specifier: ^2.3.1
+        version: 2.3.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -26339,12 +26354,21 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
+      string_decoder:
+        specifier: ^1.3.0
+        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
+      url:
+        specifier: ^0.11.3
+        version: 0.11.3
+      util:
+        specifier: ^0.12.5
+        version: 0.12.5
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -71293,6 +71317,7 @@ packages:
       react-dom: '*'
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': file:components/models/api-node-renderer(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': file:scopes/api-reference/renderers/grouped-schema-nodes-overview-summary(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.api-node-details': file:components/renderers/api-node-details(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       core-js: 3.13.0
@@ -72503,6 +72528,7 @@ packages:
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       classnames: 2.2.6
       core-js: 3.13.0
+      pluralize: 8.0.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
       react-syntax-highlighter: 15.5.0(react@17.0.2)

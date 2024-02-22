@@ -113,6 +113,8 @@ export class BuilderMain {
     isolateOptions: IsolateComponentsOptions = {},
     builderOptions: BuilderServiceOptions = {}
   ): Promise<OnTagResults> {
+    console.log('🚀 ~ file: builder.main.runtime.ts:117 ~ BuilderMain ~ tagListener:');
+
     const pipeResults: TaskResultsList[] = [];
     const allTasksResults: TaskResults[] = [];
     const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap, populateArtifactsFrom } = options;
@@ -369,6 +371,9 @@ export class BuilderMain {
     extraOptions?: { includeTag?: boolean; includeSnap?: boolean }
   ): Promise<TaskResultsList> {
     const ids = components.map((c) => c.id);
+
+    console.log('🚀 ~ file: builder.main.runtime.ts:375 ~ BuilderMain:');
+
     const capsulesBaseDir = this.buildService.getComponentsCapsulesBaseDir();
     const baseIsolateOpts = {
       baseDir: capsulesBaseDir,
@@ -388,6 +393,9 @@ export class BuilderMain {
       ...(builderOptions || {}),
     };
     this.logger.consoleTitle(`Total ${components.length} components to build`);
+    console.log(
+      '🚀 ~ file: builder.main.runtime.ts:396 ~ await envs.runOnce(this.buildService, builderServiceOptions):'
+    );
     const buildResult: TaskResultsList = await envs.runOnce(this.buildService, builderServiceOptions);
 
     if (extraOptions?.includeSnap || extraOptions?.includeTag) {

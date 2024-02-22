@@ -334,6 +334,7 @@ export async function tagModelComponent({
 
   const publishedPackages: string[] = [];
   let harmonyComps: Component[] = [];
+  // here is tag building
   if (build) {
     const onTagOpts: OnTagOpts = {
       disableTagAndSnapPipelines,
@@ -347,10 +348,16 @@ export async function tagModelComponent({
     const builderOptions = { exitOnFirstFailedTask, skipTests };
 
     const componentsToBuild = allComponentsToTag.filter((c) => !c.isRemoved());
+
+    console.log('🚀 ~ file: tag-model-component.ts:352 ~ componentsToBuild:');
+
     if (componentsToBuild.length) {
       await scope.reloadAspectsWithNewVersion(componentsToBuild);
       harmonyComps = await (workspace || scope).getManyByLegacy(componentsToBuild);
       const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions, builderOptions);
+
+      console.log('🚀 ~ file: tag-model-component.ts:359 ~ :');
+
       const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
 
       snapping._updateComponentsByTagResult(componentsToBuild, buildResult);

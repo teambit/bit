@@ -123,6 +123,8 @@ export class WebpackMain {
     initialConfigs?: webpack.Configuration[],
     webpackModuleOrPath?: string | any
   ) {
+    console.log('🚀 ~ file: webpack.main.runtime.ts:127 ~ WebpackMain ~ createBundler:');
+
     const transformerContext: GlobalWebpackConfigTransformContext = {
       mode: 'prod',
       isEnvTemplate: context.metaData?.isEnvTemplate,
@@ -131,6 +133,9 @@ export class WebpackMain {
     const configs =
       initialConfigs ||
       this.createConfigs(context.targets, baseConfigFactory, transformers, transformerContext, context);
+
+    console.log('🚀 ~ file: webpack.main.runtime.ts:135 ~ WebpackMain ~ configs:', configs);
+
     return new WebpackBundler(
       context.targets,
       configs,

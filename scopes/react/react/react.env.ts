@@ -349,6 +349,7 @@ export class ReactEnv
     transformers: WebpackConfigTransformer[] = [],
     webpackModulePath?: string
   ): Promise<Bundler> {
+    console.log('🚀 ~ file: react.env.ts:353 ~ getBundler:');
     return this.createComponentsWebpackBundler(context, transformers, webpackModulePath);
   }
 
@@ -357,6 +358,8 @@ export class ReactEnv
     transformers: WebpackConfigTransformer[] = [],
     webpackModulePath?: string
   ): Promise<Bundler> {
+    console.log('🚀 ~ file: react.env.ts:362 ~ createComponentsWebpackBundler ~ context:');
+
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(context.development);
     const componentProdConfig = componentPreviewProdConfigFactory();
@@ -417,7 +420,7 @@ export class ReactEnv
   getPreviewConfig() {
     return {
       strategyName: COMPONENT_PREVIEW_STRATEGY_NAME as PreviewStrategyName,
-      splitComponentBundle: true,
+      splitComponentBundle: true, // here
       isScaling: true,
     };
   }

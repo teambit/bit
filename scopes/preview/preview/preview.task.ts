@@ -39,6 +39,7 @@ export class PreviewTask implements BuildTask {
     const bundlingStrategy = this.preview.getBundlingStrategy(context.env);
     const envPreviewConfig = this.preview.getEnvPreviewConfig(context.env);
     const splitComponentBundle = envPreviewConfig.splitComponentBundle ?? false;
+    console.log('🚀 ~ file: preview.task.ts:38 ~ PreviewTask ~ execute ~ splitComponentBundle:', splitComponentBundle);
     const computeTargetsContext = Object.assign(context, { splitComponentBundle });
 
     const targets: Target[] = await bundlingStrategy.computeTargets(computeTargetsContext, defs, this);

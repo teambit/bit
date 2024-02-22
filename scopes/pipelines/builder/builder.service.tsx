@@ -92,6 +92,8 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
    * runs all tasks for all envs
    */
   async runOnce(envsExecutionContext: ExecutionContext[], options: BuilderServiceOptions): Promise<TaskResultsList> {
+    console.log('🚀 ~ file: builder.service.tsx:96 ~ BuilderService ~ runOnce');
+
     const envs = envsExecutionContext.map((executionContext) => executionContext.envDefinition);
     const tasksQueue = calculatePipelineOrder(
       this.taskSlot,

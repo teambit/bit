@@ -308,6 +308,9 @@ export class PreviewMain {
   async calcPreviewData(component: Component): Promise<PreviewComponentData> {
     const doesScaling = await this.calcDoesScalingForComponent(component);
     const dataFromEnv = await this.calcPreviewDataFromEnv(component);
+
+    console.log('🚀 ~ file: preview.main.runtime.ts:312 ~ PreviewMain ~ calcPreviewData ~ dataFromEnv:', dataFromEnv);
+
     const envData = (await this.calculateDataForEnvComponent(component)) || {};
     const onlyOverview = await this.calculateIncludeOnlyOverview(component);
     const useNameParam = await this.calculateUseNameParam(component);
@@ -871,6 +874,8 @@ export class PreviewMain {
   };
 
   getEnvPreviewConfig(env?: PreviewEnv): EnvPreviewConfig {
+    console.log('🚀 ~ file: preview.main.runtime.ts:875 ~ PreviewMain ~ getEnvPreviewConfig');
+
     const config = env?.getPreviewConfig && typeof env?.getPreviewConfig === 'function' ? env?.getPreviewConfig() : {};
 
     return config;
@@ -883,6 +888,12 @@ export class PreviewMain {
     const defaultStrategies = this.getDefaultStrategies();
     const envPreviewConfig = this.getEnvPreviewConfig(env);
     const strategyFromEnv = envPreviewConfig?.strategyName;
+
+    console.log(
+      '🚀 ~ file: preview.main.runtime.ts:889 ~ PreviewMain ~ getBundlingStrategy ~ strategyFromEnv:',
+      strategyFromEnv
+    );
+
     const strategyName = strategyFromEnv || this.config.bundlingStrategy || 'env';
     const strategies = this.bundlingStrategySlot.values().concat(defaultStrategies);
     const selected = strategies.find((strategy) => {

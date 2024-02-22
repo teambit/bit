@@ -1,7 +1,7 @@
 /* eslint-disable complexity */
 import webpack, { Configuration } from 'webpack';
 import { isUndefined, omitBy } from 'lodash';
-import CompressionPlugin from 'compression-webpack-plugin';
+// import CompressionPlugin from 'compression-webpack-plugin';
 import { sep } from 'path';
 import type { BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
@@ -20,6 +20,14 @@ export function configFactory(target: Target, context: BundlerContext): Configur
   const dev = Boolean(context.development);
   const htmlConfig = target.html ?? context.html;
   const compress = target.compress ?? context.compress;
+
+  console.log('🚀 ~ file: webpack.config.ts:24 ~ configFactory ~ compress:', compress);
+  console.log('🚀 ~ file: webpack.config.ts:24 ~ configFactory ~ truthyEntries:', Object.keys(truthyEntries).length);
+  console.log(
+    '🚀 ~ file: webpack.config.ts:24 ~ configFactory ~ truthyEntries:',
+    Object.values(truthyEntries).map((entry) => entry.filename)
+  );
+
   const htmlPlugins = htmlConfig ? generateHtmlPlugins(htmlConfig) : undefined;
   const splitChunks = target.chunking?.splitChunks;
 
@@ -89,7 +97,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     if (!config.plugins) {
       config.plugins = [];
     }
-    config.plugins = config.plugins.concat(new CompressionPlugin());
+    // config.plugins = config.plugins.concat(new CompressionPlugin());
   }
   return config;
 }
