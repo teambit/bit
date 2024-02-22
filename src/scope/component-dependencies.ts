@@ -5,6 +5,7 @@ export default class ComponentWithDependencies {
   component: Component;
   dependencies: Component[];
   devDependencies: Component[];
+  peerDependencies: Component[];
   extensionDependencies: Component[];
   missingDependencies: ComponentID[];
 
@@ -12,18 +13,20 @@ export default class ComponentWithDependencies {
     component: Component;
     dependencies: Component[];
     devDependencies: Component[];
+    peerDependencies: Component[];
     extensionDependencies: Component[];
     missingDependencies?: ComponentID[];
   }) {
     this.component = props.component;
     this.dependencies = props.dependencies || [];
     this.devDependencies = props.devDependencies || [];
+    this.peerDependencies = props.peerDependencies || [];
     this.extensionDependencies = props.extensionDependencies || [];
     this.missingDependencies = props.missingDependencies || [];
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get allDependencies() {
-    return [...this.dependencies, ...this.devDependencies, ...this.extensionDependencies];
+    return [...this.dependencies, ...this.devDependencies, ...this.peerDependencies, ...this.extensionDependencies];
   }
 }

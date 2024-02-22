@@ -21,6 +21,8 @@ export function lifecycleToDepType(compDep: ComponentDependency): DepEdgeType {
       return 'dev';
     case 'runtime':
       return 'prod';
+    case 'peer':
+      return 'peer';
     default:
       throw new Error(`lifecycle ${compDep.lifecycle} is not support`);
   }
