@@ -1766,6 +1766,20 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/hooks/scope-context"
     },
+    "ui/hooks/use-core-aspects": {
+        "name": "ui/hooks/use-core-aspects",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/hooks/use-core-aspects",
+        "config": {
+            "bitdev.react/react-env@1.1.43": {},
+            "teambit.envs/envs": {
+                "env": "bitdev.react/react-env"
+            }
+        }
+    },
     "ui/inputs/lane-selector": {
         "name": "ui/inputs/lane-selector",
         "scope": "teambit.lanes",

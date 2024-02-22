@@ -8,7 +8,10 @@ import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
 import markDownSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { useLocation, useNavigate } from '@teambit/base-react.navigation.link';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
+import { DependencyType } from '@teambit/code.ui.queries.get-component-code';
 import { ComponentID } from '@teambit/component';
+import { useCoreAspects } from '@teambit/harmony.ui.hooks.use-core-aspects';
 import styles from './code-view.module.scss';
 
 export type CodeViewProps = {
@@ -18,6 +21,7 @@ export type CodeViewProps = {
   icon?: string;
   loading?: boolean;
   codeSnippetClassName?: string;
+  dependencies?: DependencyType[];
 } & HTMLAttributes<HTMLDivElement>;
 
 SyntaxHighlighter.registerLanguage('md', markDownSyntax);
@@ -56,7 +60,12 @@ export function CodeView({
   currentFileContent,
   codeSnippetClassName,
   loading: loadingFromProps,
+  dependencies,
 }: CodeViewProps) {
+  const depsByPackageName = new Map<string, DependencyType>(
+    (dependencies || []).map((dep) => [(dep.packageName || dep.id).toString(), dep])
+  );
+  const coreAspects = useCoreAspects();
   const { fileContent: downloadedFileContent, loading: loadingFileContent } = useFileContent(
     componentId,
     currentFile,
@@ -109,7 +118,7 @@ export function CodeView({
       let isKeywordHighlighted = false;
 
       return rows.map((node, index) => {
-        console.log('🚀 ~ returnrows.map ~ node:', node);
+        // console.log('🚀 ~ returnrows.map ~ node:', node);
         const lineText = node.children
           .map((child) => child.children?.[0]?.value ?? '')
           .join('')
@@ -121,23 +130,24 @@ export function CodeView({
         const isHighlighted = lineNum === lineNumber || matchesSearchWord || isInRange;
 
         if (isHighlighted && searchKeyword) isKeywordHighlighted = true;
-        const lineTextWithoutLineNumber = lineText.replace(/^\d+\s*/, '');
-        if (lineTextWithoutLineNumber.startsWith('import')) {
-          node.children.forEach((child) => {
-            console.log('🚀 ~ node.children.forEach ~ child:', child);
-            if (child.properties?.className?.includes('string')) {
-              console.log('🚀 ~ node.children.forEach ~ child.children[0].value:', child.children[0].value);
-              const packageNameOrPath = child.children[0].value.replace(/['"]/g, ''); // Strip quotes
-              // const link = `/path/to/${packageNameOrPath}`; // Construct your link here
-              const link = `/path/to/${packageNameOrPath}`; // Construct your link here
-
-              // Replace the original text with a clickable link
+        node.children.forEach((child) => {
+          if (child.properties?.className?.includes('string')) {
+            const packageNameOrPath = child.children[0].value.replace(/['"]/g, '');
+            const dep = depsByPackageName.get(packageNameOrPath);
+            if (dep || coreAspects[packageNameOrPath]) {
+              const id = dep
+                ? (dep?.__typename === 'ComponentDependency' && ComponentID.fromString(dep.id)) || undefined
+                : ComponentID.fromString(coreAspects[packageNameOrPath]);
+              const link = id
+                ? ComponentUrl.toUrl(id, {
+                    includeVersion: true,
+                  })
+                : `https://www.npmjs.com/package/${packageNameOrPath}`;
               child.tagName = 'a';
-              child.properties = { ...child.properties, href: link };
-              child.children[0].value = packageNameOrPath;
+              child.properties = { ...child.properties, href: link, target: '_blank' };
             }
-          });
-        }
+          }
+        });
 
         let lineNumberNode;
         if (node.children.length > 0 && node.children[0].properties.className.includes('linenumber')) {
@@ -179,7 +189,7 @@ export function CodeView({
         );
       });
     },
-    [onLineClicked, searchKeyword, lineNumber, lineRange]
+    [onLineClicked, searchKeyword, lineNumber, lineRange, coreAspects, depsByPackageName.size]
   );
 
   if (!fileContent && !loading && currentFile) return <EmptyCodeView />;

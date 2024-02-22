@@ -92,6 +92,7 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
           currentFileContent={currentArtifactFileContent}
           loading={loadingArtifactFileContent}
           codeSnippetClassName={codeViewClassName}
+          dependencies={dependencies}
         />
       </Pane>
       <HoverSplitter className={styles.splitter}>
