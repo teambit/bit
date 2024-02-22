@@ -82,6 +82,7 @@ export type WorkspaceInstallOptions = {
   optimizeReportForNonTerminal?: boolean;
   lockfileOnly?: boolean;
   writeConfigFiles?: boolean;
+  skipPrune?: boolean;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -232,7 +233,12 @@ export class InstallMain {
     // this.logger.console(
     // `the following environments are not installed yet: ${nonLoadedEnvs.join(', ')}. installing them now...`
     // );
-    await this.install(packages, { addMissingDeps: installMissing, skipIfExisting: true });
+    await this.install(packages, {
+      addMissingDeps: installMissing,
+      skipIfExisting: true,
+      writeConfigFiles: false,
+      // skipPrune: true,
+    });
   }
 
   private async _addPackages(packages: string[], options?: WorkspaceInstallOptions) {
@@ -383,7 +389,7 @@ export class InstallMain {
       current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
-    if (!options?.lockfileOnly) {
+    if (!options?.lockfileOnly || !options?.skipPrune) {
       // We clean node_modules only after the last install.
       // Otherwise, we might load an env from a location that we later remove.
       await installer.pruneModules(this.workspace.path);
