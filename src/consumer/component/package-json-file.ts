@@ -174,6 +174,13 @@ export default class PackageJsonFile {
     this.packageJsonObject.devDependencies = Object.assign({}, this.packageJsonObject.devDependencies, dependencies);
   }
 
+  addPeerDependencies(peerDependencies: Record<string, string>) {
+    this.packageJsonObject.peerDependencies = {
+      ...this.packageJsonObject.peerDependencies,
+      ...peerDependencies,
+    };
+  }
+
   removeDependency(dependency: string) {
     delete this.packageJsonObject.dependencies[dependency];
   }

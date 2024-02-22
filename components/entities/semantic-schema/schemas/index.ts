@@ -44,4 +44,5 @@ export { ArrayLiteralExpressionSchema } from './array-literal-expression';
 export { PropertyAssignmentSchema } from './property-assignment';
 export { DecoratorSchema } from './decorator';
 export { LiteralValueSchema } from './literal-value';
+export { IgnoredSchema } from './ignored';
 export * from './docs';

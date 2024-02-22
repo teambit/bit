@@ -41,6 +41,7 @@ export default class VersionDependencies {
       component,
       dependencies,
       devDependencies: [],
+      peerDependencies: [],
       extensionDependencies: [],
       missingDependencies: this.getMissingDependencies(),
     });
