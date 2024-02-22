@@ -1,7 +1,7 @@
 /* eslint-disable complexity */
 import webpack, { Configuration } from 'webpack';
 import { isUndefined, omitBy } from 'lodash';
-// import CompressionPlugin from 'compression-webpack-plugin';
+import CompressionPlugin from 'compression-webpack-plugin';
 import { sep } from 'path';
 import type { BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
@@ -97,7 +97,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     if (!config.plugins) {
       config.plugins = [];
     }
-    // config.plugins = config.plugins.concat(new CompressionPlugin());
+    config.plugins = config.plugins.concat(new CompressionPlugin());
   }
   return config;
 }
