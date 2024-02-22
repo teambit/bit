@@ -70,4 +70,18 @@ export class ClassSchema extends SchemaNode {
       decorators
     );
   }
+
+  static fromSchema(node: ClassSchema, memberTransformer: (_node: SchemaNode) => SchemaNode = (_node) => _node) {
+    return new ClassSchema(
+      node.name,
+      node.members.map(memberTransformer),
+      node.location,
+      node.signature,
+      node.doc,
+      node.typeParams,
+      node.extendsNodes,
+      node.implementNodes,
+      node.decorators
+    );
+  }
 }

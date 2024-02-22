@@ -12,6 +12,7 @@ import type { DependencyDetector, EnvPolicyConfigObject } from '@teambit/depende
 import type { Capsule } from '@teambit/isolator';
 import type { Component } from '@teambit/component';
 import { EnvPreviewConfig } from '@teambit/preview';
+import { SchemaNodeTransformer, SchemaTransformer } from '@teambit/typescript';
 
 export type EnvDescriptor = {
   type: string;
@@ -47,7 +48,13 @@ export interface Environment {
   /**
    * Returns a schema generator instance
    */
-  getSchemaExtractor?: (config?: any, tsserverPath?: string, contextPath?: string) => SchemaExtractor;
+  getSchemaExtractor?: (
+    config?: any,
+    tsserverPath?: string,
+    contextPath?: string,
+    schemaTransformers?: SchemaTransformer[],
+    apiTransformers?: SchemaNodeTransformer[]
+  ) => SchemaExtractor;
 
   /**
    * Returns the dev patterns to match doc files
