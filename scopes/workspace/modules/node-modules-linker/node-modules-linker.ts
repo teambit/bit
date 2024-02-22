@@ -44,6 +44,11 @@ export default class NodeModuleLinker {
     this.components = this.components.filter((component) => this.bitMap.getComponentIfExist(component.id));
     const links = await this.getLinks();
     const linksResults = this.getLinksResults();
+    if (!linksResults.length) {
+      // avoid clearing the cache if it ends up with no links. (e.g. happens when mistakenly generating links for a
+      // component not in the workspace)
+      return [];
+    }
     const workspacePath = this.workspace.path;
     links.addBasePath(workspacePath);
     await links.persistAllToFS();
