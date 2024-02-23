@@ -883,12 +883,6 @@ export class PreviewMain {
     const defaultStrategies = this.getDefaultStrategies();
     const envPreviewConfig = this.getEnvPreviewConfig(env);
     const strategyFromEnv = envPreviewConfig?.strategyName;
-
-    console.log(
-      '🚀 ~ file: preview.main.runtime.ts:889 ~ PreviewMain ~ getBundlingStrategy ~ strategyFromEnv:',
-      strategyFromEnv
-    );
-
     const strategyName = strategyFromEnv || this.config.bundlingStrategy || 'env';
     const strategies = this.bundlingStrategySlot.values().concat(defaultStrategies);
     const selected = strategies.find((strategy) => {

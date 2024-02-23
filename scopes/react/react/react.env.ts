@@ -417,7 +417,7 @@ export class ReactEnv
   getPreviewConfig() {
     return {
       strategyName: COMPONENT_PREVIEW_STRATEGY_NAME as PreviewStrategyName,
-      splitComponentBundle: true, // here
+      splitComponentBundle: true,
       isScaling: true,
     };
   }
