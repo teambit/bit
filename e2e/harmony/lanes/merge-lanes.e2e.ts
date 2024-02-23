@@ -531,8 +531,8 @@ describe('merge lanes', function () {
       });
       it('bit diff should show the diff between the .bitmap version and the currently merged version', () => {
         const diff = helper.command.diff();
-        expect(diff).to.have.string(`-module.exports = () => 'comp1version2 and ' + comp2();`);
-        expect(diff).to.have.string(`+module.exports = () => 'comp1version3 and ' + comp2();`);
+        expect(diff).to.have.string('-module.exports = () => `comp1version2 and ${comp2()}`;'); // eslint-disable-line no-template-curly-in-string
+        expect(diff).to.have.string('+module.exports = () => `comp1version3 and ${comp2()}`;'); // eslint-disable-line no-template-curly-in-string
       });
     });
   });

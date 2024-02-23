@@ -56,6 +56,7 @@ export type ComponentProps = {
   bitJson?: ComponentConfig;
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
+  peerDependencies?: Dependency[];
   flattenedDependencies?: ComponentIdList;
   flattenedEdges?: DepEdge[];
   packageDependencies?: Record<string, string>;
@@ -102,6 +103,7 @@ export default class Component {
   dependencies: Dependencies;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
+  peerDependencies: Dependencies;
   flattenedDependencies: ComponentIdList;
   flattenedEdges: DepEdge[];
   packageDependencies: Record<string, string>;
@@ -164,6 +166,7 @@ export default class Component {
     bitJson,
     dependencies,
     devDependencies,
+    peerDependencies,
     flattenedDependencies,
     flattenedEdges,
     packageDependencies,
@@ -195,6 +198,7 @@ export default class Component {
     this.bitJson = bitJson;
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
+    this.setPeerDependencies(peerDependencies);
     this.flattenedDependencies = flattenedDependencies || new ComponentIdList();
     this.flattenedEdges = flattenedEdges || [];
     this.packageDependencies = packageDependencies || {};
@@ -236,6 +240,7 @@ export default class Component {
     const newInstance: Component = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     newInstance.setDependencies(this.dependencies.getClone());
     newInstance.setDevDependencies(this.devDependencies.getClone());
+    newInstance.setPeerDependencies(this.peerDependencies.getClone());
     newInstance.overrides = this.overrides.clone();
     newInstance.files = this.files.map((file) => file.clone());
     return newInstance;
@@ -258,6 +263,10 @@ export default class Component {
 
   setDevDependencies(devDependencies?: Dependency[]) {
     this.devDependencies = new Dependencies(devDependencies);
+  }
+
+  setPeerDependencies(peerDependencies?: Dependency[]) {
+    this.peerDependencies = new Dependencies(peerDependencies);
   }
 
   setNewVersion(version = sha1(v4())) {
@@ -300,6 +309,7 @@ export default class Component {
     return [
       ...this.dependencies.dependencies,
       ...this.devDependencies.dependencies,
+      ...this.peerDependencies.dependencies,
       ...this.extensionDependencies.dependencies,
     ];
   }
@@ -308,6 +318,7 @@ export default class Component {
     const dependencies = [
       ...this.dependencies.getClone(),
       ...this.devDependencies.getClone(),
+      ...this.peerDependencies.getClone(),
       ...this.extensionDependencies.getClone(),
     ];
     return new Dependencies(dependencies);
@@ -318,7 +329,11 @@ export default class Component {
   }
 
   getAllNonEnvsDependencies(): Dependency[] {
-    return [...this.dependencies.dependencies, ...this.devDependencies.dependencies];
+    return [
+      ...this.dependencies.dependencies,
+      ...this.devDependencies.dependencies,
+      ...this.peerDependencies.dependencies,
+    ];
   }
 
   getAllDependenciesIds(): ComponentIdList {
@@ -329,11 +344,13 @@ export default class Component {
   get depsIdsGroupedByType(): {
     dependencies: ComponentIdList;
     devDependencies: ComponentIdList;
+    peerDependencies: ComponentIdList;
     extensionDependencies: ComponentIdList;
   } {
     return {
       dependencies: this.dependencies.getAllIds(),
       devDependencies: this.devDependencies.getAllIds(),
+      peerDependencies: this.peerDependencies.getAllIds(),
       extensionDependencies: this.extensions.extensionsBitIds,
     };
   }
@@ -379,6 +396,7 @@ export default class Component {
       bindingPrefix: this.bindingPrefix,
       dependencies: this.dependencies.serialize(),
       devDependencies: this.devDependencies.serialize(),
+      peerDependencies: this.peerDependencies.serialize(),
       extensions: this.extensions.map((ext) => {
         const res = Object.assign({}, ext.toComponentObject());
         return res;
@@ -420,6 +438,7 @@ export default class Component {
     if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
     this.setDependencies(componentFromModel.dependencies.get());
     this.setDevDependencies(componentFromModel.devDependencies.get());
+    this.setPeerDependencies(componentFromModel.peerDependencies.get());
   }
 
   static async fromObject(object: Record<string, any>): Promise<Component> {
@@ -432,6 +451,7 @@ export default class Component {
       bindingPrefix,
       dependencies,
       devDependencies,
+      peerDependencies,
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,
@@ -452,6 +472,7 @@ export default class Component {
       bindingPrefix,
       dependencies,
       devDependencies,
+      peerDependencies,
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,

@@ -19,6 +19,7 @@ import { DebugDependencies, FileType } from './auto-detect-deps';
 export type AllDependencies = {
   dependencies: Dependency[];
   devDependencies: Dependency[];
+  peerDependencies: Dependency[];
 };
 
 export type AllPackagesDependencies = {
@@ -60,6 +61,7 @@ export class ApplyOverrides {
     this.allDependencies = {
       dependencies: [],
       devDependencies: [],
+      peerDependencies: [],
     };
     this.allPackagesDependencies = {
       packageDependencies: {},
@@ -203,12 +205,11 @@ export class ApplyOverrides {
   }
 
   private _getComponentIdToAdd(
-    field: string,
-    dependency: string
-  ): { componentId?: ComponentID; packageName?: string } | undefined {
-    if (field === 'peerDependencies') return undefined;
+    dependency: string,
+    versionRange: string
+  ): { componentId?: ComponentID; packageName?: string; versionRange: string } {
     const packageData = this._resolvePackageData(dependency);
-    return { componentId: packageData?.componentId, packageName: packageData?.name };
+    return { componentId: packageData?.componentId, packageName: packageData?.name, versionRange };
   }
 
   getDependenciesToAddManually(
@@ -223,7 +224,7 @@ export class ApplyOverrides {
       if (!overrides[depField]) return;
       Object.keys(overrides[depField]).forEach((dependency) => {
         const dependencyValue = overrides[depField][dependency];
-        const componentData = this._getComponentIdToAdd(depField, dependency);
+        const componentData = this._getComponentIdToAdd(dependency, dependencyValue);
         if (componentData?.componentId) {
           const dependencyExist = existingDependencies[depField].find((d) =>
             d.id.isEqualWithoutVersion(componentData.componentId)
@@ -259,7 +260,9 @@ export class ApplyOverrides {
     DEPENDENCIES_FIELDS.forEach((depField) => {
       if (components[depField] && components[depField].length) {
         components[depField].forEach((depData) =>
-          this.allDependencies[depField].push(new Dependency(depData.componentId, [], depData.packageName))
+          this.allDependencies[depField].push(
+            new Dependency(depData.componentId, [], depData.packageName, depData.versionRange)
+          )
         );
       }
       if (packages[depField] && !isEmpty(packages[depField])) {
@@ -277,6 +280,12 @@ export class ApplyOverrides {
       for (const peerName of Object.keys(packages.peerPackageDependencies)) {
         delete this.allPackagesDependencies.packageDependencies[peerName];
       }
+    }
+    if (components.peerDependencies) {
+      const componentPeers = new Set(components.peerDependencies.map(({ packageName }) => packageName));
+      this.allDependencies.dependencies = this.allDependencies.dependencies.filter(
+        (dep) => !dep.packageName || !componentPeers.has(dep.packageName)
+      );
     }
   }
 
@@ -353,7 +362,7 @@ export class ApplyOverrides {
     if (!wsPolicy) return;
     const wsPeer = wsPolicy.peerDependencies || {};
     const wsRegular = wsPolicy.dependencies || {};
-    const peerDeps = this.allPackagesDependencies.peerPackageDependencies || {};
+    const peerPackageDeps = this.allPackagesDependencies.peerPackageDependencies || {};
     // we are not iterate component deps since they are resolved from what actually installed
     // the policy used for installation only in that case
     ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
@@ -362,14 +371,31 @@ export class ApplyOverrides {
         const regularVersionFromWsPolicy = wsRegular[pkgName];
         if (peerVersionFromWsPolicy) {
           delete this.allPackagesDependencies[field][pkgName];
-          peerDeps[pkgName] = peerVersionFromWsPolicy;
+          peerPackageDeps[pkgName] = peerVersionFromWsPolicy;
         } else if (regularVersionFromWsPolicy) {
           delete this.allPackagesDependencies.peerPackageDependencies?.[pkgName];
           this.allPackagesDependencies[field][pkgName] = regularVersionFromWsPolicy;
         }
       });
     });
-    this.allPackagesDependencies.peerPackageDependencies = peerDeps;
+    this.allPackagesDependencies.peerPackageDependencies = peerPackageDeps;
+
+    const peerDeps = this.allDependencies.peerDependencies ?? [];
+    ['dependencies', 'devDependencies'].forEach((field) => {
+      for (const dep of this.allDependencies[field]) {
+        const pkgName = dep.packageName;
+        const peerVersionFromWsPolicy = wsPeer[pkgName];
+        const regularVersionFromWsPolicy = wsRegular[pkgName];
+        if (peerVersionFromWsPolicy) {
+          dep.versionRange = peerVersionFromWsPolicy;
+          peerDeps.push(dep);
+        } else if (regularVersionFromWsPolicy) {
+          dep.versionRange = regularVersionFromWsPolicy;
+        }
+      }
+      this.allDependencies[field] = this.allDependencies[field].filter(({ packageName }) => !wsPeer[packageName]);
+    });
+    this.allDependencies.peerDependencies = peerDeps;
   }
 
   /**
@@ -419,6 +445,10 @@ export class ApplyOverrides {
           return dep.packageName === pkgName;
         });
 
+        const existsInCompsPeerDeps = this.allDependencies.peerDependencies.find((dep) => {
+          return dep.packageName === pkgName;
+        });
+
         if (
           // We are checking originAllPackagesDependencies instead of allPackagesDependencies
           // as it might be already removed from allPackagesDependencies at this point if it was set with
@@ -429,6 +459,7 @@ export class ApplyOverrides {
           !this.originAllPackagesDependencies.peerPackageDependencies[pkgName] &&
           !existsInCompsDeps &&
           !existsInCompsDevDeps &&
+          !existsInCompsPeerDeps &&
           // Check if it was orignally exists in the component
           // as we might have a policy which looks like this:
           // "components": {
@@ -479,7 +510,16 @@ export class ApplyOverrides {
           pkgVal !== MANUALLY_REMOVE_DEPENDENCY &&
           ((!existsInCompsDeps && !existsInCompsDevDeps) || field === 'peerDependencies')
         ) {
-          this.allPackagesDependencies[key][pkgName] = pkgVal;
+          if ((existsInCompsDeps || existsInCompsDevDeps) && field === 'peerDependencies') {
+            const comp = (existsInCompsDeps ?? existsInCompsDevDeps) as Dependency;
+            comp.versionRange = pkgVal;
+            this.allDependencies.peerDependencies.push(comp);
+          } else {
+            this.allPackagesDependencies[key][pkgName] = pkgVal;
+          }
+          if (existsInCompsPeerDeps) {
+            existsInCompsPeerDeps.versionRange = pkgVal;
+          }
         }
       });
     });
