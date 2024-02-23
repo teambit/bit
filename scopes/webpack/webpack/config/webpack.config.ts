@@ -1,5 +1,5 @@
 /* eslint-disable complexity */
-import webpack, { Configuration } from 'webpack';
+import webpack, { Configuration, EntryObject } from 'webpack';
 import { isUndefined, omitBy } from 'lodash';
 import CompressionPlugin from 'compression-webpack-plugin';
 import { sep } from 'path';
@@ -10,7 +10,7 @@ import { fallbacks } from './webpack-fallbacks';
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
 
-export function configFactory(target: Target, context: BundlerContext): Configuration {
+export function configFactory(target: Target, context: BundlerContext): Configuration[] {
   let truthyEntries =
     Array.isArray(target.entries) && target.entries.length ? target.entries.filter(Boolean) : target.entries || {};
   if (Array.isArray(truthyEntries) && !truthyEntries.length) {
@@ -23,10 +23,18 @@ export function configFactory(target: Target, context: BundlerContext): Configur
 
   console.log('🚀 ~ file: webpack.config.ts:24 ~ configFactory ~ compress:', compress);
   console.log('🚀 ~ file: webpack.config.ts:24 ~ configFactory ~ truthyEntries:', Object.keys(truthyEntries).length);
-  console.log(
-    '🚀 ~ file: webpack.config.ts:24 ~ configFactory ~ truthyEntries:',
-    Object.values(truthyEntries).map((entry) => entry.filename)
-  );
+  console.log('🚀 ~ file: webpack.config.ts:24 ~ configFactory ~ truthyEntries:', truthyEntries);
+
+  const newEntries: EntryObject[] = Object.entries(truthyEntries).reduce((acc, entry) => {
+    const [key, value] = entry;
+    if (typeof value.dependOn === 'string') {
+      acc.push({
+        [value.dependOn]: truthyEntries[value.dependOn],
+        [key]: value,
+      });
+    }
+    return acc;
+  }, [] as EntryObject[]);
 
   const htmlPlugins = htmlConfig ? generateHtmlPlugins(htmlConfig) : undefined;
   const splitChunks = target.chunking?.splitChunks;
@@ -38,7 +46,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     // These are the "entry points" to our application.
     // This means they will be the "root" imports that are included in JS bundle.
     // @ts-ignore
-    entry: truthyEntries,
+    // entry: truthyEntries,
 
     infrastructureLogging: {
       level: 'error',
@@ -99,7 +107,13 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     }
     config.plugins = config.plugins.concat(new CompressionPlugin());
   }
-  return config;
+
+  const configs: Configuration[] = newEntries.map((entry) => ({
+    ...config,
+    entry,
+  }));
+
+  return configs;
 }
 
 function getAssetManifestPlugin() {

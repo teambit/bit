@@ -26267,9 +26267,15 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
+      assert:
+        specifier: ^2.1.0
+        version: 2.1.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
+      buffer:
+        specifier: 6.0.3
+        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -26324,6 +26330,9 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
+      punycode:
+        specifier: ^2.3.1
+        version: 2.3.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -26345,12 +26354,21 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
+      string_decoder:
+        specifier: ^1.3.0
+        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
+      url:
+        specifier: ^0.11.3
+        version: 0.11.3
+      util:
+        specifier: ^0.12.5
+        version: 0.12.5
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -27328,7 +27346,7 @@ packages:
     dependencies:
       '@types/express': 4.17.13
       '@types/fs-capacitor': 2.0.0
-      '@types/koa': 2.14.0
+      '@types/koa': 2.15.0
       busboy: 0.3.1
       fs-capacitor: 2.0.4
       graphql: 14.7.0
@@ -27344,7 +27362,7 @@ packages:
     dependencies:
       '@types/express': 4.17.13
       '@types/fs-capacitor': 2.0.0
-      '@types/koa': 2.14.0
+      '@types/koa': 2.15.0
       busboy: 0.3.1
       fs-capacitor: 2.0.4
       graphql: 15.8.0
@@ -31798,7 +31816,7 @@ packages:
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
     dependencies:
-      '@graphql-tools/utils': 10.0.13(graphql@14.7.0)
+      '@graphql-tools/utils': 10.1.0(graphql@14.7.0)
       graphql: 14.7.0
       tslib: 2.6.2
     dev: false
@@ -31809,7 +31827,7 @@ packages:
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
     dependencies:
-      '@graphql-tools/utils': 10.0.13(graphql@15.8.0)
+      '@graphql-tools/utils': 10.1.0(graphql@15.8.0)
       graphql: 15.8.0
       tslib: 2.6.2
     dev: false
@@ -31821,7 +31839,7 @@ packages:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
     dependencies:
       '@graphql-tools/merge': 9.0.2(graphql@14.7.0)
-      '@graphql-tools/utils': 10.0.13(graphql@14.7.0)
+      '@graphql-tools/utils': 10.1.0(graphql@14.7.0)
       graphql: 14.7.0
       tslib: 2.6.2
       value-or-promise: 1.0.12
@@ -31834,14 +31852,14 @@ packages:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
     dependencies:
       '@graphql-tools/merge': 9.0.2(graphql@15.8.0)
-      '@graphql-tools/utils': 10.0.13(graphql@15.8.0)
+      '@graphql-tools/utils': 10.1.0(graphql@15.8.0)
       graphql: 15.8.0
       tslib: 2.6.2
       value-or-promise: 1.0.12
     dev: false
 
-  /@graphql-tools/utils@10.0.13(graphql@14.7.0):
-    resolution: {integrity: sha512-fMILwGr5Dm2zefNItjQ6C2rauigklv69LIwppccICuGTnGaOp3DspLt/6Lxj72cbg5d9z60Sr+Egco3CJKLsNg==}
+  /@graphql-tools/utils@10.1.0(graphql@14.7.0):
+    resolution: {integrity: sha512-wLPqhgeZ9BZJPRoaQbsDN/CtJDPd/L4qmmtPkjI3NuYJ39x+Eqz1Sh34EAGMuDh+xlOHqBwHczkZUpoK9tvzjw==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
@@ -31853,8 +31871,8 @@ packages:
       tslib: 2.6.2
     dev: false
 
-  /@graphql-tools/utils@10.0.13(graphql@15.8.0):
-    resolution: {integrity: sha512-fMILwGr5Dm2zefNItjQ6C2rauigklv69LIwppccICuGTnGaOp3DspLt/6Lxj72cbg5d9z60Sr+Egco3CJKLsNg==}
+  /@graphql-tools/utils@10.1.0(graphql@15.8.0):
+    resolution: {integrity: sha512-wLPqhgeZ9BZJPRoaQbsDN/CtJDPd/L4qmmtPkjI3NuYJ39x+Eqz1Sh34EAGMuDh+xlOHqBwHczkZUpoK9tvzjw==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
@@ -33937,7 +33955,7 @@ packages:
       '@pnpm/types': 9.4.2
       '@zkochan/rimraf': 2.1.3
       execa: /safe-execa@0.1.2
-      preferred-pm: 3.1.2
+      preferred-pm: 3.1.3
       ramda: /@pnpm/ramda@0.28.1
     transitivePeerDependencies:
       - '@pnpm/logger'
@@ -46722,11 +46740,11 @@ packages:
   /@types/koa-compose@3.2.8:
     resolution: {integrity: sha512-4Olc63RY+MKvxMwVknCUDhRQX1pFQoBZ/lXcRLP69PQkEpze/0cr8LNqJQe5NFb/b19DWi2a5bTi2VAlQzhJuA==}
     dependencies:
-      '@types/koa': 2.14.0
+      '@types/koa': 2.15.0
     dev: false
 
-  /@types/koa@2.14.0:
-    resolution: {integrity: sha512-DTDUyznHGNHAl+wd1n0z1jxNajduyTh8R53xoewuerdBzGo6Ogj6F2299BFtrexJw4NtgjsI5SMPCmV9gZwGXA==}
+  /@types/koa@2.15.0:
+    resolution: {integrity: sha512-7QFsywoE5URbuVnG3loe03QXuGajrnotr3gQkXcEBShORai23MePfFYdhz90FEtBBpkyIYQbVD+evKtloCgX3g==}
     dependencies:
       '@types/accepts': 1.3.7
       '@types/content-disposition': 0.5.8
@@ -46846,8 +46864,8 @@ packages:
     resolution: {integrity: sha512-s3nugnZumCC//n4moGGe6tkNMyYEdaDBitVjwPxXmR5lnMG5dHePinH2EdxkG3Rh1ghFHHixAG4NJhpJW1rthQ==}
     dev: false
 
-  /@types/node@18.19.17:
-    resolution: {integrity: sha512-SzyGKgwPzuWp2SHhlpXKzCX0pIOfcI4V2eF37nNBJOhwlegQ83omtVQ1XxZpDE06V/d6AQvfQdPfnw0tRC//Ng==}
+  /@types/node@18.19.18:
+    resolution: {integrity: sha512-80CP7B8y4PzZF0GWx15/gVWRrB5y/bIjNI84NK3cmQJu0WZwvmj2WMA5LcofQFVfLqqCSp545+U2LsrVzX36Zg==}
     dependencies:
       undici-types: 5.26.5
     dev: false
@@ -48745,7 +48763,7 @@ packages:
     resolution: {integrity: sha512-OUsULJ/BC5t0rzOp4BtAWjVg7QBP0Dn09FcdvlSKTWRjrRqQ0wQbS4QGSOKNi7gN1fL1TucgQBAxScJG4oIaKA==}
     engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     dependencies:
-      '@types/node': 18.19.17
+      '@types/node': 18.19.18
       '@yarnpkg/fslib': 2.10.4
     dev: false
 
@@ -48753,7 +48771,7 @@ packages:
     resolution: {integrity: sha512-fOZoZJP8AqHtAWlgZukbQu87lHtm2Hutz5EzahKx7756EfgkE3hcyp0PukYzO2GITPtgsNo5A0V4R1FgFJtAUA==}
     engines: {node: '>=18.12.0'}
     dependencies:
-      '@types/node': 18.19.17
+      '@types/node': 18.19.18
       '@yarnpkg/fslib': 3.0.2
     dev: false
 
@@ -51016,7 +51034,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001589
-      electron-to-chromium: 1.4.679
+      electron-to-chromium: 1.4.680
       escalade: 3.1.2
       node-releases: 1.1.77
     dev: false
@@ -51028,7 +51046,7 @@ packages:
     dependencies:
       caniuse-lite: 1.0.30001589
       colorette: 1.4.0
-      electron-to-chromium: 1.4.679
+      electron-to-chromium: 1.4.680
       escalade: 3.1.2
       node-releases: 1.1.77
 
@@ -51038,7 +51056,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001589
-      electron-to-chromium: 1.4.679
+      electron-to-chromium: 1.4.680
       node-releases: 2.0.14
       update-browserslist-db: 1.0.13(browserslist@4.21.4)
 
@@ -51048,7 +51066,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001589
-      electron-to-chromium: 1.4.679
+      electron-to-chromium: 1.4.680
       node-releases: 2.0.14
       update-browserslist-db: 1.0.13(browserslist@4.23.0)
 
@@ -52694,7 +52712,7 @@ packages:
         optional: true
     dependencies:
       '@jridgewell/trace-mapping': 0.3.22
-      cssnano: 6.0.3(postcss@8.4.35)
+      cssnano: 6.0.4(postcss@8.4.35)
       esbuild: 0.14.29
       jest-worker: 29.7.0
       postcss: 8.4.35
@@ -52859,8 +52877,8 @@ packages:
       postcss-unique-selectors: 5.1.1(postcss@8.4.18)
     dev: false
 
-  /cssnano-preset-default@6.0.3(postcss@8.4.35):
-    resolution: {integrity: sha512-4y3H370aZCkT9Ev8P4SO4bZbt+AExeKhh8wTbms/X7OLDo5E7AYUUy6YPxa/uF5Grf+AJwNcCnxKhZynJ6luBA==}
+  /cssnano-preset-default@6.0.4(postcss@8.4.35):
+    resolution: {integrity: sha512-mvyBIFHaFA4lkBwePlB9Gycnf/rgFQRKcP/yHG/tbD0ZuIdCDSF1GoL4QC4gcp8qaJOkmVmb0mCXMR6Wi4Da0A==}
     engines: {node: ^14 || ^16 || >=18.0}
     peerDependencies:
       postcss: ^8.4.31
@@ -52870,10 +52888,10 @@ packages:
       postcss: 8.4.35
       postcss-calc: 9.0.1(postcss@8.4.35)
       postcss-colormin: 6.0.2(postcss@8.4.35)
-      postcss-convert-values: 6.0.2(postcss@8.4.35)
+      postcss-convert-values: 6.0.3(postcss@8.4.35)
       postcss-discard-comments: 6.0.1(postcss@8.4.35)
-      postcss-discard-duplicates: 6.0.1(postcss@8.4.35)
-      postcss-discard-empty: 6.0.1(postcss@8.4.35)
+      postcss-discard-duplicates: 6.0.2(postcss@8.4.35)
+      postcss-discard-empty: 6.0.2(postcss@8.4.35)
       postcss-discard-overridden: 6.0.1(postcss@8.4.35)
       postcss-merge-longhand: 6.0.2(postcss@8.4.35)
       postcss-merge-rules: 6.0.3(postcss@8.4.35)
@@ -52925,13 +52943,13 @@ packages:
       yaml: 1.10.2
     dev: false
 
-  /cssnano@6.0.3(postcss@8.4.35):
-    resolution: {integrity: sha512-MRq4CIj8pnyZpcI2qs6wswoYoDD1t0aL28n+41c1Ukcpm56m1h6mCexIHBGjfZfnTqtGSSCP4/fB1ovxgjBOiw==}
+  /cssnano@6.0.4(postcss@8.4.35):
+    resolution: {integrity: sha512-Bp607LopXmwV9TPUxw76yvcvRk4AYrrtHtLsndAnSWUwT4xgaiC6Eaa44cZ6ciu9J7Sqv9zocMTDcyQnU4dihw==}
     engines: {node: ^14 || ^16 || >=18.0}
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
-      cssnano-preset-default: 6.0.3(postcss@8.4.35)
+      cssnano-preset-default: 6.0.4(postcss@8.4.35)
       lilconfig: 3.1.1
       postcss: 8.4.35
 
@@ -53731,8 +53749,8 @@ packages:
     requiresBuild: true
     dev: false
 
-  /electron-to-chromium@1.4.679:
-    resolution: {integrity: sha512-NhQMsz5k0d6m9z3qAxnsOR/ebal4NAGsrNVRwcDo4Kc/zQ7KdsTKZUxZoygHcVRb0QDW3waEDIcE3isZ79RP6g==}
+  /electron-to-chromium@1.4.680:
+    resolution: {integrity: sha512-4nToZ5jlPO14W82NkF32wyjhYqQByVaDmLy4J2/tYcAbJfgO2TKJC780Az1V13gzq4l73CJ0yuyalpXvxXXD9A==}
 
   /elliptic@6.5.4:
     resolution: {integrity: sha512-iLhC6ULemrljPZb+QutR5TQGB+pdW6KGD5RSegS+8sorOZT+rdQFbsQFJgvN3eRqNALqJer4oQ16YvJHlU8hzQ==}
@@ -57024,7 +57042,7 @@ packages:
       he: 1.2.0
       param-case: 3.0.4
       relateurl: 0.2.7
-      terser: 5.27.2
+      terser: 5.28.1
 
   /html-void-elements@1.0.5:
     resolution: {integrity: sha512-uE/TxKuyNIcx44cIWnjr/rfIATDH7ZaOMmstu0CwhFG1Dunhlp4OC6/NMbhiwoq5BpW0ubi303qnEk/PZj614w==}
@@ -63160,8 +63178,8 @@ packages:
       postcss-value-parser: 4.2.0
     dev: false
 
-  /postcss-convert-values@6.0.2(postcss@8.4.35):
-    resolution: {integrity: sha512-aeBmaTnGQ+NUSVQT8aY0sKyAD/BaLJenEKZ03YK0JnDE1w1Rr8XShoxdal2V2H26xTJKr3v5haByOhJuyT4UYw==}
+  /postcss-convert-values@6.0.3(postcss@8.4.35):
+    resolution: {integrity: sha512-Tj+VH3GtQxvBVX6hhggIUaAMLDbqoHgsAFeZ8iCOD03hnho+wrOF2IsahY9o4MANtaJEjqABrhD1SqwIILGH9A==}
     engines: {node: ^14 || ^16 || >=18.0}
     peerDependencies:
       postcss: ^8.4.31
@@ -63272,8 +63290,8 @@ packages:
       postcss: 8.4.18
     dev: false
 
-  /postcss-discard-duplicates@6.0.1(postcss@8.4.35):
-    resolution: {integrity: sha512-1hvUs76HLYR8zkScbwyJ8oJEugfPV+WchpnA+26fpJ7Smzs51CzGBHC32RS03psuX/2l0l0UKh2StzNxOrKCYg==}
+  /postcss-discard-duplicates@6.0.2(postcss@8.4.35):
+    resolution: {integrity: sha512-U2rsj4w6pAGROCCcD13LP2eBIi1whUsXs4kgE6xkIuGfkbxCBSKhkCTWyowFd66WdVlLv0uM1euJKIgmdmZObg==}
     engines: {node: ^14 || ^16 || >=18.0}
     peerDependencies:
       postcss: ^8.4.31
@@ -63289,8 +63307,8 @@ packages:
       postcss: 8.4.18
     dev: false
 
-  /postcss-discard-empty@6.0.1(postcss@8.4.35):
-    resolution: {integrity: sha512-yitcmKwmVWtNsrrRqGJ7/C0YRy53i0mjexBDQ9zYxDwTWVBgbU4+C9jIZLmQlTDT9zhml+u0OMFJh8+31krmOg==}
+  /postcss-discard-empty@6.0.2(postcss@8.4.35):
+    resolution: {integrity: sha512-rj6pVC2dVCJrP0Y2RkYTQEbYaCf4HEm+R/2StQgJqGHxAa3+KcYslNQhcRqjLHtl/4wpzipJluaJLqBj6d5eDQ==}
     engines: {node: ^14 || ^16 || >=18.0}
     peerDependencies:
       postcss: ^8.4.31
@@ -64323,8 +64341,8 @@ packages:
       picocolors: 1.0.0
       source-map-js: 1.0.2
 
-  /preferred-pm@3.1.2:
-    resolution: {integrity: sha512-nk7dKrcW8hfCZ4H6klWcdRknBOXWzNQByJ0oJyX97BOupsYD+FzLS4hflgEu/uPUEHZCuRfMxzCBsuWd7OzT8Q==}
+  /preferred-pm@3.1.3:
+    resolution: {integrity: sha512-MkXsENfftWSRpzCzImcp4FRsCc3y1opwB73CfCNWyzMqArju2CrlMHlqB7VexKiPEOjGMbttv1r9fSCn5S610w==}
     engines: {node: '>=10'}
     dependencies:
       find-up: 5.0.0
@@ -66331,7 +66349,7 @@ packages:
       jest-worker: 26.6.2
       rollup: 2.79.1
       serialize-javascript: 4.0.0
-      terser: 5.27.2
+      terser: 5.28.1
     dev: false
 
   /rollup@2.79.1:
@@ -67129,7 +67147,7 @@ packages:
     dependencies:
       agent-base: 6.0.2
       debug: 4.3.4(supports-color@9.4.0)
-      socks: 2.7.3
+      socks: 2.8.1
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -67140,7 +67158,7 @@ packages:
     dependencies:
       agent-base: 6.0.2
       debug: 4.3.4(supports-color@9.4.0)
-      socks: 2.7.3
+      socks: 2.8.1
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -67151,13 +67169,13 @@ packages:
     dependencies:
       agent-base: 6.0.2
       debug: 4.3.4(supports-color@9.4.0)
-      socks: 2.7.3
+      socks: 2.8.1
     transitivePeerDependencies:
       - supports-color
     dev: false
 
-  /socks@2.7.3:
-    resolution: {integrity: sha512-vfuYK48HXCTFD03G/1/zkIls3Ebr2YNa4qU9gHDZdblHLiqhJrJGkY3+0Nx0JpN9qBhJbVObc1CNciT1bIZJxw==}
+  /socks@2.8.1:
+    resolution: {integrity: sha512-B6w7tkwNid7ToxjZ08rQMT8M9BJAf8DKx8Ft4NivzH0zBUfd6jldGcisJn/RLgxcX3FPNDdNQCUEMMT79b+oCQ==}
     engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
     dependencies:
       ip-address: 9.0.5
@@ -68254,7 +68272,7 @@ packages:
       schema-utils: 3.3.0
       serialize-javascript: 6.0.2
       source-map: 0.6.1
-      terser: 5.27.2
+      terser: 5.28.1
       webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
@@ -68280,7 +68298,7 @@ packages:
       schema-utils: 3.3.0
       serialize-javascript: 6.0.2
       source-map: 0.6.1
-      terser: 5.27.2
+      terser: 5.28.1
       webpack: 5.90.3(esbuild@0.14.29)
 
   /terser-webpack-plugin@5.3.10(esbuild@0.14.29)(webpack@5.84.1):
@@ -68304,7 +68322,7 @@ packages:
       jest-worker: 27.5.1
       schema-utils: 3.3.0
       serialize-javascript: 6.0.2
-      terser: 5.27.2
+      terser: 5.28.1
       webpack: 5.84.1(esbuild@0.14.29)
 
   /terser-webpack-plugin@5.3.10(esbuild@0.14.29)(webpack@5.90.3):
@@ -68328,7 +68346,7 @@ packages:
       jest-worker: 27.5.1
       schema-utils: 3.3.0
       serialize-javascript: 6.0.2
-      terser: 5.27.2
+      terser: 5.28.1
       webpack: 5.90.3(esbuild@0.14.29)
 
   /terser@4.8.1:
@@ -68341,8 +68359,8 @@ packages:
       source-map: 0.6.1
       source-map-support: 0.5.21
 
-  /terser@5.27.2:
-    resolution: {integrity: sha512-sHXmLSkImesJ4p5apTeT63DsV4Obe1s37qT8qvwHRmVxKTBH7Rv9Wr26VcAMmLbmk9UliiwK8z+657NyJHHy/w==}
+  /terser@5.28.1:
+    resolution: {integrity: sha512-wM+bZp54v/E9eRRGXb5ZFDvinrJIOaTapx3WUokyVGZu5ucVCK55zEgGd5Dl2fSr3jUo5sDiERErUWLY6QPFyA==}
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
@@ -71311,6 +71329,7 @@ packages:
       react-dom: '*'
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': file:components/models/api-node-renderer(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': file:scopes/api-reference/renderers/grouped-schema-nodes-overview-summary(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.api-node-details': file:components/renderers/api-node-details(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       core-js: 3.13.0
@@ -77400,7 +77419,9 @@ packages:
       '@teambit/webpack.plugins.inject-head-webpack-plugin': file:scopes/webpack/plugins/inject-head-webpack-plugin(html-webpack-plugin@5.3.2)
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
+      assert: 2.1.0
       browserify-zlib: 0.2.0
+      buffer: 6.0.3
       camelcase: 6.2.0
       compression-webpack-plugin: 11.0.0(webpack@5.84.1)
       constants-browserify: 1.0.0
@@ -77419,6 +77440,7 @@ packages:
       p-map-series: 2.1.0
       path-browserify: 1.0.1
       process: 0.11.10
+      punycode: 2.3.1
       querystring-es3: 0.2.1
       react: 17.0.2
       react-dev-utils: 11.0.4(eslint@7.32.0)(typescript@4.7.4)(webpack@5.84.1)
@@ -77426,8 +77448,11 @@ packages:
       react-router-dom: 6.8.1(react-dom@17.0.2)(react@17.0.2)
       stream-browserify: 3.0.0
       stream-http: 3.2.0
+      string_decoder: 1.3.0
       timers-browserify: 2.0.12
       tty-browserify: 0.0.1
+      url: 0.11.3
+      util: 0.12.5
       vm-browserify: 1.1.2
       webpack: 5.84.1(esbuild@0.14.29)
       webpack-assets-manifest: 5.1.0(webpack@5.84.1)

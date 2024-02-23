@@ -30,7 +30,7 @@ export class WebpackBundler implements Bundler {
     const startTime = Date.now();
     const compilers = this.configs.map((config: any) => this.webpack(config));
 
-    console.log('🚀 ~ file: webpack.bundler.ts:33 ~ WebpackBundler ~ run ~ compilers:', this.configs.length);
+    console.log('🚀 ~ file: webpack.bundler.ts:33 ~ WebpackBundler ~ run ~ this.configs:', this.configs.length);
     console.log('🚀 ~ file: webpack.bundler.ts:33 ~ WebpackBundler ~ run ~ compilers:', compilers.length);
 
     const initiator = this.metaData?.initiator;
