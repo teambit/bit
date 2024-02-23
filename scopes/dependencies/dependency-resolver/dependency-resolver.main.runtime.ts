@@ -364,8 +364,8 @@ export class DependencyResolverMain {
   /**
    * returns only the dependencies that are bit-components.
    */
-  async getComponentDependencies(component: IComponent): Promise<ComponentDependency[]> {
-    const dependencyList = await this.getDependencies(component);
+  getComponentDependencies(component: IComponent): ComponentDependency[] {
+    const dependencyList = this.getDependencies(component);
     return dependencyList.getComponentDependencies();
   }
 
