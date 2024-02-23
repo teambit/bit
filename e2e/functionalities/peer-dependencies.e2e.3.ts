@@ -283,8 +283,7 @@ describe('peer-dependencies functionality', function () {
       expect(peerDep.versionRange).to.eq('*');
     });
     it('should save the peer dependency in the scope data', () => {
-      const { head } = helper.command.catComponent('comp1');
-      const comp = helper.command.catComponent(`comp1@${head}`);
+      const comp = helper.command.catComponent(`comp1@latest`);
       const depResolver = comp.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
       const peerDep = depResolver.data.dependencies[0];
       expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/comp2`);
@@ -305,8 +304,9 @@ describe('peer-dependencies functionality', function () {
       });
     });
     it('adds peer dependency to the generated package.json', () => {
+      const { head } = helper.command.catComponent('comp1');
       const pkgJson = fs.readJsonSync(
-        path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1/package.json`)
+        path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1@${head}/package.json`)
       );
       expect(pkgJson.peerDependencies).to.deep.equal({
         [`@${helper.scopes.remote}/comp2`]: '*',
