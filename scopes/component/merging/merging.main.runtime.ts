@@ -319,6 +319,7 @@ export class MergingMain {
     try {
       mergeSnapResults = await getSnapOrTagResults();
     } catch (err: any) {
+      this.logger.error('failed running snap. mergeSnapError:', err);
       mergeSnapError = err;
       if (bitMapSnapshot) this.workspace.bitMap.restoreFromSnapshot(bitMapSnapshot);
     }
