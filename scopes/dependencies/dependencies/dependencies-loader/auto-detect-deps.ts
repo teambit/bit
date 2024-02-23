@@ -52,6 +52,12 @@ export type DebugComponentsDependency = {
   packageName?: string;
 };
 
+type PushToDepsArrayOpts = {
+  fileType: FileType;
+  depDebug: DebugComponentsDependency;
+  isPeer?: boolean;
+};
+
 export class AutoDetectDeps {
   componentId: ComponentID;
   componentMap: ComponentMap;
@@ -348,7 +354,7 @@ export class AutoDetectDeps {
         id: currentComponentsDeps.id,
         importSource,
       };
-      this.pushToDependenciesArray(currentComponentsDeps, fileType, depDebug);
+      this.pushToDependenciesArray(currentComponentsDeps, { fileType, depDebug });
     }
     return false;
   }
@@ -399,16 +405,14 @@ export class AutoDetectDeps {
         return;
       }
       this.addImportNonMainIssueIfNeeded(originFile, compDep);
-      const currentComponentsDeps = new Dependency(existingId, [], compDep.name);
-      if (compDep.packageJsonContent?.bit?.peer) {
-        currentComponentsDeps.versionRange = compDep.packageJsonContent?.bit?.defaultPeerRange ?? '*';
-      }
-      this._pushToDependenciesIfNotExist(
-        currentComponentsDeps,
+      const isPeer = compDep.packageJsonContent?.bit?.peer;
+      const peerVersionRange = isPeer ? compDep.packageJsonContent?.bit?.defaultPeerRange ?? '*' : undefined;
+      const currentComponentsDeps = new Dependency(existingId, [], compDep.name, peerVersionRange);
+      this._pushToDependenciesIfNotExist(currentComponentsDeps, {
         fileType,
         depDebug,
-        compDep.packageJsonContent?.bit?.peer
-      );
+        isPeer,
+      });
     });
   }
 
@@ -598,38 +602,28 @@ export class AutoDetectDeps {
     this.debugDependenciesData.unidentifiedPackages = unidentifiedPackages;
   }
 
-  private _pushToDependenciesIfNotExist(
-    dependency: Dependency,
-    fileType: FileType,
-    depDebug: DebugComponentsDependency,
-    isPeer?: boolean
-  ) {
+  private _pushToDependenciesIfNotExist(dependency: Dependency, opts: PushToDepsArrayOpts) {
     const existingDependency = this.getExistingDependency(this.allDependencies.dependencies, dependency.id);
     const existingDevDependency = this.getExistingDependency(this.allDependencies.devDependencies, dependency.id);
     // no need to enter dev dependency to devDependencies if it exists already in dependencies
-    if (existingDependency || (existingDevDependency && fileType.isTestFile)) {
+    if (existingDependency || (existingDevDependency && opts.fileType.isTestFile)) {
       return;
     }
     // at this point, either, it doesn't exist at all and should be entered.
     // or it exists in devDependencies but now it comes from non-dev file, which should be entered
     // as non-dev.
-    this.pushToDependenciesArray(dependency, fileType, depDebug, isPeer);
+    this.pushToDependenciesArray(dependency, opts);
   }
 
-  private pushToDependenciesArray(
-    currentComponentsDeps: Dependency,
-    fileType: FileType,
-    depDebug: DebugComponentsDependency,
-    isPeer?: boolean
-  ) {
-    if (fileType.isTestFile) {
+  private pushToDependenciesArray(currentComponentsDeps: Dependency, opts: PushToDepsArrayOpts) {
+    if (opts.fileType.isTestFile) {
       this.allDependencies.devDependencies.push(currentComponentsDeps);
-    } else if (isPeer) {
+    } else if (opts.isPeer) {
       this.allDependencies.peerDependencies.push(currentComponentsDeps);
     } else {
       this.allDependencies.dependencies.push(currentComponentsDeps);
     }
-    this.debugDependenciesData.components.push(depDebug);
+    this.debugDependenciesData.components.push(opts.depDebug);
   }
 
   private getExistingDependency(dependencies: Dependency[], id: ComponentID): Dependency | null | undefined {
