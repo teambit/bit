@@ -291,13 +291,24 @@ export class Component implements IComponent {
   }
 
   /**
-   * id.version can be either a version or a hash.
+   * id.version can be either a tag or a hash.
    * if it's a hash, it may have a tag point to it. if it does, return the tag.
    */
   getTag(): Tag | undefined {
     const currentVersion = this.id.version;
     if (!currentVersion) return undefined;
     return this.tags.byVersion(currentVersion) || this.tags.byHash(currentVersion);
+  }
+
+  /**
+   * id.version can be either a tag or a hash.
+   * if it's a tag, find the hash it points to.
+   */
+  getSnapHash(): string | undefined {
+    if (!this.id.hasVersion()) return undefined;
+    const tag = this.tags.byVersion(this.id.version);
+    if (tag) return tag.hash;
+    return this.id.version;
   }
 
   /**

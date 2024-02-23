@@ -10,7 +10,6 @@ export type SchemaTransformer = {
   predicate(node: Node): boolean;
 
   getIdentifiers(node: Node, context: SchemaExtractorContext): Promise<Identifier[]>;
-
   /**
    * transform the node into JSONSchema.
    */
@@ -19,5 +18,5 @@ export type SchemaTransformer = {
 
 export type SchemaNodeTransformer = {
   predicate(node: SchemaNode): boolean;
-  transform(node: SchemaNode, context: SchemaExtractorContext): Promise<SchemaNode>;
+  transform(node: SchemaNode, context: SchemaExtractorContext): Promise<SchemaNode | null>;
 };

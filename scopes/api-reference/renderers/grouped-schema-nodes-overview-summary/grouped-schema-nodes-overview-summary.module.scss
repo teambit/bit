@@ -71,13 +71,18 @@
   display: flex;
 }
 
+.propertiesTitle {
+  font-weight: 500;
+  font-size: 16px;
+}
+
 .propertiesTitle,
 .memberTitle {
   width: 240px;
   font-size: 16px;
-  font-weight: 500;
   display: flex;
   align-items: center;
+  text-transform: capitalize;
 }
 
 .methodMembers {
@@ -137,9 +142,9 @@
 .memberDetails {
   display: grid;
   grid-template-columns: 240px minmax(400px, 800px) 50px;
-  gap: 24px;
   width: 100%;
   align-items: center;
+  gap: 16px 0px;
 }
 
 .collapsedRow {
@@ -149,6 +154,7 @@
 .collapsedRow,
 .expandedRow {
   display: contents;
+  padding: 16px 0px;
 }
 
 .memberTitle,
@@ -169,4 +175,8 @@
 
 .expandedRow {
   grid-column: 1 / span 3;
+}
+
+.table {
+  padding-top: 8px;
 }

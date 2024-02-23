@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { Command, CommandOptions } from '@teambit/cli';
+import { compact } from 'lodash';
 import { fromBase64 } from '@teambit/legacy/dist/utils';
 import { BitError } from '@teambit/bit-error';
 import { MergeFromScopeResult, MergeLanesMain } from './merge-lanes.main.runtime';
@@ -79,7 +80,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
 
     const titleBase64Decoded = titleBase64 ? fromBase64(titleBase64) : undefined;
 
-    const { mergedNow, unmerged, exportedIds, conflicts } = await this.mergeLanes.mergeFromScope(
+    const { mergedNow, unmerged, exportedIds, conflicts, mergeSnapError } = await this.mergeLanes.mergeFromScope(
       fromLane,
       toLane || DEFAULT_LANE,
       {
@@ -100,22 +101,25 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
 
     const nonMergedTitle = chalk.bold(`the following ${unmerged.length} components were not merged`);
     const nonMergedOutput = unmerged.length
-      ? `\n${nonMergedTitle}\n${unmerged.map((u) => `${u.id} (${u.reason})`).join('\n')}`
+      ? `${nonMergedTitle}\n${unmerged.map((u) => `${u.id} (${u.reason})`).join('\n')}`
       : '';
 
     const conflictsTitle = chalk.bold(
       `the following ${conflicts?.length} components have conflicts, the merge was not completed`
     );
     const conflictsOutput = conflicts?.length
-      ? `\n${conflictsTitle}\n${conflicts
+      ? `${conflictsTitle}\n${conflicts
           .map((u) => `${u.id} (files: ${u.files.join(', ') || 'N/A'}) (config: ${u.config})`)
           .join('\n')}`
       : '';
 
-    const exportedTitle = chalk.green(`successfully exported ${exportedIds.length} components`);
-    const exportedOutput = exportedIds.length ? `\n${exportedTitle}\n${exportedIds.join('\n')}` : '';
+    const mergeSnapErrorTitle = chalk.bold(`the following error was thrown while snapping the components:`);
+    const mergeSnapErrorOutput = mergeSnapError ? `${mergeSnapErrorTitle}\n${chalk.red(mergeSnapError.message)}` : '';
 
-    return mergedOutput + nonMergedOutput + conflictsOutput + exportedOutput;
+    const exportedTitle = chalk.bold(`successfully exported ${exportedIds.length} components`);
+    const exportedOutput = exportedIds.length ? `${exportedTitle}\n${exportedIds.join('\n')}` : '';
+
+    return compact([mergedOutput, nonMergedOutput, conflictsOutput, mergeSnapErrorOutput, exportedOutput]).join('\n\n');
   }
   async json(
     [fromLane, toLane]: [string, string],
@@ -144,6 +148,9 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
           unmerged: results.unmerged.map(({ id, reason }) => ({ id: id.toString(), reason })),
           conflicts: results.conflicts?.map(({ id, ...rest }) => ({ id: id.toString(), ...rest })),
           snappedIds: results.snappedIds?.map((id) => id.toString()),
+          mergeSnapError: results.mergeSnapError
+            ? { message: results.mergeSnapError.message, stack: results.mergeSnapError.stack }
+            : undefined,
         },
       };
     } catch (err: any) {

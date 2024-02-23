@@ -4,7 +4,7 @@ import type { DependenciesInfo } from '@teambit/legacy/dist/scope/graph/scope-gr
 import GraphLib from 'graphlib';
 import { uniq } from 'lodash';
 
-export type DepEdgeType = 'prod' | 'dev' | 'ext';
+export type DepEdgeType = 'prod' | 'dev' | 'ext' | 'peer';
 
 type ComponentIdNode = Node<ComponentID>;
 type DependencyEdge = Edge<DepEdgeType>;
