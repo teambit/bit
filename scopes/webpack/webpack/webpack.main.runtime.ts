@@ -131,6 +131,7 @@ export class WebpackMain {
     const configs =
       initialConfigs ||
       this.createConfigs(context.targets, baseConfigFactory, transformers, transformerContext, context);
+
     return new WebpackBundler(
       context.targets,
       configs,
@@ -142,22 +143,20 @@ export class WebpackMain {
 
   private createConfigs(
     targets: Target[],
-    factory: (target: Target, context: BundlerContext) => Configuration,
+    factory: (target: Target, context: BundlerContext) => Configuration[],
     transformers: WebpackConfigTransformer[] = [],
     transformerContext: GlobalWebpackConfigTransformContext,
     bundlerContext: BundlerContext
   ) {
-    return targets.map((target) => {
-      const baseConfig = factory(target, bundlerContext);
-      const configMutator = new WebpackConfigMutator(baseConfig);
+    return targets.flatMap((target) => {
+      const baseConfigs = factory(target, bundlerContext);
+      const configMutators = baseConfigs.map((config) => new WebpackConfigMutator(config));
       const context = Object.assign({}, transformerContext, { target });
       const internalTransformers = this.generateTransformers(context, undefined, target);
-      const afterMutation = runTransformersWithContext(
-        configMutator.clone(),
-        [...internalTransformers, ...transformers],
-        context
+      const afterMutations = configMutators.map((configMutator) =>
+        runTransformersWithContext(configMutator.clone(), [...internalTransformers, ...transformers], context)
       );
-      return afterMutation.raw;
+      return afterMutations.map((afterMutation) => afterMutation.raw) as Configuration[];
     });
   }
 
