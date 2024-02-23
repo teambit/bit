@@ -6,7 +6,6 @@ import { Manifest, ManifestToJsonOptions, ManifestDependenciesObject } from './m
 
 export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {
   installPeersFromEnvs?: boolean;
-  ignoredPeers?: Set<string>;
 }
 
 export class WorkspaceManifest extends Manifest {
@@ -33,11 +32,7 @@ export class WorkspaceManifest extends Manifest {
     if (options.installPeersFromEnvs) {
       const peersManifest = this.envSelfPeersPolicy?.toVersionManifest();
       manifest.dependencies = manifest.dependencies || {};
-      for (const [peerName, peerVersion] of Object.entries(peersManifest ?? {})) {
-        if (!options.ignoredPeers?.has(peerName)) {
-          manifest.dependencies[peerName] = peerVersion;
-        }
-      }
+      Object.assign(manifest.dependencies, peersManifest);
     }
     return manifest;
   }

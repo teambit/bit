@@ -785,7 +785,7 @@ export class InstallMain {
       if (component.state._consumer.removed) return;
       const pkgName = componentIdToPackageName(component.state._consumer);
       const found = workspacePolicy.find(pkgName);
-      if (found && found.lifecycleType !== 'peer') {
+      if (found) {
         component.state.issues.getOrCreate(IssuesClasses.DuplicateComponentAndPackage).data = found.dependencyId;
       }
     });
