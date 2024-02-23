@@ -1774,9 +1774,9 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/hooks/use-core-aspects",
         "config": {
-            "teambit.react/v17/react-env@1.0.36": {},
+            "teambit.react/react": {},
             "teambit.envs/envs": {
-                "env": "teambit.react/v17/react-env"
+                "env": "teambit.react/react"
             }
         }
     },

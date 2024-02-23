@@ -263,8 +263,6 @@ export function CodeView({
     });
   }, [location?.pathname, location?.search]);
 
-  if (loading) return <BlockSkeleton lines={25} />;
-
   if (!fileContent && !loading && currentFile) return <EmptyCodeView />;
 
   return (
