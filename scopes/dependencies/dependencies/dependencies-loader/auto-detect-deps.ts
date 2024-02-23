@@ -24,7 +24,7 @@ import {
 } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { DevFilesMain } from '@teambit/dev-files';
 import { Workspace } from '@teambit/workspace';
-import { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
+import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { ResolvedPackageData } from '@teambit/legacy/dist/utils/packages';
 import { DependencyDetector } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
@@ -507,18 +507,6 @@ export class AutoDetectDeps {
     } else this.issues.getOrCreate(IssuesClasses.ResolveErrors).data[originFile] = error.message;
   }
 
-  private getCoreAspectsPackagesAndIds(): Record<string, string> {
-    const allCoreAspectsIds = this.aspectLoader.getCoreAspectIds();
-    const coreAspectsPackagesAndIds = {};
-
-    allCoreAspectsIds.forEach((id) => {
-      const packageName = getCoreAspectPackageName(id);
-      coreAspectsPackagesAndIds[packageName] = id;
-    });
-
-    return coreAspectsPackagesAndIds;
-  }
-
   /**
    * when a user uses core-extensions these core-extensions should not be dependencies.
    * here, we filter them out from all places they could entered as dependencies.
@@ -526,7 +514,7 @@ export class AutoDetectDeps {
    * which case we recognizes that the current originFile is a core-extension and avoid filtering.
    */
   private processCoreAspects(originFile: PathLinuxRelative) {
-    const coreAspects = this.getCoreAspectsPackagesAndIds();
+    const coreAspects = this.aspectLoader.getCoreAspectsPackagesAndIds();
 
     // const scopes = coreAspects.map((id) => {
     //   const id = id.split()
