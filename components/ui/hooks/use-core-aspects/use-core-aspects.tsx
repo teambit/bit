@@ -1,4 +1,4 @@
-import { useQuery } from '@teambit/graphql.hooks.use-query';
+import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
 
 export type CoreAspectIdByPackageName = {
@@ -12,6 +12,6 @@ const GET_CORE_ASPECTS = gql`
 `;
 
 export function useCoreAspects(): CoreAspectIdByPackageName {
-  const { data } = useQuery(GET_CORE_ASPECTS);
+  const { data } = useDataQuery(GET_CORE_ASPECTS);
   return data?.coreAspects;
 }

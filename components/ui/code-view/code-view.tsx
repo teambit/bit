@@ -12,6 +12,7 @@ import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { DependencyType } from '@teambit/code.ui.queries.get-component-code';
 import { ComponentID } from '@teambit/component';
 import { useCoreAspects } from '@teambit/harmony.ui.hooks.use-core-aspects';
+import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import styles from './code-view.module.scss';
 
 export type CodeViewProps = {
@@ -51,6 +52,29 @@ const extractLineRange = (hash) => {
 
   return null;
 };
+
+function joinPaths(base: string, relative: string) {
+  // Ensure we start with a base directory path
+  const baseParts = base.endsWith('/') ? base.split('/') : base.split('/').slice(0, -1);
+  const relativeParts = relative.split('/');
+
+  for (const part of relativeParts) {
+    if (part === '.' || part === '') {
+      // No operation needed for current directory marker or empty parts.
+    } else if (part === '..') {
+      // Navigate up one directory level
+      baseParts.pop();
+    } else {
+      // Navigate into a new directory level
+      baseParts.push(part);
+    }
+  }
+
+  // Reconstruct the path from the parts
+  // Also, prevent creating a leading '/' to keep the path relative to the base
+  const newPath = baseParts.join('/');
+  return newPath.startsWith('/') ? newPath : `/${newPath}`;
+}
 
 export function CodeView({
   className,
@@ -124,32 +148,47 @@ export function CodeView({
           .join('')
           .trim();
 
-        const lineNum = index + 1;
-        const matchesSearchWord = !isKeywordHighlighted && searchKeyword && lineText.includes(searchKeyword);
-        const isInRange = lineRange && lineNum >= lineRange.start && lineNum <= lineRange.end;
-        const isHighlighted = lineNum === lineNumber || matchesSearchWord || isInRange;
-
-        if (isHighlighted && searchKeyword) isKeywordHighlighted = true;
         node.children.forEach((child) => {
-          if (child.properties?.className?.includes('string')) {
+          if (child.properties?.className?.includes('string') && child.children[0]?.value?.length > 3) {
             const packageNameOrPath = child.children[0].value.replace(/['"]/g, '');
             const dep = depsByPackageName.get(packageNameOrPath);
+            const isRelativePath = packageNameOrPath.startsWith('.');
+            const filePath = isRelativePath && currentFile ? joinPaths(currentFile, packageNameOrPath) : undefined;
+            if (filePath) {
+              child.properties = {
+                ...child.properties,
+                onClick: (e) => {
+                  e.stopPropagation();
+                  navigate(`${filePath.substring(1)}${location?.search}`);
+                },
+                style: { cursor: 'pointer', textDecoration: 'underline' },
+              };
+            }
+
             if (dep || coreAspects[packageNameOrPath]) {
               const id = dep
                 ? (dep?.__typename === 'ComponentDependency' && ComponentID.fromString(dep.id)) || undefined
                 : ComponentID.fromString(coreAspects[packageNameOrPath]);
-              const link = id
-                ? ComponentUrl.toUrl(id, {
-                    includeVersion: true,
-                  })
+              const compUrl = id && ComponentUrl.toUrl(id, { includeVersion: true });
+              const [compIdUrl, version] = compUrl ? compUrl.split('?') : [undefined, undefined];
+              const link = compIdUrl
+                ? `${compIdUrl}/~code?${version}`
                 : `https://www.npmjs.com/package/${packageNameOrPath}`;
+
               child.tagName = 'a';
-              child.properties = { ...child.properties, href: link, target: '_blank' };
+              child.properties = { ...child.properties, href: link, target: '_blank', rel: 'noopener noreferrer' };
             }
           }
         });
 
+        const lineNum = index + 1;
+        const matchesSearchWord = !isKeywordHighlighted && searchKeyword && lineText.includes(searchKeyword);
+        const isInRange = lineRange && lineNum >= lineRange.start && lineNum <= lineRange.end;
+        const isHighlighted = lineNum === lineNumber || matchesSearchWord || isInRange;
+        if (isHighlighted && searchKeyword) isKeywordHighlighted = true;
+
         let lineNumberNode;
+
         if (node.children.length > 0 && node.children[0].properties.className.includes('linenumber')) {
           lineNumberNode = node.children[0];
           node = {
@@ -189,10 +228,8 @@ export function CodeView({
         );
       });
     },
-    [onLineClicked, searchKeyword, lineNumber, lineRange, coreAspects, depsByPackageName.size]
+    [onLineClicked, searchKeyword, lineNumber, lineRange, coreAspects, depsByPackageName.size, currentFile]
   );
-
-  if (!fileContent && !loading && currentFile) return <EmptyCodeView />;
 
   const getSelectedLineRange = () => {
     const selection = window.getSelection();
@@ -225,6 +262,10 @@ export function CodeView({
       replace: true,
     });
   }, [location?.pathname, location?.search]);
+
+  if (loading) return <BlockSkeleton lines={25} />;
+
+  if (!fileContent && !loading && currentFile) return <EmptyCodeView />;
 
   return (
     <div className={classNames(styles.codeView, className)}>
