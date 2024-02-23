@@ -151,9 +151,6 @@ export class EnvPreviewTemplateTask implements BuildTask {
       peers,
       previewRoot,
     });
-
-    console.log('🚀 ~ file: env-preview-template.task.ts:155 ~ EnvPreviewTemplateTask ~ entries:', entries);
-
     const outputPath = this.computeOutputPath(context, envComponent);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
     const resolvedEnvAspects = await this.preview.resolveAspects(MainRuntime.name, [envComponent.id], undefined, {

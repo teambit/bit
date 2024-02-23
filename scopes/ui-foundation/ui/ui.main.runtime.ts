@@ -215,8 +215,6 @@ export class UiMain {
    * create a build of the given UI root.
    */
   async build(uiRootAspectIdOrName?: string, customOutputPath?: string): Promise<webpack.MultiStats | undefined> {
-    console.log('🚀 ~ file: ui.main.runtime.ts:219 ~ UiMain ~ build ~ build:');
-
     // TODO: change to MultiStats from webpack once they export it in their types
     this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}"`);
     const maybeUiRoot = this.getUi(uiRootAspectIdOrName);
@@ -233,8 +231,6 @@ export class UiMain {
     const ssrConfig = ssr && createSsrWebpackConfig(outputPath, [mainEntry], await this.publicDir(uiRoot));
 
     const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
-
-    console.log('🚀 ~ file: ui.main.runtime.ts:237 ~ UiMain ~ build ~ config:', config);
 
     const compiler = webpack(config);
     this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" running webpack`);

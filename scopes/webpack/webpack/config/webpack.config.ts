@@ -21,10 +21,6 @@ export function configFactory(target: Target, context: BundlerContext): Configur
   const htmlConfig = target.html ?? context.html;
   const compress = target.compress ?? context.compress;
 
-  console.log('🚀 ~ file: webpack.config.ts:24 ~ configFactory ~ compress:', compress);
-  console.log('🚀 ~ file: webpack.config.ts:24 ~ configFactory ~ truthyEntries:', Object.keys(truthyEntries).length);
-  console.log('🚀 ~ file: webpack.config.ts:24 ~ configFactory ~ truthyEntries:', truthyEntries);
-
   const newEntries: EntryObject[] = Object.entries(truthyEntries).reduce((acc, entry) => {
     const [key, value] = entry;
     if (typeof value.dependOn === 'string') {

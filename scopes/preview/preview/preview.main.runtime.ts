@@ -308,9 +308,6 @@ export class PreviewMain {
   async calcPreviewData(component: Component): Promise<PreviewComponentData> {
     const doesScaling = await this.calcDoesScalingForComponent(component);
     const dataFromEnv = await this.calcPreviewDataFromEnv(component);
-
-    console.log('🚀 ~ file: preview.main.runtime.ts:312 ~ PreviewMain ~ calcPreviewData ~ dataFromEnv:', dataFromEnv);
-
     const envData = (await this.calculateDataForEnvComponent(component)) || {};
     const onlyOverview = await this.calculateIncludeOnlyOverview(component);
     const useNameParam = await this.calculateUseNameParam(component);
@@ -874,8 +871,6 @@ export class PreviewMain {
   };
 
   getEnvPreviewConfig(env?: PreviewEnv): EnvPreviewConfig {
-    console.log('🚀 ~ file: preview.main.runtime.ts:875 ~ PreviewMain ~ getEnvPreviewConfig');
-
     const config = env?.getPreviewConfig && typeof env?.getPreviewConfig === 'function' ? env?.getPreviewConfig() : {};
 
     return config;
