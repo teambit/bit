@@ -1549,6 +1549,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-tab-page"
     },
+    "ui/code-view": {
+        "name": "ui/code-view",
+        "scope": "teambit.code",
+        "version": "0.0.519",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/code-view"
+    },
     "ui/compare/lane-compare": {
         "name": "ui/compare/lane-compare",
         "scope": "teambit.lanes",
@@ -1758,6 +1765,20 @@
         "version": "0.0.498",
         "mainFile": "index.ts",
         "rootDir": "components/ui/hooks/scope-context"
+    },
+    "ui/hooks/use-core-aspects": {
+        "name": "ui/hooks/use-core-aspects",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/hooks/use-core-aspects",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "ui/inputs/lane-selector": {
         "name": "ui/inputs/lane-selector",

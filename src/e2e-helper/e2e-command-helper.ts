@@ -564,8 +564,8 @@ export default class CommandHelper {
     return this.runCmd('bit stash');
   }
 
-  stashLoad() {
-    return this.runCmd('bit stash load');
+  stashLoad(flags = '') {
+    return this.runCmd(`bit stash load ${flags}`);
   }
 
   isDeprecated(compName: string): boolean {
