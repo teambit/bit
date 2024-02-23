@@ -12,7 +12,6 @@ import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { DependencyType } from '@teambit/code.ui.queries.get-component-code';
 import { ComponentID } from '@teambit/component';
 import { useCoreAspects } from '@teambit/harmony.ui.hooks.use-core-aspects';
-import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import styles from './code-view.module.scss';
 
 export type CodeViewProps = {
