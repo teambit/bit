@@ -372,7 +372,7 @@ export const BasicIdInput = () => {
       const data = [
         {
           componentId: `${helper.scopes.remote}/comp2`,
-          dependencies: [`${helper.scopes.remote}/comp3@latest`],
+          // dependencies: [`${helper.scopes.remote}/comp3@latest`],
           message: 'msg',
         },
       ];
