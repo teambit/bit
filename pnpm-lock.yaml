@@ -318,9 +318,6 @@ importers:
       '@teambit/code.ui.code-tab-tree':
         specifier: ^0.0.613
         version: 0.0.613(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
-      '@teambit/code.ui.code-view':
-        specifier: ^0.0.519
-        version: 0.0.519(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.dependency-tree':
         specifier: 0.0.546
         version: 0.0.546(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
@@ -3260,9 +3257,6 @@ importers:
       '@teambit/code.ui.code-tab-tree':
         specifier: ^0.0.613
         version: 0.0.613(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
-      '@teambit/code.ui.code-view':
-        specifier: ^0.0.519
-        version: 0.0.519(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.hooks.use-code-params':
         specifier: 0.0.496
         version: 0.0.496(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
@@ -3342,6 +3336,70 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
+      '@types/testing-library__jest-dom':
+        specifier: 5.9.5
+        version: 5.9.5
+
+  components/ui/code-view:
+    dependencies:
+      '@teambit/base-react.navigation.link':
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.constants.storage':
+        specifier: 1.0.0
+        version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/code.ui.queries.get-component-code':
+        specifier: 0.0.502
+        version: 0.0.502(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/code.ui.queries.get-file-content':
+        specifier: 0.0.504
+        version: 0.0.504(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/documenter.ui.code-snippet':
+        specifier: ^4.2.5
+        version: 4.2.5(@testing-library/react@12.1.5)(react@17.0.2)
+      '@teambit/documenter.ui.heading':
+        specifier: 4.1.1
+        version: 4.1.1(react-dom@17.0.2)(react@17.0.2)
+      classnames:
+        specifier: 2.2.6
+        version: 2.2.6
+      core-js:
+        specifier: ^3.0.0
+        version: 3.13.0
+      react:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2
+      react-dom:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2(react@17.0.2)
+      react-syntax-highlighter:
+        specifier: 15.5.0
+        version: 15.5.0(react@17.0.2)
+    devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@types/classnames':
+        specifier: 2.2.11
+        version: 2.2.11
+      '@types/jest':
+        specifier: ^26.0.0
+        version: 26.0.20
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 12.20.4
+        version: 12.20.4
+      '@types/react':
+        specifier: ^17.0.67
+        version: 17.0.75
+      '@types/react-dom':
+        specifier: ^17.0.21
+        version: 17.0.25
+      '@types/react-syntax-highlighter':
+        specifier: 15.5.10
+        version: 15.5.10
       '@types/testing-library__jest-dom':
         specifier: 5.9.5
         version: 5.9.5
@@ -4226,6 +4284,43 @@ importers:
 
   components/ui/hooks/scope-context:
     dependencies:
+      core-js:
+        specifier: ^3.0.0
+        version: 3.13.0
+      react:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2
+      react-dom:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2(react@17.0.2)
+    devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@types/jest':
+        specifier: ^26.0.0
+        version: 26.0.20
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 12.20.4
+        version: 12.20.4
+      '@types/react':
+        specifier: ^17.0.67
+        version: 17.0.75
+      '@types/react-dom':
+        specifier: ^17.0.21
+        version: 17.0.25
+      '@types/testing-library__jest-dom':
+        specifier: 5.9.5
+        version: 5.9.5
+
+  components/ui/hooks/use-core-aspects:
+    dependencies:
+      '@teambit/ui-foundation.ui.hooks.use-data-query':
+        specifier: ^0.0.505
+        version: 0.0.505(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -5199,6 +5294,9 @@ importers:
       '@teambit/code.ui.code-tab-page':
         specifier: workspace:*
         version: file:components/ui/code-tab-page(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+      '@teambit/code.ui.code-view':
+        specifier: workspace:*
+        version: file:components/ui/code-view(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/command-bar':
         specifier: workspace:*
         version: file:scopes/explorer/command-bar(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
@@ -5442,6 +5540,9 @@ importers:
       '@teambit/harmony.ui.aspect-box':
         specifier: workspace:*
         version: file:scopes/harmony/ui/aspect-box(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/harmony.ui.hooks.use-core-aspects':
+        specifier: workspace:*
+        version: file:components/ui/hooks/use-core-aspects(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html':
         specifier: workspace:*
         version: file:scopes/html/html(@testing-library/react@12.1.5)(@types/react@17.0.75)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
@@ -5986,6 +6087,8 @@ importers:
         injected: true
       '@teambit/code.ui.code-tab-page':
         injected: true
+      '@teambit/code.ui.code-view':
+        injected: true
       '@teambit/command-bar':
         injected: true
       '@teambit/community':
@@ -6147,6 +6250,8 @@ importers:
       '@teambit/harmony.testing.load-aspect':
         injected: true
       '@teambit/harmony.ui.aspect-box':
+        injected: true
+      '@teambit/harmony.ui.hooks.use-core-aspects':
         injected: true
       '@teambit/html':
         injected: true
@@ -6622,6 +6727,9 @@ importers:
       '@teambit/code.ui.code-tab-page':
         specifier: workspace:*
         version: file:components/ui/code-tab-page(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+      '@teambit/code.ui.code-view':
+        specifier: workspace:*
+        version: file:components/ui/code-view(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/command-bar':
         specifier: workspace:*
         version: file:scopes/explorer/command-bar(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
@@ -6868,6 +6976,9 @@ importers:
       '@teambit/harmony.ui.aspect-box':
         specifier: workspace:*
         version: file:scopes/harmony/ui/aspect-box(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/harmony.ui.hooks.use-core-aspects':
+        specifier: workspace:*
+        version: file:components/ui/hooks/use-core-aspects(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html':
         specifier: workspace:*
         version: file:scopes/html/html(@testing-library/react@12.1.5)(@types/react@17.0.75)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
@@ -7430,6 +7541,8 @@ importers:
         injected: true
       '@teambit/code.ui.code-tab-page':
         injected: true
+      '@teambit/code.ui.code-view':
+        injected: true
       '@teambit/command-bar':
         injected: true
       '@teambit/community':
@@ -7591,6 +7704,8 @@ importers:
       '@teambit/harmony.testing.load-aspect':
         injected: true
       '@teambit/harmony.ui.aspect-box':
+        injected: true
+      '@teambit/harmony.ui.hooks.use-core-aspects':
         injected: true
       '@teambit/html':
         injected: true
@@ -8066,6 +8181,9 @@ importers:
       '@teambit/code.ui.code-tab-page':
         specifier: workspace:*
         version: file:components/ui/code-tab-page(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+      '@teambit/code.ui.code-view':
+        specifier: workspace:*
+        version: file:components/ui/code-view(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/command-bar':
         specifier: workspace:*
         version: file:scopes/explorer/command-bar(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
@@ -8312,6 +8430,9 @@ importers:
       '@teambit/harmony.ui.aspect-box':
         specifier: workspace:*
         version: file:scopes/harmony/ui/aspect-box(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/harmony.ui.hooks.use-core-aspects':
+        specifier: workspace:*
+        version: file:components/ui/hooks/use-core-aspects(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html':
         specifier: workspace:*
         version: file:scopes/html/html(@testing-library/react@12.1.5)(@types/react@17.0.75)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
@@ -8874,6 +8995,8 @@ importers:
         injected: true
       '@teambit/code.ui.code-tab-page':
         injected: true
+      '@teambit/code.ui.code-view':
+        injected: true
       '@teambit/command-bar':
         injected: true
       '@teambit/community':
@@ -9035,6 +9158,8 @@ importers:
       '@teambit/harmony.testing.load-aspect':
         injected: true
       '@teambit/harmony.ui.aspect-box':
+        injected: true
+      '@teambit/harmony.ui.hooks.use-core-aspects':
         injected: true
       '@teambit/html':
         injected: true
@@ -9507,6 +9632,9 @@ importers:
       '@teambit/code.ui.code-tab-page':
         specifier: workspace:*
         version: file:components/ui/code-tab-page(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+      '@teambit/code.ui.code-view':
+        specifier: workspace:*
+        version: file:components/ui/code-view(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/command-bar':
         specifier: workspace:*
         version: file:scopes/explorer/command-bar(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
@@ -9750,6 +9878,9 @@ importers:
       '@teambit/harmony.ui.aspect-box':
         specifier: workspace:*
         version: file:scopes/harmony/ui/aspect-box(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/harmony.ui.hooks.use-core-aspects':
+        specifier: workspace:*
+        version: file:components/ui/hooks/use-core-aspects(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html':
         specifier: workspace:*
         version: file:scopes/html/html(@testing-library/react@12.1.5)(@types/react@17.0.75)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
@@ -10288,6 +10419,8 @@ importers:
         injected: true
       '@teambit/code.ui.code-tab-page':
         injected: true
+      '@teambit/code.ui.code-view':
+        injected: true
       '@teambit/command-bar':
         injected: true
       '@teambit/community':
@@ -10449,6 +10582,8 @@ importers:
       '@teambit/harmony.testing.load-aspect':
         injected: true
       '@teambit/harmony.ui.aspect-box':
+        injected: true
+      '@teambit/harmony.ui.hooks.use-core-aspects':
         injected: true
       '@teambit/html':
         injected: true
@@ -10921,6 +11056,9 @@ importers:
       '@teambit/code.ui.code-tab-page':
         specifier: workspace:*
         version: file:components/ui/code-tab-page(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+      '@teambit/code.ui.code-view':
+        specifier: workspace:*
+        version: file:components/ui/code-view(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/command-bar':
         specifier: workspace:*
         version: file:scopes/explorer/command-bar(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
@@ -11164,6 +11302,9 @@ importers:
       '@teambit/harmony.ui.aspect-box':
         specifier: workspace:*
         version: file:scopes/harmony/ui/aspect-box(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/harmony.ui.hooks.use-core-aspects':
+        specifier: workspace:*
+        version: file:components/ui/hooks/use-core-aspects(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html':
         specifier: workspace:*
         version: file:scopes/html/html(@testing-library/react@12.1.5)(@types/react@17.0.75)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
@@ -11708,6 +11849,8 @@ importers:
         injected: true
       '@teambit/code.ui.code-tab-page':
         injected: true
+      '@teambit/code.ui.code-view':
+        injected: true
       '@teambit/command-bar':
         injected: true
       '@teambit/community':
@@ -11869,6 +12012,8 @@ importers:
       '@teambit/harmony.testing.load-aspect':
         injected: true
       '@teambit/harmony.ui.aspect-box':
+        injected: true
+      '@teambit/harmony.ui.hooks.use-core-aspects':
         injected: true
       '@teambit/html':
         injected: true
@@ -12341,6 +12486,9 @@ importers:
       '@teambit/code.ui.code-tab-page':
         specifier: workspace:*
         version: file:components/ui/code-tab-page(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+      '@teambit/code.ui.code-view':
+        specifier: workspace:*
+        version: file:components/ui/code-view(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/command-bar':
         specifier: workspace:*
         version: file:scopes/explorer/command-bar(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
@@ -12584,6 +12732,9 @@ importers:
       '@teambit/harmony.ui.aspect-box':
         specifier: workspace:*
         version: file:scopes/harmony/ui/aspect-box(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/harmony.ui.hooks.use-core-aspects':
+        specifier: workspace:*
+        version: file:components/ui/hooks/use-core-aspects(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html':
         specifier: workspace:*
         version: file:scopes/html/html(@testing-library/react@12.1.5)(@types/react@17.0.75)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
@@ -13128,6 +13279,8 @@ importers:
         injected: true
       '@teambit/code.ui.code-tab-page':
         injected: true
+      '@teambit/code.ui.code-view':
+        injected: true
       '@teambit/command-bar':
         injected: true
       '@teambit/community':
@@ -13289,6 +13442,8 @@ importers:
       '@teambit/harmony.testing.load-aspect':
         injected: true
       '@teambit/harmony.ui.aspect-box':
+        injected: true
+      '@teambit/harmony.ui.hooks.use-core-aspects':
         injected: true
       '@teambit/html':
         injected: true
@@ -13764,6 +13919,9 @@ importers:
       '@teambit/code.ui.code-tab-page':
         specifier: workspace:*
         version: file:components/ui/code-tab-page(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
+      '@teambit/code.ui.code-view':
+        specifier: workspace:*
+        version: file:components/ui/code-view(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/command-bar':
         specifier: workspace:*
         version: file:scopes/explorer/command-bar(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
@@ -14007,6 +14165,9 @@ importers:
       '@teambit/harmony.ui.aspect-box':
         specifier: workspace:*
         version: file:scopes/harmony/ui/aspect-box(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/harmony.ui.hooks.use-core-aspects':
+        specifier: workspace:*
+        version: file:components/ui/hooks/use-core-aspects(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/html':
         specifier: workspace:*
         version: file:scopes/html/html(@testing-library/react@12.1.5)(@types/react@17.0.75)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
@@ -14572,6 +14733,8 @@ importers:
         injected: true
       '@teambit/code.ui.code-tab-page':
         injected: true
+      '@teambit/code.ui.code-view':
+        injected: true
       '@teambit/command-bar':
         injected: true
       '@teambit/community':
@@ -14733,6 +14896,8 @@ importers:
       '@teambit/harmony.testing.load-aspect':
         injected: true
       '@teambit/harmony.ui.aspect-box':
+        injected: true
+      '@teambit/harmony.ui.hooks.use-core-aspects':
         injected: true
       '@teambit/html':
         injected: true
@@ -21196,6 +21361,9 @@ importers:
       graphql:
         specifier: 15.8.0
         version: 15.8.0
+      graphql-tag:
+        specifier: 2.12.1
+        version: 2.12.1(graphql@15.8.0)
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -26267,15 +26435,9 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
-      assert:
-        specifier: ^2.1.0
-        version: 2.1.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
-      buffer:
-        specifier: 6.0.3
-        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -26330,9 +26492,6 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
-      punycode:
-        specifier: ^2.3.1
-        version: 2.3.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -26354,21 +26513,12 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
-      string_decoder:
-        specifier: ^1.3.0
-        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
-      url:
-        specifier: ^0.11.3
-        version: 0.11.3
-      util:
-        specifier: ^0.12.5
-        version: 0.12.5
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -36928,29 +37078,6 @@ packages:
       - '@testing-library/react'
       - '@types/react'
       - react-router-dom
-    dev: false
-
-  /@teambit/code.ui.code-view@0.0.519(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-XFSjXOikcjCEO1RW6cLYHcZdWkUygh4gZ3/LSdQModVpTKwq60VU6svU4PjaYzic/2E0eB922mBd0/ywnHSioQ==}
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: '*'
-      react-dom: '*'
-    dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/base-ui.constants.storage': 1.0.0(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/code.ui.queries.get-file-content': 0.0.504(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.code-snippet': 4.2.5(@testing-library/react@12.1.5)(react@17.0.2)
-      '@teambit/documenter.ui.heading': 4.1.1(react-dom@17.0.2)(react@17.0.2)
-      classnames: 2.2.6
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-      react-syntax-highlighter: 15.5.0(react@17.0.2)
-    transitivePeerDependencies:
-      - '@apollo/client'
-      - '@testing-library/react'
-      - '@types/react'
     dev: false
 
   /@teambit/code.ui.dependency-tree@0.0.546(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2):
@@ -47796,7 +47923,7 @@ packages:
     resolution: {integrity: sha512-n8oxjeb5aIbPFEtmQxQYOLI0i9n5ySBEY/ZEHHZqKQSFnxio1rv6dthascc9dLuwrL0RC5mPCxB7vnAVGAYWAQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
-      eslint: '*'
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@7.32.0)
       '@types/json-schema': 7.0.15
@@ -47816,7 +47943,7 @@ packages:
     resolution: {integrity: sha512-n8oxjeb5aIbPFEtmQxQYOLI0i9n5ySBEY/ZEHHZqKQSFnxio1rv6dthascc9dLuwrL0RC5mPCxB7vnAVGAYWAQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
-      eslint: '*'
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@7.32.0)
       '@types/json-schema': 7.0.15
@@ -47835,7 +47962,7 @@ packages:
     resolution: {integrity: sha512-n8oxjeb5aIbPFEtmQxQYOLI0i9n5ySBEY/ZEHHZqKQSFnxio1rv6dthascc9dLuwrL0RC5mPCxB7vnAVGAYWAQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
-      eslint: '*'
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@7.32.0)
       '@types/json-schema': 7.0.15
@@ -71539,7 +71666,7 @@ packages:
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-tab-tree': 0.0.613(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
-      '@teambit/code.ui.code-view': 0.0.519(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/code.ui.code-view': file:components/ui/code-view(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.hooks.use-code-params': 0.0.496(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2)
       '@teambit/code.ui.queries.get-component-code': 0.0.502(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.utils.get-file-icon': 0.0.495(react-dom@17.0.2)(react@17.0.2)
@@ -71564,6 +71691,31 @@ packages:
       - '@testing-library/react'
       - '@types/react'
       - supports-color
+    dev: false
+
+  file:components/ui/code-view(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {directory: components/ui/code-view, type: directory}
+    id: file:components/ui/code-view
+    name: '@teambit/code.ui.code-view'
+    peerDependencies:
+      react: '*'
+      react-dom: '*'
+    dependencies:
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.constants.storage': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/code.ui.queries.get-component-code': 0.0.502(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/code.ui.queries.get-file-content': 0.0.504(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/documenter.ui.code-snippet': 4.2.5(@testing-library/react@12.1.5)(react@17.0.2)
+      '@teambit/documenter.ui.heading': 4.1.1(react-dom@17.0.2)(react@17.0.2)
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+      react-syntax-highlighter: 15.5.0(react@17.0.2)
+    transitivePeerDependencies:
+      - '@apollo/client'
+      - '@testing-library/react'
+      - '@types/react'
     dev: false
 
   file:components/ui/compare/lane-compare(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/node@20.2.5)(@types/react@17.0.75)(react@17.0.2):
@@ -72005,6 +72157,22 @@ packages:
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  file:components/ui/hooks/use-core-aspects(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {directory: components/ui/hooks/use-core-aspects, type: directory}
+    id: file:components/ui/hooks/use-core-aspects
+    name: '@teambit/harmony.ui.hooks.use-core-aspects'
+    peerDependencies:
+      react: '*'
+      react-dom: '*'
+    dependencies:
+      '@teambit/ui-foundation.ui.hooks.use-data-query': 0.0.505(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@apollo/client'
     dev: false
 
   file:components/ui/inputs/lane-selector_1(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.8.1)(react@17.0.2):
@@ -75010,6 +75178,7 @@ packages:
       find-root: 1.1.0
       fs-extra: 10.0.0
       graphql: 15.8.0
+      graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       mocha: 10.2.0
       p-map-series: 2.1.0
