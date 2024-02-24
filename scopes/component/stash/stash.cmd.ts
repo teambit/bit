@@ -9,6 +9,7 @@ import { StashMain } from './stash.main.runtime';
 
 export class StashSaveCmd implements Command {
   name = 'save';
+  alias = 's';
   description = 'stash modified components';
   group = 'development';
   options = [
@@ -34,6 +35,23 @@ export class StashSaveCmd implements Command {
   }
 }
 
+export class StashListCmd implements Command {
+  name = 'list';
+  description = 'list stash';
+  group = 'development';
+  options = [] as CommandOptions;
+  loader = true;
+
+  constructor(private stash: StashMain) {}
+
+  async report() {
+    const list = await this.stash.list();
+    return list
+      .map((listItem) => `${listItem.id} (${listItem.components.length} components) ${listItem.message || ''}`)
+      .join('\n');
+  }
+}
+
 type StashLoadOpts = {
   autoMergeResolve?: MergeStrategy;
   manual?: boolean;
@@ -42,8 +60,9 @@ type StashLoadOpts = {
 };
 
 export class StashLoadCmd implements Command {
-  name = 'load';
-  description = 'load latest stash, checkout components and delete stash';
+  name = 'load [stash-id]';
+  alias = 'pop';
+  description = 'apply the changes according to the stash. if no stash-id provided, it loads the latest stash';
   group = 'development';
   options = [
     [
@@ -63,7 +82,7 @@ export class StashLoadCmd implements Command {
 
   constructor(private stash: StashMain) {}
 
-  async report(_arg, { autoMergeResolve, forceOurs, forceTheirs, manual }: StashLoadOpts) {
+  async report([stashId]: [string], { autoMergeResolve, forceOurs, forceTheirs, manual }: StashLoadOpts) {
     if (forceOurs && forceTheirs) {
       throw new BitError('please use either --force-ours or --force-theirs, not both');
     }
@@ -82,13 +101,13 @@ export class StashLoadCmd implements Command {
       forceOurs,
       forceTheirs,
     };
-    const compIds = await this.stash.loadLatest(checkoutProps);
+    const compIds = await this.stash.loadLatest(checkoutProps, stashId);
     return chalk.green(`checked out ${compIds.length} components according to the latest stash`);
   }
 }
 
 export class StashCmd implements Command {
-  name = 'stash [sub-command]';
+  name = 'stash <sub-command>';
   description = 'EXPERIMENTAL (more like a POC). stash modified components';
   group = 'development';
   options = [
@@ -100,16 +119,9 @@ export class StashCmd implements Command {
 
   constructor(private stash: StashMain) {}
 
-  async report(
-    _arg: any,
-    {
-      pattern,
-      message,
-    }: {
-      pattern?: string;
-      message?: string;
-    }
-  ) {
-    return new StashSaveCmd(this.stash).report(undefined, { pattern, message });
+  async report([unrecognizedSubcommand]: [string]) {
+    return chalk.red(
+      `"${unrecognizedSubcommand}" is not a subcommand of "stash", please run "bit stash --help" to list the subcommands`
+    );
   }
 }

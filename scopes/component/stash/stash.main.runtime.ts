@@ -8,9 +8,15 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { CheckoutAspect, CheckoutMain, CheckoutProps } from '@teambit/checkout';
 import { StashAspect } from './stash.aspect';
-import { StashCmd, StashLoadCmd, StashSaveCmd } from './stash.cmd';
+import { StashCmd, StashListCmd, StashLoadCmd, StashSaveCmd } from './stash.cmd';
 import { StashData } from './stash-data';
 import { StashFiles } from './stash-files';
+
+type ListResult = {
+  id: string;
+  message?: string;
+  components: string[];
+};
 
 export class StashMain {
   private stashFiles: StashFiles;
@@ -59,8 +65,22 @@ export class StashMain {
     return modifiedCompIds;
   }
 
-  async loadLatest(checkoutProps: CheckoutProps = {}) {
-    const stashFile = await this.stashFiles.getLatestStashFile();
+  async list(): Promise<ListResult[]> {
+    const stashFiles = await this.stashFiles.getStashFiles();
+    return Promise.all(
+      stashFiles.map(async (file) => {
+        const stashData = await this.stashFiles.getStashData(file);
+        return {
+          id: file.replace('.json', ''),
+          message: stashData.metadata.message,
+          components: stashData.stashCompsData.map((c) => c.id.toString()),
+        };
+      })
+    );
+  }
+
+  async loadLatest(checkoutProps: CheckoutProps = {}, stashId?: string) {
+    const stashFile = stashId ? `${stashId}.json` : await this.stashFiles.getLatestStashFile();
     if (!stashFile) {
       throw new BitError('no stashed components found');
     }
@@ -110,7 +130,7 @@ export class StashMain {
   static async provider([cli, workspace, checkout, snapping]: [CLIMain, Workspace, CheckoutMain, SnappingMain]) {
     const stashMain = new StashMain(workspace, checkout, snapping);
     const stashCmd = new StashCmd(stashMain);
-    stashCmd.commands = [new StashSaveCmd(stashMain), new StashLoadCmd(stashMain)];
+    stashCmd.commands = [new StashSaveCmd(stashMain), new StashLoadCmd(stashMain), new StashListCmd(stashMain)];
     cli.register(stashCmd);
     return stashMain;
   }
