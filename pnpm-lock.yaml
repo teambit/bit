@@ -67,8 +67,8 @@ importers:
         specifier: ^1.1.16
         version: 1.1.17
       '@bitdev/symphony.generators.symphony-templates':
-        specifier: ~0.0.10
-        version: 0.0.10
+        specifier: ~0.0.11
+        version: 0.0.11
       '@graphql-modules/core':
         specifier: 0.7.17
         version: 0.7.17(graphql@15.8.0)(reflect-metadata@0.1.13)
@@ -21143,8 +21143,8 @@ importers:
         specifier: 7.22.15
         version: 7.22.15(@babel/core@7.19.6)
       '@bitdev/symphony.generators.symphony-templates':
-        specifier: ~0.0.10
-        version: 0.0.10
+        specifier: ~0.0.11
+        version: 0.0.11
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
@@ -31428,8 +31428,8 @@ packages:
       prompts: 2.4.2
     dev: false
 
-  /@bitdev/harmony.generators.harmony-templates@0.0.30:
-    resolution: {integrity: sha512-HiLm45K5iJ8wKcI/Tp3zhuoa+O+YKqj5RIoUZJNMoTXe4UbeR1mpn+2ti9ROIrYq/oy4eRoCf3e3QjLdfE1V6Q==}
+  /@bitdev/harmony.generators.harmony-templates@0.0.31:
+    resolution: {integrity: sha512-ypuYrUhZ067Rd2nTFooKyies9fW2ZYZQzuioS/b7OjLDmyqO/rV54DS1m1uYcvBQ2WNXZqyl0KCKYjyckNo2aA==}
     dependencies:
       '@teambit/component-id': 1.2.0
       lodash: 4.17.21
@@ -31454,10 +31454,10 @@ packages:
       react-error-overlay: 6.0.9
       strip-ansi: 6.0.0
 
-  /@bitdev/symphony.generators.symphony-templates@0.0.10:
-    resolution: {integrity: sha512-5Txq48sLtmOetb3TzU3IVnZL/D3v7E5FsR1fpyJhnqLzG/EzHs7v4EIQ1qZjPJCSGRtvJBJZPwruSKsorzLiyg==}
+  /@bitdev/symphony.generators.symphony-templates@0.0.11:
+    resolution: {integrity: sha512-9y3S3iId8jJ2p5ZFIHxIiqyJNXqKPS2Kl4P0y7CozOIXDD2ydT6tB/Tj3Jkn97kpJuRYuV2F0d7Gr4lDGp18Jw==}
     dependencies:
-      '@bitdev/harmony.generators.harmony-templates': 0.0.30
+      '@bitdev/harmony.generators.harmony-templates': 0.0.31
     dev: false
 
   /@chevrotain/types@9.1.0:
@@ -75124,7 +75124,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
       '@bitdev/harmony.generators.harmony-templates': 0.0.29
-      '@bitdev/symphony.generators.symphony-templates': 0.0.10
+      '@bitdev/symphony.generators.symphony-templates': 0.0.11
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/bit-error': 0.0.404
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
