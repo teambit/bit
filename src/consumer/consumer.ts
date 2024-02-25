@@ -424,9 +424,10 @@ export default class Consumer {
   static create(
     projectPath: PathOsBasedAbsolute,
     noGit = false,
+    noPackageJson = false,
     workspaceConfigProps?: WorkspaceConfigProps
   ): Promise<Consumer> {
-    return this.ensure(projectPath, noGit, workspaceConfigProps);
+    return this.ensure(projectPath, noGit, noPackageJson, workspaceConfigProps);
   }
 
   static _getScopePath(projectPath: PathOsBasedAbsolute, noGit: boolean): PathOsBasedAbsolute {
@@ -441,6 +442,7 @@ export default class Consumer {
   static async ensure(
     projectPath: PathOsBasedAbsolute,
     standAlone = false,
+    noPackageJson = false,
     workspaceConfigProps?: WorkspaceConfigProps
   ): Promise<Consumer> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
@@ -458,8 +460,9 @@ export default class Consumer {
       existingGitHooks,
     });
     await consumer.setBitMap();
-    // understands why tests break with gilad and david.
-    await Consumer.ensurePackageJson(projectPath);
+    if (!noPackageJson) {
+      await Consumer.ensurePackageJson(projectPath);
+    }
     return consumer;
   }
 
