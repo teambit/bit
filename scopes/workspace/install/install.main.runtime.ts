@@ -389,7 +389,7 @@ export class InstallMain {
       current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
-    if (!options?.lockfileOnly || !options?.skipPrune) {
+    if (!options?.lockfileOnly && !options?.skipPrune) {
       // We clean node_modules only after the last install.
       // Otherwise, we might load an env from a location that we later remove.
       await installer.pruneModules(this.workspace.path);
