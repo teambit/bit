@@ -35,7 +35,7 @@ export default async function init(
     if (!scopePath) throw new Error(`fatal: scope not found in the path: ${process.cwd()}`);
     await Scope.reset(scopePath, true);
   }
-  if (!consumer) consumer = await Consumer.create(absPath, noGit, workspaceConfigProps);
+  if (!consumer) consumer = await Consumer.create(absPath, noGit, noPackageJson, workspaceConfigProps);
   if (!force && !resetScope) {
     await throwForOutOfSyncScope(consumer);
   }
