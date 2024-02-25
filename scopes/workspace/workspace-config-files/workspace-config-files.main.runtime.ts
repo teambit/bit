@@ -132,13 +132,13 @@ export class WorkspaceConfigFilesMain {
     const execContext = await this.getExecContext();
 
     let pathsToClean: string[] | undefined = [];
-    if (optionsWithDefaults.clean) {
-      pathsToClean = await this.calcPathsToClean({ writers: optionsWithDefaults.writers });
-    }
-
     let writeErr;
     let writeResults;
     try {
+      if (optionsWithDefaults.clean) {
+        pathsToClean = await this.calcPathsToClean({ writers: optionsWithDefaults.writers });
+      }
+
       writeResults = await this.write(execContext, optionsWithDefaults);
       const allWrittenFiles = writeResults.writersResult.flatMap((writerResult) => {
         return writerResult.extendingConfigFiles.flatMap((extendingConfigFile) => {
