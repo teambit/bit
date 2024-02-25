@@ -459,7 +459,7 @@ export default class Consumer {
     });
     await consumer.setBitMap();
     // understands why tests break with gilad and david.
-    // await Consumer.ensurePackageJson(projectPath);
+    await Consumer.ensurePackageJson(projectPath);
     return consumer;
   }
 
@@ -467,7 +467,8 @@ export default class Consumer {
     const packageJsonPath = path.join(projectPath, 'package.json');
     const exists = fs.existsSync(packageJsonPath);
     if (exists) return;
-    fs.writeFileSync(packageJsonPath, `{\n  "type": "module"  \n}`);
+    const jsonContent = { type: 'module' };
+    fs.writeJSONSync(packageJsonPath, jsonContent, { spaces: 2 });
   }
 
   /**
