@@ -466,7 +466,14 @@ export default class Consumer {
   static async ensurePackageJson(projectPath: string) {
     const packageJsonPath = path.join(projectPath, 'package.json');
     const exists = fs.existsSync(packageJsonPath);
-    if (exists) return;
+    if (exists) {
+      const content = await fs.readJson(packageJsonPath);
+      if (content.type === 'module') return;
+      logger.console(
+        '\nEnable ESM by adding "type":"module" to the package.json file (https://nodejs.org/api/esm.html#enabling). If you are looking to use CJS. Use the Bit CJS environments.'
+      );
+      return;
+    }
     const jsonContent = { type: 'module' };
     fs.writeJSONSync(packageJsonPath, jsonContent, { spaces: 2 });
   }
