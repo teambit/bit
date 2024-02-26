@@ -340,6 +340,6 @@ export class SetPeerCmd implements Command {
 
   async report([componentId, range]: [string, string]) {
     await this.deps.setPeer(componentId, range != null ? range.toString() : range);
-    return '';
+    return `${chalk.green('successfully marked the component as a peer component')}`;
   }
 }
