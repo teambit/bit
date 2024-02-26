@@ -131,6 +131,9 @@ export class WebpackMain {
     const configs =
       initialConfigs ||
       this.createConfigs(context.targets, baseConfigFactory, transformers, transformerContext, context);
+
+    console.log('🚀 ~ file: webpack.main.runtime.ts:133 ~ WebpackMain ~ configs:', configs);
+
     return new WebpackBundler(
       context.targets,
       configs,

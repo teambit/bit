@@ -43,17 +43,17 @@ function createBrowserConfig(outputDir: string, title: string, publicDir: string
             // this ensures the Class Names for all Schema Classes is not minimized
             // so that schemaObjToClass can match the correct Class Name during runtime
             keep_classnames: new RegExp('.*(Schema)$'),
-            parse: {
-              // We want terser to parse ecma 8 code. However, we don't want it
-              // to apply any minification steps that turns valid ecma 5 code
-              // into invalid ecma 5 code. This is why the 'compress' and 'output'
-              // sections only apply transformations that are ecma 5 safe
-              // https://github.com/facebook/create-react-app/pull/4234
-              ecma: 8,
-            },
+            // parse: {
+            //   // We want terser to parse ecma 8 code. However, we don't want it
+            //   // to apply any minification steps that turns valid ecma 5 code
+            //   // into invalid ecma 5 code. This is why the 'compress' and 'output'
+            //   // sections only apply transformations that are ecma 5 safe
+            //   // https://github.com/facebook/create-react-app/pull/4234
+            //   ecma: 8,
+            // },
             compress: {
               ecma: 5,
-              warnings: false,
+              // warnings: false,
               // Disabled because of an issue with Uglify breaking seemingly valid code:
               // https://github.com/facebook/create-react-app/issues/2376
               // Pending further investigation:
