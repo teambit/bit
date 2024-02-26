@@ -10,6 +10,7 @@ overrides:
   '@types/react': ^17.0.67
   '@types/react-dom': ^17.0.21
   minio@7.0: 7.1.1
+  terser-webpack-plugin: 5.3.10
 
 importers:
 
@@ -2062,8 +2063,8 @@ importers:
         specifier: 1.0.1
         version: 1.0.1
       terser-webpack-plugin:
-        specifier: 5.2.0
-        version: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
+        specifier: 5.3.10
+        version: 5.3.10(esbuild@0.14.29)(webpack@5.84.1)
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
@@ -24138,8 +24139,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0(webpack@5.84.1)
       terser-webpack-plugin:
-        specifier: 5.2.0
-        version: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
+        specifier: 5.3.10
+        version: 5.3.10(esbuild@0.14.29)(webpack@5.84.1)
       typescript:
         specifier: 4.7.4
         version: 4.7.4
@@ -26179,8 +26180,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0(webpack@5.84.1)
       terser-webpack-plugin:
-        specifier: 5.2.0
-        version: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
+        specifier: 5.3.10
+        version: 5.3.10(esbuild@0.14.29)(webpack@5.84.1)
       webpack:
         specifier: 5.84.1
         version: 5.84.1(esbuild@0.14.29)
@@ -43267,7 +43268,7 @@ packages:
       express: 4.18.2
       fs-extra: 10.1.0
       lodash: 4.17.21
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.90.3)
+      terser-webpack-plugin: 5.3.10(esbuild@0.14.29)(webpack@5.90.3)
       url-join: 4.0.0
       webpack: 5.90.3(esbuild@0.14.29)
     transitivePeerDependencies:
@@ -43325,7 +43326,7 @@ packages:
       express: 4.18.2
       fs-extra: 10.1.0
       lodash: 4.17.21
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.90.3)
+      terser-webpack-plugin: 5.3.10(esbuild@0.14.29)(webpack@5.90.3)
       url-join: 4.0.0
       webpack: 5.90.3(esbuild@0.14.29)
     transitivePeerDependencies:
@@ -44606,7 +44607,7 @@ packages:
       sass-loader: 13.3.2(sass@1.63.6)(webpack@5.90.3)
       source-map-loader: 4.0.1(webpack@5.90.3)
       style-loader: 3.3.1(webpack@5.90.3)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.90.3)
+      terser-webpack-plugin: 5.3.10(esbuild@0.14.29)(webpack@5.90.3)
       webpack: 5.90.3(esbuild@0.14.29)
     transitivePeerDependencies:
       - '@babel/core'
@@ -44675,7 +44676,7 @@ packages:
       sass-loader: 13.3.2(sass@1.63.6)(webpack@5.90.3)
       source-map-loader: 4.0.1(webpack@5.90.3)
       style-loader: 3.3.1(webpack@5.90.3)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.90.3)
+      terser-webpack-plugin: 5.3.10(esbuild@0.14.29)(webpack@5.90.3)
       webpack: 5.90.3(esbuild@0.14.29)
     transitivePeerDependencies:
       - '@babel/core'
@@ -44744,7 +44745,7 @@ packages:
       sass-loader: 13.3.2(sass@1.63.6)(webpack@5.90.3)
       source-map-loader: 4.0.1(webpack@5.90.3)
       style-loader: 3.3.1(webpack@5.90.3)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.90.3)
+      terser-webpack-plugin: 5.3.10(esbuild@0.14.29)(webpack@5.90.3)
       webpack: 5.90.3(esbuild@0.14.29)
     transitivePeerDependencies:
       - '@babel/core'
@@ -44813,7 +44814,7 @@ packages:
       sass-loader: 13.3.2(sass@1.63.6)(webpack@5.90.3)
       source-map-loader: 4.0.1(webpack@5.90.3)
       style-loader: 3.3.1(webpack@5.90.3)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.90.3)
+      terser-webpack-plugin: 5.3.10(esbuild@0.14.29)(webpack@5.90.3)
       webpack: 5.90.3(esbuild@0.14.29)
     transitivePeerDependencies:
       - '@babel/core'
@@ -68410,57 +68411,6 @@ packages:
       supports-hyperlinks: 2.3.0
     dev: false
 
-  /terser-webpack-plugin@5.2.0(esbuild@0.14.29)(webpack@5.84.1):
-    resolution: {integrity: sha512-FpR4Qe0Yt4knSQ5u2bA1wkM0R8VlVsvhyfSHvomXRivS4vPLk0dJV2IhRBIHRABh7AFutdMeElIA5y1dETwMBg==}
-    engines: {node: '>= 10.13.0'}
-    peerDependencies:
-      '@swc/core': '*'
-      esbuild: '*'
-      uglify-js: '*'
-      webpack: ^5.1.0
-    peerDependenciesMeta:
-      '@swc/core':
-        optional: true
-      esbuild:
-        optional: true
-      uglify-js:
-        optional: true
-    dependencies:
-      esbuild: 0.14.29
-      jest-worker: 27.5.1
-      p-limit: 3.1.0
-      schema-utils: 3.3.0
-      serialize-javascript: 6.0.2
-      source-map: 0.6.1
-      terser: 5.28.1
-      webpack: 5.84.1(esbuild@0.14.29)
-    dev: false
-
-  /terser-webpack-plugin@5.2.0(esbuild@0.14.29)(webpack@5.90.3):
-    resolution: {integrity: sha512-FpR4Qe0Yt4knSQ5u2bA1wkM0R8VlVsvhyfSHvomXRivS4vPLk0dJV2IhRBIHRABh7AFutdMeElIA5y1dETwMBg==}
-    engines: {node: '>= 10.13.0'}
-    peerDependencies:
-      '@swc/core': '*'
-      esbuild: '*'
-      uglify-js: '*'
-      webpack: ^5.1.0
-    peerDependenciesMeta:
-      '@swc/core':
-        optional: true
-      esbuild:
-        optional: true
-      uglify-js:
-        optional: true
-    dependencies:
-      esbuild: 0.14.29
-      jest-worker: 27.5.1
-      p-limit: 3.1.0
-      schema-utils: 3.3.0
-      serialize-javascript: 6.0.2
-      source-map: 0.6.1
-      terser: 5.28.1
-      webpack: 5.90.3(esbuild@0.14.29)
-
   /terser-webpack-plugin@5.3.10(esbuild@0.14.29)(webpack@5.84.1):
     resolution: {integrity: sha512-BKFPWlPDndPs+NGGCr1U59t0XScL5317Y0UReNrHaw9/FwhPENlq6bfgs+4yPfyP51vqC1bQ4rp1EfXW5ZSH9w==}
     engines: {node: '>= 10.13.0'}
@@ -76429,7 +76379,7 @@ packages:
       source-map-loader: 3.0.0(webpack@5.84.1)
       strip-ansi: 6.0.0
       style-loader: 2.0.0(webpack@5.84.1)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
+      terser-webpack-plugin: 5.3.10(esbuild@0.14.29)(webpack@5.84.1)
       typescript: 4.7.4
       url-join: 4.0.1
       webpack: 5.84.1(esbuild@0.14.29)
@@ -76571,7 +76521,7 @@ packages:
       source-map-loader: 3.0.0(webpack@5.84.1)
       strip-ansi: 6.0.0
       style-loader: 2.0.0(webpack@5.84.1)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
+      terser-webpack-plugin: 5.3.10(esbuild@0.14.29)(webpack@5.84.1)
       typescript: 4.7.4
       url-join: 4.0.1
       webpack: 5.84.1(esbuild@0.14.29)
@@ -77493,7 +77443,7 @@ packages:
       sass-loader: 13.3.2(sass@1.63.6)(webpack@5.84.1)
       source-map-loader: 3.0.0(webpack@5.84.1)
       style-loader: 2.0.0(webpack@5.84.1)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
+      terser-webpack-plugin: 5.3.10(esbuild@0.14.29)(webpack@5.84.1)
       webpack: 5.84.1(esbuild@0.14.29)
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.84.1)
       webpack-manifest-plugin: 5.0.0(webpack@5.84.1)

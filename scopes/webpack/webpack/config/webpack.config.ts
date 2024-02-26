@@ -11,6 +11,8 @@ import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
 
 export function configFactory(target: Target, context: BundlerContext): Configuration {
+  console.log('🚀 ~ file: webpack.config.ts:15 ~ configFactory ~ target:', target);
+
   let truthyEntries =
     Array.isArray(target.entries) && target.entries.length ? target.entries.filter(Boolean) : target.entries || {};
   if (Array.isArray(truthyEntries) && !truthyEntries.length) {

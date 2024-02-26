@@ -478,7 +478,7 @@
         "symlink-dir": "^5.1.1",
         "table": "6.7.3",
         "tempy": "1.0.1",
-        "terser-webpack-plugin": "5.2.0",
+        "terser-webpack-plugin": "5.3.10",
         "tippy.js": "6.2.7",
         "ua-parser-js": "0.7.24",
         "unist-util-remove": "2.0.1",
@@ -520,7 +520,8 @@
       "signal-exit@4": "^4.0.2",
       "@types/react": "^17.0.67",
       "@types/react-dom": "^17.0.21",
-      "minio@7.0": "7.1.1"
+      "minio@7.0": "7.1.1",
+      "terser-webpack-plugin": "5.3.10"
     },
     "rootComponents": true,
     "nodeVersion": "20.10.0",
@@ -529,9 +530,7 @@
     // "bit compile" breaks node_modules when hard links are used.
     "packageImportMethod": "copy",
     "packageManagerArgs": [],
-    "devFilePatterns": [
-      "**/*.spec.ts"
-    ],
+    "devFilePatterns": ["**/*.spec.ts"],
     "strictPeerDependencies": true,
     "autoInstallPeers": false,
     // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
@@ -539,40 +538,26 @@
     "savePrefix": "",
     "extraArgs": [],
     "peerDependencyRules": {
-      "allowAny": [
-        "react",
-        "react-dom",
-        "@testing-library/react"
-      ],
+      "allowAny": ["react", "react-dom", "@testing-library/react"],
       "ignoreMissing": []
     },
-    "hoistPatterns": [
-      "*",
-      "!@teambit/envs"
-    ],
+    "hoistPatterns": ["*", "!@teambit/envs"],
     "capsuleSelfReference": true
   },
   "teambit.preview/preview": {
     "bundlingStrategy": "component"
   },
   "teambit.generator/generator": {
-    "aspects": [
-      "teambit.harmony/aspect"
-    ]
+    "aspects": ["teambit.harmony/aspect"]
   },
   "teambit.component/issues": {
-    "ignoreIssues": [
-      "CircularDependencies",
-      "DuplicateComponentAndPackage"
-    ]
+    "ignoreIssues": ["CircularDependencies", "DuplicateComponentAndPackage"]
   },
   "teambit.workspace/variants": {
     // Only component with no namespace (aka aspects in our workspace)
     "*,!{*/**}": {
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": [
-          "--access public"
-        ],
+        "packageManagerPublishArgs": ["--access public"],
         "packageJson": {
           "name": "@teambit/{name}"
         }
@@ -598,14 +583,10 @@
       "teambit.component/issues": {
         // This is here because in load-bit, we have to import harmony config from non main file
         // we can't expose it from the main file, since it's not browser compatible
-        "ignoreIssues": [
-          "ImportNonMainFiles"
-        ]
+        "ignoreIssues": ["ImportNonMainFiles"]
       },
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": [
-          "--access public"
-        ],
+        "packageManagerPublishArgs": ["--access public"],
         "packageJson": {
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "bvm": {
@@ -677,9 +658,7 @@
     },
     "scopes/harmony/node": {
       "teambit.component/issues": {
-        "ignoreIssues": [
-          "ImportNonMainFiles"
-        ]
+        "ignoreIssues": ["ImportNonMainFiles"]
       },
       // TODO: remove after next tag
       "teambit.dependencies/dependency-resolver": {

@@ -14,6 +14,7 @@ export default function (dev?: boolean): Configuration {
         minimizer: [
           new TerserPlugin({
             minify: TerserPlugin.esbuildMinify,
+            parallel: 4,
             // `terserOptions` options will be passed to `esbuild`
             // Link to options - https://esbuild.github.io/api/#minify
             // Note: the `minify` options is true by default (and override other `minify*` options), so if you want to disable the `minifyIdentifiers` option (or other `minify*` options) please use:
