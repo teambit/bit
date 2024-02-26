@@ -57,7 +57,7 @@ export class WorkspaceGenerator {
     try {
       process.chdir(this.workspacePath);
       await this.initGit();
-      await init(this.workspacePath, this.options.skipGit, false, false, false, false, false, false, {});
+      await init(this.workspacePath, this.options.skipGit, false, false, false, false, false, false, false, {});
       await this.writeWorkspaceFiles();
       await this.reloadBitInWorkspaceDir();
       // Setting the workspace to be in install context to prevent errors during the workspace generation
