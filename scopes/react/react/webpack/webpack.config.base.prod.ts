@@ -18,14 +18,14 @@ export default function (dev?: boolean): Configuration {
             // `terserOptions` options will be passed to `esbuild`
             // Link to options - https://esbuild.github.io/api/#minify
             // Note: the `minify` options is true by default (and override other `minify*` options), so if you want to disable the `minifyIdentifiers` option (or other `minify*` options) please use:
-            terserOptions: {
-              // minify: false,
-              // minifyWhitespace: true,
-              // We don't want to minify identifiers to enable easier debugging on remote scopes when there are preview issues
-              minifyIdentifiers: false,
-              // minifyIdentifiers: true,
-              minifySyntax: true,
-            },
+            // terserOptions: {
+            // minify: false,
+            // minifyWhitespace: true,
+            // We don't want to minify identifiers to enable easier debugging on remote scopes when there are preview issues
+            // minifyIdentifiers: false,
+            // minifyIdentifiers: true,
+            // minifySyntax: true,
+            // },
             // terserOptions: {},
           }),
 
