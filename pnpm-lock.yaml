@@ -61,11 +61,11 @@ importers:
         specifier: 7.22.3
         version: 7.22.3
       '@bitdev/node.generators.node-templates':
-        specifier: ^1.0.9
-        version: 1.0.10
+        specifier: ^1.0.12
+        version: 1.0.12
       '@bitdev/react.generators.react-templates':
-        specifier: ^1.1.16
-        version: 1.1.17
+        specifier: ^1.1.19
+        version: 1.1.19
       '@bitdev/symphony.generators.symphony-templates':
         specifier: ~0.0.11
         version: 0.0.11
@@ -22184,8 +22184,8 @@ importers:
         specifier: 7.20.0
         version: 7.20.0
       '@bitdev/node.generators.node-templates':
-        specifier: ^1.0.9
-        version: 1.0.10
+        specifier: ^1.0.12
+        version: 1.0.12
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
@@ -23928,8 +23928,8 @@ importers:
         specifier: 7.23.2
         version: 7.23.2
       '@bitdev/react.generators.react-templates':
-        specifier: ^1.1.16
-        version: 1.1.17
+        specifier: ^1.1.19
+        version: 1.1.19
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
@@ -31436,16 +31436,14 @@ packages:
       prompts: 2.4.2
     dev: false
 
-  /@bitdev/node.generators.node-templates@1.0.10:
-    resolution: {integrity: sha512-LJZvHNflrsE/QCBleDXGY5Qthnugr8+FIr0sDvQuRZSZBU9ybCQtRd+qVTrZqzc10ZGJO14865/a0U2OTpICng==}
+  /@bitdev/node.generators.node-templates@1.0.12:
+    resolution: {integrity: sha512-w1YpIjnSW6a7NVmxG8T/gzVBSnAq4lHz2I+Olrj0DycmcbaZtcfWfhjOtdSYOeqRpuqx9pgK1CXPVLUSyH4pgw==}
     dependencies:
       lodash: 4.17.21
     dev: false
 
-  /@bitdev/react.generators.react-templates@1.1.17:
-    resolution: {integrity: sha512-V6nf0/2nTVWwgp3yw0fmR6QKtslTbZIZqdnAHhCwF4jNPcCdng7a9rtZg8P8kRErU7OpzD4Fm72+v3bJcT0LGg==}
-    dependencies:
-      dedent: 0.7.0
+  /@bitdev/react.generators.react-templates@1.1.19:
+    resolution: {integrity: sha512-kiE80W0ExqYsNo4piq1nuuT0OHCdzM11LIFAXSQylgq6Njerm0mwehhbflRPs3cgZP6PUJzyztQJSUMf+jT3PQ==}
     dev: false
 
   /@bitdev/react.webpack.refresh-overlay@0.0.1:
@@ -75595,7 +75593,7 @@ packages:
       react-dom: '*'
     dependencies:
       '@babel/runtime': 7.20.0
-      '@bitdev/node.generators.node-templates': 1.0.10
+      '@bitdev/node.generators.node-templates': 1.0.12
       '@teambit/component-id': 1.2.0
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
@@ -76349,7 +76347,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.23.2
-      '@bitdev/react.generators.react-templates': 1.1.17
+      '@bitdev/react.generators.react-templates': 1.1.19
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.4(@types/webpack@5.28.1)(react-refresh@0.10.0)(webpack-dev-server@4.15.0)(webpack@5.84.1)
       '@prerenderer/prerenderer': 1.2.4(@types/express@4.17.13)(debug@4.3.4)
@@ -76491,7 +76489,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.23.2
-      '@bitdev/react.generators.react-templates': 1.1.17
+      '@bitdev/react.generators.react-templates': 1.1.19
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.4(@types/webpack@5.28.1)(react-refresh@0.10.0)(webpack-dev-server@4.15.0)(webpack@5.84.1)
       '@prerenderer/prerenderer': 1.2.4(@types/express@4.17.13)(debug@4.3.4)
