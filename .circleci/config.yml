@@ -101,14 +101,14 @@ commands: # reusable commands
         type: string
     steps:
       - docker_build_internal:
-          image_name: "<<parameters.image_name>>"
-          docker_file_name: "<<parameters.docker_file_name>>"
-          docker_tag_suffix: "<<parameters.docker_tag_suffix>>"
-          docker_build_arg_name: "<<parameters.docker_build_arg_name>>"
-          docker_build_arg_value: "<<parameters.docker_build_arg_value>>"
+          image_name: '<<parameters.image_name>>'
+          docker_file_name: '<<parameters.docker_file_name>>'
+          docker_tag_suffix: '<<parameters.docker_tag_suffix>>'
+          docker_build_arg_name: '<<parameters.docker_build_arg_name>>'
+          docker_build_arg_value: '<<parameters.docker_build_arg_value>>'
       - docker_push:
-          image_name: "<<parameters.image_name>>"
-          docker_tag_suffix: "<<parameters.docker_tag_suffix>>"
+          image_name: '<<parameters.image_name>>'
+          docker_tag_suffix: '<<parameters.docker_tag_suffix>>'
 
   docker_build_internal:
     parameters:
@@ -125,7 +125,7 @@ commands: # reusable commands
         default: 'Dockerfile-bit'
         type: string
       docker_tag_suffix:
-        default: ""
+        default: ''
         type: string
     steps:
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg <<parameters.docker_build_arg_name>>=<<parameters.docker_build_arg_value>> -t <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>> .
@@ -272,8 +272,8 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:20.10.0"
-          docker_tag_suffix: "-node-20.10.0"
+          docker_build_arg_value: 'node:20.10.0'
+          docker_tag_suffix: '-node-20.10.0'
 
   # docker_non_root_build:
   #   machine:
@@ -292,10 +292,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:20.10.0"
-          image_name: "bitcli/bit-non-root"
-          docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-20.10.0"
+          docker_build_arg_value: 'node:20.10.0'
+          image_name: 'bitcli/bit-non-root'
+          docker_file_name: 'Dockerfile-bit-non-root'
+          docker_tag_suffix: '-node-20.10.0'
 
   server_docker_build_node_20:
     machine:
@@ -304,11 +304,11 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_name: "BIT_IMAGE"
-          docker_build_arg_value: "`npm show @teambit/bit version`-node-20.10.0"
-          image_name: "bitcli/bit-server"
-          docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-20.10.0"
+          docker_build_arg_name: 'BIT_IMAGE'
+          docker_build_arg_value: '`npm show @teambit/bit version`-node-20.10.0'
+          image_name: 'bitcli/bit-server'
+          docker_file_name: 'Dockerfile-bit-server'
+          docker_tag_suffix: '-node-20.10.0'
 
   set_ssh_key:
     <<: *defaults
@@ -347,7 +347,6 @@ jobs:
           # key: bitsrc-registry-stg-v2
           paths:
             - ~/.npmrc
-
 
   generate_docs:
     <<: *defaults
@@ -471,8 +470,8 @@ jobs:
       # - run: bvm install 1.5.36
       - run: bvm link --verbose
       - bit_config:
-          env: "hub"
-          bin_name: "bbit"
+          env: 'hub'
+          bin_name: 'bbit'
       - run: bbit
       - save_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -544,7 +543,9 @@ jobs:
           command: cd bit && bit diff
       - run:
           name: 'bit build'
-          command: 'cd bit && bit build'
+          command: |
+            echo $NODE_OPTIONS
+            cd bit && bit build
           environment:
             NODE_OPTIONS: --max-old-space-size=15000
       - store_artifacts:
@@ -567,7 +568,7 @@ jobs:
       - restore_cache:
           key: core-aspect-env-v0.0.25-v3
       - bit_config:
-          env: "hub"
+          env: 'hub'
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
@@ -642,10 +643,10 @@ jobs:
     <<: *defaults
     environment:
       # do not download chromium when installing puppeteer
-      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
     steps:
       - attach_workspace:
-            at: ./
+          at: ./
       - set_bit_cloud_registry
       - setup_bit_version
       - setup_pnpm
@@ -688,10 +689,10 @@ jobs:
     <<: *defaults
     environment:
       # do not download chromium when installing puppeteer
-      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
     steps:
       - attach_workspace:
-            at: ./
+          at: ./
       - set_bit_cloud_registry
       - setup_bit_version
       - setup_pnpm
@@ -734,10 +735,10 @@ jobs:
     <<: *defaults
     environment:
       # do not download chromium when installing puppeteer
-      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
     steps:
       - attach_workspace:
-            at: ./
+          at: ./
       - set_bit_cloud_registry
       - setup_bit_version
       - setup_pnpm
@@ -824,7 +825,7 @@ jobs:
           at: ./
       - bit_global_for_npm
       - bit_config:
-          env: "hub"
+          env: 'hub'
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
@@ -908,16 +909,16 @@ jobs:
   # # this is to check what version of node you get when you update the windows orb
   # # as it's missing in their docs
   # windows_print_node_version:
-    # <<: *windows_defaults
-    # steps:
-      # # - checkout
-      # - run: node -v
-      # - run: npm -v
-      # - run: yarn -v
-      # # - run: choco install nodejs --version 20.10.0
-      # # - run: node -v
-      # - run: cinst nodejs --version 20.10.0
-      # - run: node -v
+  # <<: *windows_defaults
+  # steps:
+  # # - checkout
+  # - run: node -v
+  # - run: npm -v
+  # - run: yarn -v
+  # # - run: choco install nodejs --version 20.10.0
+  # # - run: node -v
+  # - run: cinst nodejs --version 20.10.0
+  # - run: node -v
 
   windows_checkout_code:
     <<: *windows_defaults
@@ -986,7 +987,7 @@ jobs:
     # skipping the pre-built binaries to make sure we build them by the pack step
     # testing the install script will be done in different workflow dedicated for this
     environment:
-      SKIP_FETCH_BINARY: "true"
+      SKIP_FETCH_BINARY: 'true'
     steps:
       - attach_workspace:
           at: .
@@ -1052,8 +1053,8 @@ jobs:
     <<: *windows_defaults
     environment:
       BITSRC_ENV: stg
-      SKIP_REGISTRY_TESTS: "true"
-      SKIP_BIT_DEV_TESTS: "true"
+      SKIP_REGISTRY_TESTS: 'true'
+      SKIP_BIT_DEV_TESTS: 'true'
       BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
@@ -1085,7 +1086,7 @@ jobs:
       # -
       #   run: 'ssh-add ~/.ssh/id_rsa'
       - bit_config:
-          token: "fake-token"
+          token: 'fake-token'
       - run: 'pwd'
       - run: 'ls'
       - run: 'ls bit\bit'
@@ -1101,8 +1102,8 @@ jobs:
     <<: *windows_defaults
     environment:
       BITSRC_ENV: stg
-      SKIP_REGISTRY_TESTS: "true"
-      SKIP_BIT_DEV_TESTS: "true"
+      SKIP_REGISTRY_TESTS: 'true'
+      SKIP_BIT_DEV_TESTS: 'true'
     parallelism: 25
     steps:
       - attach_workspace:
@@ -1141,7 +1142,7 @@ jobs:
       #   run: 'ssh-add ~/.ssh/id_rsa'
       - run: 'cd bit\bit; mkdir junit'
       - bit_config:
-          token: "fake-token"
+          token: 'fake-token'
       - run:
           name: 'write e2e files'
           command: 'cd bit\bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=filesize | Out-File -FilePath .\spec-files.txt'
@@ -1160,15 +1161,14 @@ jobs:
           path: bit\junit
       - store_artifacts:
           path: bit\junit
-      -
-        store_artifacts:
+      - store_artifacts:
           path: C:\Users\circleci\AppData\Local\Bit\logs\debug.log
   windows_e2e_test:
     <<: *windows_defaults
     environment:
       BITSRC_ENV: stg
-      SKIP_REGISTRY_TESTS: "true"
-      SKIP_BIT_DEV_TESTS: "true"
+      SKIP_REGISTRY_TESTS: 'true'
+      SKIP_BIT_DEV_TESTS: 'true'
     parallelism: 25
     steps:
       - attach_workspace:
@@ -1592,4 +1592,3 @@ workflows:
   #         filters:
   #           branches:
   #             only: update-circle-node-versions
-
