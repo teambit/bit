@@ -73,7 +73,7 @@ export default class Consumer {
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
   packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
   componentLoader: ComponentLoader;
-  packageJson: any;
+  packageJson: PackageJsonFile;
   public onCacheClear: Array<() => void | Promise<void>> = [];
   constructor({
     projectPath,
@@ -96,6 +96,10 @@ export default class Consumer {
   }
   async setBitMap() {
     this.bitMap = await BitMap.load(this);
+  }
+
+  setPackageJson(packageJson: PackageJsonFile) {
+    this.packageJson = packageJson;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -183,6 +187,7 @@ export default class Consumer {
     await Promise.all([this.config.write({ workspaceDir: this.projectPath }), this.scope.ensureDir()]);
     this.bitMap.markAsChanged();
     await this.writeBitMap();
+    await this.writePackageJson();
     return this;
   }
 
@@ -461,9 +466,24 @@ export default class Consumer {
     });
     await consumer.setBitMap();
     if (!noPackageJson) {
-      await Consumer.ensurePackageJson(projectPath);
+      consumer.setPackageJsonWithTypeModule();
     }
     return consumer;
+  }
+
+  private setPackageJsonWithTypeModule() {
+    const exists = this.packageJson && this.packageJson.fileExist;
+    if (exists) {
+      const content = this.packageJson.packageJsonObject;
+      if (content.type === 'module') return;
+      logger.console(
+        '\nEnable ESM by adding "type":"module" to the package.json file (https://nodejs.org/api/esm.html#enabling). If you are looking to use CJS. Use the Bit CJS environments.'
+      );
+      return;
+    }
+    const jsonContent = { type: 'module' };
+    const packageJson = PackageJsonFile.create(this.projectPath, undefined, jsonContent);
+    this.setPackageJson(packageJson);
   }
 
   static async ensurePackageJson(projectPath: string) {
@@ -614,6 +634,10 @@ export default class Consumer {
   async writeBitMap(reasonForChange?: string) {
     await this.backupBitMap(reasonForChange);
     await this.bitMap.write();
+  }
+
+  async writePackageJson() {
+    await this.packageJson.write();
   }
 
   getBitmapHistoryDir(): PathOsBasedAbsolute {
