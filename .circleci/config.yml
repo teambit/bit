@@ -514,7 +514,7 @@ jobs:
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=15000
+      NODE_OPTIONS: --max-old-space-size=12288
     steps:
       - attach_workspace:
           at: ./
@@ -544,9 +544,14 @@ jobs:
           command: cd bit && bit diff
       - run:
           name: 'bit build'
-          command: 'cd bit && bit build'
+          command: |
+            echo $NODE_OPTIONS
+            cd bit
+            sed -i '/enableWorkerThreads/d' node_modules/terser-webpack-plugin/dist/index.js
+            cat node_modules/terser-webpack-plugin/dist/index.js
+            bit build
           environment:
-            NODE_OPTIONS: --max-old-space-size=15000
+            NODE_OPTIONS: --max-old-space-size=12288
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
@@ -555,7 +560,7 @@ jobs:
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=15000
+      NODE_OPTIONS: --max-old-space-size=12288
     steps:
       - attach_workspace:
           at: ./
@@ -613,7 +618,7 @@ jobs:
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
-            NODE_OPTIONS: --max-old-space-size=15000
+            NODE_OPTIONS: --max-old-space-size=12288
       - run: cd bit && git diff
       - run:
           name: backup bit objects (before export)
