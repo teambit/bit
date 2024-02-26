@@ -545,7 +545,10 @@ jobs:
           name: 'bit build'
           command: |
             echo $NODE_OPTIONS
-            cd bit && bit build
+            cd bit
+            sed -i '/enableWorkerThreads/d' node_modules/terser-webpack-plugin/dist/index.js
+            cat node_modules/terser-webpack-plugin/dist/index.js
+            bit build
           environment:
             NODE_OPTIONS: --max-old-space-size=15000
       - store_artifacts:
