@@ -45,6 +45,7 @@ export type CheckoutProps = {
   workspaceOnly?: boolean;
   versionPerId?: ComponentID[]; // if given, the ComponentID.version is the version to checkout to.
   skipUpdatingBitmap?: boolean; // needed for stash
+  loadStash?: boolean;
   restoreMissingComponents?: boolean; // in case .bitmap has a component and it's missing from the workspace, restore it (from model)
   allowAddingComponentsFromScope?: boolean; // in case the id doesn't exist in .bitmap, add it from the scope (relevant for switch)
   includeLocallyDeleted?: boolean; // include components that were deleted locally. currently enabled for "bit checkout reset" only.
@@ -98,7 +99,7 @@ export class CheckoutMain {
     const getComponentsStatusOfMergeNeeded = async (): Promise<ComponentStatus[]> => {
       const tmp = new Tmp(consumer.scope);
       try {
-        const afterMergeAttempt = await Promise.all(compsNeedMerge.map((c) => this.getMergeStatus(c)));
+        const afterMergeAttempt = await Promise.all(compsNeedMerge.map((c) => this.getMergeStatus(c, checkoutProps)));
         await tmp.clear();
         return afterMergeAttempt;
       } catch (err: any) {
@@ -339,6 +340,7 @@ export class CheckoutMain {
       versionPerId,
       forceOurs,
       forceTheirs,
+      loadStash,
     } = checkoutProps;
     const repo = consumer.scope.objects;
 
@@ -447,9 +449,10 @@ export class CheckoutMain {
 
     const newId = id.changeVersion(newVersion);
 
-    if (reset || !isModified || revert || !currentlyUsedVersion || forceTheirs || forceOurs) {
+    if (reset || (!isModified && !loadStash) || revert || !currentlyUsedVersion || forceTheirs || forceOurs) {
       // if the component is not modified, no need to try merge the files, they will be written later on according to the
       // checked out version. same thing when no version is specified, it'll be reset to the model-version later.
+      // in case of "loadStash", we want to merge the stashed modifications regardless whether it's modified currently.
 
       // if !currentlyUsedVersion it only exists in the model, so just write it. (happening during bit-switch/bit-lane-import)
       return { currentComponent: component, componentFromModel: componentVersion, id: newId };
@@ -463,12 +466,10 @@ export class CheckoutMain {
     return { currentComponent: component, componentFromModel: componentVersion, id: newId, propsForMerge };
   }
 
-  private async getMergeStatus({
-    currentComponent: componentFromFS,
-    componentFromModel,
-    id,
-    propsForMerge,
-  }: ComponentStatusBeforeMergeAttempt): Promise<ComponentStatus> {
+  private async getMergeStatus(
+    { currentComponent: componentFromFS, componentFromModel, id, propsForMerge }: ComponentStatusBeforeMergeAttempt,
+    checkoutProps: CheckoutProps
+  ): Promise<ComponentStatus> {
     if (!propsForMerge) throw new Error(`propsForMerge is missing for ${id.toString()}`);
     if (!componentFromFS) throw new Error(`componentFromFS is missing for ${id.toString()}`);
     const consumer = this.workspace.consumer;
@@ -483,14 +484,23 @@ export class CheckoutMain {
     // experience of "git stash", then "git checkout", then "git stash pop". practically, we want the changes done on 0.0.2
     // to be added to 0.0.1
     // if there is no modification, it doesn't go the threeWayMerge anyway, so it doesn't matter what the base is.
-    const baseVersion = currentlyUsedVersion;
+    let baseVersion = currentlyUsedVersion;
     const newVersion = id.version as string;
-    const baseComponent: Version = await componentModel.loadVersion(baseVersion, repo);
+    let baseComponent: Version = await componentModel.loadVersion(baseVersion, repo);
     const otherComponent: Version = await componentModel.loadVersion(newVersion, repo);
+    const { loadStash } = checkoutProps;
+    if (loadStash && otherComponent.parents.length) {
+      // for stash, we want the stashed modifications to be added on top of the current version.
+      // for this to happen, the "base" must be the parent of the stashed version.
+      const parent = otherComponent.parents[0];
+      baseVersion = parent.toString();
+      baseComponent = await componentModel.loadVersion(baseVersion, repo);
+    }
+
     const mergeResults = await threeWayMerge({
       scope: consumer.scope,
       otherComponent,
-      otherLabel: newVersion,
+      otherLabel: loadStash ? 'stash' : newVersion,
       currentComponent: componentFromFS,
       currentLabel: `${currentlyUsedVersion} modified`,
       baseComponent,

@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
-import { compact } from 'lodash';
+import { compact, isEmpty } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
@@ -73,7 +73,7 @@ export default class Consumer {
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
   packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
   componentLoader: ComponentLoader;
-  packageJson: any;
+  packageJson: PackageJsonFile;
   public onCacheClear: Array<() => void | Promise<void>> = [];
   constructor({
     projectPath,
@@ -96,6 +96,10 @@ export default class Consumer {
   }
   async setBitMap() {
     this.bitMap = await BitMap.load(this);
+  }
+
+  setPackageJson(packageJson: PackageJsonFile) {
+    this.packageJson = packageJson;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -183,6 +187,7 @@ export default class Consumer {
     await Promise.all([this.config.write({ workspaceDir: this.projectPath }), this.scope.ensureDir()]);
     this.bitMap.markAsChanged();
     await this.writeBitMap();
+    await this.writePackageJson();
     return this;
   }
 
@@ -424,9 +429,10 @@ export default class Consumer {
   static create(
     projectPath: PathOsBasedAbsolute,
     noGit = false,
+    noPackageJson = false,
     workspaceConfigProps?: WorkspaceConfigProps
   ): Promise<Consumer> {
-    return this.ensure(projectPath, noGit, workspaceConfigProps);
+    return this.ensure(projectPath, noGit, noPackageJson, workspaceConfigProps);
   }
 
   static _getScopePath(projectPath: PathOsBasedAbsolute, noGit: boolean): PathOsBasedAbsolute {
@@ -441,6 +447,7 @@ export default class Consumer {
   static async ensure(
     projectPath: PathOsBasedAbsolute,
     standAlone = false,
+    noPackageJson = false,
     workspaceConfigProps?: WorkspaceConfigProps
   ): Promise<Consumer> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
@@ -458,16 +465,40 @@ export default class Consumer {
       existingGitHooks,
     });
     await consumer.setBitMap();
-    // understands why tests break with gilad and david.
-    // await Consumer.ensurePackageJson(projectPath);
+    if (!noPackageJson) {
+      consumer.setPackageJsonWithTypeModule();
+    }
     return consumer;
+  }
+
+  private setPackageJsonWithTypeModule() {
+    const exists = this.packageJson && this.packageJson.fileExist;
+    if (exists) {
+      const content = this.packageJson.packageJsonObject;
+      if (content.type === 'module') return;
+      logger.console(
+        '\nEnable ESM by adding "type":"module" to the package.json file (https://nodejs.org/api/esm.html#enabling). If you are looking to use CJS. Use the Bit CJS environments.'
+      );
+      return;
+    }
+    const jsonContent = { type: 'module' };
+    const packageJson = PackageJsonFile.create(this.projectPath, undefined, jsonContent);
+    this.setPackageJson(packageJson);
   }
 
   static async ensurePackageJson(projectPath: string) {
     const packageJsonPath = path.join(projectPath, 'package.json');
     const exists = fs.existsSync(packageJsonPath);
-    if (exists) return;
-    fs.writeFileSync(packageJsonPath, `{\n  "type": "module"  \n}`);
+    if (exists) {
+      const content = await fs.readJson(packageJsonPath);
+      if (content.type === 'module') return;
+      logger.console(
+        '\nEnable ESM by adding "type":"module" to the package.json file (https://nodejs.org/api/esm.html#enabling). If you are looking to use CJS. Use the Bit CJS environments.'
+      );
+      return;
+    }
+    const jsonContent = { type: 'module' };
+    fs.writeJSONSync(packageJsonPath, jsonContent, { spaces: 2 });
   }
 
   /**
@@ -603,6 +634,12 @@ export default class Consumer {
   async writeBitMap(reasonForChange?: string) {
     await this.backupBitMap(reasonForChange);
     await this.bitMap.write();
+  }
+
+  async writePackageJson() {
+    if (!isEmpty(this.packageJson.packageJsonObject)) {
+      await this.packageJson.write();
+    }
   }
 
   getBitmapHistoryDir(): PathOsBasedAbsolute {
