@@ -61,8 +61,7 @@ export default class PackageJsonFile {
    * load from the given dir, if not exist, don't throw an error, just set packageJsonObject as an
    * empty object
    */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async load(workspaceDir: PathOsBasedAbsolute, componentDir?: PathRelative = '.'): Promise<PackageJsonFile> {
+  static async load(workspaceDir: PathOsBasedAbsolute, componentDir: PathRelative = '.'): Promise<PackageJsonFile> {
     const filePath = composePath(componentDir);
     const filePathAbsolute = path.join(workspaceDir, filePath);
     const packageJsonStr = await PackageJsonFile.getPackageJsonStrIfExist(filePathAbsolute);
@@ -73,6 +72,25 @@ export default class PackageJsonFile {
     const indent = detectIndent(packageJsonStr).indent;
     const newline = detectNewline(packageJsonStr);
     return new PackageJsonFile({ filePath, packageJsonObject, fileExist: true, workspaceDir, indent, newline });
+  }
+
+  static create(
+    workspaceDir: PathOsBasedAbsolute,
+    componentDir: PathRelative = '.',
+    content: Record<string, any>,
+    indent = '  ',
+    newline = '\n'
+  ): PackageJsonFile {
+    const filePath = composePath(componentDir);
+
+    return new PackageJsonFile({
+      filePath,
+      packageJsonObject: content,
+      fileExist: false,
+      workspaceDir,
+      indent,
+      newline,
+    });
   }
 
   static async reset(workspaceDir: PathOsBasedAbsolute) {
