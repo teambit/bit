@@ -42,7 +42,7 @@ export class ComponentLogMain {
   /**
    * get component log sorted by the timestamp in ascending order (from the earliest to the latest)
    */
-  async getLogs(id: string, isRemote?: boolean, shortHash = false): Promise<ComponentLog[]> {
+  async getLogs(id: string, isRemote?: boolean, shortHash = false, shortMessage = false): Promise<ComponentLog[]> {
     if (isRemote) {
       const consumer = this.workspace?.consumer;
       const bitId = ComponentID.fromString(id);
@@ -54,12 +54,13 @@ export class ComponentLogMain {
     const logs = await this.workspace.scope.getLogs(componentId, shortHash);
     logs.forEach((log) => {
       log.date = log.date ? moment(new Date(parseInt(log.date))).format('YYYY-MM-DD HH:mm:ss') : undefined;
+      log.message = shortMessage ? log.message.split('\n')[0] : log.message;
     });
     return logs;
   }
 
-  async getLogsWithParents(id: string, fullHash = false) {
-    const logs = await this.getLogs(id, false, !fullHash);
+  async getLogsWithParents(id: string, fullHash = false, fullMessage = false) {
+    const logs = await this.getLogs(id, false, !fullHash, !fullMessage);
     const graph = buildSnapGraph(logs);
     const sorted = graph.toposort();
     return sorted.map((node) => this.stringifyLogInfoOneLine(node.attr));
