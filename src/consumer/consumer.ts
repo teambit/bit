@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
-import { compact } from 'lodash';
+import { compact, isEmpty } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
@@ -637,7 +637,9 @@ export default class Consumer {
   }
 
   async writePackageJson() {
-    await this.packageJson.write();
+    if (!isEmpty(this.packageJson.packageJsonObject)) {
+      await this.packageJson.write();
+    }
   }
 
   getBitmapHistoryDir(): PathOsBasedAbsolute {
