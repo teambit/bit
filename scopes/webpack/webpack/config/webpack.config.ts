@@ -91,6 +91,9 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     }
     config.plugins = config.plugins.concat(new CompressionPlugin());
   }
+
+  console.log('🚀 ~ file: webpack.config.ts:94 ~ configFactory ~ config:', JSON.stringify(config));
+
   return config;
 }
 

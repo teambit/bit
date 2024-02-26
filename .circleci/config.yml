@@ -550,7 +550,7 @@ jobs:
             cat node_modules/terser-webpack-plugin/dist/index.js
             bit build
           environment:
-            NODE_OPTIONS: --max-old-space-size=15000
+            NODE_OPTIONS: --max-old-space-size=12288
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
