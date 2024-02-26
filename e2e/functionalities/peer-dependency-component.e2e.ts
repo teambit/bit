@@ -46,7 +46,6 @@ describe('set-peer', function () {
       });
     });
     describe('peer dependency is not broken after snap', () => {
-      let workspaceCapsulesRootDir: string;
       before(() => {
         helper.command.snapAllComponents();
         helper.command.build();
@@ -79,16 +78,23 @@ describe('set-peer', function () {
         expect(depResolver.config.defaultPeerRange).to.eq('0');
       });
       it('adds peer dependency to the generated package.json', () => {
-        const dirs = fs.readdirSync(workspaceCapsulesRootDir);
+        const { head } = helper.command.catComponent('comp1');
         const pkgJson = fs.readJsonSync(
-          path.join(
-            workspaceCapsulesRootDir,
-            dirs.find((dir) => dir.includes(`${helper.scopes.remote}_comp1`))!,
-            'package.json'
-          )
+          path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1@${head}/package.json`)
         );
         expect(pkgJson.peerDependencies).to.deep.equal({
           [`@${helper.scopes.remote}/comp2`]: '0',
+        });
+      });
+      describe('always peer config fields are preserved when setting new dependencies', () => {
+        let bitMap: any;
+        before(() => {
+          helper.command.dependenciesSet('comp2', 'is-odd@1.0.0');
+          bitMap = helper.bitMap.read();
+        });
+        it('should readd always peer config fields to bitmap', () => {
+          expect(bitMap['comp2'].config['teambit.dependencies/dependency-resolver'].peer).to.eq(true);
+          expect(bitMap['comp2'].config['teambit.dependencies/dependency-resolver'].defaultPeerRange).to.eq('0');
         });
       });
     });

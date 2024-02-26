@@ -292,13 +292,9 @@ describe('peer-dependencies functionality', function () {
       expect(peerDep.versionRange).to.eq('*');
     });
     it('adds peer dependency to the generated package.json', () => {
-      const dirs = fs.readdirSync(workspaceCapsulesRootDir);
+      const { head } = helper.command.catComponent('comp1');
       const pkgJson = fs.readJsonSync(
-        path.join(
-          workspaceCapsulesRootDir,
-          dirs.find((dir) => dir.includes(`${helper.scopes.remote}_comp1`))!,
-          'package.json'
-        )
+        path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1@${head}/package.json`)
       );
       expect(pkgJson.peerDependencies).to.deep.equal({
         [`@${helper.scopes.remote}/comp2`]: '*',
