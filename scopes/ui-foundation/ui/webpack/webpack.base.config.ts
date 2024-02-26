@@ -352,23 +352,23 @@ export default function createWebpackConfig(
       }),
       // Generate a service worker script that will precache, and keep up to date,
       // the HTML & assets that are part of the webpack build.
-      isEnvProduction &&
-        new WorkboxWebpackPlugin.GenerateSW({
-          clientsClaim: true,
-          maximumFileSizeToCacheInBytes: 5000000,
-          exclude: [/\.map$/, /asset-manifest\.json$/],
-          // importWorkboxFrom: 'cdn',
-          navigateFallback: 'public/index.html',
-          navigateFallbackDenylist: [
-            // Exclude URLs starting with /_, as they're likely an API call
-            new RegExp('^/_'),
-            // Exclude any URLs whose last part seems to be a file extension
-            // as they're likely a resource and not a SPA route.
-            // URLs containing a "?" character won't be blacklisted as they're likely
-            // a route with query params (e.g. auth callbacks).
-            new RegExp('/[^/?]+\\.[^/]+$'),
-          ],
-        }),
+      // isEnvProduction &&
+      //   new WorkboxWebpackPlugin.GenerateSW({
+      //     clientsClaim: true,
+      //     maximumFileSizeToCacheInBytes: 5000000,
+      //     exclude: [/\.map$/, /asset-manifest\.json$/],
+      //     // importWorkboxFrom: 'cdn',
+      //     navigateFallback: 'public/index.html',
+      //     navigateFallbackDenylist: [
+      //       // Exclude URLs starting with /_, as they're likely an API call
+      //       new RegExp('^/_'),
+      //       // Exclude any URLs whose last part seems to be a file extension
+      //       // as they're likely a resource and not a SPA route.
+      //       // URLs containing a "?" character won't be blacklisted as they're likely
+      //       // a route with query params (e.g. auth callbacks).
+      //       new RegExp('/[^/?]+\\.[^/]+$'),
+      //     ],
+      //   }),
     ].filter(Boolean),
     // Some libraries import Node modules but don't use them in the browser.
     // Tell webpack to provide empty mocks for them so importing them works.
