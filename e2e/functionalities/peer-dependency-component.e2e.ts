@@ -93,8 +93,8 @@ describe('set-peer', function () {
           bitMap = helper.bitMap.read();
         });
         it('should readd always peer config fields to bitmap', () => {
-          expect(bitMap['comp2'].config['teambit.dependencies/dependency-resolver'].peer).to.eq(true);
-          expect(bitMap['comp2'].config['teambit.dependencies/dependency-resolver'].defaultPeerRange).to.eq('0');
+          expect(bitMap.comp2.config['teambit.dependencies/dependency-resolver'].peer).to.eq(true);
+          expect(bitMap.comp2.config['teambit.dependencies/dependency-resolver'].defaultPeerRange).to.eq('0');
         });
       });
     });
