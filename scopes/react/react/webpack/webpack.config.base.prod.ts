@@ -94,7 +94,7 @@ export default function (dev?: boolean): Configuration {
       };
 
   return {
-    optimization,
+    optimization: {},
 
     plugins: [
       // Generate an asset manifest file with the following content:
