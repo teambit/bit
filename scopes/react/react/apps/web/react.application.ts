@@ -261,7 +261,8 @@ export class ReactApp implements Application {
         if (this.prerender) config.addPlugin(prerenderPlugin(this.prerender));
         return config;
       },
-      replaceTerserPlugin({ prerender: !!this.prerender }),
+      // replaceTerserPlugin({ prerender: !!this.prerender }),
+      replaceTerserPlugin(),
       ...this.transformers,
     ]);
 
@@ -278,7 +279,8 @@ export class ReactApp implements Application {
     const bundlerContext = await this.getBuildContext(context, { outputPath });
     const transformers: WebpackConfigTransformer[] = compact([
       (configMutator) => configMutator.merge(ssrBuildConfig({ outputPath: join(outputPath, this.ssrDir) })),
-      replaceTerserPlugin({ prerender: !!this.prerender }),
+      // replaceTerserPlugin({ prerender: !!this.prerender }),
+      replaceTerserPlugin(),
       ...this.transformers,
     ]);
 

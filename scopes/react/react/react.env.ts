@@ -358,7 +358,8 @@ export class ReactEnv
     webpackModulePath?: string
   ): Promise<Bundler> {
     const baseConfig = basePreviewConfigFactory(!context.development);
-    const baseProdConfig = basePreviewProdConfigFactory(context.development);
+    const baseProdConfig = basePreviewProdConfigFactory();
+    // const baseProdConfig = basePreviewProdConfigFactory(context.development);
     const componentProdConfig = componentPreviewProdConfigFactory();
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
@@ -375,7 +376,8 @@ export class ReactEnv
     webpackModulePath?: string
   ): Promise<Bundler> {
     const baseConfig = basePreviewConfigFactory(!context.development);
-    const baseProdConfig = basePreviewProdConfigFactory(context.development);
+    const baseProdConfig = basePreviewProdConfigFactory();
+    // const baseProdConfig = basePreviewProdConfigFactory(context.development);
     const templateConfig = templateWebpackConfigFactory();
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
