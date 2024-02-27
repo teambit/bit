@@ -357,6 +357,7 @@ export const BasicIdInput = () => {
     let comp3HeadOnLane: string;
     let comp2HeadOnMain: string;
     let remoteScope: string;
+    let snapResult: Record<string, any>;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(3);
@@ -378,7 +379,7 @@ export const BasicIdInput = () => {
       ];
       const flags = `--lane ${helper.scopes.remote}/dev --update-dependents --push`;
       // console.log('data', JSON.stringify(data), 'flags', flags);
-      helper.command.snapFromScope(bareTag.scopePath, data, flags);
+      snapResult = helper.command.snapFromScopeParsed(bareTag.scopePath, data, flags);
       remoteScope = helper.scopeHelper.cloneRemoteScope();
     });
     it('should add the snapped component to the updateDependents prop and export it correctly to the remote', () => {
@@ -395,6 +396,9 @@ export const BasicIdInput = () => {
       const lane = helper.command.catLane('dev', helper.scopes.remotePath);
       expect(lane.components).to.have.lengthOf(1);
       expect(lane.components[0].id.name).to.equal('comp3');
+    });
+    it('should indicate what components were exported', () => {
+      expect(snapResult.exportedIds).to.have.lengthOf(1);
     });
     describe('running bit-sign', () => {
       it('should not throw', () => {
