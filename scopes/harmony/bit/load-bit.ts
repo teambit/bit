@@ -30,6 +30,7 @@ import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
 import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { ConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
+import { BitError } from '@teambit/bit-error';
 import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
@@ -121,7 +122,11 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
     // Do nothing here, invalid bitmaps will be handled later
     // eslint-disable-next-line no-empty
   } catch (e: any) {}
-  const defaultScope = rawConfig['teambit.workspace/workspace'].defaultScope;
+  const wsConfig = rawConfig['teambit.workspace/workspace'];
+  if (!wsConfig) throw new BitError('workspace.jsonc is missing the "teambit.workspace/workspace" property');
+  const defaultScope = wsConfig.defaultScope;
+  if (!defaultScope)
+    throw new BitError('workspace.jsonc is missing the "defaultScope" property in "teambit.workspace/workspace"');
   const allBitmapIds = Object.keys(parsedBitMap).map((id) =>
     BitMap.getComponentIdFromComponentJson(id, parsedBitMap[id], defaultScope)
   );
