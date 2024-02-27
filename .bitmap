@@ -530,7 +530,7 @@
     "eslint-config-bit-react": {
         "name": "eslint-config-bit-react",
         "scope": "teambit.react",
-        "version": "1.0.118",
+        "version": "1.0.119",
         "mainFile": "index.js",
         "rootDir": "scopes/react/eslint-config-bit-react"
     },
@@ -964,7 +964,7 @@
     "modules/node-modules-linker": {
         "name": "modules/node-modules-linker",
         "scope": "teambit.workspace",
-        "version": "0.0.164",
+        "version": "0.0.165",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/modules/node-modules-linker"
     },
@@ -1461,21 +1461,21 @@
     "testing/load-aspect": {
         "name": "testing/load-aspect",
         "scope": "teambit.harmony",
-        "version": "0.0.186",
+        "version": "0.0.187",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/testing/load-aspect"
     },
     "testing/mock-components": {
         "name": "testing/mock-components",
         "scope": "teambit.component",
-        "version": "0.0.191",
+        "version": "0.0.192",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/testing/mock-components"
     },
     "testing/mock-workspace": {
         "name": "testing/mock-workspace",
         "scope": "teambit.workspace",
-        "version": "0.0.26",
+        "version": "0.0.27",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/testing/mock-workspace"
     },
@@ -1545,14 +1545,14 @@
     "ui/code-tab-page": {
         "name": "ui/code-tab-page",
         "scope": "teambit.code",
-        "version": "0.0.636",
+        "version": "0.0.637",
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-tab-page"
     },
     "ui/code-view": {
         "name": "ui/code-view",
         "scope": "teambit.code",
-        "version": "0.0.520",
+        "version": "0.0.521",
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-view"
     },

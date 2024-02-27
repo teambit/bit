@@ -109,4 +109,43 @@ describe('Snapping aspect', function () {
       await destroyWorkspace(workspaceData);
     });
   });
+  describe('snap from scope - remove existing dependency', () => {
+    let workspaceData: WorkspaceData;
+    let snappedId: ComponentID;
+    let harmonyBareScope: Harmony;
+    before(async () => {
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      await mockComponents(workspacePath, { numOfComponents: 2 });
+      const harmony = await loadManyAspects([SnappingAspect, ExportAspect], workspacePath);
+      const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
+      await snapping.snap({ build: false, message: 'first snap' });
+      const exportMain = harmony.get<ExportMain>(ExportAspect.id);
+      await exportMain.export();
+
+      const bareScope = mockBareScope(workspaceData.remoteScopePath, 'bare-for-snap');
+      harmonyBareScope = await loadManyAspects([SnappingAspect, ScopeAspect], bareScope.scopePath);
+      const snappingScope = harmonyBareScope.get<SnappingMain>(SnappingAspect.id);
+      const snapDataPerComp: SnapDataPerCompRaw[] = [
+        {
+          componentId: `${workspaceData.remoteScopeName}/comp1`,
+          message: 'snap from scope',
+          removeDependencies: [`${workspaceData.remoteScopeName}/comp2`],
+        },
+      ];
+      // console.log('snapDataPerComp', JSON.stringify(snapDataPerComp));
+      const results = await snappingScope.snapFromScope(snapDataPerComp, {});
+
+      snappedId = results.snappedIds[0];
+    });
+    it('should remove the specified dependency', async () => {
+      const snapHash = snappedId.version;
+      const scope = harmonyBareScope.get<ScopeMain>(ScopeAspect.id);
+      const versionObj = (await scope.legacyScope.objects.load(Ref.from(snapHash))) as Version;
+      expect(versionObj.dependencies.get()).to.have.lengthOf(0);
+    });
+    after(async () => {
+      await destroyWorkspace(workspaceData);
+    });
+  });
 });
