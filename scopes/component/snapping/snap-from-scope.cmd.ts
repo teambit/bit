@@ -121,6 +121,9 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     if (disableTagAndSnapPipelines && ignoreBuildErrors) {
       throw new BitError('you can use either ignore-build-errors or disable-snap-pipeline, but not both');
     }
+    if (updateDependents && !lane) {
+      throw new BitError('update-dependents flag is only available when snapping from a lane');
+    }
 
     const snapDataPerCompRaw = this.parseData(data);
 
@@ -138,7 +141,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     });
 
     return {
-      ...results,
       exportedIds: results.exportedIds?.map((id) => id.toString()),
       snappedIds: results.snappedIds.map((id) => id.toString()),
     };
