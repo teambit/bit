@@ -160,7 +160,7 @@ describe('run bit init', function () {
     });
     describe('bit init', () => {
       before(() => {
-        helper.scopeHelper.initWorkspace();
+        helper.scopeHelper.initWorkspace(undefined, { 'no-package-json': true });
       });
       it('should not change BitMap file', () => {
         const currentBitMap = helper.bitMap.read();
@@ -175,7 +175,7 @@ describe('run bit init', function () {
     describe('bit init --reset', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
-        helper.command.runCmd('bit init --reset');
+        helper.command.runCmd('bit init --reset --no-package-json');
       });
       it('should not change BitMap file', () => {
         const currentBitMap = helper.bitMap.read();

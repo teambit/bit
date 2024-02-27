@@ -34,6 +34,7 @@ export default class Init implements LegacyCommand {
       'standalone',
       'do not nest component store within .git directory and do not write config data inside package.json',
     ],
+    ['', 'no-package-json', 'do not generate package.json'],
     ['r', 'reset', 'write missing or damaged Bit files'],
     ['', 'reset-new', 'reset .bitmap file as if the components were newly added and remove all model data (objects)'],
     [
@@ -59,7 +60,6 @@ export default class Init implements LegacyCommand {
     ['', 'default-scope <default-scope>', 'set the default scope for components in the workspace'],
     ['p', 'package-manager <package-manager>', 'set the package manager (npm or yarn) to be used in the workspace'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
-    ['', 'harmony', 'DEPRECATED. no need for this flag. Harmony is the default now'],
     ['I', 'interactive', 'EXPERIMENTAL. start an interactive process'],
   ] as CommandOptions;
 
@@ -72,6 +72,7 @@ export default class Init implements LegacyCommand {
       bare,
       shared,
       standalone,
+      noPackageJson,
       reset,
       resetNew,
       resetLaneNew,
@@ -105,6 +106,7 @@ export default class Init implements LegacyCommand {
     return init(
       path,
       standalone,
+      noPackageJson,
       reset,
       resetNew,
       resetLaneNew,

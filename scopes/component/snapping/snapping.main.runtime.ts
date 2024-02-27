@@ -86,6 +86,7 @@ export type SnapDataParsed = {
     isComponent: boolean;
     type: 'runtime' | 'dev' | 'peer';
   }[];
+  removeDependencies?: string[];
 };
 
 export type SnapResults = BasicTagResults & {
@@ -415,6 +416,7 @@ if you're willing to lose the history from the head to the specified version, us
           isComponent: dep.isComponent ?? true,
           type: dep.type ?? 'runtime',
         })),
+        removeDependencies: snapData.removeDependencies,
       };
     });
 
@@ -441,6 +443,21 @@ if you're willing to lose the history from the head to the specified version, us
       return snapData;
     };
     const existingComponents = await this.scope.getMany(componentIdsLatest);
+
+    // in case of update-dependents, align the dependencies of the dependents according to the lane
+    if (params.updateDependents && laneCompIds) {
+      existingComponents.forEach((comp) => {
+        const deps = this.dependencyResolver.getComponentDependencies(comp);
+        const snapData = getSnapData(comp.id);
+        deps.forEach((dep) => {
+          const fromLane = laneCompIds.searchWithoutVersion(dep.componentId);
+          if (fromLane) {
+            snapData.dependencies.push(fromLane);
+          }
+        });
+      });
+    }
+
     const components = [...existingComponents, ...newComponents];
     // for new components these are not needed. coz when generating them we already add the aspects and the files.
     // the dependencies are calculated later and they're provided by "newDependencies" prop (not "dependencies").

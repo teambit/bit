@@ -561,11 +561,11 @@ export default class CommandHelper {
   }
 
   stash() {
-    return this.runCmd('bit stash');
+    return this.runCmd('bit stash save');
   }
 
-  stashLoad() {
-    return this.runCmd('bit stash load');
+  stashLoad(flags = '') {
+    return this.runCmd(`bit stash load ${flags}`);
   }
 
   isDeprecated(compName: string): boolean {
@@ -738,6 +738,10 @@ export default class CommandHelper {
       });
     });
     return this.runCmd(`bit _snap '${JSON.stringify(data)}' ${options}`, cwd);
+  }
+  snapFromScopeParsed(cwd: string, data: Record<string, any>, options = '') {
+    const output = this.snapFromScope(cwd, data, `${options} --json`);
+    return JSON.parse(output);
   }
   diff(id = '') {
     const output = this.runCmd(`bit diff ${id}`);

@@ -64,6 +64,7 @@ export type MergeFromScopeResult = {
   conflicts?: Array<{ id: ComponentID; files: string[]; config?: boolean }>; // relevant in case of diverge (currently possible only when merging from main to a lane)
   snappedIds?: ComponentID[]; // relevant in case of diverge (currently possible only when merging from main to a lane)
   mergedPreviously: ComponentID[];
+  mergeSnapError?: Error;
 };
 
 export class MergeLanesMain {
@@ -409,7 +410,8 @@ export class MergeLanesMain {
       this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
 
       const result = await this.mergeLane(fromLaneId, toLaneId, options as MergeLaneOptions);
-      const { mergeSnapResults, leftUnresolvedConflicts, failedComponents, components } = result.mergeResults;
+      const { mergeSnapResults, leftUnresolvedConflicts, failedComponents, components, mergeSnapError } =
+        result.mergeResults;
 
       this.logger.debug(
         `found the following config conflicts: ${result.configMergeResults
@@ -435,12 +437,13 @@ export class MergeLanesMain {
       const snappedIds = mergeSnapResults?.snappedComponents.map((c) => c.id) || [];
 
       const laneToExport = await this.lanes.loadLane(toLaneId); // needs to be loaded again after the merge as it changed
-      const exportedIds = leftUnresolvedConflicts
-        ? []
-        : await exportIfNeeded(
-            idsToMerge.map((id) => id.changeVersion(undefined)),
-            laneToExport as Lane
-          );
+      const exportedIds =
+        leftUnresolvedConflicts || mergeSnapError
+          ? []
+          : await exportIfNeeded(
+              idsToMerge.map((id) => id.changeVersion(undefined)),
+              laneToExport as Lane
+            );
 
       return {
         mergedNow: merged,
@@ -452,6 +455,7 @@ export class MergeLanesMain {
         unmerged: failedComponents?.map((c) => ({ id: c.id, reason: c.unchangedMessage })) || [],
         conflicts,
         snappedIds,
+        mergeSnapError,
       };
     }
 
