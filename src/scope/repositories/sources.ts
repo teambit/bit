@@ -613,13 +613,17 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
     const mergeErrors: ComponentNeedsUpdate[] = [];
     const isExport = !isImport;
 
-    const mergeLaneComponent = async (component: LaneComponent) => {
+    const getModelComponent = async (id: ComponentID): Promise<ModelComponent> => {
       const modelComponent =
-        (await this.get(component.id)) ||
-        componentObjects?.find((c) => c.toComponentId().isEqualWithoutVersion(component.id));
+        (await this.get(id)) || componentObjects?.find((c) => c.toComponentId().isEqualWithoutVersion(id));
       if (!modelComponent) {
-        throw new Error(`unable to merge lane ${lane.name}, the component ${component.id.toString()} was not found`);
+        throw new Error(`unable to merge lane ${lane.name}, the component ${id.toString()} was not found`);
       }
+      return modelComponent;
+    };
+
+    const mergeLaneComponent = async (component: LaneComponent) => {
+      const modelComponent = await getModelComponent(component.id);
       const existingComponent = existingLane ? existingLane.components.find((c) => c.id.isEqual(component.id)) : null;
       if (!existingComponent) {
         if (isExport) {
@@ -701,15 +705,24 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
     if (existingLane?.hasChanged && existingLane.includeDeletedData() && !lane.includeDeletedData()) {
       existingLane.setSchemaToNotSupportDeletedData();
     }
-    // merging skipWorkspaceComps is tricky. the end user should never change it, only get it as is from the remote.
-    // this prop gets updated with snap-from-scope with --skip-workspace flag. and a graphql query should remove entries
+    // merging updateDependents is tricky. the end user should never change it, only get it as is from the remote.
+    // this prop gets updated with snap-from-scope with --update-dependents flag. and a graphql query should remove entries
     // from there. other than these 2 places, it should never change. so when a user imports it, always override.
     // if it is being exported, the remote should override it only when it comes from the snap-from-scope command, to
-    // indicate this, the lane should have the overrideSkipWorkspaceComps prop set to true.
+    // indicate this, the lane should have the overrideUpdateDependents prop set to true.
     if (isImport && existingLane) {
       existingLane.updateDependents = lane.updateDependents;
     }
     if (isExport && existingLane && lane.shouldOverrideUpdateDependents()) {
+      await Promise.all(
+        (lane.updateDependents || []).map(async (id) => {
+          const existing = existingLane.updateDependents?.find((existingId) => existingId.isEqualWithoutVersion(id));
+          if (!existing || existing.version !== id.version) {
+            const mergedComponent = await getModelComponent(id);
+            mergeResults.push({ mergedComponent, mergedVersions: [id.version] });
+          }
+        })
+      );
       existingLane.updateDependents = lane.updateDependents;
     }
 
