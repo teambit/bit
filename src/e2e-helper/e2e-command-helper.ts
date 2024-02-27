@@ -564,7 +564,7 @@ export default class CommandHelper {
   }
 
   stash() {
-    return this.runCmd('bit stash');
+    return this.runCmd('bit stash save');
   }
 
   stashLoad(flags = '') {

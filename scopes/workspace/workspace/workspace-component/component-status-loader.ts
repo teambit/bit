@@ -54,7 +54,11 @@ export class ComponentStatusLoader {
    */
   async getComponentStatusById(id: ComponentID): Promise<ComponentStatusLegacy> {
     if (!this._componentsStatusCache[id.toString()]) {
-      this._componentsStatusCache[id.toString()] = await this.getStatus(id);
+      // don't do this: `this._componentsStatusCache[id.toString()] = await this.getStatus(id);`
+      // yes, it doesn't make sense right? turns out that "getStatus" can call `linkIfMissingWorkspaceAspects` which
+      // calls `linkToNodeModulesByIds` which deletes this cache. and makes this: `this._componentsStatusCache[id.toString()]` undefined.
+      const result = await this.getStatus(id);
+      this._componentsStatusCache[id.toString()] = result;
     }
     return this._componentsStatusCache[id.toString()];
   }

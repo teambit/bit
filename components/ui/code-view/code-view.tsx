@@ -88,7 +88,7 @@ export function CodeView({
   const depsByPackageName = new Map<string, DependencyType>(
     (dependencies || []).map((dep) => [(dep.packageName || dep.id).toString(), dep])
   );
-  const coreAspects = useCoreAspects();
+  const coreAspects = useCoreAspects() ?? {};
   const { fileContent: downloadedFileContent, loading: loadingFileContent } = useFileContent(
     componentId,
     currentFile,
