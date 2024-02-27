@@ -549,7 +549,7 @@ jobs:
             cd bit
             sed -i '/enableWorkerThreads/d' node_modules/terser-webpack-plugin/dist/index.js
             cat node_modules/terser-webpack-plugin/dist/index.js
-            bit build
+            bit build --unmodified
           environment:
             NODE_OPTIONS: --max-old-space-size=12288
       - store_artifacts:

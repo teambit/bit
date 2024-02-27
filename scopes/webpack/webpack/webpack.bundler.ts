@@ -28,7 +28,10 @@ export class WebpackBundler implements Bundler {
 
   async run(): Promise<BundlerResult[]> {
     const startTime = Date.now();
-    const compilers = this.configs.map((config: any) => this.webpack(config));
+    const compilers = this.configs.map((config: any) => {
+      console.log('🚀 ~ file: webpack.bundler.ts:35 ~ WebpackBundler ~ compilers ~ config:', config);
+      return this.webpack(config);
+    });
 
     const initiator = this.metaData?.initiator;
     const envId = this.metaData?.envId;
