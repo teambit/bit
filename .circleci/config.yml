@@ -553,8 +553,15 @@ jobs:
           environment:
             NODE_OPTIONS: --max-old-space-size=12288
       - run:
-        command: cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes
-        when: always
+          command: |
+            while true; do
+              sleep 5
+              # NOTE: on MacOS, the f argument is not supported.
+              # In this case, you can drop the f argument instead.
+              ps auxwwf
+              echo "======"
+            done
+          background: true
       - store_artifacts:
           path: /tmp/profiling
 
