@@ -31,6 +31,7 @@ import {
   DependenciesUsageCmd,
   RemoveDependenciesFlags,
   SetDependenciesFlags,
+  SetPeerCmd,
   WhyCmd,
 } from './dependencies-cmd';
 import { DependenciesAspect } from './dependencies.aspect';
@@ -64,6 +65,17 @@ export class DependenciesMain {
     private aspectLoader: AspectLoaderMain,
     private graph: GraphMain
   ) {}
+
+  async setPeer(componentId: string, range?: string): Promise<void> {
+    const compId = await this.workspace.resolveComponentId(componentId);
+    const config = { peer: true, defaultPeerRange: range };
+    await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, config, {
+      shouldMergeWithExisting: true,
+      shouldMergeWithPrevious: true,
+    });
+
+    await this.workspace.bitMap.write(`set-peer (${componentId})`);
+  }
 
   async setDependency(
     componentPattern: string,
@@ -379,7 +391,8 @@ export class DependenciesMain {
       new DependenciesUsageCmd(depsMain),
     ];
     const whyCmd = new WhyCmd(depsMain);
-    cli.register(depsCmd, whyCmd);
+    const setPeerCmd = new SetPeerCmd(depsMain);
+    cli.register(depsCmd, whyCmd, setPeerCmd);
 
     ComponentLoader.loadDeps = depsMain.loadDependencies.bind(depsMain);
 
