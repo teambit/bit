@@ -103,7 +103,7 @@ describe('set-peer', function () {
   });
 });
 
-describe('set-peer using just the version range suffix', function () {
+describe('set-peer using just the version range prefix', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
