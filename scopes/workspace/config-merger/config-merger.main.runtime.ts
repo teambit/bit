@@ -7,6 +7,7 @@ import {
   WorkspacePolicyConfigKeysNames,
   WorkspacePolicyEntry,
 } from '@teambit/dependency-resolver';
+import { snapToSemver } from '@teambit/component-package-version';
 import tempy from 'tempy';
 import fs from 'fs-extra';
 import { MainRuntime } from '@teambit/cli';
@@ -215,14 +216,15 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
       }
       const conflictRaw = conflictDeps[pkgName][0];
       const [, currentVal, otherVal] = conflictRaw.split('::');
-
+      // in case of a snap, the otherVal is the snap-hash, we need to convert it to semver
+      const otherValValid = snapToSemver(otherVal);
       WS_DEPS_FIELDS.forEach((depField) => {
         if (!policy[depField]?.[pkgName]) return;
         const currentVerInWsJson = policy[depField][pkgName];
         if (!currentVerInWsJson) return;
         // the version is coming from the workspace.jsonc
         conflictPackagesToRemoveFromConfigMerge.push(pkgName);
-        if (semver.satisfies(otherVal, currentVerInWsJson)) {
+        if (semver.satisfies(otherValValid, currentVerInWsJson)) {
           // the other version is compatible with the current version in the workspace.json
           return;
         }
@@ -233,7 +235,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
         });
         conflictPackagesToRemoveFromConfigMerge.push(pkgName);
         this.logger.debug(
-          `conflict workspace.jsonc: ${pkgName} current: ${currentVerInWsJson}, other: ${otherVal}. Triggered by: ${conflictDepsSources[
+          `conflict workspace.jsonc: ${pkgName} current: ${currentVerInWsJson}, other: ${otherValValid}. Triggered by: ${conflictDepsSources[
             pkgName
           ].join(', ')}`
         );
