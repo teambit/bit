@@ -319,7 +319,7 @@ export async function diffBetweenComponentsObjects(
       const diffOutput = packageDependenciesOutput(fieldName);
       if (diffOutput) depsDiff.push({ fieldName, diffOutput });
     });
-    ['dependencies', 'devDependencies', 'extensionDependencies'].forEach((fieldName) => {
+    ['dependencies', 'devDependencies', 'peerDependencies', 'extensionDependencies'].forEach((fieldName) => {
       const diffOutput = componentDependenciesOutput(fieldName);
       if (diffOutput) depsDiff.push({ fieldName, diffOutput });
     });
