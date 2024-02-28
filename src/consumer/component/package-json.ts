@@ -24,6 +24,7 @@ export type PackageJsonProps = {
   private?: boolean;
   componentId?: BitId;
   exported?: boolean;
+  bit?: Record<string, any>;
 };
 
 export default class PackageJson {
@@ -40,6 +41,7 @@ export default class PackageJson {
   workspaces?: string[];
   componentId?: BitId;
   exported?: boolean;
+  bit?: Record<string, any>;
 
   constructor(
     componentRootFolder: string,
@@ -56,6 +58,7 @@ export default class PackageJson {
       workspaces,
       componentId,
       exported,
+      bit,
     }: PackageJsonProps
   ) {
     this.name = name;
@@ -71,6 +74,7 @@ export default class PackageJson {
     this.workspaces = workspaces;
     this.componentId = componentId;
     this.exported = exported;
+    this.bit = bit;
   }
 
   static loadSync(componentRootFolder: string): PackageJson | null {

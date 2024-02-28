@@ -321,3 +321,25 @@ export class DependenciesCmd implements Command {
     );
   }
 }
+
+export class SetPeerCmd implements Command {
+  name = 'set-peer <component-id> <range>';
+  arguments = [
+    { name: 'component-id', description: 'the component to set as always peer' },
+    {
+      name: 'range',
+      description: 'the default range to use for the componnent, when added to peerDependencies',
+    },
+  ];
+  group = 'info';
+  description = 'set a component as always peer';
+  alias = '';
+  options = [];
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([componentId, range]: [string, string]) {
+    await this.deps.setPeer(componentId, range != null ? range.toString() : range);
+    return `${chalk.green('successfully marked the component as a peer component')}`;
+  }
+}
