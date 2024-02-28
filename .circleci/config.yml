@@ -552,6 +552,9 @@ jobs:
             bit build --unmodified
           environment:
             NODE_OPTIONS: --max-old-space-size=12288
+      - run:
+        command: cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes
+        when: always
       - store_artifacts:
           path: /tmp/profiling
 
