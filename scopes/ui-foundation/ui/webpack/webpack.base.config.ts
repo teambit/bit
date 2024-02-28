@@ -1,7 +1,7 @@
 import { merge } from 'lodash';
 import webpack, { Configuration } from 'webpack';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
+// import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 // import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import path from 'path';
@@ -325,22 +325,22 @@ export default function createWebpackConfig(
       //   output file so that tools can pick it up without having to parse
       //   `index.html`
       //   can be used to reconstruct the HTML if necessary
-      new WebpackManifestPlugin({
-        fileName: 'asset-manifest.json',
-        generate: (seed, files, entrypoints) => {
-          const manifestFiles = files.reduce((manifest, file) => {
-            manifest[file.name] = file.path;
-            return manifest;
-          }, seed);
-          const entrypointFiles = entrypoints.main.filter((fileName) => !fileName.endsWith('.map'));
+      // new WebpackManifestPlugin({
+      //   fileName: 'asset-manifest.json',
+      //   generate: (seed, files, entrypoints) => {
+      //     const manifestFiles = files.reduce((manifest, file) => {
+      //       manifest[file.name] = file.path;
+      //       return manifest;
+      //     }, seed);
+      //     const entrypointFiles = entrypoints.main.filter((fileName) => !fileName.endsWith('.map'));
 
-          // @ts-ignore - https://github.com/shellscape/webpack-manifest-plugin/issues/276
-          return {
-            files: manifestFiles,
-            entrypoints: entrypointFiles,
-          } as Record<string, string>;
-        },
-      }),
+      //     // @ts-ignore - https://github.com/shellscape/webpack-manifest-plugin/issues/276
+      //     return {
+      //       files: manifestFiles,
+      //       entrypoints: entrypointFiles,
+      //     } as Record<string, string>;
+      //   },
+      // }),
       // Moment.js is an extremely popular library that bundles large locale files
       // by default due to how webpack interprets its code. This is a practical
       // solution that requires the user to opt into importing specific locales.

@@ -3,7 +3,7 @@ import { configBaseFactory } from '@teambit/react.webpack.react-webpack';
 import { Configuration, ProvidePlugin } from 'webpack';
 import { merge } from 'webpack-merge';
 import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
-import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
+// import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 
 export function createWebpackConfig(outputDir: string, entryFile: string): Configuration {
   const baseConfig = configBaseFactory(true);
@@ -64,22 +64,22 @@ function createPreBundleConfig(outputDir: string, entryFile: string) {
       //   output file so that tools can pick it up without having to parse
       //   `index.html`
       //   can be used to reconstruct the HTML if necessary
-      new WebpackManifestPlugin({
-        fileName: 'asset-manifest.json',
-        generate: (seed, files, entrypoints) => {
-          const manifestFiles = files.reduce((manifest, file) => {
-            manifest[file.name] = file.path;
-            return manifest;
-          }, seed);
-          const entrypointFiles = entrypoints.main.filter((fileName) => !fileName.endsWith('.map'));
+      // new WebpackManifestPlugin({
+      //   fileName: 'asset-manifest.json',
+      //   generate: (seed, files, entrypoints) => {
+      //     const manifestFiles = files.reduce((manifest, file) => {
+      //       manifest[file.name] = file.path;
+      //       return manifest;
+      //     }, seed);
+      //     const entrypointFiles = entrypoints.main.filter((fileName) => !fileName.endsWith('.map'));
 
-          // @ts-ignore - https://github.com/shellscape/webpack-manifest-plugin/issues/276
-          return {
-            files: manifestFiles,
-            entrypoints: entrypointFiles,
-          } as Record<string, string>;
-        },
-      }),
+      //     // @ts-ignore - https://github.com/shellscape/webpack-manifest-plugin/issues/276
+      //     return {
+      //       files: manifestFiles,
+      //       entrypoints: entrypointFiles,
+      //     } as Record<string, string>;
+      //   },
+      // }),
 
       new ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
     ],
