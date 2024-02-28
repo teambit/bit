@@ -155,9 +155,9 @@ export default function (isEnvProduction = false): Configuration {
                     presets: [require.resolve('@babel/preset-env'), require.resolve('@babel/preset-react')],
                   },
                 },
-                // {
-                //   loader: require.resolve('@teambit/mdx.modules.mdx-loader'),
-                // },
+                {
+                  loader: require.resolve('@teambit/mdx.modules.mdx-loader'),
+                },
               ],
             },
             // Adds support for CSS Modules (https://github.com/css-modules/css-modules)

@@ -553,7 +553,7 @@ jobs:
           environment:
             NODE_OPTIONS: --max-old-space-size=12288
       - store_artifacts:
-          path: ~/Library/Caches/Bit/logs
+          path: /tmp/profiling
 
   bit_tag:
     resource_class: xlarge

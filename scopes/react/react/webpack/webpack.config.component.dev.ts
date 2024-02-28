@@ -70,9 +70,9 @@ export default function (workDir: string, envId: string): Configuration {
                 plugins: [require.resolve('react-refresh/babel')],
               },
             },
-            // {
-            //   loader: require.resolve('@teambit/mdx.modules.mdx-loader'),
-            // },
+            {
+              loader: require.resolve('@teambit/mdx.modules.mdx-loader'),
+            },
           ],
         },
       ],
