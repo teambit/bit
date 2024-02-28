@@ -21422,6 +21422,9 @@ importers:
       '@teambit/base-react.navigation.link':
         specifier: 2.0.27
         version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/bit-error':
+        specifier: ^0.0.404
+        version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
@@ -75247,6 +75250,7 @@ packages:
       '@apollo/client': 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/bit-error': 0.0.404
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(@types/react@17.0.75)(react@17.0.2)
       '@teambit/component-id': 1.2.0
       '@teambit/design.ui.brand.logo': 1.96.2(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
