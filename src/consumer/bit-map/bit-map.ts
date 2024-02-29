@@ -18,7 +18,7 @@ import {
   BITMAP_PREFIX_MESSAGE,
 } from '../../constants';
 import logger from '../../logger/logger';
-import { isDir, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
+import { pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import ComponentMap, {
   ComponentMapFile,
@@ -890,24 +890,17 @@ export default class BitMap {
     return this.allTrackDirs;
   }
 
-  updatePathLocation(
-    from: PathOsBasedRelative,
-    to: PathOsBasedRelative,
-    existingPath: PathOsBasedAbsolute
-  ): PathChangeResult[] {
-    const isPathDir = isDir(existingPath);
-    const allChanges = [];
+  updatePathLocation(from: PathOsBasedRelative, to: PathOsBasedRelative): PathChangeResult[] {
+    const allChanges: PathChangeResult[] = [];
     this.components.forEach((componentMap) => {
-      const changes = isPathDir ? componentMap.updateDirLocation(from, to) : componentMap.updateFileLocation(from, to);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (changes && changes.length) allChanges.push({ id: componentMap.id.clone(), changes });
+      const changes = componentMap.updateDirLocation(from, to);
+      if (changes && changes.length) {
+        allChanges.push({ id: componentMap.id.clone(), changes });
+        componentMap.noFilesError = undefined;
+      }
     });
-    if (R.isEmpty(allChanges)) {
-      const errorMsg = isPathDir
-        ? `directory ${from} is not a tracked component`
-        : `the file ${existingPath} is untracked`;
-      throw new BitError(errorMsg);
+    if (!allChanges.length) {
+      throw new BitError(`directory ${from} is not a tracked component`);
     }
 
     this.markAsChanged();
