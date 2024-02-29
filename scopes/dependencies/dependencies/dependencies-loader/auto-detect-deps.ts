@@ -406,7 +406,21 @@ export class AutoDetectDeps {
       }
       this.addImportNonMainIssueIfNeeded(originFile, compDep);
       const isPeer = compDep.packageJsonContent?.bit?.peer;
-      const peerVersionRange = isPeer ? compDep.packageJsonContent?.bit?.defaultPeerRange ?? '*' : undefined;
+      let peerVersionRange: string | undefined;
+      if (isPeer) {
+        const defaultPeerRange = compDep.packageJsonContent?.bit?.defaultPeerRange;
+        if (!defaultPeerRange) {
+          peerVersionRange = '*';
+        } else if (['~', '^', '>='].includes(defaultPeerRange)) {
+          if (semver.valid(compDep.concreteVersion)) {
+            peerVersionRange = `${defaultPeerRange}${compDep.concreteVersion}`;
+          } else {
+            peerVersionRange = `${defaultPeerRange}0.0.0-${compDep.concreteVersion}`;
+          }
+        } else {
+          peerVersionRange = defaultPeerRange;
+        }
+      }
       const currentComponentsDeps = new Dependency(existingId, [], compDep.name, peerVersionRange);
       this._pushToDependenciesIfNotExist(currentComponentsDeps, {
         fileType,
