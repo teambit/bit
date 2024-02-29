@@ -77,4 +77,18 @@ describe('bit move command', function () {
       expect(output.includes('modified components')).to.be.false;
     });
   });
+  describe('move directory manually then run bit move', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.tagComponentBarFoo();
+      helper.fs.moveSync('bar', 'baz');
+    });
+    it('should be able to run bit move with no error', () => {
+      expect(() => helper.command.move('bar', 'baz')).to.not.throw();
+      const bitmap = helper.bitMap.read();
+      expect(bitmap['bar/foo'].rootDir).to.equal('baz');
+    });
+  });
 });
