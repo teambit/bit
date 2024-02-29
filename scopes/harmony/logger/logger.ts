@@ -3,6 +3,7 @@ import logger, { IBitLogger } from '@teambit/legacy/dist/logger/logger';
 import chalk from 'chalk';
 
 import { ConsoleOnStart, LongProcessLogger } from './long-process-logger';
+import { platform } from 'os';
 
 export class Logger implements IBitLogger {
   constructor(private extensionName: string) {}
@@ -150,5 +151,13 @@ export class Logger implements IBitLogger {
   private colorMessage(message: string) {
     if (logger.isJsonFormat) return `${this.extensionName}, ${message}`;
     return `${chalk.bold(this.extensionName)}, ${message}`;
+  }
+
+  /**
+   * a recent change on Windows caused the check mark to be printed as purple.
+   * see https://github.com/chalk/chalk/issues/625
+   */
+  static successSymbol() {
+    return platform() === 'win32' ? chalk.green('√') : chalk.green('✔');
   }
 }
