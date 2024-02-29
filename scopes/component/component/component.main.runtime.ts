@@ -106,6 +106,15 @@ export class ComponentMain {
     return this.getPriorHost();
   }
 
+  getHostIfExist(id?: string): ComponentFactory | undefined {
+    try {
+      return this.getHost(id);
+    } catch (err) {
+      if (err instanceof HostNotFound) return undefined;
+      throw err;
+    }
+  }
+
   getRoute(id: ComponentID, routeName: string) {
     return `/api/${id.toString()}/~aspect/${routeName}`;
   }
