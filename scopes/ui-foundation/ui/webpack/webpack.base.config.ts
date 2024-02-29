@@ -1,6 +1,6 @@
 import { merge } from 'lodash';
 import webpack, { Configuration } from 'webpack';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+// import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 // import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 // import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
@@ -11,7 +11,7 @@ import { fallbacks } from '@teambit/webpack';
 import { postCssConfig } from './postcss.config';
 
 const baseStyleLoadersOptions = {
-  injectingLoader: MiniCssExtractPlugin.loader,
+  injectingLoader: require.resolve('style-loader'),
   cssLoaderPath: require.resolve('css-loader'),
   postCssLoaderPath: require.resolve('postcss-loader'),
   postCssConfig,
@@ -314,12 +314,12 @@ export default function createWebpackConfig(
       ],
     },
     plugins: [
-      new MiniCssExtractPlugin({
-        // Options similar to the same options in webpackOptions.output
-        // both options are optional
-        filename: 'static/css/[name].[contenthash:8].css',
-        chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
-      }),
+      // new MiniCssExtractPlugin({
+      //   // Options similar to the same options in webpackOptions.output
+      //   // both options are optional
+      //   filename: 'static/css/[name].[contenthash:8].css',
+      //   chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
+      // }),
       // Generate an asset manifest file with the following content:
       // - "files" key: Mapping of all asset filenames to their corresponding
       //   output file so that tools can pick it up without having to parse

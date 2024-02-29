@@ -16,9 +16,9 @@ export type GenerateStyleLoadersOptions = {
 
 export function generateStyleLoaders(options: GenerateStyleLoadersOptions) {
   const loaders = [
-    {
-      loader: options.injectingLoader,
-    },
+    // {
+    //   loader: options.injectingLoader,
+    // },
     {
       loader: options.cssLoaderPath,
       options: options.cssLoaderOpts,

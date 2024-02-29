@@ -1,7 +1,7 @@
 import { merge } from 'lodash';
 import { sep } from 'path';
 import 'style-loader';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+// import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import { Configuration, IgnorePlugin } from 'webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
@@ -46,7 +46,8 @@ export default function (isEnvProduction = false): Configuration {
   const isEnvProductionProfile = process.argv.includes('--profile');
 
   const baseStyleLoadersOptions = {
-    injectingLoader: isEnvProduction ? MiniCssExtractPlugin.loader : styleLoaderPath,
+    // injectingLoader: isEnvProduction ? MiniCssExtractPlugin.loader : styleLoaderPath,
+    injectingLoader: styleLoaderPath,
     cssLoaderPath: require.resolve('css-loader'),
     postCssLoaderPath: require.resolve('postcss-loader'),
     postCssConfig,
@@ -327,13 +328,13 @@ export default function (isEnvProduction = false): Configuration {
     },
     // @ts-ignore
     plugins: [
-      isEnvProduction &&
-        new MiniCssExtractPlugin({
-          // Options similar to the same options in webpackOptions.output
-          // both options are optional
-          filename: 'static/css/[name].[contenthash:8].css',
-          chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
-        }),
+      // isEnvProduction &&
+      //   new MiniCssExtractPlugin({
+      //     // Options similar to the same options in webpackOptions.output
+      //     // both options are optional
+      //     filename: 'static/css/[name].[contenthash:8].css',
+      //     chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
+      //   }),
       // Moment.js is an extremely popular library that bundles large locale files
       // by default due to how webpack interprets its code. This is a practical
       // solution that requires the user to opt into importing specific locales.

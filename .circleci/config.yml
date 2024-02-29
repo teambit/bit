@@ -543,16 +543,6 @@ jobs:
           name: 'bit diff'
           command: cd bit && bit diff
       - run:
-          name: 'bit build'
-          command: |
-            echo $NODE_OPTIONS
-            cd bit
-            sed -i '/enableWorkerThreads/d' node_modules/terser-webpack-plugin/dist/index.js
-            cat node_modules/terser-webpack-plugin/dist/index.js
-            bit build --unmodified
-          environment:
-            NODE_OPTIONS: --max-old-space-size=12288
-      - run:
           command: |
             while true; do
               sleep 5
@@ -562,6 +552,16 @@ jobs:
               echo "======"
             done
           background: true
+      - run:
+          name: 'bit build'
+          command: |
+            echo $NODE_OPTIONS
+            cd bit
+            sed -i '/enableWorkerThreads/d' node_modules/terser-webpack-plugin/dist/index.js
+            cat node_modules/terser-webpack-plugin/dist/index.js
+            bit build --unmodified
+          environment:
+            NODE_OPTIONS: --max-old-space-size=12288
       - store_artifacts:
           path: /tmp/profiling
 
