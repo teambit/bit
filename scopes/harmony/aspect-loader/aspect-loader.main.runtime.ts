@@ -18,6 +18,7 @@ import { replaceFileExtToJs } from '@teambit/compilation.modules.babel-compiler'
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { loadBit } from '@teambit/bit';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import mapSeries from 'p-map-series';
 import { difference, compact, flatten, intersection, uniqBy, some, isEmpty, isObject } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
@@ -26,8 +27,9 @@ import { AspectLoaderAspect } from './aspect-loader.aspect';
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from './constants';
 import { isEsmModule } from './is-esm-module';
 import { CannotLoadExtension } from './exceptions';
-import { getAspectDef } from './core-aspects';
+import { getAspectDef, getCoreAspectPackageName } from './core-aspects';
 import { Plugins } from './plugins';
+import { aspectLoaderSchema } from './aspect-loader.graphql';
 
 export type PluginDefinitionSlot = SlotRegistry<PluginDefinition[]>;
 
@@ -126,6 +128,18 @@ export class AspectLoaderMain {
     private onLoadRequireableExtensionSlot: OnLoadRequireableExtensionSlot,
     private pluginSlot: PluginDefinitionSlot
   ) {}
+
+  getCoreAspectsPackagesAndIds(): Record<string, string> {
+    const allCoreAspectsIds = this.getCoreAspectIds();
+    const coreAspectsPackagesAndIds = {};
+
+    allCoreAspectsIds.forEach((id) => {
+      const packageName = getCoreAspectPackageName(id);
+      coreAspectsPackagesAndIds[packageName] = id;
+    });
+
+    return coreAspectsPackagesAndIds;
+  }
 
   private getCompiler(component: Component) {
     const env = this.envs.getEnv(component)?.env;
@@ -820,7 +834,7 @@ export class AspectLoaderMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [LoggerAspect, EnvsAspect];
+  static dependencies = [LoggerAspect, EnvsAspect, GraphqlAspect];
   static slots = [
     Slot.withType<OnAspectLoadError>(),
     Slot.withType<OnLoadRequireableExtension>(),
@@ -828,7 +842,7 @@ export class AspectLoaderMain {
   ];
 
   static async provider(
-    [loggerExt, envs]: [LoggerMain, EnvsMain],
+    [loggerExt, envs, graphql]: [LoggerMain, EnvsMain, GraphqlMain],
     config,
     [onAspectLoadErrorSlot, onLoadRequireableExtensionSlot, pluginSlot]: [
       OnAspectLoadErrorSlot,
@@ -847,6 +861,7 @@ export class AspectLoaderMain {
       pluginSlot
     );
 
+    graphql.register(aspectLoaderSchema(aspectLoader));
     aspectLoader.registerPlugins([envs.getEnvPlugin()]);
 
     return aspectLoader;

@@ -327,7 +327,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       this.getWorkspaceAspectResolver(stringIds, runtimeName)
     );
 
-    await this.linkIfMissingWorkspaceAspects(wsAspectDefs, workspaceCompsIds);
+    await this.linkIfMissingWorkspaceAspects(wsAspectDefs);
 
     // TODO: hard coded use the old approach and loading from the scope capsules
     // This is because right now loading from the ws node_modules causes issues in some cases
@@ -511,21 +511,21 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     return compact(requireableComponents);
   }
 
-  private async linkIfMissingWorkspaceAspects(aspects: AspectDefinition[], ids: ComponentID[]) {
-    let missingPaths = false;
-    const existsP = aspects.map(async (aspect) => {
-      const exist = await fs.pathExists(aspect.aspectPath);
-      if (!exist) {
-        missingPaths = true;
-      }
-    });
-    await Promise.all(existsP);
-    // TODO: this should be done properly by the install aspect by slot
-    if (missingPaths) {
-      const bitIds: ComponentID[] = ids.map((id) => id);
-      return linkToNodeModulesByIds(this.workspace, bitIds);
-    }
-    return Promise.resolve();
+  private async linkIfMissingWorkspaceAspects(aspects: AspectDefinition[]) {
+    const idsToLink = await Promise.all(
+      aspects.map(async (aspect) => {
+        if (!aspect.component)
+          throw new Error(`linkIfMissingWorkspaceAspects, aspect.component is missing for ${aspect.aspectPath}`);
+        const isInWs = await this.workspace.hasId(aspect.component.id);
+        if (!isInWs) return null;
+        const exist = await fs.pathExists(aspect.aspectPath);
+        if (!exist) return aspect.component.id;
+        return null;
+      })
+    );
+    const idsToLinkWithoutNull = compact(idsToLink);
+    if (!idsToLinkWithoutNull.length) return;
+    await linkToNodeModulesByIds(this.workspace, idsToLinkWithoutNull);
   }
 
   /**

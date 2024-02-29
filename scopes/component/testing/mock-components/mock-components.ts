@@ -29,10 +29,9 @@ export async function mockComponents(
   const harmony = await loadManyAspects([WorkspaceAspect, TrackerAspect, InstallAspect, CompilerAspect], workspacePath);
   const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
   const tracker = harmony.get<TrackerMain>(TrackerAspect.id);
-  const results: CompDirs[] = [];
-  await pMapSeries(compsDirs, async (compDir) => {
+  const results: CompDirs[] = await pMapSeries(compsDirs, async (compDir) => {
     const { componentId } = await tracker.track({ rootDir: compDir });
-    results.push({ id: componentId, dir: compDir });
+    return { id: componentId, dir: compDir };
   });
   await workspace.bitMap.write();
   const install = harmony.get<InstallMain>(InstallAspect.id);

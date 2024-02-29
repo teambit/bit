@@ -16,6 +16,7 @@ import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Formatter } from '@teambit/formatter';
+import { SchemaNodeTransformer, SchemaTransformer } from '@teambit/typescript';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import { SchemaExtractor } from './schema-extractor';
@@ -110,7 +111,9 @@ export class SchemaMain {
     alwaysRunExtractor = false,
     tsserverPath?: string,
     contextPath?: string,
-    skipInternals?: boolean
+    skipInternals?: boolean,
+    schemaTransformers?: SchemaTransformer[],
+    apiTransformers?: SchemaNodeTransformer[]
   ): Promise<APISchema> {
     if (this.config.disabled) {
       return APISchema.empty(component.id as any);
@@ -128,7 +131,13 @@ export class SchemaMain {
       if (typeof env.getSchemaExtractor === 'undefined') {
         throw new Error(`No SchemaExtractor defined for ${env.name}`);
       }
-      const schemaExtractor: SchemaExtractor = env.getSchemaExtractor(undefined, tsserverPath, contextPath);
+      const schemaExtractor: SchemaExtractor = env.getSchemaExtractor(
+        undefined,
+        tsserverPath,
+        contextPath,
+        schemaTransformers,
+        apiTransformers
+      );
 
       const result = await schemaExtractor.extract(component, { formatter, tsserverPath, contextPath, skipInternals });
       if (shouldDisposeResourcesOnceDone) schemaExtractor.dispose();

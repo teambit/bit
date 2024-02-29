@@ -40,13 +40,60 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
   const [searchParams] = useSearchParams();
   const scopeFromQueryParams = searchParams.get('scope');
   const component = useContext(ComponentContext);
-  const { mainFile, fileTree = [], dependencies, devFiles } = useCode(component.id);
-  const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString());
+  const [fileParam, setFileParam] = useState<{
+    current?: string;
+    prev?: string;
+  }>({ current: urlParams.file });
 
-  const currentFile = urlParams.file || mainFile;
+  React.useEffect(() => {
+    if (urlParams.file !== fileParam.current) {
+      setFileParam((prev) => ({ current: urlParams.file, prev: prev.current }));
+    }
+  }, [urlParams.file, fileParam.current]);
+
+  const { mainFile, fileTree = [], dependencies, devFiles, loading: loadingCode } = useCode(component.id);
+  const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString());
+  const currentFile = loadingCode
+    ? undefined
+    : (() => {
+        if (urlParams.file && fileTree.includes(urlParams.file)) {
+          return urlParams.file;
+        }
+        if (!urlParams.file) return mainFile;
+
+        const extractNameAndExtension = (filename) => {
+          const match = filename.match(/^(.*?)(\.[^.]+)?$/);
+          return [match[1], match[2]];
+        };
+
+        const [currentBase] = extractNameAndExtension(fileParam.current || '');
+        const mainFileExt = extractNameAndExtension(mainFile)[1];
+        const [, prevExt] = fileParam.prev ? extractNameAndExtension(fileParam.prev) : [null, null];
+
+        const matchingFiles = fileTree.filter((file) => {
+          const [fileBase] = extractNameAndExtension(file);
+          return fileBase === currentBase || fileBase === fileParam.current;
+        });
+
+        if (matchingFiles.length === 1) {
+          return matchingFiles[0];
+        }
+
+        const preferredExt = prevExt || mainFileExt;
+        if (preferredExt) {
+          const exactExtensionMatch = matchingFiles.find((file) => {
+            const [, fileExt] = extractNameAndExtension(file);
+            return fileExt === preferredExt;
+          });
+          if (exactExtensionMatch) return exactExtensionMatch;
+        }
+
+        return matchingFiles[0] || mainFile;
+      })();
+
   const currentArtifact = getArtifactFileDetailsFromUrl(artifacts, currentFile);
   const currentArtifactFile = currentArtifact?.artifactFile;
-  const { data: currentArtifactFileData, loading } = useComponentArtifactFileContent(
+  const { data: currentArtifactFileData, loading: loadingArtifact } = useComponentArtifactFileContent(
     host,
     {
       componentId: component.id.toString(),
@@ -64,7 +111,8 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
   const icon = getFileIcon(fileIconMatchers, currentFile);
-  const loadingArtifactFileContent = loading !== undefined ? loading : !!currentFile && !currentArtifact;
+  const loadingArtifactFileContent =
+    loadingArtifact !== undefined ? loadingArtifact : !!currentFile && !currentArtifact;
   const getHref = React.useCallback(
     (node) => {
       const queryParams = new URLSearchParams();
@@ -82,6 +130,13 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
     [urlParams.version, scopeFromQueryParams]
   );
 
+  const sortedDeps = useMemo(() => {
+    // need to create a new instance of dependecies because we cant mutate the original array
+    return [...(dependencies ?? [])].sort((a, b) => {
+      return (a.packageName || a.id).localeCompare(b.packageName || b.id);
+    });
+  }, [dependencies?.length]);
+
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.codePage, className)}>
       <Pane className={styles.left}>
@@ -90,8 +145,9 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
           currentFile={currentFile}
           icon={icon}
           currentFileContent={currentArtifactFileContent}
-          loading={loadingArtifactFileContent}
+          loading={loadingArtifactFileContent || loadingCode}
           codeSnippetClassName={codeViewClassName}
+          dependencies={dependencies}
         />
       </Pane>
       <HoverSplitter className={styles.splitter}>
@@ -108,7 +164,7 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
         <CodeTabTree
           host={host}
           currentFile={currentFile}
-          dependencies={dependencies}
+          dependencies={sortedDeps}
           fileTree={fileTree}
           widgets={useMemo(() => [generateWidget(mainFile, devFiles)], [mainFile, devFiles])}
           getHref={getHref}

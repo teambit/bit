@@ -257,26 +257,6 @@ jobs:
           paths:
             - bit
 
-  symphony_docker_build:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - attach_workspace:
-          at: ./
-      - run:
-          name: set bit.dev registry (@teambit)
-          # command: npm config set @teambit:registry https://node.bit.dev
-          command: npm config set @teambit:registry https://node-registry.bit.cloud
-      - run:
-          name: set bit.dev registry (@bitdev)
-          # command: npm config set @teambit:registry https://node.bit.dev
-          command: npm config set @bitdev:registry https://node-registry.bit.cloud
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:`npm show @teambit/bit version` .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:latest .
-      - run: cd bit && docker push bitcli/bit-symphony:`npm show @teambit/bit version`
-      - run: cd bit && docker push bitcli/bit-symphony:latest
-
   # docker_build:
   #   machine:
   #     image: ubuntu-2004:202111-02
@@ -472,7 +452,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.25-v2
+          key: core-aspect-env-v0.0.25-v3
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
@@ -502,7 +482,7 @@ jobs:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.0.25-v2
+          key: core-aspect-env-v0.0.25-v3
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088
       - run: cd bit && npm run link-bit-legacy
@@ -534,6 +514,7 @@ jobs:
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
+      NODE_OPTIONS: --max-old-space-size=15000
     steps:
       - attach_workspace:
           at: ./
@@ -547,7 +528,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.25-v2
+          key: core-aspect-env-v0.0.25-v3
       # - update_ssh_agent
       # temporary, check if we can remove it
       - run: cd bit && bit cc
@@ -574,6 +555,7 @@ jobs:
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
+      NODE_OPTIONS: --max-old-space-size=15000
     steps:
       - attach_workspace:
           at: ./
@@ -583,7 +565,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.25-v2
+          key: core-aspect-env-v0.0.25-v3
       - bit_config:
           env: "hub"
       - restore_cache:
@@ -895,7 +877,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.25-v2
+          key: core-aspect-env-v0.0.25-v3
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -1355,11 +1337,6 @@ workflows:
           <<: *master_only_filter
           requires:
             - bit_tag
-      - symphony_docker_build:
-          requires:
-            - bit_export
-            - bit_tag
-            - sleep_5_minutes
       # - docker_build:
       #     requires:
       #       - harmony_publish_to_gcloud
@@ -1503,12 +1480,6 @@ workflows:
           requires:
             - bit_tag
             - harmony_deploy_approval_job
-      - symphony_docker_build:
-          requires:
-            - harmony_deploy_approval_job
-            - bit_tag
-            - bit_export
-            - sleep_5_minutes
       # - docker_build:
       #     requires:
       #       - harmony_deploy_approval_job
@@ -1545,19 +1516,6 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - docker_build_node_20
-  # uncomment to debug symphony_docker_build
-  # symphony_docker_build_workflow:
-  #   jobs:
-  #     - checkout_code:
-  #         filters:
-  #           branches:
-  #             only: circle-docker-symphony
-  #     - symphony_docker_build:
-  #         filters:
-  #           branches:
-  #             only: circle-docker-symphony
-  #         requires:
-  #           - checkout_code
 
   # uncomment to update esbuild arm64 cache
   # get_arm64_workflow_packages:
@@ -1572,64 +1530,36 @@ workflows:
   #     - checkout_code:
   #         filters:
   #           branches:
-  #             only: improve-bundling
+  #             only: manual-release
   #     - bundle_version_linux:
   #         filters:
   #           branches:
-  #             only: improve-bundling
+  #             only: manual-release
   #     - bundle_version_macos:
   #         filters:
   #           branches:
-  #             only: improve-bundling
+  #             only: manual-release
   #     - bundle_version_windows:
   #         filters:
   #           branches:
-  #             only: improve-bundling
+  #             only: manual-release
   #     - harmony_publish_to_gcloud:
   #         filters:
   #           branches:
-  #             only: improve-bundling
+  #             only: manual-release
   #         requires:
   #           - bundle_version_linux
   #           - bundle_version_macos
   #           - bundle_version_windows
   #           - checkout_code # This is needed to generate index.json
-  #     - symphony_docker_build:
-  #        filters:
-  #          branches:
-  #            only: improve-bundling
-  #        requires:
-  #          - checkout_code
-  #     # - docker_build:
-  #     #     requires:
-  #     #       - checkout_code
-  #     #       - harmony_publish_to_gcloud
-  # #     - docker_build_node_18:
-  # #         requires:
-  # #           - checkout_code
-  # #           - harmony_publish_to_gcloud
   #     - docker_build_node_20:
   #         requires:
   #           - checkout_code
   #           - harmony_publish_to_gcloud
-  #     # - docker_non_root_build:
-  #     #     requires:
-  #     #       - checkout_code
-  #     #       - harmony_publish_to_gcloud
-  # #     - docker_non_root_build_node_18:
-  # #         requires:
-  # #           - checkout_code
-  # #           - harmony_publish_to_gcloud
   #     - docker_non_root_build_node_20:
   #         requires:
   #           - checkout_code
   #           - harmony_publish_to_gcloud
-  #     # - server_docker_build:
-  #     #     requires:
-  #     #       - docker_build
-  # #     - server_docker_build_node_18:
-  # #         requires:
-  # #           - docker_build_node_18
   #     - server_docker_build_node_20:
   #         requires:
   #           - docker_build_node_20

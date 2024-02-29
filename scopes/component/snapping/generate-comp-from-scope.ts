@@ -97,6 +97,7 @@ export async function addDeps(
   };
   const compDeps = compIdsDataParsed.filter((c) => c.type === 'runtime').map((dep) => toDependency(dep.id));
   const compDevDeps = compIdsDataParsed.filter((c) => c.type === 'dev').map((dep) => toDependency(dep.id));
+  const compPeerDeps = compIdsDataParsed.filter((c) => c.type === 'peer').map((dep) => toDependency(dep.id));
   const packageDeps = newDeps.filter((dep) => !dep.isComponent);
   const toPackageObj = (pkgs: Array<{ id: string; version?: string }>) => {
     return pkgs.reduce((acc, curr) => {
@@ -105,19 +106,37 @@ export async function addDeps(
       return acc;
     }, {});
   };
-  const dependenciesData = {
-    allDependencies: {
-      dependencies: compDeps,
-      devDependencies: compDevDeps,
-    },
-    allPackagesDependencies: {
-      packageDependencies: toPackageObj(packageDeps.filter((dep) => dep.type === 'runtime')),
-      devPackageDependencies: toPackageObj(packageDeps.filter((dep) => dep.type === 'dev')),
-      peerPackageDependencies: toPackageObj(packageDeps.filter((dep) => dep.type === 'peer')),
-    },
+  const getPkgObj = (type: 'runtime' | 'dev' | 'peer') => {
+    return toPackageObj(packageDeps.filter((dep) => dep.type === type));
+  };
+  const filterRemovedPkgs = (pkgs: Record<string, string>) => {
+    snapData.removeDependencies?.forEach((pkg) => {
+      delete pkgs[pkg];
+    });
+    return pkgs;
+  };
+  const filterRemovedDeps = (currentCompDeps: Dependency[]) => {
+    return currentCompDeps.filter((dep) => !snapData.removeDependencies?.includes(dep.id.toStringWithoutVersion()));
   };
 
   const consumerComponent = component.state._consumer as ConsumerComponent;
+
+  const dependenciesData = {
+    allDependencies: {
+      dependencies: [...compDeps, ...filterRemovedDeps(consumerComponent.dependencies.get())],
+      devDependencies: [...compDevDeps, ...filterRemovedDeps(consumerComponent.devDependencies.get())],
+      peerDependencies: [...compPeerDeps, ...filterRemovedDeps(consumerComponent.peerDependencies.get())],
+    },
+    allPackagesDependencies: {
+      packageDependencies: { ...filterRemovedPkgs(consumerComponent.packageDependencies), ...getPkgObj('runtime') },
+      devPackageDependencies: { ...filterRemovedPkgs(consumerComponent.devPackageDependencies), ...getPkgObj('dev') },
+      peerPackageDependencies: {
+        ...filterRemovedPkgs(consumerComponent.peerPackageDependencies),
+        ...getPkgObj('peer'),
+      },
+    },
+  };
+
   // add the dependencies to the legacy ConsumerComponent object
   // it takes care of both: given dependencies (from the cli) and the overrides, which are coming from the env.
   await deps.loadDependenciesFromScope(consumerComponent, dependenciesData);

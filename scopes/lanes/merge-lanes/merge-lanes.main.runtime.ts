@@ -64,6 +64,7 @@ export type MergeFromScopeResult = {
   conflicts?: Array<{ id: ComponentID; files: string[]; config?: boolean }>; // relevant in case of diverge (currently possible only when merging from main to a lane)
   snappedIds?: ComponentID[]; // relevant in case of diverge (currently possible only when merging from main to a lane)
   mergedPreviously: ComponentID[];
+  mergeSnapError?: Error;
 };
 
 export class MergeLanesMain {
@@ -390,9 +391,10 @@ export class MergeLanesMain {
         // no need to export anything else other than the head. the normal calculation of what to export won't apply here
         // as it is done from the scope.
         exportHeadsOnly: shouldSquash,
-        // all artifacts must be pushed. they're all considered "external" in this case, because it's running from a
-        // bare-scope, but we don't want to ignore them, otherwise, they'll be missing from the component-scopes.
-        ignoreMissingExternalArtifacts: false,
+        // all artifacts must be pushed. otherwise, they'll be missing from the component-scopes.
+        // unless this is a merge from main to a lane, in which case it's not necessary to export the artifacts as
+        // the user importing them will get them from main.
+        throwForMissingArtifacts: !fromLaneId.isDefault(),
         exportOrigin: 'lane-merge',
       });
       return exported;
@@ -408,7 +410,8 @@ export class MergeLanesMain {
       this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
 
       const result = await this.mergeLane(fromLaneId, toLaneId, options as MergeLaneOptions);
-      const { mergeSnapResults, leftUnresolvedConflicts, failedComponents, components } = result.mergeResults;
+      const { mergeSnapResults, leftUnresolvedConflicts, failedComponents, components, mergeSnapError } =
+        result.mergeResults;
 
       this.logger.debug(
         `found the following config conflicts: ${result.configMergeResults
@@ -434,12 +437,13 @@ export class MergeLanesMain {
       const snappedIds = mergeSnapResults?.snappedComponents.map((c) => c.id) || [];
 
       const laneToExport = await this.lanes.loadLane(toLaneId); // needs to be loaded again after the merge as it changed
-      const exportedIds = leftUnresolvedConflicts
-        ? []
-        : await exportIfNeeded(
-            idsToMerge.map((id) => id.changeVersion(undefined)),
-            laneToExport as Lane
-          );
+      const exportedIds =
+        leftUnresolvedConflicts || mergeSnapError
+          ? []
+          : await exportIfNeeded(
+              idsToMerge.map((id) => id.changeVersion(undefined)),
+              laneToExport as Lane
+            );
 
       return {
         mergedNow: merged,
@@ -451,6 +455,7 @@ export class MergeLanesMain {
         unmerged: failedComponents?.map((c) => ({ id: c.id, reason: c.unchangedMessage })) || [],
         conflicts,
         snappedIds,
+        mergeSnapError,
       };
     }
 

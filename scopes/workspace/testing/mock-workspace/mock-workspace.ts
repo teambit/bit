@@ -5,10 +5,14 @@ import { assign, parse, stringify } from 'comment-json';
 
 export type WorkspaceData = { workspacePath: string; remoteScopePath: string; remoteScopeName: string };
 
+const isDebugMode = () => process.argv.includes('--debug');
+
 /**
  * setup a new workspace on a temp directory and setup a bare-scope locally to simulate a remote scope for commands
  * such as `bit export`.
  * call `destroyWorkspace()` once the tests completed to keep the filesystem clean.
+ *
+ * to print the path of the workspace, run the tests with `--debug` flag.
  */
 export function mockWorkspace(opts: { bareScopeName?: string } = {}): WorkspaceData {
   const legacyHelper = new LegacyHelper();
@@ -20,6 +24,10 @@ export function mockWorkspace(opts: { bareScopeName?: string } = {}): WorkspaceD
     legacyHelper.scopeHelper.setNewLocalAndRemoteScopes();
   }
   legacyHelper.workspaceJsonc.setupDefault();
+  if (isDebugMode()) {
+    // eslint-disable-next-line no-console
+    console.log('workspace created at ', legacyHelper.scopes.localPath);
+  }
 
   return {
     workspacePath: legacyHelper.scopes.localPath,
@@ -28,10 +36,24 @@ export function mockWorkspace(opts: { bareScopeName?: string } = {}): WorkspaceD
   };
 }
 
+export function mockBareScope(remoteToAdd: string, scopeNameSuffix?: string) {
+  const legacyHelper = new LegacyHelper();
+  const { scopeName, scopePath } = legacyHelper.scopeHelper.getNewBareScope(scopeNameSuffix, undefined, remoteToAdd);
+  if (isDebugMode()) {
+    // eslint-disable-next-line no-console
+    console.log('base-scope created at ', scopePath);
+  }
+
+  return { scopeName, scopePath };
+}
+
 /**
  * deletes the paths created by mockWorkspace. pass the results you got from `mockWorkspace()`
+ *
+ * to keep the workspace and the remote scope, run the tests with `--debug` flag.
  */
 export async function destroyWorkspace(workspaceData: WorkspaceData) {
+  if (isDebugMode()) return;
   const { workspacePath, remoteScopePath } = workspaceData;
   await Promise.all([workspacePath, remoteScopePath].map((_) => fs.remove(_)));
 }

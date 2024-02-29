@@ -382,7 +382,7 @@ describe('bit status command', function () {
       describe('running bit diff', () => {
         it('should throw an exception ComponentNotFoundInPath', () => {
           const diffFunc = () => helper.command.diff('bar/foo');
-          const error = new ComponentNotFoundInPath(path.join(helper.scopes.localPath, 'bar'));
+          const error = new ComponentNotFoundInPath('bar');
           helper.general.expectToThrow(diffFunc, error);
         });
       });

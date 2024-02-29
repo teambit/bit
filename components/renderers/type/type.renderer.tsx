@@ -1,6 +1,7 @@
 import React from 'react';
 import { TypeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { SchemaNodesSummary } from '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 
 export const typeRenderer: APINodeRenderer = {
@@ -9,6 +10,7 @@ export const typeRenderer: APINodeRenderer = {
   nodeType: 'Types',
   icon: { name: 'Type', url: 'https://static.bit.dev/api-reference/type.svg' },
   default: true,
+  OverviewComponent: TypeOverviewComponent,
 };
 
 function TypeComponent(props: APINodeRenderProps) {
@@ -47,4 +49,15 @@ function TypeComponent(props: APINodeRenderProps) {
       )}
     </APINodeDetails>
   );
+}
+
+function TypeOverviewComponent(props: APINodeRenderProps) {
+  const {
+    apiNode: { api, renderer },
+  } = props;
+  const typeNode = api as TypeSchema;
+  const icon = renderer?.icon;
+  const { type } = typeNode;
+  const nodes = type.getNodes();
+  return <SchemaNodesSummary name={typeNode.name} nodes={nodes} icon={icon} apiNodeRendererProps={props} />;
 }

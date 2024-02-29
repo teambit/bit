@@ -86,6 +86,7 @@ export type SnapDataParsed = {
     isComponent: boolean;
     type: 'runtime' | 'dev' | 'peer';
   }[];
+  removeDependencies?: string[];
 };
 
 export type SnapResults = BasicTagResults & {
@@ -415,6 +416,7 @@ if you're willing to lose the history from the head to the specified version, us
           isComponent: dep.isComponent ?? true,
           type: dep.type ?? 'runtime',
         })),
+        removeDependencies: snapData.removeDependencies,
       };
     });
 
@@ -441,6 +443,21 @@ if you're willing to lose the history from the head to the specified version, us
       return snapData;
     };
     const existingComponents = await this.scope.getMany(componentIdsLatest);
+
+    // in case of update-dependents, align the dependencies of the dependents according to the lane
+    if (params.updateDependents && laneCompIds) {
+      existingComponents.forEach((comp) => {
+        const deps = this.dependencyResolver.getComponentDependencies(comp);
+        const snapData = getSnapData(comp.id);
+        deps.forEach((dep) => {
+          const fromLane = laneCompIds.searchWithoutVersion(dep.componentId);
+          if (fromLane) {
+            snapData.dependencies.push(fromLane);
+          }
+        });
+      });
+    }
+
     const components = [...existingComponents, ...newComponents];
     // for new components these are not needed. coz when generating them we already add the aspects and the files.
     // the dependencies are calculated later and they're provided by "newDependencies" prop (not "dependencies").
@@ -456,12 +473,17 @@ if you're willing to lose the history from the head to the specified version, us
         }
       })
     );
+
+    // load the aspects user configured to set on the components. it creates capsules if needed.
+    // otherwise, when a user set a custom-env, it won't be loaded and the Version object will leave the
+    // teambit.envs/envs in a weird state. the config will be set correctly but the data will be set to the default
+    // node env.
+    await this.scope.loadManyCompsAspects(components);
+
+    // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
     await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
 
-    // run this for new components only.
-    // otherwise, running this for existing components, will override the existing dependencies unexpectedly.
-    // if this is needed for existing components, see how to merge the model data.
-    await pMapSeries(newComponents, async (component) => {
+    await pMapSeries(components, async (component) => {
       const snapData = getSnapData(component.id);
       // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
       await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver);

@@ -5,11 +5,18 @@ import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { compact } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
+import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { CheckoutAspect, CheckoutMain, CheckoutProps } from '@teambit/checkout';
 import { StashAspect } from './stash.aspect';
-import { StashCmd, StashLoadCmd, StashSaveCmd } from './stash.cmd';
+import { StashCmd, StashListCmd, StashLoadCmd, StashSaveCmd } from './stash.cmd';
 import { StashData } from './stash-data';
 import { StashFiles } from './stash-files';
+
+type ListResult = {
+  id: string;
+  message?: string;
+  components: string[];
+};
 
 export class StashMain {
   private stashFiles: StashFiles;
@@ -40,7 +47,7 @@ export class StashMain {
     const hashPerId = await Promise.all(
       modifiedComps.map(async (comp) => {
         const versionObj = await this.addComponentDataToRepo(comp);
-        return { id: comp.id, hash: versionObj.hash() };
+        return { id: comp.id, hash: versionObj.hash().toString() };
       })
     );
     await this.workspace.scope.legacyScope.objects.persist();
@@ -58,8 +65,22 @@ export class StashMain {
     return modifiedCompIds;
   }
 
-  async loadLatest() {
-    const stashFile = await this.stashFiles.getLatestStashFile();
+  async list(): Promise<ListResult[]> {
+    const stashFiles = await this.stashFiles.getStashFiles();
+    return Promise.all(
+      stashFiles.map(async (file) => {
+        const stashData = await this.stashFiles.getStashData(file);
+        return {
+          id: file.replace('.json', ''),
+          message: stashData.metadata.message,
+          components: stashData.stashCompsData.map((c) => c.id.toString()),
+        };
+      })
+    );
+  }
+
+  async loadLatest(checkoutProps: CheckoutProps = {}, stashId?: string) {
+    const stashFile = stashId ? `${stashId}.json` : await this.stashFiles.getLatestStashFile();
     if (!stashFile) {
       throw new BitError('no stashed components found');
     }
@@ -68,10 +89,13 @@ export class StashMain {
     const versionPerId = stashData.stashCompsData.map((c) => c.id.changeVersion(c.hash.toString()));
 
     await this.checkout.checkout({
+      ...checkoutProps,
       ids: compIds,
       skipNpmInstall: true,
       versionPerId,
       skipUpdatingBitmap: true,
+      promptMergeOptions: true,
+      loadStash: true,
     });
 
     await this.stashFiles.deleteStashFile(stashFile);
@@ -80,11 +104,20 @@ export class StashMain {
   }
 
   private async addComponentDataToRepo(component: Component) {
+    const previousVersion = component.getSnapHash();
     const consumerComponent = component.state._consumer.clone() as ConsumerComponent;
     consumerComponent.setNewVersion();
     const { version, files } = await this.workspace.scope.legacyScope.sources.consumerComponentToVersion(
       consumerComponent
     );
+    if (previousVersion) {
+      // set the parent, we need it for the "stash-load" to function as the "base" version for the three-way-merge.
+      const modelComponent = consumerComponent.modelComponent;
+      if (!modelComponent) throw new Error(`unable to find ModelComponent for ${consumerComponent.id.toString()}`);
+      const parent = Ref.from(previousVersion);
+      version.addAsOnlyParent(parent);
+    }
+
     const repo = this.workspace.scope.legacyScope.objects;
     repo.add(version);
     files.forEach((file) => repo.add(file.file));
@@ -97,7 +130,7 @@ export class StashMain {
   static async provider([cli, workspace, checkout, snapping]: [CLIMain, Workspace, CheckoutMain, SnappingMain]) {
     const stashMain = new StashMain(workspace, checkout, snapping);
     const stashCmd = new StashCmd(stashMain);
-    stashCmd.commands = [new StashSaveCmd(stashMain), new StashLoadCmd(stashMain)];
+    stashCmd.commands = [new StashSaveCmd(stashMain), new StashLoadCmd(stashMain), new StashListCmd(stashMain)];
     cli.register(stashCmd);
     return stashMain;
   }
