@@ -114,7 +114,10 @@ export class BuildPipe {
   private async executeTask(task: BuildTask, env: EnvDefinition): Promise<void> {
     const taskId = BuildTaskHelper.serializeId(task);
     const envName = this.options?.showEnvNameInOutput ? `(${this.getPrettyEnvName(env.id)}) ` : '';
-    const taskLogPrefix = `${envName}[${this.getPrettyAspectName(task.aspectId)}: ${task.name}]`;
+    const buildContext = this.getBuildContext(env.id);
+    const hasOriginalSeeders = Boolean(buildContext.capsuleNetwork._originalSeeders?.length);
+    const dependencyStr = hasOriginalSeeders ? '' : `[dependency] `;
+    const taskLogPrefix = `${dependencyStr}${envName}[${this.getPrettyAspectName(task.aspectId)}: ${task.name}]`;
     this.longProcessLogger.logProgress(`${taskLogPrefix}${task.description ? ` ${task.description}` : ''}`, false);
     this.updateFailedDependencyTask(task);
     if (this.shouldSkipTask(taskId, env.id)) {
@@ -122,7 +125,6 @@ export class BuildPipe {
     }
     const startTask = process.hrtime();
     const taskStartTime = Date.now();
-    const buildContext = this.getBuildContext(env.id);
     let buildTaskResult: BuiltTaskResult;
     try {
       buildTaskResult = await task.execute(buildContext);
@@ -142,8 +144,9 @@ export class BuildPipe {
       );
       this.failedTasks.push(task);
     } else {
+      const color = hasOriginalSeeders ? chalk.green : chalk.green.dim;
       this.logger.consoleSuccess(
-        chalk.green(`${this.longProcessLogger.getProgress()} ${taskLogPrefix} Completed successfully in ${duration}`)
+        color(`${this.longProcessLogger.getProgress()} ${taskLogPrefix} Completed successfully in ${duration}`)
       );
       const defs = buildTaskResult.artifacts || [];
       artifacts = this.artifactFactory.generate(buildContext, defs, task);
