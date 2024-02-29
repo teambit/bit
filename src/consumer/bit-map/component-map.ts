@@ -200,26 +200,6 @@ export default class ComponentMap {
     this.validate();
   }
 
-  updateFileLocation(fileFrom: PathOsBased, fileTo: PathOsBased): PathChange[] {
-    fileFrom = pathNormalizeToLinux(fileFrom);
-    fileTo = pathNormalizeToLinux(fileTo);
-    const currentFile = this._findFile(fileFrom);
-    const changes = [];
-    if (currentFile) {
-      const rootDir = this.rootDir;
-      const newLocation = rootDir ? ComponentMap.getPathWithoutRootDir(rootDir, fileTo) : fileTo;
-      logger.debug(`updating file location from ${currentFile.relativePath} to ${newLocation}`);
-      if (this.mainFile === currentFile.relativePath) this.mainFile = newLocation;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      changes.push({ from: currentFile.relativePath, to: newLocation });
-      currentFile.relativePath = newLocation;
-      currentFile.name = path.basename(newLocation);
-    }
-    this.validate();
-    return changes;
-  }
-
   updateDirLocation(dirFrom: PathOsBasedRelative, dirTo: PathOsBasedRelative): PathChange[] {
     dirFrom = pathNormalizeToLinux(dirFrom);
     dirTo = pathNormalizeToLinux(dirTo);
