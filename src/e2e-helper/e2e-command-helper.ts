@@ -34,7 +34,39 @@ export default class CommandHelper {
   constructor(scopes: ScopesData, debugMode: boolean) {
     this.scopes = scopes;
     this.debugMode = debugMode;
-    this.bitBin = process.env.npm_config_bit_bin || 'bit'; // e.g. npm run e2e-test --bit_bin=bit-dev
+    this.bitBin = this.getBitBin(); // e.g. npm run e2e-test --bit_bin=bit-dev
+  }
+
+  getBitBin() {
+    if (process.env.npm_config_bit_bin) return process.env.npm_config_bit_bin;
+    const [processBin, processPath] = process.argv;
+    if (processBin.endsWith('node')) {
+      const binDir = path.dirname(processPath);
+      const binName = path.basename(processPath);
+      const binNameFromBvm = this.getBinFromBvmLinks(binDir);
+      if (binNameFromBvm) return binNameFromBvm;
+      if (this.isInPath(binDir) || binDir.includes('.bvm')) return binName;
+      if (binName === 'mocha') return 'bit';
+      return `${processBin} ${processPath}`;
+    }
+    return 'bit';
+  }
+
+  getBinFromBvmLinks(binDir: string): string | undefined {
+    const linksDir = path.join('.bvm', 'links');
+    if (binDir.includes(linksDir)) {
+      const splitted = binDir.split(path.sep);
+      const linksIndex = splitted.indexOf('links');
+      if (linksIndex === -1) return undefined;
+      return splitted[linksIndex + 1];
+    }
+    return undefined;
+  }
+
+  isInPath(binDir: string): boolean {
+    const osPaths = (process.env.PATH || process.env.Path || process.env.path || '').split(path.delimiter);
+    if (osPaths.indexOf(binDir) !== -1) return true;
+    return false;
   }
 
   setFeatures(featuresToggle: string | string[]) {
