@@ -384,7 +384,7 @@
         "dagre": "0.8.5",
         "didyoumean": "1.2.1",
         "enquirer": "2.3.6",
-        "esbuild": "^0.17.12",
+        "esbuild": "^0.20.1",
         "esbuild-plugin-ignore": "^1.1.1",
         "eslint-config-airbnb-typescript": "12.0.0",
         "eslint-import-resolver-node": "0.3.4",
