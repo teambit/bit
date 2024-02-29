@@ -130,6 +130,13 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
     [urlParams.version, scopeFromQueryParams]
   );
 
+  const sortedDeps = useMemo(() => {
+    // need to create a new instance of dependecies because we cant mutate the original array
+    return [...(dependencies ?? [])].sort((a, b) => {
+      return (a.packageName || a.id).localeCompare(b.packageName || b.id);
+    });
+  }, [dependencies?.length]);
+
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.codePage, className)}>
       <Pane className={styles.left}>
@@ -157,7 +164,7 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
         <CodeTabTree
           host={host}
           currentFile={currentFile}
-          dependencies={dependencies}
+          dependencies={sortedDeps}
           fileTree={fileTree}
           widgets={useMemo(() => [generateWidget(mainFile, devFiles)], [mainFile, devFiles])}
           getHref={getHref}
