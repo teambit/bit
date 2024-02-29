@@ -5,9 +5,7 @@ import path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
-// @todo: this test randomly place comp3 inside comp1, and then comp2 is using the comp3 from the root.
-// Zoltan is planning on fixing it.
-(supportNpmCiRegistryTesting ? describe.skip : describe.skip)(
+(supportNpmCiRegistryTesting ? describe : describe.skip)(
   'installing the right versions of dependencies of a new imported component',
   function () {
     this.timeout(0);
@@ -45,12 +43,13 @@ const isPositive = require('is-positive');
       helper.command.import(`${helper.scopes.remote}/comp2`);
     });
     it('should install component dependencies from their respective models to the imported components', () => {
-      expect(helper.fs.readJsonFile(`node_modules/${scope}comp3/package.json`).version).to.eq('0.0.1');
-      expect(
-        helper.fs.readJsonFile(
-          path.join(helper.scopes.remoteWithoutOwner, `comp2/node_modules/${scope}comp3/package.json`)
-        ).version
-      ).to.eq('0.0.2');
+      const baseDir = path.join(helper.fixtures.scopes.localPath, helper.scopes.remoteWithoutOwner);
+      expect(fs.readJsonSync(resolveFrom(path.join(baseDir, 'comp1'), [`${scope}comp3/package.json`])).version).to.eq(
+        '0.0.1'
+      );
+      expect(fs.readJsonSync(resolveFrom(path.join(baseDir, 'comp2'), [`${scope}comp3/package.json`])).version).to.eq(
+        '0.0.2'
+      );
     });
     it('should install package dependencies from their respective models to the imported components', () => {
       expect(
