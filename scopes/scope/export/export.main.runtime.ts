@@ -198,7 +198,11 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     });
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const removedIds = await this.getRemovedStagedBitIds();
-    const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
+    const workspaceIds = await this.workspace.listIds();
+    const nonExistOnBitMap = exported.filter(
+      (id) => !workspaceIds.hasWithoutVersion(id) && !removedIds.hasWithoutVersion(id)
+    );
+    const updatedIds = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
     // re-generate the package.json, this way, it has the correct data in the componentId prop.
     await linkToNodeModulesByIds(this.workspace, updatedIds, true);
     await this.removeFromStagedConfig(exported);
@@ -213,7 +217,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     await consumer.onDestroy('export');
     return {
       updatedIds,
-      nonExistOnBitMap: nonExistOnBitMap.filter((id) => !removedIds.hasWithoutVersion(id)),
+      nonExistOnBitMap,
       removedIds,
       missingScope,
       exported,
@@ -884,18 +888,13 @@ ExportAspect.addRuntime(ExportMain);
  * the componentsIds passed here are the ones that didn't have scope-name before, and now they have.
  * so if the bitMap.updateComponentId returns bitId without scope-name is because it couldn't find it there
  */
-function _updateIdsOnBitMap(
-  bitMap: BitMap,
-  componentsIds: ComponentIdList
-): { updatedIds: ComponentID[]; nonExistOnBitMap: ComponentIdList } {
+function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: ComponentIdList): ComponentID[] {
   const updatedIds: ComponentID[] = [];
-  const nonExistOnBitMap = new ComponentIdList();
   componentsIds.forEach((componentsId) => {
     const resultId = bitMap.updateComponentId(componentsId, true);
     if (resultId.hasVersion()) updatedIds.push(resultId);
-    else nonExistOnBitMap.push(resultId);
   });
-  return { updatedIds, nonExistOnBitMap };
+  return updatedIds;
 }
 
 async function getParsedId(consumer: Consumer, id: string): Promise<ComponentID> {

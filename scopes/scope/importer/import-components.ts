@@ -499,7 +499,9 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       return emptyResult;
     }
     if (!this.options.objectsOnly) {
-      throw new Error(`bit import with no ids and --merge flag was not implemented yet`);
+      const flagUsed = this.options.merge ? '--merge' : '--override';
+      throw new Error(`bit import with no ids and ${flagUsed} flag is not supported.
+to write the components from .bitmap file according to the their remote, please use "bit checkout reset --all"`);
     }
     const versionDependenciesArr = await this._importComponentsObjects(componentsIdsToImport, {
       fromOriginalScope: this.options.fromOriginalScope,

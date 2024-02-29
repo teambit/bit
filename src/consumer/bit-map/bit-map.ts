@@ -758,9 +758,7 @@ export default class BitMap {
 
   /**
    * needed after exporting or tagging a component.
-   * We don't support export/tag of nested components, only authored or imported. For authored/imported components, could be
-   * in the file-system only one instance with the same component-name. As a result, we can strip the
-   * scope-name and the version, find the older version in bit.map and update the id with the new one.
+   * find the older version in bit.map and update the id with the new one.
    */
   updateComponentId(
     id: ComponentID,
