@@ -1,9 +1,8 @@
 import loader from '@teambit/legacy/dist/cli/loader';
 import logger, { IBitLogger } from '@teambit/legacy/dist/logger/logger';
 import chalk from 'chalk';
-
-import { ConsoleOnStart, LongProcessLogger } from './long-process-logger';
 import { platform } from 'os';
+import { ConsoleOnStart, LongProcessLogger } from './long-process-logger';
 
 export class Logger implements IBitLogger {
   constructor(private extensionName: string) {}
