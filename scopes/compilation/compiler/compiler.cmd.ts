@@ -88,7 +88,7 @@ export class CompileCmd implements Command {
   private getSummaryIcon(componentsStatus: ComponentsStatus[]) {
     switch (this.failedComponents(componentsStatus).length) {
       case 0:
-        return chalk.green('✔');
+        return chalk.green('√');
       case componentsStatus.length:
         return chalk.red('✗');
       default:

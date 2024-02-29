@@ -7,7 +7,7 @@ export const formatCompileResults = (compileResults: ComponentsStatus[], verbose
       componentId: componentResult.component.id.fullName,
       files: componentResult.buildResults,
       status: componentResult.errors.length ? 'FAILURE' : 'SUCCESS',
-      icon: componentResult.errors.length ? chalk.red('✗') : chalk.green('✔'),
+      icon: componentResult.errors.length ? chalk.red('✗') : chalk.green('√'),
     }))
     .reduce((outputString, result) => {
       outputString += `${result.icon} ${result.status}\t${result.componentId}`;
