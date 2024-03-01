@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import { filter } from 'bluebird';
 import path from 'path';
 import { ComponentID } from '@teambit/component-id';
 import R from 'ramda';
@@ -109,7 +110,25 @@ export class ArtifactFiles {
   async getVinylsAndImportIfMissing(id: ComponentID, scope: Scope): Promise<ArtifactVinyl[]> {
     if (this.isEmpty()) return [];
     if (this.vinyls.length) return this.vinyls;
-    const allHashes = this.refs.map((artifact) => artifact.ref.hash);
+    const allHashes = this.refs.map((artifact) => artifact.ref);
+    const missing = await filter(allHashes, async (hash) => !(await scope.objects.has(hash)));
+    if (missing.length) await this.importMissing(id, scope, missing);
+    const getOneArtifact = async (artifact: ArtifactRef) => {
+      const content = (await artifact.ref.load(scope.objects)) as Source;
+      if (!content) throw new BitError(`failed loading file ${artifact.relativePath} from the model`);
+      return new ArtifactVinyl({
+        base: '.',
+        path: artifact.relativePath,
+        contents: content.contents,
+        url: artifact.url,
+      });
+    };
+    this.vinyls = await Promise.all(this.refs.map((artifact) => getOneArtifact(artifact)));
+    return this.vinyls;
+  }
+
+  private async importMissing(id: ComponentID, scope: Scope, missingRefs: Ref[]) {
+    const allHashes = missingRefs.map((ref) => ref.hash);
     const scopeComponentsImporter = scope.scopeImporter;
     const lane = await scope.getCurrentLaneObject();
     const unmergedEntry = scope.objects.unmergedComponents.getEntry(id);
@@ -144,18 +163,6 @@ export class ArtifactFiles {
       }
       // unmergedEntry is set, and it was able to fetch from the unmerged-lane-id scope. all is good.
     }
-    const getOneArtifact = async (artifact: ArtifactRef) => {
-      const content = (await artifact.ref.load(scope.objects)) as Source;
-      if (!content) throw new BitError(`failed loading file ${artifact.relativePath} from the model`);
-      return new ArtifactVinyl({
-        base: '.',
-        path: artifact.relativePath,
-        contents: content.contents,
-        url: artifact.url,
-      });
-    };
-    this.vinyls = await Promise.all(this.refs.map((artifact) => getOneArtifact(artifact)));
-    return this.vinyls;
   }
 }
 
