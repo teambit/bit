@@ -260,6 +260,7 @@ export class SnappingMain {
       releaseType?: ReleaseType;
       ignoreIssues?: string;
       incrementBy?: number;
+      rebuildArtifacts?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<TagResults | null> {
     if (this.workspace) {
@@ -330,7 +331,7 @@ if you're willing to lose the history from the head to the specified version, us
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     const shouldUsePopulateArtifactsFrom = components.every((comp) => {
       if (!comp.buildStatus) throw new Error(`tag-from-scope expect ${comp.id.toString()} to have buildStatus`);
-      return comp.buildStatus === BuildStatus.Succeed;
+      return comp.buildStatus === BuildStatus.Succeed && !params.rebuildArtifacts;
     });
     const legacyIds = ComponentIdList.fromArray(componentIds.map((id) => id));
     const results = await tagModelComponent({
