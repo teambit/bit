@@ -555,7 +555,7 @@ if you're willing to lose the history from the head to the specified version, us
     rebuildDepsGraph,
     unmodified = false,
     exitOnFirstFailedTask = false,
-  }: {
+  }: Partial<BasicTagSnapParams> & {
     pattern?: string;
     legacyBitIds?: ComponentIdList;
     unmerged?: boolean;
@@ -565,7 +565,7 @@ if you're willing to lose the history from the head to the specified version, us
     disableTagAndSnapPipelines?: boolean;
     unmodified?: boolean;
     exitOnFirstFailedTask?: boolean;
-  } & BasicTagSnapParams): Promise<SnapResults | null> {
+  }): Promise<SnapResults | null> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     if (pattern && legacyBitIds) throw new Error(`please pass either pattern or legacyBitIds, not both`);
     const consumer: Consumer = this.workspace.consumer;
