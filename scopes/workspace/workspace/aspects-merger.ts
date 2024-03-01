@@ -279,7 +279,7 @@ export class AspectsMerger {
     if (envFromEnvsAspect && (origin === 'ModelNonSpecific' || origin === 'ModelSpecific')) {
       // if env was found, search for this env in the workspace and if found, replace the env-id with the one from the workspace
       const envAspectExt = extensionDataList.find((e) => e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect);
-      const ids = await this.workspace.listIds();
+      const ids = this.workspace.listIds();
       const envAspectId = envAspectExt?.extensionId;
       const found = envAspectId && ids.find((id) => id.isEqualWithoutVersion(envAspectId));
       if (found) {

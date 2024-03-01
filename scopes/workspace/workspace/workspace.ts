@@ -395,9 +395,8 @@ export class Workspace implements ComponentFactory {
 
   /**
    * get ids of all workspace components.
-   * @todo: remove the "async", it's not a promise anymore.
    */
-  async listIds(): Promise<ComponentIdList> {
+  listIds(): ComponentIdList {
     if (this._cachedListIds && this.bitMap.hasChanged()) {
       delete this._cachedListIds;
     }
@@ -470,7 +469,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async newComponentIds(): Promise<ComponentID[]> {
-    const allIds = await this.listIds();
+    const allIds = this.listIds();
     return allIds.filter((id) => !id.hasVersion());
   }
 
@@ -487,7 +486,7 @@ export class Workspace implements ComponentFactory {
    * @deprecated use `listIds()` instead.
    * get all workspace component-ids
    */
-  getAllComponentIds(): Promise<ComponentID[]> {
+  getAllComponentIds(): ComponentID[] {
     return this.listIds();
   }
 

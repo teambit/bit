@@ -198,7 +198,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     });
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const removedIds = await this.getRemovedStagedBitIds();
-    const workspaceIds = await this.workspace.listIds();
+    const workspaceIds = this.workspace.listIds();
     const nonExistOnBitMap = exported.filter(
       (id) => !workspaceIds.hasWithoutVersion(id) && !removedIds.hasWithoutVersion(id)
     );

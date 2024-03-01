@@ -230,7 +230,7 @@ export class Watcher {
     if (!(await this.workspace.hasId(componentId))) {
       // bitmap has changed meanwhile, which triggered `handleBitmapChanges`, which re-loaded consumer and updated versions
       // so the original componentId might not be in the workspace now, and we need to find the updated one
-      const ids = await this.workspace.listIds();
+      const ids = this.workspace.listIds();
       updatedComponentId = ids.find((id) => id.isEqual(componentId, { ignoreVersion: true }));
       if (!updatedComponentId) {
         logger.debug(`triggerCompChanges, the component ${componentId.toString()} was probably removed from .bitmap`);
