@@ -70,18 +70,24 @@ export async function getFilesDiff(
   const fileALabel = filesAVersion === filesBVersion ? `${filesAVersion} original` : filesAVersion;
   const fileBLabel = filesAVersion === filesBVersion ? `${filesBVersion} modified` : filesBVersion;
   const filesDiffP = allPaths.map(async (relativePath) => {
-    const getFileData = async (files: SourceFile[]): Promise<{ path: PathOsBased; content: string }> => {
+    const getFileData = async (files: SourceFile[]): Promise<{ path: PathOsBased; content: string; hash?: string }> => {
       const file = files.find((f) => f[fileNameAttribute] === relativePath);
+      const hash = file?.toSourceAsLinuxEOL().hash().hash;
       const content = file ? file.contents : '';
       const path = await saveIntoOsTmp(content);
-      return { path, content: content.toString('utf-8') };
+      return { path, content: content.toString('utf-8'), hash };
     };
-    const [{ path: fileAPath, content: fileAContent }, { path: fileBPath, content: fileBContent }] = await Promise.all([
-      getFileData(filesA),
-      getFileData(filesB),
-    ]);
+    const [
+      { path: fileAPath, content: fileAContent, hash: fileAHash },
+      { path: fileBPath, content: fileBContent, hash: fileBHash },
+    ] = await Promise.all([getFileData(filesA), getFileData(filesB)]);
 
-    const diffOutput = await getOneFileDiff(fileAPath, fileBPath, fileALabel, fileBLabel, relativePath, color);
+    // files are saved into the model with Linux EOL. if the current file has `/r/n` EOL, it'll show as modified
+    // unexpectedly. calculating the hash of the file with Linux EOL solves this issue.
+    const diffOutput =
+      fileAHash === fileBHash
+        ? ''
+        : await getOneFileDiff(fileAPath, fileBPath, fileALabel, fileBLabel, relativePath, color);
 
     let status: DiffStatus = 'UNCHANGED';
     if (diffOutput && !fileAContent) status = 'NEW';
