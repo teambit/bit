@@ -196,8 +196,7 @@ describe('workspace config', function () {
           expect(showBar.manuallyRemovedDependencies).to.not.have.property('dependencies');
         });
       });
-      // @TODO: FIX ON HARMONY!
-      // for some reason "chai" is still peer package
+      // @TODO: FIX. for some reason "chai" is still a peer package
       describe.skip('ignoring an existing peerDependency package', () => {
         let showBar;
         before(() => {

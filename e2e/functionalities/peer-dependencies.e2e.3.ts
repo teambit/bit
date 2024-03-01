@@ -41,9 +41,7 @@ describe('peer-dependencies functionality', function () {
       expect(output.peerPackageDependencies).to.have.property('chai');
       expect(output.peerPackageDependencies.chai).to.equal('>= 2.1.2 < 5');
     });
-    // @TODO: FIX ON HARMONY!
-    // check with Gilad. On Harmony, it's modified. it shows "chai@4.3.6" as packageDependency instead of chai@@>= 2.1.2 < 5 as peerPackageDependencies
-    describe.skip('when the component is imported', () => {
+    describe('when the component is imported', () => {
       before(() => {
         helper.scopeHelper.reInitRemoteScope();
         helper.scopeHelper.addRemoteScope();
