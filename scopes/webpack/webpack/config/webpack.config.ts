@@ -1,5 +1,6 @@
 /* eslint-disable complexity */
 import webpack, { Configuration } from 'webpack';
+// import { writeFileSync } from 'fs';
 import { isUndefined, omitBy } from 'lodash';
 // import CompressionPlugin from 'compression-webpack-plugin';
 import { sep } from 'path';
@@ -16,6 +17,23 @@ export function configFactory(target: Target, context: BundlerContext): Configur
   if (Array.isArray(truthyEntries) && !truthyEntries.length) {
     truthyEntries = {};
   }
+
+  // if(Object.keys(truthyEntries).length > 3) {
+  //   const fileContent = Object.values(truthyEntries).reduce((acc, entryVal) => {
+  //     acc += `import "${entryVal.import}"\n`;
+  //     return acc;
+  //   }, '');
+
+  //   console.log('rootPath', context.rootPath);
+
+  //   writeFileSync('./entries-index.js', fileContent);
+  //   console.log(
+  //     '🚀 ~ file: webpack.config.ts:33 ~ configFactory ~ writeFileSync: Generated file at',
+  //     require.resolve('./entries-index.js')
+  //   );
+
+  //   truthyEntries = ['./entries-index.js'];
+  // }
 
   const dev = Boolean(context.development);
   const htmlConfig = target.html ?? context.html;

@@ -557,8 +557,8 @@ jobs:
           command: |
             echo $NODE_OPTIONS
             cd bit
-            sed -i '/enableWorkerThreads/d' node_modules/terser-webpack-plugin/dist/index.js
-            cat node_modules/terser-webpack-plugin/dist/index.js
+            # sed -i '/enableWorkerThreads/d' node_modules/terser-webpack-plugin/dist/index.js
+            # cat node_modules/terser-webpack-plugin/dist/index.js
             bit build --unmodified
           environment:
             NODE_OPTIONS: --max-old-space-size=12288
