@@ -14,7 +14,7 @@ import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/ext
 import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
 import { getStringifyArgs } from '../../utils';
-import { PathLinux } from '../../utils/path';
+import { PathLinux, pathNormalizeToLinux } from '../../utils/path';
 import VersionInvalid from '../exceptions/version-invalid';
 import { BitObject, Ref } from '../objects';
 import { ObjectItem } from '../objects/object-list';
@@ -630,7 +630,7 @@ export default class Version extends BitObject {
 
     if (!component.log) throw new Error('Version.fromComponent - component.log is missing');
     const version = new Version({
-      mainFile: component.mainFile,
+      mainFile: pathNormalizeToLinux(component.mainFile),
       files: files.map(parseFile),
       bindingPrefix: component.bindingPrefix,
       log: component.log as Log,
