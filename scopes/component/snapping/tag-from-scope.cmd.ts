@@ -51,8 +51,8 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
     ['', 'pre-release [identifier]', 'syntactic sugar for "--increment prerelease" and `--prerelease-id <identifier>`'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'disable-tag-pipeline', 'skip the tag pipeline to avoid publishing the components'],
-    ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
     ['', 'ignore-build-errors', 'run the tag pipeline although the build pipeline failed'],
+    ['', 'rebuild-artifacts', 'run the full build pipeline. do not use the saved artifacts from the last snap'],
     ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
     [
       '',
@@ -89,8 +89,8 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       ignoreNewestVersion = false,
       skipTests = false,
       disableTagPipeline = false,
-      forceDeploy = false,
       ignoreBuildErrors = false,
+      rebuildArtifacts,
       rebuildDepsGraph,
       incrementBy = 1,
     }: {
@@ -104,7 +104,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       prereleaseId?: string;
       ignoreIssues?: string;
       incrementBy?: number;
-      forceDeploy?: boolean;
+      rebuildArtifacts?: boolean;
       disableTagPipeline?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<string> {
@@ -120,10 +120,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     const releaseFlags = [patch, minor, major, preRelease].filter((x) => x);
     if (releaseFlags.length > 1) {
       throw new BitError('you can use only one of the following - patch, minor, major, pre-release');
-    }
-    if (forceDeploy) {
-      this.logger.consoleWarning(`--force-deploy is deprecated, use --ignore-build-errors instead`);
-      ignoreBuildErrors = true;
     }
 
     const getReleaseType = (): ReleaseType => {
@@ -163,9 +159,9 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       disableTagAndSnapPipelines: disableTagPipeline,
       ignoreBuildErrors,
       rebuildDepsGraph,
-      forceDeploy,
       incrementBy,
       version: ver,
+      rebuildArtifacts,
     };
 
     const tagDataPerCompRaw = this.parseData(data);
