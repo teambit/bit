@@ -9,31 +9,31 @@ import '@teambit/react.babel.bit-react-transformer';
 // eslint-disable-next-line complexity
 export default function (): Configuration {
   return {
-    module: {
-      rules: [
-        {
-          test: /\.js$/,
-          include: [/node_modules/, /\/dist\//],
-          exclude: /@teambit\/legacy/,
-          descriptionData: { componentId: ComponentID.isValidObject },
-          use: [
-            {
-              loader: require.resolve('babel-loader'),
-              options: {
-                babelrc: false,
-                configFile: false,
-                plugins: [
-                  // for component highlighting in preview.
-                  [require.resolve('@teambit/react.babel.bit-react-transformer')],
-                ],
-                // turn off all optimizations (only slow down for node_modules)
-                compact: false,
-                minified: false,
-              },
-            },
-          ],
-        },
-      ],
-    },
+    // module: {
+    //   rules: [
+    //     {
+    //       test: /\.js$/,
+    //       include: [/node_modules/, /\/dist\//],
+    //       exclude: /@teambit\/legacy/,
+    //       descriptionData: { componentId: ComponentID.isValidObject },
+    //       use: [
+    //         {
+    //           loader: require.resolve('babel-loader'),
+    //           options: {
+    //             babelrc: false,
+    //             configFile: false,
+    //             plugins: [
+    //               // for component highlighting in preview.
+    //               [require.resolve('@teambit/react.babel.bit-react-transformer')],
+    //             ],
+    //             // turn off all optimizations (only slow down for node_modules)
+    //             compact: false,
+    //             minified: false,
+    //           },
+    //         },
+    //       ],
+    //     },
+    //   ],
+    // },
   };
 }
