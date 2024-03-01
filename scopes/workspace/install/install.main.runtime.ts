@@ -798,7 +798,7 @@ export class InstallMain {
   }
 
   private async _getComponentsWithDependencyPolicies() {
-    const allComponentIds = await this.workspace.listIds();
+    const allComponentIds = this.workspace.listIds();
     const componentPolicies = [] as Array<{ componentId: ComponentID; policy: any }>;
     (
       await Promise.all<ComponentConfigFile | undefined>(

@@ -418,7 +418,7 @@ export class WorkspaceComponentLoader {
   }
 
   private async isInWsIncludeDeleted(componentId: ComponentID): Promise<boolean> {
-    const nonDeletedWsIds = await this.workspace.listIds();
+    const nonDeletedWsIds = this.workspace.listIds();
     const deletedWsIds = await this.workspace.locallyDeletedIds();
     const allWsIds = nonDeletedWsIds.concat(deletedWsIds);
     const inWs = allWsIds.find((id) => id.isEqual(componentId, { ignoreVersion: !componentId.hasVersion() }));

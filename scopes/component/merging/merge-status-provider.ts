@@ -121,7 +121,7 @@ other:   ${otherLaneHead.toString()}`);
     const otherLabel = `${otherLaneHead.toString()} (${
       otherLaneName === currentLaneName ? 'incoming' : otherLaneName
     })`;
-    const workspaceIds = (await this.workspace?.listIds()) || this.currentLane?.toComponentIds() || [];
+    const workspaceIds = this.workspace?.listIds() || this.currentLane?.toComponentIds() || [];
     const configMerger = new ComponentConfigMerger(
       id.toStringWithoutVersion(),
       workspaceIds,

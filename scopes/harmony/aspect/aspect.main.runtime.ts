@@ -169,7 +169,7 @@ export class AspectMain {
         );
       }
     }
-    const allCompIds = pattern ? await this.workspace.idsByPattern(pattern) : await this.workspace.listIds();
+    const allCompIds = pattern ? await this.workspace.idsByPattern(pattern) : this.workspace.listIds();
     const allComps = await this.workspace.getMany(allCompIds);
     const alreadyUpToDate: ComponentID[] = [];
     const updatedComponentIds = await Promise.all(
