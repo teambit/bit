@@ -49,7 +49,7 @@ import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
 import { ComponentsHaveIssues } from './components-have-issues';
 import ResetCmd from './reset-cmd';
-import { tagModelComponent, updateComponentsVersions, BasicTagParams } from './tag-model-component';
+import { tagModelComponent, updateComponentsVersions, BasicTagParams, BasicTagSnapParams } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
 import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
@@ -150,6 +150,7 @@ export class SnappingMain {
     ignoreIssues,
     ignoreNewestVersion = false,
     skipTests = false,
+    skipTasks,
     skipAutoTag = false,
     build,
     unmodified = false,
@@ -221,6 +222,7 @@ export class SnappingMain {
         preReleaseId,
         ignoreNewestVersion,
         skipTests,
+        skipTasks,
         skipAutoTag,
         soft,
         build,
@@ -545,6 +547,7 @@ if you're willing to lose the history from the head to the specified version, us
     message = '',
     ignoreIssues,
     skipTests = false,
+    skipTasks,
     skipAutoSnap = false,
     build,
     disableTagAndSnapPipelines = false,
@@ -557,17 +560,12 @@ if you're willing to lose the history from the head to the specified version, us
     legacyBitIds?: ComponentIdList;
     unmerged?: boolean;
     editor?: string;
-    message?: string;
     ignoreIssues?: string;
-    build: boolean;
-    skipTests?: boolean;
     skipAutoSnap?: boolean;
     disableTagAndSnapPipelines?: boolean;
-    ignoreBuildErrors?: boolean;
-    rebuildDepsGraph?: boolean;
     unmodified?: boolean;
     exitOnFirstFailedTask?: boolean;
-  }): Promise<SnapResults | null> {
+  } & BasicTagSnapParams): Promise<SnapResults | null> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     if (pattern && legacyBitIds) throw new Error(`please pass either pattern or legacyBitIds, not both`);
     const consumer: Consumer = this.workspace.consumer;
@@ -591,6 +589,7 @@ if you're willing to lose the history from the head to the specified version, us
       ignoreNewestVersion: false,
       message,
       skipTests,
+      skipTasks,
       skipAutoTag: skipAutoSnap,
       persist: true,
       soft: false,
