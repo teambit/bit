@@ -256,7 +256,13 @@ export class WorkspaceConfigFilesMain {
     configsRootDir: string,
     opts: WriteConfigFilesOptions
   ): Promise<OneConfigWriterIdResult> {
-    const writtenRealConfigFilesMap = await handleRealConfigFiles(envEntries, envCompsDirsMap, configsRootDir, opts);
+    const writtenRealConfigFilesMap = await handleRealConfigFiles(
+      envEntries,
+      envCompsDirsMap,
+      configsRootDir,
+      this.workspace.path,
+      opts
+    );
     const writtenExtendingConfigFiles = await handleExtendingConfigFiles(
       envEntries,
       envCompsDirsMap,
