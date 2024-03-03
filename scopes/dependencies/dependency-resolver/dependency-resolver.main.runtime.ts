@@ -369,7 +369,7 @@ export class DependencyResolverMain {
     return dependencyList.getComponentDependencies();
   }
 
-  private getDependenciesFromSerializedDependencies(dependencies: SerializedDependency[]): DependencyList {
+  getDependenciesFromSerializedDependencies(dependencies: SerializedDependency[]): DependencyList {
     if (!dependencies.length) {
       return DependencyList.fromArray([]);
     }
