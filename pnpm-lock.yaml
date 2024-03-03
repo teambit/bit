@@ -61,11 +61,11 @@ importers:
         specifier: 7.22.3
         version: 7.22.3
       '@bitdev/node.generators.node-templates':
-        specifier: ^1.0.13
-        version: 1.0.13
+        specifier: ^1.0.15
+        version: 1.0.15
       '@bitdev/react.generators.react-templates':
-        specifier: ^1.1.20
-        version: 1.1.20
+        specifier: ^1.1.21
+        version: 1.1.21
       '@bitdev/symphony.generators.symphony-templates':
         specifier: ~0.0.11
         version: 0.0.11
@@ -22190,8 +22190,8 @@ importers:
         specifier: 7.20.0
         version: 7.20.0
       '@bitdev/node.generators.node-templates':
-        specifier: ^1.0.13
-        version: 1.0.13
+        specifier: ^1.0.15
+        version: 1.0.15
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
@@ -23934,8 +23934,8 @@ importers:
         specifier: 7.23.2
         version: 7.23.2
       '@bitdev/react.generators.react-templates':
-        specifier: ^1.1.20
-        version: 1.1.20
+        specifier: ^1.1.21
+        version: 1.1.21
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
@@ -26444,9 +26444,15 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
+      assert:
+        specifier: ^2.1.0
+        version: 2.1.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
+      buffer:
+        specifier: 6.0.3
+        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -26501,6 +26507,9 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
+      punycode:
+        specifier: ^2.3.1
+        version: 2.3.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -26522,12 +26531,21 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
+      string_decoder:
+        specifier: ^1.3.0
+        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
+      url:
+        specifier: ^0.11.3
+        version: 0.11.3
+      util:
+        specifier: ^0.12.5
+        version: 0.12.5
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -31424,14 +31442,14 @@ packages:
       prompts: 2.4.2
     dev: false
 
-  /@bitdev/node.generators.node-templates@1.0.13:
-    resolution: {integrity: sha512-pzCdKnPndsmXTBhHK+LmHRvsZGUL3wD1zIgIl4Qwci4O4S6I/0fZjjA3hlcIczeUepPufwsjp71Zp8XaWeW/zw==}
+  /@bitdev/node.generators.node-templates@1.0.15:
+    resolution: {integrity: sha512-IFV1fyDc4OSnFVmooFthmyYDpZrwXlue1aXTeG4jEqNqaOPCF8rnlgyegfNJROVqJtJW4PRTLKz5jPrWv5/Kug==}
     dependencies:
       lodash: 4.17.21
     dev: false
 
-  /@bitdev/react.generators.react-templates@1.1.20:
-    resolution: {integrity: sha512-/fAtVm/cHUYBWl19cLnJNg4bYAikIM3daPMFH++zC7QxtqEcdZMKNywOMqLIo9K2GMnl472vPHNL3saTA/kYIw==}
+  /@bitdev/react.generators.react-templates@1.1.21:
+    resolution: {integrity: sha512-9ptmkMr1EZHyGTT7u0aiblbeUyxLLSh8Bl62CuE9bfgvLZaMOxnPJ2a3aToPptKBfyCd8B7sFeimiwDeDmRumw==}
     dev: false
 
   /@bitdev/react.webpack.refresh-overlay@0.0.1:
@@ -75611,7 +75629,7 @@ packages:
       react-dom: '*'
     dependencies:
       '@babel/runtime': 7.20.0
-      '@bitdev/node.generators.node-templates': 1.0.13
+      '@bitdev/node.generators.node-templates': 1.0.15
       '@teambit/component-id': 1.2.0
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
@@ -76365,7 +76383,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.23.2
-      '@bitdev/react.generators.react-templates': 1.1.20
+      '@bitdev/react.generators.react-templates': 1.1.21
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.4(@types/webpack@5.28.1)(react-refresh@0.10.0)(webpack-dev-server@4.15.0)(webpack@5.84.1)
       '@prerenderer/prerenderer': 1.2.4(@types/express@4.17.13)(debug@4.3.4)
@@ -76508,7 +76526,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.23.2
-      '@bitdev/react.generators.react-templates': 1.1.20
+      '@bitdev/react.generators.react-templates': 1.1.21
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.4(@types/webpack@5.28.1)(react-refresh@0.10.0)(webpack-dev-server@4.15.0)(webpack@5.84.1)
       '@prerenderer/prerenderer': 1.2.4(@types/express@4.17.13)(debug@4.3.4)
