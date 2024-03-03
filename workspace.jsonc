@@ -523,7 +523,7 @@
       "minio@7.0": "7.1.1"
     },
     "rootComponents": true,
-    "nodeVersion": "20.10.0",
+    "nodeVersion": "20.11.1",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
@@ -609,7 +609,7 @@
         "packageJson": {
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "bvm": {
-            "node": "20.10.0"
+            "node": "20.11.1"
           },
           "bin": {
             "bbit": "bin/bit"
