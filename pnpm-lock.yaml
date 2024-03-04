@@ -61,11 +61,11 @@ importers:
         specifier: 7.22.3
         version: 7.22.3
       '@bitdev/node.generators.node-templates':
-        specifier: ^1.0.13
-        version: 1.0.13
+        specifier: ^1.0.15
+        version: 1.0.15
       '@bitdev/react.generators.react-templates':
-        specifier: ^1.1.20
-        version: 1.1.20
+        specifier: ^1.1.21
+        version: 1.1.21
       '@bitdev/symphony.generators.symphony-templates':
         specifier: ~0.0.11
         version: 0.0.11
@@ -892,8 +892,8 @@ importers:
         specifier: ^0.0.1
         version: 0.0.1
       '@teambit/typescript.typescript-compiler':
-        specifier: 2.0.1
-        version: 2.0.1(@teambit/legacy@node_modules+@teambit+legacy)
+        specifier: 2.0.18
+        version: 2.0.18(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/ui-foundation.ui.constants.z-indexes':
         specifier: ^0.0.504
         version: 0.0.504(react-dom@17.0.2)(react@17.0.2)
@@ -21173,8 +21173,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/typescript.typescript-compiler':
-        specifier: 2.0.1
-        version: 2.0.1(@teambit/legacy@node_modules+@teambit+legacy)
+        specifier: 2.0.18
+        version: 2.0.18(@teambit/legacy@node_modules+@teambit+legacy)
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.75
@@ -22190,8 +22190,8 @@ importers:
         specifier: 7.20.0
         version: 7.20.0
       '@bitdev/node.generators.node-templates':
-        specifier: ^1.0.13
-        version: 1.0.13
+        specifier: ^1.0.15
+        version: 1.0.15
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
@@ -23934,8 +23934,8 @@ importers:
         specifier: 7.23.2
         version: 7.23.2
       '@bitdev/react.generators.react-templates':
-        specifier: ^1.1.20
-        version: 1.1.20
+        specifier: ^1.1.21
+        version: 1.1.21
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
@@ -23991,8 +23991,8 @@ importers:
         specifier: 0.0.3
         version: 0.0.3(react-dom@17.0.2)(react@17.0.2)
       '@teambit/typescript.typescript-compiler':
-        specifier: 2.0.1
-        version: 2.0.1(@teambit/legacy@node_modules+@teambit+legacy)
+        specifier: 2.0.18
+        version: 2.0.18(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/ui-foundation.ui.pages.static-error':
         specifier: ^0.0.92
         version: 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
@@ -31424,14 +31424,14 @@ packages:
       prompts: 2.4.2
     dev: false
 
-  /@bitdev/node.generators.node-templates@1.0.13:
-    resolution: {integrity: sha512-pzCdKnPndsmXTBhHK+LmHRvsZGUL3wD1zIgIl4Qwci4O4S6I/0fZjjA3hlcIczeUepPufwsjp71Zp8XaWeW/zw==}
+  /@bitdev/node.generators.node-templates@1.0.15:
+    resolution: {integrity: sha512-IFV1fyDc4OSnFVmooFthmyYDpZrwXlue1aXTeG4jEqNqaOPCF8rnlgyegfNJROVqJtJW4PRTLKz5jPrWv5/Kug==}
     dependencies:
       lodash: 4.17.21
     dev: false
 
-  /@bitdev/react.generators.react-templates@1.1.20:
-    resolution: {integrity: sha512-/fAtVm/cHUYBWl19cLnJNg4bYAikIM3daPMFH++zC7QxtqEcdZMKNywOMqLIo9K2GMnl472vPHNL3saTA/kYIw==}
+  /@bitdev/react.generators.react-templates@1.1.21:
+    resolution: {integrity: sha512-9ptmkMr1EZHyGTT7u0aiblbeUyxLLSh8Bl62CuE9bfgvLZaMOxnPJ2a3aToPptKBfyCd8B7sFeimiwDeDmRumw==}
     dev: false
 
   /@bitdev/react.webpack.refresh-overlay@0.0.1:
@@ -45244,24 +45244,6 @@ packages:
       typescript: 5.1.3
     dev: false
 
-  /@teambit/typescript.typescript-compiler@2.0.1(@teambit/legacy@node_modules+@teambit+legacy):
-    resolution: {integrity: sha512-bxTazYfFjnqp1DrfL9FvwnnVDCUk+8fu2LiQEMCdGNU+bsrtYzZBKfA6DXHoh4kkynBQsBcbf7cgTp5hxh7uEw==}
-    peerDependencies:
-      '@teambit/legacy': ^1.0.380
-    dependencies:
-      '@teambit/bit-error': 0.0.402
-      '@teambit/compilation.compiler-task': 0.0.4
-      '@teambit/legacy': link:node_modules/@teambit/legacy
-      comment-json: 4.2.3
-      fs-extra: 10.1.0
-      get-tsconfig: 4.2.0
-      globby: 11.1.0
-      lodash: 4.17.21
-      normalize-path: 3.0.0
-      react: 18.2.0
-      typescript: 5.1.3
-    dev: false
-
   /@teambit/typescript.typescript-compiler@2.0.12(@teambit/legacy@node_modules+@teambit+legacy):
     resolution: {integrity: sha512-eWi5Fw1IXRsyS/X+qWZHHW7u6iyfkm9H+T/vlLgb3zcpAFTPlDA7SVnLKjY+JQ4com/BmvYrgDGV4mbqVaxsRA==}
     peerDependencies:
@@ -45295,6 +45277,24 @@ packages:
       normalize-path: 3.0.0
       react: 18.2.0
       typescript: 5.3.3
+
+  /@teambit/typescript.typescript-compiler@2.0.18(@teambit/legacy@node_modules+@teambit+legacy):
+    resolution: {integrity: sha512-hgXt5vHn8w2SYMQK5kdYII9Xdg5yDlxtjxPIPCDS2mojmFFHu5UVJs/hSAUNH2QjddXJYyj2ZTPWSCMQ9HZwZw==}
+    peerDependencies:
+      '@teambit/legacy': ^1.0.380
+    dependencies:
+      '@teambit/bit-error': 0.0.402
+      '@teambit/compilation.compiler-task': 1.0.6
+      '@teambit/legacy': link:node_modules/@teambit/legacy
+      comment-json: 4.2.3
+      fs-extra: 11.2.0
+      get-tsconfig: 4.2.0
+      globby: 11.1.0
+      lodash: 4.17.21
+      normalize-path: 3.0.0
+      react: 18.2.0
+      typescript: 5.3.3
+    dev: false
 
   /@teambit/ui-foundation.ui.buttons.collapser@0.0.215(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-rH6Ek8o8mEymCVNsAvgeT6pgcwxfEaLANU02hE2RnWerQa0H86WG8QfF8mf+EzAN+Ae4XmfuXGEPN1tTDfJiIw==}
@@ -75150,7 +75150,7 @@ packages:
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.eslint-config-bit-react': file:scopes/react/eslint-config-bit-react(eslint-plugin-import@2.22.1)(eslint-plugin-jsx-a11y@6.4.1)(eslint-plugin-react-hooks@4.2.0)(eslint-plugin-react@7.22.0)(eslint@7.32.0)(typescript@4.7.4)
-      '@teambit/typescript.typescript-compiler': 2.0.1(@teambit/legacy@node_modules+@teambit+legacy)
+      '@teambit/typescript.typescript-compiler': 2.0.18(@teambit/legacy@node_modules+@teambit+legacy)
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
       babel-plugin-transform-typescript-metadata: 0.3.1(@babel/core@7.19.6)
@@ -75611,7 +75611,7 @@ packages:
       react-dom: '*'
     dependencies:
       '@babel/runtime': 7.20.0
-      '@bitdev/node.generators.node-templates': 1.0.13
+      '@bitdev/node.generators.node-templates': 1.0.15
       '@teambit/component-id': 1.2.0
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
@@ -76365,7 +76365,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.23.2
-      '@bitdev/react.generators.react-templates': 1.1.20
+      '@bitdev/react.generators.react-templates': 1.1.21
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.4(@types/webpack@5.28.1)(react-refresh@0.10.0)(webpack-dev-server@4.15.0)(webpack@5.84.1)
       '@prerenderer/prerenderer': 1.2.4(@types/express@4.17.13)(debug@4.3.4)
@@ -76394,7 +76394,7 @@ packages:
       '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': file:scopes/react/bit-component-meta(react-dom@17.0.2)(react@17.0.2)
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
-      '@teambit/typescript.typescript-compiler': 2.0.1(@teambit/legacy@node_modules+@teambit+legacy)
+      '@teambit/typescript.typescript-compiler': 2.0.18(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/ui-foundation.ui.pages.static-error': 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
@@ -76508,7 +76508,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.23.2
-      '@bitdev/react.generators.react-templates': 1.1.20
+      '@bitdev/react.generators.react-templates': 1.1.21
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.4(@types/webpack@5.28.1)(react-refresh@0.10.0)(webpack-dev-server@4.15.0)(webpack@5.84.1)
       '@prerenderer/prerenderer': 1.2.4(@types/express@4.17.13)(debug@4.3.4)
@@ -76537,7 +76537,7 @@ packages:
       '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': file:scopes/react/bit-component-meta(react-dom@17.0.2)(react@17.0.2)
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
-      '@teambit/typescript.typescript-compiler': 2.0.1(@teambit/legacy@node_modules+@teambit+legacy)
+      '@teambit/typescript.typescript-compiler': 2.0.18(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/ui-foundation.ui.pages.static-error': 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps

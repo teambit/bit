@@ -30,6 +30,7 @@ export type BuilderServiceOptions = {
   originalSeeders?: ComponentID[];
   tasks?: string[];
   skipTests?: boolean;
+  skipTasks?: string[];
   previousTasksResults?: TaskResults[];
   dev?: boolean;
   exitOnFirstFailedTask?: boolean;
@@ -98,7 +99,8 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
       envs,
       this.pipeNameOnEnv,
       options.tasks,
-      options.skipTests
+      options.skipTests,
+      options.skipTasks
     );
     tasksQueue.validate();
     this.logger.info(`going to run tasks in the following order:\n${tasksQueue.toString()}`);

@@ -18,8 +18,8 @@
         "@babel/preset-typescript": "7.22.15",
         "@babel/types": "7.22.3",
         "@bitdev/symphony.generators.symphony-templates": "~0.0.11",
-        "@bitdev/node.generators.node-templates": "^1.0.13",
-        "@bitdev/react.generators.react-templates": "^1.1.20",
+        "@bitdev/node.generators.node-templates": "^1.0.15",
+        "@bitdev/react.generators.react-templates": "^1.1.21",
         "@graphql-modules/core": "0.7.17",
         "@graphql-tools/schema": "^10.0.0",
         "@jest/test-result": "26.6.2",
@@ -266,7 +266,7 @@
         "@teambit/scopes.scope-id": "^0.0.7",
         "@teambit/semantics.entities.semantic-schema": "^0.0.65",
         "@teambit/tests-results": "^1.0.4",
-        "@teambit/typescript.typescript-compiler": "2.0.1",
+        "@teambit/typescript.typescript-compiler": "2.0.18",
         "@teambit/ui-foundation.ui.constants.z-indexes": "^0.0.504",
         "@teambit/ui-foundation.ui.corner": "^0.0.520",
         "@teambit/ui-foundation.ui.empty-component-gallery": "^0.0.508",
@@ -504,7 +504,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.659",
+        "@teambit/legacy": "1.0.660",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
         "graphql": "15.8.0",
@@ -523,7 +523,7 @@
       "minio@7.0": "7.1.1"
     },
     "rootComponents": true,
-    "nodeVersion": "20.10.0",
+    "nodeVersion": "20.11.1",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
@@ -609,7 +609,7 @@
         "packageJson": {
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "bvm": {
-            "node": "20.10.0"
+            "node": "20.11.1"
           },
           "bin": {
             "bbit": "bin/bit"
@@ -629,7 +629,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.659",
+            "@teambit/legacy": "1.0.660",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
