@@ -157,7 +157,8 @@ export default function (isEnvProduction = false): Configuration {
                   },
                 },
                 {
-                  loader: require.resolve('@teambit/mdx.modules.mdx-loader'),
+                  // loader: require.resolve('@teambit/mdx.modules.mdx-loader'),
+                  loader: require.resolve('./mockMdxLoader'),
                 },
               ],
             },
