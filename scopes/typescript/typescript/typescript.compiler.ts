@@ -134,7 +134,9 @@ export class TypescriptCompiler implements Compiler {
     const isJsAndCompile = !!this.options.compileJs && filePath.endsWith('.js');
     const isJsxAndCompile = !!this.options.compileJsx && filePath.endsWith('.jsx');
     return (
-      (filePath.endsWith('.ts') || filePath.endsWith('.tsx') || isJsAndCompile || isJsxAndCompile) &&
+      (['.ts', '.tsx', '.mts', '.cts', '.mtsx', '.ctsx'].some((ext) => filePath.endsWith(ext)) ||
+        isJsAndCompile ||
+        isJsxAndCompile) &&
       !filePath.endsWith('.d.ts')
     );
   }
@@ -277,7 +279,9 @@ export class TypescriptCompiler implements Compiler {
   private replaceFileExtToJs(filePath: string): string {
     if (!this.isFileSupported(filePath)) return filePath;
     const fileExtension = path.extname(filePath);
-    return filePath.replace(new RegExp(`${fileExtension}$`), '.js'); // makes sure it's the last occurrence
+    // take into account mts, cts, mtsx, ctsx, etc.
+    const replacement = fileExtension.replace(/([tj]sx?)$/, 'js');
+    return filePath.replace(new RegExp(`${fileExtension}$`), replacement); // makes sure it's the last occurrence
   }
 
   version() {
