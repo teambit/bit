@@ -47,7 +47,7 @@ export default class VersionHistory extends BitObject {
 
   private versionParentsToObject(versions: VersionParents[]) {
     return versions.reduce((acc, version) => {
-      acc[version.hash.toString()] = version;
+      acc[version.hash.hash] = version;
       return acc;
     }, {});
   }
@@ -101,7 +101,7 @@ export default class VersionHistory extends BitObject {
         exists.squashed = version.squashed?.previousParents;
       } else {
         const versionData = getVersionParentsFromVersion(version);
-        this.versionsObj[version.hash.toString()] = versionData;
+        this.versionsObj[version.hash().hash] = versionData;
       }
     });
   }
