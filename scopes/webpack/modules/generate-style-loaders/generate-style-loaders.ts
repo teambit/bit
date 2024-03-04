@@ -21,7 +21,10 @@ export function generateStyleLoaders(options: GenerateStyleLoadersOptions) {
     // },
     {
       loader: options.cssLoaderPath,
-      options: options.cssLoaderOpts,
+      options: {
+        ...options.cssLoaderOpts,
+        sourceMap: false,
+      },
     },
     {
       // Options for PostCSS as we reference these options twice
@@ -31,7 +34,8 @@ export function generateStyleLoaders(options: GenerateStyleLoadersOptions) {
       options: {
         // We don't use the config file way to make it easier to mutate it by other envs
         postcssOptions: options.postCssConfig,
-        sourceMap: options.shouldUseSourceMap,
+        sourceMap: false,
+        // sourceMap: options.shouldUseSourceMap,
       },
     },
   ].filter(Boolean);
@@ -40,13 +44,15 @@ export function generateStyleLoaders(options: GenerateStyleLoadersOptions) {
       {
         loader: options.preProcessOptions.resolveUrlLoaderPath,
         options: {
-          sourceMap: options.shouldUseSourceMap,
+          sourceMap: false,
+          // sourceMap: options.shouldUseSourceMap,
         },
       },
       {
         loader: options.preProcessOptions.preProcessorPath,
         options: {
-          sourceMap: true,
+          sourceMap: false,
+          // sourceMap: true,
         },
       }
     );

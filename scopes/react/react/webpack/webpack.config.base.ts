@@ -109,7 +109,8 @@ export default function (isEnvProduction = false): Configuration {
                 merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 1,
-                    sourceMap: isEnvProduction || shouldUseSourceMap,
+                    sourceMap: false,
+                    // sourceMap: isEnvProduction || shouldUseSourceMap,
                   },
                 })
               ),
