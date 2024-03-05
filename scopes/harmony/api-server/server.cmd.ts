@@ -15,8 +15,7 @@ export class ServerCmd implements Command {
 
   constructor(private apiServer: ApiServerMain) {}
 
-  async report(args, options: { port: number; compile: boolean }): Promise<string> {
+  async wait(args, options: { port: number; compile: boolean }) {
     await this.apiServer.runApiServer(options);
-    return 'server is running successfully'; // should never get here, the previous line is blocking
   }
 }
