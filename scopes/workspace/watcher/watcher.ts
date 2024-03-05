@@ -11,6 +11,7 @@ import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import mapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
+import { UNMERGED_FILENAME } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import chokidar, { FSWatcher } from '@teambit/chokidar';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -185,6 +186,10 @@ export class Watcher {
       }
       if (filePath.endsWith(WORKSPACE_JSONC)) {
         await this.workspace.triggerOnWorkspaceConfigChange();
+        return { results: [], files: [filePath] };
+      }
+      if (filePath.endsWith(UNMERGED_FILENAME)) {
+        await this.workspace.clearCache();
         return { results: [], files: [filePath] };
       }
       const componentId = this.getComponentIdByPath(filePath);
@@ -385,7 +390,7 @@ export class Watcher {
     // const useFsEventsConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_FS_EVENTS);
     // const useFsEvents = useFsEventsConf === 'true';
     const ignoreLocalScope = (pathToCheck: string) => {
-      if (pathToCheck.startsWith(this.ipcEventsDir)) return false;
+      if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
       return (
         pathToCheck.startsWith(`${this.workspace.path}/.git/`) || pathToCheck.startsWith(`${this.workspace.path}/.bit/`)
       );

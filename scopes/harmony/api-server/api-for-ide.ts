@@ -262,6 +262,7 @@ export class APIForIDE {
   }
   async clearCache() {
     await this.workspace.clearCache();
+    this.workspace.clearAllComponentsCache();
   }
 
   async install(options = {}) {

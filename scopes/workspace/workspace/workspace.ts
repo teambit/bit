@@ -746,6 +746,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   clearAllComponentsCache() {
+    this.logger.debug('clearing all components caches');
     this.componentLoader.clearCache();
     this.consumer.componentLoader.clearComponentsCache();
     this.componentStatusLoader.clearCache();
