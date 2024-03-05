@@ -24,6 +24,7 @@ export function runEsbuild(outDir: string, appFile: string) {
     logLevel: 'error',
     platform: 'node',
     // minify: true,
+    metafile: true,
     // TODO: maybe enable sourcemap later
     // sourcemap: true,
     mainFields: ['main', 'module'],

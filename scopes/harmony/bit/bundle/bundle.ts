@@ -1,3 +1,5 @@
+import fs from 'fs-extra';
+import { omit } from 'lodash';
 import { runEsbuild } from './esbuild';
 import { generateCoreAspectsBarrelFile } from './generate-core-aspects-exports';
 import { generateCoreAspectsModules } from './generate-core-aspects-modules';
@@ -26,7 +28,9 @@ async function runBundle() {
   await generatePackageJson(rootOutDir, bundleDirName, jsAppFile);
   await generateCoreAspectsBarrelFile();
   await generateSeaConfig(bundleDir, jsAppFile, blobAppFile);
-  return esbuildRes;
+  const metafile = esbuildRes.metafile;
+  await fs.writeJSON(`${bundleDir}/metafile.json`, metafile, { spaces: 2 });
+  return omit(esbuildRes, ['metafile']);
   // return tsupRes;
 }
 
