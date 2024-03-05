@@ -11,11 +11,37 @@ import { fallbacks } from './webpack-fallbacks';
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
 
+const SCOPES = {
+  API_REFERENCE: 'teambit.api-reference', // 62
+  REACT: 'teambit.react', // 20
+  COMPONENT: 'teambit.component', // 24
+  LANES: 'teambit.lanes', // 16
+  CODE: 'teambit.code', // 4
+  CLOUD: 'teambit.cloud', // 4
+  PREVIEW: 'teambit.preview', // 4
+  DEFENDER: 'teambit.defender', // 4
+  HARMONY: 'teambit.harmony', // 4
+  SCOPE: 'teambit.scope', // 2
+  WORKSPACE: 'teambit.workspace', // 2
+  COMPOSITIONS: 'teambit.compositions', // 2
+  ENVS: 'teambit.envs', // 2
+  DOCS: 'teambit.docs', // 2
+  UI_FOUNDATION: 'teambit.ui-foundation', // 2
+};
 export function configFactory(target: Target, context: BundlerContext): Configuration {
   let truthyEntries =
     Array.isArray(target.entries) && target.entries.length ? target.entries.filter(Boolean) : target.entries || {};
   if (Array.isArray(truthyEntries) && !truthyEntries.length) {
     truthyEntries = {};
+  }
+
+  if (Object.keys(truthyEntries).length > 0 && !Array.isArray(truthyEntries)) {
+    truthyEntries = Object.keys(truthyEntries).reduce((acc, entryKey) => {
+      if (entryKey.includes(SCOPES.API_REFERENCE)) {
+        acc[entryKey] = truthyEntries[entryKey];
+      }
+      return acc;
+    }, {});
   }
 
   // if(Object.keys(truthyEntries).length > 3) {
