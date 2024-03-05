@@ -93,7 +93,7 @@ export default class Config implements LegacyCommand {
   report(conf: { [key: string]: string }): string {
     return Object.entries(conf)
       .map((tuple) => {
-        tuple[0] = rightpad(tuple[0], 30, ' ');
+        tuple[0] = rightpad(tuple[0], 45, ' ');
         return tuple.join('');
       })
       .join('\n');
