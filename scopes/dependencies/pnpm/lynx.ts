@@ -276,9 +276,8 @@ export async function install(
     ...options,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     peerDependencyRules: {
-      allowAny: ['*'],
-      ignoreMissing: ['*'],
-      ...options?.peerDependencyRules,
+      allowAny: options?.peerDependencyRules?.allowAny ?? ['*'],
+      ignoreMissing: options.autoInstallPeers ? [] : options?.peerDependencyRules?.ignoreMissing ?? ['*'],
     },
     depth: options.updateAll ? Infinity : 0,
     disableRelinkLocalDirDeps: true,
