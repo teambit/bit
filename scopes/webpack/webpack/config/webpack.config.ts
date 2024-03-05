@@ -38,7 +38,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
 
   if (Object.keys(truthyEntries).length > 0 && !Array.isArray(truthyEntries)) {
     truthyEntries = Object.keys(truthyEntries).reduce((acc, entryKey) => {
-      if (entryKey.includes(SCOPES.REACT)) {
+      if (entryKey.includes(SCOPES.COMPONENT)) {
         acc[entryKey] = truthyEntries[entryKey];
       }
       return acc;
