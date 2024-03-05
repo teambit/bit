@@ -112,6 +112,13 @@ export interface Command {
   report?(args: CLIArgs, flags: Flags): Promise<string | Report>;
 
   /**
+   * Command handler which never exits the process
+   * @param args  - arguments object as defined in name.
+   * @param flags - command flags as described in options.
+   */
+  wait?(args: CLIArgs, flags: Flags): Promise<void>;
+
+  /**
    * Optional handler to provide a raw result of the command.
    * Will be go called if '-j'/'--json' option is provided by user.
    * @param args  - arguments object as defined in name.

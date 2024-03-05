@@ -92,6 +92,7 @@ export class ApiServerMain {
       });
       server.on('listening', () => {
         this.logger.consoleSuccess(`Bit Server is listening on port ${port}`);
+        resolve('success');
       });
     });
   }
