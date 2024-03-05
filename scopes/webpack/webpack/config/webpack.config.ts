@@ -28,6 +28,7 @@ const SCOPES = {
   DOCS: 'teambit.docs', // 2
   UI_FOUNDATION: 'teambit.ui-foundation', // 2
 };
+
 export function configFactory(target: Target, context: BundlerContext): Configuration {
   let truthyEntries =
     Array.isArray(target.entries) && target.entries.length ? target.entries.filter(Boolean) : target.entries || {};
@@ -37,7 +38,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
 
   if (Object.keys(truthyEntries).length > 0 && !Array.isArray(truthyEntries)) {
     truthyEntries = Object.keys(truthyEntries).reduce((acc, entryKey) => {
-      if (entryKey.includes(SCOPES.API_REFERENCE)) {
+      if (entryKey.includes(SCOPES.REACT)) {
         acc[entryKey] = truthyEntries[entryKey];
       }
       return acc;
