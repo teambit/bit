@@ -1,6 +1,5 @@
-import React from 'react';
-import { Text, Newline } from 'ink';
 import { EnvService, EnvDefinition, Env, EnvContext, ServiceTransformationMap, ExecutionContext } from '@teambit/envs';
+import chalk from 'chalk';
 import highlight from 'cli-highlight';
 import { Compiler } from './types';
 
@@ -24,22 +23,14 @@ export class CompilerService implements EnvService<{}, CompilerDescriptor> {
 
   render(env: EnvDefinition) {
     const descriptor = this.getDescriptor(env);
-
-    return (
-      <Text key={descriptor?.id}>
-        <Text color="cyan">configured compiler: </Text>
-        <Text>
-          {descriptor?.id} ({descriptor?.displayName} @ {descriptor?.version})
-        </Text>
-        <Newline />
-        <Text color="cyan">compiler config:</Text>
-        <Newline />
-        <Text>
-          {descriptor?.config && highlight(descriptor?.config, { language: 'javascript', ignoreIllegals: true })}
-        </Text>
-        <Newline />
-      </Text>
-    );
+    const name = `${chalk.green('configured compiler:')} ${descriptor?.id} (${descriptor?.displayName} @ ${
+      descriptor?.version
+    })`;
+    const configLabel = chalk.green('compiler config:');
+    const configObj = descriptor?.config
+      ? highlight(descriptor?.config, { language: 'json', ignoreIllegals: true })
+      : '';
+    return `${name}\n${configLabel}\n${configObj}`;
   }
 
   transform(env: Env, context: EnvContext): CompilerTransformationMap | undefined {

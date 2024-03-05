@@ -1,5 +1,4 @@
 import React from 'react';
-import { Text, Newline } from 'ink';
 import {
   EnvService,
   EnvDefinition,
@@ -10,6 +9,7 @@ import {
 } from '@teambit/envs';
 import highlight from 'cli-highlight';
 import { PackageJsonProps } from './pkg.main.runtime';
+import chalk from 'chalk';
 
 export type PkgDescriptor = {
   id: string;
@@ -27,17 +27,9 @@ export class PkgService implements EnvService<{}, PkgDescriptor> {
 
   async render(env: EnvDefinition) {
     const descriptor = this.getDescriptor(env);
-
-    return (
-      <Text key={descriptor?.id}>
-        <Text color="cyan">configured package.json properties: </Text>
-        <Newline />
-        <Text>
-          {descriptor?.config && highlight(descriptor?.config, { language: 'javascript', ignoreIllegals: true })}
-        </Text>
-        <Newline />
-      </Text>
-    );
+    const title = chalk.green('configured package.json properties: ');
+    const config = descriptor?.config ? highlight(descriptor?.config, { language: 'json', ignoreIllegals: true }) : '';
+    return `${title}\n${config}`;
   }
 
   transform(env: Env, context: EnvContext): PkgTransformationMap | undefined {

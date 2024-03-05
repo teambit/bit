@@ -1,7 +1,6 @@
-import React from 'react';
+import chalk from 'chalk';
 import { defaults } from 'lodash';
 import { EnvService, ExecutionContext, EnvDefinition, ServiceTransformationMap, EnvContext, Env } from '@teambit/envs';
-import { Text, Newline } from 'ink';
 import { Workspace } from '@teambit/workspace';
 import highlight from 'cli-highlight';
 import { Component, ComponentMap } from '@teambit/component';
@@ -65,22 +64,14 @@ export class LinterService implements EnvService<LintResults> {
 
   render(env: EnvDefinition) {
     const descriptor = this.getDescriptor(env);
-
-    return (
-      <Text key={descriptor?.id}>
-        <Text color="cyan">configured linter: </Text>
-        <Text>
-          {descriptor?.id} ({descriptor?.displayName} @ {descriptor?.version})
-        </Text>
-        <Newline />
-        <Text color="cyan">linter config:</Text>
-        <Newline />
-        <Text>
-          {descriptor?.config && highlight(descriptor?.config, { language: 'javascript', ignoreIllegals: true })}
-        </Text>
-        <Newline />
-      </Text>
-    );
+    const name = `${chalk.green('configured linter:')} ${descriptor?.id} (${descriptor?.displayName} @ ${
+      descriptor?.version
+    })`;
+    const configLabel = chalk.green('linter config:');
+    const configObj = descriptor?.config
+      ? highlight(descriptor?.config, { language: 'json', ignoreIllegals: true })
+      : '';
+    return `${name}\n${configLabel}\n${configObj}`;
   }
 
   transform(env: Env, context: EnvContext): LinterTransformationMap | undefined {
