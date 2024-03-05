@@ -30,6 +30,9 @@ export class CommandRunner {
       if (this.command.report) {
         return await this.runReportHandler();
       }
+      if (this.command.wait) {
+        return await this.runWaitHandler();
+      }
     } catch (err: any) {
       return handleErrorAndExit(err, this.commandName);
     }
@@ -93,6 +96,11 @@ export class CommandRunner {
     const data = typeof result === 'string' ? result : result.data;
     const exitCode = typeof result === 'string' ? 0 : result.code;
     return this.writeAndExit(`${data}\n`, exitCode);
+  }
+
+  private async runWaitHandler() {
+    if (!this.command.wait) throw new Error('runReportHandler expects command.wait to be implemented');
+    await this.command.wait(this.args, this.flags);
   }
 
   /**
