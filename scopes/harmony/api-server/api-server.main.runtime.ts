@@ -85,14 +85,13 @@ export class ApiServerMain {
     const port = options.port || 3000;
     const server = await this.express.listen(port);
 
-    // never ending promise to not exit the process (is there a better way?)
     return new Promise((resolve, reject) => {
       server.on('error', (err) => {
         reject(err);
       });
       server.on('listening', () => {
         this.logger.consoleSuccess(`Bit Server is listening on port ${port}`);
-        resolve('success');
+        resolve(true);
       });
     });
   }
