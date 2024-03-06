@@ -44,7 +44,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     }, {});
 
     truthyEntries = Object.keys(truthyEntries)
-      .slice(20, 30)
+      .slice(20, 50)
       .reduce((acc, entryKey) => {
         acc[entryKey] = truthyEntries[entryKey];
         return acc;
@@ -158,6 +158,18 @@ export function configFactory(target: Target, context: BundlerContext): Configur
       outputPath: `/tmp/profiling/profileEvents.json`,
     })
   );
+
+  // config.plugins = config.plugins.concat(
+  //   new RsdoctorRspackPlugin({
+  //     // plugin options
+  //   })
+  // );
+
+  config.performance = {
+    maxAssetSize: 50000,
+    maxEntrypointSize: 50000,
+    hints: 'warning',
+  };
 
   return config;
 }
