@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 
-import { Consumer } from '../../../consumer';
+import { Consumer, getConsumerInfo } from '../../../consumer';
 import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
 import { Scope } from '../../../scope';
 import { Repository } from '../../../scope/objects';
@@ -19,23 +19,26 @@ export default async function init(
   force = false,
   workspaceConfigProps: WorkspaceConfigProps
 ): Promise<Consumer> {
+  const consumerInfo = await getConsumerInfo(absPath);
+  const consumerPath = consumerInfo?.path || absPath;
+
   if (reset || resetHard) {
-    await Consumer.reset(absPath, resetHard, noGit);
+    await Consumer.reset(consumerPath, resetHard, noGit);
   }
   let consumer: Consumer | undefined;
   try {
-    consumer = await Consumer.create(absPath, noGit, noPackageJson, workspaceConfigProps);
+    consumer = await Consumer.create(consumerPath, noGit, noPackageJson, workspaceConfigProps);
   } catch (err) {
     // it's possible that at this stage the consumer fails to load due to scope issues.
     // still we want to load it to include its instance of "scope.json", so then later when "consumer.write()", we
     // don't lose some scope metadata
   }
   if (resetScope) {
-    const scopePath = findScopePath(process.cwd());
-    if (!scopePath) throw new Error(`fatal: scope not found in the path: ${process.cwd()}`);
+    const scopePath = findScopePath(consumerPath);
+    if (!scopePath) throw new Error(`fatal: scope not found in the path: ${consumerPath}`);
     await Scope.reset(scopePath, true);
   }
-  if (!consumer) consumer = await Consumer.create(absPath, noGit, noPackageJson, workspaceConfigProps);
+  if (!consumer) consumer = await Consumer.create(consumerPath, noGit, noPackageJson, workspaceConfigProps);
   if (!force && !resetScope) {
     await throwForOutOfSyncScope(consumer);
   }
