@@ -7,6 +7,7 @@ import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { RemovedLocalObjects } from './removed-local-objects';
 import { RemoveMain } from './remove.main.runtime';
 import { removeTemplate } from './remove-template';
+import { Example } from '../../../dist/cli/command';
 
 export class RemoveCmd implements Command {
   name = 'remove <component-pattern>';
@@ -33,6 +34,12 @@ export class RemoveCmd implements Command {
     ['s', 'silent', 'skip confirmation'],
   ] as CommandOptions;
   loader = true;
+  examples = [
+    {
+      cmd: 'remove "$deprecated"',
+      description: 'remove all components that are deprecated',
+    },
+  ];
   remoteOp = true;
 
   constructor(private remove: RemoveMain, private workspace?: Workspace) {}
