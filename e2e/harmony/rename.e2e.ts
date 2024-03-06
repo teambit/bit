@@ -266,4 +266,15 @@ describe('bit rename command', function () {
       expect(fileContent).to.not.have.string('FooAspect');
     });
   });
+  describe('rename a new component including the namespace and the scope-name', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+    });
+    it('should not throw ComponentNotFound', () => {
+      expect(() => helper.command.rename('comp1', 'ui/comp2', '--scope another-scope')).to.not.throw();
+      const list = helper.command.listParsed();
+      expect(list[0].id).to.equal('another-scope/ui/comp2');
+    });
+  });
 });

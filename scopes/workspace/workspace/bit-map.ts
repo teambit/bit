@@ -197,7 +197,7 @@ export class BitMap {
       this.legacyBitMap.setComponent(bitMapEntry.id, bitMapEntry);
     }
     if (sourceId.scope !== targetId.scope) {
-      this.setDefaultScope(sourceId, targetId.scope);
+      this.setDefaultScope(targetId, targetId.scope);
     }
   }
 
