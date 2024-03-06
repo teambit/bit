@@ -104,12 +104,20 @@ export interface Command {
   render?(args: CLIArgs, flags: Flags): Promise<RenderResult | React.ReactElement>;
 
   /**
-   * Command handler which is called for legacy commands or when process.isTTY is false
+   * Command handler which prints the return value to the console and exits.
+   * If the command has both, `render` and `report`, this one will be called when process.isTTY is false.
    * @param args  - arguments object as defined in name.
    * @param flags - command flags as described in options.
    * @return - Report object. The Report.data is printed to the stdout as is.
    */
   report?(args: CLIArgs, flags: Flags): Promise<string | Report>;
+
+  /**
+   * Command handler which never exits the process
+   * @param args  - arguments object as defined in name.
+   * @param flags - command flags as described in options.
+   */
+  wait?(args: CLIArgs, flags: Flags): Promise<void>;
 
   /**
    * Optional handler to provide a raw result of the command.
