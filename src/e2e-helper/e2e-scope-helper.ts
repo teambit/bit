@@ -4,10 +4,10 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import * as yaml from 'yaml';
 import * as ini from 'ini';
+import { createLinkOrSymlink } from '@teambit/toolbox.fs.link-or-symlink';
 import { IS_WINDOWS } from '../constants';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { generateRandomStr } from '../utils';
-import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import NpmHelper from './e2e-npm-helper';
@@ -285,6 +285,6 @@ export default class ScopeHelper {
     console.log('aspectsRoot', aspectsRoot);
     console.log('localAspectsRoot', localAspectsRoot);
     fs.removeSync(aspectsRoot);
-    createSymlinkOrCopy(localAspectsRoot, aspectsRoot);
+    createLinkOrSymlink(localAspectsRoot, aspectsRoot);
   }
 }
