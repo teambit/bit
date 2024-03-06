@@ -1,7 +1,6 @@
-import React from 'react';
-import { Text, Newline } from 'ink';
 import { EnvService, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import highlight from 'cli-highlight';
+import chalk from 'chalk';
 import { DependencyDetector } from './dependency-detector';
 
 export type DependenciesDescriptor = {
@@ -19,17 +18,11 @@ export class DependenciesService implements EnvService<{}, DependenciesDescripto
 
   async render(env: EnvDefinition) {
     const descriptor = await this.getDescriptor(env);
-
-    return (
-      <Text key={descriptor?.id}>
-        <Text color="cyan">configured dependencies: </Text>
-        <Newline />
-        <Text>
-          {descriptor?.config && highlight(descriptor?.config, { language: 'javascript', ignoreIllegals: true })}
-        </Text>
-        <Newline />
-      </Text>
-    );
+    const configLabel = chalk.green('configured dependencies:');
+    const configObj = descriptor?.config
+      ? highlight(descriptor?.config, { language: 'json', ignoreIllegals: true })
+      : '';
+    return `${configLabel}\n${configObj}`;
   }
 
   async getDescriptor(env: EnvDefinition): Promise<DependenciesDescriptor | undefined> {

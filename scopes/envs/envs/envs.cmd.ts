@@ -1,14 +1,11 @@
 // eslint-disable-next-line max-classes-per-file
-import React from 'react';
 import pMapSeries from 'p-map-series';
-import { Text, Newline } from 'ink';
 import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
 import { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
 import { ComponentMain, ComponentFactory, Component } from '@teambit/component';
 import { EnvsMain } from './environments.main.runtime';
-import { EnvOverview } from './components/env-overview';
 
 export class ListEnvsCmd implements Command {
   name = 'list';
@@ -59,37 +56,18 @@ export class GetEnvCmd implements Command {
     const services = this.envs.getServices(env);
     const allP = services.services.map(async ([serviceId, service]) => {
       if (servicesArr && !servicesArr.includes(serviceId)) return null;
-      if (service.render)
-        return (
-          <Text>
-            <Text bold underline color="cyan">
-              {serviceId}
-            </Text>
-            <Newline />
-            <Newline />
-            {await service.render(env, envExecutionContext)}
-          </Text>
-        );
-      return (
-        <Text key={serviceId}>
-          <Text bold underline>
-            {serviceId}
-          </Text>
-        </Text>
-      );
+      const serviceTitle = chalk.cyan.bold.underline(serviceId);
+      const content = service.render ? await service.render(env, envExecutionContext) : '';
+      return `${serviceTitle}\n\n${content}`;
     });
 
     const all = compact(await Promise.all(allP));
 
-    return (
-      <Text>
-        <EnvOverview envDef={env} />
-        {all.map((item) => item)}
-      </Text>
-    );
+    const envTitle = chalk.green(`Environment: ${env.id}`);
+    return `${envTitle}\n${all.join('\n\n')}`;
   }
 
-  async render([name]: [string], { services }: GetEnvOpts): Promise<JSX.Element> {
+  async report([name]: [string], { services }: GetEnvOpts): Promise<string> {
     const host = this.componentAspect.getHost();
     const servicesArr = services ? services.split(',') : undefined;
 

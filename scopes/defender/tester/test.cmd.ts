@@ -4,8 +4,6 @@ import { Logger } from '@teambit/logger';
 import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Timer } from '@teambit/legacy/dist/toolbox/timer';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
-import { Box, Text } from 'ink';
-import React from 'react';
 import type { TesterMain } from './tester.main.runtime';
 
 type TestFlags = {
@@ -49,7 +47,7 @@ export class TestCmd implements Command {
 
   constructor(private tester: TesterMain, private workspace: Workspace, private logger: Logger) {}
 
-  async render(
+  async report(
     [userPattern]: [string],
     { watch = false, debug = false, all = false, env, scope, junit, coverage = false, unmodified = false }: TestFlags
   ) {
@@ -75,16 +73,12 @@ export class TestCmd implements Command {
     const patternWithScope = getPatternWithScope();
     const components = await this.workspace.getComponentsByUserInput(unmodified, patternWithScope, true);
     if (!components.length) {
+      const data = chalk.bold(`no components found to test.
+use "--unmodified" flag to test all components or specify the ids to test.
+otherwise, only new and modified components will be tested`);
       return {
         code: 0,
-        data: (
-          <Box>
-            <Text bold>
-              no components found to test. use "--unmodified" flag to test all components or specify the ids to test,
-              otherwise, only new and modified components will be tested{' '}
-            </Text>
-          </Box>
-        ),
+        data,
       };
     }
 
@@ -116,16 +110,11 @@ export class TestCmd implements Command {
     }
     const { seconds } = timer.stop();
 
-    if (watch) return <Box></Box>;
+    if (watch) return '';
+    const data = `tests has been completed in ${chalk.cyan(seconds.toString())} seconds.`;
     return {
       code,
-      data: (
-        <Box>
-          <Text>tests has been completed in </Text>
-          <Text color="cyan">{seconds} </Text>
-          <Text>seconds.</Text>
-        </Box>
-      ),
+      data,
     };
   }
 }

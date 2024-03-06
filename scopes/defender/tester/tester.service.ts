@@ -1,7 +1,5 @@
 import { Logger } from '@teambit/logger';
 import { resolve } from 'path';
-import React from 'react';
-import { Text, Newline } from 'ink';
 import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import { ComponentMap } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
@@ -62,24 +60,14 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
 
   render(env: EnvDefinition) {
     const descriptor = this.getDescriptor(env);
-    return (
-      <Text key={descriptor?.id}>
-        <Text color="cyan">configured tester: </Text>
-        <Text>
-          {descriptor?.id} ({descriptor?.displayName} @ {descriptor?.version})
-        </Text>
-        <Newline />
-        <Text underline color="cyan">
-          tester config:
-        </Text>
-        <Newline />
-        <Text>
-          {/* refactor a separate component which highlights for cli */}
-          {highlight(descriptor?.config || '', { language: 'javascript', ignoreIllegals: true })}
-        </Text>
-        <Newline />
-      </Text>
-    );
+    const name = `${chalk.green('configured tester:')} ${descriptor?.id} (${descriptor?.displayName} @ ${
+      descriptor?.version
+    })`;
+    const configLabel = chalk.green('tester config:');
+    const configObj = descriptor?.config
+      ? highlight(descriptor?.config, { language: 'javascript', ignoreIllegals: true })
+      : '';
+    return `${name}\n${configLabel}\n${configObj}`;
   }
 
   getDescriptor(environment: EnvDefinition) {
