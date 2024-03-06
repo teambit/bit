@@ -542,13 +542,14 @@ export const WILDCARD_HELP = (command: string) =>
 export const PATTERN_HELP = (command: string) =>
   `you can use a \`<pattern>\` for multiple component ids, such as \`bit ${command} "org.scope/utils/**"\`.
 use comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'
-use '$' prefix to filter by states/attributes, e.g. '$deprecated' or '$modified'.
+use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.
 always wrap the pattern with single quotes to avoid collision with shell commands.
 use \`bit pattern --help\` to understand patterns better and \`bit pattern <pattern>\` to validate the pattern.
 `;
 
 export const COMPONENT_PATTERN_HELP = `component name, component id, or component pattern. use component pattern to select multiple components.
 wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button".
+use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.
 use \`bit pattern --help\` to understand patterns better and \`bit pattern <pattern>\` to validate the pattern.`;
 
 export const CURRENT_UPSTREAM = 'current';
