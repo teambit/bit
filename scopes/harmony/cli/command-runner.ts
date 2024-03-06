@@ -37,7 +37,7 @@ export class CommandRunner {
       return handleErrorAndExit(err, this.commandName);
     }
 
-    throw new Error(`command "${this.commandName}" doesn't implement "render" nor "report" methods`);
+    throw new Error(`command "${this.commandName}" doesn't implement "render" nor "report" nor "wait" methods`);
   }
 
   private bootstrapCommand() {
