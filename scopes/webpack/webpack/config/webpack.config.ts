@@ -165,12 +165,6 @@ export function configFactory(target: Target, context: BundlerContext): Configur
   //   })
   // );
 
-  config.performance = {
-    maxAssetSize: 50000,
-    maxEntrypointSize: 50000,
-    hints: 'warning',
-  };
-
   return config;
 }
 

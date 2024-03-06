@@ -122,6 +122,10 @@ export default function (): Configuration {
     ].filter(Boolean),
     // Turn off performance processing because we utilize
     // our own hints via the FileSizeReporter
-    performance: false,
+    performance: {
+      maxAssetSize: 50000,
+      maxEntrypointSize: 50000,
+      hints: 'warning',
+    },
   };
 }
