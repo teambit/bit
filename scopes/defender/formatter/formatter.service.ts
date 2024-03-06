@@ -1,7 +1,6 @@
+import chalk from 'chalk';
 import { defaults } from 'lodash';
-import React from 'react';
 import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
-import { Text, Newline } from 'ink';
 import highlight from 'cli-highlight';
 import { Formatter, FormatResults } from './formatter';
 import { FormatterContext, FormatterOptions } from './formatter-context';
@@ -43,22 +42,14 @@ export class FormatterService implements EnvService<FormatResults> {
 
   render(env: EnvDefinition) {
     const descriptor = this.getDescriptor(env);
-
-    return (
-      <Text key={descriptor?.id}>
-        <Text color="cyan">configured formatter: </Text>
-        <Text>
-          {descriptor?.id} ({descriptor?.displayName} @ {descriptor?.version})
-        </Text>
-        <Newline />
-        <Text color="cyan">formatter config:</Text>
-        <Newline />
-        <Text>
-          {descriptor?.config && highlight(descriptor?.config, { language: 'javascript', ignoreIllegals: true })}
-        </Text>
-        <Newline />
-      </Text>
-    );
+    const name = `${chalk.green('configured formatter:')} ${descriptor?.id} (${descriptor?.displayName} @ ${
+      descriptor?.version
+    })`;
+    const configLabel = chalk.green('formatter config:');
+    const configObj = descriptor?.config
+      ? highlight(descriptor?.config, { language: 'json', ignoreIllegals: true })
+      : '';
+    return `${name}\n${configLabel}\n${configObj}`;
   }
 
   transform(env: Env, context: EnvContext): FormatterTransformationMap | undefined {

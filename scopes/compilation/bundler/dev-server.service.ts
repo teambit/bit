@@ -1,8 +1,7 @@
 import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import { PubsubMain } from '@teambit/pubsub';
+import chalk from 'chalk';
 import { flatten } from 'lodash';
-import React from 'react';
-import { Text, Newline } from 'ink';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import highlight from 'cli-highlight';
 import { sep } from 'path';
@@ -71,24 +70,14 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
 
   async render(env: EnvDefinition, context: ExecutionContext[]) {
     const descriptor = await this.getDescriptor(env, context);
-    return (
-      <Text key={descriptor?.id}>
-        <Text color="cyan">configured dev server: </Text>
-        <Text>
-          {descriptor?.id} ({descriptor?.displayName} @ {descriptor?.version})
-        </Text>
-        <Newline />
-        <Text underline color="cyan">
-          dev server config:
-        </Text>
-        <Newline />
-        <Text>
-          {/* refactor a separate component which highlights for cli */}
-          {highlight(descriptor?.config || '', { language: 'javascript', ignoreIllegals: true })}
-        </Text>
-        <Newline />
-      </Text>
-    );
+    const name = `${chalk.green('configured dev server:')} ${descriptor?.id} (${descriptor?.displayName} @ ${
+      descriptor?.version
+    })`;
+    const configLabel = chalk.green('dev server config:');
+    const configObj = descriptor?.config
+      ? highlight(descriptor?.config, { language: 'javascript', ignoreIllegals: true })
+      : '';
+    return `${name}\n${configLabel}\n${configObj}`;
   }
 
   async getDescriptor(
