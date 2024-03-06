@@ -342,6 +342,9 @@ importers:
       '@teambit/community.starters.hello-world':
         specifier: ^0.0.16
         version: 0.0.16(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/compilation.babel-compiler':
+        specifier: ^1.1.3
+        version: 1.1.3
       '@teambit/compilation.content.compiler-overview':
         specifier: 1.95.0
         version: 1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -16416,6 +16419,9 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
+      '@teambit/compilation.babel-compiler':
+        specifier: ^1.1.3
+        version: 1.1.3
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -16428,24 +16434,12 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
-      fs-extra:
-        specifier: 10.0.0
-        version: 10.0.0
       graphql:
         specifier: 15.8.0
         version: 15.8.0
-      lodash:
-        specifier: 4.17.21
-        version: 4.17.21
       mocha:
         specifier: 10.2.0
         version: 10.2.0
-      multimatch:
-        specifier: 5.0.0
-        version: 5.0.0
-      p-map-series:
-        specifier: 2.1.0
-        version: 2.1.0
       react:
         specifier: ^17.0.0
         version: 17.0.2
@@ -16459,12 +16453,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 0.0.25
         version: 0.0.25(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(@typescript-eslint/parser@5.62.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@7.32.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(puppeteer@13.7.0)(typescript@4.7.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
-      '@types/fs-extra':
-        specifier: 9.0.7
-        version: 9.0.7
-      '@types/lodash':
-        specifier: 4.14.165
-        version: 4.14.165
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -55855,7 +55843,7 @@ packages:
       vue-template-compiler:
         optional: true
     dependencies:
-      '@babel/code-frame': 7.10.4
+      '@babel/code-frame': 7.23.5
       chalk: 2.4.2
       eslint: 7.32.0
       micromatch: 3.1.10
@@ -70426,7 +70414,7 @@ packages:
   /wide-align@1.1.5:
     resolution: {integrity: sha512-eDMORYaPNZ4sQIuuYPDHdQvf4gyCF9rEEV/yPxGfwPkRodwEgiMUUXTx/dex+Me0wxx53S+NgUHaP7y3MGlDmg==}
     dependencies:
-      string-width: 1.0.2
+      string-width: 4.2.3
     dev: false
 
   /widest-line@2.0.1:
@@ -73170,6 +73158,7 @@ packages:
       '@babel/core': 7.19.6
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/compilation.aspect-docs.babel': file:scopes/compilation/aspect-docs/babel(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/compilation.babel-compiler': 1.1.3
       '@teambit/compilation.modules.babel-compiler': file:scopes/compilation/modules/babel-compiler
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
