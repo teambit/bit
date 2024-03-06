@@ -122,12 +122,13 @@ export class TypescriptMain {
     const configMutator = new TypescriptConfigMutator(options);
     const transformerContext: TsConfigTransformContext = {};
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+    const afterMutationWithoutTsconfig = { ...afterMutation.raw, tsconfig: '' };
 
     return new TypescriptCompiler(
       TypescriptAspect.id,
       this.logger,
+      afterMutationWithoutTsconfig,
       afterMutation.raw.tsconfig,
-      afterMutation.raw,
       tsModule as any
     );
   }
