@@ -36,13 +36,18 @@ export function configFactory(target: Target, context: BundlerContext): Configur
   }
 
   if (Object.keys(truthyEntries).length > 0 && !Array.isArray(truthyEntries)) {
-    truthyEntries = Object.keys(truthyEntries).reduce((acc, entryKey) => {
-      if (entryKey.includes(SCOPES.API_REFERENCE)) {
+    truthyEntries = Object.keys(truthyEntries).reduce((acc, entryKey, entryKeyIndex) => {
+      if (entryKey.includes(SCOPES.API_REFERENCE) && entryKeyIndex < 30) {
         acc[entryKey] = truthyEntries[entryKey];
       }
       return acc;
     }, {});
   }
+
+  console.log(
+    '🚀 ~ file: webpack.config.ts:42 ~ truthyEntries=Object.keys ~ truthyEntries:',
+    Object.keys(truthyEntries).length
+  );
 
   // if(Object.keys(truthyEntries).length > 3) {
   //   const fileContent = Object.values(truthyEntries).reduce((acc, entryVal) => {
