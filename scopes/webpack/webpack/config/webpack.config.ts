@@ -36,12 +36,19 @@ export function configFactory(target: Target, context: BundlerContext): Configur
   }
 
   if (Object.keys(truthyEntries).length > 0 && !Array.isArray(truthyEntries)) {
-    truthyEntries = Object.keys(truthyEntries).reduce((acc, entryKey, entryKeyIndex) => {
-      if (entryKey.includes(SCOPES.API_REFERENCE) && entryKeyIndex < 30) {
+    truthyEntries = Object.keys(truthyEntries).reduce((acc, entryKey) => {
+      if (entryKey.includes(SCOPES.API_REFERENCE)) {
         acc[entryKey] = truthyEntries[entryKey];
       }
       return acc;
     }, {});
+
+    truthyEntries = Object.keys(truthyEntries)
+      .slice(0, 30)
+      .reduce((acc, entryKey) => {
+        acc[entryKey] = truthyEntries[entryKey];
+        return acc;
+      }, {});
   }
 
   console.log(
