@@ -282,13 +282,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/cli/webpack-events-listener"
     },
-    "cli/webpack/error": {
-        "name": "cli/webpack/error",
-        "scope": "teambit.compilation",
-        "version": "0.0.503",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/compilation/cli/webpack/error"
-    },
     "cloud": {
         "name": "cloud",
         "scope": "teambit.cloud",
