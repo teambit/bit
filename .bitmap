@@ -275,27 +275,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/tables/cli-table"
     },
-    "cli/preview-server-status": {
-        "name": "cli/preview-server-status",
-        "scope": "teambit.preview",
-        "version": "0.0.506",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/preview/cli/preview-server-status"
-    },
-    "cli/ui-server-console": {
-        "name": "cli/ui-server-console",
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.506",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/cli/ui-server-console"
-    },
-    "cli/ui-server-loader": {
-        "name": "cli/ui-server-loader",
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.504",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/cli/ui-server-loader"
-    },
     "cli/webpack-events-listener": {
         "name": "cli/webpack-events-listener",
         "scope": "teambit.preview",
