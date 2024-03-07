@@ -14,7 +14,6 @@ import { TaskSlot } from './builder.main.runtime';
 import { BuildContext, BuildTask, BuildTaskHelper } from './build-task';
 import { ArtifactFactory } from './artifact';
 import { calculatePipelineOrder } from './build-pipeline-order';
-import { BuilderAspect } from './builder.aspect';
 
 export type BuildServiceResults = {
   id: string;

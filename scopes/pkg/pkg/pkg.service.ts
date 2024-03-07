@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   EnvService,
   EnvDefinition,
@@ -8,8 +7,8 @@ import {
   GetNpmIgnoreContext,
 } from '@teambit/envs';
 import highlight from 'cli-highlight';
-import { PackageJsonProps } from './pkg.main.runtime';
 import chalk from 'chalk';
+import { PackageJsonProps } from './pkg.main.runtime';
 
 export type PkgDescriptor = {
   id: string;

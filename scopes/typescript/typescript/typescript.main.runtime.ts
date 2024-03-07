@@ -11,6 +11,7 @@ import type { Workspace } from '@teambit/workspace';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
+import { TypescriptCompiler } from '@teambit/typescript.typescript-compiler';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { WatcherAspect, WatcherMain, WatchOptions } from '@teambit/watcher';
 import type { Component, ComponentID } from '@teambit/component';
@@ -21,7 +22,6 @@ import { flatten } from 'lodash';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
-import { TypescriptCompiler } from './typescript.compiler';
 import { TypeScriptParser } from './typescript.parser';
 import { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
 import { SchemaTransformerPlugin } from './schema-transformer.plugin';
@@ -122,7 +122,15 @@ export class TypescriptMain {
     const configMutator = new TypescriptConfigMutator(options);
     const transformerContext: TsConfigTransformContext = {};
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
-    return new TypescriptCompiler(TypescriptAspect.id, this.logger, afterMutation.raw, tsModule);
+    const afterMutationWithoutTsconfig = { ...afterMutation.raw, tsconfig: '' };
+
+    return new TypescriptCompiler(
+      TypescriptAspect.id,
+      this.logger,
+      afterMutationWithoutTsconfig,
+      afterMutation.raw.tsconfig,
+      tsModule as any
+    );
   }
 
   /**

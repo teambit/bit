@@ -1,6 +1,6 @@
 export { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
 export { TypeScriptExtractor } from './typescript.extractor';
-export { TypescriptCompiler } from './typescript.compiler';
+export { TypescriptCompiler } from '@teambit/typescript.typescript-compiler';
 export type {
   TypescriptMain,
   TsConfigTransformer,
