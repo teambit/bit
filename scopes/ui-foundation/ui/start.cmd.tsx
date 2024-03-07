@@ -71,8 +71,6 @@ export class StartCmd implements Command {
     }: StartFlags
   ) {
     const spinnies = this.logger.multiSpinner;
-    // spinnies.add('spinner-1', { text: 'I am a spinner' });
-    // spinnies.add('spinner-2', { text: 'I am another spinner' });
 
     if (!this.ui.isHostAvailable()) {
       throw new BitError(
