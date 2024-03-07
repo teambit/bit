@@ -5,12 +5,7 @@ import { BitError } from '@teambit/bit-error';
 import { init } from '../../../api/consumer';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import { initScope } from '../../../api/scope';
-import {
-  BASE_DOCS_DOMAIN,
-  CFG_INIT_INTERACTIVE,
-  CFG_INIT_DEFAULT_SCOPE,
-  CFG_INIT_DEFAULT_DIRECTORY,
-} from '../../../constants';
+import { CFG_INIT_INTERACTIVE, CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '../../../constants';
 import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
 import { initInteractive } from '../../../interactive';
 import shouldShowInteractive from '../../../interactive/utils/should-show-interactive';
