@@ -50,12 +50,14 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     // );
 
     const origComponents = context.capsuleNetwork.originalSeedersCapsules.map((capsule) => capsule.component);
+    console.log('[origComponents]', origComponents);
 
     const entriesArr = await Promise.all(
       origComponents.map((component) => {
         return this.computeComponentEntry(previewDefs, component, context);
       }, {})
     );
+    console.log('[entriesArr]', entriesArr);
 
     const chunkSize = this.preview.config.maxChunkSize;
 
