@@ -10,6 +10,10 @@ export class Loader {
     return !!this.spinner;
   }
 
+  get isSpinning() {
+    return this.spinner?.isSpinning;
+  }
+
   on(): Loader {
     if (!this.spinner) {
       this.spinner = this.createNewSpinner();

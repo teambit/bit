@@ -14,7 +14,7 @@ import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
-import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
+import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { UIAspect, UiMain, BundleUiTask } from '@teambit/ui';
 import { Artifact, ArtifactList, FsArtifact } from './artifact';
