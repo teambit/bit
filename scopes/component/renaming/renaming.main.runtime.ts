@@ -200,7 +200,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       throw new OldScopeNotFound(oldScope);
     }
     if (this.workspace.defaultScope === oldScope) {
-      await this.workspace.setDefaultScope(newScope);
+      await this.workspace.setDefaultScope(newScope, false);
     }
     const multipleIds: RenameId[] = componentsUsingOldScope.map((compId) => {
       const targetId = ComponentID.fromObject({ name: compId.fullName }, newScope);
@@ -232,7 +232,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       ? this.renameOwnerInScopeName(oldWorkspaceDefaultScope, oldOwner, newOwner)
       : undefined;
     if (newWorkspaceDefaultScope) {
-      await this.workspace.setDefaultScope(newWorkspaceDefaultScope);
+      await this.workspace.setDefaultScope(newWorkspaceDefaultScope, false);
     }
     const multipleIds: RenameId[] = componentsUsingOldScope.map((compId) => {
       const newScope = this.renameOwnerInScopeName(compId.scope, oldOwner, newOwner);

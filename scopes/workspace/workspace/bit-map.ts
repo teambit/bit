@@ -72,6 +72,7 @@ export class BitMap {
       // only new components (not snapped/tagged) can be changed
       if (componentMap.defaultScope === oldScope && !componentMap.id.hasVersion()) {
         componentMap.defaultScope = newScope;
+        componentMap.id = componentMap.id.changeDefaultScope(newScope);
         changedId.push(componentMap.id);
       }
     });
@@ -194,10 +195,10 @@ export class BitMap {
     if (sourceId.fullName !== targetId.fullName) {
       this.legacyBitMap.removeComponent(bitMapEntry.id);
       bitMapEntry.id = targetId;
+      if (sourceId.scope !== targetId.scope) bitMapEntry.defaultScope = targetId.scope;
       this.legacyBitMap.setComponent(bitMapEntry.id, bitMapEntry);
-    }
-    if (sourceId.scope !== targetId.scope) {
-      this.setDefaultScope(targetId, targetId.scope);
+    } else if (sourceId.scope !== targetId.scope) {
+      this.setDefaultScope(sourceId, targetId.scope);
     }
   }
 
