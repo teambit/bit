@@ -5,12 +5,7 @@ import { BitError } from '@teambit/bit-error';
 import { init } from '../../../api/consumer';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import { initScope } from '../../../api/scope';
-import {
-  BASE_DOCS_DOMAIN,
-  CFG_INIT_INTERACTIVE,
-  CFG_INIT_DEFAULT_SCOPE,
-  CFG_INIT_DEFAULT_DIRECTORY,
-} from '../../../constants';
+import { CFG_INIT_INTERACTIVE, CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '../../../constants';
 import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
 import { initInteractive } from '../../../interactive';
 import shouldShowInteractive from '../../../interactive/utils/should-show-interactive';
@@ -24,7 +19,8 @@ export default class Init implements LegacyCommand {
   description = 'create or reinitialize an empty workspace';
   helpUrl = 'reference/workspace/creating-workspaces/?new_existing_project=1';
   group: Group = 'start';
-  extendedDescription = `${BASE_DOCS_DOMAIN}workspace/creating-workspaces#initialize-a-workspace-on-an-existing-project`;
+  extendedDescription =
+    'if the current directory is already a workspace, it validates that bit files are correct and rewrite them if needed.';
   alias = '';
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
