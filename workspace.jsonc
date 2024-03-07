@@ -654,7 +654,7 @@
             "buffer": "6.0.3",
             "process": "0.11.10",
             "react-router-dom": "6.3.0",
-            "typescript": "4.7.4"
+            "typescript": "5.3.3"
           },
           "devDependencies": {
             // "@types/react": "-",

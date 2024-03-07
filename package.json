@@ -296,7 +296,7 @@
     "sinon": "17.0.1",
     "tar": "6.1.11",
     "type-coverage": "2.15.1",
-    "typescript": "4.7.4"
+    "typescript": "5.3.3"
   },
   "pnpm": {
     "neverBuiltDependencies": [
