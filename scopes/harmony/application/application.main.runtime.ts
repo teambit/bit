@@ -305,7 +305,15 @@ export class ApplicationMain {
     return this;
   }
 
-  async runApp(appName: string, options?: ServeAppOptions) {
+  async runApp(
+    appName: string,
+    options?: ServeAppOptions
+  ): Promise<{
+    app: Application;
+    port: number | undefined;
+    errors?: Error[];
+    isOldApi: boolean;
+  }> {
     options = this.computeOptions(options);
     const app = this.getAppOrThrow(appName);
     const context = await this.createAppContext(app.name, options.port);
