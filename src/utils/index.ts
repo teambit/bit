@@ -3,7 +3,6 @@ import sha1 from './encryption/sha1';
 import * as eol from './eol';
 import writeFile from './fs-write-file';
 import { checksum, checksumFile } from './checksum';
-import createSymlinkOrCopy from './fs/create-symlink-or-copy';
 import getWithoutExt from './fs/fs-no-ext';
 import getExt from './fs/get-ext';
 import isDirEmpty from './fs/is-dir-empty';
@@ -63,7 +62,6 @@ export {
   cleanObject,
   readDirIgnoreDsStore,
   readDirSyncIgnoreDsStore,
-  createSymlinkOrCopy,
   cleanBang,
   prependBang,
   isBitUrl,

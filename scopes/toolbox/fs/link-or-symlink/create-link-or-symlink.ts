@@ -1,37 +1,39 @@
 import fs from 'fs-extra';
+import { platform } from 'os';
 import fsNative from 'fs';
 import { BitError } from '@teambit/bit-error';
 import * as path from 'path';
-import { IS_WINDOWS } from '../../constants';
-import logger from '../../logger/logger';
-import { PathOsBased } from '../path';
+import logger from '@teambit/legacy/dist/logger/logger';
 
 /**
- * @param srcPath the path where the symlink is pointing to
- * @param destPath the path where to write the symlink
- * @param componentId
+ * create a link (hard-link). if not possible (e.g. it's a directory) or avoidHardLink is true, use symlink.
+ * on Windows, if symlink is not possible (permissions issue), use junction.
+ *
+ * @param srcPath the path where the symlink is pointing to (OS based format)
+ * @param destPath the path where to write the symlink (OS based format)
+ * @param componentId optional, for error message.
  */
-export default function createSymlinkOrCopy(
-  srcPath: PathOsBased,
-  destPath: PathOsBased,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  componentId?: string | null | undefined = '',
+export function createLinkOrSymlink(
+  srcPath: string,
+  destPath: string,
+  componentId = '',
   avoidHardLink = false,
   skipIfSymlinkValid = false
 ) {
   if (skipIfSymlinkValid && fs.existsSync(destPath)) {
     const realDestination = fs.realpathSync(destPath);
     if (realDestination === srcPath || linkPointsToPath(destPath, srcPath)) {
-      logger.trace(`createSymlinkOrCopy, skip creating symlink, it already exists on ${destPath}`);
+      logger.trace(`createLinkOrSymlink, skip creating symlink, it already exists on ${destPath}`);
       return;
     }
   }
-  logger.trace(`createSymlinkOrCopy, deleting ${destPath}`);
+  const IS_WINDOWS = platform() === 'win32';
+  logger.trace(`createLinkOrSymlink, deleting ${destPath}`);
   fs.removeSync(destPath); // in case a symlink already generated or when linking a component, when a component has been moved
   fs.ensureDirSync(path.dirname(destPath));
   try {
     logger.trace(
-      `createSymlinkOrCopy, generating a symlink on ${destPath} pointing to ${srcPath}, avoidHardLink=${avoidHardLink}`
+      `createLinkOrSymlink, generating a symlink on ${destPath} pointing to ${srcPath}, avoidHardLink=${avoidHardLink}`
     );
     if (avoidHardLink) symlink();
     else link();
@@ -54,7 +56,7 @@ Original error: ${err}`);
   function symlinkOrHardLink() {
     try {
       fs.symlinkSync(srcPath, destPath);
-      logger.trace(`createSymlinkOrCopy, symlinkOrHardLink() successfully created the symlink`);
+      logger.trace(`createLinkOrSymlink, symlinkOrHardLink() successfully created the symlink`);
     } catch (err: any) {
       // it can be a file or directory, we don't know. just run link(), it will junction for dirs and hard-link for files.
       link();
@@ -62,13 +64,13 @@ Original error: ${err}`);
   }
 
   function link() {
-    logger.trace(`createSymlinkOrCopy, link()`);
+    logger.trace(`createLinkOrSymlink, link()`);
     try {
       hardLinkOrJunctionByFsExtra(srcPath);
-      logger.trace(`createSymlinkOrCopy, link() successfully created the link`);
+      logger.trace(`createLinkOrSymlink, link() successfully created the link`);
     } catch (err: any) {
       if (err.code === 'EXDEV') {
-        logger.trace(`createSymlinkOrCopy, link() found EXDEV error, trying fs native`);
+        logger.trace(`createLinkOrSymlink, link() found EXDEV error, trying fs native`);
         // this is docker, which for some weird reason, throw error: "EXDEV: cross-device link not permitted"
         // only when using fs-extra. it doesn't happen with "fs".
         hardLinkOrJunctionByFsNative(srcPath);
@@ -82,7 +84,7 @@ Original error: ${err}`);
       }
       // the src is a relative-path of the dest, not of the cwd, that's why it got ENOENT
       if (IS_WINDOWS) {
-        logger.trace(`createSymlinkOrCopy, link() changing the path to be absolute on Windows`);
+        logger.trace(`createLinkOrSymlink, link() changing the path to be absolute on Windows`);
         const srcAbsolute = path.join(destPath, '..', srcPath);
         hardLinkOrJunctionByFsExtra(srcAbsolute);
         return;
@@ -92,12 +94,12 @@ Original error: ${err}`);
     }
   }
 
-  function hardLinkOrJunctionByFsExtra(src: PathOsBased) {
+  function hardLinkOrJunctionByFsExtra(src: string) {
     try {
       fs.linkSync(src, destPath);
     } catch (err: any) {
       if (err.code === 'EPERM') {
-        logger.trace(`createSymlinkOrCopy, hardLinkOrJunctionByFsExtra() using Junction option`);
+        logger.trace(`createLinkOrSymlink, hardLinkOrJunctionByFsExtra() using Junction option`);
         // it's a directory. use 'junction', it works on both Linux and Win
         fs.symlinkSync(srcPath, destPath, 'junction');
       } else {
@@ -106,12 +108,12 @@ Original error: ${err}`);
     }
   }
 
-  function hardLinkOrJunctionByFsNative(src: PathOsBased) {
+  function hardLinkOrJunctionByFsNative(src: string) {
     try {
       fsNative.linkSync(src, destPath);
     } catch (err: any) {
       if (err.code === 'EPERM' || err.code === 'EXDEV') {
-        logger.trace(`createSymlinkOrCopy, hardLinkOrJunctionByFsNative() using Junction option`);
+        logger.trace(`createLinkOrSymlink, hardLinkOrJunctionByFsNative() using Junction option`);
         // it's a directory. use 'junction', it works on both Linux and Win
         fsNative.symlinkSync(srcPath, destPath, 'junction');
       } else {
