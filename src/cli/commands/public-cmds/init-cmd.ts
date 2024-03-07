@@ -24,7 +24,8 @@ export default class Init implements LegacyCommand {
   description = 'create or reinitialize an empty workspace';
   helpUrl = 'reference/workspace/creating-workspaces/?new_existing_project=1';
   group: Group = 'start';
-  extendedDescription = `${BASE_DOCS_DOMAIN}workspace/creating-workspaces#initialize-a-workspace-on-an-existing-project`;
+  extendedDescription =
+    'if the current directory is already a workspace, it validates that bit files are correct and rewrite them if needed.';
   alias = '';
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],

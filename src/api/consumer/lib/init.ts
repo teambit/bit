@@ -8,7 +8,7 @@ import { findScopePath, isDirEmpty } from '../../../utils';
 import ObjectsWithoutConsumer from './exceptions/objects-without-consumer';
 
 export default async function init(
-  absPath: string = process.cwd(),
+  absPath?: string,
   noGit = false,
   noPackageJson = false,
   reset = false,
@@ -17,10 +17,26 @@ export default async function init(
   resetHard = false,
   resetScope = false,
   force = false,
-  workspaceConfigProps: WorkspaceConfigProps
+  workspaceConfigProps: WorkspaceConfigProps = {}
 ): Promise<Consumer> {
-  const consumerInfo = await getConsumerInfo(absPath);
-  const consumerPath = consumerInfo?.path || absPath;
+  const consumerInfo = await getConsumerInfo(absPath || process.cwd());
+  // if "bit init" was running without any flags, the user is probably trying to init a new workspace but wasn't aware
+  // that he's already in a workspace.
+  if (
+    !absPath &&
+    consumerInfo?.path &&
+    consumerInfo.path !== process.cwd() &&
+    !reset &&
+    !resetHard &&
+    !resetScope &&
+    !resetNew &&
+    !resetLaneNew
+  ) {
+    throw new Error(
+      `error: unable to init a new workspace in an inner directory of an existing workspace at "${consumerInfo.path}"`
+    );
+  }
+  const consumerPath = consumerInfo?.path || absPath || process.cwd();
 
   if (reset || resetHard) {
     await Consumer.reset(consumerPath, resetHard, noGit);
