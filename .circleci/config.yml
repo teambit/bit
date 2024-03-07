@@ -285,3 +285,5 @@ workflows:
             - set_npm_registries
             - checkout_code
       - bit_build:
+          requires:
+            - setup_harmony
