@@ -66,7 +66,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     const peers = await this.dependencyResolver.getPreviewHostDependenciesFromEnv(context.envDefinition.env);
 
     const halfLength = Math.floor(chunks.length / 2);
-    const targets = chunks.slice(0, halfLength).map((currentChunk) => {
+    const targets = chunks.slice(halfLength).map((currentChunk) => {
       const entries: BundlerEntryMap = {};
       const components: Component[] = [];
       currentChunk.forEach((entry) => {
@@ -75,7 +75,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       });
 
       // eslint-disable-next-line no-console
-      console.log('[entries]', halfLength, JSON.stringify(entries, null, 2));
+      console.log('[entries]', halfLength, chunks.length, JSON.stringify(entries, null, 2));
 
       return {
         entries,
