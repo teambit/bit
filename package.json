@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.662",
+  "version": "1.0.663",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -167,8 +167,6 @@
     "graphviz": "0.0.9",
     "group-array": "1.0.0",
     "ignore": "3.3.10",
-    "ink": "3.2.0",
-    "ink-spinner": "4.0.3",
     "inquirer": "6.5.2",
     "inquirer-fuzzy-path": "2.3.0",
     "is-glob": "4.0.1",

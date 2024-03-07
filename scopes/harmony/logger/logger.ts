@@ -1,3 +1,4 @@
+import Spinnies from 'dreidels';
 import loader from '@teambit/legacy/dist/cli/loader';
 import logger, { IBitLogger } from '@teambit/legacy/dist/logger/logger';
 import chalk from 'chalk';
@@ -5,6 +6,7 @@ import { platform } from 'os';
 import { ConsoleOnStart, LongProcessLogger } from './long-process-logger';
 
 export class Logger implements IBitLogger {
+  spinnies = new Spinnies();
   constructor(private extensionName: string) {}
 
   trace(message: string, ...meta: any[]) {
@@ -29,6 +31,15 @@ export class Logger implements IBitLogger {
   get isLoaderStarted() {
     return loader.isStarted;
   }
+
+  get isSpinning() {
+    return loader.isSpinning;
+  }
+
+  get multiSpinner() {
+    return this.spinnies;
+  }
+
   /**
    * use it for a long running process. upon creation it logs the `processDescription`.
    * if the process involves iteration over a list of items, such as running tag on a list of
