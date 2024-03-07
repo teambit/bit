@@ -97,15 +97,16 @@ export class StartCmd implements Command {
     uiServer
       .then(async (server) => {
         if (!server.buildOptions?.launchBrowserOnStart) return undefined;
+        const url = this.ui.publicUrl || server.fullUrl;
 
-        spinnies.succeed('ui-server', { text: 'UI server is ready' });
+        spinnies.succeed('ui-server', { text: `UI server is ready at ${chalk.cyan(url)}` });
         await server.whenReady;
         const name = server.getName();
         const message = chalk.green(`You can now view '${chalk.cyan(name)}' components in the browser.
-Bit server is running on ${chalk.cyan(this.ui.publicUrl || server.fullUrl)}`);
+Bit server is running on ${chalk.cyan(url)}`);
         spinnies.add('summary', { text: message, status: 'non-spinnable' });
         if (!noBrowser) {
-          openBrowser(this.ui.publicUrl || server.fullUrl);
+          openBrowser(url);
         }
         return undefined;
       })

@@ -108,11 +108,16 @@ export class PreviewStartPlugin implements StartPlugin {
     };
     const previewServer = this.serversMap[id];
     const spinnerId = getSpinnerId(id);
-    const hasErrors = !!(results.errors && results.errors.length);
+    const errors = results.errors || [];
+    const hasErrors = !!errors.length;
+    const warnings = getWarningsWithoutIgnored(results.warnings);
+    const hasWarnings = !!warnings.length;
     const url = `http://localhost:${previewServer.port}`;
-    const text = getSpinnerDoneMessage(this.serversMap[id], hasErrors, url);
+    const text = getSpinnerDoneMessage(this.serversMap[id], errors, warnings, url);
     if (hasErrors) {
       this.logger.multiSpinner.fail(spinnerId, { text });
+    } else if (hasWarnings) {
+      this.logger.multiSpinner.warn(spinnerId, { text });
     } else {
       this.logger.multiSpinner.succeed(spinnerId, { text });
     }
@@ -126,6 +131,21 @@ export class PreviewStartPlugin implements StartPlugin {
   get whenReady(): Promise<void> {
     return this.readyPromise;
   }
+}
+
+function getWarningsWithoutIgnored(warnings?: Error[]): Error[] {
+  if (!warnings || !warnings.length) return [];
+  const IGNORE_WARNINGS = [
+    // Webpack 5+ has no facility to disable this warning.
+    // System.import is used in @angular/core for deprecated string-form lazy routes
+    /System.import\(\) is deprecated and will be removed soon/i,
+    // We need to include all the files in the compilation because we don't know what people will use in their compositions
+    /is part of the TypeScript compilation but it's unused/i,
+    // https://github.com/webpack-contrib/source-map-loader/blob/b2de4249c7431dd8432da607e08f0f65e9d64219/src/index.js#L83
+    /Failed to parse source map from/,
+  ];
+  warnings.filter((warning) => !IGNORE_WARNINGS.find((reg) => warning?.message?.match(reg)));
+  return warnings;
 }
 
 function getSpinnerId(envId: string) {
@@ -142,15 +162,28 @@ function getSpinnerCompilingMessage(server: ComponentServer, verbose = false) {
   return `${prefix} ${envId} ${includedEnvs}`;
 }
 
-function getSpinnerDoneMessage(server: ComponentServer, hasErrors: boolean, url: string, verbose = false) {
+function getSpinnerDoneMessage(
+  server: ComponentServer,
+  errors: Error[],
+  warnings: Error[],
+  url: string,
+  verbose = false
+) {
+  const hasErrors = !!errors.length;
+  const hasWarnings = !!warnings.length;
   const prefix = hasErrors ? 'FAILED' : 'RUNNING';
   const envId = chalk.cyan(server.context.envRuntime.id);
   let includedEnvs = '';
   if (server.context.relatedContexts && server.context.relatedContexts.length > 1) {
     includedEnvs = `on behalf of ${chalk.cyan(stringifyIncludedEnvs(server.context.relatedContexts, verbose))}`;
   }
+  const errorsTxt = hasErrors ? errors.map((err) => err.message).join('\n') : '';
+  const errorsTxtWithTitle = hasErrors ? chalk.red(`\nErrors:\n${errorsTxt}`) : '';
+  const warningsTxt = hasWarnings ? warnings.map((warning) => warning.message).join('\n') : '';
+  const warningsTxtWithTitle = hasWarnings ? chalk.yellow(`\nWarnings:\n${warningsTxt}`) : '';
+
   const urlMessage = hasErrors ? '' : `at ${chalk.cyan(url)}`;
-  return `${prefix} ${envId} ${includedEnvs} ${urlMessage}`;
+  return `${prefix} ${envId} ${includedEnvs} ${urlMessage} ${errorsTxtWithTitle} ${warningsTxtWithTitle}`;
 }
 
 function stringifyIncludedEnvs(includedEnvs: string[] = [], verbose = false) {
