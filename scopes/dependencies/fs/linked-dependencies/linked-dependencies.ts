@@ -1,8 +1,8 @@
 import path from 'path';
-import { createSymlinkOrCopy } from '@teambit/legacy/dist/utils';
+import { createLinkOrSymlink } from '@teambit/toolbox.fs.link-or-symlink';
 
 type CreateLinksOpts = {
-  componentId?: string | null | undefined;
+  componentId?: string;
   avoidHardLink?: boolean;
   skipIfSymlinkValid?: boolean;
 };
@@ -11,7 +11,7 @@ export async function createLinks(rootDir: string, linkedDeps: Record<string, st
   const modulesDir = path.join(rootDir, 'node_modules');
   await Promise.all(
     Object.entries(linkedDeps).map(([packageName, linkPath]) =>
-      createSymlinkOrCopy(
+      createLinkOrSymlink(
         linkPath.substring(5),
         path.join(modulesDir, packageName),
         opts.componentId,

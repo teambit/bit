@@ -110,8 +110,9 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.command.init('--force');
       scopeOutOfSync = helper.scopeHelper.cloneLocalScope();
     });
-    // @TODO: FIX ON HARMONY!
-    // it should not show the component as staged because it is not in the bitmap.
+    // @todo: decide what needs to be done. currently, bit-status shows it as staged.
+    // the reason we don't blindly filter out components that are not in the bitmap is because the "delete"
+    // (soft-remove) feature, which snaps/tags after the component is deleted from the file-system.
     describe.skip('bit status', () => {
       let output;
       before(() => {
@@ -129,10 +130,7 @@ describe('components that are not synced between the scope and the consumer', fu
         expect(showFunc).to.not.throw();
       });
     });
-    // @TODO: FIX ON HARMONY!
-    // currently it throws MissingBitMapComponent because the component is not in the bitmap and is staged.
-    // it should probably show "nothing to export"
-    describe.skip('bit export all', () => {
+    describe('bit export all', () => {
       let output;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeOutOfSync);

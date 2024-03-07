@@ -194,7 +194,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     newScope: string,
     options: { refactor?: boolean; deprecate?: boolean } = {}
   ): Promise<RenameResult> {
-    const allComponentsIds = await this.workspace.listIds();
+    const allComponentsIds = this.workspace.listIds();
     const componentsUsingOldScope = allComponentsIds.filter((compId) => compId.scope === oldScope);
     if (!componentsUsingOldScope.length && this.workspace.defaultScope !== oldScope) {
       throw new OldScopeNotFound(oldScope);
@@ -222,7 +222,7 @@ make sure this argument is the name only, without the scope-name. to change the 
   ): Promise<RenameResult> {
     const isScopeUsesOldOwner = (scope: string) => scope.startsWith(`${oldOwner}.`);
 
-    const allComponentsIds = await this.workspace.listIds();
+    const allComponentsIds = this.workspace.listIds();
     const componentsUsingOldScope = allComponentsIds.filter((compId) => isScopeUsesOldOwner(compId.scope));
     if (!componentsUsingOldScope.length && !isScopeUsesOldOwner(this.workspace.defaultScope)) {
       throw new OldScopeNotFound(oldOwner);

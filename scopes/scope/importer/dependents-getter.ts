@@ -25,7 +25,7 @@ export class DependentsGetter {
     this.logger.setStatusLine('finding dependents');
     const { silent } = this.options;
     const graph = await this.graph.getGraphIds();
-    const sourceIds = await this.workspace.listIds();
+    const sourceIds = this.workspace.listIds();
     const getIdsForThrough = () => {
       if (!this.options.dependentsVia) return undefined;
       return this.options.dependentsVia

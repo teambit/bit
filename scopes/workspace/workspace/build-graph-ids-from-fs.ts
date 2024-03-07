@@ -79,7 +79,7 @@ export class GraphIdsFromFsBuilder {
    * once a component from scope is imported, we know that either we have its dependency graph or all flattened deps
    */
   private async importObjects(components: Component[]) {
-    const workspaceIds = await this.workspace.listIds();
+    const workspaceIds = this.workspace.listIds();
     const compOnWorkspaceOnly = components.filter((comp) => workspaceIds.find((id) => id.isEqual(comp.id)));
     const notImported = compOnWorkspaceOnly.map((c) => c.id).filter((id) => !this.importedIds.includes(id.toString()));
     const exportedDeps = notImported.filter((dep) => this.workspace.isExported(dep));
@@ -136,7 +136,7 @@ export class GraphIdsFromFsBuilder {
     component: Component
   ): Promise<Component[]> {
     const deps = await this.dependencyResolver.getComponentDependencies(component);
-    const workspaceIds = await this.workspace.listIds();
+    const workspaceIds = this.workspace.listIds();
     const [depsInScopeGraph, depsNotInScopeGraph] = partition(
       deps,
       (dep) =>

@@ -89,7 +89,7 @@ export class APIForIDE {
   }
 
   async listIdsWithPaths() {
-    const ids = await this.workspace.listIds();
+    const ids = this.workspace.listIds();
     return ids.reduce((acc, id) => {
       acc[id.toStringWithoutVersion()] = this.workspace.componentDir(id);
       return acc;
@@ -262,6 +262,7 @@ export class APIForIDE {
   }
   async clearCache() {
     await this.workspace.clearCache();
+    this.workspace.clearAllComponentsCache();
   }
 
   async install(options = {}) {
@@ -357,7 +358,7 @@ export class APIForIDE {
   }
 
   async getDataToInitSCM(): Promise<DataToInitSCM> {
-    const ids = await this.workspace.listIds();
+    const ids = this.workspace.listIds();
     const results: DataToInitSCM = {};
     await pMap(
       ids,
@@ -384,7 +385,7 @@ export class APIForIDE {
   }
 
   async getCompFilesDirPathFromLastSnapForAllComps(): Promise<{ [relativePath: string]: string }> {
-    const ids = await this.workspace.listIds();
+    const ids = this.workspace.listIds();
     let results = {};
     await pMap(
       ids,

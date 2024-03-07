@@ -154,7 +154,7 @@ export interface ComponentFactory {
    */
   listInvalid(): Promise<InvalidComponent[]>;
 
-  listIds(): Promise<ComponentID[]>;
+  listIds(): Promise<ComponentID[]> | ComponentID[];
 
   /**
    * get component-ids matching the given pattern. a pattern can have multiple patterns separated by a comma.

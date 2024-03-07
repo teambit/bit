@@ -59,11 +59,15 @@ export default class Repository {
 
   static async load({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
     const repository = new Repository(scopePath, scopeJson);
-    const scopeIndex = await repository.loadOptionallyCreateScopeIndex();
-    repository.scopeIndex = scopeIndex;
-    repository.remoteLanes = new RemoteLanes(scopePath);
-    repository.unmergedComponents = await UnmergedComponents.load(scopePath);
+    await repository.init();
     return repository;
+  }
+
+  async init() {
+    const scopeIndex = await this.loadOptionallyCreateScopeIndex();
+    this.scopeIndex = scopeIndex;
+    this.remoteLanes = new RemoteLanes(this.scopePath);
+    this.unmergedComponents = await UnmergedComponents.load(this.scopePath);
   }
 
   static async create({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
@@ -432,7 +436,7 @@ export default class Repository {
   async clearCache() {
     logger.debug('repository.clearCache');
     this.cache.deleteAll();
-    await this.reLoadScopeIndex();
+    await this.init();
   }
   clearObjectsFromCache() {
     logger.debug('repository.clearObjectsFromCache');

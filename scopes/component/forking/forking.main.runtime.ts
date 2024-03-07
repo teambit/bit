@@ -203,7 +203,7 @@ export class ForkingMain {
     const idsFromOriginalScope = patternWithScopeName
       ? await this.workspace.scope.filterIdsFromPoolIdsByPattern(patternWithScopeName, allIdsFromOriginalScope)
       : allIdsFromOriginalScope;
-    const workspaceIds = await this.workspace.listIds();
+    const workspaceIds = this.workspace.listIds();
     const workspaceBitIds = ComponentIdList.fromArray(workspaceIds.map((id) => id));
     idsFromOriginalScope.forEach((id) => {
       const existInWorkspace = workspaceBitIds.searchWithoutVersion(id);

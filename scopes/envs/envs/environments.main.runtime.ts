@@ -13,7 +13,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { BitError } from '@teambit/bit-error';
-import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
+import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { head, uniq } from 'lodash';
 import { WorkerAspect, WorkerMain } from '@teambit/worker';
 import { ComponentID } from '@teambit/component-id';

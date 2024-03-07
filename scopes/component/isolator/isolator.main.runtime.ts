@@ -614,6 +614,8 @@ export class IsolatorMain {
     const allCapsuleList = CapsuleList.fromArray(capsules);
     let capsuleList = allCapsuleList;
     if (opts.getExistingAsIs) {
+      longProcessLogger?.end();
+
       return capsuleList;
     }
 
@@ -623,7 +625,10 @@ export class IsolatorMain {
           capsuleList.filter((capsule) => capsule.fs.existsSync('package.json'))
         );
 
-        if (existingCapsules.length === capsuleList.length) return existingCapsules;
+        if (existingCapsules.length === capsuleList.length) {
+          longProcessLogger?.end();
+          return existingCapsules;
+        }
       } else {
         capsules = capsules.filter((capsule) => !capsule.fs.existsSync('package.json'));
         capsuleList = CapsuleList.fromArray(capsules);
@@ -704,9 +709,11 @@ export class IsolatorMain {
       capsuleWithPackageData.capsule.fs.writeFileSync(PACKAGE_JSON, JSON.stringify(currentPackageJson, null, 2));
     });
     await this.markCapsulesAsReady(capsuleList);
+    if (longProcessLogger) {
+      longProcessLogger.end();
+    }
     // Only show this message if at least one new capsule created
     if (longProcessLogger && capsuleList.length) {
-      longProcessLogger.end();
       // this.logger.consoleSuccess();
       const capsuleListOutput = allCapsuleList.map((capsule) => capsule.component.id.toString()).join(', ');
       this.logger.consoleSuccess(`resolved aspect(s): ${chalk.cyan(capsuleListOutput)}`);

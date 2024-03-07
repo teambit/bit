@@ -49,7 +49,7 @@ import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
 import { ComponentsHaveIssues } from './components-have-issues';
 import ResetCmd from './reset-cmd';
-import { tagModelComponent, updateComponentsVersions, BasicTagParams } from './tag-model-component';
+import { tagModelComponent, updateComponentsVersions, BasicTagParams, BasicTagSnapParams } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
 import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
@@ -150,6 +150,7 @@ export class SnappingMain {
     ignoreIssues,
     ignoreNewestVersion = false,
     skipTests = false,
+    skipTasks,
     skipAutoTag = false,
     build,
     unmodified = false,
@@ -221,6 +222,7 @@ export class SnappingMain {
         preReleaseId,
         ignoreNewestVersion,
         skipTests,
+        skipTasks,
         skipAutoTag,
         soft,
         build,
@@ -260,6 +262,7 @@ export class SnappingMain {
       releaseType?: ReleaseType;
       ignoreIssues?: string;
       incrementBy?: number;
+      rebuildArtifacts?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<TagResults | null> {
     if (this.workspace) {
@@ -330,7 +333,7 @@ if you're willing to lose the history from the head to the specified version, us
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     const shouldUsePopulateArtifactsFrom = components.every((comp) => {
       if (!comp.buildStatus) throw new Error(`tag-from-scope expect ${comp.id.toString()} to have buildStatus`);
-      return comp.buildStatus === BuildStatus.Succeed;
+      return comp.buildStatus === BuildStatus.Succeed && !params.rebuildArtifacts;
     });
     const legacyIds = ComponentIdList.fromArray(componentIds.map((id) => id));
     const results = await tagModelComponent({
@@ -544,6 +547,7 @@ if you're willing to lose the history from the head to the specified version, us
     message = '',
     ignoreIssues,
     skipTests = false,
+    skipTasks,
     skipAutoSnap = false,
     build,
     disableTagAndSnapPipelines = false,
@@ -551,19 +555,14 @@ if you're willing to lose the history from the head to the specified version, us
     rebuildDepsGraph,
     unmodified = false,
     exitOnFirstFailedTask = false,
-  }: {
+  }: Partial<BasicTagSnapParams> & {
     pattern?: string;
     legacyBitIds?: ComponentIdList;
     unmerged?: boolean;
     editor?: string;
-    message?: string;
     ignoreIssues?: string;
-    build: boolean;
-    skipTests?: boolean;
     skipAutoSnap?: boolean;
     disableTagAndSnapPipelines?: boolean;
-    ignoreBuildErrors?: boolean;
-    rebuildDepsGraph?: boolean;
     unmodified?: boolean;
     exitOnFirstFailedTask?: boolean;
   }): Promise<SnapResults | null> {
@@ -590,6 +589,7 @@ if you're willing to lose the history from the head to the specified version, us
       ignoreNewestVersion: false,
       message,
       skipTests,
+      skipTasks,
       skipAutoTag: skipAutoSnap,
       persist: true,
       soft: false,

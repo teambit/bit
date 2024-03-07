@@ -1,9 +1,5 @@
-import React from 'react';
-import pluralize from 'pluralize';
 import { Command, CommandOptions } from '@teambit/cli';
-import { Newline, Text } from 'ink';
 import { Logger } from '@teambit/logger';
-import type { RenderResult } from '@teambit/legacy/dist/cli/command';
 import { ApplicationMain } from './application.main.runtime';
 
 type RunOptions = {
@@ -45,10 +41,7 @@ export class RunCmd implements Command {
     private logger: Logger
   ) {}
 
-  async render(
-    [appName]: [string],
-    { dev, watch, ssr, port: exactPort }: RunOptions
-  ): Promise<React.ReactElement | RenderResult> {
+  async wait([appName]: [string], { dev, watch, ssr, port: exactPort }: RunOptions) {
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
     this.logger.off();
     const { port, errors, isOldApi } = await this.application.runApp(appName, {
@@ -59,32 +52,14 @@ export class RunCmd implements Command {
     });
 
     if (errors) {
-      return {
-        code: 1,
-        data: <ShowErrors errors={errors} />,
-      };
+      const errStr =
+        errors && errors.length ? errors.map((err) => err.toString()).join('\n') : 'unknown error occurred';
+      this.logger.console(errStr);
+      process.exit(1);
     }
 
     if (isOldApi) {
-      return (
-        <Text>
-          {appName} app is running on http://localhost:{port}
-        </Text>
-      );
+      this.logger.console(`${appName} app is running on http://localhost:${port}`);
     }
-
-    return <></>;
   }
-}
-
-function ShowErrors({ errors }: { errors: Error[] }) {
-  return (
-    <>
-      <Newline />
-      <Text underline>Fatal {pluralize('error', errors.length)}:</Text>
-      {errors.map((x, idx) => (
-        <Text key={idx}>{x.toString()}</Text>
-      ))}
-    </>
-  );
 }

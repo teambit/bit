@@ -51,6 +51,12 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
     ['', 'snapped', 'tag only components whose head is a snap (not a tag)'],
     ['', 'unmerged', 'complete a merge process by tagging the unmerged components'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
+    [
+      '',
+      'skip-tasks <string>',
+      `skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes.
+specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)`,
+    ],
     ['', 'skip-auto-tag', 'skip auto tagging dependents'],
     ['', 'soft', 'do not persist. only keep note of the changes to be made'],
     [
@@ -109,6 +115,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       ignoreIssues,
       ignoreNewestVersion = false,
       skipTests = false,
+      skipTasks,
       skipAutoTag = false,
       unmodified = false,
       build,
@@ -211,6 +218,7 @@ To undo local tag use the "bit reset" command.`
       ignoreIssues,
       ignoreNewestVersion,
       skipTests,
+      skipTasks,
       skipAutoTag,
       build,
       soft,

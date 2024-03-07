@@ -1,12 +1,10 @@
 import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy/dist/constants';
 import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
-import React from 'react';
 import chalk from 'chalk';
 import { uniq } from 'lodash';
 import { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { GlobalConfigMain } from '@teambit/global-config';
-import { Text, Newline } from 'ink';
 import { Logger } from '@teambit/logger';
 import { IsolatorMain } from '@teambit/isolator';
 import { Component, ComponentID } from '@teambit/component';
@@ -16,7 +14,6 @@ import { TaskSlot } from './builder.main.runtime';
 import { BuildContext, BuildTask, BuildTaskHelper } from './build-task';
 import { ArtifactFactory } from './artifact';
 import { calculatePipelineOrder } from './build-pipeline-order';
-import { BuilderAspect } from './builder.aspect';
 
 export type BuildServiceResults = {
   id: string;
@@ -30,6 +27,7 @@ export type BuilderServiceOptions = {
   originalSeeders?: ComponentID[];
   tasks?: string[];
   skipTests?: boolean;
+  skipTasks?: string[];
   previousTasksResults?: TaskResults[];
   dev?: boolean;
   exitOnFirstFailedTask?: boolean;
@@ -98,7 +96,8 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
       envs,
       this.pipeNameOnEnv,
       options.tasks,
-      options.skipTests
+      options.skipTests,
+      options.skipTasks
     );
     tasksQueue.validate();
     this.logger.info(`going to run tasks in the following order:\n${tasksQueue.toString()}`);
@@ -162,14 +161,7 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
 
   render() {
     const descriptor = this.getDescriptor();
-
-    return (
-      <Text key={BuilderAspect.id}>
-        {descriptor}
-        <Newline />
-        <Newline />
-      </Text>
-    );
+    return descriptor;
   }
 
   transform(env: Env, envContext: EnvContext): BuilderTransformationMap | undefined {
