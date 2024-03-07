@@ -1,6 +1,5 @@
-import { render } from 'ink';
 import logger, { LoggerLevel } from '@teambit/legacy/dist/logger/logger';
-import { CLIArgs, Command, Flags, RenderResult } from '@teambit/legacy/dist/cli/command';
+import { CLIArgs, Command, Flags } from '@teambit/legacy/dist/cli/command';
 import { parseCommandName } from '@teambit/legacy/dist/cli/command-registry';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
@@ -23,9 +22,6 @@ export class CommandRunner {
       this.determineConsoleWritingDuringCommand();
       if (this.flags.json) {
         return await this.runJsonHandler();
-      }
-      if (this.shouldRunRender()) {
-        return await this.runRenderHandler();
       }
       if (this.command.report) {
         return await this.runReportHandler();
@@ -53,18 +49,6 @@ export class CommandRunner {
   }
 
   /**
-   * when both "render" and "report" were implemented, check whether it's a terminal.
-   * if it's a terminal, use "render", if not, use "report" because "report" is just a string
-   */
-  private shouldRunRender() {
-    const isTerminal = process.stdout.isTTY;
-    if (this.command.report && !isTerminal) {
-      return false;
-    }
-    return Boolean(this.command.render);
-  }
-
-  /**
    * this works for both, Harmony commands and Legacy commands (the legacy-command-adapter
    * implements json() method)
    */
@@ -75,18 +59,6 @@ export class CommandRunner {
     const code = result.code || 0;
     const data = result.data || result;
     return this.writeAndExit(JSON.stringify(data, null, 2), code);
-  }
-
-  private async runRenderHandler() {
-    if (!this.command.render) throw new Error('runRenderHandler expects command.render to be implemented');
-    const result = await this.command.render(this.args, this.flags);
-    loader.off();
-
-    const { data, code } = toRenderResult(result);
-
-    const { waitUntilExit } = render(data);
-    await waitUntilExit();
-    return logger.exitAfterFlush(code, this.commandName);
   }
 
   private async runReportHandler() {
@@ -127,13 +99,4 @@ export class CommandRunner {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     return process.stdout.write(data, async () => logger.exitAfterFlush(exitCode, this.commandName, data));
   }
-}
-
-function toRenderResult(obj: RenderResult | React.ReactElement) {
-  return isRenderResult(obj) ? obj : { data: obj, code: 0 };
-}
-
-function isRenderResult(obj: RenderResult | any): obj is RenderResult {
-  // eslint-disable-next-line no-prototype-builtins
-  return typeof obj === 'object' && typeof obj.code === 'number' && obj.hasOwnProperty('data');
 }

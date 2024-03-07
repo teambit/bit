@@ -23,7 +23,7 @@ export type Handlers = {
  */
 export function SubscribeToWebpackEvents(pubsub: PubsubMain, handlers: Handlers = {}) {
   pubsub.sub(WebpackAspect.id, (event: BitBaseEvent<any>) => {
-    if (event instanceof WebpackCompilationDoneEvent) {
+    if (event.type === WebpackCompilationDoneEvent.TYPE) {
       const { stats, devServerID } = event.data;
 
       const results = {
@@ -35,9 +35,8 @@ export function SubscribeToWebpackEvents(pubsub: PubsubMain, handlers: Handlers 
       handlers.onDone?.(devServerID, results);
     }
 
-    if (event instanceof WebpackCompilationStartedEvent) {
+    if (event.type === WebpackCompilationStartedEvent.TYPE) {
       const { devServerID } = event.data;
-
       handlers.onStart?.(devServerID);
     }
   });
