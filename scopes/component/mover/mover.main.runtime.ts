@@ -1,10 +1,10 @@
 import fs from 'fs-extra';
+import { isAbsolute } from 'path';
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { isEmpty } from 'lodash';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { isDir } from '@teambit/legacy/dist/utils';
-import moveSync from '@teambit/legacy/dist/utils/fs/move-sync';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { PathChangeResult } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
@@ -84,3 +84,17 @@ to change the main-file, use "bit add <component-dir> --main <new-main-file>"`);
 MoverAspect.addRuntime(MoverMain);
 
 export default MoverMain;
+
+export function moveSync(src: PathOsBasedAbsolute, dest: PathOsBasedAbsolute, options?: Record<string, any>) {
+  if (!isAbsolute(src) || !isAbsolute(dest)) {
+    throw new Error(`moveSync, src and dest must be absolute. Got src "${src}", dest "${dest}"`);
+  }
+  try {
+    fs.moveSync(src, dest, options);
+  } catch (err: any) {
+    if (err.message.includes('Cannot move') && err.message.includes('into itself')) {
+      throw new BitError(`unable to move '${src}' into itself '${dest}'`);
+    }
+    throw err;
+  }
+}
