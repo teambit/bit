@@ -50,14 +50,14 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     // );
 
     const origComponents = context.capsuleNetwork.originalSeedersCapsules.map((capsule) => capsule.component);
-    console.log('[origComponents]', origComponents);
+    // console.log('[origComponents]', origComponents);
 
     const entriesArr = await Promise.all(
       origComponents.map((component) => {
         return this.computeComponentEntry(previewDefs, component, context);
       }, {})
     );
-    console.log('[entriesArr]', entriesArr);
+    // console.log('[entriesArr]', entriesArr);
 
     const chunkSize = this.preview.config.maxChunkSize;
 
@@ -72,6 +72,9 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
         Object.assign(entries, entry.entries);
         components.push(entry.component);
       });
+
+      // eslint-disable-next-line no-console
+      console.log('[entries]', JSON.stringify(entries, null, 2));
 
       return {
         entries,
