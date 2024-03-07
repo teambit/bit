@@ -52,7 +52,6 @@ export class RunCmd implements Command {
     });
 
     if (errors) {
-      // @ts-ignore fix once we have type for errors
       const errStr =
         errors && errors.length ? errors.map((err) => err.toString()).join('\n') : 'unknown error occurred';
       this.logger.console(errStr);
