@@ -2,7 +2,6 @@ import { EnvService, EnvDefinition, Env, EnvContext, ServiceTransformationMap } 
 import highlight from 'cli-highlight';
 import chalk from 'chalk';
 import { DependencyDetector } from './dependency-detector';
-import chalk from 'chalk';
 
 export type DependenciesDescriptor = {
   id: string;
