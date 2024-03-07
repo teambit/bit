@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import findDuplications from './find-duplications';
+import { findDuplications } from './find-duplications';
 
 describe('findDuplications', () => {
   it('should find duplications in an array of strings', () => {

@@ -57,7 +57,6 @@ export class ComponentServer {
     const hostname = this.getHostname(address);
     if (!address) throw new BindError();
     this.hostname = hostname;
-
     this.pubsub.pub(BundlerAspect.id, this.createComponentsServerStartedEvent(server, this.context, hostname, port));
   }
 
