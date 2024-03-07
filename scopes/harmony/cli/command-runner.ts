@@ -49,18 +49,6 @@ export class CommandRunner {
   }
 
   /**
-   * when both "render" and "report" were implemented, check whether it's a terminal.
-   * if it's a terminal, use "render", if not, use "report" because "report" is just a string
-   */
-  private shouldRunRender() {
-    const isTerminal = process.stdout.isTTY;
-    if (this.command.report && !isTerminal) {
-      return false;
-    }
-    return Boolean(this.command.render);
-  }
-
-  /**
    * this works for both, Harmony commands and Legacy commands (the legacy-command-adapter
    * implements json() method)
    */
