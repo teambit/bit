@@ -76,6 +76,12 @@ type GetBuildPipeModifiers = PipeServiceModifiersMap & {
   tsModifier?: PipeServiceModifier;
 };
 
+const inspectConfig: WebpackConfigTransformer = (config) => {
+  // eslint-disable-next-line no-console
+  console.log('[webpack config]', config.raw);
+  return config;
+};
+
 /**
  * a component environment built for [React](https://reactjs.org) .
  */
@@ -365,7 +371,7 @@ export class ReactEnv
       const merged = configMutator.merge([baseConfig, baseProdConfig, componentProdConfig]);
       return merged;
     };
-    const mergedTransformers = [defaultTransformer, ...transformers];
+    const mergedTransformers = [defaultTransformer, ...transformers, inspectConfig];
     return this.createWebpackBundler(context, mergedTransformers, webpackModulePath);
   }
 
@@ -382,7 +388,7 @@ export class ReactEnv
       const merged = configMutator.merge([baseConfig, baseProdConfig, templateConfig]);
       return merged;
     };
-    const mergedTransformers = [defaultTransformer, ...transformers];
+    const mergedTransformers = [defaultTransformer, ...transformers, inspectConfig];
     return this.createWebpackBundler(context, mergedTransformers, webpackModulePath);
   }
 
