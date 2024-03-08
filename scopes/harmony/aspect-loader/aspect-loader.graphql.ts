@@ -1,5 +1,5 @@
 import { Schema } from '@teambit/graphql';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { AspectLoaderMain } from './aspect-loader.main.runtime';
 

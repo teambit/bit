@@ -1,5 +1,5 @@
 import { Schema } from '@teambit/graphql';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { GeneratorMain } from './generator.main.runtime';
 import { CreateOptions } from './create.cmd';
 

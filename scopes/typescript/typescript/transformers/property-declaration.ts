@@ -1,4 +1,4 @@
-import { Node, PropertyDeclaration, PropertySignature, SyntaxKind } from 'typescript';
+import { Node, PropertyDeclaration, PropertySignature, SyntaxKind, isPropertyDeclaration } from 'typescript';
 import { VariableLikeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
@@ -26,9 +26,9 @@ export class PropertyDeclarationTransformer implements SchemaTransformer {
     const displaySig = info?.body?.displayString || node.getText();
     const typeStr = parseTypeFromQuickInfo(info);
     const type = await context.resolveType(node, typeStr);
-    const isOptional = Boolean(node.questionToken) || Boolean(node.initializer);
+    const isOptional = Boolean(node.questionToken) || (isPropertyDeclaration(node) && Boolean(node.initializer));
     const doc = await context.jsDocToDocSchema(node);
-    const defaultValue = node.initializer ? node.initializer.getText() : undefined;
+    const defaultValue = isPropertyDeclaration(node) ? node.initializer?.getText() : undefined;
     return new VariableLikeSchema(context.getLocation(node), name, displaySig, type, isOptional, doc, defaultValue);
   }
 }

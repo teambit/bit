@@ -1,6 +1,6 @@
 import { Component } from '@teambit/component';
 import { Schema } from '@teambit/graphql';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
 import { Dependency } from './dependencies';

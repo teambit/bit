@@ -1,9 +1,9 @@
 import stripAnsi from 'strip-ansi';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-import { type ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { Component } from './component';
 import { ComponentFactory } from './component-factory';
 import { ComponentMain } from './component.main.runtime';
