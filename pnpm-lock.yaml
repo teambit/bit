@@ -5822,6 +5822,9 @@ importers:
       '@teambit/toolbox.fs.hard-link-directory':
         specifier: workspace:*
         version: file:scopes/toolbox/fs/hard-link-directory
+      '@teambit/toolbox.fs.link-or-symlink':
+        specifier: workspace:*
+        version: file:scopes/toolbox/fs/link-or-symlink
       '@teambit/toolbox.modules.module-resolver':
         specifier: workspace:*
         version: file:scopes/toolbox/modules/module-resolver
@@ -6431,6 +6434,8 @@ importers:
       '@teambit/toolbox.array.duplications-finder':
         injected: true
       '@teambit/toolbox.fs.hard-link-directory':
+        injected: true
+      '@teambit/toolbox.fs.link-or-symlink':
         injected: true
       '@teambit/toolbox.modules.module-resolver':
         injected: true
@@ -7246,6 +7251,9 @@ importers:
       '@teambit/toolbox.fs.hard-link-directory':
         specifier: workspace:*
         version: file:scopes/toolbox/fs/hard-link-directory
+      '@teambit/toolbox.fs.link-or-symlink':
+        specifier: workspace:*
+        version: file:scopes/toolbox/fs/link-or-symlink
       '@teambit/toolbox.modules.module-resolver':
         specifier: workspace:*
         version: file:scopes/toolbox/modules/module-resolver
@@ -7870,6 +7878,8 @@ importers:
       '@teambit/toolbox.array.duplications-finder':
         injected: true
       '@teambit/toolbox.fs.hard-link-directory':
+        injected: true
+      '@teambit/toolbox.fs.link-or-symlink':
         injected: true
       '@teambit/toolbox.modules.module-resolver':
         injected: true
@@ -8685,6 +8695,9 @@ importers:
       '@teambit/toolbox.fs.hard-link-directory':
         specifier: workspace:*
         version: file:scopes/toolbox/fs/hard-link-directory
+      '@teambit/toolbox.fs.link-or-symlink':
+        specifier: workspace:*
+        version: file:scopes/toolbox/fs/link-or-symlink
       '@teambit/toolbox.modules.module-resolver':
         specifier: workspace:*
         version: file:scopes/toolbox/modules/module-resolver
@@ -9309,6 +9322,8 @@ importers:
       '@teambit/toolbox.array.duplications-finder':
         injected: true
       '@teambit/toolbox.fs.hard-link-directory':
+        injected: true
+      '@teambit/toolbox.fs.link-or-symlink':
         injected: true
       '@teambit/toolbox.modules.module-resolver':
         injected: true
@@ -10115,6 +10130,9 @@ importers:
       '@teambit/toolbox.fs.hard-link-directory':
         specifier: workspace:*
         version: file:scopes/toolbox/fs/hard-link-directory
+      '@teambit/toolbox.fs.link-or-symlink':
+        specifier: workspace:*
+        version: file:scopes/toolbox/fs/link-or-symlink
       '@teambit/toolbox.modules.module-resolver':
         specifier: workspace:*
         version: file:scopes/toolbox/modules/module-resolver
@@ -10718,6 +10736,8 @@ importers:
       '@teambit/toolbox.array.duplications-finder':
         injected: true
       '@teambit/toolbox.fs.hard-link-directory':
+        injected: true
+      '@teambit/toolbox.fs.link-or-symlink':
         injected: true
       '@teambit/toolbox.modules.module-resolver':
         injected: true
@@ -11524,6 +11544,9 @@ importers:
       '@teambit/toolbox.fs.hard-link-directory':
         specifier: workspace:*
         version: file:scopes/toolbox/fs/hard-link-directory
+      '@teambit/toolbox.fs.link-or-symlink':
+        specifier: workspace:*
+        version: file:scopes/toolbox/fs/link-or-symlink
       '@teambit/toolbox.modules.module-resolver':
         specifier: workspace:*
         version: file:scopes/toolbox/modules/module-resolver
@@ -12133,6 +12156,8 @@ importers:
       '@teambit/toolbox.array.duplications-finder':
         injected: true
       '@teambit/toolbox.fs.hard-link-directory':
+        injected: true
+      '@teambit/toolbox.fs.link-or-symlink':
         injected: true
       '@teambit/toolbox.modules.module-resolver':
         injected: true
@@ -12939,6 +12964,9 @@ importers:
       '@teambit/toolbox.fs.hard-link-directory':
         specifier: workspace:*
         version: file:scopes/toolbox/fs/hard-link-directory
+      '@teambit/toolbox.fs.link-or-symlink':
+        specifier: workspace:*
+        version: file:scopes/toolbox/fs/link-or-symlink
       '@teambit/toolbox.modules.module-resolver':
         specifier: workspace:*
         version: file:scopes/toolbox/modules/module-resolver
@@ -13548,6 +13576,8 @@ importers:
       '@teambit/toolbox.array.duplications-finder':
         injected: true
       '@teambit/toolbox.fs.hard-link-directory':
+        injected: true
+      '@teambit/toolbox.fs.link-or-symlink':
         injected: true
       '@teambit/toolbox.modules.module-resolver':
         injected: true
@@ -14363,6 +14393,9 @@ importers:
       '@teambit/toolbox.fs.hard-link-directory':
         specifier: workspace:*
         version: file:scopes/toolbox/fs/hard-link-directory
+      '@teambit/toolbox.fs.link-or-symlink':
+        specifier: workspace:*
+        version: file:scopes/toolbox/fs/link-or-symlink
       '@teambit/toolbox.modules.module-resolver':
         specifier: workspace:*
         version: file:scopes/toolbox/modules/module-resolver
@@ -14987,6 +15020,8 @@ importers:
       '@teambit/toolbox.array.duplications-finder':
         injected: true
       '@teambit/toolbox.fs.hard-link-directory':
+        injected: true
+      '@teambit/toolbox.fs.link-or-symlink':
         injected: true
       '@teambit/toolbox.modules.module-resolver':
         injected: true
@@ -25077,6 +25112,31 @@ importers:
         specifier: 12.20.4
         version: 12.20.4
 
+  scopes/toolbox/fs/link-or-symlink:
+    dependencies:
+      '@teambit/bit-error':
+        specifier: ^0.0.404
+        version: 0.0.404
+      fs-extra:
+        specifier: 10.0.0
+        version: 10.0.0
+    devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@types/fs-extra':
+        specifier: 9.0.7
+        version: 9.0.7
+      '@types/jest':
+        specifier: 26.0.20
+        version: 26.0.20
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 12.20.4
+        version: 12.20.4
+
   scopes/toolbox/modules/module-resolver:
     dependencies:
       resolve:
@@ -26210,15 +26270,9 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
-      assert:
-        specifier: ^2.1.0
-        version: 2.1.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
-      buffer:
-        specifier: 6.0.3
-        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -26273,9 +26327,6 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
-      punycode:
-        specifier: ^2.3.1
-        version: 2.3.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -26297,21 +26348,12 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
-      string_decoder:
-        specifier: ^1.3.0
-        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
-      url:
-        specifier: ^0.11.3
-        version: 0.11.3
-      util:
-        specifier: ^0.12.5
-        version: 0.12.5
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -74479,6 +74521,7 @@ packages:
       '@teambit/harmony.modules.requireable-component': file:scopes/harmony/modules/requireable-component
       '@teambit/legacy-bit-id': 1.1.1
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/toolbox.fs.link-or-symlink': file:scopes/toolbox/fs/link-or-symlink
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
@@ -74515,6 +74558,8 @@ packages:
   file:scopes/dependencies/fs/linked-dependencies:
     resolution: {directory: scopes/dependencies/fs/linked-dependencies, type: directory}
     name: '@teambit/dependencies.fs.linked-dependencies'
+    dependencies:
+      '@teambit/toolbox.fs.link-or-symlink': file:scopes/toolbox/fs/link-or-symlink
     dev: false
 
   file:scopes/dependencies/pnpm(@testing-library/react@12.1.5)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(react@17.0.2):
@@ -76934,6 +76979,14 @@ packages:
       fs-extra: 10.0.0
       resolve-link-target: 1.0.1
       symlink-dir: 5.2.1
+    dev: false
+
+  file:scopes/toolbox/fs/link-or-symlink:
+    resolution: {directory: scopes/toolbox/fs/link-or-symlink, type: directory}
+    name: '@teambit/toolbox.fs.link-or-symlink'
+    dependencies:
+      '@teambit/bit-error': 0.0.404
+      fs-extra: 10.0.0
     dev: false
 
   file:scopes/toolbox/modules/module-resolver:
