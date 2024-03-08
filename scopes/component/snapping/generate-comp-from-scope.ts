@@ -14,7 +14,7 @@ import type { SnappingMain, SnapDataParsed } from './snapping.main.runtime';
 
 export type CompData = {
   componentId: ComponentID;
-  dependencies: ComponentID[];
+  dependencies: string[];
   aspects: Record<string, any> | undefined;
   message: string | undefined;
   files: FileData[] | undefined;
@@ -82,6 +82,7 @@ export async function addDeps(
   depsResolver: DependencyResolverMain
 ) {
   const newDeps = snapData.newDependencies || [];
+  const updateDeps = snapData.dependencies || [];
   const compIdsData = newDeps.filter((dep) => dep.isComponent);
   const compIdsDataParsed = compIdsData.map((data) => ({
     ...data,
@@ -109,29 +110,47 @@ export async function addDeps(
   const getPkgObj = (type: 'runtime' | 'dev' | 'peer') => {
     return toPackageObj(packageDeps.filter((dep) => dep.type === type));
   };
-  const filterRemovedPkgs = (pkgs: Record<string, string>) => {
+  const manipulateCurrentPkgs = (pkgs: Record<string, string>) => {
     snapData.removeDependencies?.forEach((pkg) => {
       delete pkgs[pkg];
     });
+    Object.keys(pkgs).forEach((pkg) => {
+      const found = updateDeps.find((d) => d.startsWith(`${pkg}@`));
+      if (found) {
+        pkgs[pkg] = found.replace(`${pkg}@`, '');
+      }
+    });
     return pkgs;
   };
-  const filterRemovedDeps = (currentCompDeps: Dependency[]) => {
-    return currentCompDeps.filter((dep) => !snapData.removeDependencies?.includes(dep.id.toStringWithoutVersion()));
+  const manipulateCurrentDeps = (currentCompDeps: Dependency[]) => {
+    const afterRemoval = currentCompDeps.filter(
+      (dep) => !snapData.removeDependencies?.includes(dep.id.toStringWithoutVersion())
+    );
+    afterRemoval.forEach((dep) => {
+      const found = updateDeps.find((d) => d.startsWith(`${dep.id.toStringWithoutVersion()}@`));
+      if (found) {
+        dep.id = dep.id.changeVersion(found.replace(`${dep.id.toStringWithoutVersion()}@`, ''));
+      }
+    });
+    return afterRemoval;
   };
 
   const consumerComponent = component.state._consumer as ConsumerComponent;
 
   const dependenciesData = {
     allDependencies: {
-      dependencies: [...compDeps, ...filterRemovedDeps(consumerComponent.dependencies.get())],
-      devDependencies: [...compDevDeps, ...filterRemovedDeps(consumerComponent.devDependencies.get())],
-      peerDependencies: [...compPeerDeps, ...filterRemovedDeps(consumerComponent.peerDependencies.get())],
+      dependencies: [...compDeps, ...manipulateCurrentDeps(consumerComponent.dependencies.get())],
+      devDependencies: [...compDevDeps, ...manipulateCurrentDeps(consumerComponent.devDependencies.get())],
+      peerDependencies: [...compPeerDeps, ...manipulateCurrentDeps(consumerComponent.peerDependencies.get())],
     },
     allPackagesDependencies: {
-      packageDependencies: { ...filterRemovedPkgs(consumerComponent.packageDependencies), ...getPkgObj('runtime') },
-      devPackageDependencies: { ...filterRemovedPkgs(consumerComponent.devPackageDependencies), ...getPkgObj('dev') },
+      packageDependencies: { ...manipulateCurrentPkgs(consumerComponent.packageDependencies), ...getPkgObj('runtime') },
+      devPackageDependencies: {
+        ...manipulateCurrentPkgs(consumerComponent.devPackageDependencies),
+        ...getPkgObj('dev'),
+      },
       peerPackageDependencies: {
-        ...filterRemovedPkgs(consumerComponent.peerPackageDependencies),
+        ...manipulateCurrentPkgs(consumerComponent.peerPackageDependencies),
         ...getPkgObj('peer'),
       },
     },
