@@ -416,9 +416,9 @@ jobs:
           at: ./
       - run:
           name: 'run ESLint'
-          command: 'cd bit && npm run lint-circle'
+          command: 'cd bit && node --max-old-space-size=4096 node_modules/eslint/bin/eslint.js "{src,e2e,scopes,components}/**/*.{ts,tsx}"" --format junit -o junit/eslint-results.xml'
           environment:
-            NODE_OPTIONS: --max-old-space-size=15000
+            NODE_OPTIONS: --max-old-space-size=4096
       - store_test_results:
           path: bit/junit
       - store_artifacts:
