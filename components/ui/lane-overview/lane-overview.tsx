@@ -13,7 +13,7 @@ import { Tooltip } from '@teambit/design.ui.tooltip';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentModel } from '@teambit/component';
 import { ScopeID } from '@teambit/scopes.scope-id';
-import { ComponentCardPluginType, PluginProps } from '@teambit/explorer.ui.component-card';
+import type { ComponentCardPluginType, PluginProps } from '@teambit/explorer.ui.component-card';
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';
 import { LaneDetails } from '@teambit/lanes.ui.lane-details';
 import { EmptyLaneOverview } from './empty-lane-overview';
