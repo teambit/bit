@@ -9,7 +9,7 @@ overrides:
   signal-exit@4: ^4.0.2
   '@types/react': ^17.0.67
   '@types/react-dom': ^17.0.21
-  minio@7.0: 7.1.0
+  minio@7.0: 7.1.1
 
 importers:
 
