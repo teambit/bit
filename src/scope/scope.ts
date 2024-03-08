@@ -6,6 +6,7 @@ import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
 import { BitError } from '@teambit/bit-error';
+import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { isTag } from '@teambit/component-version';
 import { Analytics } from '../analytics/analytics';
 import {
@@ -25,7 +26,7 @@ import Component from '../consumer/component/consumer-component';
 import { ExtensionDataEntry } from '../consumer/config';
 import Consumer from '../consumer/consumer';
 import logger from '../logger/logger';
-import { pathHasAll, findScopePath, readDirSyncIgnoreDsStore } from '../utils';
+import { readDirSyncIgnoreDsStore } from '../utils';
 import { PathOsBasedAbsolute } from '../utils/path';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
@@ -757,4 +758,26 @@ once done, to continue working, please run "bit cc"`
     Scope.scopeCache[scopePath] = scope;
     return scope;
   }
+}
+
+function composePath(patternPath: string, patterns: string[]): string[] {
+  return patterns.map((pattern) => {
+    return pathLib.join(patternPath, pattern);
+  });
+}
+
+/**
+ * determine whether given path have all files/dirs
+ */
+export function pathHasAll(patterns: string[]): (absPath: string) => boolean {
+  return (absPath: string) => {
+    let state = true;
+    const paths = composePath(absPath, patterns);
+    for (const potentialPath of paths) {
+      if (!state) return false;
+      state = fs.existsSync(potentialPath);
+    }
+
+    return state;
+  };
 }

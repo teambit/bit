@@ -1,10 +1,10 @@
 import fs from 'fs-extra';
-
+import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { Consumer, getConsumerInfo } from '../../../consumer';
 import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
 import { Scope } from '../../../scope';
 import { Repository } from '../../../scope/objects';
-import { findScopePath, isDirEmpty } from '../../../utils';
+import { isDirEmpty } from '../../../utils';
 import ObjectsWithoutConsumer from './exceptions/objects-without-consumer';
 
 export default async function init(
