@@ -1,6 +1,6 @@
 import { ComponentMain } from '@teambit/component';
 import { Schema } from '@teambit/graphql';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { GraphBuilder } from './graph-builder';
 import { ComponentGraph } from './component-graph';

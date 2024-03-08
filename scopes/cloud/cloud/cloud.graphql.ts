@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { Schema } from '@teambit/graphql';
 import { ScopeDescriptor } from '@teambit/scopes.scope-descriptor';
 import { CloudMain } from './cloud.main.runtime';

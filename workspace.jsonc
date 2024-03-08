@@ -386,7 +386,7 @@
         "didyoumean": "1.2.1",
         "dreidels": "0.6.1",
         "enquirer": "2.3.6",
-        "eslint-config-airbnb-typescript": "12.0.0",
+        "eslint-config-airbnb-typescript": "17.1.0",
         "eslint-import-resolver-node": "0.3.4",
         "eventemitter2": "6.4.4",
         "expose-loader": "3.1.0",
@@ -522,7 +522,7 @@
       "signal-exit@4": "^4.0.2",
       "@types/react": "^17.0.67",
       "@types/react-dom": "^17.0.21",
-      "minio@7.0": "7.1.1"
+      "minio@7.0": "7.1.0"
     },
     "rootComponents": true,
     "nodeVersion": "20.11.1",
