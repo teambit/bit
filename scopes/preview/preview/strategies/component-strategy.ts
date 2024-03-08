@@ -68,8 +68,13 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     const halfLength = Math.floor(chunks.length / 2);
     const quarterLength = Math.floor(halfLength / 2);
     const length8th = Math.floor(quarterLength / 2);
-    const start = halfLength + quarterLength + length8th
-    const end = chunks.length
+    const length16th = Math.floor(length8th / 2);
+    // 15/16
+    const start = halfLength + quarterLength + length8th;
+    const end = halfLength + quarterLength + length8th + length16th;
+    // 16/16
+    // const start = halfLength + quarterLength + length8th + length16th;
+    // const end = chunks.length
     const targets = chunks.slice(start).map((currentChunk) => {
       const entries: BundlerEntryMap = {};
       const components: Component[] = [];
