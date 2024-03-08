@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { join, resolve, basename, dirname } from 'path';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import { Component } from '@teambit/component';
@@ -57,25 +58,20 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
         return this.computeComponentEntry(previewDefs, component, context);
       }, {})
     );
-    // console.log('[entriesArr]', entriesArr);
+    console.log('[entriesArr]', entriesArr);
+    const length = entriesArr.length;
+    const length2 = Math.floor(length / 2);
+    const finalEntriesArr = entriesArr.slice(0, length2);
+    console.log('[finalEntriesArr]', { length, length2 }, finalEntriesArr);
 
     const chunkSize = this.preview.config.maxChunkSize;
 
     const chunks = chunkSize ? chunk(entriesArr, chunkSize) : [entriesArr];
+    console.log({ chunkSize, chunks });
 
     const peers = await this.dependencyResolver.getPreviewHostDependenciesFromEnv(context.envDefinition.env);
 
-    const halfLength = Math.floor(chunks.length / 2);
-    const quarterLength = Math.floor(halfLength / 2);
-    const length8th = Math.floor(quarterLength / 2);
-    const length16th = Math.floor(length8th / 2);
-    // 15/16
-    const start = halfLength + quarterLength + length8th;
-    const end = halfLength + quarterLength + length8th + length16th;
-    // 16/16
-    // const start = halfLength + quarterLength + length8th + length16th;
-    // const end = chunks.length
-    const targets = chunks.slice(start).map((currentChunk) => {
+    const targets = chunks.map((currentChunk) => {
       const entries: BundlerEntryMap = {};
       const components: Component[] = [];
       currentChunk.forEach((entry) => {
@@ -84,7 +80,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       });
 
       // eslint-disable-next-line no-console
-      console.log('[entries]', { start, end }, JSON.stringify(entries, null, 2));
+      console.log('[entries]', JSON.stringify(entries, null, 2));
 
       return {
         entries,
