@@ -62,9 +62,9 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     const length = entriesArr.length;
     const length2 = Math.floor(length / 2);
     const length4 = Math.floor(length2 / 2);
-    const start = 0;
-    const end = length4;
-    const finalEntriesArr = entriesArr.slice(0, end);
+    const start = length4;
+    const end = length2;
+    const finalEntriesArr = entriesArr.slice(start, end);
     console.log('[finalEntriesArr 1/4]', { start, end }, finalEntriesArr);
 
     const chunkSize = this.preview.config.maxChunkSize;
