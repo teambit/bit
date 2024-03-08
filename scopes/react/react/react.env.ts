@@ -77,8 +77,8 @@ type GetBuildPipeModifiers = PipeServiceModifiersMap & {
 };
 
 const inspectConfig: WebpackConfigTransformer = (config) => {
-  // eslint-disable-next-line no-console
-  console.log('[webpack config]', config.raw);
+  // // eslint-disable-next-line no-console
+  // console.log('[webpack config]', config.raw);
   return config;
 };
 

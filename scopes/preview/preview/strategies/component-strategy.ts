@@ -58,11 +58,14 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
         return this.computeComponentEntry(previewDefs, component, context);
       }, {})
     );
-    console.log('[entriesArr]', entriesArr);
+    console.log('[entriesArr]', entriesArr.length, entriesArr);
     const length = entriesArr.length;
     const length2 = Math.floor(length / 2);
-    const finalEntriesArr = entriesArr.slice(0, length2);
-    console.log('[finalEntriesArr]', { length, length2 }, finalEntriesArr);
+    const length4 = Math.floor(length2 / 2);
+    const start = 0;
+    const end = length4;
+    const finalEntriesArr = entriesArr.slice(0, end);
+    console.log('[finalEntriesArr 1/4]', { start, end }, finalEntriesArr);
 
     const chunkSize = this.preview.config.maxChunkSize;
 
@@ -80,7 +83,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       });
 
       // eslint-disable-next-line no-console
-      console.log('[entries]', JSON.stringify(entries, null, 2));
+      console.log('[entries]', entries.length, JSON.stringify(entries, null, 2));
 
       return {
         entries,
