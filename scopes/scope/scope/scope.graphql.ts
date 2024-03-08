@@ -1,5 +1,5 @@
 import { ComponentID } from '@teambit/component';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { latestVersions } from '@teambit/legacy/dist/api/scope';
 import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { ScopeMain } from './scope.main.runtime';

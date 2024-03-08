@@ -1,6 +1,6 @@
 import { Component } from '@teambit/component';
 import { Schema } from '@teambit/graphql';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { RenamingMain } from './renaming.main.runtime';
 
 export function renamingSchema(renaming: RenamingMain): Schema {
