@@ -44,7 +44,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     }, {});
 
     truthyEntries = Object.keys(truthyEntries)
-      .slice(35, 50)
+      .slice(35, 47)
       .reduce((acc, entryKey) => {
         acc[entryKey] = truthyEntries[entryKey];
         return acc;
