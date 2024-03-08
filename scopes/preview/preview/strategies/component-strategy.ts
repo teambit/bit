@@ -66,8 +66,8 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
     const chunkSize = this.preview.config.maxChunkSize;
 
-    const chunks = chunkSize ? chunk(entriesArr, chunkSize) : [entriesArr];
-    console.log({ chunkSize, chunks });
+    const chunks = chunkSize ? chunk(finalEntriesArr, chunkSize) : [finalEntriesArr];
+    // console.log({ chunkSize, chunks });
 
     const peers = await this.dependencyResolver.getPreviewHostDependenciesFromEnv(context.envDefinition.env);
 
