@@ -134,7 +134,7 @@ also, make sure the tsconfig.json in the root has the "jsx" setting defined.`);
     }
 
     if (definitionNode.parent.kind === SyntaxKind.ExportSpecifier)
-      return exportSpecifierToSchemaNode(definitionNode.parent as ExportSpecifier, context);
+      return await exportSpecifierToSchemaNode(definitionNode.parent as ExportSpecifier, context);
 
     return await context.computeSchema(definitionNode.parent);
   } catch (e) {
