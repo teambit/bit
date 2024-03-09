@@ -41,7 +41,7 @@ export class SnapFromScopeCmd implements Command {
 the input data is a stringified JSON of an array of the following object.
 {
   componentId: string;     // ids always have scope, so it's safe to parse them from string
-  dependencies?: string[]; // dependencies component-ids to update their versions, e.g. [teambit.compilation/compiler@1.0.0, teambit.defender/tester@1.0.0]
+  dependencies?: string[]; // dependencies include versions. for components use component-id. e.g. [teambit.compilation/compiler@1.0.0, lodash@4.17.21]
   aspects?: Record<string,any> // e.g. { "teambit.react/react": {}, "teambit.envs/envs": { "env": "teambit.react/react" } }
   message?: string;       // tag-message.
   files?: Array<{path: string, content: string}>; // replace content of specified source-files. the content is base64 encoded.
