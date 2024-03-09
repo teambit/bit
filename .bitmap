@@ -1046,6 +1046,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/notifications/aspect"
     },
+    "object/sorter": {
+        "name": "object/sorter",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/object/sorter"
+    },
     "overview/api-reference-table-of-contents": {
         "name": "overview/api-reference-table-of-contents",
         "scope": "teambit.api-reference",

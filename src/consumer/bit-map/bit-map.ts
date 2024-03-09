@@ -8,6 +8,7 @@ import { LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
+import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import type { Consumer } from '..';
 import {
   AUTO_GENERATED_MSG,
@@ -18,7 +19,7 @@ import {
   BITMAP_PREFIX_MESSAGE,
 } from '../../constants';
 import logger from '../../logger/logger';
-import { pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
+import { pathJoinLinux, pathNormalizeToLinux } from '../../utils';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import ComponentMap, {
   ComponentMapFile,
@@ -148,7 +149,7 @@ export default class BitMap {
         );
       }
     }
-    const sorted = sortObject(merged);
+    const sorted = sortObjectByKeys(merged);
     // Delete and re-add it to make sure it will be at the end
     delete sorted[SCHEMA_FIELD];
     sorted[SCHEMA_FIELD] = parsed[SCHEMA_FIELD];
@@ -949,7 +950,7 @@ export default class BitMap {
       components[key] = componentMapCloned.toPlainObject();
     });
 
-    return sortObject(components);
+    return sortObjectByKeys(components);
   }
 
   /**
