@@ -5789,6 +5789,9 @@ importers:
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
+      '@teambit/scope.modules.find-scope-path':
+        specifier: workspace:*
+        version: file:scopes/scope/modules/find-scope-path
       '@teambit/scope.ui.hooks.scope-context':
         specifier: workspace:*
         version: file:components/ui/hooks/scope-context(react-dom@17.0.2)(react@17.0.2)
@@ -6412,6 +6415,8 @@ importers:
       '@teambit/scope':
         injected: true
       '@teambit/scope.models.scope-model':
+        injected: true
+      '@teambit/scope.modules.find-scope-path':
         injected: true
       '@teambit/scope.ui.hooks.scope-context':
         injected: true
@@ -7218,6 +7223,9 @@ importers:
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
+      '@teambit/scope.modules.find-scope-path':
+        specifier: workspace:*
+        version: file:scopes/scope/modules/find-scope-path
       '@teambit/scope.ui.hooks.scope-context':
         specifier: workspace:*
         version: file:components/ui/hooks/scope-context(react-dom@17.0.2)(react@17.0.2)
@@ -7856,6 +7864,8 @@ importers:
       '@teambit/scope':
         injected: true
       '@teambit/scope.models.scope-model':
+        injected: true
+      '@teambit/scope.modules.find-scope-path':
         injected: true
       '@teambit/scope.ui.hooks.scope-context':
         injected: true
@@ -8662,6 +8672,9 @@ importers:
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
+      '@teambit/scope.modules.find-scope-path':
+        specifier: workspace:*
+        version: file:scopes/scope/modules/find-scope-path
       '@teambit/scope.ui.hooks.scope-context':
         specifier: workspace:*
         version: file:components/ui/hooks/scope-context(react-dom@17.0.2)(react@17.0.2)
@@ -9300,6 +9313,8 @@ importers:
       '@teambit/scope':
         injected: true
       '@teambit/scope.models.scope-model':
+        injected: true
+      '@teambit/scope.modules.find-scope-path':
         injected: true
       '@teambit/scope.ui.hooks.scope-context':
         injected: true
@@ -10097,6 +10112,9 @@ importers:
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
+      '@teambit/scope.modules.find-scope-path':
+        specifier: workspace:*
+        version: file:scopes/scope/modules/find-scope-path
       '@teambit/scope.ui.hooks.scope-context':
         specifier: workspace:*
         version: file:components/ui/hooks/scope-context(react-dom@17.0.2)(react@17.0.2)
@@ -10714,6 +10732,8 @@ importers:
       '@teambit/scope':
         injected: true
       '@teambit/scope.models.scope-model':
+        injected: true
+      '@teambit/scope.modules.find-scope-path':
         injected: true
       '@teambit/scope.ui.hooks.scope-context':
         injected: true
@@ -11511,6 +11531,9 @@ importers:
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
+      '@teambit/scope.modules.find-scope-path':
+        specifier: workspace:*
+        version: file:scopes/scope/modules/find-scope-path
       '@teambit/scope.ui.hooks.scope-context':
         specifier: workspace:*
         version: file:components/ui/hooks/scope-context(react-dom@17.0.2)(react@17.0.2)
@@ -12134,6 +12157,8 @@ importers:
       '@teambit/scope':
         injected: true
       '@teambit/scope.models.scope-model':
+        injected: true
+      '@teambit/scope.modules.find-scope-path':
         injected: true
       '@teambit/scope.ui.hooks.scope-context':
         injected: true
@@ -12931,6 +12956,9 @@ importers:
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
+      '@teambit/scope.modules.find-scope-path':
+        specifier: workspace:*
+        version: file:scopes/scope/modules/find-scope-path
       '@teambit/scope.ui.hooks.scope-context':
         specifier: workspace:*
         version: file:components/ui/hooks/scope-context(react-dom@17.0.2)(react@17.0.2)
@@ -13554,6 +13582,8 @@ importers:
       '@teambit/scope':
         injected: true
       '@teambit/scope.models.scope-model':
+        injected: true
+      '@teambit/scope.modules.find-scope-path':
         injected: true
       '@teambit/scope.ui.hooks.scope-context':
         injected: true
@@ -14360,6 +14390,9 @@ importers:
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
+      '@teambit/scope.modules.find-scope-path':
+        specifier: workspace:*
+        version: file:scopes/scope/modules/find-scope-path
       '@teambit/scope.ui.hooks.scope-context':
         specifier: workspace:*
         version: file:components/ui/hooks/scope-context(react-dom@17.0.2)(react@17.0.2)
@@ -14998,6 +15031,8 @@ importers:
       '@teambit/scope':
         injected: true
       '@teambit/scope.models.scope-model':
+        injected: true
+      '@teambit/scope.modules.find-scope-path':
         injected: true
       '@teambit/scope.ui.hooks.scope-context':
         injected: true
@@ -24676,6 +24711,31 @@ importers:
       '@babel/runtime':
         specifier: 7.20.0
         version: 7.20.0
+      '@types/jest':
+        specifier: 26.0.20
+        version: 26.0.20
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 12.20.4
+        version: 12.20.4
+
+  scopes/scope/modules/find-scope-path:
+    dependencies:
+      find-up:
+        specifier: 5.0.0
+        version: 5.0.0
+      fs-extra:
+        specifier: 10.0.0
+        version: 10.0.0
+    devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@types/fs-extra':
+        specifier: 9.0.7
+        version: 9.0.7
       '@types/jest':
         specifier: 26.0.20
         version: 26.0.20
@@ -75221,6 +75281,7 @@ packages:
       '@teambit/harmony': 0.4.6
       '@teambit/legacy-bit-id': 1.1.1
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/scope.modules.find-scope-path': file:scopes/scope/modules/find-scope-path
       '@teambit/toolbox.performance.v8-cache': file:scopes/toolbox/performance/v8-cache
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.1(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -75327,6 +75388,7 @@ packages:
       '@teambit/bit-error': 0.0.404
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/scope.modules.find-scope-path': file:scopes/scope/modules/find-scope-path
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
       chalk: 2.4.2
@@ -75614,6 +75676,7 @@ packages:
     name: '@teambit/harmony.testing.load-aspect'
     dependencies:
       '@teambit/harmony': 0.4.6
+      '@teambit/scope.modules.find-scope-path': file:scopes/scope/modules/find-scope-path
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
     transitivePeerDependencies:
       - '@teambit/legacy'
@@ -76922,6 +76985,14 @@ packages:
     dependencies:
       '@teambit/component-descriptor': file:scopes/component/component-descriptor
       '@teambit/component-id': 1.2.0
+    dev: false
+
+  file:scopes/scope/modules/find-scope-path:
+    resolution: {directory: scopes/scope/modules/find-scope-path, type: directory}
+    name: '@teambit/scope.modules.find-scope-path'
+    dependencies:
+      find-up: 5.0.0
+      fs-extra: 10.0.0
     dev: false
 
   file:scopes/scope/scope(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-router-dom@6.8.1)(react@17.0.2):
