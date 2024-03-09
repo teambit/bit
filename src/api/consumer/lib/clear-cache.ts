@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import { __TEST__ as v8CompileCache } from 'v8-compile-cache';
 import { Consumer, getConsumerInfo, loadConsumerIfExist } from '../../../consumer';
 import { ComponentFsCache } from '../../../consumer/component/component-fs-cache';
-import { findScopePath } from '../../../utils';
+import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import ScopeIndex from '../../../scope/objects/scope-index';
 
 export type CacheClearResult = { succeed: string[]; failed: string[] };

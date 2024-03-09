@@ -14,7 +14,9 @@ import Diagnosis, { ExamineResult } from '../../../doctor/diagnosis';
 import DoctorRegistrar from '../../../doctor/doctor-registrar';
 import registerCoreAndExtensionsDiagnoses from '../../../doctor/doctor-registrar-builder';
 import logger from '../../../logger/logger';
-import { findScopePath, getExt, getWithoutExt, removeChalkCharacters } from '../../../utils';
+import { getExt, getWithoutExt, removeChalkCharacters } from '../../../utils';
+import { findScopePath } from '@teambit/scope.modules.find-scope-path';
+
 import DiagnosisNotFound from './exceptions/diagnosis-not-found';
 import MissingDiagnosisName from './exceptions/missing-diagnosis-name';
 import * as globalConfig from './global-config';
