@@ -1159,8 +1159,8 @@ importers:
         specifier: 0.0.29
         version: 0.0.29
       '@types/prettier':
-        specifier: 2.3.2
-        version: 2.3.2
+        specifier: 2.7.3
+        version: 2.7.3
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.75
@@ -19525,8 +19525,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@types/prettier':
-        specifier: 2.3.2
-        version: 2.3.2
+        specifier: 2.7.3
+        version: 2.7.3
       chai:
         specifier: 4.3.0
         version: 4.3.0
@@ -19556,8 +19556,8 @@ importers:
         specifier: 12.20.4
         version: 12.20.4
       '@types/prettier':
-        specifier: 2.3.2
-        version: 2.3.2
+        specifier: 2.7.3
+        version: 2.7.3
 
   scopes/defender/tester:
     dependencies:
@@ -26330,9 +26330,15 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
+      assert:
+        specifier: ^2.1.0
+        version: 2.1.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
+      buffer:
+        specifier: 6.0.3
+        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -26387,6 +26393,9 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
+      punycode:
+        specifier: ^2.3.1
+        version: 2.3.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -26408,12 +26417,21 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
+      string_decoder:
+        specifier: ^1.3.0
+        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
+      url:
+        specifier: ^0.11.3
+        version: 0.11.3
+      util:
+        specifier: ^0.12.5
+        version: 0.12.5
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -46872,8 +46890,8 @@ packages:
       postcss: 7.0.39
     dev: true
 
-  /@types/prettier@2.3.2:
-    resolution: {integrity: sha512-eI5Yrz3Qv4KPUa/nSIAi0h+qX0XyewOliug5F2QAtuRg6Kjg6jfmxe1GIwoIRhZspD1A0RP8ANrPwvEXXtRFog==}
+  /@types/prettier@2.7.3:
+    resolution: {integrity: sha512-+68kP9yzs4LMp7VNh8gdzMSPZFL44MLGqiHWvttYJe+6qnuVr4Ek9wSBQoveqY/r+LwjCcU29kNVkidwim+kYA==}
 
   /@types/prop-types@15.7.11:
     resolution: {integrity: sha512-ga8y9v9uyeiLdpKddhxYQkxNDrfvuPrlFb0N1qnZZByvcElJaXthF1UhvCh9TLWJBEHeNtdnbysW7Y6Uq8CVng==}
@@ -59401,7 +59419,7 @@ packages:
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
       '@types/babel__traverse': 7.20.5
-      '@types/prettier': 2.3.2
+      '@types/prettier': 2.7.3
       babel-preset-current-node-syntax: 1.0.1(@babel/core@7.19.6)
       chalk: 4.1.2
       expect: 27.5.1
