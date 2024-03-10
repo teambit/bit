@@ -1533,7 +1533,10 @@
         "scope": "teambit.code",
         "version": "0.0.291",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/code-compare"
+        "rootDir": "components/ui/code-compare",
+        "config": {
+            "teambit.react/v17/react-env@1.1.6": {}
+        }
     },
     "ui/code-tab-page": {
         "name": "ui/code-tab-page",
@@ -1554,14 +1557,20 @@
         "scope": "teambit.lanes",
         "version": "0.0.176",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare"
+        "rootDir": "components/ui/compare/lane-compare",
+        "config": {
+            "teambit.react/v17/react-env@1.1.6": {}
+        }
     },
     "ui/compare/lane-compare-drawer": {
         "name": "ui/compare/lane-compare-drawer",
         "scope": "teambit.lanes",
         "version": "0.0.154",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare-drawer"
+        "rootDir": "components/ui/compare/lane-compare-drawer",
+        "config": {
+            "teambit.react/v17/react-env@1.1.6": {}
+        }
     },
     "ui/compare/lane-compare-hooks/use-lane-diff-status": {
         "name": "ui/compare/lane-compare-hooks/use-lane-diff-status",
@@ -1582,7 +1591,10 @@
         "scope": "teambit.lanes",
         "version": "0.0.157",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare-page"
+        "rootDir": "components/ui/compare/lane-compare-page",
+        "config": {
+            "teambit.react/v17/react-env@1.1.6": {}
+        }
     },
     "ui/compare/lane-compare-state": {
         "name": "ui/compare/lane-compare-state",
@@ -1603,7 +1615,10 @@
         "scope": "teambit.component",
         "version": "0.0.179",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/component-compare"
+        "rootDir": "components/ui/component-compare/component-compare",
+        "config": {
+            "teambit.react/v17/react-env@1.1.6": {}
+        }
     },
     "ui/component-compare/context": {
         "name": "ui/component-compare/context",
@@ -1813,7 +1828,10 @@
         "scope": "teambit.lanes",
         "version": "0.0.220",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/navigation/lane-switcher"
+        "rootDir": "components/ui/navigation/lane-switcher",
+        "config": {
+            "teambit.react/v17/react-env@1.1.6": {}
+        }
     },
     "ui/preview-placeholder": {
         "name": "ui/preview-placeholder",
