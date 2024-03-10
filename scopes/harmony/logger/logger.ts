@@ -168,6 +168,6 @@ export class Logger implements IBitLogger {
    * see https://github.com/chalk/chalk/issues/625
    */
   static successSymbol() {
-    return platform() === 'win32' ? chalk.green('√') : chalk.green('✔');
+    return platform() === 'win32' ? chalk.green('✓') : chalk.green('✔');
   }
 }

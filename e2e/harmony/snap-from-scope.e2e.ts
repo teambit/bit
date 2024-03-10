@@ -474,4 +474,32 @@ export const BasicIdInput = () => {
       });
     });
   });
+  describe('updating packages (not components)', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/index.js', 'require("lodash.get")');
+      helper.npm.addFakeNpmPackage('lodash.get', '4.4.2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      const bareSnap = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareSnap.scopePath);
+      const data = [
+        {
+          componentId: `${helper.scopes.remote}/comp1`,
+          dependencies: ['lodash.get@4.5.0'],
+        },
+      ];
+      // console.log('data', JSON.stringify(data));
+      helper.command.snapFromScope(bareSnap.scopePath, data, '--push');
+    });
+    it('should update the package', () => {
+      const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, helper.scopes.remotePath);
+      expect(comp.packageDependencies['lodash.get']).to.equal('4.5.0');
+
+      const depResolver = comp.extensions.find((e) => e.name === Extensions.dependencyResolver).data;
+      const lodash = depResolver.dependencies.find((p) => p.id === 'lodash.get');
+      expect(lodash.version).to.equal('4.5.0');
+    });
+  });
 });

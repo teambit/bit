@@ -1,6 +1,6 @@
 import { resolve, join } from 'path';
 import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
-import { findScopePath } from '@teambit/legacy/dist/utils';
+import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { readdirSync } from 'fs';
 import { Harmony, Aspect } from '@teambit/harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)

@@ -388,7 +388,7 @@
         "enquirer": "2.3.6",
         "esbuild": "^0.20.1",
         "esbuild-plugin-ignore": "^1.1.1",
-        "eslint-config-airbnb-typescript": "12.0.0",
+        "eslint-config-airbnb-typescript": "17.1.0",
         "eslint-import-resolver-node": "0.3.4",
         "eventemitter2": "6.4.4",
         "expose-loader": "3.1.0",
@@ -509,7 +509,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.663",
+        "@teambit/legacy": "1.0.665",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
         "graphql": "15.8.0",
@@ -634,7 +634,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.663",
+            "@teambit/legacy": "1.0.665",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
@@ -657,7 +657,7 @@
             "buffer": "6.0.3",
             "process": "0.11.10",
             "react-router-dom": "6.3.0",
-            "typescript": "4.7.4"
+            "typescript": "5.3.3"
           },
           "devDependencies": {
             // "@types/react": "-",

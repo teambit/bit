@@ -9,7 +9,6 @@
     "target": "es2015",
     "skipLibCheck": true,
     "noImplicitAny": false,
-    "typeRoots": ["custom-types", "node_modules/@types"],
     "preserveConstEnums": true,
     "strictPropertyInitialization": false,
     "esModuleInterop": true,

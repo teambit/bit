@@ -1385,7 +1385,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return newComponentIds;
   }
 
-  async setDefaultScope(scopeName: string) {
+  /**
+   * @param scopeName
+   * @param includeComponents whether to update new components in the workspace to use the new default-scope
+   * this is relevant only for new components that were using the previous default-scope
+   */
+  async setDefaultScope(scopeName: string, includeComponents = true) {
     if (this.defaultScope === scopeName) {
       throw new Error(`the default-scope is already set as "${scopeName}", nothing to change`);
     }
@@ -1398,8 +1403,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       { defaultScope: scopeName },
       { mergeIntoExisting: true, ignoreVersion: true }
     );
-    // fix also comps using the old default-scope
-    this.bitMap.updateDefaultScope(this.config.defaultScope, scopeName);
+    if (includeComponents) {
+      // fix also comps using the old default-scope
+      this.bitMap.updateDefaultScope(this.config.defaultScope, scopeName);
+    }
 
     this.config.defaultScope = scopeName;
     await config.workspaceConfig?.write({ reasonForChange: `default-scope (${scopeName})` });

@@ -3,11 +3,9 @@ import sha1 from './encryption/sha1';
 import * as eol from './eol';
 import writeFile from './fs-write-file';
 import { checksum, checksumFile } from './checksum';
-import calculateFileInfo from './fs/file-info';
 import getWithoutExt from './fs/fs-no-ext';
 import getExt from './fs/get-ext';
 import isDirEmpty from './fs/is-dir-empty';
-import { pathHas, pathHasAll, findScopePath } from './fs/propogate-until';
 import readDirIgnoreDsStore, { readDirSyncIgnoreDsStore } from './fs/read-dir-ignore-ds-store';
 import glob from './glob';
 import retrieveIgnoreList from './ignore/ignore';
@@ -68,15 +66,11 @@ export {
   isBitUrl,
   isDir,
   resolveHomePath,
-  findScopePath,
-  pathHas,
-  pathHasAll,
   isDirEmpty,
   isDirEmptySync,
   immutableUnshift,
   stripTrailingChar,
   getLatestVersionNumber,
-  calculateFileInfo,
   getWithoutExt,
   getExt,
   pathNormalizeToLinux,

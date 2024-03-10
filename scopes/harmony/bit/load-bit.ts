@@ -41,7 +41,7 @@ import ClearCacheAspect from '@teambit/clear-cache';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import { findScopePath } from '@teambit/legacy/dist/utils';
+import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
 import { readdir, readFile } from 'fs-extra';
