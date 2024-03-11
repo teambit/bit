@@ -18,6 +18,12 @@ export type SlotRouterProps = PropsWithChildren<{
   parentPath?: string;
 }>;
 
+function toKey(route: RouteProps) {
+  if (route.path) return route.path;
+  if (route.index) return '/';
+  return '.';
+}
+
 export function SlotRouter({ routes: routesFromProps, slot, rootRoutes, children, parentPath }: SlotRouterProps) {
   const routes = routesFromProps || (slot && flatten(slot.values())) || [];
   const withRoot = routes.concat(rootRoutes || []);
@@ -43,10 +49,4 @@ export function SlotRouter({ routes: routesFromProps, slot, rootRoutes, children
       </Route>
     </Routes>
   );
-}
-
-function toKey(route: RouteProps) {
-  if (route.path) return route.path;
-  if (route.index) return '/';
-  return '.';
 }
