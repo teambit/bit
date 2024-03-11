@@ -129,12 +129,17 @@ export class WebpackMain {
     };
     // eslint-disable-next-line max-len
 
-    const addPerformanceTransformer = (config: WebpackConfigMutator) => {
-      config.raw.performance = {
-        maxAssetSize: 50000,
-        maxEntrypointSize: 50000,
-        hints: 'warning',
-      };
+    const addPerformanceTransformer = (configMutator: WebpackConfigMutator) => {
+      const merged = configMutator.merge([
+        () => ({
+          performance: {
+            maxAssetSize: 50000,
+            maxEntrypointSize: 50000,
+            hints: 'warning',
+          },
+        }),
+      ]);
+      return merged;
     };
 
     const configs =
