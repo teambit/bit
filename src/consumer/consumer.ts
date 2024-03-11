@@ -19,7 +19,8 @@ import { Scope } from '../scope';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
-import { generateRandomStr, sortObject } from '../utils';
+import { generateRandomStr } from '../utils';
+import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import { composeComponentPath } from '../utils/bit/compose-component-path';
 import {
   PathAbsolute,
@@ -356,21 +357,21 @@ export default class Consumer {
       componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
       version.dependencies.sort();
       version.devDependencies.sort();
-      version.packageDependencies = sortObject(version.packageDependencies);
-      version.devPackageDependencies = sortObject(version.devPackageDependencies);
-      version.peerPackageDependencies = sortObject(version.peerPackageDependencies);
+      version.packageDependencies = sortObjectByKeys(version.packageDependencies);
+      version.devPackageDependencies = sortObjectByKeys(version.devPackageDependencies);
+      version.peerPackageDependencies = sortObjectByKeys(version.peerPackageDependencies);
       sortOverrides(version.overrides);
       componentFromModel.dependencies.sort();
       componentFromModel.devDependencies.sort();
-      componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
-      componentFromModel.devPackageDependencies = sortObject(componentFromModel.devPackageDependencies);
-      componentFromModel.peerPackageDependencies = sortObject(componentFromModel.peerPackageDependencies);
+      componentFromModel.packageDependencies = sortObjectByKeys(componentFromModel.packageDependencies);
+      componentFromModel.devPackageDependencies = sortObjectByKeys(componentFromModel.devPackageDependencies);
+      componentFromModel.peerPackageDependencies = sortObjectByKeys(componentFromModel.peerPackageDependencies);
       sortOverrides(componentFromModel.overrides);
     }
     function sortOverrides(overrides) {
       if (!overrides) return;
       DEPENDENCIES_FIELDS.forEach((field) => {
-        if (overrides[field]) overrides[field] = sortObject(overrides[field]);
+        if (overrides[field]) overrides[field] = sortObjectByKeys(overrides[field]);
       });
     }
   }

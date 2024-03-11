@@ -8,6 +8,7 @@ import semver from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { isTag } from '@teambit/component-version';
+import { readDirIgnoreSystemFilesSync } from '@teambit/toolbox.fs.readdir-skip-system-files';
 import { Analytics } from '../analytics/analytics';
 import {
   BIT_GIT_DIR,
@@ -26,7 +27,6 @@ import Component from '../consumer/component/consumer-component';
 import { ExtensionDataEntry } from '../consumer/config';
 import Consumer from '../consumer/consumer';
 import logger from '../logger/logger';
-import { readDirSyncIgnoreDsStore } from '../utils';
 import { PathOsBasedAbsolute } from '../utils/path';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
@@ -228,7 +228,7 @@ export default class Scope {
     }
     const componentFullPath = pathLib.join(scopePath, Scope.getComponentsRelativePath(), relativePath);
     if (!fs.existsSync(componentFullPath)) return '';
-    const versions = readDirSyncIgnoreDsStore(componentFullPath);
+    const versions = readDirIgnoreSystemFilesSync(componentFullPath);
     const latestVersion = semver.maxSatisfying(versions, '*', { includePrerelease: true });
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return pathLib.join(relativePath, latestVersion!);

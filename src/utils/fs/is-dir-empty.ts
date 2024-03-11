@@ -1,6 +1,6 @@
-import readDirIgnoreDsStore from './read-dir-ignore-ds-store';
+import { readDirIgnoreSystemFiles } from '@teambit/toolbox.fs.readdir-skip-system-files';
 
 export default async function isDirEmpty(dirPath: string): Promise<boolean> {
-  const files = await readDirIgnoreDsStore(dirPath);
+  const files = await readDirIgnoreSystemFiles(dirPath);
   return !files.length;
 }

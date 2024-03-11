@@ -1,5 +1,5 @@
 import { uniqWith } from 'lodash';
-import { sortObject } from '@teambit/legacy/dist/utils';
+import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import { snapToSemver } from '@teambit/component-package-version';
 import { Policy, SemverVersion, GitUrlVersion, FileSystemPath, PolicyConfigKeys } from '../policy';
 import { KEY_NAME_BY_LIFECYCLE_TYPE, WorkspaceDependencyLifecycleType } from '../../dependencies';
@@ -132,10 +132,10 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
       return acc;
     }, res);
     if (res.dependencies) {
-      res.dependencies = sortObject(res.dependencies);
+      res.dependencies = sortObjectByKeys(res.dependencies);
     }
     if (res.peerDependencies) {
-      res.peerDependencies = sortObject(res.peerDependencies);
+      res.peerDependencies = sortObjectByKeys(res.peerDependencies);
     }
     return res;
   }
