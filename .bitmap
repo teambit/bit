@@ -2113,7 +2113,13 @@
         "scope": "teambit.ui-foundation",
         "version": "0.0.506",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/react-router/slot-router"
+        "rootDir": "components/ui/react-router/slot-router",
+        "config": {
+            "teambit.react/v17/react-env@1.1.6": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/v17/react-env"
+            }
+        }
     },
     "ui/test-compare": {
         "name": "ui/test-compare",
