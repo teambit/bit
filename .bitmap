@@ -1734,6 +1734,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/time/time-format"
     },
+    "fs/readdir-skip-system-files": {
+        "name": "fs/readdir-skip-system-files",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/fs/readdir-skip-system-files"
+    },
     "tracker": {
         "name": "tracker",
         "scope": "teambit.component",
