@@ -292,7 +292,6 @@
         "@teambit/ui-foundation.ui.pages.preview-not-found": "^0.0.84",
         "@teambit/ui-foundation.ui.pages.static-error": "^0.0.92",
         "@teambit/ui-foundation.ui.react-router.extend-path": "^0.0.486",
-        "@teambit/ui-foundation.ui.react-router.slot-router": "^0.0.506",
         "@teambit/ui-foundation.ui.react-router.use-query": "^0.0.501",
         "@teambit/ui-foundation.ui.rendering.html": "^0.0.85",
         "@teambit/ui-foundation.ui.side-bar": "^0.0.875",

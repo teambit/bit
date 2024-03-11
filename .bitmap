@@ -2108,6 +2108,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs"
     },
+    "ui/react-router/slot-router": {
+        "name": "ui/react-router/slot-router",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.506",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/react-router/slot-router"
+    },
     "ui/test-compare": {
         "name": "ui/test-compare",
         "scope": "teambit.defender",
