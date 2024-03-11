@@ -1,7 +1,8 @@
 import React, { useEffect, ReactNode, useMemo } from 'react';
 import { RouteProps } from 'react-router-dom';
 import flatten from 'lodash.flatten';
-import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SlotRegistry } from '@teambit/harmony';
 import { isFunction } from 'lodash';
 import { ComponentProvider, ComponentDescriptorProvider } from './context';
