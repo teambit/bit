@@ -2,7 +2,7 @@ import type { ComponentUI, ComponentModel } from '@teambit/component';
 import { compact, flatten } from 'lodash';
 import { ComponentAspect } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SidebarAspect, SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
 import { ComponentTreeNode } from '@teambit/component-tree';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
