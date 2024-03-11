@@ -128,9 +128,24 @@ export class WebpackMain {
       isEnvTemplate: context.metaData?.isEnvTemplate,
     };
     // eslint-disable-next-line max-len
+
+    const addPerformanceTransformer = (config: WebpackConfigMutator) => {
+      config.raw.performance = {
+        maxAssetSize: 50000,
+        maxEntrypointSize: 50000,
+        hints: 'warning',
+      };
+    };
+
     const configs =
       initialConfigs ||
-      this.createConfigs(context.targets, baseConfigFactory, transformers, transformerContext, context);
+      this.createConfigs(
+        context.targets,
+        baseConfigFactory,
+        [...transformers, addPerformanceTransformer] as WebpackConfigTransformer[],
+        transformerContext,
+        context
+      );
     return new WebpackBundler(
       context.targets,
       configs,
