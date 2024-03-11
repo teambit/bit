@@ -1,1 +1,2 @@
-export { SlotRouter, SlotRouterProps, RouteSlot, NavigationSlot } from './slot-router';
+export { SlotRouter } from './slot-router';
+export type { SlotRouterProps, RouteSlot, NavigationSlot } from './slot-router';
