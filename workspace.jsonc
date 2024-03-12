@@ -132,7 +132,7 @@
         "@teambit/component.ui.component-compare.utils.sort-tabs": "^0.0.102",
         "@teambit/component.ui.component-deprecated": "^0.0.39",
         "@teambit/component.ui.component-meta": "^0.0.358",
-        "@teambit/component.ui.component-size": "^0.0.76",
+        "@teambit/component.ui.component-size": "^0.0.77",
         "@teambit/component.ui.component-status": "^0.0.504",
         "@teambit/component.ui.component-status-resolver": "^0.0.510",
         "@teambit/component.ui.component-tooltip": "^0.0.509",
@@ -147,8 +147,8 @@
         "@teambit/defender.content.formatter-overview": "1.96.1",
         "@teambit/defender.content.linter-overview": "1.95.0",
         "@teambit/defender.content.tester-overview": "1.95.0",
-        "@teambit/defender.eslint-linter": "1.0.1",
-        "@teambit/defender.prettier-formatter": "1.0.0",
+        "@teambit/defender.eslint-linter": "1.0.19",
+        "@teambit/defender.prettier-formatter": "1.0.10",
         "@teambit/defender.ui.test-compare-section": "^0.0.100",
         "@teambit/defender.ui.test-loader": "^0.0.504",
         "@teambit/defender.ui.test-row": "^0.0.503",
@@ -292,7 +292,6 @@
         "@teambit/ui-foundation.ui.pages.preview-not-found": "^0.0.84",
         "@teambit/ui-foundation.ui.pages.static-error": "^0.0.92",
         "@teambit/ui-foundation.ui.react-router.extend-path": "^0.0.486",
-        "@teambit/ui-foundation.ui.react-router.slot-router": "^0.0.506",
         "@teambit/ui-foundation.ui.react-router.use-query": "^0.0.501",
         "@teambit/ui-foundation.ui.rendering.html": "^0.0.85",
         "@teambit/ui-foundation.ui.side-bar": "^0.0.875",
@@ -509,14 +508,14 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.665",
+        "@teambit/legacy": "1.0.667",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
         "graphql": "15.8.0",
         "mz": "2.7.0",
         "react": "17.0.2",
         "react-dom": "17.0.2",
-        "react-router-dom": "^6.0.0"
+        "react-router-dom": "^6.22.3"
       }
     },
     "linkCoreAspects": false,
@@ -634,7 +633,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.665",
+            "@teambit/legacy": "1.0.667",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",

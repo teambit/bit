@@ -1,8 +1,8 @@
 /* eslint-disable max-classes-per-file */
 import R from 'ramda';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import { compact, isEmpty, cloneDeep } from 'lodash';
-import { sortObject } from '../../utils';
 import {
   convertBuildArtifactsFromModelObject,
   convertBuildArtifactsToModelObject,
@@ -226,7 +226,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     const arr = R.sortBy(R.prop('stringId'), this);
     // Also sort the config
     arr.forEach((entry) => {
-      entry.config = sortObject(entry.config);
+      entry.config = sortObjectByKeys(entry.config);
     });
     return ExtensionDataList.fromArray(arr);
   }
