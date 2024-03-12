@@ -840,6 +840,9 @@ importers:
       '@teambit/scope.content.scope-overview':
         specifier: 1.95.0
         version: 1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/scope.modules.find-scope-path':
+        specifier: ^0.0.1
+        version: 0.0.1
       '@teambit/scope.ui.empty-scope':
         specifier: ^0.0.509
         version: 0.0.509(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
@@ -885,9 +888,15 @@ importers:
       '@teambit/tests-results':
         specifier: ^1.0.4
         version: 1.0.4
+      '@teambit/toolbox.fs.readdir-skip-system-files':
+        specifier: ^0.0.2
+        version: 0.0.2
       '@teambit/toolbox.network.agent':
         specifier: ^0.0.554
         version: 0.0.554
+      '@teambit/toolbox.object.sorter':
+        specifier: ^0.0.2
+        version: 0.0.2
       '@teambit/typescript.deps-detectors.detective-typescript':
         specifier: ^0.0.6
         version: 0.0.6(typescript@5.3.3)
@@ -5898,9 +5907,6 @@ importers:
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
-      '@teambit/scope.modules.find-scope-path':
-        specifier: workspace:*
-        version: file:scopes/scope/modules/find-scope-path
       '@teambit/scope.ui.hooks.scope-context':
         specifier: workspace:*
         version: file:components/ui/hooks/scope-context(react-dom@17.0.2)(react@17.0.2)
@@ -5937,18 +5943,12 @@ importers:
       '@teambit/toolbox.fs.link-or-symlink':
         specifier: workspace:*
         version: file:scopes/toolbox/fs/link-or-symlink
-      '@teambit/toolbox.fs.readdir-skip-system-files':
-        specifier: workspace:*
-        version: file:scopes/toolbox/fs/readdir-skip-system-files
       '@teambit/toolbox.modules.module-resolver':
         specifier: workspace:*
         version: file:scopes/toolbox/modules/module-resolver
       '@teambit/toolbox.network.get-port':
         specifier: workspace:*
         version: file:scopes/toolbox/network/get-port
-      '@teambit/toolbox.object.sorter':
-        specifier: workspace:*
-        version: file:scopes/toolbox/object/sorter
       '@teambit/toolbox.path.is-path-inside':
         specifier: workspace:*
         version: file:scopes/toolbox/path/is-path-inside
@@ -6534,8 +6534,6 @@ importers:
         injected: true
       '@teambit/scope.models.scope-model':
         injected: true
-      '@teambit/scope.modules.find-scope-path':
-        injected: true
       '@teambit/scope.ui.hooks.scope-context':
         injected: true
       '@teambit/semantics.entities.semantic-schema':
@@ -6560,13 +6558,9 @@ importers:
         injected: true
       '@teambit/toolbox.fs.link-or-symlink':
         injected: true
-      '@teambit/toolbox.fs.readdir-skip-system-files':
-        injected: true
       '@teambit/toolbox.modules.module-resolver':
         injected: true
       '@teambit/toolbox.network.get-port':
-        injected: true
-      '@teambit/toolbox.object.sorter':
         injected: true
       '@teambit/toolbox.path.is-path-inside':
         injected: true
@@ -7347,9 +7341,6 @@ importers:
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
-      '@teambit/scope.modules.find-scope-path':
-        specifier: workspace:*
-        version: file:scopes/scope/modules/find-scope-path
       '@teambit/scope.ui.hooks.scope-context':
         specifier: workspace:*
         version: file:components/ui/hooks/scope-context(react-dom@17.0.2)(react@17.0.2)
@@ -7386,18 +7377,12 @@ importers:
       '@teambit/toolbox.fs.link-or-symlink':
         specifier: workspace:*
         version: file:scopes/toolbox/fs/link-or-symlink
-      '@teambit/toolbox.fs.readdir-skip-system-files':
-        specifier: workspace:*
-        version: file:scopes/toolbox/fs/readdir-skip-system-files
       '@teambit/toolbox.modules.module-resolver':
         specifier: workspace:*
         version: file:scopes/toolbox/modules/module-resolver
       '@teambit/toolbox.network.get-port':
         specifier: workspace:*
         version: file:scopes/toolbox/network/get-port
-      '@teambit/toolbox.object.sorter':
-        specifier: workspace:*
-        version: file:scopes/toolbox/object/sorter
       '@teambit/toolbox.path.is-path-inside':
         specifier: workspace:*
         version: file:scopes/toolbox/path/is-path-inside
@@ -7998,8 +7983,6 @@ importers:
         injected: true
       '@teambit/scope.models.scope-model':
         injected: true
-      '@teambit/scope.modules.find-scope-path':
-        injected: true
       '@teambit/scope.ui.hooks.scope-context':
         injected: true
       '@teambit/semantics.entities.semantic-schema':
@@ -8024,13 +8007,9 @@ importers:
         injected: true
       '@teambit/toolbox.fs.link-or-symlink':
         injected: true
-      '@teambit/toolbox.fs.readdir-skip-system-files':
-        injected: true
       '@teambit/toolbox.modules.module-resolver':
         injected: true
       '@teambit/toolbox.network.get-port':
-        injected: true
-      '@teambit/toolbox.object.sorter':
         injected: true
       '@teambit/toolbox.path.is-path-inside':
         injected: true
@@ -8811,9 +8790,6 @@ importers:
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
-      '@teambit/scope.modules.find-scope-path':
-        specifier: workspace:*
-        version: file:scopes/scope/modules/find-scope-path
       '@teambit/scope.ui.hooks.scope-context':
         specifier: workspace:*
         version: file:components/ui/hooks/scope-context(react-dom@17.0.2)(react@17.0.2)
@@ -8850,18 +8826,12 @@ importers:
       '@teambit/toolbox.fs.link-or-symlink':
         specifier: workspace:*
         version: file:scopes/toolbox/fs/link-or-symlink
-      '@teambit/toolbox.fs.readdir-skip-system-files':
-        specifier: workspace:*
-        version: file:scopes/toolbox/fs/readdir-skip-system-files
       '@teambit/toolbox.modules.module-resolver':
         specifier: workspace:*
         version: file:scopes/toolbox/modules/module-resolver
       '@teambit/toolbox.network.get-port':
         specifier: workspace:*
         version: file:scopes/toolbox/network/get-port
-      '@teambit/toolbox.object.sorter':
-        specifier: workspace:*
-        version: file:scopes/toolbox/object/sorter
       '@teambit/toolbox.path.is-path-inside':
         specifier: workspace:*
         version: file:scopes/toolbox/path/is-path-inside
@@ -9462,8 +9432,6 @@ importers:
         injected: true
       '@teambit/scope.models.scope-model':
         injected: true
-      '@teambit/scope.modules.find-scope-path':
-        injected: true
       '@teambit/scope.ui.hooks.scope-context':
         injected: true
       '@teambit/semantics.entities.semantic-schema':
@@ -9488,13 +9456,9 @@ importers:
         injected: true
       '@teambit/toolbox.fs.link-or-symlink':
         injected: true
-      '@teambit/toolbox.fs.readdir-skip-system-files':
-        injected: true
       '@teambit/toolbox.modules.module-resolver':
         injected: true
       '@teambit/toolbox.network.get-port':
-        injected: true
-      '@teambit/toolbox.object.sorter':
         injected: true
       '@teambit/toolbox.path.is-path-inside':
         injected: true
@@ -10266,9 +10230,6 @@ importers:
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
-      '@teambit/scope.modules.find-scope-path':
-        specifier: workspace:*
-        version: file:scopes/scope/modules/find-scope-path
       '@teambit/scope.ui.hooks.scope-context':
         specifier: workspace:*
         version: file:components/ui/hooks/scope-context(react-dom@17.0.2)(react@17.0.2)
@@ -10305,18 +10266,12 @@ importers:
       '@teambit/toolbox.fs.link-or-symlink':
         specifier: workspace:*
         version: file:scopes/toolbox/fs/link-or-symlink
-      '@teambit/toolbox.fs.readdir-skip-system-files':
-        specifier: workspace:*
-        version: file:scopes/toolbox/fs/readdir-skip-system-files
       '@teambit/toolbox.modules.module-resolver':
         specifier: workspace:*
         version: file:scopes/toolbox/modules/module-resolver
       '@teambit/toolbox.network.get-port':
         specifier: workspace:*
         version: file:scopes/toolbox/network/get-port
-      '@teambit/toolbox.object.sorter':
-        specifier: workspace:*
-        version: file:scopes/toolbox/object/sorter
       '@teambit/toolbox.path.is-path-inside':
         specifier: workspace:*
         version: file:scopes/toolbox/path/is-path-inside
@@ -10896,8 +10851,6 @@ importers:
         injected: true
       '@teambit/scope.models.scope-model':
         injected: true
-      '@teambit/scope.modules.find-scope-path':
-        injected: true
       '@teambit/scope.ui.hooks.scope-context':
         injected: true
       '@teambit/semantics.entities.semantic-schema':
@@ -10922,13 +10875,9 @@ importers:
         injected: true
       '@teambit/toolbox.fs.link-or-symlink':
         injected: true
-      '@teambit/toolbox.fs.readdir-skip-system-files':
-        injected: true
       '@teambit/toolbox.modules.module-resolver':
         injected: true
       '@teambit/toolbox.network.get-port':
-        injected: true
-      '@teambit/toolbox.object.sorter':
         injected: true
       '@teambit/toolbox.path.is-path-inside':
         injected: true
@@ -11700,9 +11649,6 @@ importers:
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
-      '@teambit/scope.modules.find-scope-path':
-        specifier: workspace:*
-        version: file:scopes/scope/modules/find-scope-path
       '@teambit/scope.ui.hooks.scope-context':
         specifier: workspace:*
         version: file:components/ui/hooks/scope-context(react-dom@17.0.2)(react@17.0.2)
@@ -11739,18 +11685,12 @@ importers:
       '@teambit/toolbox.fs.link-or-symlink':
         specifier: workspace:*
         version: file:scopes/toolbox/fs/link-or-symlink
-      '@teambit/toolbox.fs.readdir-skip-system-files':
-        specifier: workspace:*
-        version: file:scopes/toolbox/fs/readdir-skip-system-files
       '@teambit/toolbox.modules.module-resolver':
         specifier: workspace:*
         version: file:scopes/toolbox/modules/module-resolver
       '@teambit/toolbox.network.get-port':
         specifier: workspace:*
         version: file:scopes/toolbox/network/get-port
-      '@teambit/toolbox.object.sorter':
-        specifier: workspace:*
-        version: file:scopes/toolbox/object/sorter
       '@teambit/toolbox.path.is-path-inside':
         specifier: workspace:*
         version: file:scopes/toolbox/path/is-path-inside
@@ -12336,8 +12276,6 @@ importers:
         injected: true
       '@teambit/scope.models.scope-model':
         injected: true
-      '@teambit/scope.modules.find-scope-path':
-        injected: true
       '@teambit/scope.ui.hooks.scope-context':
         injected: true
       '@teambit/semantics.entities.semantic-schema':
@@ -12362,13 +12300,9 @@ importers:
         injected: true
       '@teambit/toolbox.fs.link-or-symlink':
         injected: true
-      '@teambit/toolbox.fs.readdir-skip-system-files':
-        injected: true
       '@teambit/toolbox.modules.module-resolver':
         injected: true
       '@teambit/toolbox.network.get-port':
-        injected: true
-      '@teambit/toolbox.object.sorter':
         injected: true
       '@teambit/toolbox.path.is-path-inside':
         injected: true
@@ -13140,9 +13074,6 @@ importers:
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
-      '@teambit/scope.modules.find-scope-path':
-        specifier: workspace:*
-        version: file:scopes/scope/modules/find-scope-path
       '@teambit/scope.ui.hooks.scope-context':
         specifier: workspace:*
         version: file:components/ui/hooks/scope-context(react-dom@17.0.2)(react@17.0.2)
@@ -13179,18 +13110,12 @@ importers:
       '@teambit/toolbox.fs.link-or-symlink':
         specifier: workspace:*
         version: file:scopes/toolbox/fs/link-or-symlink
-      '@teambit/toolbox.fs.readdir-skip-system-files':
-        specifier: workspace:*
-        version: file:scopes/toolbox/fs/readdir-skip-system-files
       '@teambit/toolbox.modules.module-resolver':
         specifier: workspace:*
         version: file:scopes/toolbox/modules/module-resolver
       '@teambit/toolbox.network.get-port':
         specifier: workspace:*
         version: file:scopes/toolbox/network/get-port
-      '@teambit/toolbox.object.sorter':
-        specifier: workspace:*
-        version: file:scopes/toolbox/object/sorter
       '@teambit/toolbox.path.is-path-inside':
         specifier: workspace:*
         version: file:scopes/toolbox/path/is-path-inside
@@ -13776,8 +13701,6 @@ importers:
         injected: true
       '@teambit/scope.models.scope-model':
         injected: true
-      '@teambit/scope.modules.find-scope-path':
-        injected: true
       '@teambit/scope.ui.hooks.scope-context':
         injected: true
       '@teambit/semantics.entities.semantic-schema':
@@ -13802,13 +13725,9 @@ importers:
         injected: true
       '@teambit/toolbox.fs.link-or-symlink':
         injected: true
-      '@teambit/toolbox.fs.readdir-skip-system-files':
-        injected: true
       '@teambit/toolbox.modules.module-resolver':
         injected: true
       '@teambit/toolbox.network.get-port':
-        injected: true
-      '@teambit/toolbox.object.sorter':
         injected: true
       '@teambit/toolbox.path.is-path-inside':
         injected: true
@@ -14592,9 +14511,6 @@ importers:
       '@teambit/scope.models.scope-model':
         specifier: workspace:*
         version: file:scopes/scope/models/scope-model
-      '@teambit/scope.modules.find-scope-path':
-        specifier: workspace:*
-        version: file:scopes/scope/modules/find-scope-path
       '@teambit/scope.ui.hooks.scope-context':
         specifier: workspace:*
         version: file:components/ui/hooks/scope-context(react-dom@17.0.2)(react@17.0.2)
@@ -14631,18 +14547,12 @@ importers:
       '@teambit/toolbox.fs.link-or-symlink':
         specifier: workspace:*
         version: file:scopes/toolbox/fs/link-or-symlink
-      '@teambit/toolbox.fs.readdir-skip-system-files':
-        specifier: workspace:*
-        version: file:scopes/toolbox/fs/readdir-skip-system-files
       '@teambit/toolbox.modules.module-resolver':
         specifier: workspace:*
         version: file:scopes/toolbox/modules/module-resolver
       '@teambit/toolbox.network.get-port':
         specifier: workspace:*
         version: file:scopes/toolbox/network/get-port
-      '@teambit/toolbox.object.sorter':
-        specifier: workspace:*
-        version: file:scopes/toolbox/object/sorter
       '@teambit/toolbox.path.is-path-inside':
         specifier: workspace:*
         version: file:scopes/toolbox/path/is-path-inside
@@ -15252,8 +15162,6 @@ importers:
         injected: true
       '@teambit/scope.models.scope-model':
         injected: true
-      '@teambit/scope.modules.find-scope-path':
-        injected: true
       '@teambit/scope.ui.hooks.scope-context':
         injected: true
       '@teambit/semantics.entities.semantic-schema':
@@ -15278,13 +15186,9 @@ importers:
         injected: true
       '@teambit/toolbox.fs.link-or-symlink':
         injected: true
-      '@teambit/toolbox.fs.readdir-skip-system-files':
-        injected: true
       '@teambit/toolbox.modules.module-resolver':
         injected: true
       '@teambit/toolbox.network.get-port':
-        injected: true
-      '@teambit/toolbox.object.sorter':
         injected: true
       '@teambit/toolbox.path.is-path-inside':
         injected: true
@@ -20137,6 +20041,9 @@ importers:
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/toolbox.object.sorter':
+        specifier: ^0.0.2
+        version: 0.0.2
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.75
@@ -21561,6 +21468,9 @@ importers:
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/scope.modules.find-scope-path':
+        specifier: ^0.0.1
+        version: 0.0.1
       '@teambit/ui-foundation.ui.navigation.react-router-adapter':
         specifier: 6.1.1
         version: 6.1.1(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -21838,6 +21748,9 @@ importers:
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/scope.modules.find-scope-path':
+        specifier: ^0.0.1
+        version: 0.0.1
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.75
@@ -22417,6 +22330,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/scope.modules.find-scope-path':
+        specifier: ^0.0.1
+        version: 0.0.1
     devDependencies:
       '@babel/runtime':
         specifier: 7.20.0
@@ -24938,31 +24854,6 @@ importers:
         specifier: 12.20.4
         version: 12.20.4
 
-  scopes/scope/modules/find-scope-path:
-    dependencies:
-      find-up:
-        specifier: 5.0.0
-        version: 5.0.0
-      fs-extra:
-        specifier: 10.0.0
-        version: 10.0.0
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/fs-extra':
-        specifier: 9.0.7
-        version: 9.0.7
-      '@types/jest':
-        specifier: 26.0.20
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-
   scopes/scope/scope:
     dependencies:
       '@mdx-js/react':
@@ -25411,28 +25302,6 @@ importers:
         specifier: 12.20.4
         version: 12.20.4
 
-  scopes/toolbox/fs/readdir-skip-system-files:
-    dependencies:
-      fs-extra:
-        specifier: 10.0.0
-        version: 10.0.0
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/fs-extra':
-        specifier: 9.0.7
-        version: 9.0.7
-      '@types/jest':
-        specifier: 26.0.20
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-
   scopes/toolbox/modules/module-resolver:
     dependencies:
       resolve:
@@ -25472,21 +25341,6 @@ importers:
       chai:
         specifier: 4.3.0
         version: 4.3.0
-
-  scopes/toolbox/object/sorter:
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: 26.0.20
-        version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
 
   scopes/toolbox/path/is-path-inside:
     devDependencies:
@@ -26578,15 +26432,9 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
-      assert:
-        specifier: ^2.1.0
-        version: 2.1.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
-      buffer:
-        specifier: 6.0.3
-        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -26641,9 +26489,6 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
-      punycode:
-        specifier: ^2.3.1
-        version: 2.3.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -26665,21 +26510,12 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
-      string_decoder:
-        specifier: ^1.3.0
-        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
-      url:
-        specifier: ^0.11.3
-        version: 0.11.3
-      util:
-        specifier: ^0.12.5
-        version: 0.12.5
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -44307,6 +44143,13 @@ packages:
       - react-dom
     dev: false
 
+  /@teambit/scope.modules.find-scope-path@0.0.1:
+    resolution: {integrity: sha512-0L1ZQFIeG0X0cxbd9jQrMJmtIUy/k/OoLgjjfHD23/KoDEZEUakcr+Zw4TqAJfcp8lWIdrn8dQQOkB7XWoo44w==}
+    dependencies:
+      find-up: 5.0.0
+      fs-extra: 10.0.0
+    dev: false
+
   /@teambit/scope.ui.empty-scope@0.0.509(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-7Igd0vtt2M9gkJXs9dP+nDi7e4CuQfpAaL79ZO6b6UL7QbRE0zc1JX/aSnK6q9QnKGpJbz+OCASJ8HxkNpYoDw==}
     engines: {node: '>=12.22.0'}
@@ -44575,6 +44418,12 @@ packages:
       symlink-dir: 5.2.1
     dev: false
 
+  /@teambit/toolbox.fs.readdir-skip-system-files@0.0.2:
+    resolution: {integrity: sha512-30UuGkixM/z+6ymos80WBGP6Cg7ZuJwyiLU9C5YLxlLL9R3rjZlHKrYt8wW+UgeREe5Ol4ltz60ByjWJVN2bTg==}
+    dependencies:
+      fs-extra: 10.0.0
+    dev: false
+
   /@teambit/toolbox.network.agent@0.0.551:
     resolution: {integrity: sha1-Lm/1989JK6CwISZEUGjrJ9BE6fk=}
     engines: {node: '>=12.22.0'}
@@ -44600,6 +44449,10 @@ packages:
   /@teambit/toolbox.network.get-port@1.0.0:
     resolution: {integrity: sha512-d/MnfDd+LxEKNPYhjUszj/VGaLP248gZA6BQq0mA/S0ot+MYo15hoBuNNLbUG0IBZQb9M5Avf8Uf2NxAXCgO6g==}
     engines: {node: '>=12.22.0'}
+
+  /@teambit/toolbox.object.sorter@0.0.2:
+    resolution: {integrity: sha512-nIaD83mHG6nJ20m4XxBLnTHdG+pqSChazE+DO0Cbd4mLCfD5n5BZMixeGnrHrJo+TR4LvHg4KYVN65Q1/nPyXA==}
+    dev: false
 
   /@teambit/toolbox.string.ellipsis@0.0.172:
     resolution: {integrity: sha1-nbLwbPi2d8Qeg6aCX2TYlARSRew=}
@@ -74800,7 +74653,7 @@ packages:
       '@teambit/legacy-bit-id': 1.1.1
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/toolbox.fs.link-or-symlink': file:scopes/toolbox/fs/link-or-symlink
-      '@teambit/toolbox.object.sorter': file:scopes/toolbox/object/sorter
+      '@teambit/toolbox.object.sorter': 0.0.2
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
@@ -75391,7 +75244,7 @@ packages:
       '@teambit/harmony': 0.4.6
       '@teambit/legacy-bit-id': 1.1.1
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/scope.modules.find-scope-path': file:scopes/scope/modules/find-scope-path
+      '@teambit/scope.modules.find-scope-path': 0.0.1
       '@teambit/toolbox.performance.v8-cache': file:scopes/toolbox/performance/v8-cache
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.1(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -75498,7 +75351,7 @@ packages:
       '@teambit/bit-error': 0.0.404
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/scope.modules.find-scope-path': file:scopes/scope/modules/find-scope-path
+      '@teambit/scope.modules.find-scope-path': 0.0.1
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
       chalk: 2.4.2
@@ -75786,7 +75639,7 @@ packages:
     name: '@teambit/harmony.testing.load-aspect'
     dependencies:
       '@teambit/harmony': 0.4.6
-      '@teambit/scope.modules.find-scope-path': file:scopes/scope/modules/find-scope-path
+      '@teambit/scope.modules.find-scope-path': 0.0.1
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
     transitivePeerDependencies:
       - '@teambit/legacy'
@@ -76948,14 +76801,6 @@ packages:
       '@teambit/component-id': 1.2.0
     dev: false
 
-  file:scopes/scope/modules/find-scope-path:
-    resolution: {directory: scopes/scope/modules/find-scope-path, type: directory}
-    name: '@teambit/scope.modules.find-scope-path'
-    dependencies:
-      find-up: 5.0.0
-      fs-extra: 10.0.0
-    dev: false
-
   file:scopes/scope/scope(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/node@20.2.5)(@types/react@17.0.75)(react-router-dom@6.22.3)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18):
     resolution: {directory: scopes/scope/scope, type: directory}
     id: file:scopes/scope/scope
@@ -77243,13 +77088,6 @@ packages:
       fs-extra: 10.0.0
     dev: false
 
-  file:scopes/toolbox/fs/readdir-skip-system-files:
-    resolution: {directory: scopes/toolbox/fs/readdir-skip-system-files, type: directory}
-    name: '@teambit/toolbox.fs.readdir-skip-system-files'
-    dependencies:
-      fs-extra: 10.0.0
-    dev: false
-
   file:scopes/toolbox/modules/module-resolver:
     resolution: {directory: scopes/toolbox/modules/module-resolver, type: directory}
     name: '@teambit/toolbox.modules.module-resolver'
@@ -77260,11 +77098,6 @@ packages:
   file:scopes/toolbox/network/get-port:
     resolution: {directory: scopes/toolbox/network/get-port, type: directory}
     name: '@teambit/toolbox.network.get-port'
-    dev: false
-
-  file:scopes/toolbox/object/sorter:
-    resolution: {directory: scopes/toolbox/object/sorter, type: directory}
-    name: '@teambit/toolbox.object.sorter'
     dev: false
 
   file:scopes/toolbox/path/is-path-inside:
