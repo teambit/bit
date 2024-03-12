@@ -66,7 +66,9 @@ export async function saveObjects(scope: Scope, objectList: ObjectList): Promise
   ];
   scope.objects.validateObjects(true, allObjects);
   await scope.objects.writeObjectsToTheFS(allObjects);
-  logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
+  logger.debug(
+    `export-scope-components.saveObjects, ${allObjects.length} objects were written successfully to the filesystem`
+  );
 
   return mergedIds;
 }
@@ -83,6 +85,15 @@ async function updateVersionHistory(
   mergedComponents: ModelComponent[],
   versionObjects: Version[]
 ): Promise<VersionHistory[]> {
+  if (!mergedComponents.length) {
+    // this is important for bit-sign to not try to update VersionHistory and then error due to missing components
+    logger.debug('updateVersionHistory, no components were merged, no need to update VersionHistory');
+    return [];
+  }
+  logger.debug(
+    `updateVersionHistory, total components: ${mergedComponents.length}, total versions: ${versionObjects.length}`
+  );
+
   const versionsWithComponentId = versionObjects.filter((obj) => obj.origin?.id);
 
   const [versionsWithOrigin, versionWithoutOrigin] = partition(versionsWithComponentId, (v) => v.origin?.id);
