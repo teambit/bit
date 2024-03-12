@@ -478,7 +478,6 @@
         "subscriptions-transport-ws": "0.9.18",
         "symlink-dir": "^5.1.1",
         "table": "6.7.3",
-        "tempy": "1.0.1",
         "terser-webpack-plugin": "5.2.0",
         "tippy.js": "6.2.7",
         "ua-parser-js": "0.7.24",

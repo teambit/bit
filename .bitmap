@@ -576,13 +576,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/fs/linked-dependencies"
     },
-    "fs/readdir-skip-system-files": {
-        "name": "fs/readdir-skip-system-files",
-        "scope": "teambit.toolbox",
-        "version": "0.0.2",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/fs/readdir-skip-system-files"
-    },
     "generator": {
         "name": "generator",
         "scope": "teambit.generator",
@@ -898,13 +891,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/html/modules/fetch-html-from-url"
     },
-    "modules/find-scope-path": {
-        "name": "modules/find-scope-path",
-        "scope": "teambit.scope",
-        "version": "0.0.1",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/scope/modules/find-scope-path"
-    },
     "modules/generate-expose-loaders": {
         "name": "modules/generate-expose-loaders",
         "scope": "teambit.webpack",
@@ -1051,13 +1037,6 @@
         "version": "1.0.190",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/notifications/aspect"
-    },
-    "object/sorter": {
-        "name": "object/sorter",
-        "scope": "teambit.toolbox",
-        "version": "0.0.2",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/object/sorter"
     },
     "overview/api-reference-table-of-contents": {
         "name": "overview/api-reference-table-of-contents",
