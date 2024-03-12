@@ -222,7 +222,7 @@ describe('install new dependencies', function () {
       );
     });
     it('should add prerelease version as exact version', () => {
-      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['semver']).to.equal(
+      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies.semver).to.equal(
         '2.0.0-beta'
       );
     });
