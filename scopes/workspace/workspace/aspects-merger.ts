@@ -258,14 +258,15 @@ export class AspectsMerger {
   ) {
     const mergeConfigPolicy = mergeConfig?.[DependencyResolverAspect.id]?.policy;
     if (!mergeConfigPolicy) return;
-    const policy = scopeExtensionsSpecific.findCoreExtension(DependencyResolverAspect.id)?.config.policy;
-    if (!policy) return;
-    Object.keys(policy).forEach((key) => {
+    const scopePolicy = scopeExtensionsSpecific.findCoreExtension(DependencyResolverAspect.id)?.config.policy;
+    if (!scopePolicy) return;
+    Object.keys(scopePolicy).forEach((key) => {
       if (!mergeConfigPolicy[key]) {
-        mergeConfigPolicy[key] = policy[key];
+        mergeConfigPolicy[key] = scopePolicy[key];
         return;
       }
-      mergeConfigPolicy[key] = merge(mergeConfigPolicy[key], policy[key]);
+      // mergeConfigPolicy should take precedence over scopePolicy
+      mergeConfigPolicy[key] = { ...scopePolicy[key], ...mergeConfigPolicy[key] };
     });
   }
 
