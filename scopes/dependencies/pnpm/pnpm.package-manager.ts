@@ -111,7 +111,6 @@ export class PnpmPackageManager implements PackageManager {
         preferOffline: installOptions.preferOffline,
         rootComponents: installOptions.rootComponents,
         rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
-        peerDependencyRules: installOptions.peerDependencyRules,
         sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
         sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
         pnpmHomeDir: config.pnpmHomeDir,
@@ -122,6 +121,7 @@ export class PnpmPackageManager implements PackageManager {
           throttleProgress: installOptions.throttleProgress,
           hideProgressPrefix: installOptions.hideProgressPrefix,
           hideLifecycleOutput: installOptions.hideLifecycleOutput,
+          peerDependencyRules: installOptions.peerDependencyRules,
         },
       },
       this.logger
