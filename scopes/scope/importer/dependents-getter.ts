@@ -72,7 +72,7 @@ export class DependentsGetter {
     this.logger.clearStatusLine();
 
     const totalToShow = SHOW_ALL_PATHS_LIMIT;
-    if (allPaths.length >= totalToShow) {
+    if (allPaths.length > totalToShow) {
       return this.promptLevelByLevel(allPaths);
     }
     const firstItems = allPaths.slice(0, totalToShow);
