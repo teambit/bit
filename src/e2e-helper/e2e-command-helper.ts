@@ -716,6 +716,7 @@ export default class CommandHelper {
     return showConfig.data.dependencies;
   }
 
+  /** returns the ids without the versions */
   getCompDepsIdsFromData(compId: string): string[] {
     const aspectConf = this.showAspectConfig(compId, Extensions.dependencyResolver);
     return aspectConf.data.dependencies.map((dep) => dep.id);
