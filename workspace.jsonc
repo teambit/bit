@@ -255,7 +255,7 @@
         "@teambit/react.instructions.react.adding-tests": "0.0.6",
         "@teambit/react.rendering.ssr": "0.0.3",
         "@teambit/react.ui.component-highlighter": "0.2.1",
-        "@teambit/react.webpack.react-webpack": "^1.0.23",
+        "@teambit/react.webpack.react-webpack": "^1.0.25",
         "@teambit/scope.content.scope-overview": "1.95.0",
         "@teambit/scope.ui.empty-scope": "^0.0.509",
         "@teambit/scope.ui.hooks.use-scope": "^0.0.453",
@@ -380,7 +380,7 @@
         "cors": "2.8.5",
         "credentials-by-uri": "2.0.0",
         "cross-env": "7.0.3",
-        "css-minimizer-webpack-plugin": "3.0.2",
+        "css-minimizer-webpack-plugin": "^6.0.0",
         "dagre": "0.8.5",
         "didyoumean": "1.2.1",
         "dreidels": "0.6.1",
@@ -652,7 +652,12 @@
             "buffer": "6.0.3",
             "process": "0.11.10",
             "react-router-dom": "6.3.0",
-            "typescript": "5.3.3"
+            "typescript": "5.3.3",
+            // @parcel/css, lightningcss, @swc/css are used by css-minimizer-webpack-plugin
+            // see this issue https://github.com/webpack-contrib/css-minimizer-webpack-plugin/issues/244
+            "@parcel/css": "^1.8.3",
+            "lightningcss": "^1.20.0",
+            "@swc/css": "^0.0.20"
           },
           "devDependencies": {
             // "@types/react": "-",
