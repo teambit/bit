@@ -418,7 +418,7 @@ export class Watcher {
   private async setTrackDirs() {
     this.trackDirs = {};
     const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
-    componentsFromBitMap.map(async (componentMap) => {
+    componentsFromBitMap.map((componentMap) => {
       const componentId = componentMap.id;
       const rootDir = componentMap.getRootDir();
       this.trackDirs[rootDir] = componentId;

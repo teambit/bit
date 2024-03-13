@@ -1,8 +1,8 @@
 import chalk from 'chalk';
+import tempy from 'tempy';
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
 import diffFiles from '../../utils/diff-files';
-import { saveIntoOsTmp } from '../../utils/fs/save-into-os-tmp';
 import { PathOsBased } from '../../utils/path';
 import { SourceFile } from '../component/sources';
 
@@ -74,7 +74,7 @@ export async function getFilesDiff(
       const file = files.find((f) => f[fileNameAttribute] === relativePath);
       const hash = file?.toSourceAsLinuxEOL().hash().hash;
       const content = file ? file.contents : '';
-      const path = await saveIntoOsTmp(content);
+      const path = await tempy.write(content, { extension: 'js' });
       return { path, content: content.toString('utf-8'), hash };
     };
     const [

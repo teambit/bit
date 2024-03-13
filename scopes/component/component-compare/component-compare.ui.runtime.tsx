@@ -5,7 +5,7 @@ import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { ComponentCompare } from '@teambit/component.ui.component-compare.component-compare';
 import { UIRuntime } from '@teambit/ui';
-import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { ComponentCompareProps, TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { ComponentCompareChangelog } from '@teambit/component.ui.component-compare.changelog';
 import { ComponentCompareAspects } from '@teambit/component.ui.component-compare.compare-aspects.compare-aspects';

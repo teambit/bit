@@ -1,6 +1,6 @@
 import { Component } from '@teambit/component';
 import { Schema } from '@teambit/graphql';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { DevFilesMain } from './dev-files.main.runtime';
 

@@ -145,7 +145,7 @@ export class ArtifactList<T extends Artifact> extends Array<T> {
   ) {
     const results = await storageResolver.store(component, artifact as FsArtifact);
     if (!results) return;
-    artifact.files.vinyls.map(async (file) => {
+    artifact.files.vinyls.map((file) => {
       const url = results[file.relative];
       if (url) {
         file.url = url;

@@ -1174,6 +1174,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   async updateVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory> {
     const versionHistory = await this.getVersionHistory(repo);
     versionHistory.addFromVersionsObjects(versions);
+    logger.debug(`updating version history of ${this.id()} with ${versions.length} versions`);
     return versionHistory;
   }
 
@@ -1215,6 +1216,9 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
         return { err, added };
       }
       versionHistory.addFromVersionsObjects(versionsToAdd);
+      logger.debug(
+        `populateVersionHistoryIfMissingGracefully, updating ${this.id()} with ${versionsToAdd.length} versions`
+      );
       await repo.writeObjectsToTheFS([versionHistory]);
       return { added };
     });

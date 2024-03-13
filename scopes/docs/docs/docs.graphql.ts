@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { Component } from '@teambit/component';
 import { DocsMain } from './docs.main.runtime';
 

@@ -275,10 +275,17 @@ export async function install(
     },
     ...options,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
-    peerDependencyRules: {
-      allowAny: options?.peerDependencyRules?.allowAny ?? ['*'],
-      ignoreMissing: options.autoInstallPeers ? [] : options?.peerDependencyRules?.ignoreMissing ?? ['*'],
-    },
+    // As of now, pnpm (v8.15.4) uses overrides to mute peer dependency warnings with "allowAny" and "ignoreMissing".
+    // This is fine as long as the peer dependencies are not automatically installed.
+    // However, if we override the peer dependencies fields and then automatically install the peers
+    // we'll get unexpected peer dependencies installed, so we cannot use both settings at the same time.
+    peerDependencyRules: options.autoInstallPeers
+      ? {}
+      : {
+          allowAny: ['*'],
+          ignoreMissing: ['*'],
+          ...options?.peerDependencyRules,
+        },
     depth: options.updateAll ? Infinity : 0,
     disableRelinkLocalDirDeps: true,
   };

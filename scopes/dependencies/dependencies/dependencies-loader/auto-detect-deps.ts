@@ -524,7 +524,7 @@ export class AutoDetectDeps {
     if (!error) return;
     logger.errorAndAddBreadCrumb(
       'dependency-resolver.processErrors',
-      'got an error from the driver while resolving dependencies'
+      `got an error from the driver while resolving dependencies from "${originFile}"`
     );
     logger.error('dependency-resolver.processErrors', error);
     if (error.code === 'PARSING_ERROR') {

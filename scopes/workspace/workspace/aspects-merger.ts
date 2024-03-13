@@ -97,6 +97,8 @@ export class AspectsMerger {
     const scopeExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
     const scopeExtensionsSpecific = new ExtensionDataList(...specific);
 
+    this.addConfigDepsFromModelToConfigMerge(scopeExtensionsSpecific, mergeConfigCombined);
+
     const componentConfigFile = await this.workspace.componentConfigFile(componentId);
     if (componentConfigFile) {
       configFileExtensions = componentConfigFile.aspects.toLegacy();
@@ -241,6 +243,31 @@ export class AspectsMerger {
         mergeConfigObj
       );
     }
+  }
+
+  /**
+   * this is needed because if the mergeConfig has a policy, it will be used, and any other policy along the line will be ignored.
+   * in case the model has some dependencies that were set explicitly they're gonna be ignored.
+   * this makes sure to add them to the policy of the mergeConfig.
+   * in a way, this is similar to what we do when a user is running `bit deps set` and the component had previous dependencies set,
+   * we copy those dependencies along with the current one to the .bitmap file, so they won't get lost.
+   */
+  private addConfigDepsFromModelToConfigMerge(
+    scopeExtensionsSpecific: ExtensionDataList,
+    mergeConfig?: Record<string, any>
+  ) {
+    const mergeConfigPolicy = mergeConfig?.[DependencyResolverAspect.id]?.policy;
+    if (!mergeConfigPolicy) return;
+    const scopePolicy = scopeExtensionsSpecific.findCoreExtension(DependencyResolverAspect.id)?.config.policy;
+    if (!scopePolicy) return;
+    Object.keys(scopePolicy).forEach((key) => {
+      if (!mergeConfigPolicy[key]) {
+        mergeConfigPolicy[key] = scopePolicy[key];
+        return;
+      }
+      // mergeConfigPolicy should take precedence over scopePolicy
+      mergeConfigPolicy[key] = { ...scopePolicy[key], ...mergeConfigPolicy[key] };
+    });
   }
 
   private getUnmergedData(componentId: ComponentID): UnmergedComponent | undefined {

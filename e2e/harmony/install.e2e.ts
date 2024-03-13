@@ -109,7 +109,7 @@ describe('install generator configured envs', function () {
       envs: ['teambit.react/react-env', 'teambit.react/react'],
     };
     helper.extensions.workspaceJsonc.addKeyVal('teambit.generator/generator', generatorConfig);
-    await helper.command.install();
+    helper.command.install();
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -195,7 +195,7 @@ describe('install new dependencies', function () {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
-      helper.command.install('is-positive@~1.0.0 is-odd@1.0.0 is-even@1 is-negative');
+      helper.command.install('is-positive@~1.0.0 is-odd@1.0.0 is-even@1 is-negative semver@2.0.0-beta');
       workspaceJsonc = helper.workspaceJsonc.read();
     });
     after(() => {
@@ -219,6 +219,11 @@ describe('install new dependencies', function () {
     it('should add new dependency with ^ prefix by default', () => {
       expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative'][0]).to.equal(
         '^'
+      );
+    });
+    it('should add prerelease version as exact version', () => {
+      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies.semver).to.equal(
+        '2.0.0-beta'
       );
     });
   });

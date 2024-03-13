@@ -278,6 +278,10 @@ export class DependencyResolverMain {
     overridePrefix?: string;
     wantedRange?: string;
   }): string {
+    // A prerelease version is always added as an exact version
+    if (semver.parse(version)?.prerelease.length) {
+      return version;
+    }
     if (wantedRange && ['~', '^'].includes(wantedRange[0])) {
       return wantedRange;
     }

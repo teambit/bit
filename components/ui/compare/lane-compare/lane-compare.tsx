@@ -15,7 +15,7 @@ import { LaneCompareLoader as DefaultLaneCompareLoader } from '@teambit/lanes.ui
 import {
   LaneCompareDrawer,
   LaneCompareDrawerName,
-  LaneCompareDrawerProps,
+  type LaneCompareDrawerProps,
   LaneCompareDrawerProvider,
 } from '@teambit/lanes.ui.compare.lane-compare-drawer';
 import { H4 } from '@teambit/documenter.ui.heading';
