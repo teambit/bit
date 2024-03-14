@@ -621,4 +621,37 @@ describe('merge config scenarios', function () {
       });
     }
   );
+  describe('diverge with merge-able auto-detected dependencies config and pre-config explicitly set', () => {
+    let mainBeforeDiverge: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/index.js', `import R from 'ramda';`);
+      helper.npm.addFakeNpmPackage('ramda', '0.0.19');
+      helper.npm.addFakeNpmPackage('lodash', '4.2.4');
+      helper.command.dependenciesSet('comp1', 'lodash@4.2.4');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      mainBeforeDiverge = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
+      helper.npm.addFakeNpmPackage('ramda', '0.0.21');
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { ramda: '0.0.21' } });
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('dev', '--skip-dependency-installation');
+      helper.command.mergeLane('main', '--no-snap --skip-dependency-installation --ignore-config-changes');
+    });
+    it('should not delete the previously deps set', () => {
+      const deps = helper.command.getCompDepsIdsFromData('comp1');
+      expect(deps).to.include('lodash');
+    });
+  });
 });

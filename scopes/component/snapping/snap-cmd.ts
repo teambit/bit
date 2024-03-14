@@ -39,6 +39,12 @@ export class SnapCmd implements Command {
       'open an editor to write a snap message per component. optionally specify the editor-name (defaults to vim).',
     ],
     ['', 'skip-tests', 'skip running component tests during snap process'],
+    [
+      '',
+      'skip-tasks <string>',
+      `skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes.
+specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)`,
+    ],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
     [
       '',
@@ -73,6 +79,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       ignoreIssues,
       build,
       skipTests = false,
+      skipTasks,
       skipAutoSnap = false,
       disableSnapPipeline = false,
       ignoreBuildErrors = false,
@@ -105,6 +112,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       ignoreIssues,
       build,
       skipTests,
+      skipTasks,
       skipAutoSnap,
       disableTagAndSnapPipelines,
       ignoreBuildErrors,

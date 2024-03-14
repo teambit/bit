@@ -39,7 +39,12 @@ import {
   ArtifactSource,
   getArtifactsFiles,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import { VersionNotFound, ComponentNotFound, HeadNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import {
+  VersionNotFound,
+  ComponentNotFound,
+  HeadNotFound,
+  ParentNotFound,
+} from '@teambit/legacy/dist/scope/exceptions';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { DependenciesAspect, DependenciesMain } from '@teambit/dependencies';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
@@ -49,7 +54,7 @@ import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
 import { ComponentsHaveIssues } from './components-have-issues';
 import ResetCmd from './reset-cmd';
-import { tagModelComponent, updateComponentsVersions, BasicTagParams } from './tag-model-component';
+import { tagModelComponent, updateComponentsVersions, BasicTagParams, BasicTagSnapParams } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
 import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
@@ -75,7 +80,7 @@ export type TagDataPerComp = {
 
 export type SnapDataParsed = {
   componentId: ComponentID;
-  dependencies: ComponentID[];
+  dependencies: string[];
   aspects?: Record<string, any>;
   message?: string;
   files?: FileData[];
@@ -150,6 +155,7 @@ export class SnappingMain {
     ignoreIssues,
     ignoreNewestVersion = false,
     skipTests = false,
+    skipTasks,
     skipAutoTag = false,
     build,
     unmodified = false,
@@ -221,6 +227,7 @@ export class SnappingMain {
         preReleaseId,
         ignoreNewestVersion,
         skipTests,
+        skipTasks,
         skipAutoTag,
         soft,
         build,
@@ -260,6 +267,7 @@ export class SnappingMain {
       releaseType?: ReleaseType;
       ignoreIssues?: string;
       incrementBy?: number;
+      rebuildArtifacts?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<TagResults | null> {
     if (this.workspace) {
@@ -330,7 +338,7 @@ if you're willing to lose the history from the head to the specified version, us
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     const shouldUsePopulateArtifactsFrom = components.every((comp) => {
       if (!comp.buildStatus) throw new Error(`tag-from-scope expect ${comp.id.toString()} to have buildStatus`);
-      return comp.buildStatus === BuildStatus.Succeed;
+      return comp.buildStatus === BuildStatus.Succeed && !params.rebuildArtifacts;
     });
     const legacyIds = ComponentIdList.fromArray(componentIds.map((id) => id));
     const results = await tagModelComponent({
@@ -396,15 +404,10 @@ if you're willing to lose the history from the head to the specified version, us
       this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
     }
     const laneCompIds = lane?.toComponentIds();
-    const resolveDepVer = (dep: ComponentID) => {
-      if (dep.hasVersion()) return dep;
-      const fromLane = laneCompIds?.searchWithoutVersion(dep);
-      return fromLane || dep;
-    };
     const snapDataPerComp = snapDataPerCompRaw.map((snapData) => {
       return {
         componentId: ComponentID.fromString(snapData.componentId),
-        dependencies: snapData.dependencies?.map((id) => ComponentID.fromString(id)).map(resolveDepVer) || [],
+        dependencies: snapData.dependencies || [],
         aspects: snapData.aspects,
         message: snapData.message,
         files: snapData.files,
@@ -452,7 +455,7 @@ if you're willing to lose the history from the head to the specified version, us
         deps.forEach((dep) => {
           const fromLane = laneCompIds.searchWithoutVersion(dep.componentId);
           if (fromLane) {
-            snapData.dependencies.push(fromLane);
+            snapData.dependencies.push(fromLane.toString());
           }
         });
       });
@@ -460,14 +463,10 @@ if you're willing to lose the history from the head to the specified version, us
 
     const components = [...existingComponents, ...newComponents];
     // for new components these are not needed. coz when generating them we already add the aspects and the files.
-    // the dependencies are calculated later and they're provided by "newDependencies" prop (not "dependencies").
     await Promise.all(
       existingComponents.map(async (comp) => {
         const snapData = getSnapData(comp.id);
         if (snapData.aspects) await this.scope.addAspectsFromConfigObject(comp, snapData.aspects);
-        if (snapData.dependencies.length) {
-          await this.updateDependenciesVersionsOfComponent(comp, snapData.dependencies, componentIds);
-        }
         if (snapData.files?.length) {
           await this.updateSourceFiles(comp, snapData.files);
         }
@@ -495,7 +494,11 @@ if you're willing to lose the history from the head to the specified version, us
       ...params,
       scope: this.scope,
       consumerComponents,
-      tagDataPerComp: snapDataPerComp,
+      tagDataPerComp: snapDataPerComp.map((s) => ({
+        componentId: s.componentId,
+        message: s.message,
+        dependencies: [],
+      })),
       snapping: this,
       builder: this.builder,
       dependencyResolver: this.dependencyResolver,
@@ -544,6 +547,7 @@ if you're willing to lose the history from the head to the specified version, us
     message = '',
     ignoreIssues,
     skipTests = false,
+    skipTasks,
     skipAutoSnap = false,
     build,
     disableTagAndSnapPipelines = false,
@@ -551,19 +555,14 @@ if you're willing to lose the history from the head to the specified version, us
     rebuildDepsGraph,
     unmodified = false,
     exitOnFirstFailedTask = false,
-  }: {
+  }: Partial<BasicTagSnapParams> & {
     pattern?: string;
     legacyBitIds?: ComponentIdList;
     unmerged?: boolean;
     editor?: string;
-    message?: string;
     ignoreIssues?: string;
-    build: boolean;
-    skipTests?: boolean;
     skipAutoSnap?: boolean;
     disableTagAndSnapPipelines?: boolean;
-    ignoreBuildErrors?: boolean;
-    rebuildDepsGraph?: boolean;
     unmodified?: boolean;
     exitOnFirstFailedTask?: boolean;
   }): Promise<SnapResults | null> {
@@ -590,6 +589,7 @@ if you're willing to lose the history from the head to the specified version, us
       ignoreNewestVersion: false,
       message,
       skipTests,
+      skipTasks,
       skipAutoTag: skipAutoSnap,
       persist: true,
       soft: false,
@@ -803,7 +803,12 @@ there are matching among unmodified components thought. consider using --unmodif
             : await this.scope.legacyScope.isPartOfMainHistory(dep.id);
         } catch (err) {
           if (throwForMissingObjects) throw err;
-          if (err instanceof VersionNotFound || err instanceof ComponentNotFound || err instanceof HeadNotFound) {
+          if (
+            err instanceof VersionNotFound ||
+            err instanceof ComponentNotFound ||
+            err instanceof HeadNotFound ||
+            err instanceof ParentNotFound
+          ) {
             missingDeps.push(dep.id);
             return;
           }

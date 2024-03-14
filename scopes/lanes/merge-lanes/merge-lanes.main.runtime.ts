@@ -203,7 +203,7 @@ export class MergeLanesMain {
       });
     }
     if (existingOnWorkspaceOnly && this.workspace) {
-      const workspaceIds = await this.workspace.listIds();
+      const workspaceIds = this.workspace.listIds();
       const compIdsFromPattern = workspaceIds.filter((id) =>
         allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(id))
       );
@@ -291,7 +291,7 @@ export class MergeLanesMain {
 
     let checkoutResults: ApplyVersionResults | undefined;
     let checkoutError: Error | undefined;
-    checkoutProps.ids = await this.workspace.listIds();
+    checkoutProps.ids = this.workspace.listIds();
     checkoutProps.restoreMissingComponents = true;
     try {
       checkoutResults = await this.checkout.checkout(checkoutProps);
@@ -322,7 +322,7 @@ export class MergeLanesMain {
       if (!this.workspace) {
         throw new BitError(`getMainIdsToMerge needs workspace`);
       }
-      const workspaceIds = await this.workspace.listIds();
+      const workspaceIds = this.workspace.listIds();
       const mainNotOnLane = workspaceIds.filter(
         (id) => !laneIds.find((laneId) => laneId.isEqualWithoutVersion(id)) && this.scope.isExported(id)
       );

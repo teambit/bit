@@ -1,5 +1,5 @@
 import { Component, ComponentID } from '@teambit/component';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { Logger } from '@teambit/logger';
 import isBinaryPath from 'is-binary-path';
 import { BuilderMain } from './builder.main.runtime';

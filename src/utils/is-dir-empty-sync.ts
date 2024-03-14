@@ -1,5 +1,5 @@
-import { readDirSyncIgnoreDsStore } from './fs/read-dir-ignore-ds-store';
+import { readDirIgnoreSystemFilesSync } from '@teambit/toolbox.fs.readdir-skip-system-files';
 
 export default function isDirEmptySync(dirPath: string): boolean {
-  return !readDirSyncIgnoreDsStore(dirPath).length;
+  return !readDirIgnoreSystemFilesSync(dirPath).length;
 }

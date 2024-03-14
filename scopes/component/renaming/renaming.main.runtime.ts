@@ -194,13 +194,13 @@ make sure this argument is the name only, without the scope-name. to change the 
     newScope: string,
     options: { refactor?: boolean; deprecate?: boolean } = {}
   ): Promise<RenameResult> {
-    const allComponentsIds = await this.workspace.listIds();
+    const allComponentsIds = this.workspace.listIds();
     const componentsUsingOldScope = allComponentsIds.filter((compId) => compId.scope === oldScope);
     if (!componentsUsingOldScope.length && this.workspace.defaultScope !== oldScope) {
       throw new OldScopeNotFound(oldScope);
     }
     if (this.workspace.defaultScope === oldScope) {
-      await this.workspace.setDefaultScope(newScope);
+      await this.workspace.setDefaultScope(newScope, false);
     }
     const multipleIds: RenameId[] = componentsUsingOldScope.map((compId) => {
       const targetId = ComponentID.fromObject({ name: compId.fullName }, newScope);
@@ -222,7 +222,7 @@ make sure this argument is the name only, without the scope-name. to change the 
   ): Promise<RenameResult> {
     const isScopeUsesOldOwner = (scope: string) => scope.startsWith(`${oldOwner}.`);
 
-    const allComponentsIds = await this.workspace.listIds();
+    const allComponentsIds = this.workspace.listIds();
     const componentsUsingOldScope = allComponentsIds.filter((compId) => isScopeUsesOldOwner(compId.scope));
     if (!componentsUsingOldScope.length && !isScopeUsesOldOwner(this.workspace.defaultScope)) {
       throw new OldScopeNotFound(oldOwner);
@@ -232,7 +232,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       ? this.renameOwnerInScopeName(oldWorkspaceDefaultScope, oldOwner, newOwner)
       : undefined;
     if (newWorkspaceDefaultScope) {
-      await this.workspace.setDefaultScope(newWorkspaceDefaultScope);
+      await this.workspace.setDefaultScope(newWorkspaceDefaultScope, false);
     }
     const multipleIds: RenameId[] = componentsUsingOldScope.map((compId) => {
       const newScope = this.renameOwnerInScopeName(compId.scope, oldOwner, newOwner);

@@ -39,8 +39,9 @@ export class TypeScriptParser implements Parser {
       // - variable statement
       // - function statement
       // - class statement
-      if (statement.modifiers) {
-        statement.modifiers.some((modifier) => {
+      const statementModifiers = ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined;
+      if (statementModifiers) {
+        statementModifiers.some((modifier) => {
           if (modifier.kind === ts.SyntaxKind.ExportKeyword) {
             if (ts.isVariableStatement(statement)) {
               const child = statement.declarationList.declarations[0];

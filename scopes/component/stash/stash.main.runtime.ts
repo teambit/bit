@@ -25,9 +25,7 @@ export class StashMain {
   }
 
   async save(options: { message?: string; pattern?: string }): Promise<ComponentID[]> {
-    const compIds = options?.pattern
-      ? await this.workspace.idsByPattern(options?.pattern)
-      : await this.workspace.listIds();
+    const compIds = options?.pattern ? await this.workspace.idsByPattern(options?.pattern) : this.workspace.listIds();
     const comps = await this.workspace.getMany(compIds);
     const modifiedComps = compact(
       await Promise.all(

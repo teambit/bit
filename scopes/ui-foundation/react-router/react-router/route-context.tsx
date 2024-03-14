@@ -1,7 +1,8 @@
 import React, { ReactNode } from 'react';
 import { BrowserRouter, MemoryRouter, HashRouter, RouteProps } from 'react-router-dom';
 import { StaticRouter } from 'react-router-dom/server';
-import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { NavigationProvider } from '@teambit/base-react.navigation.link';
 import { reactRouterAdapter } from '@teambit/ui-foundation.ui.navigation.react-router-adapter';
 import { ReactRouterUI } from './react-router.ui.runtime';

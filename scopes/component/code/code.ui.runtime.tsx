@@ -1,7 +1,7 @@
 import React from 'react';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
-import { CodeCompare, CodeCompareEditorProvider, CodeCompareProps } from '@teambit/code.ui.code-compare';
+import { CodeCompare, CodeCompareEditorProvider, type CodeCompareProps } from '@teambit/code.ui.code-compare';
 import { Harmony, SlotRegistry, Slot } from '@teambit/harmony';
 import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';

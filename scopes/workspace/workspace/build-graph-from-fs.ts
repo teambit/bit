@@ -110,7 +110,7 @@ export class GraphFromFsBuilder {
    * that all its flattened dependencies are there. no need to call importMany again for them.
    */
   private async importObjects(components: Component[]) {
-    const workspaceIds = await this.workspace.listIds();
+    const workspaceIds = this.workspace.listIds();
     const compOnWorkspaceOnly = components.filter((comp) => workspaceIds.find((id) => id.isEqual(comp.id)));
     const allDeps = (await Promise.all(compOnWorkspaceOnly.map((c) => this.getAllDepsUnfiltered(c)))).flat();
     const allDepsNotImported = allDeps.filter((d) => !this.importedIds.includes(d.toString()));

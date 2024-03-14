@@ -1,1 +1,1 @@
-export { useCoreAspects } from './use-core-aspects.js';
+export { useCoreAspects } from './use-core-aspects';

@@ -1,3 +1,4 @@
+import { Logger } from '@teambit/logger';
 import { OnComponentEventResult } from '@teambit/workspace';
 import chalk from 'chalk';
 
@@ -8,7 +9,7 @@ const verboseComponentFilesArrayToString = (componentFiles = []) => {
 const resultsForExtensionArrayToString = (resultsForExtension, verbose) => {
   return resultsForExtension.reduce(
     (outputString, resultForExtension) =>
-      `${outputString}${chalk.green('√')}SUCCESS\t${resultForExtension.component}\n
+      `${outputString}${Logger.successSymbol()}SUCCESS\t${resultForExtension.component}\n
      ${verbose ? resultForExtension.componentFilesAsString : ''}\n`,
     ''
   );
@@ -18,7 +19,7 @@ export const formatWatchPathsSortByComponent = (trackDirs) => {
   return Object.keys(trackDirs).reduce(
     (outputString, watchPath) =>
       `${outputString}
-    ${chalk.green('√')} SUCCESS\t${trackDirs[watchPath]}\n
+    ${Logger.successSymbol()} SUCCESS\t${trackDirs[watchPath]}\n
     \t - ${watchPath}\n\n`,
     ` ${chalk.underline('STATUS\t\tCOMPONENT ID')}\n`
   );

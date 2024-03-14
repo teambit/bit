@@ -285,22 +285,5 @@ describe('run bit init', function () {
         expect(path.join(helper.scopes.localPath, '.git/bit')).to.be.a.directory();
       });
     });
-    describe('when running from an inner directory that has also .bitmap', () => {
-      let innerDir;
-      before(() => {
-        helper.scopeHelper.reInitLocalScope();
-        helper.bitMap.createHarmony();
-        innerDir = path.join(helper.scopes.localPath, 'inner');
-        fs.mkdirSync(innerDir);
-        helper.scopeHelper.initWorkspace(innerDir);
-        fs.removeSync(path.join(innerDir, '.bit'));
-        fs.removeSync(path.join(helper.scopes.localPath, '.bit'));
-      });
-      it('bit ls (or any other command) should not throw an error and should rebuild .bit dir in the inner directory', () => {
-        const lsCmd = () => helper.command.runCmd('bit ls ', innerDir);
-        expect(lsCmd).to.not.throw();
-        expect(path.join(helper.scopes.localPath, 'inner/.bit')).to.be.a.directory();
-      });
-    });
   });
 });

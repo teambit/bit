@@ -1,9 +1,9 @@
 import React, { ReactNode, useContext } from 'react';
 import { Route, RouteProps } from 'react-router-dom';
 import { Slot, Harmony, SlotRegistry } from '@teambit/harmony';
-import { LaneCompare, LaneCompareProps as DefaultLaneCompareProps } from '@teambit/lanes.ui.compare.lane-compare';
+import { LaneCompare, type LaneCompareProps as DefaultLaneCompareProps } from '@teambit/lanes.ui.compare.lane-compare';
 import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
-import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import type { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
 import { ScopeAspect, ScopeContext, ScopeUI } from '@teambit/scope';
 import { WorkspaceAspect, WorkspaceUI } from '@teambit/workspace';

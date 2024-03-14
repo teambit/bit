@@ -33,6 +33,12 @@ export class RemoveCmd implements Command {
     ['s', 'silent', 'skip confirmation'],
   ] as CommandOptions;
   loader = true;
+  examples = [
+    {
+      cmd: 'remove "$deprecated"',
+      description: 'remove all components that are deprecated',
+    },
+  ];
   remoteOp = true;
 
   constructor(private remove: RemoveMain, private workspace?: Workspace) {}

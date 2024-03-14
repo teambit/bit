@@ -35,6 +35,7 @@ export type onTagIdTransformer = (id: ComponentID) => ComponentID | null;
 export type BasicTagSnapParams = {
   message: string;
   skipTests?: boolean;
+  skipTasks?: string;
   build?: boolean;
   ignoreBuildErrors?: boolean;
   rebuildDepsGraph?: boolean;
@@ -181,6 +182,7 @@ export async function tagModelComponent({
   preReleaseId,
   ignoreNewestVersion = false,
   skipTests = false,
+  skipTasks,
   skipAutoTag,
   soft,
   build,
@@ -342,9 +344,10 @@ export async function tagModelComponent({
       isSnap,
       populateArtifactsFrom,
     };
+    const skipTasksParsed = skipTasks ? skipTasks.split(',').map((t) => t.trim()) : undefined;
     const seedersOnly = !workspace; // if tag from scope, build only the given components
     const isolateOptions = { packageManagerConfigRootDir, seedersOnly };
-    const builderOptions = { exitOnFirstFailedTask, skipTests };
+    const builderOptions = { exitOnFirstFailedTask, skipTests, skipTasks: skipTasksParsed };
 
     const componentsToBuild = allComponentsToTag.filter((c) => !c.isRemoved());
     if (componentsToBuild.length) {

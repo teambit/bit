@@ -6,6 +6,7 @@ import { StoreController, WantedDependency } from '@pnpm/package-store';
 import { rebuild } from '@pnpm/plugin-commands-rebuild';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { sortPackages } from '@pnpm/sort-packages';
+import { type PeerDependencyRules } from '@pnpm/types';
 import {
   ResolvedPackageVersion,
   Registries,
@@ -166,6 +167,7 @@ export interface ReportOptions {
   hideAddedPkgsProgress?: boolean;
   hideProgressPrefix?: boolean;
   hideLifecycleOutput?: boolean;
+  peerDependencyRules?: PeerDependencyRules;
 }
 
 export async function install(
@@ -275,11 +277,6 @@ export async function install(
     },
     ...options,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
-    peerDependencyRules: {
-      allowAny: ['*'],
-      ignoreMissing: ['*'],
-      ...options?.peerDependencyRules,
-    },
     depth: options.updateAll ? Infinity : 0,
     disableRelinkLocalDirDeps: true,
   };
@@ -346,6 +343,11 @@ function initReporter(opts?: ReportOptions) {
       hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
       hideProgressPrefix: opts?.hideProgressPrefix,
       hideLifecycleOutput: opts?.hideLifecycleOutput,
+      peerDependencyRules: {
+        allowAny: ['*'],
+        ignoreMissing: ['*'],
+        ...opts?.peerDependencyRules,
+      },
     },
     streamParser,
     // Linked in core aspects are excluded from the output to reduce noise.

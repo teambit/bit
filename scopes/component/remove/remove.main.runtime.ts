@@ -296,7 +296,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     const currentLane = await this.workspace.getCurrentLaneObject();
     if (!currentLane) return [];
     const laneIds = currentLane.toComponentIds();
-    const workspaceIds = await this.workspace.listIds();
+    const workspaceIds = this.workspace.listIds();
     const laneCompIdsNotInWorkspace = laneIds.filter(
       (id) => !workspaceIds.find((wId) => wId.isEqualWithoutVersion(id))
     );

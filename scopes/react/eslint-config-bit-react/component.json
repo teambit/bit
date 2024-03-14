@@ -34,8 +34,8 @@
     "teambit.dependencies/dependency-resolver": {
       "policy": {
         "dependencies": {
-          "@typescript-eslint/eslint-plugin": "5.62.0",
-          "@typescript-eslint/parser": "5.62.0",
+          "@typescript-eslint/eslint-plugin": "7.1.0",
+          "@typescript-eslint/parser": "7.1.0",
           "eslint-config-airbnb-typescript": "12.0.0",
           "eslint-config-prettier": "8.5.0",
           "@teambit/legacy": "-"
@@ -45,7 +45,7 @@
         },
         "peerDependencies": {
           "eslint": "> 7.0.0",
-          "@teambit/legacy": "1.0.657"
+          "@teambit/legacy": "1.0.669"
         }
       }
     },

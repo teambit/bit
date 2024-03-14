@@ -30,15 +30,26 @@ type HashMetadata = {
 export default class VersionHistory extends BitObject {
   name: string;
   scope: string;
-  versions: VersionParents[];
+  private versionsObj: { [hash: string]: VersionParents };
   graphCompleteRefs: string[];
   hasChanged = false; // whether the version history has changed since the last persist
   constructor(props: VersionHistoryProps) {
     super();
     this.name = props.name;
     this.scope = props.scope;
-    this.versions = props.versions;
+    this.versionsObj = this.versionParentsToObject(props.versions);
     this.graphCompleteRefs = props.graphCompleteRefs || [];
+  }
+
+  get versions() {
+    return Object.values(this.versionsObj);
+  }
+
+  private versionParentsToObject(versions: VersionParents[]) {
+    return versions.reduce((acc, version) => {
+      acc[version.hash.hash] = version;
+      return acc;
+    }, {});
   }
 
   id() {
@@ -73,7 +84,7 @@ export default class VersionHistory extends BitObject {
   }
 
   getVersionData(ref: Ref): VersionParents | undefined {
-    return this.versions.find((v) => v.hash.isEqual(ref));
+    return this.versionsObj[ref.toString()];
   }
 
   hasHash(ref: Ref) {
@@ -90,7 +101,7 @@ export default class VersionHistory extends BitObject {
         exists.squashed = version.squashed?.previousParents;
       } else {
         const versionData = getVersionParentsFromVersion(version);
-        this.versions.push(versionData);
+        this.versionsObj[version.hash().hash] = versionData;
       }
     });
   }
@@ -100,14 +111,14 @@ export default class VersionHistory extends BitObject {
   }
 
   getAllHashesFrom(start: Ref): { found?: string[]; missing?: string[] } {
-    const item = this.versions.find((ver) => ver.hash.isEqual(start));
+    const item = this.getVersionData(start);
     if (!item) return { missing: [start.toString()] };
     const allHashes: string[] = [item.hash.toString()];
     const missing: string[] = [];
     const addHashesRecursively = (ver: VersionParents) => {
       ver.parents.forEach((parent) => {
         if (allHashes.includes(parent.toString())) return;
-        const parentVer = this.versions.find((verItem) => verItem.hash.isEqual(parent));
+        const parentVer = this.getVersionData(parent);
         if (!parentVer) {
           missing.push(parent.toString());
           return;
@@ -137,7 +148,7 @@ export default class VersionHistory extends BitObject {
   }
 
   getAllHashesAsString(): string[] {
-    return this.versions.map((v) => v.hash.toString());
+    return Object.keys(this.versionsObj);
   }
 
   merge(versionHistory: VersionHistory) {
@@ -146,20 +157,16 @@ export default class VersionHistory extends BitObject {
     const hashesInExistingOnly = difference(existingHashes, incomingHashes);
     const versionsDataOnExistingOnly = this.versions.filter((v) => hashesInExistingOnly.includes(v.hash.toString()));
     const newVersions = [...versionHistory.versions, ...versionsDataOnExistingOnly];
-    this.versions = newVersions;
+    this.versionsObj = this.versionParentsToObject(newVersions);
   }
 
   getGraph(modelComponent?: ModelComponent, laneHeads?: { [hash: string]: string[] }, shortHash = false) {
     const refToStr = (ref: Ref) => (shortHash ? ref.toShortString() : ref.toString());
     const graph = new Graph<string | HashMetadata, string>();
-    const allHashes = uniqBy(
-      this.versions
-        .map((v) => {
-          return compact([v.hash, ...v.parents, ...(v.squashed || []), v.unrelated]);
-        })
-        .flat(),
-      'hash'
-    );
+    const allHashes = this.versions
+      .map((v) => compact([v.hash, ...v.parents, ...(v.squashed || []), v.unrelated]))
+      .flat();
+
     const getMetadata = (ref: Ref): HashMetadata | undefined => {
       if (!modelComponent || !laneHeads) return undefined;
       const tag = modelComponent.getTagOfRefIfExists(ref);

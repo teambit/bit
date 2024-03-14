@@ -30,7 +30,10 @@ export class ShowCmd implements Command {
   private async getComponent(idStr: string, remote: boolean) {
     if (remote) {
       const id = ComponentID.fromString(idStr); // user used --remote so we know it has a scope
-      const host = this.component.getHost('teambit.scope/scope');
+      const host = this.component.getHostIfExist('teambit.scope/scope');
+      if (!host)
+        throw new Error(`error: the current directory is not a workspace nor a scope. the full "bit show" is not supported.
+to see the legacy bit show, please use "--legacy" flag`);
       if (!host.getRemoteComponent) {
         throw new Error('Component Host does not implement getRemoteComponent()');
       }

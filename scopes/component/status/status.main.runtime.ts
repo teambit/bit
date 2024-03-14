@@ -162,7 +162,7 @@ export class StatusMain {
   }
 
   async statusMini(componentPattern?: string, opts: MiniStatusOpts = {}): Promise<MiniStatusResults> {
-    const ids = componentPattern ? await this.workspace.idsByPattern(componentPattern) : await this.workspace.listIds();
+    const ids = componentPattern ? await this.workspace.idsByPattern(componentPattern) : this.workspace.listIds();
     const compFiles = await pMapSeries(ids, (id) => this.workspace.getFilesModification(id));
     const modified: ComponentID[] = [];
     const newComps: ComponentID[] = [];

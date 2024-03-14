@@ -309,7 +309,7 @@ export default class ImportComponents {
       throw new BitError(`unable to import the following component(s) as they belong to other lane(s):
 ${idsFromAnotherLane.map((id) => id.toString()).join(', ')}
 if you need this specific snap, find the lane this snap is belong to, then run "bit lane merge <lane-id> [component-id]" to merge this component from the lane.
-`);
+if you just want to get a quick look into this snap, create a new workspace and import it by running "bit lane import <lane-id> --pattern <component-id>"`);
     }
   }
 
@@ -499,7 +499,9 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       return emptyResult;
     }
     if (!this.options.objectsOnly) {
-      throw new Error(`bit import with no ids and --merge flag was not implemented yet`);
+      const flagUsed = this.options.merge ? '--merge' : '--override';
+      throw new Error(`bit import with no ids and ${flagUsed} flag is not supported.
+to write the components from .bitmap file according to the their remote, please use "bit checkout reset --all"`);
     }
     const versionDependenciesArr = await this._importComponentsObjects(componentsIdsToImport, {
       fromOriginalScope: this.options.fromOriginalScope,

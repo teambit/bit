@@ -43,12 +43,13 @@ const isPositive = require('is-positive');
       helper.command.import(`${helper.scopes.remote}/comp2`);
     });
     it('should install component dependencies from their respective models to the imported components', () => {
-      expect(helper.fs.readJsonFile(`node_modules/${scope}comp3/package.json`).version).to.eq('0.0.1');
-      expect(
-        helper.fs.readJsonFile(
-          path.join(helper.scopes.remoteWithoutOwner, `comp2/node_modules/${scope}comp3/package.json`)
-        ).version
-      ).to.eq('0.0.2');
+      const baseDir = path.join(helper.fixtures.scopes.localPath, helper.scopes.remoteWithoutOwner);
+      expect(fs.readJsonSync(resolveFrom(path.join(baseDir, 'comp1'), [`${scope}comp3/package.json`])).version).to.eq(
+        '0.0.1'
+      );
+      expect(fs.readJsonSync(resolveFrom(path.join(baseDir, 'comp2'), [`${scope}comp3/package.json`])).version).to.eq(
+        '0.0.2'
+      );
     });
     it('should install package dependencies from their respective models to the imported components', () => {
       expect(

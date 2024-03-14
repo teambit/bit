@@ -8,6 +8,7 @@ import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { BitId } from '@teambit/legacy-bit-id';
 import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
@@ -16,7 +17,6 @@ import ComponentOverrides from '../../consumer/config/component-overrides';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
 import { getStringifyArgs } from '../../utils';
-import findDuplications from '../../utils/array/find-duplications';
 import ComponentObjects from '../component-objects';
 import { SnapsDistance } from '../component-ops/snaps-distance';
 import { getDivergeData } from '../component-ops/get-diverge-data';
@@ -1174,6 +1174,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   async updateVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory> {
     const versionHistory = await this.getVersionHistory(repo);
     versionHistory.addFromVersionsObjects(versions);
+    logger.debug(`updating version history of ${this.id()} with ${versions.length} versions`);
     return versionHistory;
   }
 
@@ -1215,6 +1216,9 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
         return { err, added };
       }
       versionHistory.addFromVersionsObjects(versionsToAdd);
+      logger.debug(
+        `populateVersionHistoryIfMissingGracefully, updating ${this.id()} with ${versionsToAdd.length} versions`
+      );
       await repo.writeObjectsToTheFS([versionHistory]);
       return { added };
     });

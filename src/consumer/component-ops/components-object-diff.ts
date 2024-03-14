@@ -1,4 +1,5 @@
 import arrayDifference from 'array-difference';
+import tempy from 'tempy';
 import chalk from 'chalk';
 import { ComponentIdList } from '@teambit/component-id';
 import Table from 'cli-table';
@@ -10,7 +11,6 @@ import { lt, gt } from 'semver';
 import Component from '../component/consumer-component';
 import { ExtensionDataList } from '../config';
 import { DiffOptions, FieldsDiff, getOneFileDiff } from './components-diff';
-import { saveIntoOsTmp } from '../../utils/fs/save-into-os-tmp';
 
 type ConfigDiff = {
   fieldName: string;
@@ -396,7 +396,7 @@ async function configsOutput(
 
   const getConfigAsFilePath = async (config?: Record<string, any>) => {
     const str = config ? JSON.stringify(config, undefined, 2) : '';
-    return saveIntoOsTmp(str);
+    return tempy.write(str, { extension: 'js' });
   };
 
   const fileAPath = await getConfigAsFilePath(leftConfig);
