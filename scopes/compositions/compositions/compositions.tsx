@@ -19,7 +19,7 @@ import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { Separator } from '@teambit/design.ui.separator';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { AlertCard } from '@teambit/design.ui.alert-card';
-import { Link, useNavigate, useLocation } from '@teambit/base-react.navigation.link';
+import { Link as BaseLink, useNavigate, useLocation } from '@teambit/base-react.navigation.link';
 import { OptionButton } from '@teambit/design.ui.input.option-button';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { EmptyStateSlot } from './compositions.ui.runtime';
@@ -29,6 +29,9 @@ import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import type { CompositionsMenuSlot } from './compositions.ui.runtime';
 import { ComponentCompositionProps } from './ui/composition-preview';
+
+// @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
+const Link = BaseLink as any;
 
 export type MenuBarWidget = {
   location: 'start' | 'end';
