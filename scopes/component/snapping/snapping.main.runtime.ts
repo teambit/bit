@@ -641,7 +641,8 @@ if you're willing to lose the history from the head to the specified version, us
         const allTagPending = await workspace.listPotentialTagIds();
         if (allTagPending.length) {
           throw new BitError(`unable to find matching for "${pattern}" pattern among modified/new components.
-there are matching among unmodified components thought. consider using --unmodified flag if needed`);
+there are matching among unmodified components though. consider using --unmodified flag if needed.
+in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
         }
       }
       if (!componentIds.length) {
