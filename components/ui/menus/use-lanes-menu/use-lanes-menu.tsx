@@ -5,9 +5,12 @@ import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
 import { LanesHost } from '@teambit/lanes.ui.models.lanes-model';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
-import { Link } from '@teambit/base-react.navigation.link';
+import { Link as BaseLink } from '@teambit/base-react.navigation.link';
 import { LaneId } from '@teambit/lane-id';
 import styles from './use-lanes-menu.module.scss';
+
+// @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
+const Link = BaseLink as any;
 
 export type LaneImportContentProps = {
   currentLaneId: LaneId;

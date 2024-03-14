@@ -11,11 +11,14 @@ import { VariableNodeSummary, EnumMemberSummary } from '@teambit/api-reference.r
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import defaultTheme from '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme';
-import { Link } from '@teambit/base-react.navigation.link';
+import { Link as BaseLink } from '@teambit/base-react.navigation.link';
 import pluralize from 'pluralize';
 import classnames from 'classnames';
 
 import styles from './grouped-schema-nodes-overview-summary.module.scss';
+
+// @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
+const Link = BaseLink as any;
 
 export type SchemaNodesSummaryProps = {
   name: string;

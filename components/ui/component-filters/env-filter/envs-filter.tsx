@@ -5,7 +5,7 @@ import { ComponentUrl } from '@teambit/component.modules.component-url';
 import classNames from 'classnames';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tooltip } from '@teambit/design.ui.tooltip';
-import { Link } from '@teambit/base-react.navigation.link';
+import { Link as BaseLink } from '@teambit/base-react.navigation.link';
 import {
   ComponentFilterCriteria,
   ComponentFilterRenderProps,
@@ -15,6 +15,9 @@ import {
 } from '@teambit/component.ui.component-filters.component-filter-context';
 
 import styles from './envs-filter.module.scss';
+
+// @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
+const Link = BaseLink as any;
 
 type EnvFilterEnvState = {
   active: boolean;
