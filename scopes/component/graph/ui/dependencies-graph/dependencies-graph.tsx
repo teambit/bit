@@ -25,11 +25,12 @@ import styles from './dependencies-graph.module.scss';
 
 function ComponentNodeContainer(props: NodeProps) {
   const { sourcePosition = Position.Top, targetPosition = Position.Bottom, data, id } = props;
-
+  // @todo - this will be fixed as part of the react-flow-renderer v10 upgrade
+  const ReactFlowHandle = Handle as any;
   return (
     <div key={id}>
-      <Handle type="target" position={targetPosition} isConnectable={false} />
-      <Handle type="source" position={sourcePosition} isConnectable={false} />
+      <ReactFlowHandle type="target" position={targetPosition} isConnectable={false} />
+      <ReactFlowHandle type="source" position={sourcePosition} isConnectable={false} />
       <ComponentNode node={data.node} type={data.type} />
     </div>
   );

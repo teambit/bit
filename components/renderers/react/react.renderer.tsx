@@ -5,7 +5,9 @@ import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-detail
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
 import classnames from 'classnames';
 import { TagName } from '@teambit/semantics.entities.semantic-schema';
-import { Link } from '@teambit/base-react.navigation.link';
+import { Link as BaseLink } from '@teambit/base-react.navigation.link';
+// @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
+const Link = BaseLink as any;
 
 import styles from './react.renderer.module.scss';
 
@@ -161,6 +163,7 @@ function ReactOverviewComponent(props: APINodeRenderProps) {
   const description =
     api.doc?.comment ??
     api?.doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n` ?? ''), '');
+
   return (
     <div className={styles.reactOverview}>
       <div className={styles.reactOverviewHeader}>

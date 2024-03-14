@@ -3,9 +3,12 @@ import classNames from 'classnames';
 import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { APINode, APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 import { sortAPINodes } from '@teambit/api-reference.utils.sort-api-nodes';
-import { Link } from '@teambit/base-react.navigation.link';
+import { Link as BaseLink } from '@teambit/base-react.navigation.link';
 
 import styles from './api-reference.table-of-contents.module.scss';
+
+// @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
+const Link = BaseLink as any;
 
 export type APIReferenceTableOfContentsProps = {
   apiModel: APIReferenceModel;
