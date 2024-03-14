@@ -382,19 +382,26 @@ describe('import functionality on Harmony', function () {
     // create the following graph:
     // comp1 -> comp2 -> comp3 -> comp4
     // comp1 -> comp-a -> comp4
+    // comp1 -> comp-a2 -> comp3 -> comp4
     // comp1 -> comp-b
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(4);
       helper.fs.outputFile('comp-a/index.js', `require('${helper.general.getPackageNameByCompName('comp4', false)}');`);
+      helper.fs.outputFile(
+        'comp-a2/index.js',
+        `require('${helper.general.getPackageNameByCompName('comp3', false)}');`
+      );
       helper.fs.outputFile('comp-b/index.js');
       helper.command.addComponent('comp-a');
       helper.command.addComponent('comp-b');
+      helper.command.addComponent('comp-a2');
       helper.command.compile();
       helper.fs.appendFile(
         'comp1/index.js',
-        `\nrequire('${helper.general.getPackageNameByCompName('comp-a', false)}');`
+        `\nrequire('${helper.general.getPackageNameByCompName('comp-a', false)}');
+        require('${helper.general.getPackageNameByCompName('comp-a2', false)}')`
       );
       helper.fs.appendFile(
         'comp1/index.js',
@@ -415,6 +422,7 @@ describe('import functionality on Harmony', function () {
       expect(bitMap).to.have.property('comp3');
       expect(bitMap).to.have.property('comp4');
       expect(bitMap).to.have.property('comp-a');
+      expect(bitMap).to.have.property('comp-a2');
       expect(bitMap).to.not.have.property('comp-b');
     });
     it('with --dependents-via should limit to graph traversing through the given id', () => {

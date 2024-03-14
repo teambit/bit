@@ -23,7 +23,7 @@ export class DependentsGetter {
 
   async getDependents(targetCompIds: ComponentID[]): Promise<ComponentID[]> {
     this.logger.setStatusLine('finding dependents');
-    const { silent } = this.options;
+    const { silent, dependentsAll } = this.options;
     const graph = await this.graph.getGraphIds();
     const sourceIds = this.workspace.listIds();
     const getIdsForThrough = () => {
@@ -34,7 +34,7 @@ export class DependentsGetter {
         .map((id) => ComponentID.fromString(id));
     };
     const allPaths = graph.findAllPathsFromSourcesToTargets(sourceIds, targetCompIds, getIdsForThrough());
-    const selectedPaths = silent ? allPaths : await this.promptDependents(allPaths);
+    const selectedPaths = silent || dependentsAll ? allPaths : await this.promptDependents(allPaths);
     const uniqAsStrings = uniq(selectedPaths.flat());
 
     const ids: ComponentID[] = [];

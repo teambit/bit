@@ -102,10 +102,10 @@ export class ComponentIdGraph extends Graph<ComponentID, DepEdgeType> {
       start.forEach((s) => queue.push({ node: s, path: [s] }));
       while (queue.length) {
         const { node, path } = queue.shift()!;
-        visited.add(node);
         if (end.includes(removeVerFromIdStr(node))) {
           paths.push([...path]);
         } else {
+          visited.add(node);
           const successors = this.outEdges(node).map((e) => e.targetId);
           for (const successor of successors) {
             if (!visited.has(successor)) {

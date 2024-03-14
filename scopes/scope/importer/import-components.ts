@@ -51,6 +51,7 @@ export type ImportOptions = {
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages, not as imported
   importDependents?: boolean;
   dependentsVia?: string;
+  dependentsAll?: boolean;
   silent?: boolean; // don't show prompt for --dependents flag
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
   saveInLane?: boolean; // save the imported component on the current lane (won't be available on main)
@@ -442,7 +443,8 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     const bitIds: ComponentID[] = this.options.lanes
       ? await this.getBitIdsForLanes()
       : await this.getBitIdsForNonLanes();
-    const shouldImportDependents = this.options.importDependents || this.options.dependentsVia;
+    const shouldImportDependents =
+      this.options.importDependents || this.options.dependentsVia || this.options.dependentsAll;
     if (this.options.importDependenciesDirectly || shouldImportDependents) {
       if (this.options.importDependenciesDirectly) {
         const dependenciesIds = await this.getFlattenedDepsUnique(bitIds);
