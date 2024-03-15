@@ -489,7 +489,7 @@ export class LaneImportCmd implements Command {
     [lane]: [string],
     { skipDependencyInstallation = false, pattern }: { skipDependencyInstallation: boolean; pattern?: string }
   ): Promise<string> {
-    return this.switchCmd.report([lane], { getAll: true, skipDependencyInstallation, pattern });
+    return this.switchCmd.report([lane], { skipDependencyInstallation, pattern });
   }
 }
 
