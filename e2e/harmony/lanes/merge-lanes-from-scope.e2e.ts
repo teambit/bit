@@ -424,6 +424,41 @@ describe('merge lanes from scope', function () {
       expect(() => helper.command.import(`${scope2Name}/comp1`)).to.not.throw();
     });
   });
+  describe('main to lane and multiple scopes when a main-version is missing from lane-scope', () => {
+    let bareMerge;
+    let scope2Name;
+    let scope2Path;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      const mainScope = helper.scopeHelper.cloneLocalScope();
+
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      scope2Name = scopeName;
+      scope2Path = scopePath;
+      helper.scopeHelper.addRemoteScope(scope2Path);
+      helper.command.createLane();
+      helper.command.changeLaneScope(scope2Name);
+
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(mainScope);
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+
+      bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+      helper.scopeHelper.addRemoteScope(scope2Path, bareMerge.scopePath);
+    });
+    it('should be able to merge with --push with no errors', () => {
+      const cmd = () => helper.command.mergeLaneFromScope(bareMerge.scopePath, 'main', `${scope2Name}/dev --push`);
+      expect(cmd).to.not.throw();
+    });
+  });
   describe('merge from scope lane to main when it is not up to date', () => {
     let bareMerge;
     before(() => {

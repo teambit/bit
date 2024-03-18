@@ -390,6 +390,9 @@ export class MergeLanesMain {
         allVersions: false,
         // no need to export anything else other than the head. the normal calculation of what to export won't apply here
         // as it is done from the scope.
+        // @todo: if we merge main to a lane, then no need to export all main history, it'll be fetched later by fetchMissingHistory.
+        // once a change is done in the exporter about this, uncomment the next line.
+        // exportHeadsOnly: shouldSquash || fromLaneId.isDefault(),
         exportHeadsOnly: shouldSquash,
         // all artifacts must be pushed. otherwise, they'll be missing from the component-scopes.
         // unless this is a merge from main to a lane, in which case it's not necessary to export the artifacts as
@@ -407,7 +410,9 @@ export class MergeLanesMain {
       options.excludeNonLaneComps = true;
       options.skipDependencyInstallation = true;
       this.scope.legacyScope.setCurrentLaneId(toLaneId);
-      this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
+      // this causes issues when merging main to a lane as it fetches from the lane instead of from main.
+      // see the e2e-test: "main to lane and multiple scopes when a main-version is missing from lane-scope"
+      // this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
 
       const result = await this.mergeLane(fromLaneId, toLaneId, options as MergeLaneOptions);
       const { mergeSnapResults, leftUnresolvedConflicts, failedComponents, components, mergeSnapError } =
