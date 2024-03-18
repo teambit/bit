@@ -407,7 +407,7 @@ export class MergeLanesMain {
       options.excludeNonLaneComps = true;
       options.skipDependencyInstallation = true;
       this.scope.legacyScope.setCurrentLaneId(toLaneId);
-      this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
+      // this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
 
       const result = await this.mergeLane(fromLaneId, toLaneId, options as MergeLaneOptions);
       const { mergeSnapResults, leftUnresolvedConflicts, failedComponents, components, mergeSnapError } =
