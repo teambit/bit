@@ -142,7 +142,6 @@ export class APIForIDE {
   ): Promise<string[]> {
     const results = await this.lanes.switchLanes(laneName, {
       skipDependencyInstallation,
-      getAll: true,
     });
     return (results.components || []).map((c) => c.id.toString());
   }
