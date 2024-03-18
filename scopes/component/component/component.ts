@@ -312,6 +312,16 @@ export class Component implements IComponent {
   }
 
   /**
+   * in case a component is new, it returns undefined.
+   * otherwise, it returns the Snap object (hash/parents/log) of the current component (according to the version in the id)
+   */
+  async getCurrentSnap(): Promise<Snap | undefined> {
+    const snap = this.getSnapHash();
+    if (!snap) return undefined;
+    return this.loadSnap(snap);
+  }
+
+  /**
    * checkout the component to a different version in its working tree.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
