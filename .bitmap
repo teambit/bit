@@ -1425,9 +1425,8 @@
     },
     "string/random": {
         "name": "string/random",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.toolbox",
+        "scope": "teambit.toolbox",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/string/random"
     },
