@@ -25,8 +25,8 @@ export default class Doctor implements LegacyCommand {
       'archive [filePath]',
       'archive the workspace including diagnosis info (by default exclude node-modules and include .bit)',
     ],
-    ['', 'include-node-modules', 'relevant for --archive. include node_modules in the archive file'],
-    ['', 'exclude-local-scope', 'relevant for --archive. exclude .bit or .git/bit from the archive file'],
+    ['n', 'include-node-modules', 'relevant for --archive. include node_modules in the archive file'],
+    ['e', 'exclude-local-scope', 'relevant for --archive. exclude .bit or .git/bit from the archive file'],
   ] as CommandOptions;
 
   action(
@@ -47,6 +47,9 @@ export default class Doctor implements LegacyCommand {
   ): Promise<DoctorRunAllResults | Diagnosis[] | DoctorRunOneResult> {
     if (list) {
       return listDiagnoses();
+    }
+    if ((includeNodeModules || excludeLocalScope) && !archive) {
+      throw new Error('to use --include-node-modules or --exclude-local-scope please specify --archive');
     }
     let filePath = save;
     // Happen when used --save without specify the location
