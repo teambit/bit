@@ -25,8 +25,6 @@ import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, pathResolveToLi
 import { pathIsInside } from './path-is-inside';
 import prependBang from './prepend-bang';
 import getLatestVersionNumber from './resolveLatestVersion';
-import cleanBang from './string/clean-bang';
-import cleanChar from './string/clean-char';
 import fromBase64 from './string/from-base64';
 import getStringifyArgs from './string/get-stringify-args';
 import removeChalkCharacters from './string/remove-chalk-characters';
@@ -50,12 +48,10 @@ export {
   toBase64ArrayBuffer,
   fromBase64,
   glob,
-  cleanChar,
   checksum,
   checksumFile,
   writeFile,
   cleanObject,
-  cleanBang,
   prependBang,
   isBitUrl,
   isDir,
