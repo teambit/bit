@@ -54,6 +54,13 @@ export default class ScopeComponentsImporter {
     TIMEOUT_FOR_MUTEX,
     new BitError(`error: fetch-multiple-objects timeout exceeded (${TIMEOUT_FOR_MUTEX} minutes)`)
   );
+  /**
+   * important!
+   * refrain from using this. it's a workaround for bare-scopes to import from the lane when the call is
+   * very deep in the stack and is hard to pass the lane object.
+   * this can be an issue in case we deliberately want to fetch from main.
+   * (especially when "importer" is not used, because the importer has a fallback to go to the main scope).
+   */
   shouldOnlyFetchFromCurrentLane = false;
   private constructor(private scope: Scope) {
     if (!scope) throw new Error('unable to instantiate ScopeComponentsImporter without Scope');

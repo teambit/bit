@@ -31,6 +31,7 @@ type ImportFlags = {
   dependents?: boolean;
   dependentsDryRun?: boolean;
   dependentsVia?: string;
+  dependentsAll?: boolean;
   silent?: boolean;
   allHistory?: boolean;
   fetchDeps?: boolean;
@@ -84,6 +85,11 @@ export class ImportCmd implements Command {
       '',
       'dependents-via <string>',
       'same as --dependents except the traversal must go through the specified component. to specify multiple components, wrap with quotes and separate by a comma',
+    ],
+    [
+      '',
+      'dependents-all',
+      'same as --dependents except not prompting for selecting paths but rather selecting all paths and showing final confirmation before importing',
     ],
     [
       '',
@@ -214,6 +220,7 @@ export class ImportCmd implements Command {
       dependentsDryRun = false,
       silent,
       dependentsVia,
+      dependentsAll,
       allHistory = false,
       fetchDeps = false,
       trackOnly = false,
@@ -268,6 +275,7 @@ export class ImportCmd implements Command {
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
       dependentsVia,
+      dependentsAll,
       silent,
       allHistory,
       fetchDeps,
