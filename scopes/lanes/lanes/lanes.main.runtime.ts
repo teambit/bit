@@ -15,7 +15,7 @@ import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/compone
 import { MergeStrategy, MergeOptions } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { HistoryItem } from '@teambit/legacy/dist/scope/models/lane-history';
-import { ImporterAspect, ImporterMain } from '@teambit/importer';
+import { FetchCmd, ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
@@ -56,6 +56,7 @@ import {
   LaneCheckoutCmd,
   LaneCheckoutOpts,
   LaneRevertCmd,
+  LaneFetchCmd,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
@@ -1183,6 +1184,7 @@ please create a new lane instead, which will include all components of this lane
       checkout
     );
     const switchCmd = new SwitchCmd(lanesMain);
+    const fetchCmd = new FetchCmd(importer);
     const laneCmd = new LaneCmd(lanesMain, workspace, scope);
     laneCmd.commands = [
       new LaneListCmd(lanesMain, workspace, scope),
@@ -1198,6 +1200,7 @@ please create a new lane instead, which will include all components of this lane
       new LaneRemoveReadmeCmd(lanesMain),
       new LaneImportCmd(switchCmd),
       new LaneRemoveCompCmd(workspace, lanesMain),
+      new LaneFetchCmd(fetchCmd, lanesMain),
     ];
     if (isFeatureEnabled(SUPPORT_LANE_HISTORY)) {
       laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
