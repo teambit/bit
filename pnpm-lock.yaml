@@ -292,10 +292,10 @@ importers:
         specifier: 1.0.1
         version: 1.0.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/bit-roots':
-        specifier: ^0.0.133
+        specifier: ~0.0.133
         version: 0.0.133(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit.content.what-is-bit':
         specifier: 1.96.2
@@ -769,7 +769,7 @@ importers:
         specifier: 0.0.104
         version: 0.0.104
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.icons.lane-icon':
         specifier: ^0.0.9
@@ -784,7 +784,7 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
       '@teambit/legacy-component-log':
-        specifier: ^0.0.402
+        specifier: ~0.0.402
         version: 0.0.402
       '@teambit/mdx.compilers.mdx-transpiler':
         specifier: ^1.0.6
@@ -808,7 +808,7 @@ importers:
         specifier: ^1.0.5
         version: 1.0.7(@types/react@17.0.75)(react@17.0.2)
       '@teambit/node.deps-detectors.detective-es6':
-        specifier: ^0.0.5
+        specifier: ~0.0.5
         version: 0.0.5
       '@teambit/node.utils.esm-loader':
         specifier: ^0.0.6
@@ -847,7 +847,7 @@ importers:
         specifier: 1.95.0
         version: 1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/scope.modules.find-scope-path':
-        specifier: ^0.0.1
+        specifier: ~0.0.1
         version: 0.0.1
       '@teambit/scope.ui.empty-scope':
         specifier: ^0.0.509
@@ -877,37 +877,37 @@ importers:
         specifier: ^0.0.65
         version: 0.0.65
       '@teambit/styling.deps-detectors.detective-css':
-        specifier: ^0.0.2
+        specifier: ~0.0.2
         version: 0.0.2
       '@teambit/styling.deps-detectors.detective-less':
-        specifier: ^0.0.2
+        specifier: ~0.0.2
         version: 0.0.2
       '@teambit/styling.deps-detectors.detective-sass':
-        specifier: ^0.0.2
+        specifier: ~0.0.2
         version: 0.0.2
       '@teambit/styling.deps-detectors.detective-scss':
-        specifier: ^0.0.2
+        specifier: ~0.0.2
         version: 0.0.2
       '@teambit/styling.deps-lookups.lookup-styling':
-        specifier: ^0.0.1
+        specifier: ~0.0.1
         version: 0.0.1
       '@teambit/tests-results':
         specifier: ^1.0.4
         version: 1.0.4
       '@teambit/toolbox.fs.readdir-skip-system-files':
-        specifier: ^0.0.2
+        specifier: ~0.0.2
         version: 0.0.2
       '@teambit/toolbox.network.agent':
-        specifier: ^0.0.554
+        specifier: ~0.0.554
         version: 0.0.554
       '@teambit/toolbox.object.sorter':
-        specifier: ^0.0.2
+        specifier: ~0.0.2
         version: 0.0.2
       '@teambit/typescript.deps-detectors.detective-typescript':
-        specifier: ^0.0.6
+        specifier: ~0.0.6
         version: 0.0.6(typescript@5.3.3)
       '@teambit/typescript.deps-lookups.lookup-typescript':
-        specifier: ^0.0.1
+        specifier: ~0.0.1
         version: 0.0.1
       '@teambit/typescript.typescript-compiler':
         specifier: ^2.0.22
@@ -2284,7 +2284,7 @@ importers:
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/ui-foundation.ui.hooks.use-data-query':
         specifier: ^0.0.505
@@ -2318,7 +2318,7 @@ importers:
         specifier: 2.0.27
         version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/ui-foundation.ui.hooks.use-data-query':
         specifier: ^0.0.505
@@ -2370,7 +2370,7 @@ importers:
         specifier: 2.0.27
         version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/ui-foundation.ui.react-router.use-query':
         specifier: ^0.0.501
@@ -3464,7 +3464,7 @@ importers:
         specifier: 4.1.1
         version: 4.1.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.7
@@ -3604,7 +3604,7 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/ui-foundation.ui.hooks.use-data-query':
         specifier: ^0.0.505
@@ -3776,7 +3776,7 @@ importers:
         specifier: ^0.0.8
         version: 0.0.8(react-dom@17.0.2)(react@17.0.2)
       '@teambit/legacy-component-log':
-        specifier: ^0.0.402
+        specifier: ~0.0.402
         version: 0.0.402
       classnames:
         specifier: 2.2.6
@@ -3855,7 +3855,7 @@ importers:
         specifier: ^0.0.102
         version: 0.0.102(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
       '@teambit/legacy-component-log':
-        specifier: ^0.0.402
+        specifier: ~0.0.402
         version: 0.0.402
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.7
@@ -4446,7 +4446,7 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.icons.lane-icon':
         specifier: ^0.0.9
@@ -4586,7 +4586,7 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/ui-foundation.ui.use-box.bottom-link':
         specifier: ^0.0.119
@@ -4632,7 +4632,7 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       core-js:
         specifier: ^3.0.0
@@ -4690,7 +4690,7 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.7
@@ -4952,7 +4952,7 @@ importers:
         specifier: 4.1.1
         version: 4.1.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/legacy-component-log':
-        specifier: ^0.0.402
+        specifier: ~0.0.402
         version: 0.0.402
       classnames:
         specifier: 2.2.6
@@ -5019,7 +5019,7 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/legacy-component-log':
-        specifier: ^0.0.402
+        specifier: ~0.0.402
         version: 0.0.402
       '@teambit/ui-foundation.ui.constants.z-indexes':
         specifier: ^0.0.504
@@ -16628,10 +16628,10 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/bit-roots':
-        specifier: ^0.0.133
+        specifier: ~0.0.133
         version: 0.0.133(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -16891,7 +16891,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -17037,7 +17037,7 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -17079,7 +17079,7 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
       '@teambit/legacy-component-log':
-        specifier: ^0.0.402
+        specifier: ~0.0.402
         version: 0.0.402
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
@@ -17188,7 +17188,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -17316,7 +17316,7 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-component-log':
-        specifier: ^0.0.402
+        specifier: ~0.0.402
         version: 0.0.402
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
@@ -17528,7 +17528,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -17717,7 +17717,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -18032,7 +18032,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/harmony':
         specifier: 0.4.6
@@ -18151,7 +18151,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -18160,7 +18160,7 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
@@ -18215,7 +18215,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/harmony':
         specifier: 0.4.6
@@ -18276,7 +18276,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -18334,7 +18334,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/harmony':
         specifier: 0.4.6
@@ -18395,7 +18395,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -18465,7 +18465,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/harmony':
         specifier: 0.4.6
@@ -18544,7 +18544,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -18559,7 +18559,7 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
@@ -18638,7 +18638,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -18714,7 +18714,7 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
@@ -18797,7 +18797,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -19698,7 +19698,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -20027,10 +20027,10 @@ importers:
         specifier: 9.4.2
         version: 9.4.2
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/bit-roots':
-        specifier: ^0.0.133
+        specifier: ~0.0.133
         version: 0.0.133(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bvm.path':
         specifier: ^0.1.2
@@ -20051,7 +20051,7 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/toolbox.object.sorter':
-        specifier: ^0.0.2
+        specifier: ~0.0.2
         version: 0.0.2
       '@types/react':
         specifier: ^17.0.67
@@ -20223,7 +20223,7 @@ importers:
         specifier: 2.0.15
         version: 2.0.15(@pnpm/logger@5.0.0)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/harmony':
         specifier: 0.4.6
@@ -20308,7 +20308,7 @@ importers:
         specifier: 9.4.2
         version: 9.4.2
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/harmony':
         specifier: 0.4.6
@@ -20604,7 +20604,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -20711,7 +20711,7 @@ importers:
         specifier: 1.0.1
         version: 1.0.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/design.ui.styles.ellipsis':
         specifier: 0.0.357
@@ -20790,7 +20790,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -20903,7 +20903,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -20985,7 +20985,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/harmony':
         specifier: 0.4.6
@@ -21104,13 +21104,13 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
@@ -21189,7 +21189,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -21363,7 +21363,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/bvm.config':
         specifier: ^0.2.3
@@ -21466,7 +21466,7 @@ importers:
         specifier: 2.0.27
         version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -21484,7 +21484,7 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/scope.modules.find-scope-path':
-        specifier: ^0.0.1
+        specifier: ~0.0.1
         version: 0.0.1
       '@teambit/ui-foundation.ui.navigation.react-router-adapter':
         specifier: 6.1.1
@@ -21645,7 +21645,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/harmony':
         specifier: 0.4.6
@@ -21758,7 +21758,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/harmony':
         specifier: 0.4.6
@@ -21767,7 +21767,7 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/scope.modules.find-scope-path':
-        specifier: ^0.0.1
+        specifier: ~0.0.1
         version: 0.0.1
       '@types/react':
         specifier: ^17.0.67
@@ -22349,7 +22349,7 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/scope.modules.find-scope-path':
-        specifier: ^0.0.1
+        specifier: ~0.0.1
         version: 0.0.1
     devDependencies:
       '@babel/runtime':
@@ -22603,13 +22603,13 @@ importers:
   scopes/lanes/diff:
     dependencies:
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       chalk:
         specifier: 2.4.2
@@ -22634,7 +22634,7 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
     devDependencies:
       '@babel/runtime':
@@ -22656,7 +22656,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -22671,7 +22671,7 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.menus.lanes-overview-menu':
         specifier: ^0.0.10
@@ -22762,7 +22762,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -22771,7 +22771,7 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
@@ -22972,7 +22972,7 @@ importers:
         specifier: 1.6.21
         version: 1.6.21
       '@teambit/node.deps-detectors.detective-es6':
-        specifier: ^0.0.5
+        specifier: ~0.0.5
         version: 0.0.5
       react:
         specifier: 17.0.2
@@ -23113,7 +23113,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -23125,7 +23125,7 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
@@ -23311,7 +23311,7 @@ importers:
         specifier: 7.5.6
         version: 7.5.6(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.15)(bluebird@3.7.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -23472,7 +23472,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -23967,7 +23967,7 @@ importers:
         specifier: 5.5.0
         version: 5.5.0
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -24710,7 +24710,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -24719,7 +24719,7 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
@@ -24783,7 +24783,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -24795,7 +24795,7 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/legacy-bit-id':
         specifier: ^1.1.1
@@ -24887,7 +24887,7 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/chokidar':
         specifier: 3.5.6
@@ -24917,13 +24917,13 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/legacy-bit-id':
         specifier: ^1.1.1
         version: 1.1.1
       '@teambit/legacy-component-log':
-        specifier: ^0.0.402
+        specifier: ~0.0.402
         version: 0.0.402
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
@@ -25062,7 +25062,7 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
@@ -25117,7 +25117,7 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/mdx.ui.mdx-scope-context':
         specifier: 1.0.0
@@ -25298,7 +25298,7 @@ importers:
   scopes/toolbox/fs/link-or-symlink:
     dependencies:
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       fs-extra:
         specifier: 10.0.0
@@ -26059,7 +26059,7 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/design.theme.icons-font':
         specifier: 2.0.29
@@ -26436,7 +26436,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/harmony':
         specifier: 0.4.6
@@ -26670,7 +26670,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -26801,10 +26801,10 @@ importers:
         specifier: 9.4.2
         version: 9.4.2
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/bit-roots':
-        specifier: ^0.0.133
+        specifier: ~0.0.133
         version: 0.0.133(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
@@ -26883,7 +26883,7 @@ importers:
   scopes/workspace/modules/match-pattern:
     dependencies:
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       lodash:
         specifier: 4.17.21
@@ -26920,7 +26920,7 @@ importers:
   scopes/workspace/modules/node-modules-linker:
     dependencies:
       '@teambit/bit-roots':
-        specifier: ^0.0.133
+        specifier: ~0.0.133
         version: 0.0.133(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -27131,7 +27131,7 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
@@ -27167,7 +27167,7 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/lane-id':
-        specifier: ^0.0.311
+        specifier: ~0.0.311
         version: 0.0.311(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/legacy-bit-id':
         specifier: ^1.1.1
@@ -27321,7 +27321,7 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/bit-error':
-        specifier: ^0.0.404
+        specifier: ~0.0.404
         version: 0.0.404
       '@teambit/harmony':
         specifier: 0.4.6
@@ -44581,7 +44581,7 @@ packages:
     dev: false
 
   /@teambit/toolbox.network.agent@0.0.551:
-    resolution: {integrity: sha1-Lm/1989JK6CwISZEUGjrJ9BE6fk=}
+    resolution: {integrity: sha512-EjHd3W6K7NETIChudqPc19F6Lcb4otUntcvYZk+AcB0GJxRJfsm86mCN/XrkFpP8t0iTIE0kLPewfS6eMTFbkQ==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@pnpm/network.agent': 0.1.0
