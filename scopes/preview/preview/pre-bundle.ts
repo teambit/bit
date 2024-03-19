@@ -1,5 +1,6 @@
 import { join, resolve } from 'path';
-import fs, { existsSync, outputFileSync, readJsonSync } from 'fs-extra';
+import fs, { existsSync, outputFileSync, readJsonSync, writeFileSync } from 'fs-extra';
+import objectHash from 'object-hash';
 import { AspectDefinition } from '@teambit/aspect-loader';
 import {
   createHarmonyImports,
@@ -120,14 +121,29 @@ export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[],
 export async function generateBundlePreviewEntry(rootAspectId: string, previewPreBundlePath: string, config: object) {
   const manifestPath = join(previewPreBundlePath, 'asset-manifest.json');
   const manifest = readJsonSync(manifestPath);
-  const imports = manifest.entrypoints
+  const entrypoints = manifest.entrypoints;
+  const hash = objectHash(entrypoints);
+  const tempFileName = `preview-run-${hash}.mjs`;
+  const tempFilePath = join(__dirname, tempFileName);
+  const tempFileContents = entrypoints
     .map((entry: string) => {
       const entryPath = toWindowsCompatiblePath(join(previewPreBundlePath, entry));
       return entry.endsWith('.js') || entry.endsWith('.cjs') || entry.endsWith('.mjs')
-        ? `import { run } from '${entryPath}';`
+        ? `export { run } from '${entryPath}';`
         : `import '${entryPath}';`;
     })
     .join('\n');
+  writeFileSync(tempFilePath, tempFileContents);
+
+  // const imports = manifest.entrypoints
+  //   .map((entry: string) => {
+  //     const entryPath = toWindowsCompatiblePath(join(previewPreBundlePath, entry));
+  //     return entry.endsWith('.js') || entry.endsWith('.cjs') || entry.endsWith('.mjs')
+  //       ? `import { run } from '${entryPath}';`
+  //       : `import '${entryPath}';`;
+  //   })
+  //   .join('\n');
+  const imports = `import { run } from "@teambit/preview/dist/${tempFileName}";`;
   config['teambit.harmony/bit'] = rootAspectId;
 
   const contents = [imports, `run(${JSON.stringify(config, null, 2)});`].join('\n');
