@@ -17,9 +17,10 @@ const getPackagesUsedInCode = (content = '') => {
   // regex to find all packages in the "import" statements.
   // notice the flag "m" next to the "g" flag, it's for multi-line matching.
   // needed because I match only lines that start with "import".
-  const regex = /^import.+from\s+'([\w@/-]+)'/gm;
+  const regex = /^import.+from.+'(.+)'/gm;
   let match;
   while ((match = regex.exec(content))) {
+    if (match[1].startsWith('.')) continue; // ignore local imports
     packages.push(match[1]);
   }
   return packages;
