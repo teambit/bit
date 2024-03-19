@@ -1,10 +1,10 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import { Modules, readModulesManifest } from '@pnpm/modules-yaml';
+import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { generateRandomStr } from '../../src/utils';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));

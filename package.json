@@ -135,6 +135,8 @@
     "@teambit/styling.deps-detectors.detective-sass": "~0.0.2",
     "@teambit/styling.deps-detectors.detective-scss": "~0.0.2",
     "@teambit/styling.deps-lookups.lookup-styling": "~0.0.1",
+    "@teambit/toolbox.string.random": "~0.0.1",
+    "@teambit/cloud.models.cloud-user": "~0.0.5",
     "@teambit/component-id": "^1.2.0",
     "@teambit/typescript.deps-detectors.detective-typescript": "~0.0.6",
     "@teambit/typescript.deps-lookups.lookup-typescript": "~0.0.1",
