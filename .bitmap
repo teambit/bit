@@ -1423,6 +1423,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/string/get-initials"
     },
+    "string/random": {
+        "name": "string/random",
+        "scope": "teambit.toolbox",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/string/random"
+    },
     "string/strip-trailing-char": {
         "name": "string/strip-trailing-char",
         "scope": "teambit.toolbox",
