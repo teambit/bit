@@ -316,8 +316,13 @@ export class DependencyResolverMain {
     const legacyComponent: LegacyComponent = component.state._consumer;
     const listFactory = this.getDependencyListFactory();
     const dependencyList = await listFactory.fromLegacyComponent(legacyComponent);
+
     dependencyList.forEach((dep) => {
-      const found = componentPolicy.find(dep.id);
+      let found = componentPolicy.find(dep.id);
+      if (!found) {
+        const packageName = dep?.getPackageName?.();
+        found = packageName ? componentPolicy.find(packageName) : undefined;
+      }
       // if no policy found, the dependency was auto-resolved from the source code
       dep.source = found?.source || 'auto';
       dep.hidden = found?.hidden;
