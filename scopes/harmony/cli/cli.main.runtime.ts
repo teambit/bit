@@ -31,7 +31,7 @@ export class CLIMain {
   constructor(
     private commandsSlot: CommandsSlot,
     private onStartSlot: OnStartSlot,
-    private onCommandStartSlot: OnCommandStartSlot,
+    readonly onCommandStartSlot: OnCommandStartSlot,
     private onBeforeExitSlot: OnBeforeExitSlot,
     private logger: Logger
   ) {}
