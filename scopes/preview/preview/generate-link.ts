@@ -1,8 +1,9 @@
 import type { ComponentMap } from '@teambit/component';
 import { join } from 'path';
-import { writeFileSync } from 'fs-extra';
+import { outputFileSync } from 'fs-extra';
 import objectHash from 'object-hash';
 import camelcase from 'camelcase';
+import { getAspectDirFromBvm } from '@teambit/aspect-loader';
 import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compatible-path';
 
 export type MainModulesMap = {
@@ -48,7 +49,7 @@ export function generateLink(
     return { envId, varName, resolveFrom };
   });
 
-  return `
+  const contents = `
 import { linkModules } from '@teambit/preview/dist/preview.preview.runtime.js';
 
 ${getModuleImports(moduleLinks)}
@@ -76,6 +77,7 @@ ${componentLinks
   }
 });
 `;
+  return contents;
 }
 
 function moduleVarName(componentIdx: number, fileIdx: number) {
@@ -90,16 +92,16 @@ function getEnvVarName(envId: string) {
 
 function getModuleImports(moduleLinks: ModuleLink[] = []): string {
   const hash = objectHash(moduleLinks);
+  const tempDirname = getAspectDirFromBvm('@teambit/preview');
   const tempFileName = `preview-modules-${hash}.mjs`;
-  const tempFilePath = join(__dirname, tempFileName);
+  const tempFilePath = join(tempDirname, 'dist', tempFileName);
   const tempFileContents = moduleLinks
     .map((module) => `export * as ${module.varName} from "${module.resolveFrom}";`)
     .join('\n');
-  writeFileSync(tempFilePath, tempFileContents);
+  outputFileSync(tempFilePath, tempFileContents);
   return `import { ${moduleLinks
     .map((moduleLink) => moduleLink.varName)
     .join(', ')} } from "@teambit/preview/dist/${tempFileName}";`;
-  // return moduleLinks.map((module) => `import * as ${module.varName} from "${module.resolveFrom}";`).join('\n');
 }
 
 function getComponentImports(componentLinks: ComponentLink[] = []): string {

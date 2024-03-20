@@ -1,7 +1,7 @@
 import { join, resolve } from 'path';
-import fs, { existsSync, outputFileSync, readJsonSync, writeFileSync } from 'fs-extra';
+import fs, { existsSync, outputFileSync, readJsonSync } from 'fs-extra';
 import objectHash from 'object-hash';
-import { AspectDefinition } from '@teambit/aspect-loader';
+import { AspectDefinition, getAspectDirFromBvm } from '@teambit/aspect-loader';
 import {
   createHarmonyImports,
   createImports,
@@ -123,8 +123,9 @@ export async function generateBundlePreviewEntry(rootAspectId: string, previewPr
   const manifest = readJsonSync(manifestPath);
   const entrypoints = manifest.entrypoints;
   const hash = objectHash(entrypoints);
+  const tempDirname = getAspectDirFromBvm('@teambit/preview');
   const tempFileName = `preview-run-${hash}.mjs`;
-  const tempFilePath = join(__dirname, tempFileName);
+  const tempFilePath = join(tempDirname, 'dist', tempFileName);
   const tempFileContents = entrypoints
     .map((entry: string) => {
       const entryPath = toWindowsCompatiblePath(join(previewPreBundlePath, entry));
@@ -133,21 +134,13 @@ export async function generateBundlePreviewEntry(rootAspectId: string, previewPr
         : `import '${entryPath}';`;
     })
     .join('\n');
-  writeFileSync(tempFilePath, tempFileContents);
+  outputFileSync(tempFilePath, tempFileContents);
 
-  // const imports = manifest.entrypoints
-  //   .map((entry: string) => {
-  //     const entryPath = toWindowsCompatiblePath(join(previewPreBundlePath, entry));
-  //     return entry.endsWith('.js') || entry.endsWith('.cjs') || entry.endsWith('.mjs')
-  //       ? `import { run } from '${entryPath}';`
-  //       : `import '${entryPath}';`;
-  //   })
-  //   .join('\n');
   const imports = `import { run } from "@teambit/preview/dist/${tempFileName}";`;
   config['teambit.harmony/bit'] = rootAspectId;
 
   const contents = [imports, `run(${JSON.stringify(config, null, 2)});`].join('\n');
-  const previewRuntime = resolve(join(__dirname, `preview.entry.${sha1(contents)}.js`));
+  const previewRuntime = resolve(join(tempDirname, 'dist', `preview.entry.${sha1(contents)}.js`));
 
   if (!existsSync(previewRuntime)) {
     outputFileSync(previewRuntime, contents);
