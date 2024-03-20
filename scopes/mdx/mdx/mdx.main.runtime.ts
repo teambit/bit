@@ -1,7 +1,7 @@
 import { Harmony } from '@teambit/harmony';
+import { BabelCompiler } from '@teambit/compilation.babel-compiler';
 import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
 import { TsConfigTransformer } from '@teambit/typescript';
-import { BabelAspect, BabelMain } from '@teambit/babel';
 import { MainRuntime } from '@teambit/cli';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -56,7 +56,6 @@ export class MDXMain {
     ReactAspect,
     EnvsAspect,
     MultiCompilerAspect,
-    BabelAspect,
     CompilerAspect,
     GeneratorAspect,
   ];
@@ -66,13 +65,12 @@ export class MDXMain {
   };
 
   static async provider(
-    [docs, depResolver, react, envs, multiCompiler, babel, compiler, generator, loggerAspect, workerMain]: [
+    [docs, depResolver, react, envs, multiCompiler, compiler, generator, loggerAspect, workerMain]: [
       DocsMain,
       DependencyResolverMain,
       ReactMain,
       EnvsMain,
       MultiCompilerMain,
-      BabelMain,
       CompilerMain,
       GeneratorMain,
       LoggerMain,
@@ -89,11 +87,21 @@ export class MDXMain {
       return tsconfig;
     };
     const tsCompiler = react.env.getCompiler([tsTransformer]);
+    const logger = loggerAspect.createLogger(MDXAspect.id);
+
+    const babelCompiler = BabelCompiler.create(
+      {
+        babelTransformOptions: babelConfig,
+        // set the shouldCopyNonSupportedFiles to false since we don't want babel to copy the .mdx file to the dist
+        // folder (it will conflict with the .mdx.js file created by the mdx compiler)
+        shouldCopyNonSupportedFiles: false,
+      },
+      { logger }
+    );
 
     const mdxCompiler = multiCompiler.createCompiler(
       [
-        // set the shouldCopyNonSupportedFiles to false since we don't want babel to copy the .mdx file to the dist folder (it will conflict with the .mdx.js file created by the mdx compiler)
-        babel.createCompiler({ babelTransformOptions: babelConfig, shouldCopyNonSupportedFiles: false }),
+        babelCompiler,
         mdx.createCompiler({ ignoredPatterns: docs.getPatterns(), babelTransformOptions: babelConfig }),
         tsCompiler,
       ],
