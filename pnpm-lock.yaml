@@ -5979,6 +5979,9 @@ importers:
       '@teambit/toolbox.string.get-initials':
         specifier: workspace:*
         version: file:scopes/toolbox/string/get-initials
+      '@teambit/toolbox.string.random':
+        specifier: workspace:*
+        version: file:scopes/toolbox/string/random
       '@teambit/toolbox.string.strip-trailing-char':
         specifier: workspace:*
         version: file:scopes/toolbox/string/strip-trailing-char
@@ -6584,6 +6587,8 @@ importers:
       '@teambit/toolbox.string.ellipsis':
         injected: true
       '@teambit/toolbox.string.get-initials':
+        injected: true
+      '@teambit/toolbox.string.random':
         injected: true
       '@teambit/toolbox.string.strip-trailing-char':
         injected: true
@@ -7413,6 +7418,9 @@ importers:
       '@teambit/toolbox.string.get-initials':
         specifier: workspace:*
         version: file:scopes/toolbox/string/get-initials
+      '@teambit/toolbox.string.random':
+        specifier: workspace:*
+        version: file:scopes/toolbox/string/random
       '@teambit/toolbox.string.strip-trailing-char':
         specifier: workspace:*
         version: file:scopes/toolbox/string/strip-trailing-char
@@ -8033,6 +8041,8 @@ importers:
       '@teambit/toolbox.string.ellipsis':
         injected: true
       '@teambit/toolbox.string.get-initials':
+        injected: true
+      '@teambit/toolbox.string.random':
         injected: true
       '@teambit/toolbox.string.strip-trailing-char':
         injected: true
@@ -8862,6 +8872,9 @@ importers:
       '@teambit/toolbox.string.get-initials':
         specifier: workspace:*
         version: file:scopes/toolbox/string/get-initials
+      '@teambit/toolbox.string.random':
+        specifier: workspace:*
+        version: file:scopes/toolbox/string/random
       '@teambit/toolbox.string.strip-trailing-char':
         specifier: workspace:*
         version: file:scopes/toolbox/string/strip-trailing-char
@@ -9482,6 +9495,8 @@ importers:
       '@teambit/toolbox.string.ellipsis':
         injected: true
       '@teambit/toolbox.string.get-initials':
+        injected: true
+      '@teambit/toolbox.string.random':
         injected: true
       '@teambit/toolbox.string.strip-trailing-char':
         injected: true
@@ -10302,6 +10317,9 @@ importers:
       '@teambit/toolbox.string.get-initials':
         specifier: workspace:*
         version: file:scopes/toolbox/string/get-initials
+      '@teambit/toolbox.string.random':
+        specifier: workspace:*
+        version: file:scopes/toolbox/string/random
       '@teambit/toolbox.string.strip-trailing-char':
         specifier: workspace:*
         version: file:scopes/toolbox/string/strip-trailing-char
@@ -10901,6 +10919,8 @@ importers:
       '@teambit/toolbox.string.ellipsis':
         injected: true
       '@teambit/toolbox.string.get-initials':
+        injected: true
+      '@teambit/toolbox.string.random':
         injected: true
       '@teambit/toolbox.string.strip-trailing-char':
         injected: true
@@ -11721,6 +11741,9 @@ importers:
       '@teambit/toolbox.string.get-initials':
         specifier: workspace:*
         version: file:scopes/toolbox/string/get-initials
+      '@teambit/toolbox.string.random':
+        specifier: workspace:*
+        version: file:scopes/toolbox/string/random
       '@teambit/toolbox.string.strip-trailing-char':
         specifier: workspace:*
         version: file:scopes/toolbox/string/strip-trailing-char
@@ -12326,6 +12349,8 @@ importers:
       '@teambit/toolbox.string.ellipsis':
         injected: true
       '@teambit/toolbox.string.get-initials':
+        injected: true
+      '@teambit/toolbox.string.random':
         injected: true
       '@teambit/toolbox.string.strip-trailing-char':
         injected: true
@@ -13146,6 +13171,9 @@ importers:
       '@teambit/toolbox.string.get-initials':
         specifier: workspace:*
         version: file:scopes/toolbox/string/get-initials
+      '@teambit/toolbox.string.random':
+        specifier: workspace:*
+        version: file:scopes/toolbox/string/random
       '@teambit/toolbox.string.strip-trailing-char':
         specifier: workspace:*
         version: file:scopes/toolbox/string/strip-trailing-char
@@ -13751,6 +13779,8 @@ importers:
       '@teambit/toolbox.string.ellipsis':
         injected: true
       '@teambit/toolbox.string.get-initials':
+        injected: true
+      '@teambit/toolbox.string.random':
         injected: true
       '@teambit/toolbox.string.strip-trailing-char':
         injected: true
@@ -14583,6 +14613,9 @@ importers:
       '@teambit/toolbox.string.get-initials':
         specifier: workspace:*
         version: file:scopes/toolbox/string/get-initials
+      '@teambit/toolbox.string.random':
+        specifier: workspace:*
+        version: file:scopes/toolbox/string/random
       '@teambit/toolbox.string.strip-trailing-char':
         specifier: workspace:*
         version: file:scopes/toolbox/string/strip-trailing-char
@@ -15212,6 +15245,8 @@ importers:
       '@teambit/toolbox.string.ellipsis':
         injected: true
       '@teambit/toolbox.string.get-initials':
+        injected: true
+      '@teambit/toolbox.string.random':
         injected: true
       '@teambit/toolbox.string.strip-trailing-char':
         injected: true
@@ -25464,6 +25499,21 @@ importers:
         version: 12.20.4
 
   scopes/toolbox/string/get-initials:
+    devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@types/jest':
+        specifier: 26.0.20
+        version: 26.0.20
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 12.20.4
+        version: 12.20.4
+
+  scopes/toolbox/string/random:
     devDependencies:
       '@babel/runtime':
         specifier: 7.20.0
@@ -47801,7 +47851,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.3
       '@yarnpkg/fslib': 3.0.2
-      '@yarnpkg/libzip': 3.0.1
+      '@yarnpkg/libzip': 3.0.1(@yarnpkg/fslib@3.0.2)
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -47832,7 +47882,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.3
       '@yarnpkg/fslib': 3.0.2
-      '@yarnpkg/libzip': 3.0.1
+      '@yarnpkg/libzip': 3.0.1(@yarnpkg/fslib@3.0.2)
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -47913,9 +47963,11 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/libzip@3.0.1:
+  /@yarnpkg/libzip@3.0.1(@yarnpkg/fslib@3.0.2):
     resolution: {integrity: sha512-fiqRLk2fyd2r34/Qc7HlP8fKIo1CK5CZpLNObJwnbFmZQN2hVanovFlG++3oH3qYJymEmjPl5EGsygcEJZl4Pg==}
     engines: {node: '>=18.12.0'}
+    peerDependencies:
+      '@yarnpkg/fslib': ^3.0.2
     dependencies:
       '@types/emscripten': 1.39.10
       '@yarnpkg/fslib': 3.0.2
@@ -73484,6 +73536,7 @@ packages:
       '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/toolbox.string.random': file:scopes/toolbox/string/random
       '@teambit/ui-foundation.ui.full-loader': 0.0.500(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-data-query': 0.0.505(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
@@ -73538,6 +73591,7 @@ packages:
       '@teambit/graph.cleargraph': 0.0.8
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/toolbox.string.random': file:scopes/toolbox/string/random
       '@teambit/ui-foundation.ui.full-loader': 0.0.500(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-data-query': 0.0.505(@apollo/client@3.9.6)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
@@ -77017,6 +77071,11 @@ packages:
   file:scopes/toolbox/string/get-initials:
     resolution: {directory: scopes/toolbox/string/get-initials, type: directory}
     name: '@teambit/toolbox.string.get-initials'
+    dev: false
+
+  file:scopes/toolbox/string/random:
+    resolution: {directory: scopes/toolbox/string/random, type: directory}
+    name: '@teambit/toolbox.string.random'
     dev: false
 
   file:scopes/toolbox/string/strip-trailing-char:
