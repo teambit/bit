@@ -273,7 +273,7 @@ describe('LanesAspect', function () {
             newWorkspace = mockWorkspace({ bareScopeName: workspaceData.remoteScopeName });
 
             lanes = await loadAspect(LanesAspect, newWorkspace.workspacePath);
-            await lanes.switchLanes(laneId.toString(), { skipDependencyInstallation: true, getAll: true });
+            await lanes.switchLanes(laneId.toString(), { skipDependencyInstallation: true });
             await lanes.importLaneObject(laneId, true, true);
           });
           after(async () => {
@@ -296,7 +296,7 @@ describe('LanesAspect', function () {
           it('should be able to revert to a previous history id', async () => {
             const revertWorkspace = mockWorkspace({ bareScopeName: workspaceData.remoteScopeName });
             lanes = await loadAspect(LanesAspect, revertWorkspace.workspacePath);
-            await lanes.switchLanes(laneId.toString(), { skipDependencyInstallation: true, getAll: true });
+            await lanes.switchLanes(laneId.toString(), { skipDependencyInstallation: true });
             await lanes.importLaneObject(laneId, true, true);
             const laneHistory = await lanes.getLaneHistory(laneId);
             const history = laneHistory.getHistory();

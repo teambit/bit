@@ -4,9 +4,9 @@ import fs from 'fs-extra';
 import { Graph } from 'graphlib';
 import graphviz, { Digraph } from 'graphviz';
 import { Graph as ClearGraph } from '@teambit/graph.cleargraph';
+import { generateRandomStr } from '@teambit/toolbox.string.random';
 import * as path from 'path';
 import logger from '../../logger/logger';
-import { generateRandomStr } from '../../utils';
 
 export type GraphConfig = {
   layout?: string; // dot Layout to use in the graph

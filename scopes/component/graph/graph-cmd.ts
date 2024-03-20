@@ -4,7 +4,7 @@ import * as path from 'path';
 import GraphLib from 'graphlib';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
-import { generateRandomStr } from '@teambit/legacy/dist/utils';
+import { generateRandomStr } from '@teambit/toolbox.string.random';
 import VisualDependencyGraph from '@teambit/legacy/dist/scope/graph/vizgraph';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';

@@ -438,6 +438,9 @@ jobs:
       - run:
           name: 'make sure there is no "ramda" imported to Harmony'
           command: 'cd bit && ./scripts/validate-no-ramda.sh'
+      - run:
+          name: 'make sure the packages used in legacy are specified in package.json'
+          command: 'cd bit && node scripts/validate-pkg-exist-in-pkg-json.js'
       - persist_to_workspace:
           root: .
           paths:

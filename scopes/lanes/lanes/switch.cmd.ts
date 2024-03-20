@@ -29,7 +29,8 @@ export class SwitchCmd implements Command {
       'merge [strategy]',
       'merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"',
     ],
-    ['a', 'get-all', 'checkout all components in a lane, including those not currently in the workspace'],
+    ['a', 'get-all', 'DEPRECATED. this is currently the default behavior'],
+    ['a', 'workspace-only', 'checkout only the components in the workspace to the selected lane'],
     ['x', 'skip-dependency-installation', 'do not install dependencies of the imported components'],
     [
       'p',
@@ -49,6 +50,7 @@ ${COMPONENT_PATTERN_HELP}`,
       alias,
       merge,
       getAll = false,
+      workspaceOnly = false,
       skipDependencyInstallation = false,
       pattern,
       json = false,
@@ -56,6 +58,7 @@ ${COMPONENT_PATTERN_HELP}`,
       alias?: string;
       merge?: MergeStrategy;
       getAll?: boolean;
+      workspaceOnly?: boolean;
       skipDependencyInstallation?: boolean;
       override?: boolean;
       pattern?: string;
@@ -65,10 +68,13 @@ ${COMPONENT_PATTERN_HELP}`,
     const { components, failedComponents, installationError, compilationError } = await this.lanes.switchLanes(lane, {
       alias,
       merge,
-      getAll,
+      workspaceOnly,
       pattern,
       skipDependencyInstallation,
     });
+    if (getAll) {
+      this.lanes.logger.warn('the --get-all flag is deprecated and currently the default behavior');
+    }
     if (json) {
       return JSON.stringify({ components, failedComponents }, null, 4);
     }

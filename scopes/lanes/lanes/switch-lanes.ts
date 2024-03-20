@@ -15,7 +15,7 @@ export type SwitchProps = {
   ids?: ComponentID[];
   laneBitIds?: ComponentID[]; // only needed for the deprecated onLanesOnly prop. once this prop is removed, this prop can be removed as well.
   pattern?: string;
-  existingOnWorkspaceOnly: boolean;
+  existingOnWorkspaceOnly?: boolean;
   remoteLane?: Lane;
   localTrackedLane?: string;
   alias?: string;

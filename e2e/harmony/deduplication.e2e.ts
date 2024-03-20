@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import path from 'path';
+import { generateRandomStr } from '@teambit/toolbox.string.random';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { generateRandomStr } from '../../src/utils';
 
 chai.use(require('chai-fs'));
 
