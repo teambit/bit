@@ -90,7 +90,7 @@ export class PnpmPackageManager implements PackageManager {
       proxyConfig,
       networkConfig,
       {
-        autoInstallPeers: installOptions.autoInstallPeers ?? true,
+        autoInstallPeers: installOptions.autoInstallPeers ?? false,
         engineStrict: installOptions.engineStrict ?? config.engineStrict,
         excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
         lockfileOnly: installOptions.lockfileOnly,
