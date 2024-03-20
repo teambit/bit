@@ -7,8 +7,8 @@ import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DocsAspect, DocsMain } from '@teambit/docs';
 import { ComponentID } from '@teambit/component-id';
-import { LoggerMain } from '@teambit/logger';
-import { WorkerMain } from '@teambit/worker';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { WorkerAspect, WorkerMain } from '@teambit/worker';
 import { EnvContext, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { MultiCompilerAspect, MultiCompilerMain } from '@teambit/multi-compiler';
 import { ReactAspect, ReactEnv, ReactMain } from '@teambit/react';
@@ -58,6 +58,8 @@ export class MDXMain {
     MultiCompilerAspect,
     CompilerAspect,
     GeneratorAspect,
+    LoggerAspect,
+    WorkerAspect,
   ];
 
   static defaultConfig = {
