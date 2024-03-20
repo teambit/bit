@@ -1882,6 +1882,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   async setEnvToComponents(envId: ComponentID, componentIds: ComponentID[]) {
     const envStrWithPossiblyVersion = await this.resolveEnvIdWithPotentialVersionForConfig(envId);
+    const envComp = await this.get(ComponentID.fromString(envStrWithPossiblyVersion));
+    const isEnv = this.envs.isEnv(envComp);
+    if (!isEnv) throw new BitError(`the component ${envComp.id.toString()} is not an env`);
     const envIdStrNoVersion = envId.toStringWithoutVersion();
     await this.unsetEnvFromComponents(componentIds);
     await Promise.all(
@@ -1915,7 +1918,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       return found.extensionId.toString();
     }
     const comps = await this.importAndGetMany([envId], `to get the env ${envId.toString()}`);
-    return comps[0].id.toString();
+    const comp = comps[0];
+    if (!comp) throw new BitError(`unable to find ${envId.toString()} in the workspace or in the remote`);
+    return comp.id.toString();
   }
 
   /**
