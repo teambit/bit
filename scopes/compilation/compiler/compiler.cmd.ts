@@ -8,7 +8,6 @@ import { WorkspaceCompiler, CompileOptions, BuildResult } from './workspace-comp
 import { CompilationInitiator } from './types';
 
 export class CompileCmd implements Command {
-  componentsStatus: BuildResult[] = [];
   name = 'compile [component-names...]';
   description = 'compile components in the workspace';
   helpUrl = 'reference/compiling/compiler-overview';
@@ -34,7 +33,7 @@ export class CompileCmd implements Command {
     this.logger.setStatusLine('Compiling your components, hold tight.');
 
     let outputString = '';
-    this.componentsStatus = await this.compile.compileComponents(components, {
+    const results = await this.compile.compileComponents(components, {
       ...compilerOptions,
       initiator: CompilationInitiator.CmdReport,
     });
@@ -42,16 +41,16 @@ export class CompileCmd implements Command {
 
     outputString += '\n';
     outputString += `  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}\n`;
-    outputString += formatCompileResults(this.componentsStatus, !!compilerOptions.verbose);
+    outputString += formatCompileResults(results, !!compilerOptions.verbose);
     outputString += '\n';
 
-    outputString += this.getStatusLine(this.componentsStatus, compileTimeLength);
+    outputString += this.getStatusLine(results, compileTimeLength);
 
     this.logger.clearStatusLine();
 
     return {
       data: outputString,
-      code: this.getExitCode(this.componentsStatus),
+      code: this.getExitCode(results),
     };
   }
 
