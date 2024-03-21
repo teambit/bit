@@ -136,7 +136,7 @@ export async function generateBundlePreviewEntry(rootAspectId: string, previewPr
     .join('\n');
   outputFileSync(tempFilePath, tempFileContents);
 
-  const imports = `import { run } from "@teambit/preview/dist/${tempFileName}";`;
+  const imports = `import { run } from "${tempFilePath}";`;
   config['teambit.harmony/bit'] = rootAspectId;
 
   const contents = [imports, `run(${JSON.stringify(config, null, 2)});`].join('\n');

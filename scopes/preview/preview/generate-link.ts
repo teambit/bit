@@ -99,9 +99,7 @@ function getModuleImports(moduleLinks: ModuleLink[] = []): string {
     .map((module) => `export * as ${module.varName} from "${module.resolveFrom}";`)
     .join('\n');
   outputFileSync(tempFilePath, tempFileContents);
-  return `import { ${moduleLinks
-    .map((moduleLink) => moduleLink.varName)
-    .join(', ')} } from "@teambit/preview/dist/${tempFileName}";`;
+  return `import {${moduleLinks.map((moduleLink) => moduleLink.varName).join(', ')}} from "${tempFilePath}";`;
 }
 
 function getComponentImports(componentLinks: ComponentLink[] = []): string {
