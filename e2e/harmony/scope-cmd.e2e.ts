@@ -148,4 +148,25 @@ describe('bit scope command', function () {
       expect(linkPath).to.be.a.directory();
     });
   });
+  describe('bit scope fork when the paths of two components conflicting', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.fs.outputFile('comp1/ui/index.js');
+      helper.command.addComponent('comp1/ui', '--id comp1/ui');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('should not throw an error about a component is nested in another component dir', () => {
+      const cmd = () => helper.command.forkScope(helper.scopes.remote, 'org.scope', '-x');
+      expect(cmd).to.not.throw();
+    });
+  });
 });

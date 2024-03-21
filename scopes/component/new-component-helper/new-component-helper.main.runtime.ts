@@ -14,6 +14,7 @@ import { PkgAspect } from '@teambit/pkg';
 import { RenamingAspect } from '@teambit/renaming';
 import { EnvsAspect } from '@teambit/envs';
 import { NewComponentHelperAspect } from './new-component-helper.aspect';
+import { incrementPathRecursively } from '@teambit/component-writer';
 
 const aspectsConfigToIgnore: string[] = [PkgAspect.id, RenamingAspect.id];
 
@@ -53,8 +54,23 @@ export class NewComponentHelperMain {
       return pathFromUser;
     }
 
-    return this.workspace.consumer.composeRelativeComponentPath(componentId.changeScope(componentId.scope));
+    const generatedPath = this.workspace.consumer.composeRelativeComponentPath(
+      componentId.changeScope(componentId.scope)
+    );
+
+    const existingPaths = this.workspace.bitMap.getAllRootDirs();
+    // e.g. existing "bar/foo" and currently writing "bar"
+    const existingParent = existingPaths.find((d) => d.startsWith(`${generatedPath}/`));
+    // e.g. existing "bar" and currently writing "bar/foo"
+    const existingChild = existingPaths.find((p) => generatedPath.startsWith(p));
+    if (existingParent || existingChild) {
+      // if existingChild, you can't increment the generatedPath, it'll still be a sub-directory of the existingChild
+      const pathToIncrement = existingChild || generatedPath;
+      return incrementPathRecursively(pathToIncrement, existingPaths);
+    }
+    return generatedPath;
   }
+
   async writeAndAddNewComp(
     comp: Component,
     targetId: ComponentID,
