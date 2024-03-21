@@ -1,25 +1,14 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
-import type { PubsubMain, BitBaseEvent } from '@teambit/pubsub';
+import type { PubsubMain } from '@teambit/pubsub';
 import chalk from 'chalk';
 import prettyTime from 'pretty-time';
-import { Component } from '@teambit/component';
 import { formatCompileResults } from './output-formatter';
-import { CompileError, WorkspaceCompiler, CompileOptions } from './workspace-compiler';
+import { WorkspaceCompiler, CompileOptions, BuildResult } from './workspace-compiler';
 import { CompilationInitiator } from './types';
 
-// IDs & events
-import { CompilerAspect } from './compiler.aspect';
-import { ComponentCompilationOnDoneEvent } from './events';
-
-export type ComponentsStatus = {
-  buildResults: string[];
-  component: Component;
-  errors: CompileError[];
-};
-
 export class CompileCmd implements Command {
-  componentsStatus: ComponentsStatus[] = [];
+  componentsStatus: BuildResult[] = [];
   name = 'compile [component-names...]';
   description = 'compile components in the workspace';
   helpUrl = 'reference/compiling/compiler-overview';
@@ -43,10 +32,9 @@ export class CompileCmd implements Command {
   async report([components = []]: [string[]], compilerOptions: CompileOptions) {
     const startTimestamp = process.hrtime();
     this.logger.setStatusLine('Compiling your components, hold tight.');
-    this.pubsub.sub(CompilerAspect.id, this.onComponentCompilationDone.bind(this));
 
     let outputString = '';
-    await this.compile.compileComponents(components, {
+    this.componentsStatus = await this.compile.compileComponents(components, {
       ...compilerOptions,
       initiator: CompilationInitiator.CmdReport,
     });
@@ -81,11 +69,11 @@ export class CompileCmd implements Command {
     };
   }
 
-  private failedComponents(componentsStatus: ComponentsStatus[]): ComponentsStatus[] {
+  private failedComponents(componentsStatus: BuildResult[]): BuildResult[] {
     return componentsStatus.filter((component) => component.errors.length);
   }
 
-  private getSummaryIcon(componentsStatus: ComponentsStatus[]) {
+  private getSummaryIcon(componentsStatus: BuildResult[]) {
     switch (this.failedComponents(componentsStatus).length) {
       case 0:
         return Logger.successSymbol();
@@ -96,11 +84,11 @@ export class CompileCmd implements Command {
     }
   }
 
-  private getExitCode(componentsStatus: ComponentsStatus[]) {
+  private getExitCode(componentsStatus: BuildResult[]) {
     return this.failedComponents(componentsStatus).length ? 1 : 0;
   }
 
-  private getStatusLine(componentsStatus: ComponentsStatus[], compileTimeLength) {
+  private getStatusLine(componentsStatus: BuildResult[], compileTimeLength) {
     const numberOfComponents = componentsStatus.length;
     const numberOfFailingComponents = this.failedComponents(componentsStatus).length;
     const numberOfSuccessfulComponents = componentsStatus.filter((component) => !component.errors.length).length;
@@ -111,11 +99,5 @@ export class CompileCmd implements Command {
       : `${icon} ${numberOfSuccessfulComponents}/${numberOfComponents} components compiled successfully.`;
 
     return `${summaryLine}\nFinished. (${prettyTime(compileTimeLength)})`;
-  }
-
-  private onComponentCompilationDone(event: BitBaseEvent<any>) {
-    if (event.type === ComponentCompilationOnDoneEvent.TYPE) {
-      this.componentsStatus.push(event.data);
-    }
   }
 }

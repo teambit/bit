@@ -27,10 +27,14 @@ import type { PreStartOpts } from '@teambit/ui';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { MultiCompiler } from '@teambit/multi-compiler';
 import { CompilerAspect } from './compiler.aspect';
-import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
+import { CompilerErrorEvent } from './events';
 import { Compiler, CompilationInitiator } from './types';
 
-export type BuildResult = { component: string; buildResults: string[] | null | undefined };
+export type BuildResult = {
+  component: string;
+  buildResults: string[];
+  errors: CompileError[];
+};
 
 export type CompileOptions = {
   changed?: boolean; // compile only new and modified components
@@ -110,11 +114,8 @@ export class ComponentCompiler {
     }
     const buildResults = this.dists.map((distFile) => distFile.path);
     if (this.component.state._consumer.compiler) loader.succeed();
-    this.pubsub.pub(
-      CompilerAspect.id,
-      new ComponentCompilationOnDoneEvent(this.compileErrors, this.component, buildResults)
-    );
-    return { component: this.component.id.toString(), buildResults };
+
+    return { component: this.component.id.toString(), buildResults, errors: this.compileErrors };
   }
 
   private throwOnCompileErrors(noThrow = true) {
