@@ -6,6 +6,8 @@ import camelcase from 'camelcase';
 import { getAspectDirFromBvm } from '@teambit/aspect-loader';
 import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compatible-path';
 
+const previewDir = getAspectDirFromBvm('@teambit/preview');
+
 export type MainModulesMap = {
   /**
    * Path to default module in case there is no specific module for the current environment.
@@ -50,7 +52,7 @@ export function generateLink(
   });
 
   const contents = `
-import { linkModules } from '@teambit/preview/dist/preview.preview.runtime.js';
+import { linkModules } from '${previewDir}/dist/preview.preview.runtime.js';
 
 ${getModuleImports(moduleLinks)}
 
@@ -92,9 +94,8 @@ function getEnvVarName(envId: string) {
 
 function getModuleImports(moduleLinks: ModuleLink[] = []): string {
   const hash = objectHash(moduleLinks);
-  const tempDirname = getAspectDirFromBvm('@teambit/preview');
   const tempFileName = `preview-modules-${hash}.mjs`;
-  const tempFilePath = join(tempDirname, 'dist', tempFileName);
+  const tempFilePath = join(previewDir, 'dist', tempFileName);
   const tempFileContents = moduleLinks
     .map((module) => `export * as ${module.varName} from "${module.resolveFrom}";`)
     .join('\n');
