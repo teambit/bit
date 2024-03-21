@@ -1,7 +1,7 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { buildRegistry } from '@teambit/legacy/dist/cli';
 import legacyLogger from '@teambit/legacy/dist/logger/logger';
-import { Command } from '@teambit/legacy/dist/cli/command';
+import { CLIArgs, Flags, Command } from '@teambit/legacy/dist/cli/command';
 import pMapSeries from 'p-map-series';
 import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
@@ -18,9 +18,11 @@ import { VersionCmd } from './version.cmd';
 
 export type CommandList = Array<Command>;
 export type OnStart = (hasWorkspace: boolean, currentCommand: string) => Promise<void>;
+export type OnCommandStart = (commandName: string, args: CLIArgs, flags: Flags) => Promise<void>;
 export type OnBeforeExitFn = () => Promise<void>;
 
 export type OnStartSlot = SlotRegistry<OnStart>;
+export type OnCommandStartSlot = SlotRegistry<OnCommandStart>;
 export type CommandsSlot = SlotRegistry<CommandList>;
 export type OnBeforeExitSlot = SlotRegistry<OnBeforeExitFn>;
 
@@ -29,6 +31,7 @@ export class CLIMain {
   constructor(
     private commandsSlot: CommandsSlot,
     private onStartSlot: OnStartSlot,
+    readonly onCommandStartSlot: OnCommandStartSlot,
     private onBeforeExitSlot: OnBeforeExitSlot,
     private logger: Logger
   ) {}
@@ -86,8 +89,20 @@ export class CLIMain {
     }
   }
 
+  /**
+   * onStart is when bootstrapping the CLI. (it happens before onCommandStart)
+   */
   registerOnStart(onStartFn: OnStart) {
     this.onStartSlot.register(onStartFn);
+    return this;
+  }
+
+  /**
+   * onCommandStart is when a command is about to start and we have the command object and the parsed args and flags
+   * already. (it happens after onStart)
+   */
+  registerOnCommandStart(onCommandStartFn: OnCommandStart) {
+    this.onCommandStartSlot.register(onCommandStartFn);
     return this;
   }
 
@@ -117,7 +132,7 @@ export class CLIMain {
    */
   async run(hasWorkspace: boolean) {
     await this.invokeOnStart(hasWorkspace);
-    const CliParser = new CLIParser(this.commands, this.groups);
+    const CliParser = new CLIParser(this.commands, this.groups, this.onCommandStartSlot);
     await CliParser.parse();
   }
 
@@ -146,15 +161,25 @@ export class CLIMain {
 
   static dependencies = [LoggerAspect];
   static runtime = MainRuntime;
-  static slots = [Slot.withType<CommandList>(), Slot.withType<OnStart>(), Slot.withType<OnBeforeExitFn>()];
+  static slots = [
+    Slot.withType<CommandList>(),
+    Slot.withType<OnStart>(),
+    Slot.withType<OnCommandStart>(),
+    Slot.withType<OnBeforeExitFn>(),
+  ];
 
   static async provider(
     [loggerMain]: [LoggerMain],
     config,
-    [commandsSlot, onStartSlot, onBeforeExitSlot]: [CommandsSlot, OnStartSlot, OnBeforeExitSlot]
+    [commandsSlot, onStartSlot, onCommandStartSlot, onBeforeExitSlot]: [
+      CommandsSlot,
+      OnStartSlot,
+      OnCommandStartSlot,
+      OnBeforeExitSlot
+    ]
   ) {
     const logger = loggerMain.createLogger(CLIAspect.id);
-    const cliMain = new CLIMain(commandsSlot, onStartSlot, onBeforeExitSlot, logger);
+    const cliMain = new CLIMain(commandsSlot, onStartSlot, onCommandStartSlot, onBeforeExitSlot, logger);
     const legacyRegistry = buildRegistry();
     await ensureWorkspaceAndScope();
     const legacyCommands = legacyRegistry.commands;
