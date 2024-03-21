@@ -65,6 +65,8 @@ export default class BitRawObject {
       case 'ScopeMeta':
       case 'VersionHistory':
         return JSON.stringify(this.parsedContent, ...args);
+      case 'Source':
+        return pretty ? JSON.stringify(JSON.parse(this.content.toString()), ...args) : this.content;
 
       default:
         return this.content;

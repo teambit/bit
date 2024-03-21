@@ -180,7 +180,9 @@ export default class Version extends BitObject {
         const flattenedEdgesSource = (await repo.load(this.flattenedEdgesRef, throws)) as Source | undefined;
         if (flattenedEdgesSource) {
           const flattenedEdgesJson = JSON.parse(flattenedEdgesSource.contents.toString());
-          return flattenedEdgesJson.map((item) => Version.depEdgeFromObject(item));
+          return flattenedEdgesJson.map((item) =>
+            Array.isArray(item) ? Version.depEdgeFromArray(item) : Version.depEdgeFromObject(item)
+          );
         }
       }
       return this.flattenedEdges || [];
@@ -384,8 +386,22 @@ export default class Version extends BitObject {
       type: depEdgeObj.type,
     };
   }
+  static depEdgeToArray(depEdge: DepEdge): Record<string, any> {
+    return [depEdge.source.toString(), depEdge.target.toString(), depEdge.type];
+  }
+  static depEdgeFromArray(depEdgeArr: string[]): DepEdge {
+    const [sourceStr, targetStr, type] = depEdgeArr;
+    return {
+      source: ComponentID.fromString(sourceStr),
+      target: ComponentID.fromString(targetStr),
+      type: type as DepEdgeType,
+    };
+  }
   static flattenedEdgeToSource(flattenedEdges?: DepEdge[]): Source | undefined {
     if (!flattenedEdges) return undefined;
+    // @todo: around August 2024, uncomment this line and delete the next one.
+    // it'll make this object much much smaller (for 604 edges, it's now 143KB, with the array format it's 6KB!)
+    // const flattenedEdgesObj = flattenedEdges.map((f) => Version.depEdgeToArray(f));
     const flattenedEdgesObj = flattenedEdges.map((f) => Version.depEdgeToObject(f));
     const flattenedEdgesBuffer = Buffer.from(JSON.stringify(flattenedEdgesObj));
     return Source.from(flattenedEdgesBuffer);
