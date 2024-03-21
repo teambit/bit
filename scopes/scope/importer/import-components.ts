@@ -618,9 +618,10 @@ to write the components from .bitmap file according to the their remote, please 
     ids.forEach((id: ComponentID) => {
       const existingId = this.consumer.getParsedIdIfExist(id.toStringWithoutVersion());
       if (existingId && !existingId.hasScope()) {
-        throw new BitError(`unable to import ${id.toString()}. the component name conflicted with your local component with the same name.
-        it's fine to have components with the same name as long as their scope names are different.
-        Make sure to export your component first to get a scope and then try importing again`);
+        throw new BitError(`unable to import ${id.toString()}. the component name conflicted with your local (new/staged) component with the same name.
+it's fine to have components with the same name as long as their scope names are different.
+if the component was created by mistake, remove it and import the remote one.
+otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
       }
     });
   }
