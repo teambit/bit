@@ -152,11 +152,12 @@ make sure this argument is the name only, without the scope-name. to change the 
         }
         if (!targetComp) throw new Error(`renameMultiple, targetComp is missing`);
         await this.refactoring.refactorVariableAndClasses(targetComp, sourceId, targetId, options);
+        const compPath = this.newComponentHelper.getNewComponentPath(targetId);
         this.refactoring.refactorFilenames(targetComp, sourceId, targetId);
         await this.componentWriter.writeMany({
           components: [targetComp.state._consumer],
           skipDependencyInstallation: true,
-          writeToPath: this.newComponentHelper.getNewComponentPath(targetId),
+          writeToPath: path.join(this.workspace.path, compPath),
           reasonForBitmapChange: 'rename',
         });
       });
@@ -184,15 +185,14 @@ make sure this argument is the name only, without the scope-name. to change the 
   }
 
   /**
-   * change the default-scope for new components. optionally (if refactor is true), change the source code to match the
-   * new scope-name.
-   * keep in mind that this is working for new components only, for tagged/exported it's impossible. See the errors
-   * thrown in such cases in this method.
+   * change the default-scope for new components.
+   * for tagged/exported components, delete (or deprecate - depends on the flag) the original ones and create new ones.
+   * optionally (if refactor is true), change the source code to match the new scope-name.
    */
   async renameScope(
     oldScope: string,
     newScope: string,
-    options: { refactor?: boolean; deprecate?: boolean } = {}
+    options: { refactor?: boolean; deprecate?: boolean; preserve?: boolean } = {}
   ): Promise<RenameResult> {
     const allComponentsIds = this.workspace.listIds();
     const componentsUsingOldScope = allComponentsIds.filter((compId) => compId.scope === oldScope);
@@ -206,7 +206,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       const targetId = ComponentID.fromObject({ name: compId.fullName }, newScope);
       return { sourceId: compId, targetId };
     });
-    return this.renameMultiple(multipleIds, { ...options, preserve: true });
+    return this.renameMultiple(multipleIds, options);
   }
 
   /**
