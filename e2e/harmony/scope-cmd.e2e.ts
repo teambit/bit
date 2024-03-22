@@ -69,7 +69,7 @@ describe('bit scope command', function () {
       helper.command.renameScope('my-scope', helper.scopes.remote, '--refactor');
     });
     it('should change the package name in the component files', () => {
-      const comp2Content = helper.fs.readFile('comp2/index.js');
+      const comp2Content = helper.fs.readFile(`${helper.scopes.remote}/comp2/index.js`);
       expect(comp2Content).to.not.include('my-scope');
       expect(comp2Content).to.include(helper.scopes.remote);
     });
