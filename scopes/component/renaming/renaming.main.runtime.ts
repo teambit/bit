@@ -152,11 +152,12 @@ make sure this argument is the name only, without the scope-name. to change the 
         }
         if (!targetComp) throw new Error(`renameMultiple, targetComp is missing`);
         await this.refactoring.refactorVariableAndClasses(targetComp, sourceId, targetId, options);
+        const compPath = this.newComponentHelper.getNewComponentPath(targetId);
         this.refactoring.refactorFilenames(targetComp, sourceId, targetId);
         await this.componentWriter.writeMany({
           components: [targetComp.state._consumer],
           skipDependencyInstallation: true,
-          writeToPath: this.newComponentHelper.getNewComponentPath(targetId),
+          writeToPath: path.join(this.workspace.path, compPath),
           reasonForBitmapChange: 'rename',
         });
       });
