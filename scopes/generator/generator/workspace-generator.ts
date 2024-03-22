@@ -51,7 +51,7 @@ export class WorkspaceGenerator {
 
   async generate(): Promise<string> {
     if (!this.options.currentDir && fs.existsSync(this.workspacePath)) {
-      throw new Error(`unable to create a workspace at "${this.workspaceName}", this path already exist`);
+      throw new Error(`unable to create a workspace at "${this.workspaceName}", this path already exists`);
     }
     await fs.ensureDir(this.workspacePath);
     try {

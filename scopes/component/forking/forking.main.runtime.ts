@@ -218,7 +218,15 @@ export class ForkingMain {
     await pMapSeries(components, async (component) => {
       const config = await this.getConfig(component);
       const targetCompId = ComponentID.fromObject({ name: component.id.fullName }, newScope);
-      await this.newComponentHelper.writeAndAddNewComp(component, targetCompId, { scope: newScope }, config);
+      await this.newComponentHelper.writeAndAddNewComp(
+        component,
+        targetCompId,
+        {
+          scope: newScope,
+          incrementPathIfConflicted: true,
+        },
+        config
+      );
       multipleForkInfo.push({ targetCompId, sourceId: component.id.toStringWithoutVersion(), component });
     });
     await this.refactorMultipleAndInstall(multipleForkInfo, {

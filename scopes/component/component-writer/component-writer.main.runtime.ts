@@ -158,21 +158,11 @@ export class ComponentWriterMain {
         if (ownerName && !compDir.startsWith(ownerName) && !allDirs.includes(`${ownerName}/${compDir}`)) {
           compWriter.writeToPath = `${ownerName}/${compDir}`;
         } else {
-          compWriter.writeToPath = this.incrementPathRecursively(compWriter.writeToPath, allDirs);
+          compWriter.writeToPath = incrementPathRecursively(compWriter.writeToPath, allDirs);
         }
         allDirs.push(compWriter.writeToPath);
       });
     });
-  }
-
-  private incrementPathRecursively(p: string, allPaths: string[]) {
-    const incrementPath = (str: string, number: number) => `${str}_${number}`;
-    let num = 1;
-    let newPath = incrementPath(p, num);
-    while (allPaths.includes(newPath)) {
-      newPath = incrementPath(p, (num += 1));
-    }
-    return newPath;
   }
 
   /**
@@ -187,7 +177,7 @@ export class ComponentWriterMain {
     const parentsOfOthersComps = componentWriterInstances.filter(({ writeToPath }) =>
       allDirs.find((d) => d.startsWith(`${writeToPath}/`))
     );
-    const existingRootDirs = Object.keys(this.consumer.bitMap.getAllTrackDirs());
+    const existingRootDirs = this.workspace.bitMap.getAllRootDirs();
     const parentsOfOthersCompsDirs = parentsOfOthersComps.map((c) => c.writeToPath);
     const allPaths: PathLinuxRelative[] = [...existingRootDirs, ...parentsOfOthersCompsDirs];
 
@@ -195,7 +185,7 @@ export class ComponentWriterMain {
     // change the paths of all these parents root-dir to not collide with the children root-dir
     parentsOfOthersComps.forEach((componentWriter) => {
       if (existingRootDirs.includes(componentWriter.writeToPath)) return; // component already exists.
-      const newPath = this.incrementPathRecursively(componentWriter.writeToPath, allPaths);
+      const newPath = incrementPathRecursively(componentWriter.writeToPath, allPaths);
       componentWriter.writeToPath = newPath;
     });
 
@@ -206,7 +196,7 @@ export class ComponentWriterMain {
       const existingParent = existingRootDirs.find((d) => d.startsWith(`${componentWriter.writeToPath}/`));
       if (!existingParent) return;
       if (existingRootDirs.includes(componentWriter.writeToPath)) return; // component already exists.
-      const newPath = this.incrementPathRecursively(componentWriter.writeToPath, allPaths);
+      const newPath = incrementPathRecursively(componentWriter.writeToPath, allPaths);
       componentWriter.writeToPath = newPath;
     });
 
@@ -216,7 +206,7 @@ export class ComponentWriterMain {
       const existingChildren = existingRootDirs.find((d) => componentWriter.writeToPath.startsWith(`${d}/`));
       if (!existingChildren) return;
       // we increment the existing one, because it is used to replace the base-path of the current component
-      const newPath = this.incrementPathRecursively(existingChildren, allPaths);
+      const newPath = incrementPathRecursively(existingChildren, allPaths);
       componentWriter.writeToPath = componentWriter.writeToPath.replace(existingChildren, newPath);
     });
   }
@@ -314,3 +304,13 @@ to move all component files to a different directory, run bit remove and then bi
 ComponentWriterAspect.addRuntime(ComponentWriterMain);
 
 export default ComponentWriterMain;
+
+export function incrementPathRecursively(p: string, allPaths: string[]) {
+  const incrementPath = (str: string, number: number) => `${str}_${number}`;
+  let num = 1;
+  let newPath = incrementPath(p, num);
+  while (allPaths.includes(newPath)) {
+    newPath = incrementPath(p, (num += 1));
+  }
+  return newPath;
+}
