@@ -13,7 +13,7 @@ import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable';
 import GitNotFound from '@teambit/legacy/dist/utils/git/exceptions/git-not-found';
-import { resolve, join } from 'path';
+import { join } from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { GitAspect, GitMain } from '@teambit/git';
 import { InstallAspect, InstallMain } from '@teambit/install';
@@ -27,7 +27,6 @@ import { GeneratorMain } from './generator.main.runtime';
 export type GenerateResult = { id: ComponentID; dir: string; files: string[]; envId: string };
 
 export class WorkspaceGenerator {
-  private workspacePath: string;
   private harmony: Harmony;
   private workspace: Workspace;
   private install: InstallMain;
@@ -38,21 +37,15 @@ export class WorkspaceGenerator {
   private wsConfigFiles: WorkspaceConfigFilesMain;
   private generator: GeneratorMain;
 
-  // private componentGenerator?: ComponentGenerator;
-
   constructor(
     private workspaceName: string,
+    private workspacePath: string,
     private options: NewOptions & { currentDir?: boolean },
     private template: WorkspaceTemplate,
     private aspectComponent?: Component
-  ) {
-    this.workspacePath = options.currentDir ? process.cwd() : resolve(this.workspaceName);
-  }
+  ) {}
 
   async generate(): Promise<string> {
-    if (!this.options.currentDir && fs.existsSync(this.workspacePath)) {
-      throw new Error(`unable to create a workspace at "${this.workspaceName}", this path already exists`);
-    }
     await fs.ensureDir(this.workspacePath);
     try {
       process.chdir(this.workspacePath);
