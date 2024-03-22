@@ -6,6 +6,7 @@ import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
 import { WatcherMain, WatchOptions } from '@teambit/watcher';
 import path from 'path';
+import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -291,11 +292,10 @@ export class WorkspaceCompiler {
       { initiator: watchOpts.initiator || CompilationInitiator.ComponentChanged, deleteDistDir },
       true
     );
-    // await linkToNodeModulesByComponents([component], this.workspace);
     return {
       results: buildResults,
       toString() {
-        return `${buildResults[0]?.buildResults?.join('\n\t')}`;
+        return formatCompileResults(buildResults, watchOpts.verbose);
       },
     };
   }
@@ -393,4 +393,18 @@ export class WorkspaceCompiler {
     }
     return this.workspace.listIds();
   }
+}
+
+function formatCompileResults(buildResults: BuildResult[], verbose?: boolean) {
+  if (!buildResults.length) return '';
+  // this gets called when a file is changed, so the buildResults array always has only one item
+  const buildResult = buildResults[0];
+  const title = ` ${chalk.underline('STATUS\tCOMPONENT ID')}`;
+  const verboseComponentFilesArrayToString = () => {
+    return buildResult.buildResults.map((filePath) => ` \t - ${filePath}`).join('\n');
+  };
+
+  return `${title}
+  ${Logger.successSymbol()}SUCCESS\t${buildResult.component}\n
+  ${verbose ? `${verboseComponentFilesArrayToString()}\n` : ''}`;
 }

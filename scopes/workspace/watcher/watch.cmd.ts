@@ -3,12 +3,12 @@ import moment from 'moment';
 import { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { BitBaseEvent, PubsubMain } from '@teambit/pubsub';
-import { OnComponentEventResult } from '@teambit/workspace';
+import { OnComponentEventResult, Workspace } from '@teambit/workspace';
 
 // import IDs and events
 import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
 
-import { EventMessages, WatchOptions } from './watcher';
+import { EventMessages, RootDirs, WatchOptions } from './watcher';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 import { CheckTypes } from './check-types';
 import { WatcherMain } from './watcher.main.runtime';
@@ -102,14 +102,14 @@ function getMessages(logger: Logger): EventMessages {
   return {
     onAll: (event: string, path: string) => logger.console(`Event: "${event}". Path: ${path}`),
     onStart: () => {},
-    onReady: (workspace, watchPathsSortByComponent, verbose?: boolean) => {
+    onReady: (workspace: Workspace, watchPathsSortByComponent: RootDirs, verbose?: boolean) => {
       clearOutdatedData();
       if (verbose) {
         logger.console(formatWatchPathsSortByComponent(watchPathsSortByComponent));
       }
       logger.console(
         chalk.yellow(
-          `Watching for component changes in workspace ${workspace.config.name} (${moment().format('HH:mm:ss')})...\n`
+          `Watching for component changes in workspace ${workspace.name} (${moment().format('HH:mm:ss')})...\n`
         )
       );
     },
@@ -146,9 +146,9 @@ function printOnFileEvent(
     logger.console(`${failureMsg}\n\n`);
     return;
   }
-  logger.console(`The file(s) ${files} have been ${eventMsgPlaceholder}.\n\n`);
-  logger.console(formatCompileResults(buildResults, verbose));
-  logger.console(`Finished. (${duration}ms)`);
+  logger.console(`The file(s) ${files} have been ${eventMsgPlaceholder}.\n`);
+  logger.console(formatCompileResults(buildResults));
+  logger.console(`Finished (${duration}ms).`);
   logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:mm:ss')})...`));
 }
 
