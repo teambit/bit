@@ -3,10 +3,10 @@ import { join } from 'path';
 import { outputFileSync } from 'fs-extra';
 import objectHash from 'object-hash';
 import camelcase from 'camelcase';
-import { getAspectDirFromBvm } from '@teambit/aspect-loader';
 import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compatible-path';
+import { getPreviewDistDir } from './mk-temp-dir';
 
-const previewDir = getAspectDirFromBvm('@teambit/preview');
+const previewDistDir = getPreviewDistDir();
 
 export type MainModulesMap = {
   /**
@@ -52,7 +52,7 @@ export function generateLink(
   });
 
   const contents = `
-import { linkModules } from '${previewDir}/dist/preview.preview.runtime.js';
+import { linkModules } from '${previewDistDir}/preview.preview.runtime.js';
 
 ${getModuleImports(moduleLinks)}
 
@@ -95,7 +95,7 @@ function getEnvVarName(envId: string) {
 function getModuleImports(moduleLinks: ModuleLink[] = []): string {
   const hash = objectHash(moduleLinks);
   const tempFileName = `preview-modules-${hash}.mjs`;
-  const tempFilePath = join(previewDir, 'dist', tempFileName);
+  const tempFilePath = join(previewDistDir, tempFileName);
   const tempFileContents = moduleLinks
     .map((module) => `export * as ${module.varName} from "${module.resolveFrom}";`)
     .join('\n');
