@@ -5,8 +5,8 @@ import { MoverMain } from './mover.main.runtime';
 
 export class MoveCmd implements Command {
   name = 'move <current-component-dir> <new-component-dir>';
-  description =
-    "move a component to a different filesystem path (note: this does NOT affect the component's name or scope, just its location in the workspace)";
+  description = 'move a component to a different filesystem path';
+  extendedDescription = `(note: this does NOT affect the component's name or scope, just its location in the workspace)`;
   helpUrl = 'reference/workspace/moving-components';
   arguments = [
     {
@@ -19,7 +19,6 @@ export class MoveCmd implements Command {
     },
   ];
   group = 'development';
-  extendedDescription = `move files or directories of component(s)\n`;
   alias = 'mv';
   loader = true;
   options = [];
