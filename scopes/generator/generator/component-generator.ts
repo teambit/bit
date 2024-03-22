@@ -62,7 +62,7 @@ export class ComponentGenerator {
         });
         if (fs.existsSync(path.join(this.workspace.path, componentPath))) {
           throw new BitError(
-            `unable to create a component at "${componentPath}", this path already exits, please use "--path" to create the component in a different path`
+            `unable to create a component at "${componentPath}", this path already exists, please use "--path" to create the component in a different path`
           );
         }
         dirsToDeleteIfFailed.push(componentPath);
