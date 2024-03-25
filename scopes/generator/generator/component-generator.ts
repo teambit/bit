@@ -52,7 +52,7 @@ export class ComponentGenerator {
     private envId?: ComponentID
   ) {}
 
-  async generate(): Promise<GenerateResult[]> {
+  async generate(force = false): Promise<GenerateResult[]> {
     const dirsToDeleteIfFailed: string[] = [];
     const generateResults = await pMapSeries(this.componentIds, async (componentId) => {
       try {
@@ -60,7 +60,7 @@ export class ComponentGenerator {
           pathFromUser: this.options.path,
           componentsToCreate: this.componentIds.length,
         });
-        if (fs.existsSync(path.join(this.workspace.path, componentPath))) {
+        if (!force && fs.existsSync(path.join(this.workspace.path, componentPath))) {
           throw new BitError(
             `unable to create a component at "${componentPath}", this path already exists, please use "--path" to create the component in a different path`
           );

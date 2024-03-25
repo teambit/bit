@@ -329,7 +329,7 @@ export class GeneratorMain {
       templateWithId.id,
       envId
     );
-    return componentGenerator.generate();
+    return componentGenerator.generate(options.force);
   }
 
   private async getEnvIdFromTemplateWithId(templateWithId: ComponentTemplateWithId): Promise<ComponentID | undefined> {
