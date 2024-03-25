@@ -503,7 +503,7 @@
                     "eslint-plugin-react": "7.33.2",
                     "eslint-plugin-jsx-a11y": "6.8.0",
                     "eslint-plugin-mdx": "1.17.1",
-                    "eslint-mdx": "1.17.1",
+                    "eslint-mdx": "1.17.1"
                   }
               }
           }
@@ -1059,7 +1059,7 @@
                       "eslint-plugin-react": "7.33.2",
                       "eslint-plugin-jsx-a11y": "6.8.0",
                       "eslint-plugin-mdx": "1.17.1",
-                      "eslint-mdx": "1.17.1",
+                      "eslint-mdx": "1.17.1"
                     }
                 }
             }
