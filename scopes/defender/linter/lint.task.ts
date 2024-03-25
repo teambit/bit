@@ -1,6 +1,6 @@
 import path from 'path';
 import { BuildTask, BuiltTaskResult, BuildContext, ComponentResult } from '@teambit/builder';
-import { Component, ComponentMap } from '@teambit/component';
+import { ComponentMap } from '@teambit/component';
 import { CapsuleList } from '@teambit/isolator';
 import { Linter } from './linter';
 import { LinterContext } from './linter-context';
