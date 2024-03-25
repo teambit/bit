@@ -17,6 +17,7 @@ module.exports = {
     browser: true,
     mocha: true,
     node: true,
+    es6: true,
   },
   overrides: [
     {

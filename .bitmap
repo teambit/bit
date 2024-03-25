@@ -490,7 +490,23 @@
         "scope": "teambit.envs",
         "version": "1.0.207",
         "mainFile": "index.ts",
-        "rootDir": "scopes/envs/env"
+        "rootDir": "scopes/envs/env",
+        "config": {
+          "teambit.dependencies/dependency-resolver": {
+              "policy": {
+                  "dependencies": {
+                    "@typescript-eslint/parser": "7.1.0",
+                    "@typescript-eslint/eslint-plugin": "7.1.0",
+                    "eslint-plugin-jest": "27.6.3",
+                    "eslint-plugin-import": "2.29.1",
+                    "eslint-plugin-react-hooks": "4.6.0",
+                    "eslint-plugin-react": "7.33.2",
+                    "eslint-plugin-jsx-a11y": "6.8.0",
+                    "eslint-plugin-mdx": "3.1.5"
+                  }
+              }
+          }
+      }
     },
     "envs": {
         "name": "envs",
@@ -1029,7 +1045,23 @@
         "scope": "teambit.harmony",
         "version": "1.0.207",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/node"
+        "rootDir": "scopes/harmony/node",
+        "config": {
+            "teambit.dependencies/dependency-resolver": {
+                "policy": {
+                    "dependencies": {
+                      "@typescript-eslint/parser": "7.1.0",
+                      "@typescript-eslint/eslint-plugin": "7.1.0",
+                      "eslint-plugin-jest": "27.6.3",
+                      "eslint-plugin-import": "2.29.1",
+                      "eslint-plugin-react-hooks": "4.6.0",
+                      "eslint-plugin-react": "7.33.2",
+                      "eslint-plugin-jsx-a11y": "6.8.0",
+                      "eslint-plugin-mdx": "3.1.5"
+                    }
+                }
+            }
+        }
     },
     "notifications": {
         "name": "notifications",
