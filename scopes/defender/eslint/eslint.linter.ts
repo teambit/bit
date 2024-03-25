@@ -42,7 +42,7 @@ export class ESLintLinter implements Linter {
         this.options.config.overrideConfig.parserOptions.project = tsConfigPath;
       }
     }
-    const resultsP = mapSeries(context.components, async (component) => {
+    const resultsP = mapSeries(context.componentsDirMap.components, async (component) => {
       longProcessLogger.logProgress(
         `component: ${component.id.toString()}, # of files: ${component.filesystem.files.length}`
       );
