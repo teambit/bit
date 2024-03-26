@@ -101,6 +101,7 @@ import { StashAspect } from '@teambit/stash';
 import { GitAspect } from '@teambit/git';
 import { IpcEventsAspect } from '@teambit/ipc-events';
 import { ConfigMergerAspect } from '@teambit/config-merger';
+import { VersionHistoryAspect } from '@teambit/version-history';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -206,6 +207,7 @@ export const manifestsMap = {
   [GitAspect.id]: GitAspect,
   [IpcEventsAspect.id]: IpcEventsAspect,
   [ConfigMergerAspect.id]: ConfigMergerAspect,
+  [VersionHistoryAspect.id]: VersionHistoryAspect,
 };
 
 export function isCoreAspect(id: string) {

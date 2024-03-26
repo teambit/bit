@@ -1955,6 +1955,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/variants"
     },
+    "version-history": {
+        "name": "version-history",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.scope",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/scope/version-history",
+        "config": {
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            },
+            "teambit.harmony/envs/core-aspect-env@0.0.27": {}
+        }
+    },
     "watcher": {
         "name": "watcher",
         "scope": "teambit.workspace",
