@@ -217,6 +217,7 @@ export async function install(
     );
     readPackage.push(readPackageHook as ReadPackageHook);
   }
+  readPackage.push(removeLegacyFromDeps as ReadPackageHook);
   if (!manifestsByPaths[rootDir].dependenciesMeta) {
     manifestsByPaths = {
       ...manifestsByPaths,
@@ -376,6 +377,20 @@ function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string)
     });
   }
   return readDependencyPackageHook(pkg);
+}
+
+/**
+ * @teambit/legacy should never be installed as a dependency.
+ * It is linked from bvm.
+ */
+function removeLegacyFromDeps(pkg: PackageManifest): PackageManifest {
+  if (pkg.dependencies?.['@teambit/legacy'] && !pkg.dependencies['@teambit/legacy'].startsWith('link:')) {
+    delete pkg.dependencies['@teambit/legacy'];
+  }
+  if (pkg.peerDependencies?.['@teambit/legacy']) {
+    delete pkg.peerDependencies['@teambit/legacy'];
+  }
+  return pkg;
 }
 
 /**

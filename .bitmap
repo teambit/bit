@@ -1586,7 +1586,7 @@
     "ui/compare/lane-compare": {
         "name": "ui/compare/lane-compare",
         "scope": "teambit.lanes",
-        "version": "0.0.179",
+        "version": "0.0.180",
         "mainFile": "index.ts",
         "rootDir": "components/ui/compare/lane-compare"
     },

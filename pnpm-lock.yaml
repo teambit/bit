@@ -5729,7 +5729,7 @@ importers:
         version: file:scopes/lanes/diff(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+        version: file:components/ui/compare/lane-compare(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
@@ -7165,7 +7165,7 @@ importers:
         version: file:scopes/lanes/diff(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+        version: file:components/ui/compare/lane-compare(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
@@ -8619,7 +8619,7 @@ importers:
         version: file:scopes/lanes/diff(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+        version: file:components/ui/compare/lane-compare(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
@@ -10067,7 +10067,7 @@ importers:
         version: file:scopes/lanes/diff(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+        version: file:components/ui/compare/lane-compare(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
@@ -11491,7 +11491,7 @@ importers:
         version: file:scopes/lanes/diff(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+        version: file:components/ui/compare/lane-compare(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
@@ -12921,7 +12921,7 @@ importers:
         version: file:scopes/lanes/diff(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+        version: file:components/ui/compare/lane-compare(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
@@ -14357,7 +14357,7 @@ importers:
         version: file:scopes/lanes/diff(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+        version: file:components/ui/compare/lane-compare(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
@@ -70817,13 +70817,11 @@ packages:
       - '@testing-library/react'
     dev: false
 
-  file:components/ui/compare/lane-compare(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18):
+  file:components/ui/compare/lane-compare(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18):
     resolution: {directory: components/ui/compare/lane-compare, type: directory}
     id: file:components/ui/compare/lane-compare
     name: '@teambit/lanes.ui.compare.lane-compare'
     peerDependencies:
-      '@teambit/base-react.navigation.link': 2.0.27
-      '@types/react': ^17.0.67
       react: ^16.8.0 || ^17.0.0
     dependencies:
       '@apollo/client': 3.9.6(@types/react@17.0.75)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
@@ -75933,7 +75931,7 @@ packages:
       '@teambit/lanes.hooks.use-lanes': file:components/hooks/use-lanes(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.hooks.use-viewed-lane-from-url': file:components/hooks/use-viewed-lane-from-url_1(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.modules.diff': file:scopes/lanes/diff(@teambit/legacy@node_modules+@teambit+legacy)
-      '@teambit/lanes.ui.compare.lane-compare': file:components/ui/compare/lane-compare(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+      '@teambit/lanes.ui.compare.lane-compare': file:components/ui/compare/lane-compare(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/lanes.ui.compare.lane-compare-page': file:components/ui/compare/lane-compare-page(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/lanes.ui.lane-overview': file:components/ui/lane-overview(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/node@20.2.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/lanes.ui.menus.lanes-overview-menu': 0.0.10(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
@@ -75998,7 +75996,7 @@ packages:
       '@teambit/lanes.hooks.use-lanes': file:components/hooks/use-lanes(@apollo/client@3.9.6)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.hooks.use-viewed-lane-from-url': file:components/hooks/use-viewed-lane-from-url_1(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.modules.diff': file:scopes/lanes/diff(@teambit/legacy@node_modules+@teambit+legacy)
-      '@teambit/lanes.ui.compare.lane-compare': file:components/ui/compare/lane-compare(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+      '@teambit/lanes.ui.compare.lane-compare': file:components/ui/compare/lane-compare(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/lanes.ui.compare.lane-compare-page': file:components/ui/compare/lane-compare-page(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/lanes.ui.lane-overview': file:components/ui/lane-overview(@apollo/client@3.9.6)(@teambit/base-react.navigation.link@2.0.27)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/node@20.2.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/lanes.ui.menus.lanes-overview-menu': 0.0.10(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
