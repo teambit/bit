@@ -6,7 +6,12 @@ import { BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import { merge, cloneDeep } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
-import { PrettierConfigWriter } from '@teambit/defender.prettier-formatter';
+import { PrettierConfigWriter, PrettierFormatter } from '@teambit/defender.prettier-formatter';
+import {
+  PrettierConfigMutator,
+  PrettierConfigTransformContext,
+  PrettierConfigTransformer,
+} from '@teambit/defender.prettier.config-mutator';
 import { TypescriptConfigWriter } from '@teambit/typescript.typescript-compiler';
 import { EslintConfigWriter } from '@teambit/defender.eslint-linter';
 import { CompilerMain } from '@teambit/compiler';
@@ -30,7 +35,6 @@ import type { TypeScriptCompilerOptions } from '@teambit/typescript';
 import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain, EslintConfigTransformer } from '@teambit/eslint';
-import { PrettierConfigTransformer, PrettierMain } from '@teambit/prettier';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Linter, LinterContext } from '@teambit/linter';
 import { Formatter, FormatterContext } from '@teambit/formatter';
@@ -121,8 +125,6 @@ export class ReactEnv
     private config: ReactMainConfig,
 
     private eslint: ESLintMain,
-
-    private prettier: PrettierMain,
 
     private dependencyResolver: DependencyResolverMain,
 
@@ -273,13 +275,10 @@ export class ReactEnv
    * returns and configures the component formatter.
    */
   getFormatter(context: FormatterContext, transformers: PrettierConfigTransformer[] = []): Formatter {
-    return this.prettier.createFormatter(
-      { check: context?.check },
-      {
-        config: prettierConfig,
-      },
-      transformers
-    );
+    const configMutator = new PrettierConfigMutator(prettierConfig);
+    const transformerContext: PrettierConfigTransformContext = { check: !!context?.check };
+    const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+    return PrettierFormatter.create({ config: afterMutation.raw }, { logger: this.logger });
   }
 
   private getFileMap(components: Component[], local = false) {
@@ -589,4 +588,12 @@ export class ReactEnv
       type: ReactEnvType,
     };
   }
+}
+
+export function runTransformersWithContext<P, T extends Function, C>(config: P, transformers: T[] = [], context: C): P {
+  if (!Array.isArray(transformers)) return config;
+  const newConfig = transformers.reduce((acc, transformer) => {
+    return transformer(acc, context);
+  }, config);
+  return newConfig;
 }
