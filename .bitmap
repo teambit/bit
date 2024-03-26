@@ -509,7 +509,7 @@
     "eslint-config-bit-react": {
         "name": "eslint-config-bit-react",
         "scope": "teambit.react",
-        "version": "1.0.138",
+        "version": "1.0.141",
         "mainFile": "index.js",
         "rootDir": "scopes/react/eslint-config-bit-react"
     },
@@ -1552,7 +1552,7 @@
     "ui/compare/lane-compare": {
         "name": "ui/compare/lane-compare",
         "scope": "teambit.lanes",
-        "version": "0.0.179",
+        "version": "0.0.180",
         "mainFile": "index.ts",
         "rootDir": "components/ui/compare/lane-compare"
     },
