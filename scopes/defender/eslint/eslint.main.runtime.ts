@@ -92,6 +92,8 @@ function getOptions(options: ESLintOptions, context: LinterContext): ESLintOptio
     overrideConfig: options.config,
     extensions: context.extensionFormats,
     useEslintrc: false,
+    // TODO: this should be probably be replaced with resolve-plugins-relative-to
+    // https://eslint.org/docs/latest/use/command-line-interface#--resolve-plugins-relative-to
     cwd: options.pluginPath,
     fix: !!context.fix,
     fixTypes: context.fixTypes,

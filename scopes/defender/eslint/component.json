@@ -8,7 +8,7 @@
     "teambit.dependencies/dependency-resolver": {
       "policy": {
         "devDependencies": {
-          "@types/eslint": "7.28.0"
+          "@types/eslint": "8.56.6"
         },
         "dependencies": {
           "@babel/runtime": "7.23.2"
