@@ -111,7 +111,7 @@ describe('optional dependencies', function () {
     });
     describe('deps set --optional after snap', () => {
       before(() => {
-        helper.command.snapAllComponents('-m wip');
+        helper.command.snapAllComponentsWithoutBuild('-m wip');
         helper.command.dependenciesSet('button', 'is-positive@1.0.0', '--optional');
         showOutput = helper.command.showComponent('button');
       });
