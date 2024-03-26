@@ -2,7 +2,11 @@ import { MainRuntime } from '@teambit/cli';
 import { Options as PrettierModuleOptions } from 'prettier';
 import { Formatter, FormatterMain, FormatterOptions } from '@teambit/formatter';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
+import {
+  PrettierConfigMutator,
+  PrettierConfigTransformContext,
+  PrettierConfigTransformer,
+} from '@teambit/defender.prettier.config-mutator';
 import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { PrettierAspect } from './prettier.aspect';
 import { PrettierFormatter } from './prettier.formatter';
@@ -13,15 +17,6 @@ export type PrettierOptions = {
    */
   config: PrettierModuleOptions;
 };
-
-export type PrettierConfigTransformContext = {
-  check: boolean;
-};
-
-export type PrettierConfigTransformer = (
-  config: PrettierConfigMutator,
-  context: PrettierConfigTransformContext
-) => PrettierConfigMutator;
 
 export class PrettierMain {
   constructor(private logger: Logger) {}
