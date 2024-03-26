@@ -6,6 +6,7 @@ import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
 import { WatcherMain, WatchOptions } from '@teambit/watcher';
 import path from 'path';
+import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -27,10 +28,14 @@ import type { PreStartOpts } from '@teambit/ui';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { MultiCompiler } from '@teambit/multi-compiler';
 import { CompilerAspect } from './compiler.aspect';
-import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
+import { CompilerErrorEvent } from './events';
 import { Compiler, CompilationInitiator } from './types';
 
-export type BuildResult = { component: string; buildResults: string[] | null | undefined };
+export type BuildResult = {
+  component: string;
+  buildResults: string[];
+  errors: CompileError[];
+};
 
 export type CompileOptions = {
   changed?: boolean; // compile only new and modified components
@@ -110,11 +115,8 @@ export class ComponentCompiler {
     }
     const buildResults = this.dists.map((distFile) => distFile.path);
     if (this.component.state._consumer.compiler) loader.succeed();
-    this.pubsub.pub(
-      CompilerAspect.id,
-      new ComponentCompilationOnDoneEvent(this.compileErrors, this.component, buildResults)
-    );
-    return { component: this.component.id.toString(), buildResults };
+
+    return { component: this.component.id.toString(), buildResults, errors: this.compileErrors };
   }
 
   private throwOnCompileErrors(noThrow = true) {
@@ -290,11 +292,10 @@ export class WorkspaceCompiler {
       { initiator: watchOpts.initiator || CompilationInitiator.ComponentChanged, deleteDistDir },
       true
     );
-    // await linkToNodeModulesByComponents([component], this.workspace);
     return {
       results: buildResults,
       toString() {
-        return `${buildResults[0]?.buildResults?.join('\n\t')}`;
+        return formatCompileResults(buildResults, watchOpts.verbose);
       },
     };
   }
@@ -392,4 +393,18 @@ export class WorkspaceCompiler {
     }
     return this.workspace.listIds();
   }
+}
+
+function formatCompileResults(buildResults: BuildResult[], verbose?: boolean) {
+  if (!buildResults.length) return '';
+  // this gets called when a file is changed, so the buildResults array always has only one item
+  const buildResult = buildResults[0];
+  const title = ` ${chalk.underline('STATUS\tCOMPONENT ID')}`;
+  const verboseComponentFilesArrayToString = () => {
+    return buildResult.buildResults.map((filePath) => ` \t - ${filePath}`).join('\n');
+  };
+
+  return `${title}
+  ${Logger.successSymbol()}SUCCESS\t${buildResult.component}\n
+  ${verbose ? `${verboseComponentFilesArrayToString()}\n` : ''}`;
 }

@@ -58,6 +58,8 @@ export type WatchOptions = {
   compile?: boolean; // whether compile modified/added components during watch process
 };
 
+export type RootDirs = { [dir: PathLinux]: ComponentID };
+
 const DEBOUNCE_WAIT_MS = 100;
 type PathLinux = string; // ts fails when importing it from @teambit/legacy/dist/utils/path.
 
@@ -67,7 +69,7 @@ export class Watcher {
   private watchQueue = new WatchQueue();
   private bitMapChangesInProgress = false;
   private ipcEventsDir: string;
-  private trackDirs: { [dir: PathLinux]: ComponentID } = {};
+  private rootDirs: RootDirs = {};
   private verbose = false;
   private multipleWatchers: WatcherProcessData[] = [];
   constructor(
@@ -86,8 +88,8 @@ export class Watcher {
 
   async watch() {
     const { msgs, ...watchOpts } = this.options;
-    await this.setTrackDirs();
-    const componentIds = Object.values(this.trackDirs);
+    await this.setRootDirs();
+    const componentIds = Object.values(this.rootDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
     await this.createWatcher();
     const watcher = this.fsWatcher;
@@ -101,7 +103,7 @@ export class Watcher {
         if (msgs?.onAll) watcher.on('all', msgs?.onAll);
       }
       watcher.on('ready', () => {
-        msgs?.onReady(this.workspace, this.trackDirs, this.verbose);
+        msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
         // console.log(this.fsWatcher.getWatched());
         loader.stop();
       });
@@ -287,21 +289,21 @@ export class Watcher {
    * if .bitmap changed, it's possible that a new component has been added. trigger onComponentAdd.
    */
   private async handleBitmapChanges(): Promise<OnComponentEventResult[]> {
-    const previewsTrackDirs = { ...this.trackDirs };
+    const previewsRootDirs = { ...this.rootDirs };
     await this.workspace._reloadConsumer();
-    await this.setTrackDirs();
+    await this.setRootDirs();
     await this.workspace.triggerOnBitmapChange();
-    const newDirs: string[] = difference(Object.keys(this.trackDirs), Object.keys(previewsTrackDirs));
-    const removedDirs: string[] = difference(Object.keys(previewsTrackDirs), Object.keys(this.trackDirs));
+    const newDirs: string[] = difference(Object.keys(this.rootDirs), Object.keys(previewsRootDirs));
+    const removedDirs: string[] = difference(Object.keys(previewsRootDirs), Object.keys(this.rootDirs));
     const results: OnComponentEventResult[] = [];
     if (newDirs.length) {
       const addResults = await mapSeries(newDirs, async (dir) =>
-        this.executeWatchOperationsOnComponent(this.trackDirs[dir], [], [], false)
+        this.executeWatchOperationsOnComponent(this.rootDirs[dir], [], [], false)
       );
       results.push(...addResults.flat());
     }
     if (removedDirs.length) {
-      await mapSeries(removedDirs, (dir) => this.executeWatchOperationsOnRemove(previewsTrackDirs[dir]));
+      await mapSeries(removedDirs, (dir) => this.executeWatchOperationsOnRemove(previewsRootDirs[dir]));
     }
 
     return results;
@@ -364,24 +366,24 @@ export class Watcher {
 
   private getComponentIdByPath(filePath: string): ComponentID | null {
     const relativeFile = this.getRelativePathLinux(filePath);
-    const trackDir = this.findTrackDirByFilePathRecursively(relativeFile);
-    if (!trackDir) {
+    const rootDir = this.findRootDirByFilePathRecursively(relativeFile);
+    if (!rootDir) {
       // the file is not part of any component. If it was a new component, or a new file of
       // existing component, then, handleBitmapChanges() should deal with it.
       return null;
     }
-    return this.trackDirs[trackDir];
+    return this.rootDirs[rootDir];
   }
 
   private getRelativePathLinux(filePath: string) {
     return pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(filePath));
   }
 
-  private findTrackDirByFilePathRecursively(filePath: string): string | null {
-    if (this.trackDirs[filePath]) return filePath;
+  private findRootDirByFilePathRecursively(filePath: string): string | null {
+    if (this.rootDirs[filePath]) return filePath;
     const parentDir = dirname(filePath);
     if (parentDir === filePath) return null;
-    return this.findTrackDirByFilePathRecursively(parentDir);
+    return this.findRootDirByFilePathRecursively(parentDir);
   }
 
   private async createWatcher() {
@@ -415,13 +417,13 @@ export class Watcher {
     }
   }
 
-  private async setTrackDirs() {
-    this.trackDirs = {};
+  private async setRootDirs() {
+    this.rootDirs = {};
     const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
     componentsFromBitMap.map((componentMap) => {
       const componentId = componentMap.id;
       const rootDir = componentMap.getRootDir();
-      this.trackDirs[rootDir] = componentId;
+      this.rootDirs[rootDir] = componentId;
     });
   }
 }
