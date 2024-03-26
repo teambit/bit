@@ -29,7 +29,6 @@ import { FormatterContext } from '@teambit/formatter';
 import { LinterContext } from '@teambit/linter';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
-import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
 import { WorkerAspect, WorkerMain } from '@teambit/worker';
 
 import { ReactAspect } from './react.aspect';
@@ -40,6 +39,7 @@ import { getTemplates } from './react.templates';
 import { ReactAppOptions } from './apps/web/react-app-options';
 import { ReactSchema } from './react.schema';
 import { ReactAPITransformer } from './react.api.transformer';
+import { PrettierConfigTransformer } from '@teambit/defender.prettier.config-mutator';
 
 type ReactDeps = [
   EnvsMain,
@@ -52,7 +52,6 @@ type ReactDeps = [
   PkgMain,
   TesterMain,
   ESLintMain,
-  PrettierMain,
   ApplicationMain,
   GeneratorMain,
   DependencyResolverMain,
@@ -411,7 +410,6 @@ export class ReactMain {
     PkgAspect,
     TesterAspect,
     ESLintAspect,
-    PrettierAspect,
     ApplicationAspect,
     GeneratorAspect,
     DependencyResolverAspect,
@@ -432,7 +430,6 @@ export class ReactMain {
       pkg,
       tester,
       eslint,
-      prettier,
       application,
       generator,
       dependencyResolver,
@@ -455,7 +452,6 @@ export class ReactMain {
       tester,
       config,
       eslint,
-      prettier,
       dependencyResolver,
       logger,
       CompilerAspect.id

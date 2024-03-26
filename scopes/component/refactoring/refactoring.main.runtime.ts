@@ -21,20 +21,13 @@ import {
   expressionStatementTransformer,
   typeReferenceTransformer,
 } from '@teambit/typescript';
-import { PrettierAspect, PrettierMain } from '@teambit/prettier';
-import { Formatter } from '@teambit/formatter';
 import { RefactoringAspect } from './refactoring.aspect';
 import { DependencyNameRefactorCmd, RefactorCmd } from './refactor.cmd';
 
 export type MultipleStringsReplacement = Array<{ oldStr: string; newStr: string }>;
 
 export class RefactoringMain {
-  constructor(
-    private componentMain: ComponentMain,
-    private pkg: PkgMain,
-    private envs: EnvsMain,
-    private prettierMain: PrettierMain
-  ) {}
+  constructor(private componentMain: ComponentMain, private pkg: PkgMain, private envs: EnvsMain) {}
 
   /**
    * refactor the dependency name of a component.
@@ -259,20 +252,6 @@ export class RefactoringMain {
     return changed.some((c) => c);
   }
 
-  private getDefaultFormatter(): Formatter {
-    return this.prettierMain.createFormatter(
-      { check: false },
-      {
-        config: {
-          parser: 'typescript',
-          trailingComma: 'es5',
-          tabWidth: 2,
-          singleQuote: true,
-        },
-      }
-    );
-  }
-
   private async replaceMultipleStringsInOneComp(
     comp: Component,
     stringsToReplace: MultipleStringsReplacement,
@@ -332,16 +311,10 @@ export class RefactoringMain {
   }
 
   static slots = [];
-  static dependencies = [ComponentAspect, PkgAspect, CLIAspect, EnvsAspect, PrettierAspect];
+  static dependencies = [ComponentAspect, PkgAspect, CLIAspect, EnvsAspect];
   static runtime = MainRuntime;
-  static async provider([componentMain, pkg, cli, envMain, prettierMain]: [
-    ComponentMain,
-    PkgMain,
-    CLIMain,
-    EnvsMain,
-    PrettierMain
-  ]) {
-    const refactoringMain = new RefactoringMain(componentMain, pkg, envMain, prettierMain);
+  static async provider([componentMain, pkg, cli, envMain]: [ComponentMain, PkgMain, CLIMain, EnvsMain]) {
+    const refactoringMain = new RefactoringMain(componentMain, pkg, envMain);
     const subCommands = [new DependencyNameRefactorCmd(refactoringMain, componentMain)];
     const refactorCmd = new RefactorCmd();
     refactorCmd.commands = subCommands;
