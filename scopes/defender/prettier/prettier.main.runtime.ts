@@ -18,6 +18,8 @@ export type PrettierOptions = {
   config: PrettierModuleOptions;
 };
 
+// TODO: this aspect is not used anymore, it is still here for now for backward compatibility.
+// it will be removed as part of next major bit version
 export class PrettierMain {
   constructor(private logger: Logger) {}
   /**
