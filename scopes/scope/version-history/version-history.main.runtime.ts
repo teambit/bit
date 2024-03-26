@@ -7,7 +7,7 @@ import {
   ShowOptions,
   VersionHistoryBuildCmd,
   VersionHistoryCmd,
-  VersionHistoryGraph,
+  VersionHistoryGraphCmd,
   VersionHistoryShowCmd,
 } from './version-history-cmd';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
@@ -19,6 +19,7 @@ import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
 import { BuildVersionHistoryAction } from './build-version-history-action';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { compact } from 'lodash';
+import { VersionHistoryGraph } from '@teambit/legacy/dist/scope/models/version-history';
 
 type BuildResult = { err?: Error; added?: string[] };
 type ShowResult = { node: string; pointers: string[]; edges: Array<{ hash: string; type: string }> };
@@ -103,7 +104,7 @@ export class VersionHistoryMain {
     return versionHistory;
   }
 
-  async generateGraph(id: string, shortHash?: boolean) {
+  async generateGraph(id: string, shortHash?: boolean): Promise<VersionHistoryGraph> {
     const compId = await this.scope.resolveComponentId(id);
     const modelComponent = (await this.scope.getBitObjectModelComponent(compId, true)) as ModelComponent;
     const repo = this.scope.legacyScope.objects;
@@ -161,7 +162,7 @@ export class VersionHistoryMain {
     const versionHistory = new VersionHistoryMain(scope, logger);
     const versionHistoryCmd = new VersionHistoryCmd();
     versionHistoryCmd.commands = [
-      new VersionHistoryGraph(versionHistory),
+      new VersionHistoryGraphCmd(versionHistory),
       new VersionHistoryShowCmd(versionHistory),
       new VersionHistoryBuildCmd(versionHistory),
     ];

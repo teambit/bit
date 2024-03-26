@@ -75,7 +75,7 @@ const colorPerEdgeType = {
   squashed: 'blue',
 };
 
-export class VersionHistoryGraph implements Command {
+export class VersionHistoryGraphCmd implements Command {
   name = 'graph <component-id>';
   alias = '';
   description = 'generate a graph of the version history of a component. GraphVis must be installed';
