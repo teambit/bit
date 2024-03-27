@@ -348,7 +348,6 @@
         "@types/url-join": "4.0.0",
         "@types/url-parse": "1.4.3",
         "@types/webpack": "5.28.1",
-        "@viz-js/viz": "^3.4.0",
         "@yarnpkg/cli": "3.6.1",
         "@yarnpkg/core": "3.5.2",
         "@yarnpkg/fslib": "2.10.3",
