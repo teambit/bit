@@ -252,9 +252,6 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const callId = Math.floor(Math.random() * 1000);
     const loggerPrefix = `[${callId}] workspace resolveAspects,`;
 
-    this.logger.debug(
-      `${loggerPrefix}, resolving aspects for - runtimeName: ${runtimeName}, componentIds: ${componentIds}`
-    );
     const defaultOpts: ResolveAspectsOptions = {
       excludeCore: false,
       requestedOnly: false,
@@ -265,6 +262,13 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       packageManagerConfigRootDir: this.workspace.path,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
+    this.logger.debug(
+      `${loggerPrefix}, resolving aspects for - runtimeName: ${runtimeName}, componentIds: ${componentIds}, opts: ${JSON.stringify(
+        mergedOpts,
+        null,
+        2
+      )}`
+    );
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const configuredAspects = this.aspectLoader.getConfiguredAspects();
@@ -285,13 +289,15 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         components,
         this.getWorkspaceAspectResolver([], runtimeName)
       );
-
-      const coreAspectDefs = await Promise.all(
-        coreAspectsIds.map(async (coreId) => {
-          const rawDef = await getAspectDef(coreId, runtimeName);
-          return this.aspectLoader.loadDefinition(rawDef);
-        })
-      );
+      let coreAspectDefs: AspectDefinition[] = [];
+      if (!mergedOpts.excludeCore) {
+        coreAspectDefs = await Promise.all(
+          coreAspectsIds.map(async (coreId) => {
+            const rawDef = await getAspectDef(coreId, runtimeName);
+            return this.aspectLoader.loadDefinition(rawDef);
+          })
+        );
+      }
 
       const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
       const targetDefs = wsAspectDefs.concat(coreAspectDefs);

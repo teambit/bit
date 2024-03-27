@@ -13,8 +13,6 @@ import { ReactNativeAspect } from './react-native.aspect';
 import { previewConfigTransformer, devServerConfigTransformer } from './webpack/webpack-transformers';
 import { ReactNativeEnv } from './react-native.env';
 
-const jestConfig = require.resolve('./jest/jest.config');
-
 export class ReactNativeMain {
   constructor(
     private react: ReactMain,
@@ -111,6 +109,8 @@ export class ReactNativeMain {
   static dependencies: Aspect[] = [ReactAspect, EnvsAspect, AspectAspect];
   static runtime = MainRuntime;
   static async provider([react, envs, aspect]: [ReactMain, EnvsMain, AspectMain]) {
+    const jestConfig = require.resolve('./jest/jest.config');
+
     const webpackModifiers: UseWebpackModifiers = {
       previewConfig: [previewConfigTransformer],
       devServerConfig: [devServerConfigTransformer],

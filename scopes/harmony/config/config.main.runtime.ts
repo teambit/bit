@@ -95,6 +95,7 @@ export class ConfigMain {
     return config;
   }
 
+  // static runtime = ConfigRuntime;
   static runtime = MainRuntime;
   static slots = [];
   static dependencies = [];
@@ -119,8 +120,12 @@ export class ConfigMain {
     return configMain;
   }
 }
-
 ConfigAspect.addRuntime(ConfigMain);
+
+// Required for esbuild to work properly
+export function getConfigAspect() {
+  return ConfigAspect;
+}
 
 async function loadWorkspaceConfigIfExist(cwd = process.cwd()): Promise<WorkspaceConfig | undefined> {
   const consumerInfo = await getConsumerInfo(cwd);

@@ -67,6 +67,7 @@
     "bit-hub-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter ./e2e/bit-hub/*.ts",
     "clean": "rm -rf dist && rm -rf types",
     "build": "npm run build:src",
+    "bundle": "node node_modules/@teambit/bit/dist/bundle/bundle.js",
     "build:types": "./scripts/build-types.bash",
     "build:types:windows": ".\\scripts\\build-types.bat",
     "link-bit-legacy": "node ./scripts/link-bit-legacy.js",
