@@ -78,20 +78,16 @@ const colorPerEdgeType = {
 export class VersionHistoryGraphCmd implements Command {
   name = 'graph <component-id>';
   alias = '';
-  description = 'generate a graph of the version history of a component. GraphVis must be installed';
+  description = 'generate a graph of the version history of a component and save as an SVG file';
   options = [
-    [
-      'p',
-      'graph-path <image>',
-      'image path and format. use one of the following extensions: [gif, png, svg]. default to png in the os tmp dir',
-    ],
+    ['s', 'short-hash', 'show only 9 chars of the hash'],
+    ['m', 'mark <string>', 'paint the given node-ids in the graph in red color, for multiple, separate by commas'],
+    ['', 'png', 'save the graph as a png file instead of svg. requires "graphviz" to be installed'],
     [
       'l',
       'layout <name>',
       'GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]',
     ],
-    ['s', 'short-hash', 'show only 9 chars of the hash'],
-    ['m', 'mark <string>', 'paint the given node-ids in the graph in red color, for multiple, separate by commas'],
   ] as CommandOptions;
   group = 'info';
   commands: Command[] = [];
@@ -101,15 +97,15 @@ export class VersionHistoryGraphCmd implements Command {
   async report(
     [id]: [string],
     {
-      mark,
-      graphPath,
-      layout,
       shortHash,
+      mark,
+      png,
+      layout,
     }: {
-      mark?: string;
-      graphPath?: string;
-      layout?: string;
       shortHash?: boolean;
+      mark?: string;
+      png?: boolean;
+      layout?: string;
     }
   ) {
     const graphHistory = await this.versionHistoryMain.generateGraph(id, shortHash);
@@ -117,8 +113,7 @@ export class VersionHistoryGraphCmd implements Command {
     const config: GraphConfig = { colorPerEdgeType };
     if (layout) config.layout = layout;
     const visualDependencyGraph = await VisualDependencyGraph.loadFromClearGraph(graphHistory, config, markIds);
-    const result = await visualDependencyGraph.image(graphPath);
-    return `image created at ${result}`;
+    return png ? visualDependencyGraph.image() : visualDependencyGraph.renderUsingViz();
   }
 }
 
