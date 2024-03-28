@@ -44624,7 +44624,7 @@ packages:
       - typescript
 
   /@teambit/mdx.ui.mdx-layout@0.0.515(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)(typescript@5.3.3):
-    resolution: {integrity: sha512-oEVtFFMDOsRx0g1Eggbip5vSfMBKvgj+8hVdBlwwYl51dfkwNRPVXQ6yiv0qBqqrlJu80pEESxOFfw/FeVS8fg==}
+    resolution: {integrity: sha1-pxlYP6xc/fTGJK3tBREtNajlXDI=}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -45784,7 +45784,7 @@ packages:
       react-error-boundary: 3.1.4(react@18.2.0)
 
   /@teambit/react.ui.docs.compositions-carousel@0.0.16(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-PQ7a88ALVuLSoeaSFljSvjcNCb0=}
+    resolution: {integrity: sha512-ARpC681dCfyZmU945UyL9d/X/BS5+/7r2UajexaJmilYN0CTmnwrCxU5B0bouEBWPAwXGT6yHvA8beqiTHmrTg==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -45829,7 +45829,7 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
 
   /@teambit/react.ui.docs.docs-content@0.0.16(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)(typescript@5.3.3):
-    resolution: {integrity: sha1-D47ndJiy/A2DYrf+sCkTAwAb5x0=}
+    resolution: {integrity: sha512-PrJehzbRO++5a4Jl04sl/S5AdlTCFJvCNC3xAWIkmmzmfP3jhHq7cQot450YXEh29seAQpnWMflOKJaes0x6FQ==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -46857,7 +46857,7 @@ packages:
     engines: {node: '>=12.22.0'}
 
   /@teambit/toolbox.string.ellipsis@0.0.173:
-    resolution: {integrity: sha1-CY+uj2sRmPejtTCee4HDvLFeeI8=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/string/ellipsis@0.0.173.tgz}
+    resolution: {integrity: sha1-CY+uj2sRmPejtTCee4HDvLFeeI8=}
     engines: {node: '>=12.22.0'}
 
   /@teambit/toolbox.string.ellipsis@0.0.181:
@@ -46888,7 +46888,7 @@ packages:
     dev: false
 
   /@teambit/toolbox.types.serializable@0.0.483:
-    resolution: {integrity: sha1-bUTnjhsNOvMScS8+fSEk80Bvq3E=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/types/serializable@0.0.483.tgz}
+    resolution: {integrity: sha1-bUTnjhsNOvMScS8+fSEk80Bvq3E=}
     engines: {node: '>=12.22.0'}
 
   /@teambit/toolbox.types.serializable@0.0.491:
