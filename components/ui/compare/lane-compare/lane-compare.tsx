@@ -108,6 +108,27 @@ function GroupedComponentCompareDrawer({
   customUseComponent,
   ComponentCompareLoader,
   drawerKey,
+}: {
+  baseId?: ComponentID;
+  compareId?: ComponentID;
+  open: boolean;
+  changes?: ChangeType[] | null;
+  fullScreenDrawerKey?: string;
+  tabs?: MaybeLazyLoaded<TabItem[]>;
+  host: string;
+  hooks: (base?: ComponentID, compare?: ComponentID) => ComponentCompareHooks;
+  DrawerWidgets?: {
+    Left?: React.ComponentType<DrawerWidgetProps>;
+    Right?: React.ComponentType<DrawerWidgetProps>;
+  };
+  base: LaneModel;
+  compare: LaneModel;
+  handleDrawerToggle: (id?: string) => void;
+  onFullScreenClicked: (key?: string) => (e: React.MouseEvent<HTMLDivElement>) => void;
+  Drawer: React.ComponentType<LaneCompareDrawerProps>;
+  customUseComponent?: UseComponentType;
+  ComponentCompareLoader?: React.ComponentType;
+  drawerKey: string;
 }) {
   const { laneCompareState } = useLaneCompareContext() as LaneCompareContextModel;
   const compKey = computeStateKey(baseId, compareId);
@@ -192,7 +213,7 @@ function GroupedComponentCompareDrawer({
         role="button"
         tabIndex={0}
       >
-        <Icon of={fullScreenDrawerKey ? 'reduce' : 'expand'} />
+        <Icon of={fullScreenDrawerKey ? 'reduce' : 'expand'} aria-label={fullScreenDrawerKey ? 'Minimize' : 'Expand'} />
       </div>,
     ],
     className: classnames(
@@ -236,6 +257,21 @@ function GroupedComponentCompare({
   hooks,
   loading,
   onFullScreenChanged,
+}: {
+  base: LaneModel;
+  compare: LaneModel;
+  Drawer: React.ComponentType<LaneCompareDrawerProps>;
+  ComponentCompareLoader?: React.ComponentType;
+  DrawerWidgets?: {
+    Left?: React.ComponentType<DrawerWidgetProps>;
+    Right?: React.ComponentType<DrawerWidgetProps>;
+  };
+  host: string;
+  customUseComponent?: UseComponentType;
+  tabs?: MaybeLazyLoaded<TabItem[]>;
+  hooks: (base?: ComponentID, compare?: ComponentID) => ComponentCompareHooks;
+  loading: boolean | undefined;
+  onFullScreenChanged?: (key?: string, location?: Location) => void;
 }) {
   const {
     openDrawerList = [],
@@ -325,7 +361,7 @@ function GroupedComponentCompare({
                     onFullScreenClicked={onFullScreenClicked}
                     handleDrawerToggle={handleDrawerToggle}
                     fullScreenDrawerKey={fullScreenDrawerKey}
-                    drawerKey={compareIdStrWithoutVersion}
+                    drawerKey={compareIdStrWithoutVersion ?? ''}
                     open={!!compareIdStrWithoutVersion && openDrawerList.includes(compareIdStrWithoutVersion)}
                     changes={
                       !compareIdStrWithoutVersion || loading === undefined
@@ -384,9 +420,9 @@ function LaneCompareImpl({
     const key = computeStateKey(_base, _compare);
     const extractedTabs = extractLazyLoadedData(tabs);
 
-    const onClicked = (prop: ComponentCompareStateKey) => (id, e) => {
-      e.preventDefault();
-      e.stopPropagation();
+    const onClicked = (prop: ComponentCompareStateKey) => (id?: string, e?: React.MouseEvent) => {
+      e?.preventDefault();
+      e?.stopPropagation();
       setLaneCompareState((value) => {
         let existingState = value.get(key);
         const propState = existingState?.[prop];

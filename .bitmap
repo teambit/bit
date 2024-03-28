@@ -1552,14 +1552,14 @@
     "ui/compare/lane-compare": {
         "name": "ui/compare/lane-compare",
         "scope": "teambit.lanes",
-        "version": "0.0.181",
+        "version": "0.0.183",
         "mainFile": "index.ts",
         "rootDir": "components/ui/compare/lane-compare"
     },
     "ui/compare/lane-compare-drawer": {
         "name": "ui/compare/lane-compare-drawer",
         "scope": "teambit.lanes",
-        "version": "0.0.156",
+        "version": "0.0.157",
         "mainFile": "index.ts",
         "rootDir": "components/ui/compare/lane-compare-drawer"
     },

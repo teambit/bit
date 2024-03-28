@@ -423,7 +423,7 @@
         "junit-report-builder": "3.0.1",
         "less": "^4.1.1",
         "loader-utils": "2.0.4",
-        "lodash": "4.17.20",
+        "lodash": "4.17.21",
         "lodash.compact": "3.0.1",
         "lodash.head": "4.0.1",
         "lodash.orderby": "4.6.0",
