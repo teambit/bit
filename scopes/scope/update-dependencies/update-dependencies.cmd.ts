@@ -19,6 +19,7 @@ the input data is a stringified JSON of an array of the following object.
   componentId: string; // ids always have scope, so it's safe to parse them from string
   dependencies: string[]; // e.g. [teambit/compiler@1.0.0, teambit/tester@1.0.0]
   versionToTag?: string; // specific version (e.g. '1.0.0') or semver (e.g. 'minor', 'patch')
+  versionToSnap?: string; // specific hash to snap
 }
 an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies":["ci.remote/comp1@0.0.2"]}]'
 `;
