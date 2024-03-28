@@ -78,6 +78,11 @@ export interface TesterContext extends ExecutionContext {
   specFiles: SpecFiles;
 
   /**
+   * list of source spec files to test.
+   */
+  sourceSpecFiles?: SpecFiles;
+
+  /**
    * rootPath of the component workspace or the capsule root dir (during build).
    */
   rootPath: string;
@@ -106,6 +111,11 @@ export interface TesterContext extends ExecutionContext {
    * array of patterns to test.
    */
   patterns: ComponentPatternsMap;
+
+  /**
+   * array of source files patterns to test.
+   */
+  sourcePatterns?: ComponentPatternsMap;
 
   /**
    *
