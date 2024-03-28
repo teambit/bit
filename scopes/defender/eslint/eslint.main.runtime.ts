@@ -3,7 +3,11 @@ import { MainRuntime } from '@teambit/cli';
 import { ESLint as ESLintLib } from 'eslint';
 import { Linter, LinterContext, LinterMain } from '@teambit/linter';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { EslintConfigMutator } from '@teambit/defender.eslint.config-mutator';
+import {
+  EslintConfigMutator,
+  EslintConfigTransformContext,
+  EslintConfigTransformer,
+} from '@teambit/defender.eslint.config-mutator';
 import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { ESLintAspect } from './eslint.aspect';
 import { ESLintLinter } from './eslint.linter';
@@ -40,15 +44,6 @@ export type ESLintOptions = {
   tsConfig?: Record<string, any>;
 };
 
-export type EslintConfigTransformContext = {
-  fix: boolean;
-};
-
-export type EslintConfigTransformer = (
-  config: EslintConfigMutator,
-  context: EslintConfigTransformContext
-) => EslintConfigMutator;
-
 export class ESLintMain {
   constructor(private logger: Logger) {}
 
@@ -68,6 +63,7 @@ export class ESLintMain {
     const transformerContext: EslintConfigTransformContext = { fix: !!context.fix };
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
 
+    // @ts-ignore
     return new ESLintLinter(this.logger, afterMutation.raw, ESLintModule);
   }
 
