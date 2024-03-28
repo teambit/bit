@@ -63,6 +63,7 @@ export class ESLintMain {
     const transformerContext: EslintConfigTransformContext = { fix: !!context.fix };
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
 
+    // @ts-ignore
     return new ESLintLinter(this.logger, afterMutation.raw, ESLintModule);
   }
 

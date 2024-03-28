@@ -13,7 +13,7 @@ export class ESLintLinter implements Linter {
   constructor(
     private logger: Logger,
 
-    private options: ESLintOptions,
+    private options: ESLintOptions = {},
 
     /**
      * reference to the eslint module.

@@ -40,7 +40,7 @@ export class EslintConfigMutator {
   }
 
   setPluginPath(newPath: string): EslintConfigMutator {
-    this.raw.pluginPath = newPath;
+    this.raw.pluginsPath = newPath;
     return this;
   }
 
