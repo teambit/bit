@@ -954,13 +954,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/modules/node-modules-linker"
     },
-    "modules/prerenderer-puppeteer": {
-        "name": "modules/prerenderer-puppeteer",
-        "scope": "teambit.react",
-        "version": "0.0.16",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/modules/prerenderer-puppeteer"
-    },
     "modules/requireable-component": {
         "name": "modules/requireable-component",
         "scope": "teambit.harmony",
