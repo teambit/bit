@@ -15,6 +15,8 @@ export type VersionParents = {
   squashed?: Ref[];
 };
 
+export type VersionHistoryGraph = Graph<string | HashMetadata, string>;
+
 type VersionHistoryProps = {
   name: string;
   scope: string;
@@ -160,7 +162,11 @@ export default class VersionHistory extends BitObject {
     this.versionsObj = this.versionParentsToObject(newVersions);
   }
 
-  getGraph(modelComponent?: ModelComponent, laneHeads?: { [hash: string]: string[] }, shortHash = false) {
+  getGraph(
+    modelComponent?: ModelComponent,
+    laneHeads?: { [hash: string]: string[] },
+    shortHash = false
+  ): VersionHistoryGraph {
     const refToStr = (ref: Ref) => (shortHash ? ref.toShortString() : ref.toString());
     const graph = new Graph<string | HashMetadata, string>();
     const allHashes = this.versions

@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-curly-brace-presence */
 import React, { HTMLAttributes } from 'react';
 import { ComponentCompareProps } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { DrawerProps, DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
@@ -26,12 +27,15 @@ export function LaneCompareDrawer({ drawerProps, compareProps, isFullScreen }: L
   return (
     <div className={classnames(styles.drawerRoot)} key={key}>
       <DrawerUI key={`${key}-lane-drawer`} {...drawerProps}>
-        <ComponentCompare
-          hidden={!open}
-          className={classnames(!open && styles.closed, fullScreenStyles, heightStyles)}
-          key={`lane-compare-component-compare-${key}`}
-          {...compareProps}
-        />
+        {
+          // @ts-ignore - @todo: this will be fixed in the CR: teambit.dot-lanes/fix-lane-comp-compare that fixes Component Compare for Lane Components
+          <ComponentCompare
+            hidden={!open}
+            className={classnames(!open && styles.closed, fullScreenStyles, heightStyles)}
+            key={`lane-compare-component-compare-${key}`}
+            {...compareProps}
+          />
+        }
       </DrawerUI>
     </div>
   );

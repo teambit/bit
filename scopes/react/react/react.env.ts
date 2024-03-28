@@ -1,14 +1,21 @@
 import ts, { TsConfigSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
+import { ESLint as ESLintLib } from 'eslint';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import { merge, cloneDeep } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
-import { PrettierConfigWriter } from '@teambit/defender.prettier-formatter';
+import { PrettierConfigWriter, PrettierFormatter } from '@teambit/defender.prettier-formatter';
+import {
+  PrettierConfigMutator,
+  PrettierConfigTransformContext,
+  PrettierConfigTransformer,
+} from '@teambit/defender.prettier.config-mutator';
 import { TypescriptConfigWriter } from '@teambit/typescript.typescript-compiler';
-import { EslintConfigWriter } from '@teambit/defender.eslint-linter';
+import { EslintConfigWriter, ESLintLinter } from '@teambit/defender.eslint-linter';
+import type { ESLintOptions } from '@teambit/defender.eslint-linter';
 import { CompilerMain } from '@teambit/compiler';
 import {
   BuilderEnv,
@@ -29,8 +36,11 @@ import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
 import type { TypeScriptCompilerOptions } from '@teambit/typescript';
 import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
-import { ESLintMain, EslintConfigTransformer } from '@teambit/eslint';
-import { PrettierConfigTransformer, PrettierMain } from '@teambit/prettier';
+import {
+  EslintConfigMutator,
+  EslintConfigTransformContext,
+  EslintConfigTransformer,
+} from '@teambit/defender.eslint.config-mutator';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Linter, LinterContext } from '@teambit/linter';
 import { Formatter, FormatterContext } from '@teambit/formatter';
@@ -119,10 +129,6 @@ export class ReactEnv
     private tester: TesterMain,
 
     private config: ReactMainConfig,
-
-    private eslint: ESLintMain,
-
-    private prettier: PrettierMain,
 
     private dependencyResolver: DependencyResolverMain,
 
@@ -244,42 +250,45 @@ export class ReactEnv
     return this.createTsCjsCompiler('dev', transformers, tsModule);
   }
 
+  private getEslintOptions(options: ESLintLib.Options, pluginPath: string, context: LinterContext): ESLintOptions {
+    const mergedConfig: ESLintLib.Options = {
+      // @ts-ignore - this is a bug in the @types/eslint types
+      overrideConfig: options,
+      extensions: context.extensionFormats,
+      useEslintrc: false,
+      // TODO: this should be probably be replaced with resolve-plugins-relative-to
+      // https://eslint.org/docs/latest/use/command-line-interface#--resolve-plugins-relative-to
+      cwd: pluginPath,
+      fix: !!context.fix,
+      fixTypes: context.fixTypes,
+    };
+    return Object.assign({}, options, { config: mergedConfig, extensions: context.extensionFormats });
+  }
+
   /**
    * returns and configures the component linter.
    */
   getLinter(context: LinterContext, transformers: EslintConfigTransformer[] = []): Linter {
-    const tsConfig = this.createTsCompilerOptions('dev').tsconfig;
+    const tsconfigPath = require.resolve('./typescript/tsconfig.json');
 
-    const defaultTransformer: EslintConfigTransformer = (configMutator) => {
-      configMutator.addExtensionTypes(['.md', '.mdx']);
-      configMutator.setTsConfig(tsConfig);
-      return configMutator;
-    };
-
-    const allTransformers = [defaultTransformer, ...transformers];
-
-    return this.eslint.createLinter(
-      context,
-      {
-        config: eslintConfig,
-        // resolve all plugins from the react environment.
-        pluginPath: __dirname,
-      },
-      allTransformers
-    );
+    // resolve all plugins from the react environment.
+    const mergedOptions = this.getEslintOptions(eslintConfig, __dirname, context);
+    const configMutator = new EslintConfigMutator(mergedOptions);
+    const transformerContext: EslintConfigTransformContext = { fix: !!context.fix };
+    configMutator.addExtensionTypes(['.md', '.mdx']);
+    configMutator.setTsConfig(tsconfigPath);
+    const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+    return ESLintLinter.create(afterMutation.raw, { logger: this.logger });
   }
 
   /**
    * returns and configures the component formatter.
    */
   getFormatter(context: FormatterContext, transformers: PrettierConfigTransformer[] = []): Formatter {
-    return this.prettier.createFormatter(
-      { check: context?.check },
-      {
-        config: prettierConfig,
-      },
-      transformers
-    );
+    const configMutator = new PrettierConfigMutator(prettierConfig);
+    const transformerContext: PrettierConfigTransformContext = { check: !!context?.check };
+    const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+    return PrettierFormatter.create({ config: afterMutation.raw }, { logger: this.logger });
   }
 
   private getFileMap(components: Component[], local = false) {
@@ -589,4 +598,12 @@ export class ReactEnv
       type: ReactEnvType,
     };
   }
+}
+
+export function runTransformersWithContext<P, T extends Function, C>(config: P, transformers: T[] = [], context: C): P {
+  if (!Array.isArray(transformers)) return config;
+  const newConfig = transformers.reduce((acc, transformer) => {
+    return transformer(acc, context);
+  }, config);
+  return newConfig;
 }
