@@ -5,7 +5,8 @@ import {
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import ts, { ArrayLiteralExpression, Node } from 'typescript';
-import { SchemaExtractorContext, SchemaTransformer } from '..';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import { SchemaTransformer } from '../schema-transformer';
 import { Identifier } from '../identifier';
 
 export class ArrayLiteralExpressionTransformer implements SchemaTransformer {

@@ -1,5 +1,6 @@
 import { Harmony } from '@teambit/harmony';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
+import { BabelCompiler } from '@teambit/compilation.babel-compiler';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { compact, merge } from 'lodash';
@@ -9,7 +10,6 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { EnvContext, Environment, EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
-import { BabelAspect, BabelMain } from '@teambit/babel';
 import { ComponentID } from '@teambit/component-id';
 import { AspectList } from '@teambit/component';
 import { WorkerAspect, WorkerMain } from '@teambit/worker';
@@ -211,7 +211,6 @@ export class AspectMain {
     BuilderAspect,
     AspectLoaderAspect,
     CompilerAspect,
-    BabelAspect,
     GeneratorAspect,
     WorkspaceAspect,
     CLIAspect,
@@ -220,13 +219,12 @@ export class AspectMain {
   ];
 
   static async provider(
-    [react, envs, builder, aspectLoader, compiler, babel, generator, workspace, cli, loggerMain, workerMain]: [
+    [react, envs, builder, aspectLoader, compiler, generator, workspace, cli, loggerMain, workerMain]: [
       ReactMain,
       EnvsMain,
       BuilderMain,
       AspectLoaderMain,
       CompilerMain,
-      BabelMain,
       GeneratorMain,
       Workspace,
       CLIMain,
@@ -239,11 +237,14 @@ export class AspectMain {
   ) {
     const logger = loggerMain.createLogger(AspectAspect.id);
 
-    const babelCompiler = babel.createCompiler({
+    const options = {
       babelTransformOptions: babelConfig,
       distDir: 'dist',
       distGlobPatterns: [`dist/**`, `!dist/**/*.d.ts`, `!dist/tsconfig.tsbuildinfo`],
-    });
+    };
+
+    const babelCompiler = BabelCompiler.create(options, { logger });
+
     const compilerOverride = envs.override({
       getCompiler: () => {
         return babelCompiler;
