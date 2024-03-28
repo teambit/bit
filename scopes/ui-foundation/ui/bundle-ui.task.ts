@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
+import type { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
 import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { UIAspect } from './ui.aspect';
