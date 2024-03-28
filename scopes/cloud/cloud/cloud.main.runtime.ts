@@ -119,9 +119,17 @@ export class CloudMain {
     configUpdates?: string;
   }> {
     const authToken = this.getAuthToken();
-    const username = this.getUsername();
-    if (!authToken || !username) {
+    if (!authToken) {
       throw new Error('user is not logged in');
+    }
+    const currentUser = await this.getCurrentUser();
+    let username = currentUser?.username;
+    if (!username) {
+      this.logger.warn('failed to fetch username from cloud for the current user. falling back to the global config.');
+      username = this.getUsername();
+    }
+    if (!username) {
+      throw new Error('username is not found in the global config or the cloud. please login first.');
     }
     return this.updateNpmConfig({ authToken, username, dryRun, force });
   }
