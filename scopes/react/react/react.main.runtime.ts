@@ -28,7 +28,7 @@ import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { FormatterContext } from '@teambit/formatter';
 import { LinterContext } from '@teambit/linter';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
+import { EslintConfigTransformer } from '@teambit/defender.eslint.config-mutator';
 import { WorkerAspect, WorkerMain } from '@teambit/worker';
 
 import { ReactAspect } from './react.aspect';
@@ -51,7 +51,6 @@ type ReactDeps = [
   GraphqlMain,
   PkgMain,
   TesterMain,
-  ESLintMain,
   ApplicationMain,
   GeneratorMain,
   DependencyResolverMain,
@@ -409,7 +408,6 @@ export class ReactMain {
     GraphqlAspect,
     PkgAspect,
     TesterAspect,
-    ESLintAspect,
     ApplicationAspect,
     GeneratorAspect,
     DependencyResolverAspect,
@@ -429,7 +427,6 @@ export class ReactMain {
       graphql,
       pkg,
       tester,
-      eslint,
       application,
       generator,
       dependencyResolver,
@@ -451,7 +448,6 @@ export class ReactMain {
       pkg,
       tester,
       config,
-      eslint,
       dependencyResolver,
       logger,
       CompilerAspect.id
