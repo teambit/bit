@@ -119,9 +119,17 @@ export class CloudMain {
     configUpdates?: string;
   }> {
     const authToken = this.getAuthToken();
-    const username = this.getUsername();
-    if (!authToken || !username) {
+    if (!authToken) {
       throw new Error('user is not logged in');
+    }
+    const currentUser = await this.getCurrentUser();
+    let username = currentUser?.username;
+    if (!username) {
+      this.logger.warn('failed to fetch username from cloud for the current user. falling back to the global config.');
+      username = this.getUsername();
+    }
+    if (!username) {
+      throw new Error('username is not found in the global config or the cloud. please login first.');
     }
     return this.updateNpmConfig({ authToken, username, dryRun, force });
   }
@@ -200,9 +208,11 @@ export class CloudMain {
   setupAuthListener({
     port: portFromParams,
     clientId = v4(),
+    skipConfigUpdate,
   }: {
     port?: number;
     clientId?: string;
+    skipConfigUpdate?: boolean;
   } = {}): Promise<CloudAuthListener | null> {
     return new Promise((resolve, reject) => {
       const port = portFromParams || this.getLoginPort();
@@ -282,21 +292,27 @@ export class CloudMain {
 
           const onLoggedInFns = this.onSuccessLoginSlot.values();
 
-          this.updateNpmConfig({ authToken: token as string, username: username as string })
-            .then((configUpdates) => {
-              onLoggedInFns.forEach((fn) => fn({ username, token: token as string, npmrcUpdateResult: configUpdates }));
-            })
-            .catch((error) => {
-              onLoggedInFns.forEach((fn) =>
-                fn({
-                  username,
-                  token: token as string,
-                  npmrcUpdateResult: {
-                    error: new Error(`failed to update npmrc. error ${error?.toString}`),
-                  },
-                })
-              );
-            });
+          if (!skipConfigUpdate) {
+            this.updateNpmConfig({ authToken: token as string, username: username as string })
+              .then((configUpdates) => {
+                onLoggedInFns.forEach((fn) =>
+                  fn({ username, token: token as string, npmrcUpdateResult: configUpdates })
+                );
+              })
+              .catch((error) => {
+                onLoggedInFns.forEach((fn) =>
+                  fn({
+                    username,
+                    token: token as string,
+                    npmrcUpdateResult: {
+                      error: new Error(`failed to update npmrc. error ${error?.toString}`),
+                    },
+                  })
+                );
+              });
+          } else {
+            onLoggedInFns.forEach((fn) => fn({ username, token: token as string }));
+          }
 
           if (this.REDIRECT_URL) return res.redirect(this.REDIRECT_URL);
           if (typeof redirectUri === 'string' && redirectUri) return res.redirect(redirectUri);
@@ -424,7 +440,8 @@ export class CloudMain {
     suppressBrowserLaunch?: boolean,
     machineName?: string,
     cloudDomain?: string,
-    redirectUrl?: string
+    redirectUrl?: string,
+    skipConfigUpdate?: boolean
   ): Promise<{
     isAlreadyLoggedIn?: boolean;
     username?: string;
@@ -473,6 +490,7 @@ export class CloudMain {
       try {
         this.setupAuthListener({
           port: Number(port),
+          skipConfigUpdate,
         })
           .then(promptLogin)
           .catch((e) => reject(e));
