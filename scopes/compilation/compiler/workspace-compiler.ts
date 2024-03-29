@@ -70,10 +70,11 @@ export class ComponentCompiler {
   async compile(noThrow = true, options: CompileOptions): Promise<BuildResult> {
     let dataToPersist;
     const deleteDistDir = options.deleteDistDir ?? this.compilerInstance.deleteDistDir;
+    const distDirs = await this.distDirs();
     // delete dist folder before transpilation (because some compilers (like ngPackagr) can generate files there during the compilation process)
     if (deleteDistDir) {
       dataToPersist = new DataToPersist();
-      for (const distDir of await this.distDirs()) {
+      for (const distDir of distDirs) {
         dataToPersist.removePath(new RemovePath(distDir));
       }
       dataToPersist.addBasePath(this.workspace.path);
@@ -88,12 +89,14 @@ export class ComponentCompiler {
 
     if (canTranspileFile) {
       await Promise.all(
-        this.component.filesystem.files.map((file: AbstractVinyl) => this.compileOneFile(file, options.initiator))
+        this.component.filesystem.files.map((file: AbstractVinyl) =>
+          this.compileOneFile(file, options.initiator, distDirs)
+        )
       );
     }
 
     if (canTranspileComponent) {
-      await this.compileAllFiles(this.component, options.initiator);
+      await this.compileAllFiles(this.component, options.initiator, distDirs);
     }
 
     if (!canTranspileFile && !canTranspileComponent) {
@@ -158,7 +161,11 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     return this.workspace.componentDir(this.component.id);
   }
 
-  private async compileOneFile(file: AbstractVinyl, initiator: CompilationInitiator): Promise<void> {
+  private async compileOneFile(
+    file: AbstractVinyl,
+    initiator: CompilationInitiator,
+    distDirs: PathOsBasedRelative[]
+  ): Promise<void> {
     const options = { componentDir: this.componentDir, filePath: file.relative, initiator };
     const isFileSupported = this.compilerInstance.isFileSupported(file.path);
     let compileResults;
@@ -170,7 +177,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
         return;
       }
     }
-    for (const base of await this.distDirs()) {
+    for (const base of distDirs) {
       if (isFileSupported && compileResults) {
         this.dists.push(
           ...compileResults.map(
@@ -189,9 +196,13 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 
-  private async compileAllFiles(component: Component, initiator: CompilationInitiator): Promise<void> {
+  private async compileAllFiles(
+    component: Component,
+    initiator: CompilationInitiator,
+    distDirs: PathOsBasedRelative[]
+  ): Promise<void> {
     const filesToCompile: AbstractVinyl[] = [];
-    for (const base of await this.distDirs()) {
+    for (const base of distDirs) {
       component.filesystem.files.forEach((file: AbstractVinyl) => {
         const isFileSupported = this.compilerInstance.isFileSupported(file.path);
         if (isFileSupported) {
@@ -324,7 +335,6 @@ export class WorkspaceCompiler {
     const getManyOpts =
       options.initiator === CompilationInitiator.AspectLoadFail ? { loadSeedersAsAspects: false } : undefined;
     const components = await this.workspace.getMany(componentIds, getManyOpts);
-
     const grouped = this.groupByIsEnv(components);
     const envsResults = grouped.envs ? await this.runCompileComponents(grouped.envs, options, noThrow) : [];
     const otherResults = grouped.other ? await this.runCompileComponents(grouped.other, options, noThrow) : [];
