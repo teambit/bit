@@ -541,7 +541,9 @@
       "allowAny": [
         "react",
         "react-dom",
-        "@testing-library/react"
+        "@testing-library/react",
+        "@teambit/legacy",
+        "typescript"
       ],
       "ignoreMissing": []
     },
