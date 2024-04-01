@@ -68,6 +68,10 @@ export class ComponentFsCache {
     await cacache.rm.all(this.getCachePath(DEPS));
   }
 
+  async deleteDependenciesDataCache(idStr: string) {
+    await cacache.rm.entry(this.getCachePath(DEPS), idStr);
+  }
+
   async listDependenciesDataCache() {
     return cacache.ls(this.getCachePath(DEPS));
   }
