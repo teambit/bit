@@ -29,6 +29,7 @@ describe('optional dependencies', function () {
   before(() => {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.workspaceJsonc.disablePreview();
     envId = `${helper.scopes.remote}/react-based-env`;
     helper.command.create('react', 'button', '-p button --env teambit.react/react');
     helper.fs.prependFile('button/button.tsx', '// @ts-ignore\nimport isOdd from "is-odd";\n');

@@ -349,8 +349,8 @@ importers:
         specifier: ^0.0.16
         version: 0.0.16(react-dom@17.0.2)(react@17.0.2)
       '@teambit/compilation.babel-compiler':
-        specifier: ^1.1.7
-        version: 1.1.7
+        specifier: ^1.1.8
+        version: 1.1.8
       '@teambit/compilation.content.compiler-overview':
         specifier: 1.95.0
         version: 1.95.0(react-dom@17.0.2)(react@17.0.2)
@@ -18025,8 +18025,8 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@teambit/compilation.babel-compiler':
-        specifier: ^1.1.7
-        version: 1.1.7
+        specifier: ^1.1.8
+        version: 1.1.8
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -39004,8 +39004,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@teambit/compilation.babel-compiler@1.1.7:
-    resolution: {integrity: sha512-DoxlmCSLzp5vv/Ewk+TwYa8juq+ZOWMD5eEmnQnDmmrm9jBXP3d6u2fs2EvKQX8dxqvbS4+dbs335r8I0tSQZQ==}
+  /@teambit/compilation.babel-compiler@1.1.8:
+    resolution: {integrity: sha512-nPOrKpr5ktiM2H58Q40Z9aWHSwNP+SMifRWqVsvvskeIHe4cfTceetNjTFgShpo6oaFCxlp6kFBM+Q6efjynEQ==}
     dependencies:
       '@babel/core': 7.20.2
       '@teambit/bit-error': 0.0.402
@@ -75545,7 +75545,7 @@ packages:
       '@babel/core': 7.19.6
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/compilation.aspect-docs.babel': file:scopes/compilation/aspect-docs/babel(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/compilation.babel-compiler': 1.1.7
+      '@teambit/compilation.babel-compiler': 1.1.8
       '@teambit/compilation.modules.babel-compiler': file:scopes/compilation/modules/babel-compiler
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
