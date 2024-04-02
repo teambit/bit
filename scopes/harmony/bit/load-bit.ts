@@ -12,6 +12,8 @@ import { nativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 nativeCompileCache?.install();
 
 import './hook-require';
+// need it for graphql modules to work. https://the-guild.dev/graphql/modules/docs/di/introduction
+import 'reflect-metadata';
 
 import {
   getAspectDir,

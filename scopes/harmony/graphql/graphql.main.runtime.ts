@@ -1,17 +1,16 @@
 import { mergeSchemas } from '@graphql-tools/schema';
-import NoIntrospection from 'graphql-disable-introspection';
-import { GraphQLModule } from '@graphql-modules/core';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
+import { Module, createModule, createApplication, Application } from 'graphql-modules';
 import { MainRuntime } from '@teambit/cli';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import express, { Express } from 'express';
-import { graphqlHTTP } from 'express-graphql';
+import { createHandler as createGraphqlHandler } from 'graphql-http/lib/use/express';
 import { Port } from '@teambit/toolbox.network.get-port';
-import { execute, subscribe } from 'graphql';
+import { execute, subscribe, GraphQLError } from 'graphql';
 import { PubSubEngine, PubSub } from 'graphql-subscriptions';
 import { createServer, Server } from 'http';
 import httpProxy from 'http-proxy';
-import { SubscriptionServer } from 'subscriptions-transport-ws';
 import cors from 'cors';
 import { GraphQLServer } from './graphql-server';
 import { createRemoteSchemas } from './create-remote-schemas';
@@ -82,7 +81,7 @@ export class GraphqlMain {
     return new PubSub();
   }
 
-  private modules = new Map<string, GraphQLModule>();
+  private modules = new Map<string, Module>();
 
   /**
    * returns the schema for a specific aspect by its id.
@@ -130,24 +129,60 @@ export class GraphqlMain {
 
     app.use(
       '/graphql',
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      graphqlHTTP((request, res, params) => ({
-        customFormatErrorFn: (err) => {
-          this.logger.error('graphql got an error during running the following query:', params);
+      createGraphqlHandler({
+        schema,
+        validationRules: disableIntrospection
+          ? [
+              function NoIntrospection(context) {
+                return {
+                  Field(node) {
+                    if (node.name.value === '__schema' || node.name.value === '__type') {
+                      context.reportError(
+                        new GraphQLError(
+                          'GraphQL introspection is not allowed, but the query contained __schema or __type',
+                          [node]
+                        )
+                      );
+                    }
+                  },
+                };
+              },
+            ]
+          : undefined,
+        formatError: (err) => {
           this.logger.error('graphql error ', err);
           return Object.assign(err, {
             // @ts-ignore
             ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
             // @ts-ignore
             HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code,
+            s,
           });
         },
-        schema,
-        rootValue: request,
-        graphiql,
-        validationRules: disableIntrospection ? [NoIntrospection] : undefined,
-      }))
+      })
     );
+
+    // todo - add graphiql middleware for playground
+
+    // app.use(
+    //   '/graphql',
+    //   // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    //   graphqlHTTP((request, res, params) => ({
+    //     customFormatErrorFn: (err) => {
+    //       this.logger.error('graphql got an error during running the following query:', params);
+    //       this.logger.error('graphql error ', err);
+    //       return Object.assign(err, {
+    //         // @ts-ignore
+    //         ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
+    //         // @ts-ignore
+    //         HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code, s
+    //       });
+    //     },
+    //     schema,
+    //     rootValue: request,
+    //     graphiql,
+    //     validationRules: disableIntrospection ? [NoIntrospection] : undefined,
+    //   }))
 
     const server = createServer(app);
     const subscriptionsPort = options.subscriptionsPortRange || this.config.subscriptionsPortRange;
@@ -227,7 +262,7 @@ export class GraphqlMain {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const subServer = new SubscriptionServer(
+    const subServer = SubscriptionServer.create(
       {
         execute,
         subscribe,
@@ -253,52 +288,25 @@ export class GraphqlMain {
     });
   }
 
-  private createRootModule(schemaSlot?: SchemaSlot) {
+  private createRootModule(schemaSlot?: SchemaSlot): Application {
     const modules = this.buildModules(schemaSlot);
 
-    return new GraphQLModule({
-      imports: modules,
-    });
+    return createApplication({ modules });
   }
 
   private buildModules(schemaSlot?: SchemaSlot) {
     const schemaSlots = schemaSlot ? schemaSlot.toArray() : this.moduleSlot.toArray();
     return schemaSlots.map(([extensionId, schema]) => {
-      const moduleDeps = this.getModuleDependencies(extensionId);
-
-      const module = new GraphQLModule({
+      const module = createModule({
+        id: extensionId,
         typeDefs: schema.typeDefs,
         resolvers: schema.resolvers,
-        schemaDirectives: schema.schemaDirectives,
-        imports: moduleDeps,
-        context: (session) => {
-          return {
-            ...session,
-            verb: session?.headers?.['x-verb'] || Verb.READ,
-          };
-        },
       });
 
       this.modules.set(extensionId, module);
 
       return module;
     });
-  }
-
-  private getModuleDependencies(extensionId: string): GraphQLModule[] {
-    const extension = this.context.extensions.get(extensionId);
-    if (!extension) throw new Error(`aspect ${extensionId} was not found`);
-    const deps = this.context.getDependencies(extension);
-    const ids = deps.map((dep) => dep.id);
-
-    // @ts-ignore check :TODO why types are breaking here.
-    return Array.from(this.modules.entries())
-      .map(([depId, module]) => {
-        const dep = ids.includes(depId);
-        if (!dep) return undefined;
-        return module;
-      })
-      .filter((module) => !!module);
   }
 
   static slots = [Slot.withType<Schema>(), Slot.withType<GraphQLServer>(), Slot.withType<PubSubSlot>()];
