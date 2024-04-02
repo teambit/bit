@@ -547,7 +547,10 @@
       ],
       "ignoreMissing": []
     },
-    "hoistPatterns": [],
+    "hoistPatterns": [
+      "*",
+      "!@teambit/*"
+    ],
     "capsuleSelfReference": true
   },
   "teambit.preview/preview": {
