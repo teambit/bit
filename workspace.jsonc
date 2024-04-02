@@ -549,7 +549,8 @@
     },
     "hoistPatterns": [
       "*",
-      "!@teambit/envs"
+      "!@teambit/envs",
+      "!@teambit/builder"
     ],
     "capsuleSelfReference": true
   },
