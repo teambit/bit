@@ -111,7 +111,7 @@ export class GraphIdsFromFsBuilder {
       return [];
     }
 
-    const deps = await this.dependencyResolver.getComponentDependencies(component);
+    const deps = this.dependencyResolver.getComponentDependencies(component);
     const allDepsIds = deps.map((d) => d.componentId);
     const allDependenciesComps = await this.loadManyComponents(allDepsIds, idStr);
 
@@ -135,18 +135,24 @@ export class GraphIdsFromFsBuilder {
     graphFromScope: CompIdGraph,
     component: Component
   ): Promise<Component[]> {
-    const deps = await this.dependencyResolver.getComponentDependencies(component);
+    const deps = this.dependencyResolver.getComponentDependencies(component);
     const workspaceIds = this.workspace.listIds();
+    const workspaceIdsStr = workspaceIds.map((id) => id.toString());
     const [depsInScopeGraph, depsNotInScopeGraph] = partition(
       deps,
       (dep) =>
-        graphFromScope.hasNode(dep.componentId.toString()) && !workspaceIds.find((id) => id.isEqual(dep.componentId))
+        graphFromScope.hasNode(dep.componentId.toString()) && !workspaceIdsStr.includes(dep.componentId.toString())
     );
 
     const depsInScopeGraphIds = depsInScopeGraph.map((dep) => dep.componentId.toString());
     const depsInScopeGraphIdsNotCompleted = depsInScopeGraphIds.filter((id) => !this.completed.includes(id));
     if (depsInScopeGraphIdsNotCompleted.length) {
       const subGraphs = graphFromScope.successorsSubgraph(depsInScopeGraphIdsNotCompleted);
+      // delete any edge that its source is from the workspace. if this component is modified, this edge could be
+      // incorrect. we don't need these edges anyway because we add them directly.
+      subGraphs.edges.forEach((edge) => {
+        if (workspaceIdsStr.includes(edge.sourceId)) subGraphs.deleteEdge(edge.sourceId, edge.targetId);
+      });
       this.graph.merge([subGraphs]);
       this.completed.push(...depsInScopeGraphIdsNotCompleted);
     }
