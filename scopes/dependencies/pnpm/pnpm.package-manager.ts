@@ -16,7 +16,7 @@ import { Logger } from '@teambit/logger';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
-import { readModulesManifest } from '@pnpm/modules-yaml';
+import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
 import {
   buildDependenciesHierarchy,
   DependenciesHierarchy,
@@ -33,6 +33,7 @@ import type { RebuildFn } from './lynx';
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
+  readonly modulesManifestCache: Map<string, Modules> = new Map();
 
   private _readConfig = async (dir?: string) => {
     const { config, warnings } = await readConfig(dir);
@@ -81,6 +82,7 @@ export class PnpmPackageManager implements PackageManager {
         }
       });
     }
+    this.modulesManifestCache.delete(rootDir);
     const { dependenciesChanged, rebuild, storeDir } = await install(
       rootDir,
       manifests,
@@ -241,8 +243,15 @@ export class PnpmPackageManager implements PackageManager {
     return modulesState.injectedDeps[`node_modules/${packageName}`] ?? modulesState.injectedDeps[componentDir] ?? [];
   }
 
-  _readModulesManifest(lockfileDir: string) {
-    return readModulesManifest(join(lockfileDir, 'node_modules'));
+  async _readModulesManifest(lockfileDir: string): Promise<Modules | undefined> {
+    if (this.modulesManifestCache.has(lockfileDir)) {
+      return this.modulesManifestCache.get(lockfileDir);
+    }
+    const modulesManifest = await readModulesManifest(join(lockfileDir, 'node_modules'));
+    if (modulesManifest) {
+      this.modulesManifestCache.set(lockfileDir, modulesManifest);
+    }
+    return modulesManifest ?? undefined;
   }
 
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
