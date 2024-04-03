@@ -1033,13 +1033,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return foundEnv?.components || [];
   }
 
-  async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
-    const { components } = await this.componentLoader.getMany(ids, loadOpts);
-    return components;
-  }
-
-  async getManyGracefully(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
-    const { components } = await this.componentLoader.getMany(ids, loadOpts, false);
+  async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<Component[]> {
+    const { components } = await this.componentLoader.getMany(ids, loadOpts, throwOnFailure);
     return components;
   }
 
@@ -1098,7 +1093,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       lane,
       reason,
     });
-    return throwOnError ? this.getMany(ids, loadOpts) : this.getManyGracefully(ids, loadOpts);
+    return this.getMany(ids, loadOpts, throwOnError);
   }
 
   async importCurrentLaneIfMissing(): Promise<Lane | undefined> {
