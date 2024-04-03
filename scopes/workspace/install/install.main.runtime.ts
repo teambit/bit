@@ -320,6 +320,7 @@ export class InstallMain {
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
       overrides: this.dependencyResolver.config.overrides,
       hoistPatterns: this.dependencyResolver.config.hoistPatterns,
+      hoistInjectedDependencies: this.dependencyResolver.config.hoistInjectedDependencies,
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       rootComponents: hasRootComponents,
       updateAll: options?.updateAll,

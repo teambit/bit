@@ -187,6 +187,7 @@ export async function install(
     includeOptionalDeps?: boolean;
     reportOptions?: ReportOptions;
     hidePackageManagerOutput?: boolean;
+    hoistInjectedDependencies?: boolean;
     dryRun?: boolean;
     dedupeInjectedDeps?: boolean;
   } & Pick<
@@ -282,7 +283,9 @@ export async function install(
     disableRelinkLocalDirDeps: true,
     hoistPattern: [
       ...(options.hoistPattern ?? []),
-      ...(externalDependencies ? Array.from(externalDependencies).map((pkgName) => `!${pkgName}`) : []),
+      ...(externalDependencies && !options.hoistInjectedDependencies
+        ? Array.from(externalDependencies).map((pkgName) => `!${pkgName}`)
+        : []),
     ],
   };
 
