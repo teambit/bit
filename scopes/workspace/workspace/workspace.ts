@@ -1038,6 +1038,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return components;
   }
 
+  async getManyGracefully(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
+    const { components } = await this.componentLoader.getMany(ids, loadOpts, false);
+    return components;
+  }
+
   getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     return mapSeries(components, async (component) => {
       const id = component.id;
@@ -1080,7 +1085,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async importAndGetMany(
     ids: Array<ComponentID>,
     reason?: string,
-    loadOpts?: ComponentLoadOptions
+    loadOpts?: ComponentLoadOptions,
+    throwOnError = true
   ): Promise<Component[]> {
     if (!ids.length) return [];
     const lane = await this.importCurrentLaneIfMissing();
@@ -1092,7 +1098,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       lane,
       reason,
     });
-    return this.getMany(ids, loadOpts);
+    return throwOnError ? this.getMany(ids, loadOpts) : this.getManyGracefully(ids, loadOpts);
   }
 
   async importCurrentLaneIfMissing(): Promise<Lane | undefined> {
