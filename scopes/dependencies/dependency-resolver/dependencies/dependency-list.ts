@@ -1,5 +1,5 @@
 import { uniqBy, property } from 'lodash';
-import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
+import { SNAP_VERSION_PREFIX, snapToSemver } from '@teambit/component-package-version';
 import { Dependency, DependencyLifecycleType, SerializedDependency, SemverVersion, PackageName } from './dependency';
 import { KEY_NAME_BY_LIFECYCLE_TYPE } from './constants';
 import { ComponentDependency } from './component-dependency';
@@ -148,7 +148,7 @@ export class DependencyList {
           : KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
       const entry = dep.toManifest();
       if (entry) {
-        manifest[keyName][entry.packageName] = entry.version;
+        manifest[keyName][entry.packageName] = snapToSemver(entry.version);
         if (dep.optional && dep.lifecycle === 'peer') {
           manifest.peerDependenciesMeta[entry.packageName] = { optional: true };
         }
