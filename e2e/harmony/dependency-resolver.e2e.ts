@@ -2,6 +2,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import { Modules, readModulesManifest } from '@pnpm/modules-yaml';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
+import rimraf from 'rimraf';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -292,13 +293,14 @@ describe('dependency-resolver extension', function () {
       });
     });
   });
-  describe('hoist patterns', function () {
+  describe.only('hoist patterns', function () {
     let modulesState: Modules | null;
     before(async () => {
       helper = new Helper();
       helper.scopeHelper.reInitLocalScope();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('hoistPatterns', ['hoist-pattern']);
+      helper.fixtures.populateComponents(1);
       helper.command.install('is-positive');
       modulesState = await readModulesManifest(path.join(helper.fixtures.scopes.localPath, 'node_modules'));
     });
@@ -306,7 +308,18 @@ describe('dependency-resolver extension', function () {
       helper.scopeHelper.destroy();
     });
     it('should run pnpm with the specified hoist pattern', () => {
-      expect(modulesState?.hoistPattern).to.deep.eq(['hoist-pattern']);
+      expect(modulesState?.hoistPattern).to.deep.eq(['hoist-pattern', `!@${helper.scopes.remote}/comp1`]);
+    });
+    describe('hoist injected dependencies', function () {
+      before(async () => {
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('hoistInjectedDependencies', true);
+        rimraf.sync(path.join(helper.fixtures.scopes.localPath, 'node_modules'));
+        helper.command.install();
+        modulesState = await readModulesManifest(path.join(helper.fixtures.scopes.localPath, 'node_modules'));
+      });
+      it('should run pnpm with the specified hoist pattern', () => {
+        expect(modulesState?.hoistPattern).to.deep.eq(['hoist-pattern']);
+      });
     });
   });
 });
