@@ -71,7 +71,6 @@ export class Publisher {
 
     const componentIdStr = capsule.id.toString();
     const errors: string[] = [];
-    let metadata: TaskMetadata = {};
     try {
       this.logger.off();
       // @todo: once capsule.exec works properly, replace this
@@ -79,12 +78,16 @@ export class Publisher {
       await execa(this.packageManager, publishParams, { cwd, stdio: 'inherit' });
       this.logger.on();
       this.logger.debug(`${componentIdStr}, successfully ran ${this.packageManager} ${publishParamsStr} at ${cwd}`);
-      const pkg = await fsx.readJSON(`${capsule.path}/package.json`);
-      metadata = this.options.dryRun ? {} : { publishedPackage: `${pkg.name}@${pkg.version}` };
-    } catch (err: any) {
-      const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}`;
+    } catch (err: unknown) {
+      const errorDetails = typeof err === 'object' && err && 'message' in err ? err.message : err;
+      const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}: ${errorDetails}`;
       this.logger.error(`${componentIdStr}, ${errorMsg}`);
       errors.push(errorMsg);
+    }
+    let metadata: TaskMetadata = {};
+    if (errors.length === 0 && !this.options.dryRun) {
+      const pkg = await fsx.readJSON(`${capsule.path}/package.json`);
+      metadata = { publishedPackage: `${pkg.name}@${pkg.version}` };
     }
     const component = capsule.component;
     return { component, metadata, errors, startTime, endTime: Date.now() };
