@@ -207,14 +207,14 @@ export async function install(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string }> {
-  let externalDependencies: Set<string> | undefined;
+  const externalDependencies = new Set<string>();
   const readPackage: ReadPackageHook[] = [];
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
-    externalDependencies = new Set(
-      Object.values(manifestsByPaths)
-        .map(({ name }) => name)
-        .filter(Boolean) as string[]
-    );
+    for (const [dir, { name }] of Object.entries(manifestsByPaths)) {
+      if (dir !== rootDir && name) {
+        externalDependencies.add(name);
+      }
+    }
     readPackage.push(readPackageHook as ReadPackageHook);
   }
   readPackage.push(removeLegacyFromDeps as ReadPackageHook);
@@ -280,6 +280,10 @@ export async function install(
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     depth: options.updateAll ? Infinity : 0,
     disableRelinkLocalDirDeps: true,
+    hoistPattern: [
+      ...(options.hoistPattern ?? []),
+      ...(externalDependencies ? Array.from(externalDependencies).map((pkgName) => `!${pkgName}`) : []),
+    ],
   };
 
   let dependenciesChanged = false;
