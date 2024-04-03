@@ -1,4 +1,4 @@
-import logger, { LoggerLevel } from '@teambit/legacy/dist/logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { CLIArgs, Command, Flags } from '@teambit/legacy/dist/cli/command';
 import { parseCommandName } from '@teambit/legacy/dist/cli/command-registry';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -100,11 +100,6 @@ export class CommandRunner {
     } else {
       loader.off();
       logger.shouldWriteToConsole = false;
-    }
-    if (this.flags.log) {
-      // probably not necessary anymore. it is handled in src/logger - determineWritingLogToScreen()
-      const logValue = typeof this.flags.log === 'string' ? this.flags.log : undefined;
-      logger.switchToConsoleLogger(logValue as LoggerLevel);
     }
   }
 

@@ -85,6 +85,7 @@ export class WorkspaceAspectsLoader {
     neededFor?: string,
     opts: WorkspaceLoadAspectsOptions = {}
   ): Promise<string[]> {
+    this.logger.profile('workspace.loadAspects');
     const calculatedThrowOnError: boolean = throwOnError ?? false;
     const defaultOpts: Required<WorkspaceLoadAspectsOptions> = {
       useScopeAspectsCapsule: false,
@@ -107,7 +108,10 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     this.workspace.localAspects = localAspects;
     await this.aspectLoader.loadAspectFromPath(this.workspace.localAspects);
     const notLoadedIds = nonLocalAspects.filter((id) => !this.aspectLoader.isAspectLoaded(id));
-    if (!notLoadedIds.length) return [];
+    if (!notLoadedIds.length) {
+      this.logger.profile('workspace.loadAspects');
+      return [];
+    }
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
 
@@ -171,6 +175,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, undefined, { throwOnError });
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
     const manifestIds = manifests.map((manifest) => manifest.id);
+    this.logger.profile('workspace.loadAspects');
     return compact(manifestIds.concat(scopeAspectIds));
   }
 
