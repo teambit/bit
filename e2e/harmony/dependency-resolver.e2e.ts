@@ -293,7 +293,7 @@ describe('dependency-resolver extension', function () {
       });
     });
   });
-  describe.only('hoist patterns', function () {
+  describe('hoist patterns', function () {
     let modulesState: Modules | null;
     before(async () => {
       helper = new Helper();
