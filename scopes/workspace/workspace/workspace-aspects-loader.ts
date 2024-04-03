@@ -275,8 +275,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       : difference(this.harmony.extensionsIds, coreAspectsIds);
     const rootAspectsIds: string[] = difference(configuredAspects, coreAspectsIds);
     const componentIdsToResolve = await this.workspace.resolveMultipleComponentIds(userAspectsIds);
-    const components = await this.importAndGetAspects(componentIdsToResolve);
-
+    const components = await this.importAndGetAspects(componentIdsToResolve, opts?.throwOnError);
     // Run the on load slot
     await this.runOnAspectsResolveFunctions(components);
 
@@ -753,7 +752,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   /**
    * same as `this.importAndGetMany()` with a specific error handling of ComponentNotFound
    */
-  private async importAndGetAspects(componentIds: ComponentID[]): Promise<Component[]> {
+  private async importAndGetAspects(componentIds: ComponentID[], throwOnError = true): Promise<Component[]> {
     try {
       // We don't want to load the seeders as aspects as it will cause an infinite loop
       // once you try to load the seeder it will try to load the workspace component
@@ -761,7 +760,12 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       const loadOpts: ComponentLoadOptions = {
         idsToNotLoadAsAspects: componentIds.map((id) => id.toString()),
       };
-      return await this.workspace.importAndGetMany(componentIds, 'to load aspects from the workspace', loadOpts);
+      return await this.workspace.importAndGetMany(
+        componentIds,
+        'to load aspects from the workspace',
+        loadOpts,
+        throwOnError
+      );
     } catch (err: any) {
       this.throwWsJsoncAspectNotFoundError(err);
 
