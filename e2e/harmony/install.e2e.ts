@@ -206,7 +206,7 @@ describe('install new dependencies', function () {
         '~1.0.0'
       );
     });
-    it('should add new dependency with ^ prefix if the dependency was installed by specifying the exact version', () => {
+    it('should add new dependency with exact version if the dependency was installed by specifying the exact version', () => {
       expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal(
         '3.0.0'
       );
@@ -246,7 +246,7 @@ describe('install new dependencies', function () {
         '~1.0.0'
       );
     });
-    it('should add new dependency with ^ prefix if the dependency was installed by specifying the exact version', () => {
+    it('should add new dependency with exact version if the dependency was installed by specifying the exact version', () => {
       expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal(
         '1.0.0'
       );
