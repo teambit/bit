@@ -431,6 +431,7 @@ export class WorkspaceComponentLoader {
     loadOpts: GetAndLoadSlotOpts,
     throwOnFailure = true
   ) {
+    throwOnFailure = false;
     const invalidComponents: InvalidComponent[] = [];
     const errors: { id: ComponentID; err: Error }[] = [];
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
