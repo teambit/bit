@@ -157,7 +157,6 @@ export class Workspace implements ComponentFactory {
    * This is important to know to ignore missing modules across different places
    */
   inInstallContext = false;
-  private _cachedListIds?: ComponentIdList;
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
   private componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized;
@@ -397,13 +396,7 @@ export class Workspace implements ComponentFactory {
    * get ids of all workspace components.
    */
   listIds(): ComponentIdList {
-    if (this._cachedListIds && this.bitMap.hasChanged()) {
-      delete this._cachedListIds;
-    }
-    if (!this._cachedListIds) {
-      this._cachedListIds = this.consumer.bitmapIdsFromCurrentLane;
-    }
-    return this._cachedListIds;
+    return this.consumer.bitmapIdsFromCurrentLane;
   }
 
   listIdsIncludeRemoved(): ComponentIdList {
@@ -737,7 +730,6 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.aspectLoader.resetFailedLoadAspects();
     if (!options.skipClearFailedToLoadEnvs) this.envs.resetFailedToLoadEnvs();
     this.logger.debug('clearing the workspace and scope caches');
-    delete this._cachedListIds;
     this.componentLoader.clearCache();
     this.componentStatusLoader.clearCache();
     await this.scope.clearCache();
