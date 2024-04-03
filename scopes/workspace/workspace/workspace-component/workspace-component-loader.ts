@@ -138,6 +138,10 @@ export class WorkspaceComponentLoader {
       throwOnFailure
     );
 
+    invalidComponents.forEach(({ err }) => {
+      if (throwOnFailure) throw err;
+    });
+
     const components = [...loadedComponents, ...loadOrCached.fromCache];
 
     // this.logger.clearStatusLine();
