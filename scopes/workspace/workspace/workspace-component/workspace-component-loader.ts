@@ -134,9 +134,12 @@ export class WorkspaceComponentLoader {
 
     const { components: loadedComponents, invalidComponents } = await this.getAndLoadSlotOrdered(
       loadOrCached.idsToLoad || [],
-      loadOptsWithDefaults,
-      throwOnFailure
+      loadOptsWithDefaults
     );
+
+    invalidComponents.forEach(({ err }) => {
+      if (throwOnFailure) throw err;
+    });
 
     const components = [...loadedComponents, ...loadOrCached.fromCache];
 
@@ -147,11 +150,7 @@ export class WorkspaceComponentLoader {
     return { components, invalidComponents };
   }
 
-  private async getAndLoadSlotOrdered(
-    ids: ComponentID[],
-    loadOpts: ComponentLoadOptions,
-    throwOnFailure = true
-  ): Promise<GetManyRes> {
+  private async getAndLoadSlotOrdered(ids: ComponentID[], loadOpts: ComponentLoadOptions): Promise<GetManyRes> {
     if (!ids?.length) return { components: [], invalidComponents: [] };
 
     const workspaceScopeIdsMap: WorkspaceScopeIdsMap = await this.groupAndUpdateIds(ids);
@@ -165,12 +164,7 @@ export class WorkspaceComponentLoader {
       await mapSeries(groupsToHandle, async (group) => {
         const { scopeIds, workspaceIds, aspects, core, seeders } = group;
         if (!workspaceIds.length && !scopeIds.length) return undefined;
-        const res = await this.getAndLoadSlot(
-          workspaceIds,
-          scopeIds,
-          { ...loadOpts, core, seeders, aspects },
-          throwOnFailure
-        );
+        const res = await this.getAndLoadSlot(workspaceIds, scopeIds, { ...loadOpts, core, seeders, aspects });
         // We don't want to return components that were not asked originally (we do want to load them)
         if (!group.seeders) return undefined;
         return res;
@@ -270,14 +264,12 @@ export class WorkspaceComponentLoader {
   private async getAndLoadSlot(
     workspaceIds: ComponentID[],
     scopeIds: ComponentID[],
-    loadOpts: GetAndLoadSlotOpts,
-    throwOnFailure = true
+    loadOpts: GetAndLoadSlotOpts
   ): Promise<GetManyRes> {
     const { workspaceComponents, scopeComponents, invalidComponents } = await this.getComponentsWithoutLoadExtensions(
       workspaceIds,
       scopeIds,
-      loadOpts,
-      throwOnFailure
+      loadOpts
     );
 
     const components = workspaceComponents.concat(scopeComponents);
@@ -428,8 +420,7 @@ export class WorkspaceComponentLoader {
   private async getComponentsWithoutLoadExtensions(
     workspaceIds: ComponentID[],
     scopeIds: ComponentID[],
-    loadOpts: GetAndLoadSlotOpts,
-    throwOnFailure = true
+    loadOpts: GetAndLoadSlotOpts
   ) {
     const invalidComponents: InvalidComponent[] = [];
     const errors: { id: ComponentID; err: Error }[] = [];
@@ -462,8 +453,8 @@ export class WorkspaceComponentLoader {
     legacyInvalidComponents.forEach((invalidComponent) => {
       const entry = { id: idsIndex[invalidComponent.id.toString()], err: invalidComponent.error };
       if (ConsumerComponent.isComponentInvalidByErrorType(invalidComponent.error)) {
-        if (throwOnFailure) throw invalidComponent.error;
         invalidComponents.push(entry);
+        return;
       }
       if (
         this.isComponentNotExistsError(invalidComponent.error) ||
@@ -475,7 +466,7 @@ export class WorkspaceComponentLoader {
 
     const getWithCatch = (id, legacyComponent) => {
       return this.get(id, legacyComponent, undefined, undefined, loadOptsWithDefaults).catch((err) => {
-        if (ConsumerComponent.isComponentInvalidByErrorType(err) && !throwOnFailure) {
+        if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
           invalidComponents.push({
             id,
             err,
