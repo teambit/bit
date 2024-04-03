@@ -109,6 +109,7 @@ export class PnpmPackageManager implements PackageManager {
           ? ['*']
           : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
         hoistWorkspacePackages: installOptions.hoistWorkspacePackages,
+        hoistInjectedDependencies: installOptions.hoistInjectedDependencies,
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
         preferOffline: installOptions.preferOffline,
         rootComponents: installOptions.rootComponents,

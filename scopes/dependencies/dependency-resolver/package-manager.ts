@@ -111,6 +111,12 @@ export type PackageManagerInstallOptions = {
   hoistPatterns?: string[];
 
   /**
+   * When true, dependencies from the workspace are hoisted to node_modules/.pnpm/node_modules
+   * even if they are found in the root node_modules
+   */
+  hoistInjectedDependencies?: boolean;
+
+  /**
    * Tells pnpm to automatically install peer dependencies. It is true by default.
    */
   autoInstallPeers?: boolean;
