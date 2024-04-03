@@ -35,7 +35,8 @@ export function generateLink(
   prefix: string,
   componentMap: ComponentMap<string[]>,
   mainModulesMap?: MainModulesMap,
-  isSplitComponentBundle = false
+  isSplitComponentBundle = false,
+  tempPackageDir?: string
 ): string {
   const componentLinks: ComponentLink[] = componentMap.toArray().map(([component, modulePath], compIdx) => ({
     componentIdentifier: component.id.fullName,
@@ -54,7 +55,7 @@ export function generateLink(
   const contents = `
 import { linkModules } from '${previewDistDir}/preview.preview.runtime.js';
 
-${getModuleImports(moduleLinks)}
+${getModuleImports(moduleLinks, tempPackageDir)}
 
 ${getComponentImports(componentLinks)}
 
@@ -92,10 +93,10 @@ function getEnvVarName(envId: string) {
   return varName;
 }
 
-function getModuleImports(moduleLinks: ModuleLink[] = []): string {
+function getModuleImports(moduleLinks: ModuleLink[] = [], tempPackageDir?: string): string {
   const hash = objectHash(moduleLinks);
   const tempFileName = `preview-modules-${hash}.mjs`;
-  const tempFilePath = join(previewDistDir, tempFileName);
+  const tempFilePath = join(tempPackageDir || previewDistDir, tempFileName);
   const tempFileContents = moduleLinks
     .map((module) => `export * as ${module.varName} from "${module.resolveFrom}";`)
     .join('\n');
