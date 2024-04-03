@@ -278,8 +278,9 @@ export class DependencyResolverMain {
     overridePrefix?: string;
     wantedRange?: string;
   }): string {
-    // A prerelease version is always added as an exact version
-    if (semver.parse(version)?.prerelease.length) {
+    // A prerelease version is always added as an exact version.
+    // A package installed by its exact version is also added as an exact version.
+    if (semver.parse(version)?.prerelease.length || wantedRange === version) {
       return version;
     }
     if (wantedRange && ['~', '^'].includes(wantedRange[0])) {
