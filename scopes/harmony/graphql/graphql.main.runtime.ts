@@ -1,13 +1,15 @@
 import { mergeSchemas } from '@graphql-tools/schema';
-import { SubscriptionServer } from 'subscriptions-transport-ws';
+import { WebSocketServer } from 'ws';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { useServer } from 'graphql-ws/lib/use/ws';
 import { Module, createModule, createApplication, Application } from 'graphql-modules';
 import { MainRuntime } from '@teambit/cli';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import express, { Express } from 'express';
-import { createHandler as createGraphqlHandler } from 'graphql-http/lib/use/express';
 import { Port } from '@teambit/toolbox.network.get-port';
-import { execute, subscribe, GraphQLError } from 'graphql';
 import { PubSubEngine, PubSub } from 'graphql-subscriptions';
 import { createServer, Server } from 'http';
 import httpProxy from 'http-proxy';
@@ -104,17 +106,111 @@ export class GraphqlMain {
       });
   }
 
+  // async createServer(options: GraphQLServerOptions) {
+  //   const { graphiql = true, disableIntrospection } = options;
+  //   const localSchema = this.createRootModule(options.schemaSlot);
+  //   const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
+  //   const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
+  //   const schema = mergeSchemas({
+  //     schemas,
+  //   });
+
+  //   // TODO: @guy please consider to refactor to express extension.
+  //   const app = options.app || express();
+  //   if (!this.config.disableCors) {
+  //     app.use(
+  //       // @ts-ignore todo: it's not clear what's the issue.
+  //       cors({
+  //         origin(origin, callback) {
+  //           callback(null, true);
+  //         },
+  //         credentials: true,
+  //       })
+  //     );
+  //   }
+
+  //   app.use(
+  //     '/graphql',
+  //     createGraphqlHandler({
+  //       schema,
+  //       validationRules: disableIntrospection
+  //         ? [
+  //             function NoIntrospection(context) {
+  //               return {
+  //                 Field(node) {
+  //                   if (node.name.value === '__schema' || node.name.value === '__type') {
+  //                     context.reportError(
+  //                       new GraphQLError(
+  //                         'GraphQL introspection is not allowed, but the query contained __schema or __type',
+  //                         [node]
+  //                       )
+  //                     );
+  //                   }
+  //                 },
+  //               };
+  //             },
+  //           ]
+  //         : undefined,
+  //       formatError: (err) => {
+  //         this.logger.error('graphql error ', err);
+  //         return Object.assign(err, {
+  //           // @ts-ignore
+  //           ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
+  //           // @ts-ignore
+  //           HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code,
+  //         });
+  //       },
+  //     })
+  //   );
+
+  //   // todo - add graphiql middleware for playground
+
+  //   // app.use(
+  //   //   '/graphql',
+  //   //   // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  //   //   graphqlHTTP((request, res, params) => ({
+  //   //     customFormatErrorFn: (err) => {
+  //   //       this.logger.error('graphql got an error during running the following query:', params);
+  //   //       this.logger.error('graphql error ', err);
+  //   //       return Object.assign(err, {
+  //   //         // @ts-ignore
+  //   //         ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
+  //   //         // @ts-ignore
+  //   //         HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code, s
+  //   //       });
+  //   //     },
+  //   //     schema,
+  //   //     rootValue: request,
+  //   //     graphiql,
+  //   //     validationRules: disableIntrospection ? [NoIntrospection] : undefined,
+  //   //   }))
+
+  //   const server = createServer(app);
+  //   const subscriptionsPort = options.subscriptionsPortRange || this.config.subscriptionsPortRange;
+  //   const subscriptionServerPort = await this.getPort(subscriptionsPort);
+  //   const { port } = await this.createSubscription(options, subscriptionServerPort);
+  //   this.proxySubscription(server, port);
+
+  //   return server;
+  // }
+
   async createServer(options: GraphQLServerOptions) {
-    const { graphiql = true, disableIntrospection } = options;
+    const app = options.app || express();
+    const httpServer = createServer(app);
+
     const localSchema = this.createRootModule(options.schemaSlot);
     const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
     const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
-    const schema = mergeSchemas({
+    const mergedSchema = mergeSchemas({
       schemas,
     });
+    const apolloServer = new ApolloServer({
+      schema: mergedSchema,
+      plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    });
 
-    // TODO: @guy please consider to refactor to express extension.
-    const app = options.app || express();
+    await apolloServer.start();
+
     if (!this.config.disableCors) {
       app.use(
         // @ts-ignore todo: it's not clear what's the issue.
@@ -127,70 +223,40 @@ export class GraphqlMain {
       );
     }
 
-    app.use(
-      '/graphql',
-      createGraphqlHandler({
+    app.use('/graphql', expressMiddleware(apolloServer, {}));
+
+    await this.createSubscription(mergedSchema, httpServer);
+
+    return httpServer;
+  }
+
+  async createSubscription(schema, httpServer) {
+    const websocketServer = new WebSocketServer({
+      noServer: true, // Use the HTTP server for handling WebSocket connections
+      path: this.config.subscriptionsPath,
+    });
+
+    httpServer.on('upgrade', (request, socket, head) => {
+      // Only handle upgrades for the specific path, otherwise ignore
+      if (request.url.startsWith(this.config.subscriptionsPath)) {
+        websocketServer.handleUpgrade(request, socket, head, (websocket) => {
+          websocketServer.emit('connection', websocket, request);
+        });
+      }
+    });
+
+    useServer(
+      {
         schema,
-        validationRules: disableIntrospection
-          ? [
-              function NoIntrospection(context) {
-                return {
-                  Field(node) {
-                    if (node.name.value === '__schema' || node.name.value === '__type') {
-                      context.reportError(
-                        new GraphQLError(
-                          'GraphQL introspection is not allowed, but the query contained __schema or __type',
-                          [node]
-                        )
-                      );
-                    }
-                  },
-                };
-              },
-            ]
-          : undefined,
-        formatError: (err) => {
-          this.logger.error('graphql error ', err);
-          return Object.assign(err, {
-            // @ts-ignore
-            ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
-            // @ts-ignore
-            HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code,
-            s,
-          });
+        onConnect: (ctx) => {
+          console.log('Connected!', ctx);
         },
-      })
+        onDisconnect(ctx, code, reason) {
+          console.log('Disconnected!', code, reason);
+        },
+      },
+      websocketServer
     );
-
-    // todo - add graphiql middleware for playground
-
-    // app.use(
-    //   '/graphql',
-    //   // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    //   graphqlHTTP((request, res, params) => ({
-    //     customFormatErrorFn: (err) => {
-    //       this.logger.error('graphql got an error during running the following query:', params);
-    //       this.logger.error('graphql error ', err);
-    //       return Object.assign(err, {
-    //         // @ts-ignore
-    //         ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
-    //         // @ts-ignore
-    //         HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code, s
-    //       });
-    //     },
-    //     schema,
-    //     rootValue: request,
-    //     graphiql,
-    //     validationRules: disableIntrospection ? [NoIntrospection] : undefined,
-    //   }))
-
-    const server = createServer(app);
-    const subscriptionsPort = options.subscriptionsPortRange || this.config.subscriptionsPortRange;
-    const subscriptionServerPort = await this.getPort(subscriptionsPort);
-    const { port } = await this.createSubscription(options, subscriptionServerPort);
-    this.proxySubscription(server, port);
-
-    return server;
   }
 
   /**
@@ -242,48 +308,58 @@ export class GraphqlMain {
 
   /** create Subscription server with different port */
 
-  private async createSubscription(options: GraphQLServerOptions, port: number) {
-    // Create WebSocket listener server
-    const websocketServer = createServer((request, response) => {
-      response.writeHead(404);
-      response.end();
-    });
+  // private async createSubscription(options: GraphQLServerOptions, port: number) {
+  //   // Create WebSocket listener server
+  //   const websocketServer = createServer((request, response) => {
+  //     response.writeHead(404);
+  //     response.end();
+  //   });
 
-    // Bind it to port and start listening
-    websocketServer.listen(port, () =>
-      this.logger.debug(`Websocket Server is now running on http://localhost:${port}`)
-    );
+  //   // Bind it to port and start listening
+  //   websocketServer.listen(port, () =>
+  //     this.logger.debug(`Websocket Server is now running on http://localhost:${port}`)
+  //   );
 
-    const localSchema = this.createRootModule(options.schemaSlot);
-    const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
-    const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
-    const schema = mergeSchemas({
-      schemas,
-    });
+  //   const localSchema = this.createRootModule(options.schemaSlot);
+  //   const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
+  //   const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
+  //   const schema = mergeSchemas({
+  //     schemas,
+  //   });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const subServer = SubscriptionServer.create(
-      {
-        execute,
-        subscribe,
-        schema,
-        onConnect: options.onWsConnect,
-      },
-      {
-        server: websocketServer,
-        path: this.config.subscriptionsPath,
-      }
-    );
-    return { subServer, port };
-  }
+  //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //   const subServer = SubscriptionServer.create(
+  //     {
+  //       execute,
+  //       subscribe,
+  //       schema,
+  //       onConnect: options.onWsConnect,
+  //     },
+  //     {
+  //       server: websocketServer,
+  //       path: this.config.subscriptionsPath,
+  //     }
+  //   );
+  //   return { subServer, port };
+  // }
   /** proxy ws Subscription server to avoid conflict with different websocket connections */
 
   private proxySubscription(server: Server, port: number) {
-    const proxServer = httpProxy.createProxyServer();
-    const subscriptionsPath = this.config.subscriptionsPath;
-    server.on('upgrade', function (req, socket, head) {
-      if (req.url === subscriptionsPath) {
-        proxServer.ws(req, socket, head, { target: { host: 'localhost', port } });
+    // const proxServer = httpProxy.createProxyServer();
+    // const subscriptionsPath = this.config.subscriptionsPath;
+    // server.on('upgrade', function (req, socket, head) {
+    //   if (req.url === subscriptionsPath) {
+    //     proxServer.ws(req, socket, head, { target: { host: 'localhost', port } });
+    //   }
+    // });
+    const proxy = httpProxy.createProxyServer({ ws: true, changeOrigin: true });
+
+    server.on('upgrade', (req, socket, head) => {
+      // Check if the upgrade request is for the GraphQL subscriptions endpoint
+      if (req.url?.startsWith(this.config.subscriptionsPath)) {
+        proxy.ws(req, socket, head, {
+          target: `ws://localhost:${port}${this.config.subscriptionsPath}`,
+        });
       }
     });
   }
