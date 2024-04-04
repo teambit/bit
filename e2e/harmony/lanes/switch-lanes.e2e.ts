@@ -23,7 +23,7 @@ describe('bit lane command', function () {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
+        helper.fixtures.addComponentBarFoo();
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
         helper.command.createLane();
@@ -276,7 +276,7 @@ describe('bit lane command', function () {
         helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
+        helper.fixtures.addComponentBarFoo();
         npmCiRegistry = new NpmCiRegistry(helper);
         npmCiRegistry.configureCiInPackageJsonHarmony();
         await npmCiRegistry.init();

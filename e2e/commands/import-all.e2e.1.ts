@@ -15,7 +15,7 @@ describe('bit import command with no ids', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
       const bitMap = helper.bitMap.read();
@@ -32,7 +32,7 @@ describe('bit import command with no ids', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
       const bitMap = helper.bitMap.read();
@@ -97,7 +97,7 @@ describe('bit import command with no ids', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       const bitMap = helper.bitMap.read();
       helper.scopeHelper.reInitLocalScope();
