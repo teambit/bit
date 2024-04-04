@@ -123,7 +123,7 @@ describe('bit dependencies command', function () {
         npmCiRegistry.configureCiInPackageJsonHarmony();
         helper.fixtures.populateComponents(1, false);
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
+        helper.fixtures.addComponentBarFoo();
         helper.command.compile();
         helper.command.install();
         helper.command.tagAllComponents();
