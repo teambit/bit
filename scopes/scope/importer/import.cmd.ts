@@ -299,7 +299,9 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
     if (importDetails.latestVersion) {
       return `${importDetails.versions.length} new version(s) available, latest ${importDetails.latestVersion}`;
     }
-    return `new versions: ${importDetails.versions.join(', ')}`;
+    return importDetails.versions.length > 5
+      ? `${importDetails.versions.length} new versions`
+      : `new versions: ${importDetails.versions.join(', ')}`;
   };
   const versions = getVersionsOutput();
   const usedVersion = status === 'added' ? `, currently used version ${bitId.version}` : '';

@@ -92,8 +92,8 @@ describe('cyclic dependencies', function () {
       // isString => isType
       helper.fixtures.createComponentIsType();
       helper.fixtures.createComponentIsString();
-      helper.fixtures.addComponentUtilsIsTypeAsDir();
-      helper.fixtures.addComponentUtilsIsStringAsDir();
+      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.addComponentUtilsIsString();
       helper.command.linkAndRewire();
       helper.command.tagAllWithoutBuild();
 
@@ -412,7 +412,7 @@ describe('cyclic dependencies', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       // after export, the author now has a link from node_modules.

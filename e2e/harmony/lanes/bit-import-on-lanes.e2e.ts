@@ -17,7 +17,7 @@ describe('bit lane command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.export();
       helper.scopeHelper.reInitLocalScope();
