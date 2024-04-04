@@ -7,7 +7,6 @@ import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '../../
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
 import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, retrieveIgnoreList } from '../../utils';
-import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '../../utils/path';
 import { removeInternalConfigFields } from '../config/extension-data';
 import Consumer from '../consumer';
@@ -281,18 +280,9 @@ export default class ComponentMap {
    * if the component dir has changed since the last tracking, re-scan the component-dir to get the
    * updated list of the files
    */
-  async trackDirectoryChangesHarmony(consumer: Consumer, id: ComponentID): Promise<void> {
+  async trackDirectoryChangesHarmony(consumer: Consumer): Promise<void> {
     const trackDir = this.rootDir;
     if (!trackDir) {
-      return;
-    }
-    const trackDirAbsolute = path.join(consumer.getPath(), trackDir);
-    const lastTrack = await consumer.componentFsCache.getLastTrackTimestamp(id.toString());
-    const wasModifiedAfterLastTrack = async () => {
-      const lastModified = await getLastModifiedDirTimestampMs(trackDirAbsolute);
-      return lastModified > lastTrack;
-    };
-    if (!(await wasModifiedAfterLastTrack())) {
       return;
     }
     const gitIgnore = getGitIgnoreHarmony(consumer.getPath());

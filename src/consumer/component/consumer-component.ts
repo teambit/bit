@@ -603,7 +603,7 @@ async function getLoadedFiles(
     logger.error(`rethrowing an error of ${componentMap.noFilesError.message}`);
     throw componentMap.noFilesError;
   }
-  await componentMap.trackDirectoryChangesHarmony(consumer, id);
+  await componentMap.trackDirectoryChangesHarmony(consumer);
   const sourceFiles = componentMap.files.map((file) => {
     const filePath = path.join(bitDir, file.relativePath);
     const sourceFile = SourceFile.load(filePath, bitDir, consumer.getPath(), {
