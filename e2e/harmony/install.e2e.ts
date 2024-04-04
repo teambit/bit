@@ -294,7 +294,7 @@ describe('install with --lockfile-only', function () {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
-    helper.command.install('is-positive@1.0.0 --lockfile-only');
+    helper.command.install('is-positive@^1.0.0 --lockfile-only');
     workspaceJsonc = helper.workspaceJsonc.read();
   });
   after(() => {
