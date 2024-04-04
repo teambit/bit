@@ -20,7 +20,7 @@ chai.use(require('chai-fs'));
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponentsTS();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
     });
     describe('run bit watch', () => {

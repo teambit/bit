@@ -18,7 +18,7 @@ describe('extensions config diff', function () {
     helper.workspaceJsonc.disablePreview();
     helper.fixtures.populateExtensions(4);
     helper.fixtures.createComponentBarFoo();
-    helper.fixtures.addComponentBarFooAsDir();
+    helper.fixtures.addComponentBarFoo();
     helper.extensions.addExtensionToVariant('bar', 'my-scope/ext1', { key: 'val-variant' });
     helper.extensions.addExtensionToVariant('bar', 'my-scope/ext2', { key: 'val-variant' });
     helper.extensions.addExtensionToVariant('bar', 'my-scope/ext3', { key: 'val-variant' });

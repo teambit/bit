@@ -31,7 +31,7 @@ describe('dependency-resolver extension', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
+        helper.fixtures.addComponentBarFoo();
         helper.fixtures.createComponentUtilsIsType();
         helper.fs.outputFile(path.join('utils', 'is-type.js'), fixtures.isType);
         helper.command.addComponent('utils', { i: 'utils/is-type' });
@@ -71,7 +71,7 @@ describe('dependency-resolver extension', function () {
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.fixtures.createComponentBarFoo();
-          helper.fixtures.addComponentBarFooAsDir();
+          helper.fixtures.addComponentBarFoo();
           // TODO: use custom env with versions provided from outside in the config by the user
           helper.extensions.addExtensionToVariant('bar', 'teambit.react/react', {});
           barFooOutput = helper.command.showComponentParsed('bar/foo');
@@ -86,7 +86,7 @@ describe('dependency-resolver extension', function () {
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.fixtures.createComponentBarFoo('import "lodash.zip"');
-          helper.fixtures.addComponentBarFooAsDir();
+          helper.fixtures.addComponentBarFoo();
           helper.fixtures.createComponentUtilsIsType();
           helper.fs.outputFile('utils/is-type.js', fixtures.isType);
           helper.command.addComponent('utils', { i: 'utils/is-type' });
@@ -119,7 +119,7 @@ describe('dependency-resolver extension', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
+        helper.fixtures.addComponentBarFoo();
         helper.fixtures.createComponentUtilsIsType();
         helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
         helper.command.addComponent('utils', { i: 'utils/is-type' });
