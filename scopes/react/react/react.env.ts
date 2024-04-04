@@ -471,9 +471,6 @@ export class ReactEnv
   }
 
   getNpmIgnore() {
-    // ignores only .ts files in the root directory, so d.ts files inside dists are unaffected.
-    // without this change, the package has "index.ts" file in the root, causing typescript to parse it instead of the
-    // d.ts files. (changing the "types" prop in the package.json file doesn't help).
     return [`${CAPSULE_ARTIFACTS_DIR}/`];
   }
 
