@@ -592,7 +592,7 @@ describe('merge config scenarios', function () {
           it('should show the versions as conflicted in workspace.jsonc file', () => {
             const wsJsonc = helper.workspaceJsonc.readRaw();
             expect(wsJsonc).to.have.string(`<<<<<<< ours
-        "${barPkgName}": "^0.0.3"
+        "${barPkgName}": "0.0.3"
 =======
         "${barPkgName}": "0.0.2"
 >>>>>>> theirs`);
