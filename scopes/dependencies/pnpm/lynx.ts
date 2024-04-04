@@ -247,6 +247,12 @@ export async function install(
     packageImportMethod: options?.packageImportMethod,
     pnpmHomeDir: options?.pnpmHomeDir,
   });
+  const hoistPattern = options.hoistPattern ?? ['*'];
+  if (hoistPattern.length > 0 && externalDependencies.size > 0 && !options.hoistInjectedDependencies) {
+    for (const pkgName of externalDependencies) {
+      hoistPattern.push(`!${pkgName}`);
+    }
+  }
   const opts: InstallOptions = {
     allProjects,
     autoInstallPeers: options.autoInstallPeers,
@@ -281,12 +287,7 @@ export async function install(
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     depth: options.updateAll ? Infinity : 0,
     disableRelinkLocalDirDeps: true,
-    hoistPattern: [
-      ...(options.hoistPattern ?? []),
-      ...(externalDependencies && !options.hoistInjectedDependencies
-        ? Array.from(externalDependencies).map((pkgName) => `!${pkgName}`)
-        : []),
-    ],
+    hoistPattern,
   };
 
   let dependenciesChanged = false;
