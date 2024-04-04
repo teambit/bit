@@ -81,6 +81,7 @@ class BitLogger implements IBitLogger {
    * it's written only if the consumer is loaded. otherwise, the commandHistory.fileBasePath is undefined
    */
   commandHistoryBasePath: string | undefined;
+  shouldConsoleProfiler = false;
   constructor(logger: PinoLogger) {
     this.logger = logger;
     this.profiler = new Profiler();
@@ -169,7 +170,7 @@ class BitLogger implements IBitLogger {
     const msg = this.profiler.profile(id);
     if (!msg) return;
     const fullMsg = `${id}: ${msg}`;
-    console ? this.console(fullMsg) : this.info(fullMsg);
+    console || this.shouldConsoleProfiler ? this.console(fullMsg) : this.info(fullMsg);
   }
 
   registerOnBeforeExitFn(fn: Function) {
@@ -304,7 +305,7 @@ function determineWritingLogToScreen() {
   // or it can have a level: `--log=error` or `--log error`: both syntaxes are supported
   if (process.argv.includes('--log')) {
     const level = process.argv.find((arg) => LEVELS.includes(arg)) as Level | undefined;
-    logger.switchToConsoleLogger(level || 'info');
+    logger.switchToConsoleLogger(level as Level);
     return;
   }
   LEVELS.forEach((level) => {
@@ -312,6 +313,9 @@ function determineWritingLogToScreen() {
       logger.switchToConsoleLogger(level as Level);
     }
   });
+  if (process.argv.includes(`--log=profile`)) {
+    logger.shouldConsoleProfiler = true;
+  }
 }
 
 determineWritingLogToScreen();
@@ -335,6 +339,9 @@ function isLevel(maybeLevel: Level | string): maybeLevel is Level {
 export function writeLogToScreen(levelOrPrefix = '') {
   if (isLevel(levelOrPrefix)) {
     logger.switchToConsoleLogger(levelOrPrefix);
+  }
+  if (levelOrPrefix === 'profile') {
+    logger.shouldConsoleProfiler = true;
   }
   // @todo: implement
   // const prefixes = levelOrPrefix.split(',');
