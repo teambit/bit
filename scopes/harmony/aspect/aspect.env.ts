@@ -1,5 +1,5 @@
 import { Compiler } from '@teambit/compiler';
-import type { DependenciesEnv, PackageEnv, GetNpmIgnoreContext, PreviewEnv } from '@teambit/envs';
+import type { DependenciesEnv, PackageEnv, PreviewEnv } from '@teambit/envs';
 import { merge } from 'lodash';
 import { PackageJsonProps } from '@teambit/pkg';
 import { TsConfigSourceFile } from 'typescript';
@@ -10,7 +10,6 @@ import { Bundler, BundlerContext } from '@teambit/bundler';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { Tester } from '@teambit/tester';
 import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
-import { BUNDLE_UI_DIR } from '@teambit/ui';
 import { ConfigWriterEntry } from '@teambit/workspace-config-files';
 import { PrettierConfigWriter } from '@teambit/defender.prettier-formatter';
 import { TypescriptConfigWriter } from '@teambit/typescript.typescript-compiler';
