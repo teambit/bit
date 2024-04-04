@@ -201,7 +201,7 @@ describe('bit lane command', function () {
       helper.command.export();
       helper.command.createLane('lane-b');
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       beforeRemoveScope = helper.scopeHelper.cloneLocalScope();
@@ -273,7 +273,7 @@ describe('bit lane command', function () {
       helper.command.export();
       helper.command.createLane('lane-b');
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       beforeRemoveScope = helper.scopeHelper.cloneLocalScope();
@@ -376,7 +376,7 @@ describe('bit lane command', function () {
       laneBws = helper.scopeHelper.cloneLocalScope();
       helper.command.switchLocalLane('lane-a', '-x');
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.softRemoveOnLane('bar/foo');

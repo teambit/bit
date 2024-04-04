@@ -151,7 +151,7 @@ describe('merge lanes', function () {
         helper.workspaceJsonc.setupDefault();
         helper.command.createLane('dev');
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
+        helper.fixtures.addComponentBarFoo();
         helper.command.snapAllComponentsWithoutBuild();
       });
       it('should not merge the two lanes on the remote, instead, it should throw', () => {
@@ -833,7 +833,7 @@ describe('merge lanes', function () {
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.command.createLane('lane-b');
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 

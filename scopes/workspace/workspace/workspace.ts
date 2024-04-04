@@ -46,7 +46,11 @@ import {
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact, uniqBy } from 'lodash';
-import { MergeConfigFilename, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy/dist/constants';
+import {
+  MergeConfigFilename,
+  CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS,
+  CFG_USER_TOKEN_KEY,
+} from '@teambit/legacy/dist/constants';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { WatchOptions } from '@teambit/watcher';
@@ -60,6 +64,7 @@ import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { isHash } from '@teambit/component-version';
 import { GlobalConfigMain } from '@teambit/global-config';
+import { getAuthHeader } from '@teambit/legacy/dist/scope/network/http/http';
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,
@@ -1684,7 +1689,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     }
 
     const url = `https://node-registry.bit.cloud/${packageName}`;
-    const res = await fetch(url);
+    const token = await this.globalConfig.get(CFG_USER_TOKEN_KEY);
+    const headers = token ? getAuthHeader(token) : {};
+    const res = await fetch(url, { headers });
     if (!res.ok) {
       throw new BitError(`${errMsgPrefix}got ${res.statusText} from the url: ${url}`);
     }

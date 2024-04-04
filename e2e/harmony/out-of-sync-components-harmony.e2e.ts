@@ -17,7 +17,7 @@ describe('components that are not synced between the scope and the consumer', fu
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       const bitMap = helper.bitMap.read();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -50,7 +50,7 @@ describe('components that are not synced between the scope and the consumer', fu
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
       helper.fs.deletePath('.bit');
       scopeOutOfSync = helper.scopeHelper.cloneLocalScope();

@@ -23,7 +23,7 @@ describe('bit snap command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       output = helper.command.snapComponent('bar/foo');
     });
     it('should snap successfully', () => {
@@ -111,7 +111,7 @@ describe('bit snap command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapComponent('bar/foo', undefined, '--unmodified');
       const compAfterSnap1 = helper.command.catComponent('bar/foo');
       firstSnap = compAfterSnap1.head;
@@ -138,7 +138,7 @@ describe('bit snap command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapComponent('bar/foo');
       firstSnap = helper.command.getHead('bar/foo');
       helper.command.export();
@@ -538,7 +538,7 @@ describe('bit snap command', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
+        helper.fixtures.addComponentBarFoo();
         helper.command.snapAllComponents();
         firstSnap = helper.command.getHead('bar/foo');
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);

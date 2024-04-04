@@ -498,7 +498,7 @@ describe('merge config scenarios', function () {
         pkgHelper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
         pkgHelper.scopeHelper.setNewLocalAndRemoteScopes();
         pkgHelper.fixtures.createComponentBarFoo();
-        pkgHelper.fixtures.addComponentBarFooAsDir();
+        pkgHelper.fixtures.addComponentBarFoo();
         npmCiRegistry = new NpmCiRegistry(pkgHelper);
         npmCiRegistry.configureCiInPackageJsonHarmony();
         await npmCiRegistry.init();
