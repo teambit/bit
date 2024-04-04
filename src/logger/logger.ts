@@ -305,7 +305,7 @@ function determineWritingLogToScreen() {
   // or it can have a level: `--log=error` or `--log error`: both syntaxes are supported
   if (process.argv.includes('--log')) {
     const level = process.argv.find((arg) => LEVELS.includes(arg)) as Level | undefined;
-    logger.switchToConsoleLogger(level || 'info');
+    logger.switchToConsoleLogger(level as Level);
     return;
   }
   LEVELS.forEach((level) => {
