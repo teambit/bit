@@ -275,7 +275,7 @@ export class GraphqlMain {
     );
 
     await this.createSubscription(mergedSchema, httpServer);
-
+    this.proxySubscription(httpServer, this.config.port);
     return httpServer;
   }
 
