@@ -42,11 +42,7 @@
         "@pnpm/lockfile-file": "8.1.8",
         "@pnpm/logger": "5.0.0",
         "@pnpm/modules-yaml": "12.1.7",
-<<<<<<< HEAD
-        "@pnpm/network.ca-file": "1.0.2",
-=======
         "@pnpm/network.ca-file": "2.0.1",
->>>>>>> origin/master
         "@pnpm/package-store": "19.0.17",
         "@pnpm/parse-overrides": "4.0.3",
         "@pnpm/pick-registry-for-package": "5.0.6",
