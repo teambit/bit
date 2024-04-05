@@ -17,6 +17,7 @@ import httpProxy from 'http-proxy';
 import compact from 'lodash.compact';
 import cors from 'cors';
 import { GraphQLServer } from './graphql-server';
+import { execute, subscribe } from 'graphql';
 import { createRemoteSchemas } from './create-remote-schemas';
 import { GraphqlAspect } from './graphql.aspect';
 import { Schema } from './schema';
@@ -200,28 +201,18 @@ export class GraphqlMain {
     const { graphiql = true, disableIntrospection } = options;
     const app = options.app || express();
     const httpServer = createServer(app);
+    const subscriptionsPort = options.subscriptionsPortRange || this.config.subscriptionsPortRange;
+    const subscriptionServerPort = await this.getPort(subscriptionsPort);
 
     const localSchema = this.createRootModule(options.schemaSlot);
     // const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
     // const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
-    const schemas = [localSchema.schema].concat([]).filter((x) => x);
-    const mergedSchema = mergeSchemas({
-      schemas,
-    });
-    // const gateway = new ApolloGateway({
-    //   supergraphSdl: new IntrospectAndCompose({
-    //     /**
-    //      * include all the running services in the super-graph.
-    //      */
-    //     subgraphs: context.services.map((service) => {
-    //       return {
-    //         name: service.appName || '',
-    //         url: service.url || `http://localhost:${service.port}/graphql`,
-    //       };
-    //     }),
-    //   }),
+    // const schemas = [localSchema.schema].concat([]).filter((x) => x);
+    // const mergedSchema = mergeSchemas({
+    //   schemas,
     // });
 
+    const subscriptionServerCleanup = await this.createSubscription(localSchema.schema, httpServer, options);
     const apolloServer = new ApolloServer({
       gateway: {
         async load() {
@@ -240,6 +231,15 @@ export class GraphqlMain {
       plugins: compact([
         ApolloServerPluginDrainHttpServer({ httpServer }),
         !graphiql ? ApolloServerPluginLandingPageDisabled() : null,
+        {
+          async serverWillStart() {
+            return {
+              async drainServer() {
+                await subscriptionServerCleanup.dispose();
+              },
+            };
+          },
+        },
       ]),
       introspection: !disableIntrospection,
       formatError: (err) => {
@@ -274,14 +274,12 @@ export class GraphqlMain {
       })
     );
 
-    await this.createSubscription(mergedSchema, httpServer);
-    this.proxySubscription(httpServer, this.config.port);
     return httpServer;
   }
 
-  async createSubscription(schema, httpServer) {
+  async createSubscription(schema, httpServer, options) {
     const websocketServer = new WebSocketServer({
-      noServer: true, // Use the HTTP server for handling WebSocket connections
+      noServer: true,
       path: this.config.subscriptionsPath,
     });
 
@@ -294,14 +292,13 @@ export class GraphqlMain {
       }
     });
 
-    useServer(
+    return useServer(
       {
         schema,
-        onConnect: (ctx) => {
-          console.log('Connected!', ctx);
-        },
-        onDisconnect(ctx, code, reason) {
-          console.log('Disconnected!', code, reason);
+        execute,
+        subscribe,
+        context: (ctx) => {
+          options?.onWsConnect && options.onWsConnect(ctx.connectionParams);
         },
       },
       websocketServer
@@ -355,67 +352,20 @@ export class GraphqlMain {
     return Port.getPort(from, to);
   }
 
-  /** create Subscription server with different port */
-
-  // private async createSubscription(options: GraphQLServerOptions, port: number) {
-  //   // Create WebSocket listener server
-  //   const websocketServer = createServer((request, response) => {
-  //     response.writeHead(404);
-  //     response.end();
-  //   });
-
-  //   // Bind it to port and start listening
-  //   websocketServer.listen(port, () =>
-  //     this.logger.debug(`Websocket Server is now running on http://localhost:${port}`)
-  //   );
-
-  //   const localSchema = this.createRootModule(options.schemaSlot);
-  //   const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
-  //   const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
-  //   const schema = mergeSchemas({
-  //     schemas,
-  //   });
-
-  //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  //   const subServer = SubscriptionServer.create(
-  //     {
-  //       execute,
-  //       subscribe,
-  //       schema,
-  //       onConnect: options.onWsConnect,
-  //     },
-  //     {
-  //       server: websocketServer,
-  //       path: this.config.subscriptionsPath,
-  //     }
-  //   );
-  //   return { subServer, port };
-  // }
   /** proxy ws Subscription server to avoid conflict with different websocket connections */
 
-  private proxySubscription(server: Server, port: number) {
-    // const proxServer = httpProxy.createProxyServer();
-    // const subscriptionsPath = this.config.subscriptionsPath;
-    // server.on('upgrade', function (req, socket, head) {
-    //   if (req.url === subscriptionsPath) {
-    //     proxServer.ws(req, socket, head, { target: { host: 'localhost', port } });
-    //   }
-    // });
-    const proxy = httpProxy.createProxyServer({ ws: true, changeOrigin: true });
-
-    server.on('upgrade', (req, socket, head) => {
-      // Check if the upgrade request is for the GraphQL subscriptions endpoint
-      if (req.url?.startsWith(this.config.subscriptionsPath)) {
-        proxy.ws(req, socket, head, {
-          target: `ws://localhost:${port}${this.config.subscriptionsPath}`,
-        });
-      }
-    });
-  }
+  // private proxySubscription(server: Server, port: number) {
+  //   const proxServer = httpProxy.createProxyServer();
+  //   const subscriptionsPath = this.config.subscriptionsPath;
+  //   server.on('upgrade', function (req, socket, head) {
+  //     if (req.url === subscriptionsPath) {
+  //       proxServer.ws(req, socket, head, { target: { host: 'localhost', port } });
+  //     }
+  //   });
+  // }
 
   private createRootModule(schemaSlot?: SchemaSlot): Application {
     const modules = this.buildModules(schemaSlot);
-
     return createApplication({ modules });
   }
 
