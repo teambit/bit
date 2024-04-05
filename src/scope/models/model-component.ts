@@ -1181,15 +1181,23 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   async populateVersionHistoryIfMissingGracefully(
     repo: Repository,
     versionHistory: VersionHistory,
-    head: Ref
+    head: Ref,
+    /**
+     * during traversal, if a hash is found in the VersionHistory it probably means that it has all history until this
+     * point, so we can stop there for better performance. In some rare cases (e.g. the export was interrupted), we
+     * need the ability of full traversal to repair the VersionHistory.
+     */
+    exitWhenFind = true
   ): Promise<{ err?: Error; added?: VersionParents[] }> {
-    if (versionHistory.hasHash(head)) return {};
+    const headExists = versionHistory.hasHash(head);
+    if (exitWhenFind && headExists) return {};
     const getVersionObj = async (ref: Ref) => (await ref.load(repo)) as Version | undefined;
     const versionsToAdd: Version[] = [];
     let err: Error | undefined;
     const addParentsRecursively = async (version: Version) => {
       await pMapSeries(version.parents, async (parent) => {
-        if (versionHistory.hasHash(parent) || versionsToAdd.find((v) => v.hash().isEqual(parent))) {
+        const foundParent = versionHistory.hasHash(parent) || versionsToAdd.find((v) => v.hash().isEqual(parent));
+        if (exitWhenFind && foundParent) {
           return;
         }
         const parentVersion = await getVersionObj(parent);
@@ -1209,7 +1217,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       return { err: new HeadNotFound(this.id(), head.toString()) };
     }
     return this.populateVersionHistoryMutex.runExclusive(async () => {
-      versionsToAdd.push(headVer);
+      if (!headExists) versionsToAdd.push(headVer);
       await addParentsRecursively(headVer);
       const added = versionsToAdd.map((v) => getVersionParentsFromVersion(v));
       if (err) {

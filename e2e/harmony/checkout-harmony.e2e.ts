@@ -7,7 +7,6 @@ import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import { NewerVersionFound } from '../../src/consumer/exceptions';
 import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
 import { FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
-import { UPDATE_DEPS_ON_IMPORT } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -36,7 +35,7 @@ describe('bit checkout command', function () {
   describe('after the component was created', () => {
     before(() => {
       helper.fixtures.createComponentBarFoo(barFooV1);
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
     });
     it('before tagging it should show an error saying the component was not tagged yet', () => {
       const output = helper.general.runWithTryCatch('bit checkout 1.0.0 bar/foo');
@@ -182,7 +181,7 @@ describe('bit checkout command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
       helper.fs.outputFile('bar/foo2.js');
       helper.command.tagAllWithoutBuild();
@@ -274,7 +273,7 @@ describe('bit checkout command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo(`${barFooV1}\n`);
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.fixtures.createComponentBarFoo(`${barFooV2}\n`);
       helper.fixtures.tagComponentBarFoo();
@@ -594,7 +593,6 @@ describe('bit checkout command', function () {
 
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.command.setFeatures(UPDATE_DEPS_ON_IMPORT);
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();

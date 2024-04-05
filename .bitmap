@@ -954,13 +954,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/modules/node-modules-linker"
     },
-    "modules/prerenderer-puppeteer": {
-        "name": "modules/prerenderer-puppeteer",
-        "scope": "teambit.react",
-        "version": "0.0.16",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/modules/prerenderer-puppeteer"
-    },
     "modules/requireable-component": {
         "name": "modules/requireable-component",
         "scope": "teambit.harmony",
@@ -1422,6 +1415,13 @@
         "version": "0.0.497",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/string/get-initials"
+    },
+    "string/random": {
+        "name": "string/random",
+        "scope": "teambit.toolbox",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/string/random"
     },
     "string/strip-trailing-char": {
         "name": "string/strip-trailing-char",
@@ -1947,6 +1947,13 @@
         "version": "0.0.1065",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/variants"
+    },
+    "version-history": {
+        "name": "version-history",
+        "scope": "teambit.scope",
+        "version": "0.0.13",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/scope/version-history"
     },
     "watcher": {
         "name": "watcher",

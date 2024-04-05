@@ -13,7 +13,7 @@ import { connect } from '../scope/network';
 import { Network } from '../scope/network/network';
 import { ObjectItemsStream, ObjectList } from '../scope/objects/object-list';
 import RemovedObjects from '../scope/removed-components';
-import { cleanBang, isBitUrl } from '../utils';
+import { isBitUrl } from '../utils';
 import { InvalidRemote } from './exceptions';
 
 /**
@@ -114,7 +114,7 @@ export default class Remote {
 
   static load(name: string, host: string, thisScope?: Scope): Remote {
     const primary = isPrimary(name);
-    if (primary) name = cleanBang(name);
+    if (primary) name = name.replace('!', '');
 
     return new Remote(name, host, primary, thisScope?.name);
   }

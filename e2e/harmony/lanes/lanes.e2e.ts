@@ -133,7 +133,7 @@ describe('bit lane command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.createLane();
@@ -293,7 +293,7 @@ describe('bit lane command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.createLane();
       helper.command.snapAllComponents();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
@@ -343,7 +343,7 @@ describe('bit lane command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagWithoutBuild();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
       helper.command.tagWithoutBuild();
@@ -985,7 +985,7 @@ describe('bit lane command', function () {
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
@@ -1269,7 +1269,7 @@ describe('bit lane command', function () {
       helper.command.export();
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
@@ -1559,7 +1559,7 @@ describe('bit lane command', function () {
       helper.scopeHelper.addRemoteScope();
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.importComponent('comp1@0.0.1', '--save-in-lane'); // now the lane has it as 0.0.1
       helper.command.export();

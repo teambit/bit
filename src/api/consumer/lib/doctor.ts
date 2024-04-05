@@ -46,32 +46,26 @@ export type DoctorRunOneResult = {
 
 let runningTimeStamp;
 
-export default async function runAll({
-  filePath,
-  archiveWorkspace,
-}: {
+export type DoctorOptions = {
+  diagnosisName?: string;
   filePath?: string;
   archiveWorkspace?: boolean;
-}): Promise<DoctorRunAllResults> {
+  includeNodeModules?: boolean;
+  excludeLocalScope?: boolean;
+};
+
+export default async function runAll(options: DoctorOptions): Promise<DoctorRunAllResults> {
   registerCoreAndExtensionsDiagnoses();
   runningTimeStamp = _getTimeStamp();
   const doctorRegistrar = DoctorRegistrar.getInstance();
   const examineP = doctorRegistrar.diagnoses.map((diagnosis) => diagnosis.examine());
   const examineResults = await Promise.all(examineP);
   const envMeta = await _getEnvMeta();
-  const savedFilePath = await _saveExamineResultsToFile(examineResults, envMeta, filePath, archiveWorkspace);
+  const savedFilePath = await _saveExamineResultsToFile(examineResults, envMeta, options);
   return { examineResults, savedFilePath, metaData: envMeta };
 }
 
-export async function runOne({
-  diagnosisName,
-  filePath,
-  archiveWorkspace = false,
-}: {
-  diagnosisName: string;
-  filePath?: string;
-  archiveWorkspace?: boolean;
-}): Promise<DoctorRunOneResult> {
+export async function runOne({ diagnosisName, ...options }: DoctorOptions): Promise<DoctorRunOneResult> {
   if (!diagnosisName) {
     throw new MissingDiagnosisName();
   }
@@ -84,7 +78,7 @@ export async function runOne({
   }
   const examineResult = await diagnosis.examine();
   const envMeta = await _getEnvMeta();
-  const savedFilePath = await _saveExamineResultsToFile([examineResult], envMeta, filePath, archiveWorkspace);
+  const savedFilePath = await _saveExamineResultsToFile([examineResult], envMeta, options);
   return { examineResult, savedFilePath, metaData: envMeta };
 }
 
@@ -97,14 +91,13 @@ export async function listDiagnoses(): Promise<Diagnosis[]> {
 async function _saveExamineResultsToFile(
   examineResults: ExamineResult[],
   envMeta: DoctorMetaData,
-  filePath: string | null | undefined,
-  archiveWorkspace = false
+  options: DoctorOptions
 ): Promise<string | null | undefined> {
-  if (!filePath) {
+  if (!options.filePath) {
     return Promise.resolve(undefined);
   }
-  const finalFilePath = _calculateFinalFileName(filePath);
-  const packStream = await _generateExamineResultsTarFile(examineResults, envMeta, archiveWorkspace, finalFilePath);
+  const finalFilePath = _calculateFinalFileName(options.filePath);
+  const packStream = await _generateExamineResultsTarFile(examineResults, envMeta, finalFilePath, options);
 
   const yourTarball = fs.createWriteStream(finalFilePath);
 
@@ -149,9 +142,10 @@ function _getTimeStamp() {
 async function _generateExamineResultsTarFile(
   examineResults: ExamineResult[],
   envMeta: DoctorMetaData,
-  archiveWorkspace = false,
-  tarFilePath: string
+  tarFilePath: string,
+  options: DoctorOptions
 ): Promise<Stream.Readable> {
+  const { archiveWorkspace, includeNodeModules, excludeLocalScope } = options;
   const debugLog = await _getDebugLogAsBuffer();
   const consumerInfo = await _getConsumerInfo();
   let bitmap;
@@ -188,10 +182,16 @@ async function _generateExamineResultsTarFile(
     return packExamineResults(pack);
   }
 
+  const ignore = (fileName: string) => {
+    if (fileName === tarFilePath) return true;
+    if (!includeNodeModules && fileName.startsWith(`node_modules${path.sep}`)) return true;
+    const isLocalScope = fileName.startsWith(`.bit${path.sep}`) || fileName.startsWith(`.git${path.sep}bit${path.sep}`);
+    if (excludeLocalScope && isLocalScope) return true;
+    return false;
+  };
+
   const myPack = tarFS.pack('.', {
-    ignore: (name) => {
-      return name.startsWith(`node_modules${path.sep}`) || name === tarFilePath;
-    },
+    ignore,
     finalize: false,
     finish: packExamineResults,
   });

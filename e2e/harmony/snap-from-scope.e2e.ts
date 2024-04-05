@@ -186,7 +186,7 @@ describe('snap components from scope', function () {
       helper.command.export();
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 

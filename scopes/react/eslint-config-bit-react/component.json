@@ -44,8 +44,8 @@
           "@teambit/legacy": "-"
         },
         "peerDependencies": {
-          "eslint": "> 7.0.0",
-          "@teambit/legacy": "1.0.669"
+          "eslint": "> 8.0.0",
+          "@teambit/legacy": "1.0.680"
         }
       }
     },
