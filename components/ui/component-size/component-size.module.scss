@@ -1,0 +1,12 @@
+.componentSizeTooltip {
+  padding: 0;
+  max-width: fit-content !important;
+}
+
+.componentSizeTooltipContent {
+  font-size: var(--bit-p-xs, '14px');
+}
+
+.label {
+  padding: 4px 8px;
+}

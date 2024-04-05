@@ -15,7 +15,7 @@ export type SwitchProps = {
   ids?: ComponentID[];
   laneBitIds?: ComponentID[]; // only needed for the deprecated onLanesOnly prop. once this prop is removed, this prop can be removed as well.
   pattern?: string;
-  existingOnWorkspaceOnly: boolean;
+  existingOnWorkspaceOnly?: boolean;
   remoteLane?: Lane;
   localTrackedLane?: string;
   alias?: string;
@@ -30,7 +30,7 @@ export class LaneSwitcher {
     private logger: Logger,
     private switchProps: SwitchProps,
     private checkoutProps: CheckoutProps,
-    private Lanes: LanesMain
+    private lanes: LanesMain
   ) {
     this.consumer = this.workspace.consumer;
   }
@@ -56,7 +56,7 @@ export class LaneSwitcher {
       lane: this.laneToSwitchTo,
     };
 
-    const results = await this.Lanes.checkout.checkout(checkoutProps);
+    const results = await this.lanes.checkout.checkout(checkoutProps);
 
     await this.saveLanesData();
     await this.consumer.onDestroy('lane-switch');
@@ -99,7 +99,7 @@ export class LaneSwitcher {
     this.laneIdToSwitchTo = remoteLaneId;
     this.logger.debug(`populatePropsAccordingToRemoteLane, remoteLaneId: ${remoteLaneId.toString()}`);
     this.throwForSwitchingToCurrentLane();
-    const remoteLane = await this.Lanes.fetchLaneWithItsComponents(remoteLaneId);
+    const remoteLane = await this.lanes.fetchLaneWithItsComponents(remoteLaneId);
     this.switchProps.laneName = remoteLaneId.name;
     this.switchProps.localTrackedLane = this.consumer.scope.lanes.getAliasByLaneId(remoteLaneId) || undefined;
     this.switchProps.remoteLane = remoteLane;

@@ -16,7 +16,7 @@ import { Logger } from '@teambit/logger';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
-import { readModulesManifest } from '@pnpm/modules-yaml';
+import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
 import {
   buildDependenciesHierarchy,
   DependenciesHierarchy,
@@ -33,6 +33,7 @@ import type { RebuildFn } from './lynx';
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
+  readonly modulesManifestCache: Map<string, Modules> = new Map();
 
   private _readConfig = async (dir?: string) => {
     const { config, warnings } = await readConfig(dir);
@@ -81,6 +82,7 @@ export class PnpmPackageManager implements PackageManager {
         }
       });
     }
+    this.modulesManifestCache.delete(rootDir);
     const { dependenciesChanged, rebuild, storeDir } = await install(
       rootDir,
       manifests,
@@ -90,7 +92,7 @@ export class PnpmPackageManager implements PackageManager {
       proxyConfig,
       networkConfig,
       {
-        autoInstallPeers: installOptions.autoInstallPeers ?? true,
+        autoInstallPeers: installOptions.autoInstallPeers ?? false,
         engineStrict: installOptions.engineStrict ?? config.engineStrict,
         excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
         lockfileOnly: installOptions.lockfileOnly,
@@ -107,11 +109,11 @@ export class PnpmPackageManager implements PackageManager {
           ? ['*']
           : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
         hoistWorkspacePackages: installOptions.hoistWorkspacePackages,
+        hoistInjectedDependencies: installOptions.hoistInjectedDependencies,
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
         preferOffline: installOptions.preferOffline,
         rootComponents: installOptions.rootComponents,
         rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
-        peerDependencyRules: installOptions.peerDependencyRules,
         sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
         sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
         pnpmHomeDir: config.pnpmHomeDir,
@@ -122,6 +124,7 @@ export class PnpmPackageManager implements PackageManager {
           throttleProgress: installOptions.throttleProgress,
           hideProgressPrefix: installOptions.hideProgressPrefix,
           hideLifecycleOutput: installOptions.hideLifecycleOutput,
+          peerDependencyRules: installOptions.peerDependencyRules,
         },
       },
       this.logger
@@ -241,8 +244,15 @@ export class PnpmPackageManager implements PackageManager {
     return modulesState.injectedDeps[`node_modules/${packageName}`] ?? modulesState.injectedDeps[componentDir] ?? [];
   }
 
-  _readModulesManifest(lockfileDir: string) {
-    return readModulesManifest(join(lockfileDir, 'node_modules'));
+  async _readModulesManifest(lockfileDir: string): Promise<Modules | undefined> {
+    if (this.modulesManifestCache.has(lockfileDir)) {
+      return this.modulesManifestCache.get(lockfileDir);
+    }
+    const modulesManifest = await readModulesManifest(join(lockfileDir, 'node_modules'));
+    if (modulesManifest) {
+      this.modulesManifestCache.set(lockfileDir, modulesManifest);
+    }
+    return modulesManifest ?? undefined;
   }
 
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {

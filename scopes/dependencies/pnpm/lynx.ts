@@ -6,6 +6,7 @@ import { StoreController, WantedDependency } from '@pnpm/package-store';
 import { rebuild } from '@pnpm/plugin-commands-rebuild';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { sortPackages } from '@pnpm/sort-packages';
+import { type PeerDependencyRules } from '@pnpm/types';
 import {
   ResolvedPackageVersion,
   Registries,
@@ -166,6 +167,7 @@ export interface ReportOptions {
   hideAddedPkgsProgress?: boolean;
   hideProgressPrefix?: boolean;
   hideLifecycleOutput?: boolean;
+  peerDependencyRules?: PeerDependencyRules;
 }
 
 export async function install(
@@ -185,6 +187,7 @@ export async function install(
     includeOptionalDeps?: boolean;
     reportOptions?: ReportOptions;
     hidePackageManagerOutput?: boolean;
+    hoistInjectedDependencies?: boolean;
     dryRun?: boolean;
     dedupeInjectedDeps?: boolean;
   } & Pick<
@@ -205,16 +208,17 @@ export async function install(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string }> {
-  let externalDependencies: Set<string> | undefined;
+  const externalDependencies = new Set<string>();
   const readPackage: ReadPackageHook[] = [];
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
-    externalDependencies = new Set(
-      Object.values(manifestsByPaths)
-        .map(({ name }) => name)
-        .filter(Boolean) as string[]
-    );
+    for (const [dir, { name }] of Object.entries(manifestsByPaths)) {
+      if (dir !== rootDir && name) {
+        externalDependencies.add(name);
+      }
+    }
     readPackage.push(readPackageHook as ReadPackageHook);
   }
+  readPackage.push(removeLegacyFromDeps as ReadPackageHook);
   if (!manifestsByPaths[rootDir].dependenciesMeta) {
     manifestsByPaths = {
       ...manifestsByPaths,
@@ -243,6 +247,12 @@ export async function install(
     packageImportMethod: options?.packageImportMethod,
     pnpmHomeDir: options?.pnpmHomeDir,
   });
+  const hoistPattern = options.hoistPattern ?? ['*'];
+  if (hoistPattern.length > 0 && externalDependencies.size > 0 && !options.hoistInjectedDependencies) {
+    for (const pkgName of externalDependencies) {
+      hoistPattern.push(`!${pkgName}`);
+    }
+  }
   const opts: InstallOptions = {
     allProjects,
     autoInstallPeers: options.autoInstallPeers,
@@ -275,19 +285,9 @@ export async function install(
     },
     ...options,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
-    // As of now, pnpm (v8.15.4) uses overrides to mute peer dependency warnings with "allowAny" and "ignoreMissing".
-    // This is fine as long as the peer dependencies are not automatically installed.
-    // However, if we override the peer dependencies fields and then automatically install the peers
-    // we'll get unexpected peer dependencies installed, so we cannot use both settings at the same time.
-    peerDependencyRules: options.autoInstallPeers
-      ? {}
-      : {
-          allowAny: ['*'],
-          ignoreMissing: ['*'],
-          ...options?.peerDependencyRules,
-        },
     depth: options.updateAll ? Infinity : 0,
     disableRelinkLocalDirDeps: true,
+    hoistPattern,
   };
 
   let dependenciesChanged = false;
@@ -352,6 +352,11 @@ function initReporter(opts?: ReportOptions) {
       hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
       hideProgressPrefix: opts?.hideProgressPrefix,
       hideLifecycleOutput: opts?.hideLifecycleOutput,
+      peerDependencyRules: {
+        allowAny: ['*'],
+        ignoreMissing: ['*'],
+        ...opts?.peerDependencyRules,
+      },
     },
     streamParser,
     // Linked in core aspects are excluded from the output to reduce noise.
@@ -380,6 +385,20 @@ function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string)
     });
   }
   return readDependencyPackageHook(pkg);
+}
+
+/**
+ * @teambit/legacy should never be installed as a dependency.
+ * It is linked from bvm.
+ */
+function removeLegacyFromDeps(pkg: PackageManifest): PackageManifest {
+  if (pkg.dependencies?.['@teambit/legacy'] && !pkg.dependencies['@teambit/legacy'].startsWith('link:')) {
+    delete pkg.dependencies['@teambit/legacy'];
+  }
+  if (pkg.peerDependencies?.['@teambit/legacy']) {
+    delete pkg.peerDependencies['@teambit/legacy'];
+  }
+  return pkg;
 }
 
 /**

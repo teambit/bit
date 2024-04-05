@@ -1,4 +1,4 @@
-import logger, { LoggerLevel } from '@teambit/legacy/dist/logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { CLIArgs, Command, Flags } from '@teambit/legacy/dist/cli/command';
 import { parseCommandName } from '@teambit/legacy/dist/cli/command-registry';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -6,10 +6,17 @@ import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
 import { TOKEN_FLAG_NAME } from '@teambit/legacy/dist/constants';
 import globalFlags from '@teambit/legacy/dist/cli/global-flags';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
+import { OnCommandStartSlot } from './cli.main.runtime';
+import pMapSeries from 'p-map-series';
 
 export class CommandRunner {
   private commandName: string;
-  constructor(private command: Command, private args: CLIArgs, private flags: Flags) {
+  constructor(
+    private command: Command,
+    private args: CLIArgs,
+    private flags: Flags,
+    private onCommandStartSlot: OnCommandStartSlot
+  ) {
     this.commandName = parseCommandName(this.command.name);
   }
 
@@ -19,6 +26,7 @@ export class CommandRunner {
   async runCommand() {
     try {
       this.bootstrapCommand();
+      await this.invokeOnCommandStart();
       this.determineConsoleWritingDuringCommand();
       if (this.flags.json) {
         return await this.runJsonHandler();
@@ -46,6 +54,11 @@ export class CommandRunner {
     if (token) {
       globalFlags.token = token.toString();
     }
+  }
+
+  private async invokeOnCommandStart() {
+    const funcs = this.onCommandStartSlot.values();
+    await pMapSeries(funcs, (onCommandStart) => onCommandStart(this.commandName, this.args, this.flags));
   }
 
   /**
@@ -87,11 +100,6 @@ export class CommandRunner {
     } else {
       loader.off();
       logger.shouldWriteToConsole = false;
-    }
-    if (this.flags.log) {
-      // probably not necessary anymore. it is handled in src/logger - determineWritingLogToScreen()
-      const logValue = typeof this.flags.log === 'string' ? this.flags.log : undefined;
-      logger.switchToConsoleLogger(logValue as LoggerLevel);
     }
   }
 

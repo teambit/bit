@@ -94,10 +94,10 @@ export class StartCmd implements Command {
 
     uiServer
       .then(async (server) => {
-        if (!server.buildOptions?.launchBrowserOnStart) return undefined;
         const url = this.ui.publicUrl || server.fullUrl;
-
         spinnies.succeed('ui-server', { text: `UI server is ready at ${chalk.cyan(url)}` });
+        if (!server.buildOptions?.launchBrowserOnStart) return undefined;
+
         await server.whenReady;
         const name = server.getName();
         const message = chalk.green(`You can now view '${chalk.cyan(name)}' components in the browser.

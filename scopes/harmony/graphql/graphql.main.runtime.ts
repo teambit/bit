@@ -3,6 +3,7 @@ import { WebSocketServer } from 'ws';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import { Module, createModule, createApplication, Application } from 'graphql-modules';
 import { MainRuntime } from '@teambit/cli';
@@ -13,6 +14,7 @@ import { Port } from '@teambit/toolbox.network.get-port';
 import { PubSubEngine, PubSub } from 'graphql-subscriptions';
 import { createServer, Server } from 'http';
 import httpProxy from 'http-proxy';
+import compact from 'lodash.compact';
 import cors from 'cors';
 import { GraphQLServer } from './graphql-server';
 import { createRemoteSchemas } from './create-remote-schemas';
@@ -195,18 +197,60 @@ export class GraphqlMain {
   // }
 
   async createServer(options: GraphQLServerOptions) {
+    const { graphiql = true, disableIntrospection } = options;
     const app = options.app || express();
     const httpServer = createServer(app);
 
     const localSchema = this.createRootModule(options.schemaSlot);
-    const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
-    const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
+    // const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
+    // const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
+    const schemas = [localSchema.schema].concat([]).filter((x) => x);
     const mergedSchema = mergeSchemas({
       schemas,
     });
+    // const gateway = new ApolloGateway({
+    //   supergraphSdl: new IntrospectAndCompose({
+    //     /**
+    //      * include all the running services in the super-graph.
+    //      */
+    //     subgraphs: context.services.map((service) => {
+    //       return {
+    //         name: service.appName || '',
+    //         url: service.url || `http://localhost:${service.port}/graphql`,
+    //       };
+    //     }),
+    //   }),
+    // });
+
     const apolloServer = new ApolloServer({
-      schema: mergedSchema,
-      plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+      gateway: {
+        async load() {
+          return { executor: localSchema.createApolloExecutor() };
+        },
+        onSchemaLoadOrUpdate(callback) {
+          const apiSchema = { apiSchema: localSchema.schema } as any;
+          callback(apiSchema);
+          return () => {};
+        },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        async stop() {},
+      },
+      // schema: localSchema.schema,
+      // schema: localSchema.schema,
+      plugins: compact([
+        ApolloServerPluginDrainHttpServer({ httpServer }),
+        !graphiql ? ApolloServerPluginLandingPageDisabled() : null,
+      ]),
+      introspection: !disableIntrospection,
+      formatError: (err) => {
+        this.logger.error('graphql error ', err);
+        return Object.assign(err, {
+          // @ts-ignore
+          ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
+          // @ts-ignore
+          HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code,
+        });
+      },
     });
 
     await apolloServer.start();
@@ -223,7 +267,12 @@ export class GraphqlMain {
       );
     }
 
-    app.use('/graphql', expressMiddleware(apolloServer, {}));
+    app.use(
+      '/graphql',
+      expressMiddleware(apolloServer, {
+        context: async ({ req }) => req,
+      })
+    );
 
     await this.createSubscription(mergedSchema, httpServer);
 

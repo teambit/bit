@@ -94,32 +94,33 @@ export class ComponentIdGraph extends Graph<ComponentID, DepEdgeType> {
     through?: ComponentID[]
   ): string[][] {
     const removeVerFromIdStr = (idStr: string) => idStr.split('@')[0];
-    const targetsStr = targets.map((t) => t.toStringWithoutVersion());
 
-    const traverseDFS = (
-      node: string,
-      visitedInPath: string[],
-      visitedInGraph: string[] = [],
-      allPaths: string[][]
-    ) => {
-      if (visitedInPath.includes(node)) return;
-      visitedInPath.push(node);
-      if (targetsStr.includes(removeVerFromIdStr(node))) {
-        allPaths.push(visitedInPath);
-        return;
+    const findAllPathsBFS = (start: string[], end: string[]): string[][] => {
+      const paths: string[][] = [];
+      const visited = new Set<string>();
+      const queue: { node: string; path: string[] }[] = [];
+      start.forEach((s) => queue.push({ node: s, path: [s] }));
+      while (queue.length) {
+        const { node, path } = queue.shift()!;
+        if (end.includes(removeVerFromIdStr(node))) {
+          paths.push([...path]);
+        } else {
+          visited.add(node);
+          const successors = this.outEdges(node).map((e) => e.targetId);
+          for (const successor of successors) {
+            if (!visited.has(successor)) {
+              queue.push({ node: successor, path: [...path, successor] });
+            }
+          }
+        }
       }
-      if (visitedInGraph.includes(node)) return;
-      visitedInGraph.push(node);
-      const successors = Array.from(this.successorMap(node).values());
-      successors.forEach((s) => {
-        traverseDFS(s.id, [...visitedInPath], visitedInGraph, allPaths);
-      });
+      return paths;
     };
 
-    let allPaths: string[][] = [];
-    sources.forEach((source) => {
-      traverseDFS(source.toString(), [], [], allPaths);
-    });
+    const targetsStr = targets.map((t) => t.toStringWithoutVersion());
+    const sourcesStr = sources.map((s) => s.toString());
+
+    let allPaths = findAllPathsBFS(sourcesStr, targetsStr);
 
     if (through?.length) {
       allPaths = allPaths.filter((pathWithVer) => {
@@ -128,7 +129,6 @@ export class ComponentIdGraph extends Graph<ComponentID, DepEdgeType> {
       });
     }
 
-    const sourcesStr = sources.map((s) => s.toString());
     const filtered = allPaths.filter((path) => {
       if (path.length < 3) {
         // if length is 1, the source and target are the same.

@@ -11,10 +11,15 @@ import { getCommandId } from './get-command-id';
 import { formatHelp } from './help';
 import { GLOBAL_GROUP, STANDARD_GROUP, YargsAdapter } from './yargs-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
+import { OnCommandStartSlot } from './cli.main.runtime';
 
 export class CLIParser {
   public parser = yargs;
-  constructor(private commands: Command[], private groups: GroupsType) {}
+  constructor(
+    private commands: Command[],
+    private groups: GroupsType,
+    private onCommandStartSlot: OnCommandStartSlot
+  ) {}
 
   async parse(args = process.argv.slice(2)) {
     this.throwForNonExistsCommand(args[0]);
@@ -138,7 +143,7 @@ export class CLIParser {
   }
 
   private getYargsCommand(command: Command): YargsAdapter {
-    const yarnCommand = new YargsAdapter(command);
+    const yarnCommand = new YargsAdapter(command, this.onCommandStartSlot);
     yarnCommand.builder = yarnCommand.builder.bind(yarnCommand);
     yarnCommand.handler = yarnCommand.handler.bind(yarnCommand);
 

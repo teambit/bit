@@ -1,6 +1,6 @@
 import { H3 } from '@teambit/documenter.ui.heading';
 import { Contributors } from '@teambit/design.ui.contributors';
-import { Link, useLocation } from '@teambit/base-react.navigation.link';
+import { Link as BaseLink, useLocation } from '@teambit/base-react.navigation.link';
 import { Labels } from '@teambit/component.ui.version-label';
 import classNames from 'classnames';
 import React, { HTMLAttributes, useMemo } from 'react';
@@ -10,6 +10,9 @@ import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 
 import styles from './version-block.module.scss';
+
+// @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
+const Link = BaseLink as any;
 
 export type VersionBlockProps = {
   componentId: string;

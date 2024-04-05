@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
-import { Link } from '@teambit/base-react.navigation.link';
+import { Link as BaseLink } from '@teambit/base-react.navigation.link';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
@@ -20,6 +20,9 @@ import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 
 import styles from './api-reference-page.module.scss';
+
+// @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
+const Link = BaseLink as any;
 
 export type APIRefPageProps = {
   host: string;

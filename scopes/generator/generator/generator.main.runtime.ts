@@ -1,13 +1,13 @@
+import fs from 'fs-extra';
+import { resolve } from 'path';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config';
 import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
-
 import { ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain, Component } from '@teambit/component';
-
 import { isCoreAspect, loadBit, restoreGlobals } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { GitAspect, GitMain } from '@teambit/git';
@@ -35,6 +35,7 @@ import {
 import { BasicWorkspaceStarter } from './templates/basic';
 import { StarterPlugin } from './starter.plugin';
 import { GeneratorService } from './generator.service';
+import { WorkspacePathExists } from './exceptions/workspace-path-exists';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
@@ -328,7 +329,7 @@ export class GeneratorMain {
       templateWithId.id,
       envId
     );
-    return componentGenerator.generate();
+    return componentGenerator.generate(options.force);
   }
 
   private async getEnvIdFromTemplateWithId(templateWithId: ComponentTemplateWithId): Promise<ComponentID | undefined> {
@@ -357,14 +358,18 @@ export class GeneratorMain {
     if (this.workspace) {
       throw new BitError('Error: unable to generate a new workspace inside of an existing workspace');
     }
+    const workspacePath = options.currentDir ? process.cwd() : resolve(workspaceName);
+    if (!options.currentDir && fs.existsSync(workspacePath)) {
+      throw new WorkspacePathExists(workspacePath);
+    }
     const { aspect: aspectId, loadFrom } = options;
     const { workspaceTemplate, aspect } = loadFrom
       ? await this.findTemplateInOtherWorkspace(loadFrom, templateName, aspectId)
       : await this.getWorkspaceTemplate(templateName, aspectId);
 
     if (!workspaceTemplate) throw new BitError(`template "${templateName}" was not found`);
-    const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, workspaceTemplate, aspect);
-    const workspacePath = await workspaceGenerator.generate();
+    const workspaceGenerator = new WorkspaceGenerator(workspaceName, workspacePath, options, workspaceTemplate, aspect);
+    await workspaceGenerator.generate();
     return { workspacePath, appName: workspaceTemplate.appName };
   }
 

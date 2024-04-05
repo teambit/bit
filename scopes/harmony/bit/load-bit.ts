@@ -93,6 +93,10 @@ async function getWsConfig(consumerPath: string, configOpts: ConfigOptions) {
     if (fileContent.includes('<<<<<<<') || fileContent.includes('>>>>>>>')) {
       throw new Error(`please fix the conflicts in workspace.jsonc to continue`);
     }
+    if (err.constructor.name === 'ReadConfigError' && err.err?.message) {
+      const location = err.err.line && err.err.column ? ` (${err.err.line}:${err.err.column})` : '';
+      throw new Error(`failed parsing the workspace.jsonc file at ${wsPath}. error: ${err.err.toString()}${location}`);
+    }
     throw err;
   }
 }

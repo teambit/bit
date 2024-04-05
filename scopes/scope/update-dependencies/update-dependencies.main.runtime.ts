@@ -18,6 +18,8 @@ import { LanesAspect, Lane, LanesMain } from '@teambit/lanes';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { UpdateDependenciesCmd } from './update-dependencies.cmd';
 import { UpdateDependenciesAspect } from './update-dependencies.aspect';
+import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { isSnap } from '@teambit/component-version';
 
 export type UpdateDepsOptions = {
   tag?: boolean;
@@ -35,12 +37,14 @@ export type DepUpdateItemRaw = {
   componentId: string; // ids always have scope, so it's safe to parse them from string
   dependencies: string[]; // e.g. [@teambit/compiler@~1.0.0, @teambit/tester@^1.0.0]
   versionToTag?: string; // specific version or semver. e.g. '1.0.0', 'minor',
+  versionToSnap?: string;
 };
 
 export type DepUpdateItem = {
   component: Component;
   dependencies: ComponentID[];
   versionToTag?: string;
+  versionToSnap?: string;
 };
 
 export type UpdateDepsResult = {
@@ -229,7 +233,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       const dependencies = await Promise.all(
         depUpdateItemRaw.dependencies.map((dep) => this.getDependencyWithExactVersion(dep))
       );
-      return { component, dependencies, versionToTag: depUpdateItemRaw.versionToTag };
+      return { ...depUpdateItemRaw, component, dependencies };
     });
   }
 
@@ -253,7 +257,21 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
         legacyComp.setNewVersion(modelComponent.getVersionToAdd(releaseType, exactVersion));
       } else {
         // snap is the default
-        legacyComp.setNewVersion();
+        if (depUpdateItem.versionToSnap) {
+          if (!isSnap(depUpdateItem.versionToSnap)) {
+            throw new Error(
+              `update-dependencies command received an invalid version ${depUpdateItem.versionToSnap} to snap. make sure it's a string, Hex and 40 characters long.`
+            );
+          }
+          const exist = await this.scope.legacyScope.objects.has(Ref.from(depUpdateItem.versionToSnap));
+          if (exist)
+            throw new Error(
+              `unable to snap ${depUpdateItem.component.id.toStringWithoutVersion()} with the specified hash ${
+                depUpdateItem.versionToSnap
+              }, it's already exists in the scope`
+            );
+        }
+        legacyComp.setNewVersion(depUpdateItem.versionToSnap);
       }
     });
   }

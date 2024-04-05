@@ -12,6 +12,7 @@ import { approveOperation } from '@teambit/legacy/dist/prompts';
 import { COMPONENT_PATTERN_HELP, DEFAULT_CLOUD_DOMAIN } from '@teambit/legacy/dist/constants';
 import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
 import { SwitchCmd } from './switch.cmd';
+import { FetchCmd } from '@teambit/importer';
 
 type LaneOptions = {
   details?: boolean;
@@ -489,7 +490,31 @@ export class LaneImportCmd implements Command {
     [lane]: [string],
     { skipDependencyInstallation = false, pattern }: { skipDependencyInstallation: boolean; pattern?: string }
   ): Promise<string> {
-    return this.switchCmd.report([lane], { getAll: true, skipDependencyInstallation, pattern });
+    return this.switchCmd.report([lane], { skipDependencyInstallation, pattern });
+  }
+}
+
+export class LaneFetchCmd implements Command {
+  name = 'fetch [lane-id]';
+  description = `fetch component objects from lanes. if no lane-id is provided, it fetches from the current lane`;
+  extendedDescription = `note, it does not save the remote lanes objects locally, only the refs`;
+  alias = '';
+  options = [['a', 'all', 'fetch all remote lanes']] as CommandOptions;
+  loader = true;
+
+  constructor(private fetchCmd: FetchCmd, private lanes: LanesMain) {}
+
+  async report([laneId]: [string], { all }: { all?: boolean }): Promise<string> {
+    if (all) return this.fetchCmd.report([[]], { lanes: true });
+    const getLaneIdStr = () => {
+      if (laneId) return laneId;
+      const currentLane = this.lanes.getCurrentLaneId();
+      if (!currentLane || currentLane.isDefault())
+        throw new BitError('you are not checked out to any lane. please specify a lane-id to fetch or use --all flag');
+      return currentLane.toString();
+    };
+    const lane = getLaneIdStr();
+    return this.fetchCmd.report([[lane]], { lanes: true });
   }
 }
 

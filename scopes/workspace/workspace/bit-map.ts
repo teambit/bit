@@ -29,6 +29,10 @@ export class BitMap {
     return this.legacyBitMap.mapPath;
   }
 
+  getAllRootDirs(): string[] {
+    return Object.keys(this.legacyBitMap.getAllTrackDirs());
+  }
+
   /**
    * adds component config to the .bitmap file.
    * later, upon `bit tag`, the data is saved in the scope.

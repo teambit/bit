@@ -261,9 +261,12 @@ export class WorkspaceMain {
     cli.register(...commands);
     component.registerHost(workspace);
 
+    // mini-status should be super fast. login/logout don't need loading aspects
+    const commandsToSkipLoadingAspects = ['mini-status', 'ms', 'login', 'logout'];
+
     cli.registerOnStart(async (_hasWorkspace: boolean, currentCommand: string) => {
-      if (currentCommand === 'mini-status' || currentCommand === 'ms') {
-        return; // mini-status should be super fast.
+      if (commandsToSkipLoadingAspects.includes(currentCommand)) {
+        return;
       }
       if (currentCommand === 'install') {
         workspace.inInstallContext = true;
