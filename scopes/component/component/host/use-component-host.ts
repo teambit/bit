@@ -1,5 +1,5 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql } from '@apollo/client';
+import { gql } from 'graphql-tag';
 
 import { ComponentHostModel } from './component-host-model';
 

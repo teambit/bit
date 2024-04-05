@@ -1,5 +1,5 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql } from '@apollo/client';
+import { gql } from 'graphql-tag';
 import { LaneId } from '@teambit/lane-id';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { LaneDiff, PlainLaneDiff, ChangeType } from '@teambit/lanes.entities.lane-diff';

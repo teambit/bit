@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { ComponentModel } from '@teambit/component';
 import useLatest from '@react-hook/latest';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql } from '@apollo/client';
+import { gql } from 'graphql-tag';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 
 import { Workspace } from './workspace-model';

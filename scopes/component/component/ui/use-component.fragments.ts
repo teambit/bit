@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql } from 'graphql-tag';
 
 export const componentIdFields = gql`
   fragment componentIdFields on ComponentID {

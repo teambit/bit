@@ -1,6 +1,6 @@
 import { Component } from '@teambit/component';
 import { Schema } from '@teambit/graphql';
-import { gql } from '@apollo/client';
+import { gql } from 'graphql-tag';
 
 import { BundlerMain } from './bundler.main.runtime';
 

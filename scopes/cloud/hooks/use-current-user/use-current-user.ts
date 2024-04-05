@@ -1,5 +1,5 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql } from '@apollo/client';
+import { gql } from 'graphql-tag';
 import { CloudUser } from '@teambit/cloud.models.cloud-user';
 
 export const CURRENT_USER_QUERY = gql`
