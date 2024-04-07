@@ -13,7 +13,6 @@ import express, { Express } from 'express';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { PubSubEngine, PubSub } from 'graphql-subscriptions';
 import { createServer, Server } from 'http';
-import httpProxy from 'http-proxy';
 import compact from 'lodash.compact';
 import cors from 'cors';
 import { GraphQLServer } from './graphql-server';
@@ -201,8 +200,6 @@ export class GraphqlMain {
     const { graphiql = true, disableIntrospection } = options;
     const app = options.app || express();
     const httpServer = createServer(app);
-    const subscriptionsPort = options.subscriptionsPortRange || this.config.subscriptionsPortRange;
-    const subscriptionServerPort = await this.getPort(subscriptionsPort);
 
     const localSchema = this.createRootModule(options.schemaSlot);
     // const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
@@ -281,14 +278,24 @@ export class GraphqlMain {
     const websocketServer = new WebSocketServer({
       noServer: true,
       path: this.config.subscriptionsPath,
+      // server: httpServer,
     });
 
     httpServer.on('upgrade', (request, socket, head) => {
       // Only handle upgrades for the specific path, otherwise ignore
       if (request.url.startsWith(this.config.subscriptionsPath)) {
+        websocketServer.on('error', (err) => {
+          console.error('Websocket error', err);
+        });
         websocketServer.handleUpgrade(request, socket, head, (websocket) => {
+          console.log(
+            '🚀 ~ file: graphql.main.runtime.ts:288 ~ GraphqlMain ~ websocketServer.handleUpgrade ~ request:',
+            request.url
+          );
           websocketServer.emit('connection', websocket, request);
         });
+      } else {
+        console.log('Upgrade request not matched:', request.url);
       }
     });
 
@@ -297,6 +304,12 @@ export class GraphqlMain {
         schema,
         execute,
         subscribe,
+        onError: (err) => {
+          this.logger.error('graphql error ', err);
+          console.error('graphql error ', err);
+        },
+        onConnect: () => console.error('Client connected to WebSocket.'),
+        onDisconnect: () => console.error('Client disconnected from WebSocket.'),
         context: (ctx) => {
           options?.onWsConnect && options.onWsConnect(ctx.connectionParams);
         },
@@ -388,7 +401,6 @@ export class GraphqlMain {
 
   static defaultConfig = {
     port: 4000,
-    subscriptionsPortRange: [2000, 2100],
     disableCors: false,
     subscriptionsPath: '/subscriptions',
   };

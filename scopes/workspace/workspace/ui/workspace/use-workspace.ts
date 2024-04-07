@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from 'react';
 import { ComponentModel } from '@teambit/component';
 import useLatest from '@react-hook/latest';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+// import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from 'graphql-tag';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import { useQuery } from '@apollo/client';
 
 import { Workspace } from './workspace-model';
 
@@ -115,7 +116,7 @@ const COMPONENT_SUBSCRIPTION_REMOVED = gql`
 `;
 
 export function useWorkspace(options: UseWorkspaceOptions = {}) {
-  const { data, subscribeToMore, ...rest } = useDataQuery(WORKSPACE);
+  const { data, subscribeToMore, ...rest } = useQuery(WORKSPACE);
   const optionsRef = useLatest(options);
 
   useEffect(() => {

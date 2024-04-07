@@ -798,7 +798,9 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       if (onAddResult) results.push({ extensionId: extension, results: onAddResult });
     });
 
+    console.log('🚀 ~ file: workspace.ts:803 ~ Workspace ~ triggerOnComponentAdd ~ ComponentAdded:', ComponentAdded);
     await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
+
     return results;
   }
 
