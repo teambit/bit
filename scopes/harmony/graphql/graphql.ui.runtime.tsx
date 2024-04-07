@@ -66,18 +66,21 @@ export class GraphqlUI {
   }
 
   private createLink(uri: string, { subscriptionUri }: { subscriptionUri?: string } = {}) {
-    const httpLink = new HttpLink({ credentials: 'include', uri });
+    const httpLink = createHttpLink({
+      credentials: 'include',
+      uri,
+      fetch: crossFetch,
+    });
+    const wsClient = subscriptionUri ? createClient({ url: subscriptionUri }) : undefined;
 
     const subsLink = subscriptionUri
       ? new ApolloLink((operation) => {
           const observable = new Observable<FetchResult>((observer) => {
-            const client = createClient({ url: subscriptionUri });
-
             const { variables } = operation;
             // @ts-ignore todo - update env to latest graphql version
             const query = print(operation.query);
 
-            const dispose = client.subscribe(
+            const dispose = wsClient?.subscribe(
               { query, variables },
               {
                 next: (data) => observer.next({ data }),
@@ -87,7 +90,7 @@ export class GraphqlUI {
             );
 
             return () => {
-              dispose();
+              dispose?.();
             };
           });
 

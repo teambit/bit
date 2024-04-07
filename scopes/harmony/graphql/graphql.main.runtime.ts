@@ -288,10 +288,6 @@ export class GraphqlMain {
           console.error('Websocket error', err);
         });
         websocketServer.handleUpgrade(request, socket, head, (websocket) => {
-          console.log(
-            '🚀 ~ file: graphql.main.runtime.ts:288 ~ GraphqlMain ~ websocketServer.handleUpgrade ~ request:',
-            request.url
-          );
           websocketServer.emit('connection', websocket, request);
         });
       } else {
@@ -302,17 +298,26 @@ export class GraphqlMain {
     return useServer(
       {
         schema,
-        execute,
-        subscribe,
-        onError: (err) => {
-          this.logger.error('graphql error ', err);
-          console.error('graphql error ', err);
-        },
-        onConnect: () => console.error('Client connected to WebSocket.'),
-        onDisconnect: () => console.error('Client disconnected from WebSocket.'),
-        context: (ctx) => {
-          options?.onWsConnect && options.onWsConnect(ctx.connectionParams);
-        },
+        // execute,
+        // subscribe,
+        // onError: (err) => {
+        //   this.logger.error('graphql error ', err);
+        //   console.error('graphql error ', err);
+        // },
+        // onConnect: (ctx) => {
+        //   console.log("🚀 ~ file: graphql.main.runtime.ts:313 ~ GraphqlMain ~ createSubscription ~ ctx:", ctx)
+        //   console.error('Client connected to WebSocket.')
+        //   return {
+        //     ...ctx
+        //   };
+        // },
+        // onDisconnect: () => {console.error('Client disconnected from WebSocket.')},
+        // context: (ctx) => {
+        //   this.logger.error('graphql error ', err);
+        //   console.log("🚀 ~ file: graphql.main.runtime.ts:315 ~ GraphqlMain ~ createSubscription ~ ctx:", ctx)
+        //   options?.onWsConnect && options.onWsConnect(ctx.connectionParams);
+        //   return ctx;
+        // },
       },
       websocketServer
     );
