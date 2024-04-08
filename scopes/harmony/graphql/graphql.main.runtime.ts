@@ -374,17 +374,17 @@ export class GraphqlMain {
     return Port.getPort(from, to);
   }
 
-  /** proxy ws Subscription server to avoid conflict with different websocket connections */
+  // /** proxy ws Subscription server to avoid conflict with different websocket connections */
 
-  private proxySubscription(server: Server, port: number) {
-    const proxServer = httpProxy.createProxyServer();
-    const subscriptionsPath = this.config.subscriptionsPath;
-    server.on('upgrade', function (req, socket, head) {
-      if (req.url === subscriptionsPath) {
-        proxServer.ws(req, socket, head, { target: { host: 'localhost', port } });
-      }
-    });
-  }
+  // private proxySubscription(server: Server, port: number) {
+  //   const proxServer = httpProxy.createProxyServer();
+  //   const subscriptionsPath = this.config.subscriptionsPath;
+  //   server.on('upgrade', function (req, socket, head) {
+  //     if (req.url === subscriptionsPath) {
+  //       proxServer.ws(req, socket, head, { target: { host: 'localhost', port } });
+  //     }
+  //   });
+  // }
 
   private createRootModule(schemaSlot?: SchemaSlot): Application {
     const modules = this.buildModules(schemaSlot);
