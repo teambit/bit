@@ -10,6 +10,7 @@ export class LoginCmd implements Command {
   alias = '';
   options = [
     ['', 'skip-config-update', 'skip writing to the .npmrc file'],
+    ['', 'refresh-token', 'force refresh token even when logged in'],
     ['d', 'cloud-domain <domain>', 'login cloud domain (default bit.cloud)'],
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
     ['', 'no-browser', 'do not open a browser for authentication'],
@@ -39,6 +40,7 @@ export class LoginCmd implements Command {
       noBrowser,
       machineName,
       skipConfigUpdate,
+      refreshToken,
     }: {
       cloudDomain?: string;
       port: string;
@@ -46,9 +48,14 @@ export class LoginCmd implements Command {
       noBrowser?: boolean;
       machineName?: string;
       skipConfigUpdate?: boolean;
+      refreshToken?: boolean;
     }
   ): Promise<string> {
     noBrowser = noBrowser || suppressBrowserLaunch;
+
+    if (refreshToken) {
+      this.cloud.logout();
+    }
 
     const isLoggedIn = this.cloud.isLoggedIn();
 
