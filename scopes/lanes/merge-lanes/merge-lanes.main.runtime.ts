@@ -55,6 +55,7 @@ export type MergeLaneOptions = {
   ignoreConfigChanges?: boolean;
   skipFetch?: boolean;
   excludeNonLaneComps?: boolean;
+  shouldIncludeUpdateDependents?: boolean;
 };
 export type MergeFromScopeResult = {
   mergedNow: ComponentID[];
@@ -113,6 +114,7 @@ export class MergeLanesMain {
       ignoreConfigChanges,
       skipFetch,
       excludeNonLaneComps,
+      shouldIncludeUpdateDependents,
     } = options;
     const legacyScope = this.scope.legacyScope;
     if (tag && !currentLaneId.isDefault()) {
@@ -162,7 +164,9 @@ export class MergeLanesMain {
         );
       }
       if (!otherLane) throw new Error(`lane must be defined for non-default`);
-      return otherLane.toBitIds();
+      return shouldIncludeUpdateDependents
+        ? otherLane.toComponentIdsIncludeUpdateDependents()
+        : otherLane.toComponentIds();
     };
     const idsToMerge = await getBitIds();
     this.logger.debug(`merging the following ids: ${idsToMerge.toString()}`);
@@ -229,7 +233,7 @@ export class MergeLanesMain {
     throwForFailures(allComponentsStatus);
 
     if (shouldSquash) {
-      await squashSnaps(allComponentsStatus, currentLaneId, otherLaneId, legacyScope);
+      await squashSnaps(allComponentsStatus, currentLaneId, otherLaneId, legacyScope, options.snapMessage);
     }
 
     if (laneToFetchArtifactsFrom) {
@@ -353,7 +357,7 @@ export class MergeLanesMain {
     const getIdsToMerge = async (): Promise<ComponentIdList> => {
       if (!options.pattern) return laneIds;
       const ids = await this.scope.filterIdsFromPoolIdsByPattern(options.pattern, laneIds);
-      return ComponentIdList.fromArray(ids.map((id) => id));
+      return ComponentIdList.fromArray(ids);
     };
     const idsToMerge = await getIdsToMerge();
     const scopeComponentsImporter = this.scope.legacyScope.scopeImporter;
@@ -411,6 +415,7 @@ export class MergeLanesMain {
     options.mergeStrategy = 'manual';
     options.excludeNonLaneComps = true;
     options.skipDependencyInstallation = true;
+    options.shouldIncludeUpdateDependents = shouldIncludeUpdateDependents;
     this.scope.legacyScope.setCurrentLaneId(toLaneId);
     // this causes issues when merging main to a lane as it fetches from the lane instead of from main.
     // see the e2e-test: "main to lane and multiple scopes when a main-version is missing from lane-scope"
@@ -665,7 +670,8 @@ async function squashSnaps(
   allComponentsStatus: ComponentMergeStatus[],
   currentLaneId: LaneId,
   otherLaneId: LaneId,
-  scope: LegacyScope
+  scope: LegacyScope,
+  messageTitle?: string
 ) {
   const currentLaneName = currentLaneId.name;
   const succeededComponents = allComponentsStatus.filter((c) => !c.unchangedMessage);
@@ -684,7 +690,8 @@ async function squashSnaps(
         divergeData,
         log,
         scope,
-        componentFromModel
+        componentFromModel,
+        messageTitle
       );
       if (modifiedComp) {
         scope.objects.add(modifiedComp);
