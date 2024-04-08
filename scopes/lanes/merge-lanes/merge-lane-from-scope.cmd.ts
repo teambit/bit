@@ -154,6 +154,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
         },
       };
     } catch (err: any) {
+      this.mergeLanes.logger.error('merge-lane-from-scope.json, error: ', err);
       return {
         code: 1,
         error: err.message,
