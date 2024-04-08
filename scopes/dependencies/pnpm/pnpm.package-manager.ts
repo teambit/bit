@@ -1,3 +1,4 @@
+import { CloudMain } from '@teambit/cloud';
 import {
   DependencyResolverMain,
   extendWithComponentsFromDir,
@@ -34,6 +35,7 @@ import type { RebuildFn } from './lynx';
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
   readonly modulesManifestCache: Map<string, Modules> = new Map();
+  private username: string;
 
   private _readConfig = async (dir?: string) => {
     const { config, warnings } = await readConfig(dir);
@@ -47,7 +49,7 @@ export class PnpmPackageManager implements PackageManager {
 
   public readConfig = memoize(this._readConfig);
 
-  constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
+  constructor(private depResolver: DependencyResolverMain, private logger: Logger, private cloud: CloudMain) {}
 
   async install(
     { rootDir, manifests }: InstallationContext,
@@ -83,6 +85,9 @@ export class PnpmPackageManager implements PackageManager {
       });
     }
     this.modulesManifestCache.delete(rootDir);
+    if (!this.username) {
+      this.username = (await this.cloud.getCurrentUser())?.username ?? 'anonymous';
+    }
     const { dependenciesChanged, rebuild, storeDir } = await install(
       rootDir,
       manifests,
@@ -118,6 +123,7 @@ export class PnpmPackageManager implements PackageManager {
         sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
         pnpmHomeDir: config.pnpmHomeDir,
         updateAll: installOptions.updateAll,
+        userAgent: `bit user/${this.username}`,
         hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
         reportOptions: {
           appendOnly: installOptions.optimizeReportForNonTerminal,
