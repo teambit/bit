@@ -510,7 +510,7 @@
         "yesno": "0.4.0"
       },
       "peerDependencies": {
-        "@apollo/client": "^3.9.0",
+        "@apollo/client": "^3.9.7",
         "@teambit/base-react.navigation.link": "2.0.27",
         "@teambit/legacy": "1.0.680",
         "@testing-library/react": "^12.1.5",
@@ -528,7 +528,8 @@
       "signal-exit@4": "^4.0.2",
       "@types/react": "^17.0.67",
       "@types/react-dom": "^17.0.21",
-      "minio@7.0": "7.1.1"
+      "minio@7.0": "7.1.1",
+      "@apollo/client": "^3.9.7"
     },
     "rootComponents": true,
     "nodeVersion": "20.11.1",

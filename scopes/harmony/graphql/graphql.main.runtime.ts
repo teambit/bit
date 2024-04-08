@@ -3,6 +3,7 @@ import { WebSocketServer } from 'ws';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import httpProxy from 'http-proxy';
 import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import { Module, createModule, createApplication, Application } from 'graphql-modules';
@@ -16,7 +17,7 @@ import { createServer, Server } from 'http';
 import compact from 'lodash.compact';
 import cors from 'cors';
 import { GraphQLServer } from './graphql-server';
-import { execute, subscribe } from 'graphql';
+import { GraphQLSchema, subscribe as graphqlSubscribe } from 'graphql';
 import { createRemoteSchemas } from './create-remote-schemas';
 import { GraphqlAspect } from './graphql.aspect';
 import { Schema } from './schema';
@@ -25,6 +26,8 @@ export enum Verb {
   WRITE = 'write',
   READ = 'read',
 }
+
+export type Subscribe = typeof graphqlSubscribe;
 
 export type GraphQLConfig = {
   port: number;
@@ -202,6 +205,8 @@ export class GraphqlMain {
     const httpServer = createServer(app);
 
     const localSchema = this.createRootModule(options.schemaSlot);
+    const subscribe = localSchema.createSubscription();
+    const execute = localSchema.createExecution();
     // const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
     // const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
     // const schemas = [localSchema.schema].concat([]).filter((x) => x);
@@ -209,9 +214,25 @@ export class GraphqlMain {
     //   schemas,
     // });
 
-    const subscriptionServerCleanup = await this.createSubscription(localSchema.schema, httpServer, options);
+    // const subscriptionsPort = options.subscriptionsPortRange || this.config.subscriptionsPortRange;
+
+    // const subscriptionServerPort = await this.getPort(subscriptionsPort);
+
+    // console.log("🚀 ~ file: graphql.main.runtime.ts:220 ~ GraphqlMain ~ createServer ~ subscriptionServerPort:", subscriptionServerPort)
+
+    const subscriptionServerCleanup = await this.createSubscription(
+      localSchema.schema,
+      httpServer,
+      options,
+      subscribe,
+      execute
+    );
+
+    // this.proxySubscription(httpServer, subscriptionServerPort)
+
     const apolloServer = new ApolloServer({
       gateway: {
+        // @ts-ignore - todo this fixes when update graphql on the core-aspect-env
         async load() {
           return { executor: localSchema.createApolloExecutor() };
         },
@@ -274,50 +295,33 @@ export class GraphqlMain {
     return httpServer;
   }
 
-  async createSubscription(schema, httpServer, options) {
+  async createSubscription(
+    schema: GraphQLSchema,
+    httpServer: Server,
+    options: GraphQLServerOptions,
+    subscribe: Subscribe,
+    execute
+  ) {
     const websocketServer = new WebSocketServer({
       noServer: true,
       path: this.config.subscriptionsPath,
-      // server: httpServer,
     });
-
     httpServer.on('upgrade', (request, socket, head) => {
-      // Only handle upgrades for the specific path, otherwise ignore
-      if (request.url.startsWith(this.config.subscriptionsPath)) {
-        websocketServer.on('error', (err) => {
-          console.error('Websocket error', err);
-        });
+      if (request.url?.startsWith(this.config.subscriptionsPath)) {
         websocketServer.handleUpgrade(request, socket, head, (websocket) => {
           websocketServer.emit('connection', websocket, request);
         });
-      } else {
-        console.log('Upgrade request not matched:', request.url);
       }
     });
 
     return useServer(
       {
         schema,
-        // execute,
-        // subscribe,
-        // onError: (err) => {
-        //   this.logger.error('graphql error ', err);
-        //   console.error('graphql error ', err);
-        // },
-        // onConnect: (ctx) => {
-        //   console.log("🚀 ~ file: graphql.main.runtime.ts:313 ~ GraphqlMain ~ createSubscription ~ ctx:", ctx)
-        //   console.error('Client connected to WebSocket.')
-        //   return {
-        //     ...ctx
-        //   };
-        // },
-        // onDisconnect: () => {console.error('Client disconnected from WebSocket.')},
-        // context: (ctx) => {
-        //   this.logger.error('graphql error ', err);
-        //   console.log("🚀 ~ file: graphql.main.runtime.ts:315 ~ GraphqlMain ~ createSubscription ~ ctx:", ctx)
-        //   options?.onWsConnect && options.onWsConnect(ctx.connectionParams);
-        //   return ctx;
-        // },
+        subscribe,
+        execute,
+        onConnect: () => {
+          options?.onWsConnect?.();
+        },
       },
       websocketServer
     );
@@ -372,15 +376,15 @@ export class GraphqlMain {
 
   /** proxy ws Subscription server to avoid conflict with different websocket connections */
 
-  // private proxySubscription(server: Server, port: number) {
-  //   const proxServer = httpProxy.createProxyServer();
-  //   const subscriptionsPath = this.config.subscriptionsPath;
-  //   server.on('upgrade', function (req, socket, head) {
-  //     if (req.url === subscriptionsPath) {
-  //       proxServer.ws(req, socket, head, { target: { host: 'localhost', port } });
-  //     }
-  //   });
-  // }
+  private proxySubscription(server: Server, port: number) {
+    const proxServer = httpProxy.createProxyServer();
+    const subscriptionsPath = this.config.subscriptionsPath;
+    server.on('upgrade', function (req, socket, head) {
+      if (req.url === subscriptionsPath) {
+        proxServer.ws(req, socket, head, { target: { host: 'localhost', port } });
+      }
+    });
+  }
 
   private createRootModule(schemaSlot?: SchemaSlot): Application {
     const modules = this.buildModules(schemaSlot);
@@ -408,6 +412,7 @@ export class GraphqlMain {
     port: 4000,
     disableCors: false,
     subscriptionsPath: '/subscriptions',
+    // subscriptionsPortRange: [2000, 2100],
   };
 
   static runtime = MainRuntime;

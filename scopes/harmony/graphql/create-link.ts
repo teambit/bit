@@ -1,5 +1,5 @@
-import { split, ApolloLink } from '@apollo/client';
 import { getMainDefinition } from '@apollo/client/utilities';
+import { ApolloLink, split } from '@apollo/client';
 
 /**
  * create a link which splits routes data depending on type of operation.
