@@ -26,6 +26,7 @@ export function devServerSchema(bundler: BundlerMain): Schema {
           // the gotHost.get query is "id".
           // see it in scopes/component/component/component.graphql.ts
           const requestedId = context.body.variables.id;
+          console.log('🚀 ~ file: dev-server.graphql.ts:30 ~ devServerSchema ~ requestedId:', requestedId);
           // if we ask for specific id with specific version it means we want to fetch if from scope
           // so don't return the server url
           // see https://github.com/teambit/bit/issues/5328

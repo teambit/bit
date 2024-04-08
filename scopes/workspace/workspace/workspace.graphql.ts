@@ -89,7 +89,6 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
       Subscription: {
         componentAdded: {
           subscribe: () => {
-            console.log('subscribing to componentAdded');
             return graphql.pubsub.asyncIterator(ComponentAdded);
           },
         },

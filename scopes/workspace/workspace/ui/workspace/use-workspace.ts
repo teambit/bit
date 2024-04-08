@@ -56,10 +56,6 @@ const wcComponentFields = gql`
       isDeprecate
       newId
     }
-    server {
-      env
-      url
-    }
     env {
       id
       icon
@@ -75,6 +71,10 @@ const WORKSPACE = gql`
       icon
       components {
         ...wcComponentFields
+        server {
+          env
+          url
+        }
       }
     }
   }
@@ -123,7 +123,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     const unSubCompAddition = subscribeToMore({
       document: COMPONENT_SUBSCRIPTION_ADDED,
       updateQuery: (prev, { subscriptionData }) => {
-        const update = subscriptionData.data;
+        const update = subscriptionData.data.data;
         const addedComponent = update?.componentAdded?.component;
         if (!addedComponent) return prev;
 

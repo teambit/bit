@@ -17,7 +17,7 @@ import { createServer, Server } from 'http';
 import compact from 'lodash.compact';
 import cors from 'cors';
 import { GraphQLServer } from './graphql-server';
-import { GraphQLSchema, subscribe as graphqlSubscribe } from 'graphql';
+import { GraphQLSchema, subscribe as graphqlSubscribe, execute as graphqlExecute } from 'graphql';
 import { createRemoteSchemas } from './create-remote-schemas';
 import { GraphqlAspect } from './graphql.aspect';
 import { Schema } from './schema';
@@ -28,6 +28,7 @@ export enum Verb {
 }
 
 export type Subscribe = typeof graphqlSubscribe;
+export type Execute = typeof graphqlExecute;
 
 export type GraphQLConfig = {
   port: number;
@@ -245,7 +246,6 @@ export class GraphqlMain {
         async stop() {},
       },
       // schema: localSchema.schema,
-      // schema: localSchema.schema,
       plugins: compact([
         ApolloServerPluginDrainHttpServer({ httpServer }),
         !graphiql ? ApolloServerPluginLandingPageDisabled() : null,
@@ -300,7 +300,7 @@ export class GraphqlMain {
     httpServer: Server,
     options: GraphQLServerOptions,
     subscribe: Subscribe,
-    execute
+    execute: Execute
   ) {
     const websocketServer = new WebSocketServer({
       noServer: true,
@@ -369,10 +369,10 @@ export class GraphqlMain {
     return this;
   }
 
-  private async getPort(range: number[]) {
-    const [from, to] = range;
-    return Port.getPort(from, to);
-  }
+  // private async getPort(range: number[]) {
+  //   const [from, to] = range;
+  //   return Port.getPort(from, to);
+  // }
 
   // /** proxy ws Subscription server to avoid conflict with different websocket connections */
 
@@ -388,7 +388,9 @@ export class GraphqlMain {
 
   private createRootModule(schemaSlot?: SchemaSlot): Application {
     const modules = this.buildModules(schemaSlot);
-    return createApplication({ modules });
+    return createApplication({
+      modules,
+    });
   }
 
   private buildModules(schemaSlot?: SchemaSlot) {
@@ -426,6 +428,7 @@ export class GraphqlMain {
   ) {
     const logger = loggerFactory.createLogger(GraphqlAspect.id);
     const graphqlMain = new GraphqlMain(config, moduleSlot, context, logger, graphQLServerSlot, pubSubSlot);
+    graphqlMain.registerPubSub(new PubSub());
     return graphqlMain;
   }
 }
