@@ -1,3 +1,4 @@
+import { CloudMain } from '@teambit/cloud';
 import {
   DependencyResolverMain,
   extendWithComponentsFromDir,
@@ -34,6 +35,7 @@ import type { RebuildFn } from './lynx';
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
   readonly modulesManifestCache: Map<string, Modules> = new Map();
+  private username: string;
 
   private _readConfig = async (dir?: string) => {
     const { config, warnings } = await readConfig(dir);
@@ -47,7 +49,7 @@ export class PnpmPackageManager implements PackageManager {
 
   public readConfig = memoize(this._readConfig);
 
-  constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
+  constructor(private depResolver: DependencyResolverMain, private logger: Logger, private cloud: CloudMain) {}
 
   async install(
     { rootDir, manifests }: InstallationContext,
@@ -185,6 +187,9 @@ export class PnpmPackageManager implements PackageManager {
 
   async getNetworkConfig?(): Promise<PackageManagerNetworkConfig> {
     const { config } = await this.readConfig();
+    if (!this.username) {
+      this.username = (await this.cloud.getCurrentUser())?.username ?? 'anonymous';
+    }
     // We need to use config.rawConfig as it will only contain the settings defined by the user.
     // config contains default values of the settings when they are not defined by the user.
     return {
@@ -200,6 +205,7 @@ export class PnpmPackageManager implements PackageManager {
       ca: config.ca,
       cert: config.cert,
       key: config.key,
+      userAgent: `bit user/${this.username}`,
     };
   }
 
