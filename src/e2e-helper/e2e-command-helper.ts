@@ -701,13 +701,13 @@ export default class CommandHelper {
     return JSON.parse(output);
   }
 
-  showComponentParsedHarmony(id = 'bar/foo') {
-    const output = this.runCmd(`bit show ${id} --json`);
+  showComponentParsedHarmony(id = 'bar/foo', cwd?: string) {
+    const output = this.runCmd(`bit show ${id} --json`, cwd);
     return JSON.parse(output);
   }
 
-  showAspectConfig(compId: string, aspectId: string) {
-    const show = this.showComponentParsedHarmony(compId);
+  showAspectConfig(compId: string, aspectId: string, cwd?: string) {
+    const show = this.showComponentParsedHarmony(compId, cwd);
     return show.find((_) => _.title === 'configuration').json.find((_) => _.id === aspectId);
   }
 
