@@ -85,9 +85,6 @@ export class PnpmPackageManager implements PackageManager {
       });
     }
     this.modulesManifestCache.delete(rootDir);
-    if (!this.username) {
-      this.username = (await this.cloud.getCurrentUser())?.username ?? 'anonymous';
-    }
     const { dependenciesChanged, rebuild, storeDir } = await install(
       rootDir,
       manifests,
@@ -123,7 +120,6 @@ export class PnpmPackageManager implements PackageManager {
         sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
         pnpmHomeDir: config.pnpmHomeDir,
         updateAll: installOptions.updateAll,
-        userAgent: `bit user/${this.username}`,
         hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
         reportOptions: {
           appendOnly: installOptions.optimizeReportForNonTerminal,
@@ -191,6 +187,9 @@ export class PnpmPackageManager implements PackageManager {
 
   async getNetworkConfig?(): Promise<PackageManagerNetworkConfig> {
     const { config } = await this.readConfig();
+    if (!this.username) {
+      this.username = (await this.cloud.getCurrentUser())?.username ?? 'anonymous';
+    }
     // We need to use config.rawConfig as it will only contain the settings defined by the user.
     // config contains default values of the settings when they are not defined by the user.
     return {
@@ -206,6 +205,7 @@ export class PnpmPackageManager implements PackageManager {
       ca: config.ca,
       cert: config.cert,
       key: config.key,
+      userAgent: `bit user/${this.username}`,
     };
   }
 
