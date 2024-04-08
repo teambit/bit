@@ -303,6 +303,7 @@ export class DependenciesMain {
   }
 
   async usageDeep(depName: string, opts?: { depth?: number }): Promise<string | undefined> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     if (!isComponentId(depName)) {
       return this.dependencyResolver.getPackageManager()?.findUsages?.(depName, {
         lockfileDir: this.workspace.path,
@@ -317,6 +318,7 @@ export class DependenciesMain {
    * @returns a map of component-id-string to the version of the dependency
    */
   async usage(depName: string): Promise<{ [compIdStr: string]: string }> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const [name, version] = this.splitPkgToNameAndVer(depName);
     const allComps = await this.workspace.list();
     const results = {};
