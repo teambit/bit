@@ -50,6 +50,20 @@ export class LoginCmd implements Command {
   ): Promise<string> {
     noBrowser = noBrowser || suppressBrowserLaunch;
 
+    const isLoggedIn = this.cloud.isLoggedIn();
+
+    if (isLoggedIn) {
+      this.cloud.logger.clearStatusLine();
+      const reLoginPrompt = chalk.yellow(
+        'You are already logged in. Do you want to re-login to refresh your access token? [yes(y)/no(n)]'
+      );
+      const ok = await yesno({ question: reLoginPrompt });
+      if (!ok) {
+        return chalk.green(`Logged in as ${this.cloud.getUsername()}`);
+      }
+      this.cloud.logout();
+    }
+
     const result = await this.cloud.login(
       port || this.port,
       noBrowser,
@@ -58,9 +72,10 @@ export class LoginCmd implements Command {
       undefined,
       skipConfigUpdate
     );
+
     let message = chalk.green(`Logged in as ${result?.username}`);
 
-    if (result?.isAlreadyLoggedIn || skipConfigUpdate) {
+    if (skipConfigUpdate) {
       return message;
     }
 
