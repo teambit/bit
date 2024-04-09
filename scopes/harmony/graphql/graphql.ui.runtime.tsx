@@ -4,7 +4,7 @@ import { print } from 'graphql';
 import { Observable } from '@apollo/client/utilities';
 import { FetchResult } from '@apollo/client/core';
 import { UIRuntime } from '@teambit/ui';
-import { InMemoryCache, ApolloClient, ApolloLink, HttpLink, createHttpLink } from '@apollo/client';
+import { InMemoryCache, ApolloClient, ApolloLink, createHttpLink } from '@apollo/client';
 import type { NormalizedCacheObject } from '@apollo/client';
 import { onError } from '@apollo/client/link/error';
 

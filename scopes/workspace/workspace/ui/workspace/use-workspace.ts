@@ -150,8 +150,6 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
       updateQuery: (prev, { subscriptionData }) => {
         const update = subscriptionData.data;
 
-        console.log('🚀 ~ file: use-workspace.ts:153 ~ useEffect ~ update:', update);
-
         if (!update) return prev;
 
         const updatedComponent = update.componentChanged.component;
