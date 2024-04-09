@@ -180,6 +180,7 @@ export class UIServer {
    */
   async dev({ portRange }: StartOptions = {}) {
     const devServerPort = await this.selectPort(portRange);
+
     await this.start({ portRange: [4100, 4200] });
     const expressAppPort = this._port;
 
