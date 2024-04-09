@@ -26,6 +26,7 @@ export default class Doctor implements LegacyCommand {
       'archive the workspace including diagnosis info (by default exclude node-modules and include .bit)',
     ],
     ['n', 'include-node-modules', 'relevant for --archive. include node_modules in the archive file'],
+    ['p', 'include-public', 'relevant for --archive. include public folder in the archive file'],
     ['e', 'exclude-local-scope', 'relevant for --archive. exclude .bit or .git/bit from the archive file'],
   ] as CommandOptions;
 
@@ -36,12 +37,14 @@ export default class Doctor implements LegacyCommand {
       save,
       archive,
       includeNodeModules = false,
+      includePublic = false,
       excludeLocalScope = false,
     }: {
       list?: boolean;
       save?: string;
       archive?: string;
       includeNodeModules?: boolean;
+      includePublic?: boolean;
       excludeLocalScope?: boolean;
     }
   ): Promise<DoctorRunAllResults | Diagnosis[] | DoctorRunOneResult> {
@@ -65,6 +68,7 @@ export default class Doctor implements LegacyCommand {
       filePath,
       archiveWorkspace: Boolean(archive),
       includeNodeModules,
+      includePublic,
       excludeLocalScope,
     };
     return diagnosisName ? runOne(doctorOptions) : runAll(doctorOptions);
