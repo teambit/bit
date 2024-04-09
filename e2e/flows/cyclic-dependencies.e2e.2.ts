@@ -417,13 +417,15 @@ describe('cyclic dependencies', function () {
       helper.command.export();
       // after export, the author now has a link from node_modules.
       helper.fixtures.createComponentBarFoo(`require('@${helper.scopes.remote}/bar.foo');`);
-      tagOutput = helper.command.tagAllWithoutBuild();
     });
-    it('should tag successfully with no error', () => {
+    it('should block the tag by default', () => {
+      expect(() => helper.command.tagAllWithoutBuild()).to.throw();
+    });
+    it('should tag successfully with --ignore-issues flag and should not save the component itself as a dependency', () => {
+      tagOutput = helper.command.tagAllWithoutBuild('--ignore-issues=SelfReference');
       // we had a bug where this was leading to an error "unable to save Version object, it has dependencies but its flattenedDependencies is empty"
       expect(tagOutput).to.have.string('1 component(s) tagged');
-    });
-    it('should not save the component itself as a dependency', () => {
+
       const catComponent = helper.command.catComponent('bar/foo@latest');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(catComponent.dependencies).to.be.lengthOf(0);
