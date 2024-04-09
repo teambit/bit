@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { useQuery as useDataQuery } from '@apollo/client';
 import { GraphQlError } from '@teambit/graphql';
 import { GET_GRAPH, RawGraphQuery } from './get-graph.query';
 import { GraphModel } from './graph-model';

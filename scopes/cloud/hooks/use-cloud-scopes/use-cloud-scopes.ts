@@ -1,4 +1,4 @@
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { useQuery as useDataQuery } from '@apollo/client';
 import { gql } from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 import { ScopeDescriptor } from '@teambit/scopes.scope-descriptor';

@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from 'react';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { useQuery as useDataQuery } from '@apollo/client';
 import { LaneModel, LanesModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
 import { gql } from 'graphql-tag';
 import { DocumentNode } from 'graphql';
