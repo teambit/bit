@@ -1803,48 +1803,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-view"
     },
-    "ui/compare/lane-compare": {
-        "name": "ui/compare/lane-compare",
-        "scope": "teambit.lanes",
-        "version": "0.0.193",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare"
-    },
-    "ui/compare/lane-compare-drawer": {
-        "name": "ui/compare/lane-compare-drawer",
-        "scope": "teambit.lanes",
-        "version": "0.0.158",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare-drawer"
-    },
-    "ui/compare/lane-compare-hooks/use-lane-diff-status": {
-        "name": "ui/compare/lane-compare-hooks/use-lane-diff-status",
-        "scope": "teambit.lanes",
-        "version": "0.0.144",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare-hooks/use-lane-diff-status"
-    },
-    "ui/compare/lane-compare-loader": {
-        "name": "ui/compare/lane-compare-loader",
-        "scope": "teambit.lanes",
-        "version": "0.0.6",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare-loader"
-    },
-    "ui/compare/lane-compare-page": {
-        "name": "ui/compare/lane-compare-page",
-        "scope": "teambit.lanes",
-        "version": "0.0.163",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare-page"
-    },
-    "ui/compare/lane-compare-state": {
-        "name": "ui/compare/lane-compare-state",
-        "scope": "teambit.lanes",
-        "version": "0.0.11",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare-state"
-    },
     "ui/component-compare/changelog": {
         "name": "ui/component-compare/changelog",
         "scope": "teambit.component",
