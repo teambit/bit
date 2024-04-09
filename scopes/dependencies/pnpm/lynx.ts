@@ -201,7 +201,6 @@ export async function install(
     | 'nodeVersion'
     | 'engineStrict'
     | 'excludeLinksFromLockfile'
-    | 'peerDependencyRules'
     | 'neverBuiltDependencies'
     | 'ignorePackageManifest'
     | 'hoistWorkspacePackages'
