@@ -1,6 +1,7 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from 'graphql-tag';
 import { LaneId } from '@teambit/lane-id';
+import { DocumentNode } from 'graphql';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { LaneDiff, PlainLaneDiff, ChangeType } from '@teambit/lanes.entities.lane-diff';
 
@@ -21,7 +22,7 @@ export type LaneDiffStatusQueryResponse = {
   };
 };
 
-export const QUERY_LANE_DIFF_STATUS = gql`
+export const QUERY_LANE_DIFF_STATUS: DocumentNode = gql`
   query LaneDiffStatus($source: String!, $target: String!, $options: DiffStatusOptions) {
     lanes {
       id
