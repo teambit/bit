@@ -95,6 +95,7 @@ export type NetworkConfig = {
   cafile?: string;
   cert?: string | string[];
   key?: string;
+  userAgent?: string;
 };
 
 type Agent = HttpsProxyAgent | HttpAgent | HttpAgent.HttpsAgent | HttpProxyAgent | SocksProxyAgent | undefined;

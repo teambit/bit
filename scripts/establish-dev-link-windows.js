@@ -1,4 +1,4 @@
-const { rmdirSync, unlinkSync, mkdirSync, writeFileSync } = require('fs');
+const { unlinkSync, mkdirSync, writeFileSync, symlinkSync, rmSync } = require('fs-extra');
 const { exec } = require('child_process');
 const path = require('path');
 
@@ -9,7 +9,7 @@ const source = path.join(__dirname, '..', 'bin', 'bit.js');
 const dest = `${process.env.localappdata}\\${linkName}`;
 
 try {
-  rmdirSync(dest, { recursive: true });
+  rmSync(dest, { recursive: true });
 } catch (err) {} // maybe doesn't exist
 
 try {
@@ -17,8 +17,13 @@ try {
 } catch (err) {} // maybe doesn't exist or not a symlink
 
 mkdirSync(dest);
-
+// for cmd.
 writeFileSync(`${dest}\\${linkName}.bat`, `@echo off\nnode ${source} %*`);
+
+// for git bash.
+try {
+  symlinkSync(source, `${dest}\\${linkName}`);
+} catch (err) {}
 
 if (process.env.PATH.includes(dest)) {
   console.log(`Success!!!\nNow you can use the "${linkName}" command to run your dev app.`);

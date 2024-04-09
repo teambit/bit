@@ -51,6 +51,7 @@ export type DoctorOptions = {
   filePath?: string;
   archiveWorkspace?: boolean;
   includeNodeModules?: boolean;
+  includePublic?: boolean;
   excludeLocalScope?: boolean;
 };
 
@@ -145,7 +146,7 @@ async function _generateExamineResultsTarFile(
   tarFilePath: string,
   options: DoctorOptions
 ): Promise<Stream.Readable> {
-  const { archiveWorkspace, includeNodeModules, excludeLocalScope } = options;
+  const { archiveWorkspace, includeNodeModules, includePublic, excludeLocalScope } = options;
   const debugLog = await _getDebugLogAsBuffer();
   const consumerInfo = await _getConsumerInfo();
   let bitmap;
@@ -184,9 +185,21 @@ async function _generateExamineResultsTarFile(
 
   const ignore = (fileName: string) => {
     if (fileName === tarFilePath) return true;
-    if (!includeNodeModules && fileName.startsWith(`node_modules${path.sep}`)) return true;
+    if (fileName === '.DS_Store') return true;
+    if (
+      !includeNodeModules &&
+      (fileName.startsWith(`node_modules${path.sep}`) || fileName.includes(`${path.sep}node_modules${path.sep}`))
+    )
+      return true;
+    if (
+      !includePublic &&
+      (fileName.startsWith(`public${path.sep}`) || fileName.includes(`${path.sep}public${path.sep}`))
+    )
+      return true;
+    const isGit = fileName.startsWith(`.git${path.sep}`);
     const isLocalScope = fileName.startsWith(`.bit${path.sep}`) || fileName.startsWith(`.git${path.sep}bit${path.sep}`);
     if (excludeLocalScope && isLocalScope) return true;
+    if (isGit && !isLocalScope) return true;
     return false;
   };
 
