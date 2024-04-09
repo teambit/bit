@@ -185,7 +185,11 @@ async function _generateExamineResultsTarFile(
 
   const ignore = (fileName: string) => {
     if (fileName === tarFilePath) return true;
-    if (!includeNodeModules && fileName.startsWith(`node_modules${path.sep}`)) return true;
+    if (
+      !includeNodeModules &&
+      (fileName.startsWith(`node_modules${path.sep}`) || fileName.includes(`${path.sep}node_modules${path.sep}`))
+    )
+      return true;
     if (
       !includePublic &&
       (fileName.startsWith(`public${path.sep}`) || fileName.includes(`${path.sep}public${path.sep}`))
