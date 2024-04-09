@@ -185,6 +185,7 @@ async function _generateExamineResultsTarFile(
 
   const ignore = (fileName: string) => {
     if (fileName === tarFilePath) return true;
+    if (fileName === '.DS_Store') return true;
     if (
       !includeNodeModules &&
       (fileName.startsWith(`node_modules${path.sep}`) || fileName.includes(`${path.sep}node_modules${path.sep}`))
