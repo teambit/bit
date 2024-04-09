@@ -284,7 +284,8 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
       const deps = this.depsResolver.getDependenciesFromLegacyComponent(component);
       deps.forEach((dep) => {
         if (dep.source !== 'auto') return;
-        const depId = dep.idWithoutVersion;
+        const depId = dep.getPackageName?.();
+        if (!depId) return; // unclear when this happens.
         if (!workspacePolicyObj[depId]) return;
         if (workspacePolicyObj[depId] === dep.version) return;
         if (componentDepsWithMultipleVer[depId]?.includes(dep.version)) return;
