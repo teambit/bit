@@ -26,6 +26,10 @@ export { Level as LoggerLevel };
 const jsonFormat =
   yn(getSync(CFG_LOG_JSON_FORMAT), { default: false }) || yn(process.env.JSON_LOGS, { default: false });
 
+export const shouldDisableLoader = yn(process.env.BIT_DISABLE_SPINNER);
+export const shouldDisableConsole =
+  yn(process.env.BIT_DISABLE_CONSOLE) || process.argv.includes('--json') || process.argv.includes('-j');
+
 const LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
 
 const logLevel = getLogLevel();
@@ -75,7 +79,7 @@ class BitLogger implements IBitLogger {
    * it set before the command-registrar is loaded. at this stage we don't know for sure the "-j"
    * is actually "json". that's why this variable is overridden once the command-registrar is up.
    */
-  shouldWriteToConsole = !process.argv.includes('--json') && !process.argv.includes('-j');
+  shouldWriteToConsole = !shouldDisableConsole;
   /**
    * helpful to get a list in the .bit/command-history of all commands that were running on this workspace.
    * it's written only if the consumer is loaded. otherwise, the commandHistory.fileBasePath is undefined
