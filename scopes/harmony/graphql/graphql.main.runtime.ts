@@ -134,11 +134,8 @@ export class GraphqlMain {
       execute
     );
 
-    // this.proxySubscription(httpServer, subscriptionServerPort)
-
     const apolloServer = new ApolloServer({
       gateway: {
-        // @ts-ignore - todo this fixes when update graphql on the core-aspect-env
         async load() {
           return { executor: application.createApolloExecutor() };
         },
@@ -179,7 +176,6 @@ export class GraphqlMain {
 
     if (!this.config.disableCors) {
       app.use(
-        // @ts-ignore todo: it's not clear what's the issue.
         cors({
           origin(origin, callback) {
             callback(null, true);
@@ -301,7 +297,6 @@ export class GraphqlMain {
     port: 4000,
     disableCors: false,
     subscriptionsPath: '/subscriptions',
-    // subscriptionsPortRange: [2000, 2100],
   };
 
   static runtime = MainRuntime;
