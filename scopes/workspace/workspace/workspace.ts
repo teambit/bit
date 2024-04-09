@@ -18,7 +18,12 @@ import {
 import { BitError } from '@teambit/bit-error';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
-import { DependencyResolverMain, DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
+import {
+  DependencyResolverMain,
+  DependencyResolverAspect,
+  VariantPolicy,
+  DependencyList,
+} from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
@@ -558,6 +563,10 @@ export class Workspace implements ComponentFactory {
       })
     );
     return compsWithHead;
+  }
+
+  getDependencies(component: Component): DependencyList {
+    return this.dependencyResolver.getDependencies(component);
   }
 
   async getSavedGraphOfComponentIfExist(component: Component) {

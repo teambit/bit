@@ -5,6 +5,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { CompIdGraph } from '@teambit/graph';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import type { AspectDefinition } from '@teambit/aspect-loader';
+import type { DependencyList } from '@teambit/dependency-resolver';
 import { Component, InvalidComponent } from './component';
 import { State } from './state';
 import { Snap } from './snap';
@@ -118,6 +119,8 @@ export interface ComponentFactory {
   getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<CompIdGraph>;
 
   getLogs(id: ComponentID, shortHash?: boolean, startsFrom?: string): Promise<ComponentLog[]>;
+
+  getDependencies(component: Component): DependencyList;
 
   /**
    * returns a specific state of a component by hash or semver.

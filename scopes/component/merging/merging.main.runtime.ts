@@ -294,7 +294,9 @@ export class MergingMain {
         });
       } catch (err: any) {
         this.logger.error(`failed installing packages`, err);
-        this.logger.consoleError(`failed installing packages, see the log for full stacktrace. error: ${err.message}`);
+        this.logger.consoleFailure(
+          `failed installing packages, see the log for full stacktrace. error: ${err.message}`
+        );
       }
     }
 
@@ -432,7 +434,6 @@ export class MergingMain {
       laneId: otherLaneId,
     };
     id = currentComponent ? currentComponent.id : id;
-
     const modelComponent = await legacyScope.getModelComponent(id);
 
     const addToCurrentLane = (head: Ref) => {
@@ -527,7 +528,7 @@ export class MergingMain {
     }
 
     return {
-      applyVersionResult: { id, filesStatus },
+      applyVersionResult: { id: idToLoad, filesStatus },
       component: currentComponent || undefined,
       legacyCompToWrite: legacyComponent,
     };

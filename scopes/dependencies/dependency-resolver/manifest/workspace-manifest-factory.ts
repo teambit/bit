@@ -153,14 +153,13 @@ export class WorkspaceManifestFactory {
         const coreAspectIds = this.aspectLoader.getCoreAspectIds();
         for (const comp of depList.toTypeArray('component') as ComponentDependency[]) {
           const [compIdWithoutVersion] = comp.id.split('@');
-          if (
-            !comp.isExtension &&
-            !coreAspectIds.includes(compIdWithoutVersion) &&
-            components.some((c) => c.id.isEqual(comp.componentId))
-          ) {
-            const pkgName = comp.getPackageName();
-            if (pkgName !== '@teambit/harmony') {
-              additionalDeps[pkgName] = `workspace:*`;
+          if (!comp.isExtension && !coreAspectIds.includes(compIdWithoutVersion)) {
+            const componentInWorkspace = components.find((c) => c.id.isEqual(comp.componentId));
+            if (componentInWorkspace) {
+              const pkgName = this.dependencyResolver.getPackageName(componentInWorkspace);
+              if (pkgName !== '@teambit/harmony') {
+                additionalDeps[pkgName] = `workspace:*`;
+              }
             }
           }
         }

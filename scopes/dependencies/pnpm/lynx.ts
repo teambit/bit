@@ -76,6 +76,7 @@ async function createStoreController(
     preferOffline: options.preferOffline,
     resolveSymlinksInInjectedDirs: true,
     pnpmHomeDir: options.pnpmHomeDir,
+    userAgent: options.networkConfig.userAgent,
   };
   // We should avoid the recreation of store.
   // The store holds cache that makes subsequent resolutions faster.
@@ -109,6 +110,7 @@ async function generateResolverAndFetcher(
     strictSsl: networkConfig.strictSSL,
     timeout: networkConfig.fetchTimeout,
     rawConfig: pnpmConfig.config.rawConfig,
+    userAgent: networkConfig.userAgent,
     retry: {
       factor: networkConfig.fetchRetryFactor,
       maxTimeout: networkConfig.fetchRetryMaxtimeout,
@@ -283,6 +285,7 @@ export async function install(
       devDependencies: true,
       optionalDependencies: options?.includeOptionalDeps !== false,
     },
+    userAgent: networkConfig.userAgent,
     ...options,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     depth: options.updateAll ? Infinity : 0,

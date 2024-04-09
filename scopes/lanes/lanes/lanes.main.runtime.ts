@@ -162,7 +162,7 @@ export class LanesMain {
   }): Promise<LaneData[]> {
     const showMergeData = Boolean(merged || notMerged);
     const consumer = this.workspace?.consumer;
-
+    if (!this.scope) throw new Error(`error: please run the command from a workspace or a scope directory`);
     if (remote) {
       const laneId = name ? LaneId.from(name, remote) : undefined;
       const remoteObj = await getRemoteByName(remote, consumer);
