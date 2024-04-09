@@ -171,7 +171,7 @@ type UseRootLanes = (
 const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}, scope) => {
   const { ids, offset, limit, sort } = options;
 
-  const { data, fetchMore, loading } = useDataQuery<LanesQuery>(GET_LANES, {
+  const { data, fetchMore, loading } = useDataQuery(GET_LANES, {
     variables: {
       laneIds: ids,
       offset,
@@ -259,7 +259,7 @@ const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}, scope) => 
 };
 
 export const useSearchLanes: SearchLanes = (search, skip) => {
-  const { data: searchData, loading: loadingSearch } = useDataQuery<LanesQuery>(GET_LANES, {
+  const { data: searchData, loading: loadingSearch } = useDataQuery(GET_LANES, {
     variables: {
       search,
       skipViewedLane: true,

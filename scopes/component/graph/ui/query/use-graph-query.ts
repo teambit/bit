@@ -1,17 +1,12 @@
 import { useMemo } from 'react';
 import { useQuery as useDataQuery } from '@apollo/client';
 import { GraphQlError } from '@teambit/graphql';
-import { GET_GRAPH, RawGraphQuery } from './get-graph.query';
+import { GET_GRAPH } from './get-graph.query';
 import { GraphModel } from './graph-model';
-
-type QueryVariables = {
-  ids?: string[];
-  filter?: string;
-};
 
 /** provides dependencies graph data from graphQL */
 export function useGraphQuery(componentId?: string[], filter?: string) {
-  const { data, error, loading } = useDataQuery<RawGraphQuery, QueryVariables>(GET_GRAPH, {
+  const { data, error, loading } = useDataQuery(GET_GRAPH, {
     variables: { ids: componentId, filter },
     skip: !componentId,
   });
