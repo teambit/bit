@@ -191,8 +191,10 @@ async function _generateExamineResultsTarFile(
       (fileName.startsWith(`public${path.sep}`) || fileName.includes(`${path.sep}public${path.sep}`))
     )
       return true;
+    const isGit = fileName.startsWith(`.git${path.sep}`);
     const isLocalScope = fileName.startsWith(`.bit${path.sep}`) || fileName.startsWith(`.git${path.sep}bit${path.sep}`);
     if (excludeLocalScope && isLocalScope) return true;
+    if (isGit && !isLocalScope) return true;
     return false;
   };
 
