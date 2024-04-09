@@ -2,11 +2,12 @@ import { useMemo, useCallback } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { LaneModel, LanesModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
 import { gql } from 'graphql-tag';
+import { DocumentNode } from 'graphql';
 import { LaneId } from '@teambit/lane-id';
 import { isEqual } from 'lodash';
 import { useLanesContext } from './lanes-context';
 
-const GET_LANES = gql`
+const GET_LANES: DocumentNode = gql`
   query Lanes(
     $extensionId: String
     $laneIds: [String!]

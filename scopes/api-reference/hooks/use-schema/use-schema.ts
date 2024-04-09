@@ -1,9 +1,10 @@
 import { DataQueryResult, useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from 'graphql-tag';
+import { DocumentNode } from 'graphql';
 import { SchemaQueryResult, APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 import { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 
-const GET_SCHEMA = gql`
+const GET_SCHEMA: DocumentNode = gql`
   query Schema($extensionId: String!, $componentId: String!) {
     getHost(id: $extensionId) {
       id # used for GQL caching

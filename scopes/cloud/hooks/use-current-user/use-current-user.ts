@@ -1,8 +1,9 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from 'graphql-tag';
+import { DocumentNode } from 'graphql';
 import { CloudUser } from '@teambit/cloud.models.cloud-user';
 
-export const CURRENT_USER_QUERY = gql`
+export const CURRENT_USER_QUERY: DocumentNode = gql`
   query CurrentUser($redirectUrl: String!) {
     getCurrentUser {
       username

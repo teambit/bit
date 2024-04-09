@@ -1,9 +1,10 @@
 import { gql } from 'graphql-tag';
+import { DocumentNode } from 'graphql';
 import { EdgeType } from '../../edge-type';
 
 // please update types when updating query, for added safety
 
-export const GET_GRAPH = gql`
+export const GET_GRAPH: DocumentNode = gql`
   query graph($ids: [String], $filter: String) {
     graph(ids: $ids, filter: $filter) {
       nodes {

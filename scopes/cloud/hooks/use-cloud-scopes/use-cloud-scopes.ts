@@ -1,9 +1,10 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from 'graphql-tag';
+import { DocumentNode } from 'graphql';
 import { ScopeDescriptor } from '@teambit/scopes.scope-descriptor';
 import { ScopeID } from '@teambit/scopes.scope-id';
 
-export const GET_CLOUD_SCOPES_QUERY = gql`
+export const GET_CLOUD_SCOPES_QUERY: DocumentNode = gql`
   query GET_CLOUD_SCOPES($ids: [String!]) {
     getCloudScopes(ids: $ids) {
       id

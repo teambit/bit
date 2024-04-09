@@ -1,7 +1,8 @@
 import { useMutation } from '@teambit/ui';
 import { gql } from 'graphql-tag';
+import { DocumentNode } from 'graphql';
 
-export const LOGOUT_MUTATION = gql`
+export const LOGOUT_MUTATION: DocumentNode = gql`
   mutation LogoutUser {
     logout
   }

@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from 'react';
 import { ComponentModel } from '@teambit/component';
 import useLatest from '@react-hook/latest';
-// import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from 'graphql-tag';
+import { DocumentNode } from 'graphql';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { useQuery } from '@apollo/client';
 
@@ -15,7 +15,7 @@ type UseWorkspaceOptions = {
 };
 type RawComponent = { id: ComponentIdObj };
 
-const wcComponentFields = gql`
+const wcComponentFields: DocumentNode = gql`
   fragment wcComponentFields on Component {
     id {
       name
@@ -63,7 +63,7 @@ const wcComponentFields = gql`
   }
 `;
 
-const WORKSPACE = gql`
+const WORKSPACE: DocumentNode = gql`
   query workspace {
     workspace {
       name
@@ -81,7 +81,7 @@ const WORKSPACE = gql`
   ${wcComponentFields}
 `;
 
-const COMPONENT_SUBSCRIPTION_ADDED = gql`
+const COMPONENT_SUBSCRIPTION_ADDED: DocumentNode = gql`
   subscription OnComponentAdded {
     componentAdded {
       component {
@@ -92,7 +92,7 @@ const COMPONENT_SUBSCRIPTION_ADDED = gql`
   ${wcComponentFields}
 `;
 
-const COMPONENT_SUBSCRIPTION_CHANGED = gql`
+const COMPONENT_SUBSCRIPTION_CHANGED: DocumentNode = gql`
   subscription OnComponentChanged {
     componentChanged {
       component {
@@ -103,7 +103,7 @@ const COMPONENT_SUBSCRIPTION_CHANGED = gql`
   ${wcComponentFields}
 `;
 
-const COMPONENT_SUBSCRIPTION_REMOVED = gql`
+const COMPONENT_SUBSCRIPTION_REMOVED: DocumentNode = gql`
   subscription OnComponentRemoved {
     componentRemoved {
       componentIds {
