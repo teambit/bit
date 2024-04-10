@@ -122,6 +122,8 @@ export interface ComponentFactory {
 
   getDependencies(component: Component): DependencyList;
 
+  componentPackageName(component: Component): string;
+
   /**
    * returns a specific state of a component by hash or semver.
    */

@@ -313,6 +313,10 @@ export class ScopeMain implements ComponentFactory {
     return this.dependencyResolver.getDependencies(component);
   }
 
+  componentPackageName(component: Component): string {
+    return this.dependencyResolver.getPackageName(component);
+  }
+
   private async upsertExtensionData(component: Component, extension: string, data: any) {
     if (!data) return;
     const existingExtension = component.state._consumer.extensions.findExtension(extension);
