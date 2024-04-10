@@ -192,21 +192,40 @@ export class PnpmPackageManager implements PackageManager {
     }
     // We need to use config.rawConfig as it will only contain the settings defined by the user.
     // config contains default values of the settings when they are not defined by the user.
-    return {
-      maxSockets: config.rawConfig['max-sockets'],
-      networkConcurrency: config.rawConfig['network-concurrency'],
-      fetchRetries: config.rawConfig['fetch-retries'],
-      fetchTimeout: config.rawConfig['fetch-timeout'],
-      fetchRetryMaxtimeout: config.rawConfig['fetch-retry-maxtimeout'],
-      fetchRetryMintimeout: config.rawConfig['fetch-retry-mintimeout'],
-      strictSSL: config.rawConfig['strict-ssl'],
-      // These settings don't have default value, so it is safe to read them from config
-      // ca is automatically populated from the content of the file specified by cafile.
-      ca: config.ca,
-      cert: config.cert,
-      key: config.key,
+    const result: PackageManagerNetworkConfig = {
       userAgent: `bit user/${this.username}`,
     };
+    if (config.rawConfig['max-sockets'] != null) {
+      result.maxSockets = config.rawConfig['max-sockets'];
+    }
+    if (config.rawConfig['network-concurrency'] != null) {
+      result.networkConcurrency = config.rawConfig['network-concurrency'];
+    }
+    if (config.rawConfig['fetch-retries'] != null) {
+      result.fetchRetries = config.rawConfig['fetch-retries'];
+    }
+    if (config.rawConfig['fetch-timeout'] != null) {
+      result.fetchTimeout = config.rawConfig['fetch-timeout'];
+    }
+    if (config.rawConfig['fetch-retry-maxtimeout'] != null) {
+      result.fetchRetryMaxtimeout = config.rawConfig['fetch-retry-maxtimeout'];
+    }
+    if (config.rawConfig['fetch-retry-mintimeout'] != null) {
+      result.fetchRetryMintimeout = config.rawConfig['fetch-retry-mintimeout'];
+    }
+    if (config.rawConfig['strict-ssl'] != null) {
+      result.strictSSL = config.rawConfig['strict-ssl'];
+    }
+    if (config.ca != null) {
+      result.ca = config.ca;
+    }
+    if (config.cert != null) {
+      result.cert = config.cert;
+    }
+    if (config.key != null) {
+      result.key = config.key;
+    }
+    return result;
   }
 
   async getRegistries(): Promise<Registries> {
