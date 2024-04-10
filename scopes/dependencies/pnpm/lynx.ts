@@ -261,13 +261,11 @@ export async function install(
     confirmModulesPurge: false,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
-    dedupeInjectedDeps: false,
     dir: rootDir,
     storeController: storeController.ctrl,
     workspacePackages,
     preferFrozenLockfile: true,
     pruneLockfileImporters: true,
-    hoistWorkspacePackages: false,
     lockfileOnly: options.lockfileOnly ?? false,
     modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.
     neverBuiltDependencies: options.neverBuiltDependencies,

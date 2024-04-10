@@ -103,14 +103,14 @@ export class PnpmPackageManager implements PackageManager {
         nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
         includeOptionalDeps: installOptions.includeOptionalDeps,
         ignorePackageManifest: installOptions.ignorePackageManifest,
-        dedupeInjectedDeps: installOptions.dedupeInjectedDeps,
+        dedupeInjectedDeps: installOptions.dedupeInjectedDeps ?? false,
         dryRun: installOptions.dryRun,
         overrides: installOptions.overrides,
         hoistPattern: installOptions.hoistPatterns ?? config.hoistPattern,
         publicHoistPattern: config.shamefullyHoist
           ? ['*']
           : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
-        hoistWorkspacePackages: installOptions.hoistWorkspacePackages,
+        hoistWorkspacePackages: installOptions.hoistWorkspacePackages ?? false,
         hoistInjectedDependencies: installOptions.hoistInjectedDependencies,
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
         preferOffline: installOptions.preferOffline,
@@ -247,7 +247,10 @@ export class PnpmPackageManager implements PackageManager {
   async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
     const modulesState = await this._readModulesManifest(rootDir);
     if (modulesState?.injectedDeps == null) return [];
-    return modulesState.injectedDeps[`node_modules/${packageName}`] ?? modulesState.injectedDeps[componentDir] ?? [];
+    const result =
+      modulesState.injectedDeps[`node_modules/${packageName}`] ?? modulesState.injectedDeps[componentDir] ?? [];
+    console.log(result);
+    return result;
   }
 
   async _readModulesManifest(lockfileDir: string): Promise<Modules | undefined> {
