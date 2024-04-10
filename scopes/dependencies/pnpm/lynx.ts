@@ -261,7 +261,7 @@ export async function install(
     confirmModulesPurge: false,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
-    dedupeInjectedDeps: options.dedupeInjectedDeps,
+    dedupeInjectedDeps: options.dedupeInjectedDeps ?? false,
     dir: rootDir,
     storeController: storeController.ctrl,
     workspacePackages,
