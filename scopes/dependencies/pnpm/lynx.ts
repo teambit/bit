@@ -77,6 +77,11 @@ async function createStoreController(
     resolveSymlinksInInjectedDirs: true,
     pnpmHomeDir: options.pnpmHomeDir,
     userAgent: options.networkConfig.userAgent,
+    fetchRetries: options.networkConfig.fetchRetries,
+    fetchRetryFactor: options.networkConfig.fetchRetryFactor,
+    fetchRetryMaxtimeout: options.networkConfig.fetchRetryMaxtimeout,
+    fetchRetryMintimeout: options.networkConfig.fetchRetryMintimeout,
+    fetchTimeout: options.networkConfig.fetchTimeout,
   };
   // We should avoid the recreation of store.
   // The store holds cache that makes subsequent resolutions faster.
