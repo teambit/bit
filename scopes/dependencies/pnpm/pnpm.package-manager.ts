@@ -195,34 +195,34 @@ export class PnpmPackageManager implements PackageManager {
     const result: PackageManagerNetworkConfig = {
       userAgent: `bit user/${this.username}`,
     };
-    if (config.rawConfig['max-sockets']) {
+    if (config.rawConfig['max-sockets'] != null) {
       result.maxSockets = config.rawConfig['max-sockets'];
     }
-    if (config.rawConfig['network-concurrency']) {
+    if (config.rawConfig['network-concurrency'] != null) {
       result.networkConcurrency = config.rawConfig['network-concurrency'];
     }
-    if (config.rawConfig['fetch-retries']) {
+    if (config.rawConfig['fetch-retries'] != null) {
       result.fetchRetries = config.rawConfig['fetch-retries'];
     }
-    if (config.rawConfig['fetch-timeout']) {
+    if (config.rawConfig['fetch-timeout'] != null) {
       result.fetchTimeout = config.rawConfig['fetch-timeout'];
     }
-    if (config.rawConfig['fetch-retry-maxtimeout']) {
+    if (config.rawConfig['fetch-retry-maxtimeout'] != null) {
       result.fetchRetryMaxtimeout = config.rawConfig['fetch-retry-maxtimeout'];
     }
-    if (config.rawConfig['fetch-retry-mintimeout']) {
+    if (config.rawConfig['fetch-retry-mintimeout'] != null) {
       result.fetchRetryMintimeout = config.rawConfig['fetch-retry-mintimeout'];
     }
-    if (config.rawConfig['strict-ssl']) {
+    if (config.rawConfig['strict-ssl'] != null) {
       result.strictSSL = config.rawConfig['strict-ssl'];
     }
-    if (config.ca) {
+    if (config.ca != null) {
       result.ca = config.ca;
     }
-    if (config.cert) {
+    if (config.cert != null) {
       result.cert = config.cert;
     }
-    if (config.key) {
+    if (config.key != null) {
       result.key = config.key;
     }
     return result;
