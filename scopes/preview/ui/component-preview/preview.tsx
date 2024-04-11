@@ -108,6 +108,19 @@ export function ComponentPreview({
   usePubSubIframe(pubsub ? currentRef : undefined);
   // const pubsubContext = usePubSub();
   // pubsubContext?.connect(iframeHeight);
+
+  useEffect(() => {
+    const handleLoad = (event) => {
+      if (event.data && event.data.event === 'loaded') {
+        onLoad && onLoad(event);
+      }
+    };
+    window.addEventListener('message', handleLoad);
+    return () => {
+      window.removeEventListener('message', handleLoad);
+    };
+  }, []);
+
   useEffect(() => {
     if (!iframeRef.current) return;
     connectToChild({
