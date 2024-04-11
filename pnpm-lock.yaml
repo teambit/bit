@@ -2231,11 +2231,11 @@ importers:
         version: 2.0.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/harmony.envs.core-aspect-env-jest':
-        specifier: 0.0.11
-        version: 0.0.11(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.14
+        version: 0.0.14(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react.v17.react-env':
         specifier: 1.1.6
         version: 1.1.6(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(@typescript-eslint/parser@7.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(react-test-renderer@17.0.2)(subscriptions-transport-ws@0.9.18)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
@@ -6312,7 +6312,7 @@ importers:
       '@teambit/yarn':
         injected: true
 
-  node_modules/.bit_roots/teambit.harmony_envs_core-aspect-env-jest@0.0.11:
+  node_modules/.bit_roots/teambit.harmony_envs_core-aspect-env-jest@0.0.14:
     dependencies:
       '@mdx-js/react':
         specifier: 1.6.22
@@ -6744,8 +6744,8 @@ importers:
         specifier: workspace:*
         version: file:scopes/harmony/cli-reference(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony.envs.core-aspect-env-jest':
-        specifier: 0.0.11
-        version: 0.0.11(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.14
+        version: 0.0.14(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/harmony.modules.harmony-root-generator':
         specifier: workspace:*
         version: file:components/modules/harmony-root-generator
@@ -7736,7 +7736,7 @@ importers:
       '@teambit/yarn':
         injected: true
 
-  node_modules/.bit_roots/teambit.harmony_envs_core-aspect-env@0.0.30:
+  node_modules/.bit_roots/teambit.harmony_envs_core-aspect-env@0.0.33:
     dependencies:
       '@mdx-js/react':
         specifier: 1.6.22
@@ -8168,8 +8168,8 @@ importers:
         specifier: workspace:*
         version: file:scopes/harmony/cli-reference(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/harmony.modules.harmony-root-generator':
         specifier: workspace:*
         version: file:components/modules/harmony-root-generator
@@ -14827,8 +14827,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -15603,8 +15603,8 @@ importers:
         version: 0.4.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/express':
         specifier: 4.17.13
         version: 4.17.13
@@ -15875,8 +15875,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -16062,8 +16062,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -16120,8 +16120,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -16196,8 +16196,8 @@ importers:
         specifier: 1.95.0
         version: 1.95.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -16273,8 +16273,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -16383,8 +16383,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -16444,8 +16444,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -16520,8 +16520,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -16668,8 +16668,8 @@ importers:
         specifier: 1.95.0
         version: 1.95.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -16750,8 +16750,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash.flatten':
         specifier: 4.4.6
         version: 4.4.6
@@ -16799,8 +16799,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -16872,8 +16872,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/cli-table':
         specifier: ^0.3.0
         version: 0.3.4
@@ -16943,8 +16943,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -16986,8 +16986,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -17084,8 +17084,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -17148,8 +17148,8 @@ importers:
         version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -17206,8 +17206,8 @@ importers:
         specifier: 1.95.9
         version: 1.95.9(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -17279,8 +17279,8 @@ importers:
         version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -17406,8 +17406,8 @@ importers:
         version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -17512,8 +17512,8 @@ importers:
         version: 8.3.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -17579,8 +17579,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -17637,8 +17637,8 @@ importers:
         version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/cli-table':
         specifier: ^0.3.0
         version: 0.3.4
@@ -17707,8 +17707,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -17765,8 +17765,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -17826,8 +17826,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -17887,8 +17887,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -17957,8 +17957,8 @@ importers:
         version: 0.4.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -18024,8 +18024,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -18115,8 +18115,8 @@ importers:
         version: 8.3.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -18194,8 +18194,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -18261,8 +18261,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -18362,8 +18362,8 @@ importers:
         version: 0.5.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -18584,8 +18584,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -18741,8 +18741,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/eslint':
         specifier: 8.56.6
         version: 8.56.6
@@ -18842,8 +18842,8 @@ importers:
         specifier: 1.96.1
         version: 1.96.1(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -18921,8 +18921,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -18994,8 +18994,8 @@ importers:
         specifier: 1.95.0
         version: 1.95.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -19055,8 +19055,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -19113,8 +19113,8 @@ importers:
         specifier: 1.95.0
         version: 1.95.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -19165,8 +19165,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -19281,8 +19281,8 @@ importers:
         specifier: 1.95.0
         version: 1.95.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -19501,8 +19501,8 @@ importers:
         version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -19631,8 +19631,8 @@ importers:
         version: 0.3.1
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env-jest':
-        specifier: 0.0.11
-        version: 0.0.11(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.14
+        version: 0.0.14(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -19788,8 +19788,8 @@ importers:
         version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -19888,8 +19888,8 @@ importers:
         version: 1.10.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -19970,8 +19970,8 @@ importers:
         specifier: 1.95.9
         version: 1.95.9(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -20129,8 +20129,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 10.0.1
         version: 10.0.1
@@ -20196,8 +20196,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -20306,8 +20306,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -20376,8 +20376,8 @@ importers:
         version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -20504,8 +20504,8 @@ importers:
         version: 2.2.1
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -20565,8 +20565,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -20623,8 +20623,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -20687,8 +20687,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -20793,8 +20793,8 @@ importers:
         version: 5.3.3
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -20970,8 +20970,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -21109,8 +21109,8 @@ importers:
         specifier: 1.96.2
         version: 1.96.2(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -21161,8 +21161,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/cacache':
         specifier: 12.0.1
         version: 12.0.1
@@ -21237,8 +21237,8 @@ importers:
         version: 17.0.1
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/didyoumean':
         specifier: 1.2.0
         version: 1.2.0
@@ -21347,8 +21347,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -21399,8 +21399,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -21451,8 +21451,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/express':
         specifier: 4.17.13
         version: 4.17.13
@@ -21509,8 +21509,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -21624,8 +21624,8 @@ importers:
         version: 7.4.2(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/cors':
         specifier: 2.8.10
         version: 2.8.10
@@ -21685,8 +21685,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -21740,8 +21740,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -21901,8 +21901,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/ui-foundation.ui.is-browser':
         specifier: ^0.0.500
         version: 0.0.500(react-dom@17.0.2)(react@17.0.2)
@@ -22030,8 +22030,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -22311,8 +22311,8 @@ importers:
         version: 2.0.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -22393,8 +22393,8 @@ importers:
         version: 0.4.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -22768,8 +22768,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/archiver':
         specifier: 5.3.1
         version: 5.3.1
@@ -22963,8 +22963,8 @@ importers:
         version: 10.0.1
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/pkg.content.packages-overview':
         specifier: 1.95.9
         version: 1.95.9(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
@@ -23133,8 +23133,8 @@ importers:
         version: 5.8.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -23859,8 +23859,8 @@ importers:
         version: 5.3.3
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -24328,8 +24328,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -24407,8 +24407,8 @@ importers:
         version: 0.4.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -24589,8 +24589,8 @@ importers:
         version: 7.5.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/scope.content.scope-overview':
         specifier: 1.95.0
         version: 1.95.0(react-dom@17.0.2)(react@17.0.2)
@@ -24662,8 +24662,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24723,8 +24723,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -24781,8 +24781,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -24845,8 +24845,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -25390,8 +25390,8 @@ importers:
         version: 0.4.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -25442,8 +25442,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -25497,8 +25497,8 @@ importers:
         version: 8.3.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -25549,8 +25549,8 @@ importers:
         version: 3.2.0(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -25604,8 +25604,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -25659,8 +25659,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -25852,8 +25852,8 @@ importers:
         version: 6.2.4(@types/babel__core@7.20.0)(webpack@5.84.1)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/express':
         specifier: 4.17.13
         version: 4.17.13
@@ -25925,8 +25925,8 @@ importers:
         version: 0.7.24
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -26193,8 +26193,8 @@ importers:
         version: 5.8.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/find-root':
         specifier: 1.1.2
         version: 1.1.2
@@ -26297,8 +26297,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -26361,8 +26361,8 @@ importers:
         version: 1.0.1
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -26419,8 +26419,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -26498,8 +26498,8 @@ importers:
         version: 5.4.6
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -26664,8 +26664,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/workspace.content.variants':
         specifier: 1.95.9
         version: 1.95.9(react-dom@17.0.2)(react@17.0.2)
@@ -26737,8 +26737,8 @@ importers:
         version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -26921,8 +26921,8 @@ importers:
         version: 1.0.1
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/workspace.content.workspace-overview':
         specifier: 1.95.0
         version: 1.95.0(react-dom@17.0.2)(react@17.0.2)
@@ -27018,8 +27018,8 @@ importers:
         version: 0.4.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 0.0.30
-        version: 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        specifier: 0.0.33
+        version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -41946,17 +41946,17 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
 
-  /@teambit/harmony.envs.core-aspect-env-jest@0.0.11(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
-    resolution: {integrity: sha512-L1O8aGUBsKKoBpIEl5LkaaN7bv1UHUjentLHRqx/v5b4qNmc/UkovEshpQfgdBN4qdt5EA3aFdMpI7qZmKYjpw==}
+  /@teambit/harmony.envs.core-aspect-env-jest@0.0.14(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
+    resolution: {integrity: sha512-Z/lfxgQ7CALH/KMGTjsWE52gp4x3+ZS3mhYc+nAxqGMeiXMEbhG079O/wRBfDHho5Vid1O3yjbkGlBh6v22AIw==}
     dependencies:
       '@babel/runtime': 7.20.0
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/compilation.babel-compiler': 1.1.8
       '@teambit/defender.jest-tester': 1.0.25(@types/node@20.2.5)
-      '@teambit/harmony.envs.core-aspect-env': 0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+      '@teambit/harmony.envs.core-aspect-env': 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.jest.react-jest': 1.0.20(@babel/core@7.19.6)(@types/node@20.2.5)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@teambit/typescript.typescript-compiler': 2.0.25
+      '@teambit/typescript.typescript-compiler': 2.0.26
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
       core-js: 3.13.0
@@ -42008,8 +42008,8 @@ packages:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  /@teambit/harmony.envs.core-aspect-env@0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
-    resolution: {integrity: sha512-GcecG5i/Yyc6yZYgmmsNTe9I9gGai4k82N9HU6W5EFktH5EH8of3tT99vNh5Vzje+6cHDmGd1p/V9recZG1Iqw==}
+  /@teambit/harmony.envs.core-aspect-env@0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
+    resolution: {integrity: sha512-BqYudMpBOrDgD+6U1EYcKVYyGFHGRtS858mcKgSYGrxkVM9sjXLNI+dht0NiGV7UtfFc4aSauzjJ3aNJElxp0A==}
     dependencies:
       '@babel/plugin-proposal-decorators': 7.23.9(@babel/core@7.19.6)
       '@babel/plugin-transform-class-properties': 7.23.3(@babel/core@7.19.6)
@@ -42029,7 +42029,7 @@ packages:
       '@teambit/react.react-env': 1.0.54(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@12.20.4)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react.v17.docs-template': 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.75)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(typescript@5.3.3)
       '@teambit/react.v17.mounter': 1.0.1(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/typescript.typescript-compiler': 2.0.25
+      '@teambit/typescript.typescript-compiler': 2.0.26
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
       babel-plugin-transform-typescript-metadata: 0.3.2(@babel/core@7.19.6)
@@ -42083,8 +42083,8 @@ packages:
       - webpack-plugin-serve
     dev: true
 
-  /@teambit/harmony.envs.core-aspect-env@0.0.30(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
-    resolution: {integrity: sha512-GcecG5i/Yyc6yZYgmmsNTe9I9gGai4k82N9HU6W5EFktH5EH8of3tT99vNh5Vzje+6cHDmGd1p/V9recZG1Iqw==}
+  /@teambit/harmony.envs.core-aspect-env@0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
+    resolution: {integrity: sha512-BqYudMpBOrDgD+6U1EYcKVYyGFHGRtS858mcKgSYGrxkVM9sjXLNI+dht0NiGV7UtfFc4aSauzjJ3aNJElxp0A==}
     dependencies:
       '@babel/plugin-proposal-decorators': 7.23.9(@babel/core@7.19.6)
       '@babel/plugin-transform-class-properties': 7.23.3(@babel/core@7.19.6)
@@ -42104,7 +42104,7 @@ packages:
       '@teambit/react.react-env': 1.0.54(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react.v17.docs-template': 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.75)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(typescript@5.3.3)
       '@teambit/react.v17.mounter': 1.0.1(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/typescript.typescript-compiler': 2.0.25
+      '@teambit/typescript.typescript-compiler': 2.0.26
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
       babel-plugin-transform-typescript-metadata: 0.3.2(@babel/core@7.19.6)
@@ -45163,6 +45163,21 @@ packages:
 
   /@teambit/typescript.typescript-compiler@2.0.25:
     resolution: {integrity: sha512-eqqI7JGGh0MC8JPfZLbE13fOL3CNG+CN6AWO8UI2BfIi+H0zcJViDhDWzxW7k1tCtqC8Frf32DGTAThtT++TmA==}
+    dependencies:
+      '@teambit/bit-error': 0.0.402
+      '@teambit/compilation.compiler-task': 1.0.7
+      comment-json: 4.2.3
+      fs-extra: 11.2.0
+      get-tsconfig: 4.2.0
+      globby: 11.1.0
+      lodash: 4.17.21
+      normalize-path: 3.0.0
+      react: 18.2.0
+      typescript: 5.3.3
+    dev: false
+
+  /@teambit/typescript.typescript-compiler@2.0.26:
+    resolution: {integrity: sha512-yIIF5oJCqrMtwqnntpuU9DfUqo1M6DOJ3j+xHOleta7GfSQ0vtcsEwb+8AiwiAYtM8KnEGjhoNJMimC+COPPQg==}
     dependencies:
       '@teambit/bit-error': 0.0.402
       '@teambit/compilation.compiler-task': 1.0.7
@@ -48331,7 +48346,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.3
       '@yarnpkg/fslib': 3.0.2
-      '@yarnpkg/libzip': 3.0.1(@yarnpkg/fslib@3.0.2)
+      '@yarnpkg/libzip': 3.0.1
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -48362,7 +48377,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.3
       '@yarnpkg/fslib': 3.0.2
-      '@yarnpkg/libzip': 3.0.1(@yarnpkg/fslib@3.0.2)
+      '@yarnpkg/libzip': 3.0.1
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -48443,11 +48458,9 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/libzip@3.0.1(@yarnpkg/fslib@3.0.2):
+  /@yarnpkg/libzip@3.0.1:
     resolution: {integrity: sha512-fiqRLk2fyd2r34/Qc7HlP8fKIo1CK5CZpLNObJwnbFmZQN2hVanovFlG++3oH3qYJymEmjPl5EGsygcEJZl4Pg==}
     engines: {node: '>=18.12.0'}
-    peerDependencies:
-      '@yarnpkg/fslib': ^3.0.2
     dependencies:
       '@types/emscripten': 1.39.10
       '@yarnpkg/fslib': 3.0.2
@@ -76170,7 +76183,7 @@ packages:
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.eslint-config-bit-react': file:scopes/react/eslint-config-bit-react(eslint-plugin-import@2.29.1)(eslint-plugin-jsx-a11y@6.8.0)(eslint-plugin-react-hooks@4.6.0)(eslint-plugin-react@7.33.2)(eslint@8.56.0)(typescript@5.3.3)
-      '@teambit/typescript.typescript-compiler': 2.0.24
+      '@teambit/typescript.typescript-compiler': 2.0.25
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
       babel-plugin-transform-typescript-metadata: 0.3.1(@babel/core@7.19.6)
@@ -77455,7 +77468,7 @@ packages:
       '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': file:scopes/react/bit-component-meta(react-dom@17.0.2)(react@17.0.2)
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
-      '@teambit/typescript.typescript-compiler': 2.0.24
+      '@teambit/typescript.typescript-compiler': 2.0.25
       '@teambit/ui-foundation.ui.pages.static-error': 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
@@ -78274,7 +78287,7 @@ packages:
       '@teambit/ts-server': file:scopes/typescript/ts-server
       '@teambit/typescript.aspect-docs.typescript': file:scopes/typescript/aspect-docs/typescript(react-dom@17.0.2)(react@17.0.2)
       '@teambit/typescript.modules.ts-config-mutator': file:scopes/typescript/modules/ts-config-mutator
-      '@teambit/typescript.typescript-compiler': 2.0.24
+      '@teambit/typescript.typescript-compiler': 2.0.25
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
       chalk: 2.4.2
