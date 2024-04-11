@@ -7,13 +7,14 @@ import chalk from 'chalk';
 import { BuilderMain } from './builder.main.runtime';
 
 type BuildOpts = {
-  all: boolean; // deprecated. use unmodified
   unmodified?: boolean;
   dev: boolean;
   rebuild: boolean;
   install: boolean;
   cachePackagesOnCapsulesRoot: boolean;
   reuseCapsules: boolean;
+  rewrite?: boolean; //relevant only when reuseCapsules is set
+  reinstall?: boolean; //relevant only when reuseCapsules is set
   tasks: string;
   listTasks?: string;
   skipTests?: boolean;
@@ -25,17 +26,33 @@ type BuildOpts = {
 export class BuilderCmd implements Command {
   name = 'build [component-pattern]';
   description = 'run set of tasks for build.';
-  extendedDescription = 'by default, only new and modified components are built';
+  extendedDescription = `by default, only new and modified components are built.
+the build takes place in an isolated directories on the filesystem (called "capsules"). the component files are copied to these directories
+and the package-manager installs the dependencies in the capsules root. once done, the build pipeline is running.
+because this process can take a while on a large workspace, some flags are available to shorten the process. See the example section for more info.
+  `;
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
+  examples = [
+    {
+      cmd: 'build --reuse-capsules --tasks "custom-task"',
+      description: 'helps to debug this "custom-task" without recreating the capsules from scratch',
+    },
+    {
+      cmd: 'build --reuse-capsules --rewrite --tasks "BabelCompile,MochaTest"',
+      description: `helpful when for example the tests are failing and code changes are needed to debug it.
+the "--rewrite" flag ensures the component files are fresh, and the "--tasks" ensures to re-compile them and then run the tests`,
+    },
+  ];
   helpUrl = 'reference/build-pipeline/builder-overview';
   alias = '';
   group = 'development';
   options = [
-    ['a', 'all', 'DEPRECATED. use --unmodified'],
     ['u', 'unmodified', 'include unmodified components (by default, only new and modified components are built)'],
     ['d', 'dev', 'run the pipeline in dev mode'],
     ['', 'install', 'install core aspects in capsules'],
     ['', 'reuse-capsules', 'avoid deleting the capsules root-dir before starting the build'],
+    ['', 'rewrite', 'use only with --reuse-capsules. rewrite the component files'],
+    ['', 'reinstall', 'use only with --reuse-capsules. rerun the installation'],
     [
       '',
       'tasks <string>',
@@ -71,12 +88,13 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
   async report(
     [pattern]: [string],
     {
-      all = false,
       unmodified = false,
       dev = false,
       install = false,
       cachePackagesOnCapsulesRoot = false,
       reuseCapsules = false,
+      rewrite = false,
+      reinstall = false,
       tasks,
       listTasks,
       skipTests,
@@ -85,11 +103,9 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       includeTag,
     }: BuildOpts
   ): Promise<string> {
+    if (rewrite && !reuseCapsules) throw new Error('cannot use --rewrite without --reuse-capsules');
+    if (reinstall && !reuseCapsules) throw new Error('cannot use --reinstall without --reuse-capsules');
     if (!this.workspace) throw new OutsideWorkspaceError();
-    if (all) {
-      this.logger.consoleWarning(`--all is deprecated, please use --unmodified instead`);
-      unmodified = true;
-    }
     if (listTasks) {
       return this.getListTasks(listTasks);
     }
@@ -109,10 +125,11 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
         installOptions: {
           installTeambitBit: install,
           packageManagerConfigRootDir: this.workspace.path,
+          installPackages: rewrite && !reinstall ? false : true,
         },
         linkingOptions: { linkTeambitBit: !install },
         emptyRootDir: !reuseCapsules,
-        getExistingAsIs: reuseCapsules,
+        getExistingAsIs: reuseCapsules && !rewrite && !reinstall,
         cachePackagesOnCapsulesRoot,
       },
       {
