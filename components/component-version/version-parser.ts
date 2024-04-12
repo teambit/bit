@@ -57,6 +57,7 @@ export function isSnap(str: string | null | undefined): boolean {
  * generate a random valid snap hash (which is a 40 characters long hash encoded in HEX)
  */
 export function generateSnap(): string {
+  // @ts-ignore until @types/node is updated to v18 or above
   return crypto.createHash('sha1').update(crypto.randomUUID()).digest('hex');
 }
 
