@@ -6,11 +6,6 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-import { nativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
-
-// Enable v8 compile cache, keep this before other imports
-nativeCompileCache?.install();
-
 import './hook-require';
 
 import {
