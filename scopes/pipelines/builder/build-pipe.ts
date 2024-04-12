@@ -76,7 +76,6 @@ export class BuildPipe {
    * execute a pipeline of build tasks.
    */
   async execute(): Promise<TaskResultsList> {
-    this.addSignalListener();
     await this.executePreBuild();
     this.longProcessLogger = this.logger.createLongProcessLogger('running tasks', this.tasksQueue.length);
     await mapSeries(this.tasksQueue, async ({ task, env }) => this.executeTask(task, env));
@@ -86,19 +85,6 @@ export class BuildPipe {
     await this.executePostBuild(tasksResultsList);
 
     return tasksResultsList;
-  }
-
-  /**
-   * for some reason, some tasks (such as typescript compilation) ignore ctrl+C. this fixes it.
-   */
-  private addSignalListener() {
-    process.on('SIGTERM', () => {
-      process.exit();
-    });
-
-    process.on('SIGINT', () => {
-      process.exit();
-    });
   }
 
   private async executePreBuild() {
