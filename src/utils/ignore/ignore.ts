@@ -7,9 +7,13 @@ import { GIT_IGNORE, IGNORE_LIST } from '../../constants';
 
 export const BIT_IGNORE = '.bitignore';
 
-function getGitIgnoreFile(dir: string): string[] {
+async function getGitIgnoreFile(dir: string): Promise<string[]> {
   const gitIgnoreFile = findUp.sync([GIT_IGNORE], { cwd: dir });
-  return gitIgnoreFile ? gitignore(fs.readFileSync(gitIgnoreFile)) : [];
+  return gitIgnoreFile ? gitignore(await fs.readFile(gitIgnoreFile)) : [];
+}
+
+async function isBitIgnoreFileExistsInDir(dir: string): Promise<boolean> {
+  return fs.pathExists(path.join(dir, BIT_IGNORE));
 }
 
 export async function getBitIgnoreFile(dir: string): Promise<string[]> {
@@ -17,7 +21,9 @@ export async function getBitIgnoreFile(dir: string): Promise<string[]> {
   return gitignore(fileContent);
 }
 
-export default function retrieveIgnoreList(cwd: string) {
-  const ignoreList = getGitIgnoreFile(cwd).concat(IGNORE_LIST);
-  return ignoreList;
+export async function retrieveIgnoreList(consumerRoot: string): Promise<string[]> {
+  const userIgnoreList = (await isBitIgnoreFileExistsInDir(consumerRoot))
+    ? await getBitIgnoreFile(consumerRoot)
+    : await getGitIgnoreFile(consumerRoot);
+  return [...userIgnoreList, ...IGNORE_LIST];
 }
