@@ -150,6 +150,10 @@ export class Component implements IComponent {
     return this.factory.getDependencies(this);
   }
 
+  getPackageName(): string {
+    return this.factory.componentPackageName(this);
+  }
+
   stringify(): string {
     return JSON.stringify({
       id: this.id,
