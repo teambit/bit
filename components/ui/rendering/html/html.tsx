@@ -5,6 +5,8 @@ import { popAssets, StoredAssets } from './stored-assets';
 import { SsrStyles, removeSsrStyles } from './ssr-styles';
 import { FullHeightStyle } from './full-height-style';
 
+export const LOAD_EVENT = '_DOM_LOADED_';
+
 export type Assets = Partial<{
   /** page title */
   title: string;
@@ -23,17 +25,19 @@ export interface HtmlProps extends React.HtmlHTMLAttributes<HTMLHtmlElement> {
   fullHeight?: boolean;
   assets?: Assets;
   ssr?: boolean;
+  notifyParentOnLoad?: boolean;
 }
 
 const NotifyParentScript = () => (
   <script
     dangerouslySetInnerHTML={{
       __html: `
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.parent && window !== window.parent) {
-                window.parent.postMessage({ event: 'loaded' }, '*');
-            }
-        });
+      // only send loaded event when mounted in an iframe
+      if (window.parent && window !== window.parent) {
+          document.addEventListener('DOMContentLoaded', function() {
+            window.parent.postMessage({ event: '${LOAD_EVENT}' }, '*');
+          });
+        };
       `,
     }}
   ></script>
@@ -46,6 +50,7 @@ export function Html({
   fullHeight,
   ssr,
   children = <MountPoint />,
+  notifyParentOnLoad = true,
   ...rest
 }: HtmlProps) {
   return (
@@ -65,7 +70,7 @@ export function Html({
         {assets.css?.map((x, idx) => (
           <link key={idx} href={x} rel="stylesheet" type="text/css" />
         ))}
-        <NotifyParentScript />
+        {notifyParentOnLoad && <NotifyParentScript />}
       </head>
       <body>
         {children}
