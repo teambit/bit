@@ -76,6 +76,12 @@ async function createStoreController(
     preferOffline: options.preferOffline,
     resolveSymlinksInInjectedDirs: true,
     pnpmHomeDir: options.pnpmHomeDir,
+    userAgent: options.networkConfig.userAgent,
+    fetchRetries: options.networkConfig.fetchRetries,
+    fetchRetryFactor: options.networkConfig.fetchRetryFactor,
+    fetchRetryMaxtimeout: options.networkConfig.fetchRetryMaxtimeout,
+    fetchRetryMintimeout: options.networkConfig.fetchRetryMintimeout,
+    fetchTimeout: options.networkConfig.fetchTimeout,
   };
   // We should avoid the recreation of store.
   // The store holds cache that makes subsequent resolutions faster.
@@ -109,6 +115,7 @@ async function generateResolverAndFetcher(
     strictSsl: networkConfig.strictSSL,
     timeout: networkConfig.fetchTimeout,
     rawConfig: pnpmConfig.config.rawConfig,
+    userAgent: networkConfig.userAgent,
     retry: {
       factor: networkConfig.fetchRetryFactor,
       maxTimeout: networkConfig.fetchRetryMaxtimeout,
@@ -187,6 +194,7 @@ export async function install(
     includeOptionalDeps?: boolean;
     reportOptions?: ReportOptions;
     hidePackageManagerOutput?: boolean;
+    hoistInjectedDependencies?: boolean;
     dryRun?: boolean;
     dedupeInjectedDeps?: boolean;
   } & Pick<
@@ -207,14 +215,14 @@ export async function install(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string }> {
-  let externalDependencies: Set<string> | undefined;
+  const externalDependencies = new Set<string>();
   const readPackage: ReadPackageHook[] = [];
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
-    externalDependencies = new Set(
-      Object.values(manifestsByPaths)
-        .map(({ name }) => name)
-        .filter(Boolean) as string[]
-    );
+    for (const [dir, { name }] of Object.entries(manifestsByPaths)) {
+      if (dir !== rootDir && name) {
+        externalDependencies.add(name);
+      }
+    }
     readPackage.push(readPackageHook as ReadPackageHook);
   }
   readPackage.push(removeLegacyFromDeps as ReadPackageHook);
@@ -246,6 +254,12 @@ export async function install(
     packageImportMethod: options?.packageImportMethod,
     pnpmHomeDir: options?.pnpmHomeDir,
   });
+  const hoistPattern = options.hoistPattern ?? ['*'];
+  if (hoistPattern.length > 0 && externalDependencies.size > 0 && !options.hoistInjectedDependencies) {
+    for (const pkgName of externalDependencies) {
+      hoistPattern.push(`!${pkgName}`);
+    }
+  }
   const opts: InstallOptions = {
     allProjects,
     autoInstallPeers: options.autoInstallPeers,
@@ -276,10 +290,12 @@ export async function install(
       devDependencies: true,
       optionalDependencies: options?.includeOptionalDeps !== false,
     },
+    userAgent: networkConfig.userAgent,
     ...options,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     depth: options.updateAll ? Infinity : 0,
     disableRelinkLocalDirDeps: true,
+    hoistPattern,
   };
 
   let dependenciesChanged = false;

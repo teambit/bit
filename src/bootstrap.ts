@@ -8,7 +8,7 @@ import { Analytics } from './analytics/analytics';
 import { handleUnhandledRejection } from './cli/handle-errors';
 import { BIT_VERSION, GLOBAL_CONFIG, GLOBAL_LOGS } from './constants';
 import HooksManager from './hooks';
-import { printWarning } from './logger/logger';
+import { printWarning, shouldDisableConsole, shouldDisableLoader } from './logger/logger';
 import loader from './cli/loader';
 
 const RECOMMENDED_NODE_VERSIONS = '>=18.12.0 <21.0.0';
@@ -121,11 +121,7 @@ function enableLoaderIfPossible() {
     'env',
     'envs',
   ];
-  if (
-    safeCommandsForLoader.includes(process.argv[2]) &&
-    !process.argv.includes('--json') &&
-    !process.argv.includes('-j')
-  ) {
+  if (safeCommandsForLoader.includes(process.argv[2]) && !shouldDisableConsole && !shouldDisableLoader) {
     loader.on();
     // loader.start('loading bit...');
   }

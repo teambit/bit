@@ -1,4 +1,4 @@
-import logger, { LoggerLevel } from '@teambit/legacy/dist/logger/logger';
+import logger, { shouldDisableLoader } from '@teambit/legacy/dist/logger/logger';
 import { CLIArgs, Command, Flags } from '@teambit/legacy/dist/cli/command';
 import { parseCommandName } from '@teambit/legacy/dist/cli/command-registry';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -93,18 +93,13 @@ export class CommandRunner {
    * for internals commands, such as, _put, _fetch, the command.loader = false.
    */
   private determineConsoleWritingDuringCommand() {
-    if (this.command.loader && !this.flags.json && !this.flags['get-yargs-completions']) {
+    if (this.command.loader && !this.flags.json && !this.flags['get-yargs-completions'] && !shouldDisableLoader) {
       loader.on();
       loader.start(`running command "${this.commandName}"...`);
       logger.shouldWriteToConsole = true;
     } else {
       loader.off();
       logger.shouldWriteToConsole = false;
-    }
-    if (this.flags.log) {
-      // probably not necessary anymore. it is handled in src/logger - determineWritingLogToScreen()
-      const logValue = typeof this.flags.log === 'string' ? this.flags.log : undefined;
-      logger.switchToConsoleLogger(logValue as LoggerLevel);
     }
   }
 

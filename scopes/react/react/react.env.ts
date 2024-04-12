@@ -1,6 +1,7 @@
 import ts, { TsConfigSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
+import { ESLint as ESLintLib } from 'eslint';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import { merge, cloneDeep } from 'lodash';
@@ -13,7 +14,8 @@ import {
   PrettierConfigTransformer,
 } from '@teambit/defender.prettier.config-mutator';
 import { TypescriptConfigWriter } from '@teambit/typescript.typescript-compiler';
-import { EslintConfigWriter } from '@teambit/defender.eslint-linter';
+import { EslintConfigWriter, ESLintLinter } from '@teambit/defender.eslint-linter';
+import type { ESLintOptions } from '@teambit/defender.eslint-linter';
 import { CompilerMain } from '@teambit/compiler';
 import {
   BuilderEnv,
@@ -34,7 +36,11 @@ import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
 import type { TypeScriptCompilerOptions } from '@teambit/typescript';
 import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
-import { ESLintMain, EslintConfigTransformer } from '@teambit/eslint';
+import {
+  EslintConfigMutator,
+  EslintConfigTransformContext,
+  EslintConfigTransformer,
+} from '@teambit/defender.eslint.config-mutator';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Linter, LinterContext } from '@teambit/linter';
 import { Formatter, FormatterContext } from '@teambit/formatter';
@@ -123,8 +129,6 @@ export class ReactEnv
     private tester: TesterMain,
 
     private config: ReactMainConfig,
-
-    private eslint: ESLintMain,
 
     private dependencyResolver: DependencyResolverMain,
 
@@ -246,29 +250,35 @@ export class ReactEnv
     return this.createTsCjsCompiler('dev', transformers, tsModule);
   }
 
+  private getEslintOptions(options: ESLintLib.Options, pluginPath: string, context: LinterContext): ESLintOptions {
+    const mergedConfig: ESLintLib.Options = {
+      // @ts-ignore - this is a bug in the @types/eslint types
+      overrideConfig: options,
+      extensions: context.extensionFormats,
+      useEslintrc: false,
+      // TODO: this should be probably be replaced with resolve-plugins-relative-to
+      // https://eslint.org/docs/latest/use/command-line-interface#--resolve-plugins-relative-to
+      cwd: pluginPath,
+      fix: !!context.fix,
+      fixTypes: context.fixTypes,
+    };
+    return Object.assign({}, options, { config: mergedConfig, extensions: context.extensionFormats });
+  }
+
   /**
    * returns and configures the component linter.
    */
   getLinter(context: LinterContext, transformers: EslintConfigTransformer[] = []): Linter {
-    const tsConfig = this.createTsCompilerOptions('dev').tsconfig;
+    const tsconfigPath = require.resolve('./typescript/tsconfig.json');
 
-    const defaultTransformer: EslintConfigTransformer = (configMutator) => {
-      configMutator.addExtensionTypes(['.md', '.mdx']);
-      configMutator.setTsConfig(tsConfig);
-      return configMutator;
-    };
-
-    const allTransformers = [defaultTransformer, ...transformers];
-
-    return this.eslint.createLinter(
-      context,
-      {
-        config: eslintConfig,
-        // resolve all plugins from the react environment.
-        pluginPath: __dirname,
-      },
-      allTransformers
-    );
+    // resolve all plugins from the react environment.
+    const mergedOptions = this.getEslintOptions(eslintConfig, __dirname, context);
+    const configMutator = new EslintConfigMutator(mergedOptions);
+    const transformerContext: EslintConfigTransformContext = { fix: !!context.fix };
+    configMutator.addExtensionTypes(['.md', '.mdx']);
+    configMutator.setTsConfig(tsconfigPath);
+    const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+    return ESLintLinter.create(afterMutation.raw, { logger: this.logger });
   }
 
   /**
@@ -461,9 +471,6 @@ export class ReactEnv
   }
 
   getNpmIgnore() {
-    // ignores only .ts files in the root directory, so d.ts files inside dists are unaffected.
-    // without this change, the package has "index.ts" file in the root, causing typescript to parse it instead of the
-    // d.ts files. (changing the "types" prop in the package.json file doesn't help).
     return [`${CAPSULE_ARTIFACTS_DIR}/`];
   }
 

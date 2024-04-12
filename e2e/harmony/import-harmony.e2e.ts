@@ -287,7 +287,7 @@ describe('import functionality on Harmony', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.outputFile('bar/foo.ts', `import cors from 'cors'; console.log(cors);`);
       helper.command.add('bar');
-      helper.command.install('cors@2.8.5 @types/cors@2.8.10');
+      helper.command.install('cors@^2.8.5 @types/cors@^2.8.10');
 
       // intermediate step, make sure the types are saved in the
       const show = helper.command.showComponentParsed('bar');

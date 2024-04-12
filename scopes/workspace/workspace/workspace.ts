@@ -18,7 +18,12 @@ import {
 import { BitError } from '@teambit/bit-error';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
-import { DependencyResolverMain, DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
+import {
+  DependencyResolverMain,
+  DependencyResolverAspect,
+  VariantPolicy,
+  DependencyList,
+} from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
@@ -46,7 +51,11 @@ import {
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact, uniqBy } from 'lodash';
-import { MergeConfigFilename, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy/dist/constants';
+import {
+  MergeConfigFilename,
+  CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS,
+  CFG_USER_TOKEN_KEY,
+} from '@teambit/legacy/dist/constants';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { WatchOptions } from '@teambit/watcher';
@@ -60,6 +69,7 @@ import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { isHash } from '@teambit/component-version';
 import { GlobalConfigMain } from '@teambit/global-config';
+import { getAuthHeader } from '@teambit/legacy/dist/scope/network/http/http';
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,
@@ -157,7 +167,6 @@ export class Workspace implements ComponentFactory {
    * This is important to know to ignore missing modules across different places
    */
   inInstallContext = false;
-  private _cachedListIds?: ComponentIdList;
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
   private componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized;
@@ -397,13 +406,7 @@ export class Workspace implements ComponentFactory {
    * get ids of all workspace components.
    */
   listIds(): ComponentIdList {
-    if (this._cachedListIds && this.bitMap.hasChanged()) {
-      delete this._cachedListIds;
-    }
-    if (!this._cachedListIds) {
-      this._cachedListIds = this.consumer.bitmapIdsFromCurrentLane;
-    }
-    return this._cachedListIds;
+    return this.consumer.bitmapIdsFromCurrentLane;
   }
 
   listIdsIncludeRemoved(): ComponentIdList {
@@ -560,6 +563,10 @@ export class Workspace implements ComponentFactory {
       })
     );
     return compsWithHead;
+  }
+
+  getDependencies(component: Component): DependencyList {
+    return this.dependencyResolver.getDependencies(component);
   }
 
   async getSavedGraphOfComponentIfExist(component: Component) {
@@ -737,7 +744,6 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.aspectLoader.resetFailedLoadAspects();
     if (!options.skipClearFailedToLoadEnvs) this.envs.resetFailedToLoadEnvs();
     this.logger.debug('clearing the workspace and scope caches');
-    delete this._cachedListIds;
     this.componentLoader.clearCache();
     this.componentStatusLoader.clearCache();
     await this.scope.clearCache();
@@ -1033,8 +1039,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return foundEnv?.components || [];
   }
 
-  async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
-    const { components } = await this.componentLoader.getMany(ids, loadOpts);
+  async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<Component[]> {
+    const { components } = await this.componentLoader.getMany(ids, loadOpts, throwOnFailure);
     return components;
   }
 
@@ -1080,7 +1086,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async importAndGetMany(
     ids: Array<ComponentID>,
     reason?: string,
-    loadOpts?: ComponentLoadOptions
+    loadOpts?: ComponentLoadOptions,
+    throwOnError = true
   ): Promise<Component[]> {
     if (!ids.length) return [];
     const lane = await this.importCurrentLaneIfMissing();
@@ -1092,7 +1099,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       lane,
       reason,
     });
-    return this.getMany(ids, loadOpts);
+    return this.getMany(ids, loadOpts, throwOnError);
   }
 
   async importCurrentLaneIfMissing(): Promise<Lane | undefined> {
@@ -1691,7 +1698,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     }
 
     const url = `https://node-registry.bit.cloud/${packageName}`;
-    const res = await fetch(url);
+    const token = await this.globalConfig.get(CFG_USER_TOKEN_KEY);
+    const headers = token ? getAuthHeader(token) : {};
+    const res = await fetch(url, { headers });
     if (!res.ok) {
       throw new BitError(`${errMsgPrefix}got ${res.statusText} from the url: ${url}`);
     }

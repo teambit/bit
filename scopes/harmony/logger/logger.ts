@@ -6,7 +6,7 @@ import { platform } from 'os';
 import { ConsoleOnStart, LongProcessLogger } from './long-process-logger';
 
 export class Logger implements IBitLogger {
-  spinnies = new Spinnies();
+  private spinnies?: Spinnies;
   constructor(private extensionName: string) {}
 
   trace(message: string, ...meta: any[]) {
@@ -36,7 +36,8 @@ export class Logger implements IBitLogger {
     return loader.isSpinning;
   }
 
-  get multiSpinner() {
+  get multiSpinner(): Spinnies {
+    if (!this.spinnies) this.spinnies = new Spinnies();
     return this.spinnies;
   }
 

@@ -26,6 +26,10 @@ export { Level as LoggerLevel };
 const jsonFormat =
   yn(getSync(CFG_LOG_JSON_FORMAT), { default: false }) || yn(process.env.JSON_LOGS, { default: false });
 
+export const shouldDisableLoader = yn(process.env.BIT_DISABLE_SPINNER);
+export const shouldDisableConsole =
+  yn(process.env.BIT_DISABLE_CONSOLE) || process.argv.includes('--json') || process.argv.includes('-j');
+
 const LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
 
 const logLevel = getLogLevel();
@@ -75,12 +79,13 @@ class BitLogger implements IBitLogger {
    * it set before the command-registrar is loaded. at this stage we don't know for sure the "-j"
    * is actually "json". that's why this variable is overridden once the command-registrar is up.
    */
-  shouldWriteToConsole = !process.argv.includes('--json') && !process.argv.includes('-j');
+  shouldWriteToConsole = !shouldDisableConsole;
   /**
    * helpful to get a list in the .bit/command-history of all commands that were running on this workspace.
    * it's written only if the consumer is loaded. otherwise, the commandHistory.fileBasePath is undefined
    */
   commandHistoryBasePath: string | undefined;
+  shouldConsoleProfiler = false;
   constructor(logger: PinoLogger) {
     this.logger = logger;
     this.profiler = new Profiler();
@@ -169,7 +174,7 @@ class BitLogger implements IBitLogger {
     const msg = this.profiler.profile(id);
     if (!msg) return;
     const fullMsg = `${id}: ${msg}`;
-    console ? this.console(fullMsg) : this.info(fullMsg);
+    console || this.shouldConsoleProfiler ? this.console(fullMsg) : this.info(fullMsg);
   }
 
   registerOnBeforeExitFn(fn: Function) {
@@ -304,7 +309,7 @@ function determineWritingLogToScreen() {
   // or it can have a level: `--log=error` or `--log error`: both syntaxes are supported
   if (process.argv.includes('--log')) {
     const level = process.argv.find((arg) => LEVELS.includes(arg)) as Level | undefined;
-    logger.switchToConsoleLogger(level || 'info');
+    logger.switchToConsoleLogger(level as Level);
     return;
   }
   LEVELS.forEach((level) => {
@@ -312,6 +317,9 @@ function determineWritingLogToScreen() {
       logger.switchToConsoleLogger(level as Level);
     }
   });
+  if (process.argv.includes(`--log=profile`)) {
+    logger.shouldConsoleProfiler = true;
+  }
 }
 
 determineWritingLogToScreen();
@@ -335,6 +343,9 @@ function isLevel(maybeLevel: Level | string): maybeLevel is Level {
 export function writeLogToScreen(levelOrPrefix = '') {
   if (isLevel(levelOrPrefix)) {
     logger.switchToConsoleLogger(levelOrPrefix);
+  }
+  if (levelOrPrefix === 'profile') {
+    logger.shouldConsoleProfiler = true;
   }
   // @todo: implement
   // const prefixes = levelOrPrefix.split(',');

@@ -5,7 +5,7 @@ import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { BuildStatus } from '@teambit/legacy/dist/constants';
 import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
-
+import type { DependencyList } from '@teambit/dependency-resolver';
 import { slice } from 'lodash';
 import { ComponentFactory } from './component-factory';
 import ComponentFS from './component-fs';
@@ -144,6 +144,14 @@ export class Component implements IComponent {
     }
 
     return filteredLogs;
+  }
+
+  getDependencies(): DependencyList {
+    return this.factory.getDependencies(this);
+  }
+
+  getPackageName(): string {
+    return this.factory.componentPackageName(this);
   }
 
   stringify(): string {
