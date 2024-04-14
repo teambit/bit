@@ -357,6 +357,9 @@ importers:
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
+      '@teambit/component-issues':
+        specifier: ~0.0.141
+        version: 0.0.145
       '@teambit/component-version':
         specifier: ^1.0.3
         version: 1.0.3
@@ -37158,6 +37161,13 @@ packages:
       '@teambit/legacy-bit-id': 1.1.0
       lodash: 4.17.21
 
+  /@teambit/component-issues@0.0.145:
+    resolution: {integrity: sha512-lS8RGfdiLckX3r8lFdCTE5qnIHZFDgmu8ue//M/ItnEgVrY3XBytWSP0Qs/ytZnYmhm/GFr8X1tjHO26mEItDA==}
+    dependencies:
+      '@teambit/component-id': 1.2.0
+      chalk: 2.4.2
+    dev: false
+
   /@teambit/component-version@0.0.366(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-ouewvgwqxESGVFqb25u9E0+Cd0cCVyOl3lTc8IKzBxyc+EmPDq9ZEGLLr4PoKJg/YlM2ZsJfLgJwNZPMT7bCxA==}
     engines: {node: '>=12.22.0'}
@@ -48346,7 +48356,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.3
       '@yarnpkg/fslib': 3.0.2
-      '@yarnpkg/libzip': 3.0.1
+      '@yarnpkg/libzip': 3.0.1(@yarnpkg/fslib@3.0.2)
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -48377,7 +48387,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.3
       '@yarnpkg/fslib': 3.0.2
-      '@yarnpkg/libzip': 3.0.1
+      '@yarnpkg/libzip': 3.0.1(@yarnpkg/fslib@3.0.2)
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -48458,9 +48468,11 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/libzip@3.0.1:
+  /@yarnpkg/libzip@3.0.1(@yarnpkg/fslib@3.0.2):
     resolution: {integrity: sha512-fiqRLk2fyd2r34/Qc7HlP8fKIo1CK5CZpLNObJwnbFmZQN2hVanovFlG++3oH3qYJymEmjPl5EGsygcEJZl4Pg==}
     engines: {node: '>=18.12.0'}
+    peerDependencies:
+      '@yarnpkg/fslib': ^3.0.2
     dependencies:
       '@types/emscripten': 1.39.10
       '@yarnpkg/fslib': 3.0.2
