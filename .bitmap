@@ -1766,6 +1766,20 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/navigation/lane-switcher"
     },
+    "ui/pages/preview-not-found": {
+        "name": "ui/pages/preview-not-found",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.84",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/pages/preview-not-found"
+    },
+    "ui/pages/static-error": {
+        "name": "ui/pages/static-error",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.92",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/pages/static-error"
+    },
     "ui/preview-placeholder": {
         "name": "ui/preview-placeholder",
         "scope": "teambit.preview",
@@ -1786,6 +1800,13 @@
         "version": "0.0.508",
         "mainFile": "index.ts",
         "rootDir": "components/ui/react-router/slot-router"
+    },
+    "ui/rendering/html": {
+        "name": "ui/rendering/html",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.85",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/rendering/html"
     },
     "ui/test-compare": {
         "name": "ui/test-compare",
