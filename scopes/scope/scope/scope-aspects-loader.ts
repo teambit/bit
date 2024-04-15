@@ -21,6 +21,7 @@ import { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } fro
 import { Logger } from '@teambit/logger';
 import { EnvsMain } from '@teambit/envs';
 import { NodeLinker } from '@teambit/dependency-resolver';
+import { BitError } from '@teambit/bit-error';
 import { ScopeMain } from './scope.main.runtime';
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
@@ -225,11 +226,23 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   private async compileIfNoDist(capsule: Capsule, component: Component) {
-    const env = this.envs.getEnv(component);
-    const compiler: Compiler = env.env.getCompiler();
+    let compiler: Compiler | undefined;
+    try {
+      const env = this.envs.getEnv(component);
+      compiler = env.env.getCompiler();
+    } catch (err: any) {
+      this.logger.info(
+        `compileIfNoDist: failed loading compiler for ${component.id.toString()} in capsule ${capsule.path}, error: ${
+          err.message
+        }`
+      );
+    }
     const distDir = compiler?.distDir || DEFAULT_DIST_DIRNAME;
     const distExists = existsSync(join(capsule.path, distDir));
     if (distExists) return;
+    if (!compiler) {
+      throw new BitError(`unable to compile aspect/env ${component.id.toString()}, no compiler found`);
+    }
 
     const compiledCode = (
       await Promise.all(
