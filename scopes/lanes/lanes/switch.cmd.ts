@@ -25,12 +25,12 @@ export class SwitchCmd implements Command {
       "relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote",
     ],
     [
-      'm',
-      'merge [strategy]',
+      '',
+      'auto-merge-resolve <merge-strategy>',
       'merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"',
     ],
     ['a', 'get-all', 'DEPRECATED. this is currently the default behavior'],
-    ['a', 'workspace-only', 'checkout only the components in the workspace to the selected lane'],
+    ['', 'workspace-only', 'checkout only the components in the workspace to the selected lane'],
     ['x', 'skip-dependency-installation', 'do not install dependencies of the imported components'],
     [
       'p',
@@ -48,7 +48,7 @@ ${COMPONENT_PATTERN_HELP}`,
     [lane]: [string],
     {
       alias,
-      merge,
+      autoMergeResolve,
       getAll = false,
       workspaceOnly = false,
       skipDependencyInstallation = false,
@@ -56,7 +56,7 @@ ${COMPONENT_PATTERN_HELP}`,
       json = false,
     }: {
       alias?: string;
-      merge?: MergeStrategy;
+      autoMergeResolve?: MergeStrategy;
       getAll?: boolean;
       workspaceOnly?: boolean;
       skipDependencyInstallation?: boolean;
@@ -67,7 +67,7 @@ ${COMPONENT_PATTERN_HELP}`,
   ) {
     const { components, failedComponents, installationError, compilationError } = await this.lanes.switchLanes(lane, {
       alias,
-      merge,
+      merge: autoMergeResolve,
       workspaceOnly,
       pattern,
       skipDependencyInstallation,
