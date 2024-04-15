@@ -224,7 +224,15 @@ export class ComponentGenerator {
         setBy: hasEnvConfiguredOriginally ? 'workspace variants' : '<default>',
       };
     };
-    const { envId, setBy } = getEnvData();
+    // eslint-disable-next-line prefer-const
+    let { envId, setBy } = getEnvData();
+    if (envId) {
+      const isInWorkspace = this.workspace.exists(envId);
+      const isSameAsThisEnvId = envId === this.envId?.toString() || envId === this.envId?.toStringWithoutVersion();
+      if (isSameAsThisEnvId && this.envId) {
+        envId = isInWorkspace ? this.envId.toStringWithoutVersion() : this.envId.toString();
+      }
+    }
     return {
       id: componentId,
       dir: componentPath,
