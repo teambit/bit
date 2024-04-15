@@ -247,6 +247,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const compiledCode = (
       await Promise.all(
         component.filesystem.files.flatMap(async (file) => {
+          // @ts-ignore - we know it's not null, we have throw error above if yes
           if (!compiler.isFileSupported(file.path)) {
             return [
               {
@@ -255,8 +256,9 @@ needed-for: ${neededFor || '<unknown>'}`);
               },
             ] as TranspileFileOutputOneFile[];
           }
-
+          // @ts-ignore - we know it's not null, we have throw error above if yes
           if (compiler.transpileFile) {
+            // @ts-ignore - we know it's not null, we have throw error above if yes
             return compiler.transpileFile(file.contents.toString('utf8'), {
               filePath: file.path,
               componentDir: capsule.path,
@@ -270,6 +272,7 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     await Promise.all(
       compact(compiledCode).map((compiledFile) => {
+        // @ts-ignore - we know it's not null, we have throw error above if yes
         const path = compiler.getDistPathBySrcPath(compiledFile.outputPath);
         return capsule?.outputFile(path, compiledFile.outputText);
       })
