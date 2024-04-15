@@ -210,7 +210,7 @@ export default class BitMap {
   }
 
   async loadFiles() {
-    const gitIgnore = getGitIgnoreHarmony(this.projectRoot);
+    const gitIgnore = await getGitIgnoreHarmony(this.projectRoot);
     await Promise.all(
       this.components.map(async (componentMap) => {
         const rootDir = componentMap.rootDir;

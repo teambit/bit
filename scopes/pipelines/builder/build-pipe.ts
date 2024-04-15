@@ -81,7 +81,7 @@ export class BuildPipe {
     await mapSeries(this.tasksQueue, async ({ task, env }) => this.executeTask(task, env));
     this.longProcessLogger.end();
     const capsuleRootDir = Object.values(this.envsBuildContext)[0]?.capsuleNetwork.capsulesRootDir;
-    const tasksResultsList = new TaskResultsList(this.tasksQueue, this.taskResults, capsuleRootDir);
+    const tasksResultsList = new TaskResultsList(this.tasksQueue, this.taskResults, capsuleRootDir, this.logger);
     await this.executePostBuild(tasksResultsList);
 
     return tasksResultsList;
