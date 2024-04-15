@@ -152,6 +152,8 @@ export class ComponentIdGraph extends Graph<ComponentID, DepEdgeType> {
    */
   findCycles(graph?: this, includeDeps = false): string[][] {
     const cycles = super.findCycles(graph);
+    // reverse the order to show a more intuitive cycle order. from the dependent to the dependency.
+    cycles.forEach((cycle) => cycle.reverse());
     if (!this.shouldLimitToSeedersOnly() || includeDeps) {
       return cycles;
     }
