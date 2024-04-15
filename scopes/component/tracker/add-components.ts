@@ -506,13 +506,13 @@ you can add the directory these files are located at and it'll change the root d
     return addedComp;
   }
 
-  getIgnoreList(): string[] {
+  async getIgnoreList(): Promise<string[]> {
     const consumerPath = this.consumer.getPath();
     return getIgnoreListHarmony(consumerPath);
   }
 
   async add(): Promise<AddActionResults> {
-    this.ignoreList = this.getIgnoreList();
+    this.ignoreList = await this.getIgnoreList();
     this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
 
     let componentPathsStats: PathsStats = {};
