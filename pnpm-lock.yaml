@@ -359,7 +359,7 @@ importers:
         version: 1.2.0
       '@teambit/component-issues':
         specifier: ~0.0.141
-        version: 0.0.144
+        version: 0.0.145
       '@teambit/component-version':
         specifier: ^1.0.3
         version: 1.0.3
@@ -37265,8 +37265,8 @@ packages:
       '@teambit/legacy-bit-id': 1.1.0
       lodash: 4.17.21
 
-  /@teambit/component-issues@0.0.144:
-    resolution: {integrity: sha512-myP0uo0MRILzSeca/R/IE6Jh6zagX9xsZ8EhuagjwRHyHZxuvjtPckq9GGXngemBJxElJ60ZNBbpUJiyepBoQQ==}
+  /@teambit/component-issues@0.0.145:
+    resolution: {integrity: sha512-lS8RGfdiLckX3r8lFdCTE5qnIHZFDgmu8ue//M/ItnEgVrY3XBytWSP0Qs/ytZnYmhm/GFr8X1tjHO26mEItDA==}
     dependencies:
       '@teambit/component-id': 1.2.0
       chalk: 2.4.2
