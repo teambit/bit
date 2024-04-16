@@ -402,7 +402,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
 
     await pMapSeries(idsWithWildcard, async (idStr: string) => {
       const idsFromRemote = await getRemoteBitIdsByWildcards(idStr, this.options.includeDeprecated);
-      const existingOnLanes = idsFromRemote.filter((id) => bitIdsFromLane.hasWithoutVersion(id));
+      const existingOnLanes = compact(idsFromRemote.map((id) => bitIdsFromLane.searchWithoutVersion(id)));
       if (!existingOnLanes.length) {
         throw new BitError(`the id with the the wildcard "${idStr}" has been parsed to multiple component ids.
 however, none of them existing on the lane "${this.remoteLane?.id()}".
