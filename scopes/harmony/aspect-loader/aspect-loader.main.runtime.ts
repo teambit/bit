@@ -1,4 +1,4 @@
-import { join, resolve } from 'path';
+import { join, resolve, extname } from 'path';
 import { NativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 import esmLoader from '@teambit/node.utils.esm-loader';
 // import findRoot from 'find-root';
@@ -538,15 +538,36 @@ export class AspectLoaderMain {
     return !isEmpty(files);
   }
 
+  private searchDistFile(rootDir: string, relativePath: string) {
+    const defaultDistDir = join(rootDir, 'dist');
+    const fileExtension = extname(relativePath);
+    const fileNames = ['ts', 'js', 'tsx', 'jsx'].map((ext) =>
+      relativePath.replace(new RegExp(`${fileExtension}$`), `.${ext}`)
+    );
+    const defaultDistPath = fileNames.map((fileName) => join(defaultDistDir, fileName));
+    const found = defaultDistPath.find((distPath) => existsSync(distPath));
+    return found;
+  }
+
   pluginFileResolver(component: Component, rootDir: string) {
     return (relativePath: string) => {
-      const compiler = this.getCompiler(component);
-      if (!compiler) {
-        return join(rootDir, relativePath);
-      }
+      try {
+        const compiler = this.getCompiler(component);
+        if (!compiler) {
+          const distFile = this.searchDistFile(rootDir, relativePath);
+          return distFile || join(rootDir, relativePath);
+        }
 
-      const dist = compiler.getDistPathBySrcPath(relativePath);
-      return join(rootDir, dist);
+        const dist = compiler.getDistPathBySrcPath(relativePath);
+        return join(rootDir, dist);
+      } catch (err) {
+        // This might happen for example when loading an env from the global scope, and the env of the env / aspect is not a core one
+        this.logger.info(
+          `pluginFileResolver: got an error during get compiler for component ${component.id.toString()}, probably the env is not loaded yet ${err}`
+        );
+        const distFile = this.searchDistFile(rootDir, relativePath);
+        return distFile || join(rootDir, relativePath);
+      }
     };
   }
 

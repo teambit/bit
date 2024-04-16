@@ -299,11 +299,8 @@
         "@teambit/ui-foundation.ui.notifications.notification-center": "^0.0.523",
         "@teambit/ui-foundation.ui.notifications.notification-context": "^0.0.501",
         "@teambit/ui-foundation.ui.notifications.store": "^0.0.500",
-        "@teambit/ui-foundation.ui.pages.preview-not-found": "^0.0.84",
-        "@teambit/ui-foundation.ui.pages.static-error": "^0.0.92",
         "@teambit/ui-foundation.ui.react-router.extend-path": "^0.0.486",
         "@teambit/ui-foundation.ui.react-router.use-query": "^0.0.501",
-        "@teambit/ui-foundation.ui.rendering.html": "^0.0.85",
         "@teambit/ui-foundation.ui.side-bar": "^0.0.875",
         "@teambit/ui-foundation.ui.top-bar": "^0.0.514",
         "@teambit/ui-foundation.ui.tree.drawer": "^0.0.518",
@@ -512,7 +509,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.9.7",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.682",
+        "@teambit/legacy": "1.0.683",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
         "graphql": "16.8.1",
@@ -635,8 +632,7 @@
           "dependencies": {
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
-            "@apollo/client": "3.9.7",
-            "@teambit/legacy": "1.0.682",
+            "@teambit/legacy": "1.0.683",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",

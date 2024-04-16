@@ -23,6 +23,8 @@ export default class FindCycles implements Insight {
       };
     }
     const cycles = graph.findCycles(undefined, opts?.includeDeps);
+    // add the first component to the end to make the circular visible in the output
+    cycles.forEach((cycle) => cycle.push(cycle[0]));
     if (cycles.length === 1) {
       return {
         message: `Found ${cycles.length} cycle.`,

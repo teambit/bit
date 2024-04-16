@@ -7,7 +7,7 @@ import getWithoutExt from './fs/fs-no-ext';
 import getExt from './fs/get-ext';
 import isDirEmpty from './fs/is-dir-empty';
 import glob from './glob';
-import retrieveIgnoreList from './ignore/ignore';
+import { retrieveIgnoreList } from './ignore/ignore';
 import immutableUnshift from './immutable-unshift';
 import isBitUrl from './is-bit-url';
 import isDir from './is-dir';

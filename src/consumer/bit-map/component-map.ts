@@ -285,7 +285,7 @@ export default class ComponentMap {
     if (!trackDir) {
       return;
     }
-    const gitIgnore = getGitIgnoreHarmony(consumer.getPath());
+    const gitIgnore = await getGitIgnoreHarmony(consumer.getPath());
     this.files = await getFilesByDir(trackDir, consumer.getPath(), gitIgnore);
   }
 
@@ -394,13 +394,13 @@ export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore
   }));
 }
 
-export function getGitIgnoreHarmony(consumerPath: string): any {
-  const ignoreList = getIgnoreListHarmony(consumerPath);
+export async function getGitIgnoreHarmony(consumerPath: string): Promise<any> {
+  const ignoreList = await getIgnoreListHarmony(consumerPath);
   return ignore().add(ignoreList);
 }
 
-export function getIgnoreListHarmony(consumerPath: string): string[] {
-  const ignoreList = retrieveIgnoreList(consumerPath);
+export async function getIgnoreListHarmony(consumerPath: string): Promise<string[]> {
+  const ignoreList = await retrieveIgnoreList(consumerPath);
   // the ability to track package.json is deprecated since Harmony
   ignoreList.push(PACKAGE_JSON);
   return ignoreList;
