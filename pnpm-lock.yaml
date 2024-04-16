@@ -103,8 +103,8 @@ importers:
         specifier: 21.1.0
         version: 21.1.0(@pnpm/logger@5.0.0)
       '@pnpm/core':
-        specifier: 14.0.1
-        version: 14.0.1(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
+        specifier: 14.0.2
+        version: 14.0.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
       '@pnpm/default-reporter':
         specifier: 13.0.1
         version: 13.0.1(@pnpm/logger@5.0.0)
@@ -19744,8 +19744,8 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@pnpm/core':
-        specifier: 14.0.1
-        version: 14.0.1(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
+        specifier: 14.0.2
+        version: 14.0.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
       '@pnpm/network.ca-file':
         specifier: 3.0.0
         version: 3.0.0
@@ -19898,8 +19898,8 @@ importers:
         specifier: 21.1.0
         version: 21.1.0(@pnpm/logger@5.0.0)
       '@pnpm/core':
-        specifier: 14.0.1
-        version: 14.0.1(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
+        specifier: 14.0.2
+        version: 14.0.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
       '@pnpm/default-reporter':
         specifier: 13.0.1
         version: 13.0.1(@pnpm/logger@5.0.0)
@@ -32829,8 +32829,8 @@ packages:
       '@pnpm/types': 10.0.0
     dev: false
 
-  /@pnpm/core@14.0.1(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2):
-    resolution: {integrity: sha512-4NXSClwSiay5CrgvUGTA8xq+q1o+48XF+MUIyt+afHiYMcBI0ncjMG+BSQ2gJ3x5IddSa6Q5RR2p2z9DGaiUbg==}
+  /@pnpm/core@14.0.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-W5B6ZCE5lq0fbjkSmzC6pds1gmJrPD40U0n1o0ueQwu3ZhvlNAjwVv6fj7NeK+0KtjIfhpLQ/xKJXXl/N5abEA==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -75874,7 +75874,7 @@ packages:
       react: ^17.0.0 || ^18.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@pnpm/core': 14.0.1(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
+      '@pnpm/core': 14.0.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
       '@pnpm/network.ca-file': 3.0.0
       '@pnpm/types': 10.0.0
       '@teambit/bit-error': 0.0.404
@@ -75940,7 +75940,7 @@ packages:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@pnpm/client': 11.0.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)
       '@pnpm/config': 21.1.0(@pnpm/logger@5.0.0)
-      '@pnpm/core': 14.0.1(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
+      '@pnpm/core': 14.0.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
       '@pnpm/default-reporter': 13.0.1(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path': 3.0.0
       '@pnpm/error': 6.0.0
