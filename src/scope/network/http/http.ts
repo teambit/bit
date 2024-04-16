@@ -660,6 +660,11 @@ export function getAuthHeader(token: string) {
   };
 }
 
+export async function fetchWithAgent(uri: string, opts) {
+  const _fetch = await getFetcherWithAgent(uri);
+  return _fetch(uri, opts);
+}
+
 /**
  * Read the proxy config from the global config, and wrap fetch with fetch with proxy
  */
