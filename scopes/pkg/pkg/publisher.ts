@@ -68,7 +68,7 @@ export class Publisher {
       publishParams.push(...extraArgsSplit);
     }
     const publishParamsStr = publishParams.join(' ');
-
+    const getPkgJson = async () => fsx.readJSON(`${capsule.path}/package.json`);
     const componentIdStr = capsule.id.toString();
     const errors: string[] = [];
     try {
@@ -82,7 +82,18 @@ export class Publisher {
       const errorDetails = typeof err === 'object' && err && 'message' in err ? err.message : err;
       const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}: ${errorDetails}`;
       this.logger.error(`${componentIdStr}, ${errorMsg}`);
-      errors.push(errorMsg);
+      let isPublished = false;
+      if (typeof errorDetails === 'string' && errorDetails.includes('EPERM')) {
+        const pkgJson = await getPkgJson();
+        const versionOnNpm = await this.checkVersionOnNpm(pkgJson.name);
+        if (versionOnNpm && versionOnNpm === pkgJson.version) {
+          isPublished = true;
+          this.logger.debug(
+            `${componentIdStr}, package ${pkgJson.name} is already on npm with version ${versionOnNpm}`
+          );
+        }
+      }
+      if (!isPublished) errors.push(errorMsg);
     }
     let metadata: TaskMetadata = {};
     if (errors.length === 0 && !this.options.dryRun) {
@@ -91,6 +102,16 @@ export class Publisher {
     }
     const component = capsule.component;
     return { component, metadata, errors, startTime, endTime: Date.now() };
+  }
+
+  private async checkVersionOnNpm(pkgName: string): Promise<string | undefined> {
+    try {
+      const results = await execa(this.packageManager, ['view', pkgName, 'version']);
+      return results.stdout;
+    } catch (err: unknown) {
+      this.logger.error(`failed running ${this.packageManager} view ${pkgName} version: ${err}`, err);
+      return undefined;
+    }
   }
 
   private getTagFlagForPreRelease(id: ComponentID): string[] {
