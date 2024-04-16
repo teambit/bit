@@ -15,7 +15,6 @@ export default function createWebpackConfig(
   publicDir: string
 ): Configuration {
   const baseConfig = createBaseConfig(outputDir, entryFiles);
-  console.log('🚀 ~ file: webpack.browser.config.ts:19 ~ baseConfig:', baseConfig);
   const browserConfig = createBrowserConfig(outputDir, title, publicDir);
   // @ts-ignore that's an issue because of different types/webpack version
   const combined = merge(baseConfig, browserConfig);
