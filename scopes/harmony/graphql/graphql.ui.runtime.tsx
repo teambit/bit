@@ -4,7 +4,7 @@ import { print } from 'graphql';
 import { Observable } from '@apollo/client/utilities';
 import { FetchResult } from '@apollo/client/core';
 import { UIRuntime } from '@teambit/ui';
-import { InMemoryCache, ApolloClient, ApolloLink, createHttpLink } from '@apollo/client';
+import { InMemoryCache, ApolloClient, createHttpLink, ApolloLink } from '@apollo/client';
 import type { NormalizedCacheObject } from '@apollo/client';
 import { onError } from '@apollo/client/link/error';
 
@@ -77,13 +77,12 @@ export class GraphqlUI {
       ? new ApolloLink((operation) => {
           const observable = new Observable<FetchResult>((observer) => {
             const { variables } = operation;
-            // @ts-ignore todo - update env to latest graphql version
             const query = print(operation.query);
 
             const dispose = wsClient?.subscribe(
               { query, variables },
               {
-                next: (data) => observer.next({ data }),
+                next: ({ data }) => observer.next({ data }),
                 error: (error) => observer.error(error),
                 complete: () => observer.complete(),
               }

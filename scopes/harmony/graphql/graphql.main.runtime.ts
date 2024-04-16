@@ -5,6 +5,7 @@ import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
 import { useServer } from 'graphql-ws/lib/use/ws';
+import { GRAPHQL_TRANSPORT_WS_PROTOCOL } from 'graphql-ws';
 import { Module, createModule, createApplication, Application } from 'graphql-modules';
 import { MainRuntime } from '@teambit/cli';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
@@ -206,11 +207,15 @@ export class GraphqlMain {
       noServer: true,
       path: this.config.subscriptionsPath,
     });
+
     httpServer.on('upgrade', (request, socket, head) => {
       if (request.url?.startsWith(this.config.subscriptionsPath)) {
-        websocketServer.handleUpgrade(request, socket, head, (websocket) => {
-          websocketServer.emit('connection', websocket, request);
-        });
+        const protocols = request.headers['sec-websocket-protocol'];
+        if (protocols?.includes(GRAPHQL_TRANSPORT_WS_PROTOCOL)) {
+          websocketServer.handleUpgrade(request, socket, head, (websocket) => {
+            websocketServer.emit('connection', websocket, request);
+          });
+        }
       }
     });
 
@@ -221,6 +226,13 @@ export class GraphqlMain {
         execute,
         onConnect: () => {
           options?.onWsConnect?.();
+        },
+        context: async (ctx, msgs, args) => {
+          return {
+            ctx,
+            msgs,
+            args,
+          };
         },
       },
       websocketServer
