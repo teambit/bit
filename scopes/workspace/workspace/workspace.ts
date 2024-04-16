@@ -1,7 +1,6 @@
 /* eslint-disable max-lines */
 import memoize from 'memoizee';
 import mapSeries from 'p-map-series';
-import fetch from 'node-fetch';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
@@ -69,7 +68,7 @@ import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { isHash } from '@teambit/component-version';
 import { GlobalConfigMain } from '@teambit/global-config';
-import { getAuthHeader } from '@teambit/legacy/dist/scope/network/http/http';
+import { getAuthHeader, fetchWithAgent as fetch } from '@teambit/legacy/dist/scope/network/http/http';
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,
