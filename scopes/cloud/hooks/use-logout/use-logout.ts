@@ -1,5 +1,5 @@
 import { useMutation } from '@teambit/ui';
-import { gql } from 'graphql-tag';
+import { gql } from '@apollo/client';
 import { DocumentNode } from 'graphql';
 
 export const LOGOUT_MUTATION: DocumentNode = gql`

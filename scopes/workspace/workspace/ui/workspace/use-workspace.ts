@@ -60,6 +60,10 @@ const wcComponentFields: DocumentNode = gql`
       id
       icon
     }
+    server {
+      env
+      url
+    }
   }
 `;
 
@@ -71,10 +75,6 @@ const WORKSPACE: DocumentNode = gql`
       icon
       components {
         ...wcComponentFields
-        server {
-          env
-          url
-        }
       }
     }
   }
