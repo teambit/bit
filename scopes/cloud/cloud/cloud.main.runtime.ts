@@ -594,7 +594,7 @@ export class CloudMain {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return response.json();
+      return await response.json();
     } catch (error) {
       this.logger.debug('fetchFromSymphonyViaGQL. ', 'Error fetching data: ', error);
       return null;
