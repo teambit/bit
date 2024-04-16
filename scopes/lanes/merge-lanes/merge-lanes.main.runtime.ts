@@ -56,6 +56,8 @@ export type MergeLaneOptions = {
   skipFetch?: boolean;
   excludeNonLaneComps?: boolean;
   shouldIncludeUpdateDependents?: boolean;
+  throwIfNotUpToDate?: boolean; // relevant when merging from a scope
+  fetchCurrent?: boolean; // needed when merging from a bare-scope (because it's empty)
 };
 export type ConflictPerId = { id: ComponentID; files: string[]; config?: boolean };
 export type MergeFromScopeResult = {
@@ -122,6 +124,8 @@ export class MergeLanesMain {
       skipFetch,
       excludeNonLaneComps,
       shouldIncludeUpdateDependents,
+      throwIfNotUpToDate,
+      fetchCurrent,
     } = options;
     const legacyScope = this.scope.legacyScope;
     if (tag && !currentLaneId.isDefault()) {
@@ -136,6 +140,10 @@ export class MergeLanesMain {
       throw new BitError(
         `unable to resolve unrelated when on main. switch to ${otherLaneId.toString()} and run "bit lane merge main --resolve-unrelated"`
       );
+    }
+    if (fetchCurrent && !currentLaneId.isDefault()) {
+      // if current is default, it'll be fetch later on
+      await this.lanes.fetchLaneWithItsComponents(currentLaneId);
     }
     const currentLane = currentLaneId.isDefault() ? null : await legacyScope.loadLane(currentLaneId);
     const isDefaultLane = otherLaneId.isDefault();
@@ -152,16 +160,21 @@ export class MergeLanesMain {
       const shouldFetch = !lane || (!skipFetch && !lane.isNew);
       if (shouldFetch) {
         // don't assign `lane` to the result of this command. otherwise, if you have local snaps, it'll ignore them and use the remote-lane.
-        const otherLane = await this.lanes.fetchLaneWithItsComponents(otherLaneId);
+        const otherLane = await this.lanes.fetchLaneWithItsComponents(otherLaneId, shouldIncludeUpdateDependents);
         laneToFetchArtifactsFrom = otherLane;
         lane = await legacyScope.loadLane(otherLaneId);
       }
       return lane;
     };
     const otherLane = isDefaultLane ? undefined : await getOtherLane();
+    if (fetchCurrent && otherLane && currentLaneId.isDefault()) {
+      const ids = await this.getMainIdsToMerge(otherLane, false, shouldIncludeUpdateDependents);
+      const compIdList = ComponentIdList.fromArray(ids).toVersionLatest();
+      await this.importer.importObjectsFromMainIfExist(compIdList);
+    }
     const getBitIds = async () => {
       if (isDefaultLane) {
-        const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps);
+        const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps, shouldIncludeUpdateDependents);
         const modelComponents = await Promise.all(ids.map((id) => this.scope.legacyScope.getModelComponent(id)));
         return compact(
           modelComponents.map((c) => {
@@ -176,6 +189,9 @@ export class MergeLanesMain {
         : otherLane.toComponentIds();
     };
     const idsToMerge = await getBitIds();
+
+    if (throwIfNotUpToDate) await this.throwIfNotUpToDate(otherLaneId, currentLaneId);
+
     this.logger.debug(`merging the following ids: ${idsToMerge.toString()}`);
 
     const shouldSquash = squash || (currentLaneId.isDefault() && !noSquash);
@@ -338,9 +354,9 @@ export class MergeLanesMain {
     return { checkoutResults, restoredItems, checkoutError };
   }
 
-  private async getMainIdsToMerge(lane?: Lane | null, includeNonLaneComps = true) {
+  private async getMainIdsToMerge(lane?: Lane | null, includeNonLaneComps = true, includeUpdateDependents = false) {
     if (!lane) throw new Error(`unable to merge ${DEFAULT_LANE}, the current lane was not found`);
-    const laneIds = lane.toComponentIds();
+    const laneIds = includeUpdateDependents ? lane.toComponentIdsIncludeUpdateDependents() : lane.toComponentIds();
     const ids = laneIds.filter((id) => this.scope.isExported(id));
     if (includeNonLaneComps) {
       if (!this.workspace) {
@@ -367,12 +383,11 @@ export class MergeLanesMain {
     }
     const fromLaneId = await this.lanes.parseLaneId(fromLane);
     const toLaneId = toLane === DEFAULT_LANE ? this.lanes.getDefaultLaneId() : LaneId.parse(toLane);
-    const toLaneObj = toLaneId.isDefault() ? undefined : await this.lanes.fetchLaneWithItsComponents(toLaneId);
     const shouldIncludeUpdateDependents = toLaneId.isDefault();
-    const shouldSquash = !toLaneObj && !options.noSquash; // only when merging to main we squash.
 
     const exportIfNeeded = async (idsToExport: ComponentID[], laneToExport?: Lane): Promise<ComponentID[]> => {
       if (!options.push) return [];
+      const shouldSquash = toLaneId.isDefault() && !options.noSquash; // only when merging to main we squash.
       const compIdsList = ComponentIdList.fromArray(idsToExport);
       const { exported } = await this.exporter.exportMany({
         scope: this.scope.legacyScope,
@@ -395,16 +410,14 @@ export class MergeLanesMain {
       return exported;
     };
 
-    if (!fromLaneId.isDefault()) {
-      await this.throwIfNotUpToDate(fromLaneId, toLaneId);
-    }
-
     // current -> target (to)
     // other -> source (from)
     options.mergeStrategy = 'manual';
     options.excludeNonLaneComps = true;
     options.skipDependencyInstallation = true;
     options.shouldIncludeUpdateDependents = shouldIncludeUpdateDependents;
+    options.throwIfNotUpToDate = !fromLaneId.isDefault();
+    options.fetchCurrent = true;
     this.scope.legacyScope.setCurrentLaneId(toLaneId);
 
     const { mergeResults, configMergeResults, conflicts, mergedSuccessfullyIds } = await this.mergeLane(
