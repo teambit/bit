@@ -1,6 +1,5 @@
-import { useQuery as useDataQuery } from '@apollo/client';
+import { useQuery as useDataQuery, DocumentNode } from '@apollo/client';
 import { gql } from 'graphql-tag';
-import { DocumentNode } from 'graphql';
 
 export type CoreAspectIdByPackageName = {
   [packageName: string]: string;

@@ -101,6 +101,7 @@ export default function createWebpackConfig(
           'react-dom$': 'react-dom/profiling',
           'scheduler/tracing': 'scheduler/tracing-profiling',
         }),
+        '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
       },
       fallback: {
         module: false,

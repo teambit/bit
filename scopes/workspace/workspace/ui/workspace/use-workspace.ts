@@ -2,9 +2,8 @@ import { useEffect, useMemo } from 'react';
 import { ComponentModel } from '@teambit/component';
 import useLatest from '@react-hook/latest';
 import { gql } from 'graphql-tag';
-import { DocumentNode } from 'graphql';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
-import { useQuery } from '@apollo/client';
+import { useQuery, DocumentNode } from '@apollo/client';
 
 import { Workspace } from './workspace-model';
 

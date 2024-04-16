@@ -1,7 +1,6 @@
-import { DataQueryResult, useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { useQuery as useDataQuery, DocumentNode } from '@apollo/client';
 import { gql } from 'graphql-tag';
-import { DocumentNode } from 'graphql';
-import { SchemaQueryResult, APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
+import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 import { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 
 const GET_SCHEMA: DocumentNode = gql`
@@ -17,11 +16,8 @@ export function useSchema(
   host: string,
   componentId: string,
   apiNodeRenderers: APINodeRenderer[]
-): { apiModel?: APIReferenceModel } & Omit<
-  DataQueryResult<SchemaQueryResult, { extensionId: string; componentId: string }>,
-  'data'
-> {
-  const { data, ...rest } = useDataQuery(GET_SCHEMA, {
+): { apiModel?: APIReferenceModel; loading?: boolean } {
+  const { data, loading } = useDataQuery(GET_SCHEMA, {
     variables: {
       extensionId: host,
       componentId,
@@ -31,7 +27,7 @@ export function useSchema(
   const apiModel = data?.getHost?.getSchema ? APIReferenceModel.from(data, apiNodeRenderers) : undefined;
 
   return {
-    ...rest,
+    loading,
     apiModel,
   };
 }

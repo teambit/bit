@@ -1,6 +1,5 @@
-import { useQuery as useDataQuery } from '@apollo/client';
+import { useQuery as useDataQuery, DocumentNode } from '@apollo/client';
 import { gql } from 'graphql-tag';
-import { DocumentNode } from 'graphql';
 import { ComponentID, ComponentModel, componentOverviewFields } from '@teambit/component';
 import { LaneId } from '@teambit/lane-id';
 import { ComponentDescriptor } from '@teambit/component-descriptor';

@@ -1,8 +1,7 @@
 import { useMemo, useCallback } from 'react';
-import { useQuery as useDataQuery } from '@apollo/client';
+import { useQuery as useDataQuery, DocumentNode } from '@apollo/client';
 import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { gql } from 'graphql-tag';
-import { DocumentNode } from 'graphql';
 import { LaneId } from '@teambit/lane-id';
 import { isEqual } from 'lodash';
 import { useLanesContext } from './lanes-context';

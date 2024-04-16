@@ -1,5 +1,5 @@
 import { gql } from 'graphql-tag';
-import { DocumentNode } from 'graphql';
+import { DocumentNode } from '@apollo/client';
 import { EdgeType } from '../../edge-type';
 
 // please update types when updating query, for added safety

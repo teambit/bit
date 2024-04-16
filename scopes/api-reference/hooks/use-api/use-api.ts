@@ -1,6 +1,5 @@
-import { useQuery as useDataQuery } from '@apollo/client';
+import { useQuery as useDataQuery, DocumentNode } from '@apollo/client';
 import { gql } from 'graphql-tag';
-import { DocumentNode } from 'graphql';
 import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 import { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 

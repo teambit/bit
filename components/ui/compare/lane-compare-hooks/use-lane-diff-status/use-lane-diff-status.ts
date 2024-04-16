@@ -1,7 +1,6 @@
-import { useQuery as useDataQuery } from '@apollo/client';
+import { useQuery as useDataQuery, DocumentNode } from '@apollo/client';
 import { gql } from 'graphql-tag';
 import { LaneId } from '@teambit/lane-id';
-import { DocumentNode } from 'graphql';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { LaneDiff, PlainLaneDiff, ChangeType } from '@teambit/lanes.entities.lane-diff';
 
