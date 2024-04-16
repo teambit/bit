@@ -351,6 +351,7 @@
         "@types/react-syntax-highlighter": "15.5.10",
         "@types/react-tabs": "2.3.2",
         "@types/socket.io-client": "1.4.35",
+        "@types/ssri": "^7.1.5",
         "@types/testing-library__jest-dom": "5.9.5",
         "@types/ua-parser-js": "0.7.35",
         "@types/url-join": "4.0.0",
@@ -509,7 +510,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.9.7",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.683",
+        "@teambit/legacy": "1.0.684",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
         "graphql": "16.8.1",
@@ -632,7 +633,8 @@
           "dependencies": {
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
-            "@teambit/legacy": "1.0.683",
+            "@apollo/client": "3.6.9",
+            "@teambit/legacy": "1.0.684",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
