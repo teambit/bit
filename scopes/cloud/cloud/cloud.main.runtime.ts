@@ -26,6 +26,7 @@ import {
 } from '@teambit/legacy/dist/constants';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import globalFlags from '@teambit/legacy/dist/cli/global-flags';
+import { fetchWithAgent as fetch } from '@teambit/legacy/dist/scope/network/http/http';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
