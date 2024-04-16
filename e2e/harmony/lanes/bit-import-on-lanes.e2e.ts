@@ -284,4 +284,23 @@ describe('bit lane command', function () {
       expect(status.outdatedComponents).to.have.lengthOf(0);
     });
   });
+  describe('import with wildcards when a component exists on both, main and lane', () => {
+    let headOnLane: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.export();
+      helper.command.importComponent('**', '-x');
+    });
+    it('should not checkout to the main version', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.not.equal('0.0.1');
+      expect(bitmap.comp1.version).to.equal(headOnLane);
+    });
+  });
 });
