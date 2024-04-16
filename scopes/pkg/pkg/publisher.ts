@@ -10,6 +10,7 @@ import { Scope } from '@teambit/legacy/dist/scope';
 import fsx from 'fs-extra';
 import mapSeries from 'p-map-series';
 import { join } from 'path';
+import ssri from 'ssri';
 import execa from 'execa';
 import { PkgAspect } from './pkg.aspect';
 import { PkgExtensionConfig } from './pkg.main.runtime';
@@ -83,15 +84,18 @@ export class Publisher {
       const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}: ${errorDetails}`;
       this.logger.error(`${componentIdStr}, ${errorMsg}`);
       let isPublished = false;
-      if (typeof errorDetails === 'string' && errorDetails.includes('EPERM')) {
+      if (typeof errorDetails === 'string' && errorDetails.includes('EPERM') && tarPath) {
         const pkgJson = await getPkgJson();
         // sleep 5 seconds
         await new Promise((resolve) => setTimeout(resolve, Number(process.env.NPM_WAKE_UP || 5000)));
-        const versionOnNpm = await this.checkVersionOnNpm(pkgJson.name);
-        if (versionOnNpm && versionOnNpm === pkgJson.version) {
-          isPublished = true;
+        const integrityOnNpm = await this.getIntegrityOnNpm(pkgJson.name, pkgJson.version);
+        if (integrityOnNpm && tarPath) {
+          const tarData = fsx.readFileSync(join(tarFolderPath, tarPath));
+          // If the integrity of the tarball in the registry matches the local one,
+          // we consider the package published
+          isPublished = ssri.checkData(tarData, integrityOnNpm) !== false;
           this.logger.debug(
-            `${componentIdStr}, package ${pkgJson.name} is already on npm with version ${versionOnNpm}`
+            `${componentIdStr}, package ${pkgJson.name} is already on npm with version ${pkgJson.version}`
           );
         }
       }
@@ -106,12 +110,13 @@ export class Publisher {
     return { component, metadata, errors, startTime, endTime: Date.now() };
   }
 
-  private async checkVersionOnNpm(pkgName: string): Promise<string | undefined> {
+  private async getIntegrityOnNpm(pkgName: string, pkgVersion: string): Promise<string | undefined> {
+    const args = ['view', `${pkgName}@${pkgVersion}`, 'dist.integrity'];
     try {
-      const results = await execa(this.packageManager, ['view', pkgName, 'version']);
+      const results = await execa(this.packageManager, args);
       return results.stdout;
     } catch (err: unknown) {
-      this.logger.error(`failed running ${this.packageManager} view ${pkgName} version: ${err}`, err);
+      this.logger.error(`failed running ${this.packageManager} ${args.join(' ')}: ${err}`, err);
       return undefined;
     }
   }
