@@ -996,21 +996,12 @@ importers:
       '@teambit/ui-foundation.ui.notifications.store':
         specifier: ^0.0.500
         version: 0.0.500(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.pages.preview-not-found':
-        specifier: ^0.0.84
-        version: 0.0.84(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.pages.static-error':
-        specifier: ^0.0.92
-        version: 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.extend-path':
         specifier: ^0.0.486
         version: 0.0.486(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query':
         specifier: ^0.0.501
         version: 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.rendering.html':
-        specifier: ^0.0.85
-        version: 0.0.85(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.side-bar':
         specifier: ^0.0.875
         version: 0.0.875(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
@@ -1224,6 +1215,9 @@ importers:
       '@types/socket.io-client':
         specifier: 1.4.35
         version: 1.4.35
+      '@types/ssri':
+        specifier: ^7.1.5
+        version: 7.1.5
       '@types/testing-library__jest-dom':
         specifier: 5.9.5
         version: 5.9.5
@@ -4427,6 +4421,83 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
 
+  components/ui/pages/preview-not-found:
+    dependencies:
+      core-js:
+        specifier: ^3.0.0
+        version: 3.13.0
+      react:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2
+      react-dom:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2(react@17.0.2)
+    devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@types/jest':
+        specifier: ^26.0.0
+        version: 26.0.20
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 12.20.4
+        version: 12.20.4
+      '@types/react':
+        specifier: ^17.0.67
+        version: 17.0.75
+      '@types/react-dom':
+        specifier: ^17.0.21
+        version: 17.0.25
+      '@types/testing-library__jest-dom':
+        specifier: 5.9.5
+        version: 5.9.5
+
+  components/ui/pages/static-error:
+    dependencies:
+      '@teambit/base-ui.theme.fonts.book':
+        specifier: 1.0.2
+        version: 1.0.2(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.pages.not-found':
+        specifier: 0.0.366
+        version: 0.0.366(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.pages.server-error':
+        specifier: 0.0.366
+        version: 0.0.366(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      core-js:
+        specifier: ^3.0.0
+        version: 3.13.0
+      react:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2
+      react-dom:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2(react@17.0.2)
+    devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@types/jest':
+        specifier: ^26.0.0
+        version: 26.0.20
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 12.20.4
+        version: 12.20.4
+      '@types/react':
+        specifier: ^17.0.67
+        version: 17.0.75
+      '@types/react-dom':
+        specifier: ^17.0.21
+        version: 17.0.25
+      '@types/testing-library__jest-dom':
+        specifier: 5.9.5
+        version: 5.9.5
+
   components/ui/react-router/slot-router:
     dependencies:
       '@apollo/client':
@@ -4487,6 +4558,40 @@ importers:
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
+
+  components/ui/rendering/html:
+    dependencies:
+      core-js:
+        specifier: ^3.0.0
+        version: 3.13.0
+      react:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2
+      react-dom:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2(react@17.0.2)
+    devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@types/jest':
+        specifier: ^26.0.0
+        version: 26.0.20
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 12.20.4
+        version: 12.20.4
+      '@types/react':
+        specifier: ^17.0.67
+        version: 17.0.75
+      '@types/react-dom':
+        specifier: ^17.0.21
+        version: 17.0.25
+      '@types/testing-library__jest-dom':
+        specifier: 5.9.5
+        version: 5.9.5
 
   components/ui/test-compare:
     dependencies:
@@ -5685,9 +5790,18 @@ importers:
       '@teambit/ui-foundation.ui.buttons.collapser':
         specifier: workspace:*
         version: file:components/ui/buttons/collapser(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.preview-not-found':
+        specifier: workspace:*
+        version: file:components/ui/pages/preview-not-found(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.static-error':
+        specifier: workspace:*
+        version: file:components/ui/pages/static-error(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router':
         specifier: workspace:*
         version: file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-router-dom@6.22.3)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+      '@teambit/ui-foundation.ui.rendering.html':
+        specifier: workspace:*
+        version: file:components/ui/rendering/html(react-dom@17.0.2)(react@17.0.2)
       '@teambit/update-dependencies':
         specifier: workspace:*
         version: file:scopes/scope/update-dependencies(@types/react@17.0.75)(react@17.0.2)
@@ -6270,7 +6384,13 @@ importers:
         injected: true
       '@teambit/ui-foundation.ui.buttons.collapser':
         injected: true
+      '@teambit/ui-foundation.ui.pages.preview-not-found':
+        injected: true
+      '@teambit/ui-foundation.ui.pages.static-error':
+        injected: true
       '@teambit/ui-foundation.ui.react-router.slot-router':
+        injected: true
+      '@teambit/ui-foundation.ui.rendering.html':
         injected: true
       '@teambit/update-dependencies':
         injected: true
@@ -7094,9 +7214,18 @@ importers:
       '@teambit/ui-foundation.ui.buttons.collapser':
         specifier: workspace:*
         version: file:components/ui/buttons/collapser(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.preview-not-found':
+        specifier: workspace:*
+        version: file:components/ui/pages/preview-not-found(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.static-error':
+        specifier: workspace:*
+        version: file:components/ui/pages/static-error(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router':
         specifier: workspace:*
         version: file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-router-dom@6.22.3)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+      '@teambit/ui-foundation.ui.rendering.html':
+        specifier: workspace:*
+        version: file:components/ui/rendering/html(react-dom@17.0.2)(react@17.0.2)
       '@teambit/update-dependencies':
         specifier: workspace:*
         version: file:scopes/scope/update-dependencies(@types/react@17.0.75)(react@17.0.2)
@@ -7694,7 +7823,13 @@ importers:
         injected: true
       '@teambit/ui-foundation.ui.buttons.collapser':
         injected: true
+      '@teambit/ui-foundation.ui.pages.preview-not-found':
+        injected: true
+      '@teambit/ui-foundation.ui.pages.static-error':
+        injected: true
       '@teambit/ui-foundation.ui.react-router.slot-router':
+        injected: true
+      '@teambit/ui-foundation.ui.rendering.html':
         injected: true
       '@teambit/update-dependencies':
         injected: true
@@ -8518,9 +8653,18 @@ importers:
       '@teambit/ui-foundation.ui.buttons.collapser':
         specifier: workspace:*
         version: file:components/ui/buttons/collapser(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.preview-not-found':
+        specifier: workspace:*
+        version: file:components/ui/pages/preview-not-found(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.static-error':
+        specifier: workspace:*
+        version: file:components/ui/pages/static-error(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router':
         specifier: workspace:*
         version: file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-router-dom@6.22.3)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+      '@teambit/ui-foundation.ui.rendering.html':
+        specifier: workspace:*
+        version: file:components/ui/rendering/html(react-dom@17.0.2)(react@17.0.2)
       '@teambit/update-dependencies':
         specifier: workspace:*
         version: file:scopes/scope/update-dependencies(@types/react@17.0.75)(react@17.0.2)
@@ -9118,7 +9262,13 @@ importers:
         injected: true
       '@teambit/ui-foundation.ui.buttons.collapser':
         injected: true
+      '@teambit/ui-foundation.ui.pages.preview-not-found':
+        injected: true
+      '@teambit/ui-foundation.ui.pages.static-error':
+        injected: true
       '@teambit/ui-foundation.ui.react-router.slot-router':
+        injected: true
+      '@teambit/ui-foundation.ui.rendering.html':
         injected: true
       '@teambit/update-dependencies':
         injected: true
@@ -9933,9 +10083,18 @@ importers:
       '@teambit/ui-foundation.ui.buttons.collapser':
         specifier: workspace:*
         version: file:components/ui/buttons/collapser(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.preview-not-found':
+        specifier: workspace:*
+        version: file:components/ui/pages/preview-not-found(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.static-error':
+        specifier: workspace:*
+        version: file:components/ui/pages/static-error(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router':
         specifier: workspace:*
         version: file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-router-dom@6.22.3)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+      '@teambit/ui-foundation.ui.rendering.html':
+        specifier: workspace:*
+        version: file:components/ui/rendering/html(react-dom@17.0.2)(react@17.0.2)
       '@teambit/update-dependencies':
         specifier: workspace:*
         version: file:scopes/scope/update-dependencies(@types/react@17.0.75)(react@17.0.2)
@@ -10512,7 +10671,13 @@ importers:
         injected: true
       '@teambit/ui-foundation.ui.buttons.collapser':
         injected: true
+      '@teambit/ui-foundation.ui.pages.preview-not-found':
+        injected: true
+      '@teambit/ui-foundation.ui.pages.static-error':
+        injected: true
       '@teambit/ui-foundation.ui.react-router.slot-router':
+        injected: true
+      '@teambit/ui-foundation.ui.rendering.html':
         injected: true
       '@teambit/update-dependencies':
         injected: true
@@ -11327,9 +11492,18 @@ importers:
       '@teambit/ui-foundation.ui.buttons.collapser':
         specifier: workspace:*
         version: file:components/ui/buttons/collapser(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.preview-not-found':
+        specifier: workspace:*
+        version: file:components/ui/pages/preview-not-found(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.static-error':
+        specifier: workspace:*
+        version: file:components/ui/pages/static-error(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router':
         specifier: workspace:*
         version: file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-router-dom@6.22.3)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+      '@teambit/ui-foundation.ui.rendering.html':
+        specifier: workspace:*
+        version: file:components/ui/rendering/html(react-dom@17.0.2)(react@17.0.2)
       '@teambit/update-dependencies':
         specifier: workspace:*
         version: file:scopes/scope/update-dependencies(@types/react@17.0.75)(react@17.0.2)
@@ -11912,7 +12086,13 @@ importers:
         injected: true
       '@teambit/ui-foundation.ui.buttons.collapser':
         injected: true
+      '@teambit/ui-foundation.ui.pages.preview-not-found':
+        injected: true
+      '@teambit/ui-foundation.ui.pages.static-error':
+        injected: true
       '@teambit/ui-foundation.ui.react-router.slot-router':
+        injected: true
+      '@teambit/ui-foundation.ui.rendering.html':
         injected: true
       '@teambit/update-dependencies':
         injected: true
@@ -12727,9 +12907,18 @@ importers:
       '@teambit/ui-foundation.ui.buttons.collapser':
         specifier: workspace:*
         version: file:components/ui/buttons/collapser(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.preview-not-found':
+        specifier: workspace:*
+        version: file:components/ui/pages/preview-not-found(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.static-error':
+        specifier: workspace:*
+        version: file:components/ui/pages/static-error(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router':
         specifier: workspace:*
         version: file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-router-dom@6.22.3)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+      '@teambit/ui-foundation.ui.rendering.html':
+        specifier: workspace:*
+        version: file:components/ui/rendering/html(react-dom@17.0.2)(react@17.0.2)
       '@teambit/update-dependencies':
         specifier: workspace:*
         version: file:scopes/scope/update-dependencies(@types/react@17.0.75)(react@17.0.2)
@@ -13312,7 +13501,13 @@ importers:
         injected: true
       '@teambit/ui-foundation.ui.buttons.collapser':
         injected: true
+      '@teambit/ui-foundation.ui.pages.preview-not-found':
+        injected: true
+      '@teambit/ui-foundation.ui.pages.static-error':
+        injected: true
       '@teambit/ui-foundation.ui.react-router.slot-router':
+        injected: true
+      '@teambit/ui-foundation.ui.rendering.html':
         injected: true
       '@teambit/update-dependencies':
         injected: true
@@ -14139,9 +14334,18 @@ importers:
       '@teambit/ui-foundation.ui.buttons.collapser':
         specifier: workspace:*
         version: file:components/ui/buttons/collapser(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.preview-not-found':
+        specifier: workspace:*
+        version: file:components/ui/pages/preview-not-found(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.static-error':
+        specifier: workspace:*
+        version: file:components/ui/pages/static-error(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router':
         specifier: workspace:*
         version: file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-router-dom@6.22.3)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+      '@teambit/ui-foundation.ui.rendering.html':
+        specifier: workspace:*
+        version: file:components/ui/rendering/html(react-dom@17.0.2)(react@17.0.2)
       '@teambit/update-dependencies':
         specifier: workspace:*
         version: file:scopes/scope/update-dependencies(@types/react@17.0.75)(react@17.0.2)
@@ -14748,7 +14952,13 @@ importers:
         injected: true
       '@teambit/ui-foundation.ui.buttons.collapser':
         injected: true
+      '@teambit/ui-foundation.ui.pages.preview-not-found':
+        injected: true
+      '@teambit/ui-foundation.ui.pages.static-error':
+        injected: true
       '@teambit/ui-foundation.ui.react-router.slot-router':
+        injected: true
+      '@teambit/ui-foundation.ui.rendering.html':
         injected: true
       '@teambit/update-dependencies':
         injected: true
@@ -22983,6 +23193,9 @@ importers:
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
+      '@types/ssri':
+        specifier: ^7.1.5
+        version: 7.1.5
       chai:
         specifier: 4.3.0
         version: 4.3.0
@@ -23071,9 +23284,6 @@ importers:
       '@teambit/react.webpack.react-webpack':
         specifier: ^1.0.25
         version: 1.0.25(@babel/core@7.19.6)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.0)(react@17.0.2)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
-      '@teambit/ui-foundation.ui.pages.static-error':
-        specifier: ^0.0.92
-        version: 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@types/react':
         specifier: ^17.0.67
         version: 17.0.75
@@ -23565,9 +23775,6 @@ importers:
       '@teambit/typescript.typescript-compiler':
         specifier: ^2.0.22
         version: 2.0.22
-      '@teambit/ui-foundation.ui.pages.static-error':
-        specifier: ^0.0.92
-        version: 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/jest-dom':
         specifier: 5.16.2
         version: 5.16.2
@@ -26913,9 +27120,6 @@ importers:
       mocha:
         specifier: 10.2.0
         version: 10.2.0
-      node-fetch:
-        specifier: 2.6.7
-        version: 2.6.7
       p-map:
         specifier: 4.0.0
         version: 4.0.0
@@ -26968,9 +27172,6 @@ importers:
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
-      '@types/node-fetch':
-        specifier: 2.5.12
-        version: 2.5.12
       '@types/pluralize':
         specifier: 0.0.29
         version: 0.0.29
@@ -45797,18 +45998,6 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
 
-  /@teambit/ui-foundation.ui.pages.preview-not-found@0.0.84(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-Odjiu1fDYg0dc5VK8oFEAjyAYWWBOVk4i+x74o9lI8hKXbjtVBdSvLcvyvQQKV2wxqlfg9NlslUlHSrsIcMl+g==}
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
   /@teambit/ui-foundation.ui.pages.static-error@0.0.88(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-6baC6ppU668YxrkWf0bs+Rd/v8F+kP3Y69/yjGchsXbRPEAWMZbuuIJ2PZKmsnu/gkOiCeCWNdWvzxFmcpXZaw==}
     engines: {node: '>=12.22.0'}
@@ -45826,26 +46015,6 @@ packages:
     transitivePeerDependencies:
       - '@testing-library/react'
       - '@types/react'
-
-  /@teambit/ui-foundation.ui.pages.static-error@0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-IMNDNB5Vy9hMCW5GXGlfa/UFzos1IZVTOBPVZcdDU6+6dIJwcUZtEt/kl2u6HcJXRO5v/BvMUy5AjQDKZOFgmg==}
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/base-ui.theme.fonts.book': 1.0.2(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/design.ui.pages.not-found': 0.0.366(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/design.ui.pages.server-error': 0.0.366(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.pages.preview-not-found': 0.0.84(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.rendering.html': 0.0.85(react-dom@17.0.2)(react@17.0.2)
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    transitivePeerDependencies:
-      - '@testing-library/react'
-      - '@types/react'
-    dev: false
 
   /@teambit/ui-foundation.ui.react-router.extend-path@0.0.486(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-P6Q/0X/hTfHB+neqJfEGkKI8g7Q=}
@@ -45961,18 +46130,6 @@ packages:
     dependencies:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-
-  /@teambit/ui-foundation.ui.rendering.html@0.0.85(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-vhUMNosGssFUIZrEyBlAZOvU3/dK/6X6gZYharYamRY4xedI6gS1BfoTSmhwOvW23FYr3Pm3K3/1TfaTvYlm5w==}
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
 
   /@teambit/ui-foundation.ui.side-bar@0.0.875(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-6i+sbu7fusNEwOIYc4CfmvS2M7wIG93IQNP1vwyh/90CZC+RkkNJm11KrlwzSrg608yPwy/7kvXVFD1WSS4H2Q==}
@@ -47284,7 +47441,6 @@ packages:
     resolution: {integrity: sha512-odD/56S3B51liILSk5aXJlnYt99S6Rt9EFDDqGtJM26rKHApHcwyU/UoYHrzKkdkHMAIquGWCuHtQTbes+FRQw==}
     dependencies:
       '@types/node': 20.2.5
-    dev: false
 
   /@types/stack-utils@2.0.3:
     resolution: {integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==}
@@ -72680,6 +72836,40 @@ packages:
       - ts-node
     dev: false
 
+  file:components/ui/pages/preview-not-found(react-dom@17.0.2)(react@17.0.2):
+    resolution: {directory: components/ui/pages/preview-not-found, type: directory}
+    id: file:components/ui/pages/preview-not-found
+    name: '@teambit/ui-foundation.ui.pages.preview-not-found'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  file:components/ui/pages/static-error(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {directory: components/ui/pages/static-error, type: directory}
+    id: file:components/ui/pages/static-error
+    name: '@teambit/ui-foundation.ui.pages.static-error'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-ui.theme.fonts.book': 1.0.2(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.pages.not-found': 0.0.366(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.pages.server-error': 0.0.366(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.preview-not-found': file:components/ui/pages/preview-not-found(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.rendering.html': file:components/ui/rendering/html(react-dom@17.0.2)(react@17.0.2)
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@types/react'
+    dev: false
+
   file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-router-dom@6.22.3)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18):
     resolution: {directory: components/ui/react-router/slot-router, type: directory}
     id: file:components/ui/react-router/slot-router
@@ -72715,6 +72905,19 @@ packages:
       - subscriptions-transport-ws
       - supports-color
       - ts-node
+    dev: false
+
+  file:components/ui/rendering/html(react-dom@17.0.2)(react@17.0.2):
+    resolution: {directory: components/ui/rendering/html, type: directory}
+    id: file:components/ui/rendering/html
+    name: '@teambit/ui-foundation.ui.rendering.html'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
     dev: false
 
   file:components/ui/test-compare(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)(typescript@5.3.3):
@@ -77286,7 +77489,7 @@ packages:
       '@teambit/preview.ui.component-preview': file:scopes/preview/ui/component-preview(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.webpack.react-webpack': 1.0.25(@babel/core@7.19.6)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.0)(react@17.0.2)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/toolbox.path.to-windows-compatible-path': file:scopes/toolbox/path/to-windows-compatible-path
-      '@teambit/ui-foundation.ui.pages.static-error': 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
       camelcase: 6.2.0
@@ -77345,6 +77548,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.rendering.html': file:components/ui/rendering/html(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       lodash: 4.17.21
@@ -77500,7 +77704,7 @@ packages:
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/typescript.typescript-compiler': 2.0.25
-      '@teambit/ui-foundation.ui.pages.static-error': 0.0.92(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
       '@testing-library/jest-dom': 5.16.2
@@ -79112,7 +79316,6 @@ packages:
       - '@testing-library/react'
       - '@types/node'
       - babel-plugin-macros
-      - encoding
       - graphql-ws
       - node-notifier
       - react-test-renderer
@@ -79211,7 +79414,6 @@ packages:
       - '@testing-library/react'
       - '@types/node'
       - babel-plugin-macros
-      - encoding
       - graphql-ws
       - node-notifier
       - react-test-renderer

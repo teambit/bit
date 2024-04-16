@@ -4,6 +4,7 @@ import { compact } from 'lodash';
 import { connectToChild } from 'penpal';
 import { usePubSubIframe } from '@teambit/pubsub';
 import { ComponentModel } from '@teambit/component';
+import { LOAD_EVENT } from '@teambit/ui-foundation.ui.rendering.html';
 import { toPreviewUrl } from './urls';
 import { computePreviewScale } from './compute-preview-scale';
 import { useIframeContentHeight } from './use-iframe-content-height';
@@ -108,6 +109,19 @@ export function ComponentPreview({
   usePubSubIframe(pubsub ? currentRef : undefined);
   // const pubsubContext = usePubSub();
   // pubsubContext?.connect(iframeHeight);
+
+  useEffect(() => {
+    const handleLoad = (event) => {
+      if (event.data && event.data.event === LOAD_EVENT) {
+        onLoad && onLoad(event);
+      }
+    };
+    window.addEventListener('message', handleLoad);
+    return () => {
+      window.removeEventListener('message', handleLoad);
+    };
+  }, []);
+
   useEffect(() => {
     if (!iframeRef.current) return;
     connectToChild({
