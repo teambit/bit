@@ -219,19 +219,26 @@ export class ComponentCompareMain {
     }
 
     async function getComponentDiff(component: Component): Promise<DiffResults> {
-      const diffResult = { id: component.id, hasDiff: false };
+      const diffResult: DiffResults = { id: component.id, hasDiff: false };
       const consumerComponent = component.state._consumer as ConsumerComponent;
       if (!consumerComponent.componentFromModel) {
+        if (component.isDeleted()) {
+          // component exists in the model but not in the filesystem, show all files as deleted
+          // the reason it is loaded without componentFromModel is because it was loaded from the scope, not workspace.
+          // as a proof, consumerComponent.loadedFromFileSystem is false.
+          const modelFiles = consumerComponent.files;
+          diffResult.filesDiff = await getFilesDiff(modelFiles, [], component.id.version, component.id.version);
+          if (hasDiff(diffResult)) diffResult.hasDiff = true;
+          return diffResult;
+        }
         // it's a new component. not modified. show all files as new.
         const fsFiles = consumerComponent.files;
-        // @ts-ignore version must be defined as the component.componentFromModel do exist
         diffResult.filesDiff = await getFilesDiff([], fsFiles, component.id.version, component.id.version);
         if (hasDiff(diffResult)) diffResult.hasDiff = true;
         return diffResult;
       }
       const modelFiles = consumerComponent.componentFromModel.files;
       const fsFiles = consumerComponent.files;
-      // @ts-ignore version must be defined as the component.componentFromModel do exist
       diffResult.filesDiff = await getFilesDiff(modelFiles, fsFiles, component.id.version, component.id.version);
       await updateFieldsDiff(consumerComponent.componentFromModel, consumerComponent, diffResult, diffOpts);
 
