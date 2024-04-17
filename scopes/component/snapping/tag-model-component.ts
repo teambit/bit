@@ -535,7 +535,7 @@ function setCurrentSchema(components: ConsumerComponent[]) {
 
 function addBuildStatus(components: ConsumerComponent[], buildStatus: BuildStatus) {
   components.forEach((component) => {
-    component.buildStatus = buildStatus;
+    component.buildStatus = component.isRemoved() ? BuildStatus.Skipped : buildStatus;
   });
 }
 
