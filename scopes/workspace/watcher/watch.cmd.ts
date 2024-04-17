@@ -17,6 +17,7 @@ export type WatchCmdOpts = {
   verbose?: boolean;
   skipPreCompilation?: boolean;
   checkTypes?: string | boolean;
+  import?: boolean;
 };
 
 export class WatchCommand implements Command {
@@ -35,6 +36,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
       'check-types [string]',
       'EXPERIMENTAL. show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project',
     ],
+    ['i', 'import', 'helpful when using git. import component objects if .bitmap changed not by bit'],
   ] as CommandOptions;
 
   constructor(
@@ -70,7 +72,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
   };
 
   async report(cliArgs: [], watchCmdOpts: WatchCmdOpts) {
-    const { verbose, checkTypes } = watchCmdOpts;
+    const { verbose, checkTypes, import: importIfNeeded } = watchCmdOpts;
     const getCheckTypesEnum = () => {
       switch (checkTypes) {
         case undefined:
@@ -92,6 +94,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
       preCompile: !watchCmdOpts.skipPreCompilation,
       spawnTSServer: Boolean(checkTypes), // if check-types is enabled, it must spawn the tsserver.
       checkTypes: getCheckTypesEnum(),
+      import: importIfNeeded,
     };
     await this.watcher.watch(watchOpts);
     return 'watcher terminated';

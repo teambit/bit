@@ -846,7 +846,7 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
-   * wether a component is soft-removed.
+   * whether a component is soft-removed.
    * the version is required as it can be removed on a lane. in which case, the version is the head in the lane.
    */
   async isComponentRemoved(id: ComponentID): Promise<Boolean> {
@@ -855,6 +855,13 @@ export class ScopeMain implements ComponentFactory {
     const modelComponent = await this.legacyScope.getModelComponent(id);
     const versionObj = await modelComponent.loadVersion(version, this.legacyScope.objects);
     return versionObj.isRemoved();
+  }
+
+  /**
+   * whether the id with the specified version exits in the local scope.
+   */
+  async isComponentInScope(id: ComponentID): Promise<boolean> {
+    return this.legacyScope.isComponentInScope(id);
   }
 
   /**
