@@ -22608,6 +22608,9 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 0.0.33
         version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+      '@types/chai':
+        specifier: 4.2.15
+        version: 4.2.15
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -77226,9 +77229,12 @@ packages:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
+      '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
+      '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lane-id': 0.0.311
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
       chalk: 2.4.2
