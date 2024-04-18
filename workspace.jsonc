@@ -30,7 +30,7 @@
         "@pnpm/client": "11.0.0",
         "@pnpm/colorize-semver-diff": "1.0.1",
         "@pnpm/config": "21.1.0",
-        "@pnpm/core": "14.0.2",
+        "@pnpm/core": "14.0.3",
         "@pnpm/default-reporter": "13.0.1",
         "@pnpm/dependency-path": "3.0.0",
         "@pnpm/error": "6.0.0",
