@@ -284,7 +284,7 @@ export async function runCLI() {
   await cli.run(hasWorkspace);
 }
 
-const globalsState: Record<string, any> = {};
+export type LegacyGlobal = { classInstance: any; methodName: string; value: any; empty: any };
 
 /**
  * loadBit may gets called multiple times (currently, it's happening during e2e-tests that call loadBit).
@@ -297,24 +297,77 @@ function clearGlobalsIfNeeded() {
     return;
   }
   delete loadConsumer.cache;
-  ComponentLoader.onComponentLoadSubscribers = [];
-  ComponentOverrides.componentOverridesLoadingRegistry = {};
-  ComponentConfig.componentConfigLoadingRegistry = {};
-  PackageJsonTransformer.packageJsonTransformersRegistry = [];
-  globalsState.loadDeps = ComponentLoader.loadDeps;
-  // @ts-ignore
-  ComponentLoader.loadDeps = undefined;
-  // ExtensionDataList.coreExtensionsNames = new Map();
-  ExtensionDataList.toModelObjectsHook = [];
-  // @ts-ignore
-  WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;
-  // @ts-ignore
-  WorkspaceConfig.workspaceConfigIsExistRegistry = undefined;
-  // @ts-ignore
-  WorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
-  ExternalActions.externalActions = [];
+
+  const legacyGlobals = takeLegacyGlobalsSnapshot();
+  legacyGlobals.forEach((global) => {
+    global.classInstance[global.methodName] = global.empty;
+  });
 }
 
-export function restoreGlobals() {
-  if (globalsState.loadDeps) ComponentLoader.loadDeps = globalsState.loadDeps;
+export function takeLegacyGlobalsSnapshot(): LegacyGlobal[] {
+  const legacyGlobals: LegacyGlobal[] = [
+    {
+      classInstance: ComponentLoader,
+      methodName: 'onComponentLoadSubscribers',
+      value: ComponentLoader.onComponentLoadSubscribers,
+      empty: [],
+    },
+    {
+      classInstance: ComponentOverrides,
+      methodName: 'componentOverridesLoadingRegistry',
+      value: ComponentOverrides.componentOverridesLoadingRegistry,
+      empty: {},
+    },
+    {
+      classInstance: ComponentConfig,
+      methodName: 'componentConfigLoadingRegistry',
+      value: ComponentConfig.componentConfigLoadingRegistry,
+      empty: {},
+    },
+    {
+      classInstance: PackageJsonTransformer,
+      methodName: 'packageJsonTransformersRegistry',
+      value: PackageJsonTransformer.packageJsonTransformersRegistry,
+      empty: [],
+    },
+    { classInstance: ComponentLoader, methodName: 'loadDeps', value: ComponentLoader.loadDeps, empty: undefined },
+    {
+      classInstance: ExtensionDataList,
+      methodName: 'toModelObjectsHook',
+      value: ExtensionDataList.toModelObjectsHook,
+      empty: [],
+    },
+    {
+      classInstance: WorkspaceConfig,
+      methodName: 'workspaceConfigEnsuringRegistry',
+      value: WorkspaceConfig.workspaceConfigEnsuringRegistry,
+      empty: undefined,
+    },
+    {
+      classInstance: WorkspaceConfig,
+      methodName: 'workspaceConfigIsExistRegistry',
+      value: WorkspaceConfig.workspaceConfigIsExistRegistry,
+      empty: undefined,
+    },
+    {
+      classInstance: WorkspaceConfig,
+      methodName: 'workspaceConfigLoadingRegistry',
+      value: WorkspaceConfig.workspaceConfigLoadingRegistry,
+      empty: undefined,
+    },
+    {
+      classInstance: ExternalActions,
+      methodName: 'externalActions',
+      value: ExternalActions.externalActions,
+      empty: [],
+    },
+  ];
+
+  return legacyGlobals;
+}
+
+export function restoreGlobalsFromSnapshot(snapshot: LegacyGlobal[]) {
+  snapshot.forEach((global) => {
+    global.classInstance[global.methodName] = global.value;
+  });
 }
