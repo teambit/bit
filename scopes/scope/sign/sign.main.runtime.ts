@@ -76,8 +76,7 @@ export class SignMain {
     }
     const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids, rebuild);
     if (ids.length && componentsToSkip.length) {
-      // eslint-disable-next-line no-console
-      console.log(`the following component(s) were already signed successfully:
+      this.logger.console(`the following component(s) were already signed successfully or marked as skipped:
 ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     }
     if (!componentsToSign.length) {
@@ -224,7 +223,9 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const componentsToSign: ComponentID[] = [];
     const componentsToSkip: ComponentID[] = [];
     components.forEach((component) => {
-      if (component.state._consumer.buildStatus === BuildStatus.Succeed) {
+      if (component.state._consumer.buildStatus === BuildStatus.Skipped) {
+        componentsToSkip.push(component.id);
+      } else if (component.state._consumer.buildStatus === BuildStatus.Succeed) {
         rebuild ? componentsToSign.push(component.id) : componentsToSkip.push(component.id);
       } else {
         componentsToSign.push(component.id);

@@ -736,7 +736,7 @@ export default class ScopeComponentsImporter {
             `ScopeComponentImporter, expect ${id.toString()} to have a Version object of "${versionComp.version}"`
           );
         }
-        if (onlyIfBuilt && version.buildStatus !== BuildStatus.Succeed) {
+        if (onlyIfBuilt && version.buildStatus !== BuildStatus.Succeed && version.buildStatus !== BuildStatus.Skipped) {
           logger.debug(
             `multipleCompsDefsToVersionDeps, id: ${id.toString()} is skipped because its build-status is ${
               version.buildStatus
