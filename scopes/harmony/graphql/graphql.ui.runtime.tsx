@@ -6,7 +6,7 @@ import type { NormalizedCacheObject } from '@apollo/client';
 import { WebSocketLink } from '@apollo/client/link/ws';
 import { onError } from '@apollo/client/link/error';
 
-import crossFetch from 'cross-fetch';
+import crossFetch from '@pnpm/node-fetch';
 
 import { createSplitLink } from './create-link';
 import { GraphQLProvider } from './graphql-provider';

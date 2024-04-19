@@ -1,7 +1,7 @@
 import { PubsubAspect, PubsubPreview } from '@teambit/pubsub';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';
-import crossFetch from 'cross-fetch';
+import crossFetch from '@pnpm/node-fetch';
 import memoize from 'memoizee';
 import { debounce, intersection, isObject } from 'lodash';
 
