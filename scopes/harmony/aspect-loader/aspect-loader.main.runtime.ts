@@ -141,9 +141,20 @@ export class AspectLoaderMain {
     return coreAspectsPackagesAndIds;
   }
 
-  private getCompiler(component: Component) {
-    const env = this.envs.getEnv(component)?.env;
-    return env?.getCompiler();
+  private async getCompiler(component: Component) {
+    let env: any;
+    try {
+      env = this.envs.getEnv(component)?.env;
+    } catch (e) {
+      // The env might be missing from local, trying to load it from global
+      const id = this.envs.getEnvId(component);
+      const { components } = await this.loadAspectsFromGlobalScope([id]);
+      if (components.length === 1) {
+        this.envs.registerEnv(components[0]);
+        env = components[0];
+      }
+    }
+    return env?.getCompiler?.() || env?.compiler?.();
   }
 
   registerOnAspectLoadErrorSlot(onAspectLoadError: OnAspectLoadError) {
@@ -176,7 +187,7 @@ export class AspectLoaderMain {
     // @david we should add a compiler api for this.
     if (!runtimeFile) return null;
     try {
-      const compiler = this.getCompiler(component);
+      const compiler = await this.getCompiler(component);
 
       if (!compiler) {
         return join(modulePath, runtimeFile.relative);
@@ -203,7 +214,7 @@ export class AspectLoaderMain {
     // @david we should add a compiler api for this.
     if (!aspectFile) return null;
     try {
-      const compiler = this.getCompiler(component);
+      const compiler = await this.getCompiler(component);
 
       if (!compiler) {
         return join(modulePath, aspectFile.relative);
@@ -503,9 +514,9 @@ export class AspectLoaderMain {
     return flatten(this.pluginSlot.values());
   }
 
-  getPlugins(component: Component, componentPath: string): Plugins {
+  async getPlugins(component: Component, componentPath: string): Promise<Plugins> {
     const defs = this.getPluginDefs();
-    return this.getPluginsFromDefs(component, componentPath, defs);
+    return await this.getPluginsFromDefs(component, componentPath, defs);
   }
 
   async isEsmModule(path: string) {
@@ -517,19 +528,20 @@ export class AspectLoaderMain {
     return esmLoader(path);
   }
 
-  getPluginsFromDefs(component: Component, componentPath: string, defs: PluginDefinition[]): Plugins {
+  async getPluginsFromDefs(component: Component, componentPath: string, defs: PluginDefinition[]): Promise<Plugins> {
     return Plugins.from(
       component,
       defs,
       this.triggerOnAspectLoadError.bind(this),
       this.logger,
-      this.pluginFileResolver.call(this, component, componentPath)
+      await this.pluginFileResolver.call(this, component, componentPath)
     );
   }
 
-  getPluginFiles(component: Component, componentPath: string): string[] {
+  async getPluginFiles(component: Component, componentPath: string): Promise<string[]> {
     const defs = this.getPluginDefs();
-    return Plugins.files(component, defs, this.pluginFileResolver.call(this, component, componentPath));
+    const plugin = await this.pluginFileResolver.call(this, component, componentPath);
+    return Plugins.files(component, defs, plugin);
   }
 
   hasPluginFiles(component: Component): boolean {
@@ -549,25 +561,24 @@ export class AspectLoaderMain {
     return found;
   }
 
-  pluginFileResolver(component: Component, rootDir: string) {
+  async pluginFileResolver(component: Component, rootDir: string) {
+    let compiler: any;
+    try {
+      compiler = await this.getCompiler(component);
+    } catch (err) {
+      // This might happen, for example, when loading an env from the global scope, and the env of the env / aspect is not a core one
+      console.log(
+        `pluginFileResolver: got an error during get compiler for component ${component.id.toString()}, probably the env is not loaded yet ${err}`
+      );
+    }
     return (relativePath: string) => {
-      try {
-        const compiler = this.getCompiler(component);
-        if (!compiler) {
-          const distFile = this.searchDistFile(rootDir, relativePath);
-          return distFile || join(rootDir, relativePath);
-        }
-
-        const dist = compiler.getDistPathBySrcPath(relativePath);
-        return join(rootDir, dist);
-      } catch (err) {
-        // This might happen for example when loading an env from the global scope, and the env of the env / aspect is not a core one
-        this.logger.info(
-          `pluginFileResolver: got an error during get compiler for component ${component.id.toString()}, probably the env is not loaded yet ${err}`
-        );
+      if (!compiler) {
         const distFile = this.searchDistFile(rootDir, relativePath);
         return distFile || join(rootDir, relativePath);
       }
+
+      const dist = compiler.getDistPathBySrcPath(relativePath);
+      return join(rootDir, dist);
     };
   }
 
@@ -598,7 +609,7 @@ export class AspectLoaderMain {
     const aspectLoader = globalScopeHarmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
     const ids = aspectIds.map((id) => ComponentID.fromString(id));
     const hasVersions = ids.every((id) => id.hasVersion());
-    const useCache = hasVersions; // if all components has versions, try to use the cached aspects
+    const useCache = hasVersions; // if all components have versions, try to use the cached aspects
     await scope.import(ids, { useCache, reason: 'to load aspects from global scope' });
     const components = await scope.getMany(ids, true);
 

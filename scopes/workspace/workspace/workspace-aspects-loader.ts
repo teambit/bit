@@ -482,7 +482,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       const component = aspectDef.component;
       if (!component) return undefined;
       const requireFunc = async () => {
-        const plugins = this.aspectLoader.getPlugins(component, localPath);
+        const plugins = await this.aspectLoader.getPlugins(component, localPath);
         if (plugins.has()) {
           return plugins.load(MainRuntime.name);
         }

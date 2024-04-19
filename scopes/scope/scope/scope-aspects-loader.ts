@@ -205,7 +205,7 @@ needed-for: ${neededFor || '<unknown>'}`);
         capsule.component,
         async () => {
           // eslint-disable-next-line global-require, import/no-dynamic-require
-          const plugins = this.aspectLoader.getPlugins(capsule.component, capsule.path);
+          const plugins = await this.aspectLoader.getPlugins(capsule.component, capsule.path);
           if (plugins.has()) {
             await this.compileIfNoDist(capsule, capsule.component);
             return plugins.load(MainRuntime.name);

@@ -90,7 +90,7 @@ export class EnvsMain {
    */
   private failedToLoadExt = new Set<string>();
   /**
-   * Ids of envs (not neccesrraly loaded successfully)
+   * Ids of envs (not necessarily loaded successfully)
    */
   public envIds = new Set<string>();
 
