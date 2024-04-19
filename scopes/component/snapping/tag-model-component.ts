@@ -443,7 +443,7 @@ async function removeMergeConfigFromComponents(
 async function addComponentsToScope(
   snapping: SnappingMain,
   components: ConsumerComponent[],
-  lane: Lane | null,
+  lane: Lane | undefined,
   shouldValidateVersion: boolean,
   consumer?: Consumer,
   tagDataPerComp?: TagDataPerComp[],

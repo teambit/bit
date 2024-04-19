@@ -218,7 +218,7 @@ export class MergingMain {
     mergeStrategy: MergeStrategy;
     allComponentsStatus: ComponentMergeStatus[];
     otherLaneId: LaneId;
-    currentLane: Lane | null;
+    currentLane?: Lane;
     noSnap: boolean;
     tag?: boolean;
     snapMessage: string;
@@ -350,8 +350,8 @@ export class MergingMain {
   async getMergeStatus(
     bitIds: ComponentID[], // the id.version is the version we want to merge to the current component
     options: MergeStatusProviderOptions,
-    currentLane: Lane | null, // currently checked out lane. if on main, then it's null.
-    otherLane?: Lane | null // the lane we want to merged to our lane. (null if it's "main").
+    currentLane?: Lane, // currently checked out lane. if on main, then it's null.
+    otherLane?: Lane // the lane we want to merged to our lane. (null if it's "main").
   ): Promise<ComponentMergeStatus[]> {
     const mergeStatusProvider = new MergeStatusProvider(
       this.scope,
@@ -359,8 +359,8 @@ export class MergingMain {
       this.importer,
       options,
       this.workspace,
-      currentLane || undefined,
-      otherLane || undefined
+      currentLane,
+      otherLane
     );
     return mergeStatusProvider.getStatus(bitIds);
   }
@@ -369,7 +369,7 @@ export class MergingMain {
     succeededComponents: ComponentMergeStatus[],
     otherLaneId: LaneId,
     mergeStrategy: MergeStrategy,
-    currentLane: Lane | null
+    currentLane?: Lane
   ): Promise<ApplyVersionWithComps[]> {
     const componentsResults = await mapSeries(
       succeededComponents,
@@ -422,7 +422,7 @@ export class MergingMain {
     mergeStrategy: MergeStrategy;
     remoteHead: Ref;
     otherLaneId: LaneId;
-    currentLane: Lane | null;
+    currentLane?: Lane;
     resolvedUnrelated?: ResolveUnrelatedData;
     configMergeResult?: ConfigMergeResult;
   }): Promise<ApplyVersionWithComps> {
@@ -557,7 +557,7 @@ export class MergingMain {
   private async getAllComponentsStatus(
     bitIds: ComponentID[],
     laneId: LaneId,
-    localLaneObject: Lane | null,
+    localLaneObject: Lane | undefined,
     mergeStrategy: MergeStrategy
   ): Promise<ComponentMergeStatus[]> {
     const ids = await Promise.all(
