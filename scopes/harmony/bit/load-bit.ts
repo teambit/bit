@@ -107,7 +107,7 @@ async function getWsConfig(consumerPath: string, configOpts: ConfigOptions) {
  * @param config
  */
 function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): Config {
-  if (!consumerInfo || !consumerInfo.hasBitMap) {
+  if (!consumerInfo || !consumerInfo.hasBitMap || !consumerInfo.hasConsumerConfig) {
     return config;
   }
   const rawConfig = config.toObject();
