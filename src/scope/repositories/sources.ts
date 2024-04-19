@@ -332,7 +332,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     component: ModelComponent,
     versionsRefs: Ref[],
     versions: string[],
-    lane: Lane | null,
+    lane?: Lane,
     removeOnlyHead?: boolean
   ) {
     logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);

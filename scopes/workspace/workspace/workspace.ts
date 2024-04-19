@@ -864,7 +864,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     return this.consumer.getCurrentLaneId();
   }
 
-  async getCurrentLaneObject(): Promise<Lane | null> {
+  async getCurrentLaneObject(): Promise<Lane | undefined> {
     return this.consumer.getCurrentLaneObject();
   }
 
@@ -1105,7 +1105,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const laneId = this.getCurrentLaneId();
     const laneObj = await this.scope.legacyScope.getCurrentLaneObject();
     if (laneId.isDefault() || laneObj) {
-      return laneObj || undefined;
+      return laneObj;
     }
     const lane = await this.getCurrentRemoteLane();
     if (!lane) {

@@ -569,7 +569,7 @@ export class ScopeMain implements ComponentFactory {
     }
 
     // there are components that don't have the graph saved, create the graph by using Version objects of all flattened
-    const lane = (await this.legacyScope.getCurrentLaneObject()) || undefined;
+    const lane = await this.legacyScope.getCurrentLaneObject();
     await this.import(
       componentsWithoutSavedGraph.map((c) => c.id),
       { reFetchUnBuiltVersion: false, lane, reason: `to build graph-ids from the scope` }
