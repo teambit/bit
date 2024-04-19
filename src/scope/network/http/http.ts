@@ -663,8 +663,8 @@ export function getAuthHeader(token: string) {
 }
 
 export async function fetchWithAgent(uri: string, opts) {
-  const _fetch = await getFetcherWithAgent(uri);
-  return _fetch(uri, opts);
+  const fetcherWithAgent = await getFetcherWithAgent(uri);
+  return fetcherWithAgent(uri, opts);
 }
 
 /**
