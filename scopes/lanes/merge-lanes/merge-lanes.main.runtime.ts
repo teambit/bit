@@ -145,7 +145,7 @@ export class MergeLanesMain {
       // if current is default, it'll be fetch later on
       await this.lanes.fetchLaneWithItsComponents(currentLaneId);
     }
-    const currentLane = currentLaneId.isDefault() ? null : await legacyScope.loadLane(currentLaneId);
+    const currentLane = currentLaneId.isDefault() ? undefined : await legacyScope.loadLane(currentLaneId);
     const isDefaultLane = otherLaneId.isDefault();
     if (isDefaultLane) {
       if (!skipFetch) {
@@ -219,7 +219,7 @@ export class MergeLanesMain {
         idsToMerge,
         legacyScope,
         includeDeps,
-        otherLane || undefined,
+        otherLane,
         shouldSquash
       );
       idsToMerge.forEach((bitId) => {
@@ -239,7 +239,7 @@ export class MergeLanesMain {
         idsToMerge,
         legacyScope,
         includeDeps,
-        otherLane || undefined,
+        otherLane,
         shouldSquash
       );
       idsToMerge.forEach((bitId) => {
@@ -444,7 +444,7 @@ export class MergeLanesMain {
         ? []
         : await exportIfNeeded(
             mergedSuccessfullyIds.map((id) => id.changeVersion(undefined)),
-            laneToExport || undefined
+            laneToExport
           );
 
     return {
