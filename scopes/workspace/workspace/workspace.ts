@@ -266,7 +266,7 @@ export class Workspace implements ComponentFactory {
     if (this.consumer.isLegacy) return;
     if (isEmpty(this.config))
       throw new BitError(
-        `fatal: workspace config is empty. probably one of bit files is missing. consider running "bit init"`
+        `fatal: workspace config is empty. probably one of bit files is missing. please run "bit init" to rewrite them`
       );
     const defaultScope = this.config.defaultScope;
     if (!defaultScope) throw new BitError('defaultScope is missing');
