@@ -9,7 +9,8 @@
     "teambit.dependencies/dependency-resolver": {
       "policy": {
         "dependencies": {
-          "@teambit/legacy": "-"
+          "@teambit/legacy": "-",
+          "react-native": "^0.68.0"
         },
         "devDependencies": {
           "@teambit/legacy": "-",
@@ -19,7 +20,7 @@
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "react-native-web": "^0.16.0",
+          "react-native-web": "^0.16.5",
           "@teambit/legacy": "1.0.685"
         }
       }
