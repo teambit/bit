@@ -291,7 +291,7 @@ once done, to continue working, please run "bit cc"`
 
   async listIncludeRemoteHead(laneId: LaneId): Promise<ModelComponent[]> {
     const components = await this.list();
-    const lane = laneId.isDefault() ? null : await this.loadLane(laneId);
+    const lane = laneId.isDefault() ? undefined : await this.loadLane(laneId);
     await Promise.all(components.map((component) => component.populateLocalAndRemoteHeads(this.objects, lane)));
     return components;
   }
@@ -305,7 +305,7 @@ once done, to continue working, please run "bit cc"`
     return this.lanes.listLanes();
   }
 
-  async loadLane(id: LaneId): Promise<Lane | null> {
+  async loadLane(id: LaneId): Promise<Lane | undefined> {
     return this.lanes.loadLane(id);
   }
 
@@ -436,9 +436,9 @@ once done, to continue working, please run "bit cc"`
     return this.sources.get(id);
   }
 
-  async getCurrentLaneObject(): Promise<Lane | null> {
+  async getCurrentLaneObject(): Promise<Lane | undefined> {
     const currentLaneId = this.getCurrentLaneId();
-    return currentLaneId ? this.loadLane(currentLaneId) : null;
+    return currentLaneId ? this.loadLane(currentLaneId) : undefined;
   }
 
   /**
