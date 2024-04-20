@@ -1,5 +1,5 @@
-import { LegacyCommand } from '@teambit/legacy/dist/cli/legacy-command';
-import { Command, CommandOptions, GenericObject } from '.';
+import { CommandOptions, LegacyCommand } from '@teambit/legacy/dist/cli/legacy-command';
+import type { Command, GenericObject } from '@teambit/legacy/dist/cli/command';
 import { CLIMain } from './cli.main.runtime';
 
 export class LegacyCommandAdapter implements Command {
