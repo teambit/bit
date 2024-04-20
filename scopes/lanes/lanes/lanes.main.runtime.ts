@@ -267,9 +267,9 @@ export class LanesMain {
   /**
    * get the currently checked out lane object, if on main - return null.
    */
-  async getCurrentLane(): Promise<Lane | null> {
+  async getCurrentLane(): Promise<Lane | undefined> {
     const laneId = this.getCurrentLaneId();
-    if (!laneId || laneId.isDefault()) return null;
+    if (!laneId || laneId.isDefault()) return undefined;
     return this.loadLane(laneId);
   }
 
@@ -324,7 +324,7 @@ if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-
     return results;
   }
 
-  async loadLane(id: LaneId): Promise<Lane | null> {
+  async loadLane(id: LaneId): Promise<Lane | undefined> {
     return this.scope.legacyScope.lanes.loadLane(id);
   }
 

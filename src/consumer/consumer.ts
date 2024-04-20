@@ -166,7 +166,7 @@ export default class Consumer {
     return this.getCurrentLaneId().isDefault();
   }
 
-  async getCurrentLaneObject(): Promise<Lane | null> {
+  async getCurrentLaneObject(): Promise<Lane | undefined> {
     return this.scope.loadLane(this.getCurrentLaneId());
   }
 

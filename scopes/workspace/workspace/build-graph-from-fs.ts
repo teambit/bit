@@ -21,7 +21,7 @@ export class GraphFromFsBuilder {
   private depth = 1;
   private consumer: Consumer;
   private importedIds: string[] = [];
-  private currentLane: Lane | null;
+  private currentLane: Lane | undefined;
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -122,7 +122,7 @@ export class GraphFromFsBuilder {
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
       throwForSeederNotFound: this.shouldThrowOnMissingDep,
       reFetchUnBuiltVersion: false,
-      lane: this.currentLane || undefined,
+      lane: this.currentLane,
       reason: 'for building a graph from the workspace',
     });
     allDepsNotImported.map((id) => this.importedIds.push(id.toString()));
