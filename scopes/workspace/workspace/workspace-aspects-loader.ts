@@ -187,16 +187,10 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     const nonWorkspaceIdsString = ids.map((id) => id.toString());
     try {
-      scopeAspectIds = await this.scope.loadAspects(
-        nonWorkspaceIdsString,
-        throwOnError,
-        neededFor,
-        currentLane || undefined,
-        {
-          packageManagerConfigRootDir: this.workspace.path,
-          workspaceName: this.workspace.name,
-        }
-      );
+      scopeAspectIds = await this.scope.loadAspects(nonWorkspaceIdsString, throwOnError, neededFor, currentLane, {
+        packageManagerConfigRootDir: this.workspace.path,
+        workspaceName: this.workspace.name,
+      });
       return scopeAspectIds;
     } catch (err: any) {
       this.throwWsJsoncAspectNotFoundError(err);

@@ -89,7 +89,7 @@ export class GraphIdsFromFsBuilder {
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
       throwForSeederNotFound: this.shouldThrowOnMissingDep,
       reFetchUnBuiltVersion: false,
-      lane: (await this.workspace.getCurrentLaneObject()) || undefined,
+      lane: await this.workspace.getCurrentLaneObject(),
       reason: 'for building graph-ids from the workspace',
     });
     notImported.map((id) => this.importedIds.push(id.toString()));

@@ -132,6 +132,9 @@ importers:
       '@pnpm/network.ca-file':
         specifier: 3.0.0
         version: 3.0.0
+      '@pnpm/node-fetch':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@pnpm/package-store':
         specifier: 20.0.1
         version: 20.0.1(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)
@@ -1422,9 +1425,6 @@ importers:
       cross-env:
         specifier: 7.0.3
         version: 7.0.3
-      cross-fetch:
-        specifier: 3.1.5
-        version: 3.1.5
       crypto-browserify:
         specifier: 3.12.0
         version: 3.12.0
@@ -21748,6 +21748,9 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
+      '@pnpm/node-fetch':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -21787,9 +21790,6 @@ importers:
       cors:
         specifier: 2.8.5
         version: 2.8.5
-      cross-fetch:
-        specifier: 3.1.5
-        version: 3.1.5
       express:
         specifier: 4.17.1
         version: 4.17.1
@@ -23348,6 +23348,9 @@ importers:
         specifier: 5.8.0
         version: 5.8.0
     devDependencies:
+      '@pnpm/node-fetch':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 0.0.33
         version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
@@ -23381,9 +23384,6 @@ importers:
       chai:
         specifier: 4.3.0
         version: 4.3.0
-      cross-fetch:
-        specifier: 3.1.5
-        version: 3.1.5
       memoizee:
         specifier: 0.4.15
         version: 0.4.15
@@ -33664,7 +33664,6 @@ packages:
       fetch-blob: 2.1.2
     transitivePeerDependencies:
       - domexception
-    dev: false
 
   /@pnpm/normalize-registries@6.0.0:
     resolution: {integrity: sha512-V2Lj3zwjIANgUqnQkMOWYVBdwRc6ZVjmZ0AD9w3a9Gby8Ad7wIdwjKJab2R5p4rjX22cbcM/ao9Grt1FlSxEYA==}
@@ -53051,7 +53050,6 @@ packages:
   /data-uri-to-buffer@3.0.1:
     resolution: {integrity: sha512-WboRycPNsVw3B3TL559F7kuBUM4d8CgMEvk6xEJlOp7OBPjt6G7z8WMWlD2rOFZLk6OYfFIUGsCOWzcQH9K2og==}
     engines: {node: '>= 6'}
-    dev: false
 
   /data-urls@2.0.0:
     resolution: {integrity: sha512-X5eWTSXO/BJmpdIKCRuKUgSCgAN0OwliVK3yPKbwIWU1Tdw5BRajxlzMidvh+gwko9AfQ9zIj52pzF91Q3YAvQ==}
@@ -55827,7 +55825,6 @@ packages:
     peerDependenciesMeta:
       domexception:
         optional: true
-    dev: false
 
   /figgy-pudding@3.5.2:
     resolution: {integrity: sha512-0btnI/H8f2pavGMN8w40mlSKOfTK2SVJmBfBeVIj3kNw0swwgzyRq0d5TJVOwodFmtvpPeWPN/MCcfuWF0Ezbw==}
@@ -76708,6 +76705,7 @@ packages:
       '@graphql-modules/core': 0.7.17(graphql@15.8.0)(reflect-metadata@0.1.13)
       '@graphql-tools/schema': 10.0.2(graphql@15.8.0)
       '@mdx-js/react': 1.6.22(react@17.0.2)
+      '@pnpm/node-fetch': 1.0.0
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
@@ -76740,6 +76738,7 @@ packages:
       ws: 7.4.2(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     transitivePeerDependencies:
       - debug
+      - domexception
       - encoding
       - reflect-metadata
       - supports-color
@@ -76761,6 +76760,7 @@ packages:
       '@graphql-modules/core': 0.7.17(graphql@15.8.0)(reflect-metadata@0.1.13)
       '@graphql-tools/schema': 10.0.2(graphql@15.8.0)
       '@mdx-js/react': 1.6.22(react@17.0.2)
+      '@pnpm/node-fetch': 1.0.0
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
@@ -76793,6 +76793,7 @@ packages:
       ws: 7.4.2(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     transitivePeerDependencies:
       - debug
+      - domexception
       - encoding
       - reflect-metadata
       - supports-color

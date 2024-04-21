@@ -346,7 +346,7 @@ export class Watcher {
     }
     await this.workspace.scope.import(currentIds, {
       useCache: true,
-      lane: (await this.workspace.getCurrentLaneObject()) || undefined,
+      lane: await this.workspace.getCurrentLaneObject(),
     });
   }
 
