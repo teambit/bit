@@ -103,8 +103,8 @@ importers:
         specifier: 21.1.0
         version: 21.1.0(@pnpm/logger@5.0.0)
       '@pnpm/core':
-        specifier: 14.0.5
-        version: 14.0.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
+        specifier: 14.0.6
+        version: 14.0.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
       '@pnpm/default-reporter':
         specifier: 13.0.1
         version: 13.0.1(@pnpm/logger@5.0.0)
@@ -118,11 +118,11 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(@pnpm/logger@5.0.0)
       '@pnpm/list':
-        specifier: ^10.0.0
-        version: 10.0.0(@pnpm/logger@5.0.0)
+        specifier: ^10.0.1
+        version: 10.0.1(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-file':
-        specifier: 9.0.0
-        version: 9.0.0(@pnpm/logger@5.0.0)
+        specifier: 9.0.1
+        version: 9.0.1(@pnpm/logger@5.0.0)
       '@pnpm/logger':
         specifier: 5.0.0
         version: 5.0.0
@@ -148,14 +148,14 @@ importers:
         specifier: 8.0.2
         version: 8.0.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)
       '@pnpm/plugin-commands-rebuild':
-        specifier: 11.0.3
-        version: 11.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+        specifier: 11.0.4
+        version: 11.0.4(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       '@pnpm/registry-mock':
         specifier: 3.4.0
         version: 3.4.0
       '@pnpm/reviewing.dependencies-hierarchy':
-        specifier: ^3.0.0
-        version: 3.0.0(@pnpm/logger@5.0.0)
+        specifier: ^3.0.1
+        version: 3.0.1(@pnpm/logger@5.0.0)
       '@pnpm/semver-diff':
         specifier: 1.1.0
         version: 1.1.0
@@ -19744,8 +19744,8 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@pnpm/core':
-        specifier: 14.0.5
-        version: 14.0.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
+        specifier: 14.0.6
+        version: 14.0.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
       '@pnpm/network.ca-file':
         specifier: 3.0.0
         version: 3.0.0
@@ -19898,8 +19898,8 @@ importers:
         specifier: 21.1.0
         version: 21.1.0(@pnpm/logger@5.0.0)
       '@pnpm/core':
-        specifier: 14.0.5
-        version: 14.0.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
+        specifier: 14.0.6
+        version: 14.0.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
       '@pnpm/default-reporter':
         specifier: 13.0.1
         version: 13.0.1(@pnpm/logger@5.0.0)
@@ -19910,11 +19910,11 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       '@pnpm/list':
-        specifier: ^10.0.0
-        version: 10.0.0(@pnpm/logger@5.0.0)
+        specifier: ^10.0.1
+        version: 10.0.1(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-file':
-        specifier: 9.0.0
-        version: 9.0.0(@pnpm/logger@5.0.0)
+        specifier: 9.0.1
+        version: 9.0.1(@pnpm/logger@5.0.0)
       '@pnpm/logger':
         specifier: 5.0.0
         version: 5.0.0
@@ -19928,11 +19928,11 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       '@pnpm/plugin-commands-rebuild':
-        specifier: 11.0.3
-        version: 11.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+        specifier: 11.0.4
+        version: 11.0.4(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       '@pnpm/reviewing.dependencies-hierarchy':
-        specifier: ^3.0.0
-        version: 3.0.0(@pnpm/logger@5.0.0)
+        specifier: ^3.0.1
+        version: 3.0.1(@pnpm/logger@5.0.0)
       '@pnpm/sort-packages':
         specifier: 6.0.0
         version: 6.0.0
@@ -32822,8 +32822,8 @@ packages:
       '@pnpm/types': 10.0.0
     dev: false
 
-  /@pnpm/core@14.0.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2):
-    resolution: {integrity: sha512-FnG4bBclsWux83PFxLwygsfCtcvACpLwbKWijz90JoTenCPYJgNzhr1TlUrVZS5/qT1eh65+uvNwRBr7OFu9EQ==}
+  /@pnpm/core@14.0.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-fMXFA5UjvTe/l6Dpf7ORG8aXwOESLDL4oq42Ybm6866CC7PBuUtiTiXVB6GN+dk996HfcMI40BSpev3k5Wgfug==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -32839,15 +32839,15 @@ packages:
       '@pnpm/deps.graph-sequencer': 2.0.0
       '@pnpm/error': 6.0.0
       '@pnpm/filter-lockfile': 9.0.1(@pnpm/logger@5.0.0)
-      '@pnpm/get-context': 11.0.0(@pnpm/logger@5.0.0)
-      '@pnpm/headless': 23.0.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)
+      '@pnpm/get-context': 11.0.1(@pnpm/logger@5.0.0)
+      '@pnpm/headless': 23.0.3(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)
       '@pnpm/hoist': 9.0.0(@pnpm/logger@5.0.0)
-      '@pnpm/hooks.read-package-hook': 4.0.0(@yarnpkg/core@3.5.2)
+      '@pnpm/hooks.read-package-hook': 4.0.1(@yarnpkg/core@3.5.2)
       '@pnpm/hooks.types': 2.0.0
       '@pnpm/lifecycle': 17.0.1(@pnpm/logger@5.0.0)
       '@pnpm/link-bins': 10.0.0(@pnpm/logger@5.0.0)
-      '@pnpm/lockfile-file': 9.0.0(@pnpm/logger@5.0.0)
-      '@pnpm/lockfile-to-pnp': 4.0.0(@pnpm/logger@5.0.0)
+      '@pnpm/lockfile-file': 9.0.1(@pnpm/logger@5.0.0)
+      '@pnpm/lockfile-to-pnp': 4.0.1(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-utils': 10.0.0
       '@pnpm/lockfile-walker': 8.0.0
       '@pnpm/lockfile.preferred-versions': 1.0.0(@pnpm/logger@5.0.0)
@@ -32866,7 +32866,7 @@ packages:
       '@pnpm/read-package-json': 9.0.0
       '@pnpm/read-project-manifest': 6.0.0
       '@pnpm/remove-bins': 6.0.0(@pnpm/logger@5.0.0)
-      '@pnpm/resolve-dependencies': 32.0.3(@pnpm/logger@5.0.0)
+      '@pnpm/resolve-dependencies': 32.0.4(@pnpm/logger@5.0.0)
       '@pnpm/resolver-base': 12.0.0
       '@pnpm/store-controller-types': 18.0.0
       '@pnpm/symlink-dependency': 8.0.0(@pnpm/logger@5.0.0)
@@ -32994,8 +32994,8 @@ packages:
       semver: 7.6.0
     dev: false
 
-  /@pnpm/deps.graph-builder@1.0.1(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-36Bx8l15WHGgaqrwb8U/Z+ipza2dsNNp9GMTDghYlTETbEaUsOg+s5P9XFxWoHfGlm+PqDn0+p+JVWMVDAL+tg==}
+  /@pnpm/deps.graph-builder@1.0.2(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-gEyvuSGz934j5dy1ExDmqcXZwC7G0Je4bRvuiiEf+ayf2zXs+b+mB1l9akPVDGS6X9QAiejiR+wNBqQeB4vjtA==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -33003,7 +33003,7 @@ packages:
       '@pnpm/constants': 8.0.0
       '@pnpm/core-loggers': 10.0.0(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path': 3.0.0
-      '@pnpm/lockfile-file': 9.0.0(@pnpm/logger@5.0.0)
+      '@pnpm/lockfile-file': 9.0.1(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-utils': 10.0.0
       '@pnpm/logger': 5.0.0
       '@pnpm/modules-yaml': 13.0.0
@@ -33169,8 +33169,8 @@ packages:
       npm-packlist: 5.1.3
     dev: false
 
-  /@pnpm/get-context@11.0.0(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-tIrubTsZHV6UBKNkjd3kfDOvDm/ad1Zmyl9nsdjgyNEeNjThaoJFf+XVHmR9HFXt4OgWOo1QIqS5SQCMs97kVw==}
+  /@pnpm/get-context@11.0.1(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-HPm/XPkHF0FFQaXpQPoowj51sI5dPiDgkiteTMnpIt0w/L84lzP2tEBXylVRi77wdn5QruPMcpjus76wYYEvYw==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -33178,10 +33178,10 @@ packages:
       '@pnpm/constants': 8.0.0
       '@pnpm/core-loggers': 10.0.0(@pnpm/logger@5.0.0)
       '@pnpm/error': 6.0.0
-      '@pnpm/lockfile-file': 9.0.0(@pnpm/logger@5.0.0)
+      '@pnpm/lockfile-file': 9.0.1(@pnpm/logger@5.0.0)
       '@pnpm/logger': 5.0.0
       '@pnpm/modules-yaml': 13.0.0
-      '@pnpm/read-projects-context': 9.0.0(@pnpm/logger@5.0.0)
+      '@pnpm/read-projects-context': 9.0.1(@pnpm/logger@5.0.0)
       '@pnpm/types': 10.0.0
       '@zkochan/rimraf': 2.1.3
       ci-info: 3.9.0
@@ -33237,8 +33237,8 @@ packages:
       graceful-fs: 4.2.11
     dev: false
 
-  /@pnpm/headless@23.0.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5):
-    resolution: {integrity: sha512-VdBcGsYBLPclQm0L1Bcq4k08m0NhJaZ/XjvUruHaVjqeF3TOUn0dX7pgsfKgBw1RyRbhFHdoideZ6+jUXkqh5w==}
+  /@pnpm/headless@23.0.3(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5):
+    resolution: {integrity: sha512-U40ORvUncY57fGfC56b6kivJOQv0pMaiBHNDR/1eD09SQy3mSiLwPNS0kaJC8mwFaApAEDmsebQbgUPjfPC5uQ==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -33250,14 +33250,14 @@ packages:
       '@pnpm/constants': 8.0.0
       '@pnpm/core-loggers': 10.0.0(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path': 3.0.0
-      '@pnpm/deps.graph-builder': 1.0.1(@pnpm/logger@5.0.0)
+      '@pnpm/deps.graph-builder': 1.0.2(@pnpm/logger@5.0.0)
       '@pnpm/error': 6.0.0
       '@pnpm/filter-lockfile': 9.0.1(@pnpm/logger@5.0.0)
       '@pnpm/hoist': 9.0.0(@pnpm/logger@5.0.0)
       '@pnpm/lifecycle': 17.0.1(@pnpm/logger@5.0.0)
       '@pnpm/link-bins': 10.0.0(@pnpm/logger@5.0.0)
-      '@pnpm/lockfile-file': 9.0.0(@pnpm/logger@5.0.0)
-      '@pnpm/lockfile-to-pnp': 4.0.0(@pnpm/logger@5.0.0)
+      '@pnpm/lockfile-file': 9.0.1(@pnpm/logger@5.0.0)
+      '@pnpm/lockfile-to-pnp': 4.0.1(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-utils': 10.0.0
       '@pnpm/logger': 5.0.0
       '@pnpm/modules-cleaner': 15.0.1(@pnpm/logger@5.0.0)
@@ -33306,8 +33306,8 @@ packages:
       symlink-dir: 5.2.1
     dev: false
 
-  /@pnpm/hooks.read-package-hook@4.0.0(@yarnpkg/core@3.5.2):
-    resolution: {integrity: sha512-G+J985vkJCmDxlQJdzAZygEylrkCqgm0MRLtqUSLaF5tFTjH3pdB5XRmFptJ52b2Q1bbWmEEvEA4MSTtA79TSg==}
+  /@pnpm/hooks.read-package-hook@4.0.1(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-OYhvbxvorPA5Y2edIJlCSXZYl1S7paEo5BGRk943IRUbgasWA3/n42Cy3AIhHrB3XVF+5XYCOyW3GaG5CZ7LKQ==}
     engines: {node: '>=18.12'}
     dependencies:
       '@pnpm/error': 6.0.0
@@ -33385,13 +33385,13 @@ packages:
       symlink-dir: 5.2.1
     dev: false
 
-  /@pnpm/list@10.0.0(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-Aoj6yd0jbav1evl+fU9jrn7ovPCHPtMco7mx4BQnJaPsfGN1Zt1sApOmRdqdNCW2QSmN1Ff1rTBxTsrKZ6xj1A==}
+  /@pnpm/list@10.0.1(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-VXivKE04EHWbPLPnQvWrDSIsiA8SNzBVSnHra9pBERzQrBFoKcojdBQ/YCVtASh6KxmhM74LSvGFVWtDOQEy+Q==}
     engines: {node: '>=18.12'}
     dependencies:
       '@pnpm/read-package-json': 9.0.0
       '@pnpm/read-project-manifest': 6.0.0
-      '@pnpm/reviewing.dependencies-hierarchy': 3.0.0(@pnpm/logger@5.0.0)
+      '@pnpm/reviewing.dependencies-hierarchy': 3.0.1(@pnpm/logger@5.0.0)
       '@pnpm/types': 10.0.0
       archy: 1.0.0
       chalk: 4.1.2
@@ -33418,8 +33418,8 @@ packages:
       ssri: 10.0.5
     dev: false
 
-  /@pnpm/lockfile-file@9.0.0(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-/V39Zl6EwHtgfZTgnwymQk6xCcC9uikHrrG677wyFfSOcBC4rPSSASan+Rbky8w2ztW+iMjSsfSZPCsIg2A7/Q==}
+  /@pnpm/lockfile-file@9.0.1(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-3wFeZspaEyYVtiqPM7+GqiNoDGXz3m19BDrQC/xDiWGYHLtbgq5tlB4aOxe8NCTzs0UtqcbwxAUa64QVDQagHA==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -33433,7 +33433,7 @@ packages:
       '@pnpm/logger': 5.0.0
       '@pnpm/merge-lockfile-changes': 6.0.0
       '@pnpm/types': 10.0.0
-      '@pnpm/util.lex-comparator': 1.0.0
+      '@pnpm/util.lex-comparator': 3.0.0
       '@zkochan/rimraf': 2.1.3
       comver-to-semver: 1.0.0
       js-yaml: /@zkochan/js-yaml@0.0.7
@@ -33445,14 +33445,14 @@ packages:
       write-file-atomic: 5.0.1
     dev: false
 
-  /@pnpm/lockfile-to-pnp@4.0.0(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-vElo+hwXssN5r4taOlXZG314wDZTAuJzflPLXAhxcYNq/coW/8wO2xCLLzQPeFyOQvZIjTYiYl5RTZlcHUVqsg==}
+  /@pnpm/lockfile-to-pnp@4.0.1(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-dUQ6Zzus6OcFzaePY1uGzHe8dqwC7m6GEtKX5btXXSPf859IBzW3BeNtyS718Y48jVoLjv60BDdtAOFV7/euqg==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/dependency-path': 3.0.0
-      '@pnpm/lockfile-file': 9.0.0(@pnpm/logger@5.0.0)
+      '@pnpm/lockfile-file': 9.0.1(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-utils': 10.0.0
       '@pnpm/logger': 5.0.0
       '@pnpm/types': 10.0.0
@@ -33929,8 +33929,8 @@ packages:
       - supports-color
     dev: false
 
-  /@pnpm/plugin-commands-rebuild@11.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5):
-    resolution: {integrity: sha512-0p4mIeNCHlELJScFZbbZDPiUY2m92XZE2Wh1j+2Yu27DaMVbFcAaGztQJquMCNQkj4D28SbiHvYPyfxzr6MxFw==}
+  /@pnpm/plugin-commands-rebuild@11.0.4(@pnpm/logger@5.0.0)(@types/node@20.2.5):
+    resolution: {integrity: sha512-2XWCyKX0zU2lUu5qFAKBLJEouWRzcfllly8rrWpMI9THWE2CQ4XgOt6ljYF0kPbSaH3AB0DobCMqzikhFxrpLQ==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -33945,7 +33945,7 @@ packages:
       '@pnpm/dependency-path': 3.0.0
       '@pnpm/deps.graph-sequencer': 2.0.0
       '@pnpm/error': 6.0.0
-      '@pnpm/get-context': 11.0.0(@pnpm/logger@5.0.0)
+      '@pnpm/get-context': 11.0.1(@pnpm/logger@5.0.0)
       '@pnpm/lifecycle': 17.0.1(@pnpm/logger@5.0.0)
       '@pnpm/link-bins': 10.0.0(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-types': 6.0.0
@@ -34062,13 +34062,13 @@ packages:
       strip-bom: 4.0.0
     dev: false
 
-  /@pnpm/read-projects-context@9.0.0(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-Q3slPAtgp5runpcWWg+WtRFkz8OAJFMBGYTrQO345c9BLGnYaopiyfm0sHUiby24Z9qayhza/YVlmZI8ba3fjw==}
+  /@pnpm/read-projects-context@9.0.1(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-ySewBI4TkqhDfsjo3WHNpfdwFUznxmTCDIEHVtop0kGUfD0sG5xVvVhwX6gox7mW8lUOETVp9YjE2FZf2w+NZQ==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
-      '@pnpm/lockfile-file': 9.0.0(@pnpm/logger@5.0.0)
+      '@pnpm/lockfile-file': 9.0.1(@pnpm/logger@5.0.0)
       '@pnpm/logger': 5.0.0
       '@pnpm/modules-yaml': 13.0.0
       '@pnpm/normalize-registries': 6.0.0
@@ -34134,8 +34134,8 @@ packages:
       semver: 7.6.0
     dev: false
 
-  /@pnpm/resolve-dependencies@32.0.3(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-XP0StKDDPHK6LyR9g+tMALhlsh2zGgr/SQYkNZA9x5Fhak8kpUroeOhllDkXSGtgpLz5QPRDHnCnQ5kjGtYrlw==}
+  /@pnpm/resolve-dependencies@32.0.4(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-I33fAZ5HhNfgi56Ntlot8VbkTkMEx9aYmpx+u0tMIrRWmPs1xk2enYnFuBz9YCnSHgpRuRM6p0f3cP/5BU20Jg==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -34192,12 +34192,12 @@ packages:
       '@pnpm/types': 10.0.0
     dev: false
 
-  /@pnpm/reviewing.dependencies-hierarchy@3.0.0(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-Kqte1d8A3N351D4qUu4C7e4ZONUVUX4HrsHP93bXhNZxUokP3jRkiD5yGE5UGtZj/+5Hm7nHLq3sQ87koG7YFA==}
+  /@pnpm/reviewing.dependencies-hierarchy@3.0.1(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-sZqXjel/oIdh9fd4g787tIOV4Cw6cNIPlDqjycPtqnGFHFbA15mws1wzSq+KJRaz4T1sfZ5vKesVxxgisFUGzQ==}
     engines: {node: '>=18.12'}
     dependencies:
       '@pnpm/dependency-path': 3.0.0
-      '@pnpm/lockfile-file': 9.0.0(@pnpm/logger@5.0.0)
+      '@pnpm/lockfile-file': 9.0.1(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-utils': 10.0.0
       '@pnpm/lockfile.detect-dep-types': 1.0.0
       '@pnpm/matcher': 6.0.0
@@ -75851,7 +75851,7 @@ packages:
       react: ^17.0.0 || ^18.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@pnpm/core': 14.0.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
+      '@pnpm/core': 14.0.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
       '@pnpm/network.ca-file': 3.0.0
       '@pnpm/types': 10.0.0
       '@teambit/bit-error': 0.0.404
@@ -75917,18 +75917,18 @@ packages:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@pnpm/client': 11.0.1(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)
       '@pnpm/config': 21.1.0(@pnpm/logger@5.0.0)
-      '@pnpm/core': 14.0.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
+      '@pnpm/core': 14.0.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
       '@pnpm/default-reporter': 13.0.1(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path': 3.0.0
       '@pnpm/error': 6.0.0
-      '@pnpm/list': 10.0.0(@pnpm/logger@5.0.0)
-      '@pnpm/lockfile-file': 9.0.0(@pnpm/logger@5.0.0)
+      '@pnpm/list': 10.0.1(@pnpm/logger@5.0.0)
+      '@pnpm/lockfile-file': 9.0.1(@pnpm/logger@5.0.0)
       '@pnpm/logger': 5.0.0
       '@pnpm/modules-yaml': 13.0.0
       '@pnpm/package-store': 20.0.1(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)
       '@pnpm/pick-registry-for-package': 6.0.0
-      '@pnpm/plugin-commands-rebuild': 11.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5)
-      '@pnpm/reviewing.dependencies-hierarchy': 3.0.0(@pnpm/logger@5.0.0)
+      '@pnpm/plugin-commands-rebuild': 11.0.4(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+      '@pnpm/reviewing.dependencies-hierarchy': 3.0.1(@pnpm/logger@5.0.0)
       '@pnpm/sort-packages': 6.0.0
       '@pnpm/store-connection-manager': 8.0.3(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.0)
       '@pnpm/types': 10.0.0
