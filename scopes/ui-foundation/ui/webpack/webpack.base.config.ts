@@ -101,6 +101,9 @@ export default function createWebpackConfig(
           'react-dom$': 'react-dom/profiling',
           'scheduler/tracing': 'scheduler/tracing-profiling',
         }),
+        '@teambit/component.ui.component-compare.context': require.resolve(
+          '@teambit/component.ui.component-compare.context'
+        ),
       },
       fallback: {
         module: false,
