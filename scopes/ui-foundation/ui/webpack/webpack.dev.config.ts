@@ -178,6 +178,9 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         react: require.resolve('react'),
         'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
+        '@teambit/component.ui.component-compare.context': require.resolve(
+          '@teambit/component.ui.component-compare.context'
+        ),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
       },
       fallback: {
