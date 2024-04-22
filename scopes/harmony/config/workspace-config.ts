@@ -113,6 +113,11 @@ export class WorkspaceConfig implements HostConfig {
       delete this.raw[oldExtId];
       return true;
     }
+    const generatorEnvs = this.raw?.['teambit.generator/generator']?.envs;
+    if (generatorEnvs && generatorEnvs.includes(oldExtId)) {
+      generatorEnvs.splice(generatorEnvs.indexOf(oldExtId), 1, newExtId);
+      return true;
+    }
     return false;
   }
 
