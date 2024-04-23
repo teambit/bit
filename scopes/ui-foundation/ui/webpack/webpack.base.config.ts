@@ -117,12 +117,6 @@ export default function createWebpackConfig(
         tls: false,
         child_process: false,
         process: fallbacks.process,
-        http: fallbacks.http,
-        https: fallbacks.https,
-        zlib: fallbacks.zlib,
-        crypto: fallbacks.crypto,
-        vm: fallbacks.vm,
-        buffer: fallbacks.buffer,
       },
     },
     module: {

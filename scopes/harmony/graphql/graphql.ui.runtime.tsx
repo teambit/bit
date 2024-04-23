@@ -6,15 +6,13 @@ import type { NormalizedCacheObject } from '@apollo/client';
 import { WebSocketLink } from '@apollo/client/link/ws';
 import { onError } from '@apollo/client/link/error';
 
-import _crossFetch from '@pnpm/node-fetch';
+import crossFetch from 'cross-fetch';
 
 import { createSplitLink } from './create-link';
 import { GraphQLProvider } from './graphql-provider';
 import { GraphqlAspect } from './graphql.aspect';
 import { GraphqlRenderPlugins } from './render-lifecycle';
 import { logError } from './logging';
-
-const crossFetch: typeof fetch = _crossFetch as unknown as typeof fetch;
 
 /**
  * Type of gql client.
