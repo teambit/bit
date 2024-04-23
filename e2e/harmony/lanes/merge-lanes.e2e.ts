@@ -1522,4 +1522,34 @@ describe('merge lanes', function () {
       expect(foo).to.include('<<<<<<<');
     });
   });
+  describe('merging lane with a component newly introduced where it was a package before', () => {
+    let laneAWs: string;
+    let comp2PkgName: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      laneAWs = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('main');
+      helper.command.mergeLane('lane-a', '-x');
+      helper.command.export();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      comp2PkgName = helper.general.getPackageNameByCompName('comp2', false);
+      helper.scopeHelper.getClonedLocalScope(laneAWs);
+      helper.npm.addFakeNpmPackage(comp2PkgName, '0.0.1');
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { [comp2PkgName]: '0.0.1' } });
+    });
+    it('should remove the package from workspace.jsonc', () => {
+      helper.command.mergeLane('lane-b', '-x');
+      const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+      expect(policy.dependencies).to.not.have.property(comp2PkgName);
+    });
+  });
 });
