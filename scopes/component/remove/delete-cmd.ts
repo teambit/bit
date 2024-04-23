@@ -79,7 +79,8 @@ this command marks the components as deleted, and after snap/tag and export they
       return `${localMessage}${this.paintArray(remoteResult)}`;
     }
 
-    const removedCompIds = await this.remove.deleteComps(componentsPattern, { updateMain });
+    const removedComps = await this.remove.deleteComps(componentsPattern, { updateMain });
+    const removedCompIds = removedComps.map((comp) => comp.id.toString());
     return `${chalk.green('successfully deleted the following components:')}
 ${removedCompIds.join('\n')}
 
