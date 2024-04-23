@@ -351,6 +351,31 @@ export class LaneHistoryCmd implements Command {
   }
 }
 
+export class LaneEjectCmd implements Command {
+  name = 'eject <component-pattern>';
+  description = `delete a component from the lane and install it as a package from main`;
+  extendedDescription = `NOTE: unlike "bit eject" on main, this command doesn't only remove the component from the
+workspace, but also mark it as deleted from the lane, so it won't be merged later on.`;
+  alias = '';
+  arguments = [
+    {
+      name: 'component-pattern',
+      description: COMPONENT_PATTERN_HELP,
+    },
+  ];
+  options = [] as CommandOptions;
+  loader = true;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([pattern]: [string]) {
+    const results = await this.lanes.eject(pattern);
+    const title = chalk.green('successfully ejected the following components');
+    const body = results.map((r) => r.toString()).join('\n');
+    return `${title}\n${body}`;
+  }
+}
+
 export class LaneChangeScopeCmd implements Command {
   name = 'change-scope <remote-scope-name>';
   description = `changes the remote scope of a lane`;
