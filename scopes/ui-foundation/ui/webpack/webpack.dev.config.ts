@@ -188,12 +188,6 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         path: fallbacks.path,
         stream: false,
         process: fallbacks.process,
-        http: fallbacks.http,
-        https: fallbacks.https,
-        zlib: fallbacks.zlib,
-        crypto: fallbacks.crypto,
-        vm: fallbacks.vm,
-        buffer: fallbacks.buffer,
       },
     },
 
@@ -366,7 +360,7 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         chunks: ['main'],
         filename: 'index.html',
       }),
-      new ProvidePlugin({ process: fallbacksProvidePluginConfig.process, Buffer: fallbacksProvidePluginConfig.Buffer }),
+      new ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
     ],
   };
 }

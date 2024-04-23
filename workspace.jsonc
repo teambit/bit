@@ -383,6 +383,7 @@
         "cors": "2.8.5",
         "credentials-by-uri": "2.0.0",
         "cross-env": "7.0.3",
+        "cross-fetch": "3.1.5",
         "css-minimizer-webpack-plugin": "^6.0.0",
         "dagre": "0.8.5",
         "didyoumean": "1.2.1",

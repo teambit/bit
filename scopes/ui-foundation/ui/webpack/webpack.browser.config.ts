@@ -122,7 +122,7 @@ function createBrowserConfig(outputDir: string, title: string, publicDir: string
         },
       }),
 
-      new ProvidePlugin({ process: fallbacksProvidePluginConfig.process, Buffer: fallbacksProvidePluginConfig.Buffer }),
+      new ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
     ],
   };
 
