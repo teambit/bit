@@ -1,7 +1,7 @@
 import { PubsubAspect, PubsubPreview } from '@teambit/pubsub';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';
-import _crossFetch from '@pnpm/node-fetch';
+import crossFetch from 'cross-fetch';
 import memoize from 'memoizee';
 import { debounce, intersection, isObject } from 'lodash';
 
@@ -15,8 +15,6 @@ import { fetchComponentAspects } from './gql/fetch-component-aspects';
 import { PREVIEW_MODULES } from './preview-modules';
 import { loadScript, loadLink } from './html-utils';
 import { SizeEvent } from './size-event';
-
-const crossFetch: typeof fetch = _crossFetch as unknown as typeof fetch;
 
 // forward linkModules() for generate-link.ts
 export { linkModules } from './preview-modules';
