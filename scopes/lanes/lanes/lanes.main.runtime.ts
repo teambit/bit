@@ -57,6 +57,7 @@ import {
   LaneCheckoutOpts,
   LaneRevertCmd,
   LaneFetchCmd,
+  LaneEjectCmd,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
@@ -65,6 +66,7 @@ import { createLane, createLaneInScope, throwForInvalidLaneName } from './create
 import { LanesCreateRoute } from './lanes.create.route';
 import { LanesDeleteRoute } from './lanes.delete.route';
 import { LanesRestoreRoute } from './lanes.restore.route';
+import InstallAspect, { InstallMain } from '@teambit/install';
 
 export { Lane };
 
@@ -140,7 +142,8 @@ export class LanesMain {
     private componentCompare: ComponentCompareMain,
     readonly componentWriter: ComponentWriterMain,
     private remove: RemoveMain,
-    readonly checkout: CheckoutMain
+    readonly checkout: CheckoutMain,
+    private install: InstallMain
   ) {}
 
   /**
@@ -483,6 +486,16 @@ please create a new lane instead, which will include all components of this lane
 
   async importLaneObject(laneId: LaneId, persistIfNotExists = true, includeLaneHistory = false): Promise<Lane> {
     return this.importer.importLaneObject(laneId, persistIfNotExists, includeLaneHistory);
+  }
+
+  async eject(pattern: string): Promise<ComponentID[]> {
+    if (!this.workspace) {
+      throw new BitError(`unable to eject a component outside of Bit workspace`);
+    }
+    const deletedComps = await this.remove.deleteComps(pattern);
+    const packages = deletedComps.map((c) => c.getPackageName());
+    await this.install.install(packages);
+    return deletedComps.map((c) => c.id);
   }
 
   /**
@@ -1136,6 +1149,7 @@ please create a new lane instead, which will include all components of this lane
     ComponentWriterAspect,
     RemoveAspect,
     CheckoutAspect,
+    InstallAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1153,6 +1167,7 @@ please create a new lane instead, which will include all components of this lane
     componentWriter,
     remove,
     checkout,
+    install,
   ]: [
     CLIMain,
     ScopeMain,
@@ -1167,7 +1182,8 @@ please create a new lane instead, which will include all components of this lane
     ComponentCompareMain,
     ComponentWriterMain,
     RemoveMain,
-    CheckoutMain
+    CheckoutMain,
+    InstallMain
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
     const lanesMain = new LanesMain(
@@ -1181,7 +1197,8 @@ please create a new lane instead, which will include all components of this lane
       componentCompare,
       componentWriter,
       remove,
-      checkout
+      checkout,
+      install
     );
     const switchCmd = new SwitchCmd(lanesMain);
     const fetchCmd = new FetchCmd(importer);
@@ -1201,6 +1218,7 @@ please create a new lane instead, which will include all components of this lane
       new LaneImportCmd(switchCmd),
       new LaneRemoveCompCmd(workspace, lanesMain),
       new LaneFetchCmd(fetchCmd, lanesMain),
+      new LaneEjectCmd(lanesMain),
     ];
     if (isFeatureEnabled(SUPPORT_LANE_HISTORY)) {
       laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
