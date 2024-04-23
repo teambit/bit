@@ -46,6 +46,8 @@ import {
   WorkspaceConfigUpdateResult,
 } from '@teambit/config-merger';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import DependencyResolverAspect, { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { MergeCmd } from './merge-cmd';
@@ -121,7 +123,8 @@ export class MergingMain {
     private importer: ImporterMain,
     private config: ConfigMain,
     private remove: RemoveMain,
-    private configMerger: ConfigMergerMain
+    private configMerger: ConfigMergerMain,
+    private depResolver: DependencyResolverMain
   ) {}
 
   async merge(
@@ -248,6 +251,8 @@ export class MergingMain {
 
     const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.unchangedMessage);
 
+    const currentLaneIdsBeforeMerge = currentLane?.toComponentIds();
+
     const componentsResults = await this.applyVersionMultiple(
       succeededComponents,
       otherLaneId,
@@ -275,7 +280,10 @@ export class MergingMain {
 
     await legacyScope.objects.unmergedComponents.write();
 
-    if (this.workspace) await consumer.writeBitMap(`merge ${otherLaneId.toString()}`);
+    if (this.workspace) {
+      await consumer.writeBitMap(`merge ${otherLaneId.toString()}`);
+      await this.removeFromWsJsonPolicyIfExists(componentsResults, currentLane, currentLaneIdsBeforeMerge);
+    }
 
     if (componentIdsToRemove.length && this.workspace) {
       const compBitIdsToRemove = ComponentIdList.fromArray(componentIdsToRemove);
@@ -339,6 +347,25 @@ export class MergingMain {
       },
       leftUnresolvedConflicts,
     };
+  }
+
+  async removeFromWsJsonPolicyIfExists(
+    componentsResults: ApplyVersionWithComps[],
+    currentLane?: Lane,
+    currentLaneIdsBeforeMerge?: ComponentIdList
+  ) {
+    const newlyIntroducedIds = currentLane
+      ?.toComponentIds()
+      .filter((id) => !currentLaneIdsBeforeMerge?.hasWithoutVersion(id));
+    const newlyIntroducedComponentIds = ComponentIdList.fromArray(newlyIntroducedIds || []);
+    const components = compact(
+      componentsResults
+        .map((c) => c.legacyCompToWrite)
+        .filter((c) => c && newlyIntroducedComponentIds.hasWithoutVersion(c.id))
+    );
+    const packages = components.map((c) => componentIdToPackageName(c));
+    const isRemoved = this.depResolver.removeFromRootPolicy(packages);
+    if (isRemoved) await this.depResolver.persistConfig('merge (remove packages)');
   }
 
   /**
@@ -663,6 +690,7 @@ export class MergingMain {
     RemoveAspect,
     GlobalConfigAspect,
     ConfigMergerAspect,
+    DependencyResolverAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -679,6 +707,7 @@ export class MergingMain {
     remove,
     globalConfig,
     configMerger,
+    depResolver,
   ]: [
     CLIMain,
     Workspace,
@@ -692,7 +721,8 @@ export class MergingMain {
     ConfigMain,
     RemoveMain,
     GlobalConfigMain,
-    ConfigMergerMain
+    ConfigMergerMain,
+    DependencyResolverMain
   ]) {
     const logger = loggerMain.createLogger(MergingAspect.id);
     const merging = new MergingMain(
@@ -706,7 +736,8 @@ export class MergingMain {
       importer,
       config,
       remove,
-      configMerger
+      configMerger,
+      depResolver
     );
     cli.register(new MergeCmd(merging, globalConfig));
     return merging;
