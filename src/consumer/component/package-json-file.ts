@@ -11,7 +11,7 @@ import logger from '../../logger/logger';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
 import Component from './consumer-component';
-import PackageJsonVinyl from './package-json-vinyl';
+import { JsonVinyl } from './json-vinyl';
 
 /**
  * when a package.json file is loaded, we save the indentation and the type of newline it uses, so
@@ -170,8 +170,8 @@ export default class PackageJsonFile {
     return new PackageJsonFile({ filePath, packageJsonObject, fileExist: false });
   }
 
-  toVinylFile(): PackageJsonVinyl {
-    return PackageJsonVinyl.load({
+  toVinylFile(): JsonVinyl {
+    return JsonVinyl.load({
       base: path.dirname(this.filePath),
       path: this.filePath,
       content: this.packageJsonObject,
