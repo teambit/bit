@@ -13,6 +13,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { isDir, isDirEmptySync } from '@teambit/legacy/dist/utils';
 import { PathLinuxRelative, pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { ConfigMergerAspect, ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
@@ -125,6 +126,13 @@ export class ComponentWriterMain {
         componentWriter.existingComponentMap =
           componentWriter.existingComponentMap ||
           (await componentWriter.addComponentToBitMap(componentWriter.writeToPath));
+        const componentConfigPath = path.join(
+          this.workspace.path,
+          componentWriter.existingComponentMap.rootDir,
+          COMPONENT_CONFIG_FILE_NAME
+        );
+        const componentConfigExist = await fs.pathExists(componentConfigPath);
+        componentWriter.writeConfig = componentWriter.writeConfig || componentConfigExist;
       })
     );
     if (opts.resetConfig) {
