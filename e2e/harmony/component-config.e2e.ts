@@ -79,7 +79,7 @@ describe('component config', function () {
           output = helper.command.ejectConf('bar/foo');
         });
         it('should throw error if override not used', () => {
-          componentJsonPath = helper.componentJson.composePath('bar');
+          componentJsonPath = helper.componentJson.composePath('bar', false);
           const ejectCmd = () => helper.command.ejectConf('bar/foo');
           const error = new AlreadyExistsError(componentJsonPath);
           helper.general.expectToThrow(ejectCmd, error);
