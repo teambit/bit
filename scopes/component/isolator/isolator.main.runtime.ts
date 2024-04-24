@@ -84,6 +84,14 @@ export type IsolationContext = {
   workspaceName?: string;
 };
 
+/**
+ * it's normally a sha1 of the workspace/scope dir. 40 chars long. however, Windows is not happy with long paths.
+ * so we use a shorter hash. the number 9 is pretty random, it's what we use for short-hash of snaps.
+ * we're aware of an extremely low risk of collision. take into account that in most cases you won't have more than 10
+ * capsules in the machine.
+ */
+const CAPSULE_DIR_LENGTH = 9;
+
 export type IsolateComponentsInstallOptions = {
   installPackages?: boolean; // default: true
   // TODO: add back when depResolver.getInstaller support it
@@ -1000,7 +1008,7 @@ export class IsolatorMain {
       return path.join(capsulesRootBaseDir, datedBaseDir, dateDir, hashDir);
     }
     const dir = getCapsuleDirOptsWithDefaults.useHash
-      ? hash(getCapsuleDirOptsWithDefaults.baseDir)
+      ? hash(getCapsuleDirOptsWithDefaults.baseDir).substring(0, CAPSULE_DIR_LENGTH)
       : getCapsuleDirOptsWithDefaults.baseDir;
     return path.join(capsulesRootBaseDir, dir);
   }
