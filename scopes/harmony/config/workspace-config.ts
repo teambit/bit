@@ -122,10 +122,18 @@ export class WorkspaceConfig implements HostConfig {
   }
 
   removeExtension(extId: string): boolean {
-    if (!this.raw[extId]) return false;
-    delete this.raw[extId];
-    this.loadExtensions();
-    return true;
+    if (this.raw[extId]) {
+      delete this.raw[extId];
+      this.loadExtensions();
+      return true;
+    }
+    const generatorEnvs = this.raw?.['teambit.generator/generator']?.envs;
+    if (generatorEnvs && generatorEnvs.includes(extId)) {
+      generatorEnvs.splice(generatorEnvs.indexOf(extId), 1);
+      this.loadExtensions();
+      return true;
+    }
+    return false;
   }
 
   /**
