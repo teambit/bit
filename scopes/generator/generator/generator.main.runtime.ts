@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import camelCase from 'camelcase';
 import { resolve } from 'path';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
@@ -313,6 +314,15 @@ export class GeneratorMain {
     const componentIds = componentNames.map((componentName) =>
       this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
     );
+
+    const componentNameSameAsTemplateName = componentIds.find((componentId) => componentId.name === templateName);
+    if (componentNameSameAsTemplateName) {
+      const compNamePascal = camelCase(templateName, { pascalCase: true });
+      throw new BitError(
+        `unable to create a component with the same name as the template "${templateName}", please use a different name.
+the reason is that after refactoring, the code will have this invalid class: "class ${compNamePascal} extends ${compNamePascal} {}"`
+      );
+    }
 
     const envId = await this.getEnvIdFromTemplateWithId(templateWithId);
 
