@@ -1,31 +1,75 @@
 .apiRefToc {
   display: flex;
-  gap: 48px;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .apiRefTocGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
 }
 
-.apiRefTocGroupItem {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  align-items: center;
+.apiRefTocGroupC {
+  display: grid;
+  grid-template-columns: 180px 1fr;
 }
 
-.apiRefTocGroupItemName {
+@media (min-width: 600px) {
+  .apiRefTocGroup {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
+@media (min-width: 800px) {
+  .apiRefTocGroup {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1000px) {
+  .apiRefTocGroup {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .apiRefTocGroup {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1400px) {
+  .apiRefTocGroup {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.apiRefTocGroupName {
   display: flex;
-  font-size: 16px;
 }
 
 .apiRefTocGroupIcon {
-  display: flex;
-  > img {
-    height: 16px;
-    width: 16px;
-  }
+  width: 16px;
+  height: 16px;
+  padding: 0px 8px;
+}
+
+.apiRefTocGroupItem {
+  padding: 8px;
+  font-size: 16px;
+  align-items: flex-start;
+}
+
+.apiRefTocLink {
+  text-decoration: none;
+}
+
+.apiRefTocGroupNameContainer {
+  display: grid;
+  font-size: 16px;
+  font-weight: 500;
+  align-items: flex-start;
+  grid-column: 1;
+  padding: 8px 0px;
 }
