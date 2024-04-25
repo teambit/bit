@@ -131,19 +131,21 @@ async function removeLocal(
           throw err;
         }
       }
+    });
+    if (newIds.length) {
       const list = await workspace.listWithInvalid();
       list.components.forEach((c) => {
         if (bitIds.hasWithoutVersion(c.id)) return; // it gets deleted anyway
         const aspectIds = c.state.aspects.ids;
         const used = newIds.find((newId) => aspectIds.includes(newId));
         if (used)
-          throw new BitError(`Unable to remove ${id.toStringWithoutVersion()}.
+          throw new BitError(`Unable to remove ${c.id.toStringWithoutVersion()}.
 This component is 1) an aspect 2) is used by other components, such as "${c.id.toStringWithoutVersion()}" 3) it's a new component so it can't be installed as a package.
 Removing this component from the workspace will disrupt the functionality of other components that depend on it, and resolving these issues may not be straightforward.
 If you understand the risks and wish to proceed with the removal, please use the --force flag.
 `);
       });
-    });
+    }
   }
   const idsToRemove = force ? bitIds : nonModifiedComponents;
   const componentsList = new ComponentsList(consumer);
