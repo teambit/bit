@@ -69,6 +69,8 @@ import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/s
 import { isHash } from '@teambit/component-version';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { getAuthHeader, fetchWithAgent as fetch } from '@teambit/legacy/dist/scope/network/http/http';
+import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { JsonVinyl } from '@teambit/legacy/dist/consumer/component/json-vinyl';
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,
@@ -917,28 +919,38 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     return ExtensionDataList.fromConfigObject(this.config.extensions);
   }
 
-  async ejectMultipleConfigs(ids: ComponentID[], options: EjectConfOptions): Promise<EjectConfResult[]> {
-    return Promise.all(ids.map((id) => this.ejectConfig(id, options)));
-  }
-
-  async ejectConfig(id: ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
+  async getComponentConfigVinylFile(
+    id: ComponentID,
+    options: EjectConfOptions,
+    excludeLocalChanges = false
+  ): Promise<JsonVinyl> {
     const componentId = await this.resolveComponentId(id);
-    const extensions = await this.getExtensionsFromScopeAndSpecific(id);
+    const extensions = await this.getExtensionsFromScopeAndSpecific(id, excludeLocalChanges);
     const aspects = await this.createAspectList(extensions);
-    const componentDir = this.componentDir(id, { ignoreVersion: true });
-    const componentConfigFile = new ComponentConfigFile(componentId, aspects, componentDir, options.propagate);
-    await componentConfigFile.write({ override: options.override });
-    // remove config from the .bitmap as it's not needed anymore. it is replaced by the component.json
-    this.bitMap.removeEntireConfig(id);
-    await this.bitMap.write(`eject-conf (${id.toString()})`);
-    return {
-      configPath: ComponentConfigFile.composePath(componentDir),
-    };
+    const componentDir = this.componentDir(id, { ignoreVersion: true }, { relative: true });
+    const configFile = new ComponentConfigFile(componentId, aspects, componentDir, options.propagate);
+    return configFile.toVinylFile(options);
   }
 
-  async getExtensionsFromScopeAndSpecific(id: ComponentID): Promise<ExtensionDataList> {
+  async ejectMultipleConfigs(ids: ComponentID[], options: EjectConfOptions): Promise<EjectConfResult[]> {
+    const vinylFiles = await Promise.all(ids.map((id) => this.getComponentConfigVinylFile(id, options)));
+    const EjectConfResult = vinylFiles.map((file) => ({ configPath: file.path }));
+    const dataToPersist = new DataToPersist();
+    dataToPersist.addManyFiles(vinylFiles);
+    dataToPersist.addBasePath(this.path);
+    await dataToPersist.persistAllToFS();
+
+    ids.map((id) => this.bitMap.removeEntireConfig(id));
+    await this.bitMap.write(`eject-conf (${ids.length} component(s))`);
+
+    return EjectConfResult;
+  }
+
+  async getExtensionsFromScopeAndSpecific(id: ComponentID, excludeComponentJson = false): Promise<ExtensionDataList> {
     const componentFromScope = await this.scope.get(id);
-    const { extensions } = await this.componentExtensions(id, componentFromScope, ['WorkspaceVariants']);
+    const exclude: ExtensionsOrigin[] = ['WorkspaceVariants'];
+    if (excludeComponentJson) exclude.push('ComponentJsonFile');
+    const { extensions } = await this.componentExtensions(id, componentFromScope, exclude);
 
     return extensions;
   }

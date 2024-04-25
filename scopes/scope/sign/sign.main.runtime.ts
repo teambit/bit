@@ -18,9 +18,10 @@ import { ComponentIdList } from '@teambit/component-id';
 import Version, { Log } from '@teambit/legacy/dist/scope/models/version';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import { LanesAspect, LanesMain } from '@teambit/lanes';
+import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
-import { SignCmd } from './sign.cmd';
+import { SignCmd, SignOptions } from './sign.cmd';
 import { SignAspect } from './sign.aspect';
 
 export type SignResult = {
@@ -54,12 +55,16 @@ export class SignMain {
    */
   async sign(
     ids: ComponentID[],
-    originalScope?: boolean,
-    push?: boolean,
     laneIdStr?: string,
-    rebuild?: boolean
+    { originalScope, push, rebuild, saveLocally }: SignOptions = {}
   ): Promise<SignResult | null> {
     this.throwIfOnWorkspace();
+    if (push && rebuild) {
+      throw new BitError('you can not use --push and --rebuild together');
+    }
+    if (saveLocally && push && originalScope) {
+      throw new BitError('no need to use --save-locally when pushing to the original scope, it is done automatically');
+    }
     let lane: Lane | undefined;
     if (!originalScope) {
       const longProcessLogger = this.logger.createLongProcessLogger('import objects');
@@ -107,6 +112,9 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       } else {
         await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus, lane);
       }
+    }
+    if (saveLocally) {
+      await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
     }
     await this.triggerOnPostSign(components);
 
