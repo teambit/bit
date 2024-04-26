@@ -35,6 +35,7 @@ import { MergeLaneFromScopeCmd } from './merge-lane-from-scope.cmd';
 import { MissingCompsToMerge } from './exceptions/missing-comps-to-merge';
 import { MergeAbortLaneCmd, MergeAbortOpts } from './merge-abort.cmd';
 import { LastMerged } from './last-merged';
+import { MergeMoveLaneCmd } from './merge-move.cmd';
 
 export type MergeLaneOptions = {
   mergeStrategy: MergeStrategy;
@@ -74,7 +75,7 @@ export class MergeLanesMain {
   constructor(
     private workspace: Workspace | undefined,
     private merging: MergingMain,
-    private lanes: LanesMain,
+    readonly lanes: LanesMain,
     readonly logger: Logger,
     private remove: RemoveMain,
     private scope: ScopeMain,
@@ -315,6 +316,14 @@ export class MergeLanesMain {
     return { mergeResults, deleteResults, configMergeResults, mergedSuccessfullyIds, conflicts };
   }
 
+  async mergeMove(newLaneName: string, options: { scope?: string }) {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    const lastMerge = new LastMerged(this.scope, this.workspace.consumer, this.logger);
+    await lastMerge.restoreLaneObjectFromLastMerged();
+    const newLaneResult = await this.lanes.createLane(newLaneName, { scope: options.scope });
+    return newLaneResult;
+  }
+
   async abortLaneMerge(checkoutProps: CheckoutProps, mergeAbortOpts: MergeAbortOpts) {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const lastMerge = new LastMerged(this.scope, this.workspace.consumer, this.logger);
@@ -525,6 +534,7 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
     );
     lanesCommand?.commands?.push(new MergeLaneCmd(mergeLanesMain, globalConfig));
     lanesCommand?.commands?.push(new MergeAbortLaneCmd(mergeLanesMain));
+    lanesCommand?.commands?.push(new MergeMoveLaneCmd(mergeLanesMain));
     cli.register(new MergeLaneFromScopeCmd(mergeLanesMain));
     return mergeLanesMain;
   }
