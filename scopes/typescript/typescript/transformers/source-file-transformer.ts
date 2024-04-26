@@ -48,7 +48,7 @@ export class SourceFileTransformer implements SchemaTransformer {
       (internal) => internal.kind !== ts.SyntaxKind.ImportDeclaration
     );
 
-    const exportDeclarations = await pMapSeries(exports, (exportNode) => {
+    const exportDeclarations = await pMapSeries(exports, async (exportNode) => {
       return context.computeSchema(exportNode);
     });
 
