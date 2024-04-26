@@ -30,4 +30,5 @@ export interface Network {
   latestVersions(bitIds: ComponentIdList): Promise<string[]>;
   graph(bitId?: ComponentID): Promise<DependencyGraph>;
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]>;
+  hasObjects(hashes: string[]): Promise<string[]>;
 }

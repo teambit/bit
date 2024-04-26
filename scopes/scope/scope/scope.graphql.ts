@@ -38,6 +38,9 @@ export function scopeSchema(scopeMain: ScopeMain) {
         # get many components by ID.
         getMany(ids: [String]!): [Component]
 
+        # filter existing objects in the scope.
+        hasObjects(hashes: [String]!): [String]
+
         # get serialized legacy component ids with versions. deprecated. PLEASE DO NOT USE THIS API.
         _legacyLatestVersions(ids: [String]!): [String]
       }
@@ -103,6 +106,10 @@ export function scopeSchema(scopeMain: ScopeMain) {
 
         getMany: async (scope: ScopeMain, { ids }: { ids: string[] }) => {
           return scope.getMany(ids.map((str) => ComponentID.fromString(str)));
+        },
+
+        hasObjects: async (scope: ScopeMain, { hashes }: { hashes: string[] }) => {
+          return scope.hasObjects(hashes);
         },
         // delete: async (scope: ScopeMain, props: {  }) => {
 

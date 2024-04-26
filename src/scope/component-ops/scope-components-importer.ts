@@ -30,6 +30,7 @@ import { getAllVersionHashes } from './traverse-versions';
 import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
 import { pMapPool } from '../../utils/promise-with-concurrent';
 import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
+import getRemoteByName from '../../remotes/get-remote-by-name';
 
 type HashesPerRemote = { [remoteName: string]: string[] };
 
@@ -512,10 +513,20 @@ export default class ScopeComponentsImporter {
     });
   }
 
-  async checkWhatHashesExistOnRemote(remote: string, hashes: string[]): Promise<string[]> {
-    const remotes = await getScopeRemotes(this.scope);
-    const multipleStreams = await remotes.fetch({ [remote]: hashes }, this.scope, { type: 'object' });
-    const existing = await this.streamToHashes(remote, multipleStreams[remote]);
+  async checkWhatHashesExistOnRemote(remoteName: string, hashes: string[]): Promise<string[]> {
+    const remotes: Remotes = await getScopeRemotes(this.scope);
+    const remote = await remotes.resolve(remoteName);
+    const getExisting = async () => {
+      try {
+        return await remote.hasObjects(hashes);
+      } catch (err) {
+        // probably not supported by the server
+        const multipleStreams = await remotes.fetch({ [remoteName]: hashes }, this.scope, { type: 'object' });
+        const existing = await this.streamToHashes(remoteName, multipleStreams[remoteName]);
+        return existing;
+      }
+    };
+    const existing = await getExisting();
     logger.debug(
       `checkWhatHashesExistOnRemote, searched for ${hashes.length} hashes, found ${existing.length} hashes on ${remote}`
     );
