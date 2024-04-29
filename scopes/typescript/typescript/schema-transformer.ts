@@ -13,7 +13,7 @@ export type SchemaTransformer = {
   /**
    * transform the node into JSONSchema.
    */
-  transform(node: Node, context: SchemaExtractorContext, alias?: string): Promise<SchemaNode>;
+  transform(node: Node, context: SchemaExtractorContext): Promise<SchemaNode>;
 };
 
 export type SchemaNodeTransformer = {

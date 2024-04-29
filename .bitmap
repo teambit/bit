@@ -826,7 +826,13 @@
         "scope": "teambit.api-reference",
         "version": "0.0.25",
         "mainFile": "index.ts",
-        "rootDir": "components/models/api-reference-model"
+        "rootDir": "components/models/api-reference-model",
+        "config": {
+            "teambit.harmony/node": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/node"
+            }
+        }
     },
     "models/cloud-scope": {
         "name": "models/cloud-scope",
