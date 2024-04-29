@@ -515,17 +515,25 @@ export default class ScopeComponentsImporter {
   async checkWhatHashesExistOnRemote(remoteName: string, hashes: string[]): Promise<string[]> {
     const remotes: Remotes = await getScopeRemotes(this.scope);
     const remote = await remotes.resolve(remoteName);
+    const getExistingLegacy = async () => {
+      const multipleStreams = await remotes.fetch({ [remoteName]: hashes }, this.scope, { type: 'object' });
+      const existing = await this.streamToHashes(remoteName, multipleStreams[remoteName]);
+      return existing;
+    };
+
+    // @todo: this is supported since version > 1.6.150. once all remote scopes are updated, then change the below
+    // call `const existing = await getExistingLegacy();` to `const existing = await getExisting();`
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const getExisting = async () => {
       try {
         return await remote.hasObjects(hashes);
-      } catch (err) {
+      } catch (err: any) {
+        if (err.name !== 'GraphQLClientError') throw err;
         // probably not supported by the server
-        const multipleStreams = await remotes.fetch({ [remoteName]: hashes }, this.scope, { type: 'object' });
-        const existing = await this.streamToHashes(remoteName, multipleStreams[remoteName]);
-        return existing;
+        return getExistingLegacy();
       }
     };
-    const existing = await getExisting();
+    const existing = await getExistingLegacy();
     logger.debug(
       `checkWhatHashesExistOnRemote, searched for ${hashes.length} hashes, found ${existing.length} hashes on ${remote}`
     );
