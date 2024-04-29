@@ -29,10 +29,13 @@ export function APIReferenceTableOfContents({ apiModel, className }: APIReferenc
           </div>
           <div key={type} className={styles.apiRefTocGroup}>
             {nodes.sort(sortAPINodes).map((node) => (
-              <div key={node.api.name} className={styles.apiRefTocGroupItem}>
+              <div key={node.alias || node.api.name} className={styles.apiRefTocGroupItem}>
                 <div className={styles.apiRefTocGroupItemName}>
-                  <Link className={styles.apiRefTocLink} href={`~api-reference?selectedAPI=${node.api.name}`}>
-                    {node.api.name}
+                  <Link
+                    className={styles.apiRefTocLink}
+                    href={`~api-reference?selectedAPI=${node.alias || node.api.name}`}
+                  >
+                    {node.alias || node.api.name}
                   </Link>
                 </div>
               </div>
