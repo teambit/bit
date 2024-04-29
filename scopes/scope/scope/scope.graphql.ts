@@ -2,6 +2,7 @@ import { ComponentID } from '@teambit/component';
 import { gql } from 'graphql-tag';
 import { latestVersions } from '@teambit/legacy/dist/api/scope';
 import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
+import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import { ScopeMain } from './scope.main.runtime';
 
 export function scopeSchema(scopeMain: ScopeMain) {
@@ -37,6 +38,12 @@ export function scopeSchema(scopeMain: ScopeMain) {
 
         # get many components by ID.
         getMany(ids: [String]!): [Component]
+
+        # filter existing objects in the scope.
+        hasObjects(hashes: [String]!): [String]
+
+        # get bit version
+        getBitVersion: String
 
         # get serialized legacy component ids with versions. deprecated. PLEASE DO NOT USE THIS API.
         _legacyLatestVersions(ids: [String]!): [String]
@@ -103,6 +110,14 @@ export function scopeSchema(scopeMain: ScopeMain) {
 
         getMany: async (scope: ScopeMain, { ids }: { ids: string[] }) => {
           return scope.getMany(ids.map((str) => ComponentID.fromString(str)));
+        },
+
+        hasObjects: async (scope: ScopeMain, { hashes }: { hashes: string[] }) => {
+          return scope.hasObjects(hashes);
+        },
+
+        getBitVersion: () => {
+          return getHarmonyVersion(true);
         },
         // delete: async (scope: ScopeMain, props: {  }) => {
 
