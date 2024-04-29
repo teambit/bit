@@ -1153,6 +1153,12 @@ export class ScopeMain implements ComponentFactory {
     // no-op (it's relevant for the workspace only)
   }
 
+  async hasObjects(hashes: string[]): Promise<string[]> {
+    const refs = hashes.map((h) => Ref.from(h));
+    const results = await this.legacyScope.objects.hasMultiple(refs);
+    return results.map((r) => r.hash);
+  }
+
   /**
    * declare the slots of scope extension.
    */

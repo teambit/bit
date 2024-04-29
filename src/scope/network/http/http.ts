@@ -619,6 +619,19 @@ export class Http implements Network {
     }));
   }
 
+  async hasObjects(hashes: string[]): Promise<string[]> {
+    const HAS_OBJECTS = gql`
+      query hasObjects($hashes: [String!]) {
+        scope {
+          hasObjects(hashes: $hashes)
+        }
+      }
+    `;
+    const res = await this.graphClientRequest(HAS_OBJECTS, Verb.READ, { hashes });
+
+    return res;
+  }
+
   private getHeaders(headers: { [key: string]: string } = {}) {
     const authHeader = this.token ? getAuthHeader(this.token) : {};
     const localScope = this.localScopeName ? { 'x-request-scope': this.localScopeName } : {};
