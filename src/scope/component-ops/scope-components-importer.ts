@@ -30,7 +30,6 @@ import { getAllVersionHashes } from './traverse-versions';
 import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
 import { pMapPool } from '../../utils/promise-with-concurrent';
 import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
-import getRemoteByName from '../../remotes/get-remote-by-name';
 
 type HashesPerRemote = { [remoteName: string]: string[] };
 
