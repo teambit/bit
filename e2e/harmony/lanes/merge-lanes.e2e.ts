@@ -1552,4 +1552,57 @@ describe('merge lanes', function () {
       expect(policy.dependencies).to.not.have.property(comp2PkgName);
     });
   });
+  describe('bit lane merge-move command', () => {
+    let oldSnapComp1: string;
+    let snapComp2: string;
+    let newSnapComp1: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(3, true, 'on-lane');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.fixtures.populateComponents(3, true, 'on-main');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('dev', '-x');
+      helper.command.mergeLane('main', '-x --manual');
+      helper.fixtures.populateComponents(3, true, 'fixed-conflicts');
+      oldSnapComp1 = helper.command.getHeadOfLane('dev', 'comp1');
+      snapComp2 = helper.command.getHeadOfLane('dev', 'comp2');
+      helper.command.snapComponentWithoutBuild('comp1');
+      newSnapComp1 = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.mergeMoveLane('new-lane');
+    });
+    it('should create a new lane', () => {
+      const lanes = helper.command.listLanesParsed();
+      expect(lanes.currentLane).to.equal('new-lane');
+    });
+    it('the new lane should have the new local snaps created on the original lane', () => {
+      const lane = helper.command.catLane('new-lane');
+      expect(lane.components).to.have.lengthOf(3);
+      const comp1 = lane.components.find((c) => c.id.name === 'comp1');
+      expect(comp1.head).to.equal(newSnapComp1);
+    });
+    it('the new lane should have the same components as the original lane', () => {
+      const lane = helper.command.catLane('new-lane');
+      const comp2 = lane.components.find((c) => c.id.name === 'comp2');
+      expect(comp2.head).to.equal(snapComp2);
+    });
+    it('the filesystem should stay the same', () => {
+      const comp1 = helper.fs.readFile(`comp1/index.js`);
+      expect(comp1).to.have.string('fixed-conflicts');
+      const comp2 = helper.fs.readFile(`comp2/index.js`);
+      expect(comp2).to.have.string('fixed-conflicts');
+    });
+    it('the original lane should be reverted to the before-merge state', () => {
+      const lane = helper.command.catLane('dev');
+      const comp1 = lane.components.find((c) => c.id.name === 'comp1');
+      expect(comp1.head).to.equal(oldSnapComp1);
+    });
+  });
 });
