@@ -374,14 +374,14 @@ if you just want to get a quick look into this snap, create a new workspace and 
     if (!this.options.lanes) {
       throw new Error(`getBitIdsForLanes: this.options.lanes must be set`);
     }
-    const bitIdsFromLane = this.remoteLane?.toComponentIds() || new ComponentIdList();
+    const remoteLaneIds = this.remoteLane?.toComponentIds() || new ComponentIdList();
 
     if (!this.options.ids.length) {
       const bitMapIds = this.consumer.bitMap.getAllBitIds();
-      const bitMapIdsToImport = bitMapIds.filter((id) => id.hasScope() && !bitIdsFromLane.has(id));
-      bitIdsFromLane.push(...bitMapIdsToImport);
+      const bitMapIdsToImport = bitMapIds.filter((id) => id.hasScope() && !remoteLaneIds.has(id));
+      remoteLaneIds.push(...bitMapIdsToImport);
 
-      return bitIdsFromLane;
+      return remoteLaneIds;
     }
 
     const idsWithWildcard = this.options.ids.filter((id) => hasWildcard(id));
@@ -389,7 +389,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
     const idsWithoutWildcardPreferFromLane = await Promise.all(
       idsWithoutWildcard.map(async (idStr) => {
         const id = await this.getIdFromStr(idStr);
-        const fromLane = bitIdsFromLane.searchWithoutVersion(id);
+        const fromLane = remoteLaneIds.searchWithoutVersion(id);
         return fromLane && !id.hasVersion() ? fromLane : id;
       })
     );
@@ -401,15 +401,15 @@ if you just want to get a quick look into this snap, create a new workspace and 
     }
 
     await pMapSeries(idsWithWildcard, async (idStr: string) => {
-      const idsFromRemote = await getRemoteBitIdsByWildcards(idStr, this.options.includeDeprecated);
-      const existingOnLanes = compact(idsFromRemote.map((id) => bitIdsFromLane.searchWithoutVersion(id)));
-      if (!existingOnLanes.length) {
-        throw new BitError(`the id with the the wildcard "${idStr}" has been parsed to multiple component ids.
-however, none of them existing on the lane "${this.remoteLane?.id()}".
-in case you intend to import these components from main, please run the following:
-bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`);
+      const existingOnLanes = await this.workspace.filterIdsFromPoolIdsByPattern(idStr, remoteLaneIds, false);
+      // in case the wildcard contains components from the lane, the user wants to import only them. not from main.
+      // otherwise, if the wildcard translates to main components only, it's ok to import from main.
+      if (existingOnLanes.length) {
+        bitIds.push(...existingOnLanes);
+      } else {
+        const idsFromRemote = await getRemoteBitIdsByWildcards(idStr, this.options.includeDeprecated);
+        bitIds.push(...idsFromRemote);
       }
-      bitIds.push(...existingOnLanes);
     });
 
     return bitIds;
