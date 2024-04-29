@@ -83,6 +83,7 @@ async function createStoreController(
     fetchRetryMaxtimeout: options.networkConfig.fetchRetryMaxtimeout,
     fetchRetryMintimeout: options.networkConfig.fetchRetryMintimeout,
     fetchTimeout: options.networkConfig.fetchTimeout,
+    virtualStoreDirMaxLength: getVirtualStoreDirMaxLength(),
   };
   // We should avoid the recreation of store.
   // The store holds cache that makes subsequent resolutions faster.
@@ -164,6 +165,7 @@ export async function getPeerDependencyIssues(
     overrides: opts.overrides,
     workspacePackages,
     registries: registriesMap,
+    virtualStoreDirMaxLength: getVirtualStoreDirMaxLength(),
   });
 }
 

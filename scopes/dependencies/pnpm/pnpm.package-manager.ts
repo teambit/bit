@@ -31,6 +31,7 @@ import { join } from 'path';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
+import { getVirtualStoreDirMaxLength } from './get-virtual-store-dir-max-length';
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
@@ -313,6 +314,7 @@ export class PnpmPackageManager implements PackageManager {
           default: 'https://registry.npmjs.org',
         },
         search,
+        virtualStoreDirMaxLength: getVirtualStoreDirMaxLength(),
       })
     ).map(([projectPath, builtDependenciesHierarchy]) => {
       pkgNamesToComponentIds(builtDependenciesHierarchy, { cache, getPkgLocation });
