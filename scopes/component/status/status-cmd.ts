@@ -3,7 +3,6 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { IssuesList } from '@teambit/component-issues';
-import { formatBitString } from '@teambit/legacy/dist/cli/chalk-box';
 import { getInvalidComponentLabel } from '@teambit/legacy/dist/cli/templates/component-issues-template';
 import {
   IMPORT_PENDING_MSG,
@@ -159,36 +158,51 @@ export class StatusCmd implements Command {
     // troubleshooting doc
     let showTroubleshootingLink = false;
 
-    function format(id: ComponentID, showIssues = false, message?: string, localVersions?: string[]): string {
+    function format(
+      id: ComponentID,
+      showIssues = false,
+      message?: string,
+      localVersions?: string[],
+      showSoftTagMsg = true
+    ): string {
       const idWithIssues = componentsWithIssues.find((c) => c.id.isEqual(id));
-      const softTagged = softTaggedComponents.find((softTaggedId) => softTaggedId.isEqual(id));
-
-      const messageStatusText = message || 'ok';
-      const messageStatusTextWithSoftTag = softTagged ? `${messageStatusText} (soft-tagged)` : messageStatusText;
-      const color = message ? 'yellow' : 'green';
-      const messageStatus = chalk[color](messageStatusTextWithSoftTag);
+      const isSoftTagged = Boolean(softTaggedComponents.find((softTaggedId) => softTaggedId.isEqual(id)));
+      const getStatusText = () => {
+        if (message) return message;
+        if (idWithIssues) return statusFailureMsg;
+        return 'ok';
+      };
+      const getColor = () => {
+        if (message) return 'yellow';
+        if (idWithIssues) return 'red';
+        return 'green';
+      };
+      const messageStatusText = getStatusText();
+      const messageStatusTextWithSoftTag =
+        isSoftTagged && showSoftTagMsg ? `${messageStatusText} (soft-tagged)` : messageStatusText;
+      const messageStatus = chalk[getColor()](messageStatusTextWithSoftTag);
+      let idFormatted = chalk.white('     > ') + chalk.cyan(id.toStringWithoutVersion());
 
       if (!showIssues && !localVersions) {
-        return `${formatBitString(id.toStringWithoutVersion())} ... ${messageStatus}`;
+        return `${idFormatted} ... ${messageStatus}`;
       }
-      let bitFormatted = `${formatBitString(id.toStringWithoutVersion())}`;
       if (localVersions) {
         if (verbose) {
-          bitFormatted += `. versions: ${localVersions.join(', ')}`;
+          idFormatted += `. versions: ${localVersions.join(', ')}`;
         } else {
           const [snaps, tags] = partition(localVersions, (version) => isHash(version));
           const tagsStr = tags.length ? `versions: ${tags.join(', ')}` : '';
           const snapsStr = snaps.length ? `${snaps.length} snap(s)` : '';
-          bitFormatted += `. `;
-          bitFormatted += tagsStr && snapsStr ? `${tagsStr}. and ${snapsStr}` : tagsStr || snapsStr;
+          idFormatted += `. `;
+          idFormatted += tagsStr && snapsStr ? `${tagsStr}. and ${snapsStr}` : tagsStr || snapsStr;
         }
       }
-      bitFormatted += ' ... ';
+      idFormatted += ' ... ';
       if (showIssues && idWithIssues) {
         showTroubleshootingLink = true;
-        return `${bitFormatted} ${chalk.red(statusFailureMsg)}${formatIssues(idWithIssues.issues)}`;
+        return `${idFormatted} ${chalk.red(statusFailureMsg)}${formatIssues(idWithIssues.issues)}`;
       }
-      return `${bitFormatted}${messageStatus}`;
+      return `${idFormatted}${messageStatus}`;
     }
 
     function formatCategory(title: string, description: string, compsOutput: string[]) {
@@ -290,6 +304,10 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
     const stagedComps = stagedComponents.map((c) => format(c.id, false, undefined, c.versions));
     const stagedComponentsOutput = formatCategory('staged components', stagedDesc, stagedComps);
 
+    const softTaggedDesc = '(use "bit tag --persist" to complete the tag)';
+    const softTaggedComps = softTaggedComponents.map((id) => format(id, false, undefined, undefined, false));
+    const softTaggedComponentsOutput = formatCategory('soft-tagged components', softTaggedDesc, softTaggedComps);
+
     const snappedDesc = '(use "bit tag" or "bit tag --snapped" to lock a semver version)';
     const snappedComponentsOutput = formatCategory(
       'snapped components (tag pending)',
@@ -365,6 +383,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
         modifiedComponentOutput,
         snappedComponentsOutput,
         stagedComponentsOutput,
+        softTaggedComponentsOutput,
         unavailableOnMainOutput,
         autoTagPendingOutput,
         compWithIssuesOutput,
