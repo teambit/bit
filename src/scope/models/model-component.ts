@@ -526,6 +526,13 @@ export default class Component extends BitObject {
       }
     }
 
+    const head = this.getHeadRegardlessOfLane();
+    const headVersion = head ? ((await repo.load(head)) as Version) : undefined;
+    const removeAspect = headVersion?.extensions.findCoreExtension(Extensions.remove);
+    const removeRange = removeAspect?.config.range;
+    const deprecationAspect = headVersion?.extensions.findCoreExtension(Extensions.deprecation);
+    const deprecationRange = deprecationAspect?.config.range;
+
     const getRef = (ref: Ref) => (shortHash ? ref.toShortString() : ref.toString());
     const results = versionsInfo.map((versionInfo) => {
       const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };
@@ -538,6 +545,8 @@ export default class Component extends BitObject {
         hash: getRef(versionInfo.ref),
         parents: versionInfo.parents.map((parent) => getRef(parent)),
         onLane: versionInfo.onLane,
+        deleted: versionInfo.tag && removeRange && semver.satisfies(versionInfo.tag, removeRange),
+        deprecated: versionInfo.tag && deprecationRange && semver.satisfies(versionInfo.tag, deprecationRange),
       };
     });
     // sort from earliest to latest
@@ -931,18 +940,30 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return false;
   }
 
-  async isRemoved(repo: Repository): Promise<boolean> {
+  async isRemoved(repo: Repository, specificVersion?: string): Promise<boolean | null> {
     const head = this.getHeadRegardlessOfLane();
     if (!head) {
       // it's new or only on lane
       return false;
     }
-    const version = (await repo.load(head)) as Version;
-    if (!version) {
+    const headVersion = (await repo.load(head)) as Version;
+    if (!headVersion) {
       // the head Version doesn't exist locally, there is no way to know whether it's removed
+      return null;
+    }
+    const removeAspect = headVersion.extensions.findCoreExtension(Extensions.remove);
+    if (!removeAspect) {
       return false;
     }
-    return version.isRemoved();
+    if (removeAspect.config.removed) {
+      return true;
+    }
+    if (specificVersion && removeAspect.config.range) {
+      const tag = this.getTag(specificVersion);
+      if (!tag) return false; // it's a snap. "range" doesn't support snaps. only semver.
+      return semver.satisfies(tag, removeAspect.config.range);
+    }
+    return false;
   }
 
   async isLaneReadmeOf(repo: Repository): Promise<string[]> {
