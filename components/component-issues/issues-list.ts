@@ -19,6 +19,7 @@ import { NonLoadedEnv } from './non-loaded-env';
 import { ExternalEnvWithoutVersion } from './external-env-without-version';
 import { RemovedDependencies } from './removed-dependencies';
 import { SelfReference } from './self-reference';
+import { ImportFromDirectory } from './import-from-directory';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
@@ -41,6 +42,7 @@ export const IssuesClasses = {
   ExternalEnvWithoutVersion,
   RemovedDependencies,
   SelfReference,
+  ImportFromDirectory,
 };
 export type IssuesNames = keyof typeof IssuesClasses;
 
