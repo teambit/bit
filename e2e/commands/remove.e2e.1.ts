@@ -473,7 +473,7 @@ describe('bit remove command', function () {
     it('should not build the removed component', () => {
       expect(snapOutput).to.not.have.string('pipeline');
       const versionObj = helper.command.catComponent('comp1@latest');
-      expect(versionObj.buildStatus).to.equal('pending');
+      expect(versionObj.buildStatus).to.equal('skipped');
     });
     it('should remove successfully', () => {
       const versionObj = helper.command.catComponent('comp1@latest');

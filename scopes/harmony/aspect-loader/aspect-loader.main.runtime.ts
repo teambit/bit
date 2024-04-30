@@ -16,7 +16,7 @@ import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { replaceFileExtToJs } from '@teambit/compilation.modules.babel-compiler';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { loadBit } from '@teambit/bit';
+import { LegacyGlobal, loadBit, takeLegacyGlobalsSnapshot } from '@teambit/bit';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import mapSeries from 'p-map-series';
@@ -589,9 +589,10 @@ export class AspectLoaderMain {
    */
   async loadAspectsFromGlobalScope(
     aspectIds: string[]
-  ): Promise<{ components: Component[]; globalScopeHarmony: Harmony }> {
+  ): Promise<{ components: Component[]; globalScopeHarmony: Harmony; legacyGlobalsSnapshot: LegacyGlobal[] }> {
     const globalScope = await LegacyScope.ensure(GLOBAL_SCOPE, 'global-scope');
     await globalScope.ensureDir();
+    const legacyGlobalsSnapshot = takeLegacyGlobalsSnapshot();
     const globalScopeHarmony = await loadBit(globalScope.path);
     const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
     const aspectLoader = globalScopeHarmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
@@ -619,7 +620,7 @@ export class AspectLoaderMain {
       }
     }
 
-    return { components, globalScopeHarmony };
+    return { components, globalScopeHarmony, legacyGlobalsSnapshot };
   }
 
   filterAspectDefs(

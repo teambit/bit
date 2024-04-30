@@ -231,7 +231,7 @@ a lane created from another lane contains all the components of the original lan
         )}. you can change the lane's scope, before it is exported, with the "bit lane change-scope" command`;
     const title = chalk.green(
       `successfully added and checked out to the new lane ${chalk.bold(result.alias || result.laneId.name)}
-      ${currentLane !== null ? chalk.yellow(`\nnote - your new lane will be based on lane ${currentLane.name}`) : ''}
+      ${currentLane ? chalk.yellow(`\nnote - your new lane will be based on lane ${currentLane.name}`) : ''}
       `
     );
     const remoteScopeOutput = `this lane will be exported to ${remoteScopeOrDefaultScope}`;
@@ -348,6 +348,31 @@ export class LaneHistoryCmd implements Command {
       return `${uuid} ${date} ${historyItem.log.username} ${message}`;
     });
     return items.join('\n');
+  }
+}
+
+export class LaneEjectCmd implements Command {
+  name = 'eject <component-pattern>';
+  description = `delete a component from the lane and install it as a package from main`;
+  extendedDescription = `NOTE: unlike "bit eject" on main, this command doesn't only remove the component from the
+workspace, but also mark it as deleted from the lane, so it won't be merged later on.`;
+  alias = '';
+  arguments = [
+    {
+      name: 'component-pattern',
+      description: COMPONENT_PATTERN_HELP,
+    },
+  ];
+  options = [] as CommandOptions;
+  loader = true;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([pattern]: [string]) {
+    const results = await this.lanes.eject(pattern);
+    const title = chalk.green('successfully ejected the following components');
+    const body = results.map((r) => r.toString()).join('\n');
+    return `${title}\n${body}`;
   }
 }
 

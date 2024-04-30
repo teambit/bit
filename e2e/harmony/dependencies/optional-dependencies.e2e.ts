@@ -79,7 +79,7 @@ describe('optional dependencies', function () {
     let workspaceCapsulesRootDir: string;
     let buttonPkgJson;
     before(() => {
-      helper.command.build('--skip-tests');
+      helper.command.build('--tasks CoreExporter');
       workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
       buttonPkgJson = fs.readJsonSync(
         path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_button/package.json`)

@@ -48,8 +48,12 @@ describe('bit delete command', function () {
       it('bit status should not show RemovedDependencies issues', () => {
         helper.command.expectStatusToNotHaveIssue(IssuesClasses.RemovedDependencies.name);
       });
-      it('bit snap should not fail due to removedDependencies error', () => {
+      it('bit snap should not fail due to removedDependencies error, also it should save the correct dep version', () => {
         expect(() => helper.command.snapAllComponentsWithoutBuild()).not.to.throw();
+
+        const catComp1 = helper.command.catComponent('comp1@latest');
+        expect(catComp1.dependencies[0].id.name).to.equal('comp2');
+        expect(catComp1.dependencies[0].id.version).to.equal('0.0.1');
       });
       it('bit snap output should be relevant for lanes when --lane command used', () => {
         expect(output).to.not.have.string('will mark the component as deleted');

@@ -93,7 +93,7 @@ export class RemoveMain {
     return results;
   }
 
-  async markRemoveComps(componentIds: ComponentID[], shouldUpdateMain = false) {
+  private async markRemoveComps(componentIds: ComponentID[], shouldUpdateMain = false): Promise<Component[]> {
     const components = await this.workspace.getMany(componentIds);
     await removeComponentsFromNodeModules(
       this.workspace.consumer,
@@ -105,13 +105,13 @@ export class RemoveMain {
     if (shouldUpdateMain) config.removeOnMain = true;
     componentIds.map((compId) => this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, config));
     await this.workspace.bitMap.write('delete');
-    const bitIds = ComponentIdList.fromArray(componentIds.map((id) => id));
+    const bitIds = ComponentIdList.fromArray(componentIds);
     await deleteComponentsFiles(this.workspace.consumer, bitIds);
 
-    return componentIds;
+    return components;
   }
 
-  async deleteComps(componentsPattern: string, opts: { updateMain?: boolean } = {}): Promise<ComponentID[]> {
+  async deleteComps(componentsPattern: string, opts: { updateMain?: boolean } = {}): Promise<Component[]> {
     if (!this.workspace) throw new ConsumerNotFound();
     const componentIds = await this.workspace.idsByPattern(componentsPattern);
     const newComps = componentIds.filter((id) => !id.hasVersion());

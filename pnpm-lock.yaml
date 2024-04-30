@@ -61,14 +61,14 @@ importers:
         specifier: 7.22.3
         version: 7.22.3
       '@bitdev/node.generators.node-templates':
-        specifier: ^1.0.15
-        version: 1.0.15
+        specifier: ^2.0.2
+        version: 2.0.2
       '@bitdev/react.generators.react-templates':
-        specifier: ^1.1.21
-        version: 1.1.21
+        specifier: ^2.0.1
+        version: 2.0.1
       '@bitdev/symphony.generators.symphony-templates':
-        specifier: ~0.0.11
-        version: 0.0.11
+        specifier: ^1.0.0
+        version: 1.0.0
       '@graphql-modules/core':
         specifier: 0.7.17
         version: 0.7.17(graphql@15.8.0)(reflect-metadata@0.1.13)
@@ -132,6 +132,9 @@ importers:
       '@pnpm/network.ca-file':
         specifier: 2.0.1
         version: 2.0.1
+      '@pnpm/node-fetch':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@pnpm/package-store':
         specifier: 19.0.17
         version: 19.0.17(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.15)
@@ -490,8 +493,8 @@ importers:
         specifier: 0.0.1
         version: 0.0.1
       '@teambit/defender.prettier-formatter':
-        specifier: 1.0.11
-        version: 1.0.11
+        specifier: 1.0.12
+        version: 1.0.12
       '@teambit/defender.ui.test-compare-section':
         specifier: ^0.0.100
         version: 0.0.100(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
@@ -2446,21 +2449,12 @@ importers:
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
     devDependencies:
       '@babel/runtime':
         specifier: 7.20.0
         version: 7.20.0
       '@types/jest':
-        specifier: ^26.0.0
+        specifier: 26.0.20
         version: 26.0.20
       '@types/mocha':
         specifier: 9.1.0
@@ -2468,15 +2462,6 @@ importers:
       '@types/node':
         specifier: 12.20.4
         version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.75
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.25
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
 
   components/modules/harmony-root-generator:
     dependencies:
@@ -20936,8 +20921,8 @@ importers:
         specifier: 7.22.15
         version: 7.22.15(@babel/core@7.19.6)
       '@bitdev/symphony.generators.symphony-templates':
-        specifier: ~0.0.11
-        version: 0.0.11
+        specifier: ^1.0.0
+        version: 1.0.0
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
@@ -20954,8 +20939,8 @@ importers:
         specifier: 1.0.22
         version: 1.0.22(eslint@8.56.0)
       '@teambit/defender.prettier-formatter':
-        specifier: 1.0.11
-        version: 1.0.11
+        specifier: 1.0.12
+        version: 1.0.12
       '@teambit/design.ui.empty-box':
         specifier: 0.0.363
         version: 0.0.363(react-dom@17.0.2)(react@17.0.2)
@@ -21998,8 +21983,8 @@ importers:
         specifier: 7.20.0
         version: 7.20.0
       '@bitdev/node.generators.node-templates':
-        specifier: ^1.0.15
-        version: 1.0.15
+        specifier: ^2.0.2
+        version: 2.0.2
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
@@ -22608,6 +22593,9 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 0.0.33
         version: 0.0.33(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+      '@types/chai':
+        specifier: 4.2.15
+        version: 4.2.15
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -23716,8 +23704,8 @@ importers:
         specifier: 7.23.2
         version: 7.23.2
       '@bitdev/react.generators.react-templates':
-        specifier: ^1.1.21
-        version: 1.1.21
+        specifier: ^2.0.1
+        version: 2.0.1
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
@@ -23749,8 +23737,8 @@ importers:
         specifier: 1.0.22
         version: 1.0.22(eslint@8.56.0)
       '@teambit/defender.prettier-formatter':
-        specifier: 1.0.11
-        version: 1.0.11
+        specifier: 1.0.12
+        version: 1.0.12
       '@teambit/design.ui.input.option-button':
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -24828,6 +24816,9 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
+      '@teambit/bit-error':
+        specifier: ~0.0.404
+        version: 0.0.404
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
@@ -26302,9 +26293,15 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
+      assert:
+        specifier: ^2.1.0
+        version: 2.1.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
+      buffer:
+        specifier: 6.0.3
+        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -26359,6 +26356,9 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
+      punycode:
+        specifier: ^2.3.1
+        version: 2.3.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -26380,12 +26380,21 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
+      string_decoder:
+        specifier: ^1.3.0
+        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
+      url:
+        specifier: ^0.11.3
+        version: 0.11.3
+      util:
+        specifier: ^0.12.5
+        version: 0.12.5
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -27123,9 +27132,6 @@ importers:
       reset-css:
         specifier: 5.0.1
         version: 5.0.1
-      stringify-package:
-        specifier: 1.0.1
-        version: 1.0.1
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 0.0.33
@@ -31271,22 +31277,22 @@ packages:
   /@bcoe/v8-coverage@0.2.3:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  /@bitdev/harmony.generators.harmony-templates@0.0.31:
-    resolution: {integrity: sha512-ypuYrUhZ067Rd2nTFooKyies9fW2ZYZQzuioS/b7OjLDmyqO/rV54DS1m1uYcvBQ2WNXZqyl0KCKYjyckNo2aA==}
+  /@bitdev/harmony.generators.harmony-templates@1.0.1:
+    resolution: {integrity: sha512-ZSo3zHDPbzILHe6uib56CmhI71nrzAw0S1eWi24pyo19/R9NdyTToKKjHHJFG67pvvQP3I6XqPzjKC+jH54/jQ==}
     dependencies:
       '@teambit/component-id': 1.2.0
       lodash: 4.17.21
       prompts: 2.4.2
     dev: false
 
-  /@bitdev/node.generators.node-templates@1.0.15:
-    resolution: {integrity: sha512-IFV1fyDc4OSnFVmooFthmyYDpZrwXlue1aXTeG4jEqNqaOPCF8rnlgyegfNJROVqJtJW4PRTLKz5jPrWv5/Kug==}
+  /@bitdev/node.generators.node-templates@2.0.2:
+    resolution: {integrity: sha512-PjvX9+FbuEWOeveze1fSebICitWSpYTj47JZppXsRMDb3O6mUZcP8Pb3CNBsUVU0jO/lkP0Sz1/qsf97UI2gUg==}
     dependencies:
       lodash: 4.17.21
     dev: false
 
-  /@bitdev/react.generators.react-templates@1.1.21:
-    resolution: {integrity: sha512-9ptmkMr1EZHyGTT7u0aiblbeUyxLLSh8Bl62CuE9bfgvLZaMOxnPJ2a3aToPptKBfyCd8B7sFeimiwDeDmRumw==}
+  /@bitdev/react.generators.react-templates@2.0.1:
+    resolution: {integrity: sha512-652Pqh/VlXerQ4YM3EQueYx+GK76u3hdJSqx0UD2RtMircR71Ko1YPOI+yC7DEECUvrrH1+Zpwyp66OUAp7RIA==}
     dev: false
 
   /@bitdev/react.webpack.refresh-overlay@0.0.1:
@@ -31295,10 +31301,10 @@ packages:
       react-error-overlay: 6.0.9
       strip-ansi: 6.0.0
 
-  /@bitdev/symphony.generators.symphony-templates@0.0.11:
-    resolution: {integrity: sha512-9y3S3iId8jJ2p5ZFIHxIiqyJNXqKPS2Kl4P0y7CozOIXDD2ydT6tB/Tj3Jkn97kpJuRYuV2F0d7Gr4lDGp18Jw==}
+  /@bitdev/symphony.generators.symphony-templates@1.0.0:
+    resolution: {integrity: sha512-tRcLZ5X+XRGTtycOrWEedHTnM5j5OFKxKc29d3uGrIoGOXJIdye4QGC1OMQKSoqXkBg4ms6q5CxOxon70qqbvA==}
     dependencies:
-      '@bitdev/harmony.generators.harmony-templates': 0.0.31
+      '@bitdev/harmony.generators.harmony-templates': 1.0.1
     dev: false
 
   /@chevrotain/types@9.1.0:
@@ -39121,6 +39127,16 @@ packages:
       lodash: 4.17.21
       p-map-series: 2.1.0
       prettier: 2.8.8
+
+  /@teambit/defender.prettier-formatter@1.0.12:
+    resolution: {integrity: sha512-M9pY2ZeVmcX7xgEQzAE2r6QRZyonP5XXH1LA9bcNrTOLbr6UjYvhbm5eO1pdSVbfymv8aCLafZFwbJZ15FBdiA==}
+    dependencies:
+      '@teambit/bit-error': 0.0.402
+      fs-extra: 10.1.0
+      lodash: 4.17.21
+      p-map-series: 2.1.0
+      prettier: 2.8.8
+    dev: false
 
   /@teambit/defender.tester-task@1.0.7:
     resolution: {integrity: sha512-+iCFAh21w/8tAjC/JuGTCU+DhIX2xCuk0xWnCiF7gpNxVMTp2syRmKiOeFkDOOoBK4joO6aiEUAskdhTiZnXUw==}
@@ -71663,9 +71679,6 @@ packages:
     resolution: {directory: components/models/api-reference-model, type: directory}
     id: file:components/models/api-reference-model
     name: '@teambit/api-reference.models.api-reference-model'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': file:components/models/api-node-renderer(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 1.2.0
@@ -71673,6 +71686,9 @@ packages:
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - react
+      - react-dom
     dev: false
 
   file:components/modules/harmony-root-generator:
@@ -76384,14 +76400,14 @@ packages:
       '@babel/preset-env': 7.23.2(@babel/core@7.19.6)
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
-      '@bitdev/symphony.generators.symphony-templates': 0.0.11
+      '@bitdev/symphony.generators.symphony-templates': 1.0.0
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/bit-error': 0.0.404
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
       '@teambit/compilation.babel-compiler': 1.1.8
       '@teambit/component-id': 1.2.0
       '@teambit/defender.eslint-linter': 1.0.22(eslint@8.56.0)
-      '@teambit/defender.prettier-formatter': 1.0.11
+      '@teambit/defender.prettier-formatter': 1.0.12
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -76706,6 +76722,7 @@ packages:
       '@graphql-modules/core': 0.7.17(graphql@15.8.0)(reflect-metadata@0.1.13)
       '@graphql-tools/schema': 10.0.2(graphql@15.8.0)
       '@mdx-js/react': 1.6.22(react@17.0.2)
+      '@pnpm/node-fetch': 1.0.0
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
@@ -76759,6 +76776,7 @@ packages:
       '@graphql-modules/core': 0.7.17(graphql@15.8.0)(reflect-metadata@0.1.13)
       '@graphql-tools/schema': 10.0.2(graphql@15.8.0)
       '@mdx-js/react': 1.6.22(react@17.0.2)
+      '@pnpm/node-fetch': 1.0.0
       '@teambit/harmony': 0.4.6
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
@@ -76857,7 +76875,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@bitdev/node.generators.node-templates': 1.0.15
+      '@bitdev/node.generators.node-templates': 2.0.2
       '@teambit/component-id': 1.2.0
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
@@ -76895,7 +76913,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@bitdev/node.generators.node-templates': 1.0.15
+      '@bitdev/node.generators.node-templates': 2.0.2
       '@teambit/component-id': 1.2.0
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
@@ -77204,9 +77222,12 @@ packages:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
+      '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
+      '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lane-id': 0.0.311
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
       chalk: 2.4.2
@@ -77651,7 +77672,7 @@ packages:
       '@babel/preset-react': 7.22.15(@babel/core@7.19.6)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.19.6)
       '@babel/runtime': 7.23.2
-      '@bitdev/react.generators.react-templates': 1.1.21
+      '@bitdev/react.generators.react-templates': 2.0.1
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.4(@types/webpack@5.28.1)(react-refresh@0.10.0)(webpack-dev-server@4.15.0)(webpack@5.84.1)
       '@prerenderer/prerenderer': 1.2.4(@types/express@4.17.13)(debug@4.3.4)
@@ -77665,7 +77686,7 @@ packages:
       '@teambit/compositions.ui.hooks.use-composition': 0.0.177(react-dom@17.0.2)(react@17.0.2)
       '@teambit/defender.eslint-linter': 1.0.22(eslint@8.56.0)
       '@teambit/defender.eslint.config-mutator': file:scopes/defender/eslint-config-mutator
-      '@teambit/defender.prettier-formatter': 1.0.11
+      '@teambit/defender.prettier-formatter': 1.0.12
       '@teambit/defender.prettier.config-mutator': file:scopes/defender/prettier-config-mutator
       '@teambit/design.ui.input.option-button': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
@@ -78244,6 +78265,7 @@ packages:
     name: '@teambit/sign'
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
+      '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
       '@teambit/component-version': 1.0.3
       '@teambit/harmony': 0.4.6
@@ -78667,6 +78689,7 @@ packages:
       '@teambit/base-ui.loaders.loader-ribbon': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.theme.fonts.roboto': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error': 0.0.404
+      '@teambit/component.ui.component-compare.context': file:components/ui/component-compare/context(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.theme.icons-font': 2.0.29(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.themes.theme-toggler': 0.1.3(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
@@ -78772,6 +78795,7 @@ packages:
       '@teambit/base-ui.loaders.loader-ribbon': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.theme.fonts.roboto': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit-error': 0.0.404
+      '@teambit/component.ui.component-compare.context': file:components/ui/component-compare/context(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.theme.icons-font': 2.0.29(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.themes.theme-toggler': 0.1.3(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)

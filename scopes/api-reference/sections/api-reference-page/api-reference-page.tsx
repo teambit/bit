@@ -50,7 +50,7 @@ export function APIRefPage({ rendererSlot, className }: APIRefPageProps) {
   const apiTree: string[] = useMemo(() => {
     return apiNodes.map((apiNode) => {
       if (!apiNode.exported) return `_Internals/${apiModel?.internalAPIKey(apiNode.api)}`;
-      return `${apiNode.renderer?.nodeType}/${apiNode.api.name}`;
+      return `${apiNode.renderer?.nodeType}/${apiNode.alias || apiNode.api.name}`;
     });
   }, [apiNodes.length]);
 
@@ -68,11 +68,10 @@ export function APIRefPage({ rendererSlot, className }: APIRefPageProps) {
 
   const selectedAPIName =
     (selectedAPINode && selectedAPINode.exported
-      ? `${selectedAPINode?.renderer?.nodeType}/${selectedAPINode?.api.name}`
+      ? `${selectedAPINode?.renderer?.nodeType}/${selectedAPINode?.alias || selectedAPINode?.api.name}`
       : selectedAPINode && `_Internals/${apiModel?.internalAPIKey(selectedAPINode.api)}`) || apiTree[0];
 
   const SelectedAPIComponent = selectedAPINode && selectedAPINode.renderer.Component;
-  // const location = useLocation();
   const query = useQuery();
 
   if (loading) {

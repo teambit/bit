@@ -45,4 +45,5 @@ export { PropertyAssignmentSchema } from './property-assignment';
 export { DecoratorSchema } from './decorator';
 export { LiteralValueSchema } from './literal-value';
 export { IgnoredSchema } from './ignored';
+export { ExportSchema } from './export';
 export * from './docs';
