@@ -3,6 +3,7 @@ import { ComponentID } from '@teambit/component-id';
 import {
   ClassSchema,
   EnumSchema,
+  ExportSchema,
   FunctionLikeSchema,
   InterfaceSchema,
   ModuleSchema,
@@ -39,9 +40,21 @@ export class APISchema extends SchemaNode {
     this.taggedModuleExports = taggedModuleExports;
   }
 
-  listTaggedExports(module?: ModuleSchema) {
+  listTaggedExports(module?: ModuleSchema): SchemaNode[] {
     if (!module) return [];
-    return module.exports.filter((e) => e.doc?.hasTag(TagName.exports));
+    return module.exports
+      .filter((e) => {
+        if (ExportSchema.isExportSchema(e)) {
+          return e.exportNode.doc?.hasTag(TagName.exports) || e.doc?.hasTag(TagName.exports);
+        }
+        return e.doc?.hasTag(TagName.exports);
+      })
+      .map((e) => {
+        if (ExportSchema.isExportSchema(e)) {
+          return e.exportNode;
+        }
+        return e;
+      });
   }
 
   toString() {
@@ -55,7 +68,12 @@ export class APISchema extends SchemaNode {
   toStringPerType() {
     const title = chalk.inverse(`API Schema of ${this.componentId.toString()}\n`);
     const getSection = (ClassObj, sectionName: string) => {
-      const objects = this.module.exports.filter((exp) => exp instanceof ClassObj);
+      const objects = this.module.exports.filter((exp) => {
+        if (ExportSchema.isExportSchema(exp)) {
+          return exp.exportNode instanceof ClassObj;
+        }
+        return exp instanceof ClassObj;
+      });
       if (!objects.length) {
         return '';
       }

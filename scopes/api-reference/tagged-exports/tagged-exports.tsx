@@ -11,9 +11,10 @@ import styles from './tagged-exports.module.scss';
 
 export type TaggedExportsProps = {
   componentId: string;
+  showBanner?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function TaggedExports({ componentId, ...rest }: TaggedExportsProps) {
+export function TaggedExports({ componentId, showBanner, ...rest }: TaggedExportsProps) {
   const renderers = useAPIRefRenderers();
   const api = useAPI(componentId, renderers.nodeRenderers);
   const showTableOfContents = api.apiModel?.taggedAPINodes.length === 0;
@@ -65,7 +66,7 @@ export function TaggedExports({ componentId, ...rest }: TaggedExportsProps) {
           })}
         </div>
       )}
-      {!loading && (
+      {!loading && showBanner && (
         <div className={styles.banner}>
           <img style={{ width: 16 }} src="https://static.bit.dev/bit-icons/lightbulb-thinking.svg" />
           <span>
