@@ -104,34 +104,27 @@ export class RemoveMain {
 
   private async markRemoveComps(componentIds: ComponentID[], { updateMain, range }: DeleteOpts): Promise<Component[]> {
     const allComponentsToMarkDeleted = await this.workspace.getMany(componentIds);
-    const getComps = async () => {
-      if (!range) return allComponentsToMarkDeleted;
-      return allComponentsToMarkDeleted.filter((comp) => {
-        const currentTag = comp.getTag();
-        return Boolean(currentTag && semver.satisfies(currentTag.version, range));
-      });
-    };
-    const componentsToMarkDeletedInHead = await getComps();
-    const componentsIdsToMarkDeletedInHead = ComponentIdList.fromArray(componentsToMarkDeletedInHead.map((c) => c.id));
+
+    const componentsToDeleteFromFs = range ? [] : allComponentsToMarkDeleted;
+    const componentsIdsToDeleteFromFs = ComponentIdList.fromArray(componentsToDeleteFromFs.map((c) => c.id));
     await removeComponentsFromNodeModules(
       this.workspace.consumer,
-      componentsToMarkDeletedInHead.map((c) => c.state._consumer)
+      componentsToDeleteFromFs.map((c) => c.state._consumer)
     );
     // don't use `this.workspace.addSpecificComponentConfig`, if the component has component.json it will be deleted
     // during this removal along with the entire component dir.
-    const config: RemoveInfo = { removed: true };
+    // in case this is range, the "removed" property is set to false. even when the range overlap the current version.
+    // the reason is that if we set it to true, then, the component is considered as "deleted" for *all* versions.
+    // remember that this config is always passed to the next version and if we set removed: true, it'll be copied
+    // to the next version even when that version is not in the range.
+    const config: RemoveInfo = { removed: !range };
     if (updateMain) config.removeOnMain = true;
-    componentIds.forEach((compId) => {
-      if (range) {
-        config.range = range;
-        config.removed = componentsIdsToMarkDeletedInHead.hasWithoutVersion(compId);
-      }
-      this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, config);
-    });
+    if (range) config.range = range;
+    componentIds.forEach((compId) => this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, config));
     await this.workspace.bitMap.write('delete');
-    await deleteComponentsFiles(this.workspace.consumer, componentsIdsToMarkDeletedInHead);
+    await deleteComponentsFiles(this.workspace.consumer, componentsIdsToDeleteFromFs);
 
-    return componentsToMarkDeletedInHead;
+    return componentsToDeleteFromFs;
   }
 
   async deleteComps(componentsPattern: string, opts: DeleteOpts = {}): Promise<Component[]> {

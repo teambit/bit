@@ -257,13 +257,13 @@ describe('bit delete command', function () {
       helper.command.tagAllWithoutBuild();
     });
     it('should show the component as deleted', () => {
-      const deletionData = helper.command.showComponentParsedHarmonyByTitle('comp2', 'removed');
+      const deletionData = helper.command.showComponentParsedHarmonyByTitle('comp1', 'removed');
       expect(deletionData.removed).to.be.true;
       expect(deletionData.range).to.equal('<1.0.0');
     });
     it('when the range is outside the current version it should not show as deleted', () => {
       helper.command.tagAllWithoutBuild('--ver 2.0.0 --unmodified');
-      const deletionData = helper.command.showComponentParsedHarmonyByTitle('comp2', 'removed');
+      const deletionData = helper.command.showComponentParsedHarmonyByTitle('comp1', 'removed');
       expect(deletionData.removed).to.be.false;
     });
   });
