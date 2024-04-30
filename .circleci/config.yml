@@ -895,12 +895,13 @@ jobs:
       - run: 'rm bit/node_modules/.bin/bit'
       - run:
           name: 'Run e2e tests'
-          command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs -n 1 npm run mocha-circleci'
+          command: cd bit && npm run e2e-test-circle
+          # command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs -n 1 npm run mocha-circleci'
           # command which support only - for debug purpose
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
-            NODE_OPTIONS: --no-warnings --max-old-space-size=5000
+            # NODE_OPTIONS: --no-warnings --max-old-space-size=5000
           when: always
       - store_test_results:
           path: bit/junit

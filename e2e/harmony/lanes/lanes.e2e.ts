@@ -106,8 +106,9 @@ describe('bit lane command', function () {
         helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
         helper.command.switchLocalLane('main');
         const output = helper.command.mergeLane('dev');
-        expect(output).to.have.string('removed components');
-        expect(output).to.have.string('comp1');
+        // fail this to test
+        expect(output).to.not.have.string('removed components');
+        expect(output).to.not.have.string('comp1');
       });
       it('should keep the readme component on successful merge when (--keep-readme) is set', () => {
         helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
