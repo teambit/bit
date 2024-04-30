@@ -9,7 +9,7 @@ import { Workspace } from '@teambit/workspace';
 import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
 import { TsconfigWriterOptions } from './typescript.main.runtime';
-import { TypescriptAspect } from '.';
+import { TypescriptAspect } from './typescript.aspect';
 
 export type TsconfigPathsPerEnv = { envIds: string[]; tsconfig: string; paths: string[] };
 
