@@ -245,12 +245,13 @@ make sure this argument is the name only, without the scope-name. to change the 
   private async renameAspectIdsInWorkspaceConfig(ids: RenameId[]) {
     const config = this.config.workspaceConfig;
     if (!config) throw new Error('unable to get workspace config');
-    const hasChanged = ids.some((renameId) =>
+    const wereChangesDone = ids.map((renameId) =>
       config.renameExtensionInRaw(
         renameId.sourceId.toStringWithoutVersion(),
         renameId.targetId.toStringWithoutVersion()
       )
     );
+    const hasChanged = wereChangesDone.some((isChanged) => isChanged);
     if (hasChanged) await config.write({ reasonForChange: 'rename' });
   }
   private async changeEnvsAccordingToNewIds(renameData: RenameData[]) {

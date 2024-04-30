@@ -108,32 +108,33 @@ export class WorkspaceConfig implements HostConfig {
   }
 
   renameExtensionInRaw(oldExtId: string, newExtId: string): boolean {
+    let isChanged = false;
     if (this.raw[oldExtId]) {
       this.raw[newExtId] = this.raw[oldExtId];
       delete this.raw[oldExtId];
-      return true;
+      isChanged = true;
     }
     const generatorEnvs = this.raw?.['teambit.generator/generator']?.envs;
     if (generatorEnvs && generatorEnvs.includes(oldExtId)) {
       generatorEnvs.splice(generatorEnvs.indexOf(oldExtId), 1, newExtId);
-      return true;
+      isChanged = true;
     }
-    return false;
+    return isChanged;
   }
 
   removeExtension(extId: string): boolean {
+    let isChanged = false;
     if (this.raw[extId]) {
       delete this.raw[extId];
-      this.loadExtensions();
-      return true;
+      isChanged = true;
     }
     const generatorEnvs = this.raw?.['teambit.generator/generator']?.envs;
     if (generatorEnvs && generatorEnvs.includes(extId)) {
       generatorEnvs.splice(generatorEnvs.indexOf(extId), 1);
-      this.loadExtensions();
-      return true;
+      isChanged = true;
     }
-    return false;
+    if (isChanged) this.loadExtensions();
+    return isChanged;
   }
 
   /**
