@@ -307,9 +307,11 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     if (bitmapEntry && bitmapEntry.isRecovered()) return false;
     const modelComp = await this.workspace.scope.getBitObjectModelComponent(componentId);
     if (!modelComp) return false;
-    const versionObj = await this.workspace.scope.getBitObjectVersion(modelComp, componentId.version as string);
-    if (!versionObj) return false;
-    return versionObj.isRemoved();
+    const isRemoved = await modelComp.isRemoved(
+      this.workspace.scope.legacyScope.objects,
+      componentId.version as string
+    );
+    return Boolean(isRemoved);
   }
 
   /**

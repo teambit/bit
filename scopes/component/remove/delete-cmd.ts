@@ -30,7 +30,7 @@ this command marks the components as deleted, and after snap/tag and export they
     [
       '',
       'range <string>',
-      'EXPERIMENTAL. enter a Semver range to delete specific tags. see https://www.npmjs.com/package/semver#ranges for the range syntax',
+      'EXPERIMENTAL. enter a Semver range to delete specific tags (cannot be used for snaps). see https://www.npmjs.com/package/semver#ranges for the range syntax',
     ],
     ['s', 'silent', 'skip confirmation'],
     [
