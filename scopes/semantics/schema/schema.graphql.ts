@@ -1,5 +1,5 @@
 import { ComponentFactory } from '@teambit/component';
-import { GraphQLJSONObject } from 'graphql-type-json';
+import { GraphQLJSONObject } from 'graphql-scalars';
 import { gql } from 'graphql-tag';
 import { APISchema, UnImplementedSchema } from '@teambit/semantics.entities.semantic-schema';
 import { Schema } from '@teambit/graphql';
