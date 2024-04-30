@@ -751,6 +751,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/lanes"
     },
+    "legacy-component-log": {
+        "name": "legacy-component-log",
+        "scope": "teambit.component",
+        "version": "0.0.402",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy-component-log"
+    },
     "linter": {
         "name": "linter",
         "scope": "teambit.defender",

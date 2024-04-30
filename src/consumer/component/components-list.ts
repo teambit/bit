@@ -455,7 +455,7 @@ export default class ComponentsList {
         return {
           id: component.toComponentIdWithLatestVersion(),
           deprecated: Boolean(await component.isDeprecated(scope.objects)),
-          removed: await component.isRemoved(scope.objects),
+          removed: Boolean(await component.isRemoved(scope.objects)),
           laneReadmeOf: await component.isLaneReadmeOf(scope.objects),
         };
       })
