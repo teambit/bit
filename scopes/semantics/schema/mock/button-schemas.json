@@ -714,152 +714,161 @@
         "defaultValue": "['hi', 'there']"
       },
       {
-        "__schema": "ClassSchema",
+        "__schema": "ExportSchema",
         "location": {
           "filePath": "index.ts",
-          "line": 36,
-          "character": 1
+          "line": 50,
+          "character": 10
         },
-        "signature": "class ClassSomething",
         "name": "ClassSomething",
-        "members": [
-          {
-            "__schema": "VariableLikeSchema",
-            "location": {
-              "filePath": "index.ts",
-              "line": 37,
-              "character": 3
-            },
-            "signature": "(property) ClassSomething.app: string",
-            "name": "app",
-            "type": {
-              "__schema": "InferenceTypeSchema",
+        "exportNode": {
+          "__schema": "ClassSchema",
+          "location": {
+            "filePath": "index.ts",
+            "line": 36,
+            "character": 1
+          },
+          "signature": "class ClassSomething",
+          "name": "ClassSomething",
+          "members": [
+            {
+              "__schema": "VariableLikeSchema",
               "location": {
                 "filePath": "index.ts",
                 "line": 37,
                 "character": 3
               },
-              "type": "string"
-            },
-            "isOptional": true,
-            "defaultValue": "''"
-          },
-          {
-            "__schema": "ConstructorSchema",
-            "location": {
-              "filePath": "index.ts",
-              "line": 38,
-              "character": 3
-            },
-            "signature": "constructor ClassSomething(da: 'dsa'): ClassSomething",
-            "name": "constructor",
-            "params": [
-              {
-                "__schema": "ParameterSchema",
+              "signature": "(property) ClassSomething.app: string",
+              "name": "app",
+              "type": {
+                "__schema": "InferenceTypeSchema",
                 "location": {
                   "filePath": "index.ts",
-                  "line": 38,
-                  "character": 15
+                  "line": 37,
+                  "character": 3
                 },
-                "name": "da",
-                "type": {
-                  "__schema": "LiteralTypeSchema",
+                "type": "string"
+              },
+              "isOptional": true,
+              "defaultValue": "''"
+            },
+            {
+              "__schema": "ConstructorSchema",
+              "location": {
+                "filePath": "index.ts",
+                "line": 38,
+                "character": 3
+              },
+              "signature": "constructor ClassSomething(da: 'dsa'): ClassSomething",
+              "name": "constructor",
+              "params": [
+                {
+                  "__schema": "ParameterSchema",
                   "location": {
                     "filePath": "index.ts",
                     "line": 38,
-                    "character": 28
+                    "character": 15
                   },
-                  "name": "'dsa'"
+                  "name": "da",
+                  "type": {
+                    "__schema": "LiteralTypeSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 38,
+                      "character": 28
+                    },
+                    "name": "'dsa'"
+                  },
+                  "isOptional": false,
+                  "isSpread": false
+                }
+              ],
+              "returnType": {
+                "__schema": "ThisTypeSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 36,
+                  "character": 1
                 },
-                "isOptional": false,
-                "isSpread": false
-              }
-            ],
-            "returnType": {
-              "__schema": "ThisTypeSchema",
-              "location": {
-                "filePath": "index.ts",
-                "line": 36,
-                "character": 1
+                "name": "ClassSomething"
               },
-              "name": "ClassSomething"
+              "modifiers": []
             },
-            "modifiers": []
-          },
-          {
-            "__schema": "FunctionLikeSchema",
-            "location": {
-              "filePath": "index.ts",
-              "line": 40,
-              "character": 3
-            },
-            "signature": "(method) ClassSomething.a(): Foo",
-            "name": "a",
-            "params": [],
-            "returnType": {
-              "__schema": "TypeRefSchema",
+            {
+              "__schema": "FunctionLikeSchema",
               "location": {
                 "filePath": "index.ts",
                 "line": 40,
                 "character": 3
               },
-              "name": "Foo",
-              "internalFilePath": "index.ts"
+              "signature": "(method) ClassSomething.a(): Foo",
+              "name": "a",
+              "params": [],
+              "returnType": {
+                "__schema": "TypeRefSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 40,
+                  "character": 3
+                },
+                "name": "Foo",
+                "internalFilePath": "index.ts"
+              },
+              "modifiers": []
             },
-            "modifiers": []
-          },
-          {
-            "__schema": "GetAccessorSchema",
-            "location": {
-              "filePath": "index.ts",
-              "line": 43,
-              "character": 3
-            },
-            "signature": "(getter) ClassSomething.getter: string",
-            "name": "getter",
-            "type": {
-              "__schema": "InferenceTypeSchema",
+            {
+              "__schema": "GetAccessorSchema",
               "location": {
                 "filePath": "index.ts",
                 "line": 43,
                 "character": 3
               },
-              "type": "string"
-            }
-          },
-          {
-            "__schema": "SetAccessorSchema",
-            "location": {
-              "filePath": "index.ts",
-              "line": 47,
-              "character": 3
+              "signature": "(getter) ClassSomething.getter: string",
+              "name": "getter",
+              "type": {
+                "__schema": "InferenceTypeSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 43,
+                  "character": 3
+                },
+                "type": "string"
+              }
             },
-            "signature": "(setter) ClassSomething.setter: boolean",
-            "name": "setter",
-            "param": {
-              "__schema": "ParameterSchema",
+            {
+              "__schema": "SetAccessorSchema",
               "location": {
                 "filePath": "index.ts",
                 "line": 47,
-                "character": 14
+                "character": 3
               },
-              "name": "a",
-              "type": {
-                "__schema": "KeywordTypeSchema",
+              "signature": "(setter) ClassSomething.setter: boolean",
+              "name": "setter",
+              "param": {
+                "__schema": "ParameterSchema",
                 "location": {
                   "filePath": "index.ts",
                   "line": 47,
-                  "character": 17
+                  "character": 14
                 },
-                "name": "boolean"
-              },
-              "isOptional": false,
-              "isSpread": false
+                "name": "a",
+                "type": {
+                  "__schema": "KeywordTypeSchema",
+                  "location": {
+                    "filePath": "index.ts",
+                    "line": 47,
+                    "character": 17
+                  },
+                  "name": "boolean"
+                },
+                "isOptional": false,
+                "isSpread": false
+              }
             }
-          }
-        ],
-        "extendsNodes": [],
-        "implementNodes": []
+          ],
+          "extendsNodes": [],
+          "implementNodes": []
+        }
       },
       {
         "__schema": "TypeSchema",
