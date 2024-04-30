@@ -568,7 +568,7 @@ to write the components from .bitmap file according to the their remote, please 
       };
       const filesStatus = this.mergeStatus && this.mergeStatus[idStr] ? this.mergeStatus[idStr] : null;
       const deprecated = Boolean(await modelComponent.isDeprecated(this.scope.objects, id.version));
-      const removed = await component.component.component.isRemoved(this.scope.objects);
+      const removed = Boolean(await component.component.component.isRemoved(this.scope.objects, id.version));
       const latestVersion = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
       return {
         id: idStr,

@@ -198,6 +198,8 @@ export class Component implements IComponent {
 
   /**
    * whether a component is marked as deleted.
+   * warning! if this component is not the head, it might be deleted by a range later on.
+   * to get accurate results, please use teambit.component/remove aspect, "isDeleted" method.
    */
   isDeleted(): boolean {
     return this.state._consumer.isRemoved();

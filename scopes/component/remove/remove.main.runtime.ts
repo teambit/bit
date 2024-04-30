@@ -1,4 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import semver from 'semver';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -22,6 +23,7 @@ import { RemoveAspect } from './remove.aspect';
 import { RemoveFragment } from './remove.fragment';
 import { RecoverCmd, RecoverOptions } from './recover-cmd';
 import { DeleteCmd } from './delete-cmd';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 
 const BEFORE_REMOVE = 'removing components';
 
@@ -31,11 +33,18 @@ export type RemoveInfo = {
    * whether to remove the component from default lane once merged
    */
   removeOnMain?: boolean;
+  /**
+   * Semver range to mark specific versions as deleted
+   */
+  range?: string;
 };
+
+export type DeleteOpts = { updateMain?: boolean; range?: string };
 
 export class RemoveMain {
   constructor(
     private workspace: Workspace,
+    private scope: ScopeMain,
     public logger: Logger,
     private importer: ImporterMain,
     private depResolver: DependencyResolverMain
@@ -93,25 +102,39 @@ export class RemoveMain {
     return results;
   }
 
-  private async markRemoveComps(componentIds: ComponentID[], shouldUpdateMain = false): Promise<Component[]> {
-    const components = await this.workspace.getMany(componentIds);
+  private async markRemoveComps(componentIds: ComponentID[], { updateMain, range }: DeleteOpts): Promise<Component[]> {
+    const allComponentsToMarkDeleted = await this.workspace.getMany(componentIds);
+    const getComps = async () => {
+      if (!range) return allComponentsToMarkDeleted;
+      return allComponentsToMarkDeleted.filter((comp) => {
+        const currentTag = comp.getTag();
+        return Boolean(currentTag && semver.satisfies(currentTag.version, range));
+      });
+    };
+    const componentsToMarkDeletedInHead = await getComps();
+    const componentsIdsToMarkDeletedInHead = ComponentIdList.fromArray(componentsToMarkDeletedInHead.map((c) => c.id));
     await removeComponentsFromNodeModules(
       this.workspace.consumer,
-      components.map((c) => c.state._consumer)
+      componentsToMarkDeletedInHead.map((c) => c.state._consumer)
     );
     // don't use `this.workspace.addSpecificComponentConfig`, if the component has component.json it will be deleted
     // during this removal along with the entire component dir.
     const config: RemoveInfo = { removed: true };
-    if (shouldUpdateMain) config.removeOnMain = true;
-    componentIds.map((compId) => this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, config));
+    if (updateMain) config.removeOnMain = true;
+    componentIds.forEach((compId) => {
+      if (range) {
+        config.range = range;
+        config.removed = componentsIdsToMarkDeletedInHead.hasWithoutVersion(compId);
+      }
+      this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, config);
+    });
     await this.workspace.bitMap.write('delete');
-    const bitIds = ComponentIdList.fromArray(componentIds);
-    await deleteComponentsFiles(this.workspace.consumer, bitIds);
+    await deleteComponentsFiles(this.workspace.consumer, componentsIdsToMarkDeletedInHead);
 
-    return components;
+    return componentsToMarkDeletedInHead;
   }
 
-  async deleteComps(componentsPattern: string, opts: { updateMain?: boolean } = {}): Promise<Component[]> {
+  async deleteComps(componentsPattern: string, opts: DeleteOpts = {}): Promise<Component[]> {
     if (!this.workspace) throw new ConsumerNotFound();
     const componentIds = await this.workspace.idsByPattern(componentsPattern);
     const newComps = componentIds.filter((id) => !id.hasVersion());
@@ -129,8 +152,11 @@ export class RemoveMain {
         'no need to delete components from an un-exported lane, you can remove them by running "bit remove"'
       );
     }
+    if (currentLane && !updateMain && opts.range) {
+      throw new BitError(`--range is not needed when deleting components from a lane, unless --update-main is used`);
+    }
 
-    return this.markRemoveComps(componentIds, updateMain);
+    return this.markRemoveComps(componentIds, opts);
   }
 
   /**
@@ -181,7 +207,8 @@ export class RemoveMain {
       // case #4
       const compId = bitMapEntry.id;
       const comp = await this.workspace.get(compId);
-      if (!this.isRemoved(comp)) {
+      const removeInfo = await this.getRemoveInfo(comp);
+      if (!removeInfo.removed && !removeInfo.range) {
         return false;
       }
       await setAsRemovedFalse(compId);
@@ -192,7 +219,7 @@ export class RemoveMain {
     const idOnLane = currentLane?.getComponent(compId);
     const compIdWithPossibleVer = idOnLane ? compId.changeVersion(idOnLane.head.toString()) : compId;
     const compFromScope = await this.workspace.scope.get(compIdWithPossibleVer);
-    if (compFromScope && this.isRemoved(compFromScope)) {
+    if (compFromScope && (await this.isDeleted(compFromScope))) {
       // case #2 and #3
       await importComp(compIdWithPossibleVer._legacy.toString());
       await setAsRemovedFalse(compIdWithPossibleVer);
@@ -210,7 +237,7 @@ export class RemoveMain {
       }
       throw err;
     }
-    if (!this.isRemoved(comp)) {
+    if (!(await this.isDeleted(comp))) {
       return false;
     }
     await importComp(compId._legacy.toString());
@@ -230,15 +257,51 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     }
   }
 
-  getRemoveInfo(component: Component): RemoveInfo {
-    const data = component.config.extensions.findExtension(RemoveAspect.id)?.config as RemoveInfo | undefined;
+  async getRemoveInfo(component: Component): Promise<RemoveInfo> {
+    const headComponent = await this.getHeadComponent(component);
+    const data = headComponent.config.extensions.findExtension(RemoveAspect.id)?.config as RemoveInfo | undefined;
+
+    const isDeletedByRange = () => {
+      if (!data?.range) return false;
+      const currentTag = component.getTag();
+      return Boolean(currentTag && semver.satisfies(currentTag.version, data.range));
+    };
+
     return {
-      removed: data?.removed || false,
+      removed: data?.removed || isDeletedByRange() || false,
+      range: data?.range,
     };
   }
 
-  isRemoved(component: Component): boolean {
-    return this.getRemoveInfo(component).removed;
+  private async getHeadComponent(component: Component): Promise<Component> {
+    if (
+      component.id.version &&
+      component.head &&
+      component.id.version !== component.head?.hash &&
+      component.id.version !== component.headTag?.version.version
+    ) {
+      const headComp = this.workspace // if workspace exits, prefer using the workspace as it may be modified
+        ? await this.workspace.get(component.id.changeVersion(undefined))
+        : await this.scope.get(component.id.changeVersion(component.head.hash));
+      if (!headComp) throw new Error(`unable to get the head of ${component.id.toString()}`);
+      return headComp;
+    }
+    return component;
+  }
+
+  /**
+   * @deprecated use `isDeleted` instead.
+   */
+  async isRemoved(component: Component): Promise<boolean> {
+    return this.isDeleted(component);
+  }
+
+  /**
+   * whether a component is marked as deleted.
+   */
+  async isDeleted(component: Component): Promise<boolean> {
+    const removeInfo = await this.getRemoveInfo(component);
+    return removeInfo.removed;
   }
 
   /**
@@ -302,7 +365,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     );
     if (!laneCompIdsNotInWorkspace.length) return [];
     const comps = await this.workspace.scope.getMany(laneCompIdsNotInWorkspace);
-    const removed = comps.filter((c) => this.isRemoved(c));
+    const removed = comps.filter((c) => this.isDeleted(c));
     const staged = await Promise.all(
       removed.map(async (c) => {
         const snapDistance = await this.workspace.scope.getSnapDistance(c.id, false);
@@ -335,6 +398,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
   static slots = [];
   static dependencies = [
     WorkspaceAspect,
+    ScopeAspect,
     CLIAspect,
     LoggerAspect,
     ComponentAspect,
@@ -344,8 +408,9 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
   ];
   static runtime = MainRuntime;
 
-  static async provider([workspace, cli, loggerMain, componentAspect, importerMain, depResolver, issues]: [
+  static async provider([workspace, scope, cli, loggerMain, componentAspect, importerMain, depResolver, issues]: [
     Workspace,
+    ScopeMain,
     CLIMain,
     LoggerMain,
     ComponentMain,
@@ -354,7 +419,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     IssuesMain
   ]) {
     const logger = loggerMain.createLogger(RemoveAspect.id);
-    const removeMain = new RemoveMain(workspace, logger, importerMain, depResolver);
+    const removeMain = new RemoveMain(workspace, scope, logger, importerMain, depResolver);
     issues.registerAddComponentsIssues(removeMain.addRemovedDependenciesIssues.bind(removeMain));
     componentAspect.registerShowFragments([new RemoveFragment(removeMain)]);
     cli.register(
