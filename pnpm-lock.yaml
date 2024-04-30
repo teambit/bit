@@ -2449,21 +2449,12 @@ importers:
       '@teambit/component-id':
         specifier: ^1.2.0
         version: 1.2.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
     devDependencies:
       '@babel/runtime':
         specifier: 7.20.0
         version: 7.20.0
       '@types/jest':
-        specifier: ^26.0.0
+        specifier: 26.0.20
         version: 26.0.20
       '@types/mocha':
         specifier: 9.1.0
@@ -2471,15 +2462,6 @@ importers:
       '@types/node':
         specifier: 12.20.4
         version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.75
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.25
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
 
   components/modules/harmony-root-generator:
     dependencies:
@@ -71679,9 +71661,6 @@ packages:
     resolution: {directory: components/models/api-reference-model, type: directory}
     id: file:components/models/api-reference-model
     name: '@teambit/api-reference.models.api-reference-model'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': file:components/models/api-node-renderer(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 1.2.0
@@ -71689,6 +71668,9 @@ packages:
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - react
+      - react-dom
     dev: false
 
   file:components/modules/harmony-root-generator:
