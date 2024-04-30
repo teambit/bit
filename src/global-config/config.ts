@@ -4,7 +4,7 @@ import * as path from 'path';
 import { GLOBAL_CONFIG, GLOBAL_CONFIG_FILE } from '../constants';
 import { mapToObject } from '../utils';
 
-function getPath() {
+export function getGlobalConfigPath() {
   return path.join(GLOBAL_CONFIG, GLOBAL_CONFIG_FILE);
 }
 
@@ -18,15 +18,15 @@ export default class Config extends Map<string, string> {
   }
 
   write() {
-    return fs.outputFile(getPath(), this.toJson());
+    return fs.outputFile(getGlobalConfigPath(), this.toJson());
   }
 
   writeSync() {
-    return fs.outputFileSync(getPath(), this.toJson());
+    return fs.outputFileSync(getGlobalConfigPath(), this.toJson());
   }
 
   static loadSync(): Config {
-    const configPath = getPath();
+    const configPath = getGlobalConfigPath();
     if (!fs.existsSync(configPath)) {
       const config = new Config([]);
       config.writeSync();
@@ -37,7 +37,7 @@ export default class Config extends Map<string, string> {
   }
 
   static async load(): Promise<Config> {
-    const configPath = getPath();
+    const configPath = getGlobalConfigPath();
     const exists = await fs.pathExists(configPath);
     if (!exists) {
       const config = new Config([]);

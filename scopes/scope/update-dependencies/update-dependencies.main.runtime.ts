@@ -184,7 +184,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
 
   private async addComponentsToScope() {
     await mapSeries(this.legacyComponents, (component) =>
-      this.snapping._addCompFromScopeToObjects(component, this.laneObj || null)
+      this.snapping._addCompFromScopeToObjects(component, this.laneObj)
     );
   }
 

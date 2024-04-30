@@ -10,6 +10,7 @@ import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { Workspace } from '@teambit/workspace';
 import { compact } from 'lodash';
 import { getBitCloudUser } from '@teambit/legacy/dist/utils/bit/get-cloud-user';
+import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 
 const MAX_LANE_NAME_LENGTH = 800;
 
@@ -28,6 +29,9 @@ export async function createLane(
   }
   const bitCloudUser = await getBitCloudUser();
   throwForInvalidLaneName(laneName);
+  if (!isValidScopeName(scopeName)) {
+    throw new InvalidScopeName(scopeName);
+  }
   await throwForStagedComponents(consumer);
   const getDataToPopulateLaneObjectIfNeeded = async (): Promise<LaneComponent[]> => {
     if (remoteLane) return remoteLane.components;

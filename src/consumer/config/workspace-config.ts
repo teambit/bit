@@ -49,11 +49,6 @@ export default class WorkspaceConfig extends AbstractConfig {
   packageJsonObject: Record<string, any> | null | undefined; // workspace package.json if exists (parsed)
   defaultScope: string | undefined; // default remote scope to export to
 
-  static workspaceConfigIsExistRegistry: WorkspaceConfigIsExistFunction;
-  static registerOnWorkspaceConfigIsExist(func: WorkspaceConfigIsExistFunction) {
-    this.workspaceConfigIsExistRegistry = func;
-  }
-
   static workspaceConfigLoadingRegistry: WorkspaceConfigLoadFunction;
   static registerOnWorkspaceConfigLoading(func: WorkspaceConfigLoadFunction) {
     this.workspaceConfigLoadingRegistry = func;
@@ -150,14 +145,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     const loadFunc = this.workspaceConfigLoadingRegistry;
     if (loadFunc && typeof loadFunc === 'function') {
       return loadFunc(dirPath, scopePath);
-    }
-    return undefined;
-  }
-
-  static async isExist(dirPath: string): Promise<boolean | undefined> {
-    const isExistFunc = this.workspaceConfigIsExistRegistry;
-    if (isExistFunc && typeof isExistFunc === 'function') {
-      return isExistFunc(dirPath);
     }
     return undefined;
   }

@@ -323,7 +323,7 @@ export default class Component extends BitObject {
     });
   }
 
-  async populateLocalAndRemoteHeads(repo: Repository, lane: Lane | null) {
+  async populateLocalAndRemoteHeads(repo: Repository, lane?: Lane) {
     this.setLaneHeadLocal(lane);
     if (lane) this.laneId = lane.toLaneId();
     if (!this.scope) {
@@ -351,7 +351,7 @@ export default class Component extends BitObject {
     this.calculatedRemoteHeadWhenOnLane = await calculateRemote();
   }
 
-  setLaneHeadLocal(lane: Lane | null) {
+  setLaneHeadLocal(lane?: Lane) {
     if (lane) {
       this.laneHeadLocal = lane.getComponentHead(this.toComponentId());
     }
@@ -622,7 +622,7 @@ export default class Component extends BitObject {
   addVersion(
     version: Version,
     versionToAdd: string,
-    lane: Lane | null,
+    lane?: Lane,
     previouslyUsedVersion?: string,
     addToUpdateDependentsInLane = false
   ): string {

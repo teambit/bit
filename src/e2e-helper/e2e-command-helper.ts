@@ -530,6 +530,9 @@ export default class CommandHelper {
   fetchLane(id: string) {
     return this.runCmd(`bit fetch ${id} --lanes`);
   }
+  ejectFromLane(id: string) {
+    return this.runCmd(`bit lane eject ${id}`);
+  }
   fetchRemoteLane(id: string) {
     return this.runCmd(`bit fetch ${this.scopes.remote}${LANE_REMOTE_DELIMITER}${id} --lanes`);
   }

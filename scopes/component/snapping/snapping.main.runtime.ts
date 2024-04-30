@@ -519,7 +519,7 @@ if you're willing to lose the history from the head to the specified version, us
         ids,
         idsWithFutureScope: ids,
         allVersions: false,
-        laneObject: updatedLane || undefined,
+        laneObject: updatedLane,
         // no need other snaps. only the latest one. without this option, when snapping on lane from another-scope, it
         // may throw an error saying the previous snaps don't exist on the filesystem.
         // (see the e2e - "snap on a lane when the component is new to the lane and the scope")
@@ -731,18 +731,14 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     const lane = await getLane();
 
     if (rebuildDepsGraph) {
-      const flattenedDependenciesGetter = new FlattenedDependenciesGetter(
-        this.scope.legacyScope,
-        components,
-        lane || undefined
-      );
+      const flattenedDependenciesGetter = new FlattenedDependenciesGetter(this.scope.legacyScope, components, lane);
       await flattenedDependenciesGetter.populateFlattenedDependencies();
       loader.stop();
       await this._addFlattenedDepsGraphToComponents(components);
       return;
     }
 
-    const flattenedEdgesGetter = new FlattenedEdgesGetter(this.scope, components, this.logger, lane || undefined);
+    const flattenedEdgesGetter = new FlattenedEdgesGetter(this.scope, components, this.logger, lane);
     await flattenedEdgesGetter.buildGraph();
 
     components.forEach((component) => {
@@ -755,7 +751,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     const lane = await this.scope.legacyScope.getCurrentLaneObject();
     const allIds = ComponentIdList.fromArray(components.map((c) => c.id));
     const missingDeps = await pMapSeries(components, async (component) => {
-      return this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined);
+      return this.throwForDepsFromAnotherLaneForComp(component, allIds, lane);
     });
     const flattenedMissingDeps = ComponentIdList.uniqFromArray(
       missingDeps.flat().map((id) => id.changeVersion(undefined))
@@ -767,11 +763,11 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       cache: false,
       ignoreMissingHead: true,
       includeVersionHistory: true,
-      lane: lane || undefined,
+      lane,
       reason: 'of latest with version-history to make sure there are no dependencies from another lane',
     });
     await pMapSeries(components, async (component) => {
-      await this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined, true);
+      await this.throwForDepsFromAnotherLaneForComp(component, allIds, lane, true);
     });
   }
 
@@ -927,7 +923,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     updateDependentsOnLane = false,
   }: {
     source: ConsumerComponent;
-    lane: Lane | null;
+    lane?: Lane;
     shouldValidateVersion?: boolean;
     updateDependentsOnLane?: boolean;
   }): Promise<{
@@ -972,7 +968,7 @@ another option, in case this dependency is not in main yet is to remove all refe
 
   async _addCompFromScopeToObjects(
     source: ConsumerComponent,
-    lane: Lane | null,
+    lane?: Lane,
     updateDependentsOnLane = false
   ): Promise<{
     component: ModelComponent;
