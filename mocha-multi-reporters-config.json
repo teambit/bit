@@ -8,7 +8,7 @@
       "json": true
     },
     "mochaJunitReporterReporterOptions": {
-      "mochaFile": "junit/unit-test-results.xml"
+      "mochaFile": "${MOCHA_FILE}"
     }
   }
   
