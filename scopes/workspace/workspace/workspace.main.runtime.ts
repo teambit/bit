@@ -262,12 +262,14 @@ export class WorkspaceMain {
     component.registerHost(workspace);
 
     // mini-status should be super fast. login/logout don't need loading aspects
-    const commandsToSkipLoadingAspects = ['mini-status', 'ms', 'login', 'logout'];
+    // const commandsToSkipLoadingAspects = ['mini-status', 'ms', 'login', 'logout'];
+    const commandsToLoadAspects = ['app', 'run'];
 
     cli.registerOnStart(async (_hasWorkspace: boolean, currentCommand: string) => {
-      if (commandsToSkipLoadingAspects.includes(currentCommand)) {
+      if (!commandsToLoadAspects.includes(currentCommand)) {
         return;
       }
+      logger.profile('workspace.registerOnStart');
       if (currentCommand === 'install') {
         workspace.inInstallContext = true;
       }
@@ -287,6 +289,7 @@ export class WorkspaceMain {
       componentIds.forEach((id) => {
         workspace.clearComponentCache(id);
       });
+      logger.profile('workspace.registerOnStart');
     });
 
     // add sub-commands "set" and "unset" to envs command.
