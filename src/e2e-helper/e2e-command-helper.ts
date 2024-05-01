@@ -838,6 +838,9 @@ export default class CommandHelper {
   runApp(name: string) {
     return this.runCmd(`bit app run ${name}`);
   }
+  listApps() {
+    return this.runCmd(`bit app list`);
+  }
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
   }

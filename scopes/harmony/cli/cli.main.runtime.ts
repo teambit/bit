@@ -10,14 +10,14 @@ import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { getCommandId } from './get-command-id';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
-import { CLIParser } from './cli-parser';
+import { CLIParser, findCommandByArgv } from './cli-parser';
 import { CompletionCmd } from './completion.cmd';
 import { CliCmd, CliGenerateCmd } from './cli.cmd';
 import { HelpCmd } from './help.cmd';
 import { VersionCmd } from './version.cmd';
 
 export type CommandList = Array<Command>;
-export type OnStart = (hasWorkspace: boolean, currentCommand: string) => Promise<void>;
+export type OnStart = (hasWorkspace: boolean, currentCommand: string, commandObject?: Command) => Promise<void>;
 export type OnCommandStart = (commandName: string, args: CLIArgs, flags: Flags) => Promise<void>;
 export type OnBeforeExitFn = () => Promise<void>;
 
@@ -138,8 +138,9 @@ export class CLIMain {
 
   private async invokeOnStart(hasWorkspace: boolean) {
     const onStartFns = this.onStartSlot.values();
-    const currentCommand = process.argv[2];
-    await pMapSeries(onStartFns, (onStart) => onStart(hasWorkspace, currentCommand));
+    const foundCmd = findCommandByArgv(this.commands);
+    const currentCommandName = process.argv[2];
+    await pMapSeries(onStartFns, (onStart) => onStart(hasWorkspace, currentCommandName, foundCmd));
   }
 
   private setDefaults(command: Command) {

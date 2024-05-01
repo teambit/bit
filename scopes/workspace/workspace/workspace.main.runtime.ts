@@ -1,7 +1,7 @@
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
-import { CLIAspect, MainRuntime, CLIMain, CommandList } from '@teambit/cli';
+import { CLIAspect, MainRuntime, CLIMain, CommandList, Command } from '@teambit/cli';
 import { ComponentAspect } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -263,17 +263,17 @@ export class WorkspaceMain {
 
     // mini-status should be super fast. login/logout don't need loading aspects
     // const commandsToSkipLoadingAspects = ['mini-status', 'ms', 'login', 'logout'];
-    const commandsToLoadAspects = ['app', 'run'];
+    // const commandsToLoadAspects = ['app', 'run'];
 
-    cli.registerOnStart(async (_hasWorkspace: boolean, currentCommand: string) => {
-      if (!commandsToLoadAspects.includes(currentCommand)) {
-        return;
-      }
-      logger.profile('workspace.registerOnStart');
+    cli.registerOnStart(async (_hasWorkspace: boolean, currentCommand: string, commandObject?: Command) => {
       if (currentCommand === 'install') {
         workspace.inInstallContext = true;
       }
       await workspace.importCurrentLaneIfMissing();
+      if (commandObject && !commandObject.loadAspects) {
+        return;
+      }
+      logger.profile('workspace.registerOnStart');
       const loadAspectsOpts = {
         runSubscribers: false,
         skipDeps: !config.autoLoadAspectsDeps,
