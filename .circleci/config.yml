@@ -395,6 +395,7 @@ jobs:
           name: 'Run unit tests'
           command: 'cd bit && npm run test-circle'
           environment:
+            FORCE_COLOR: 1
             MOCHA_FILE: junit/unit-test-results.xml
           when: always
       - store_test_results:

@@ -1,6 +1,6 @@
 {
     "reporterEnabled": "spec, mocha-junit-reporter",
-    "mochaJunitReporterReporterOptions": {
+    "mochaJunitReporterOptions": {
         "mochaFile": "junit/unit-test-results.xml"
     },
     "specReporterOptions": {
