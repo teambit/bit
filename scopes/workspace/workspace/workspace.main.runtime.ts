@@ -38,6 +38,7 @@ import { EnvsReplaceCmd } from './envs-subcommands/envs-replace.cmd';
 import { ScopeSetCmd } from './scope-subcommands/scope-set.cmd';
 import { UseCmd } from './use.cmd';
 import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
+import { UnuseCmd } from './unuse.cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -255,7 +256,12 @@ export class WorkspaceMain {
     });
     graphql.register(workspaceSchema);
     const capsuleCmd = getCapsulesCommands(isolator, scope, workspace);
-    const commands: CommandList = [new EjectConfCmd(workspace), capsuleCmd, new UseCmd(workspace)];
+    const commands: CommandList = [
+      new EjectConfCmd(workspace),
+      capsuleCmd,
+      new UseCmd(workspace),
+      new UnuseCmd(workspace),
+    ];
 
     commands.push(new PatternCommand(workspace));
     cli.register(...commands);
