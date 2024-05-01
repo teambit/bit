@@ -236,7 +236,6 @@ export const IGNORE_LIST = [
   '**/.env.**.local',
   '**/.bit.map.json',
   '**/.bitmap',
-  '**/.gitignore',
   '**/bit.json',
   '**/component.json',
   '**/bitBindings.js',
