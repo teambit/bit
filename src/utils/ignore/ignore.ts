@@ -7,7 +7,7 @@ import { GIT_IGNORE, IGNORE_LIST } from '../../constants';
 
 export const BIT_IGNORE = '.bitignore';
 
-async function getGitIgnoreFile(dir: string): Promise<string[]> {
+export async function getGitIgnoreFile(dir: string): Promise<string[]> {
   const gitIgnoreFile = findUp.sync([GIT_IGNORE], { cwd: dir });
   return gitIgnoreFile ? gitignore(await fs.readFile(gitIgnoreFile)) : [];
 }
