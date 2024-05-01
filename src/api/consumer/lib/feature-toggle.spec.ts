@@ -17,8 +17,7 @@ describe('featureToggle', () => {
   describe('addFeature', () => {
     it('should add feature', () => {
       addFeature('add1');
-      // fail this to check how it reports
-      expect(isFeatureEnabled('add1')).to.be.false;
+      expect(isFeatureEnabled('add1')).to.be.true;
     });
     it('should add feature to existing features', () => {
       process.env[ENV_VAR_FEATURE_TOGGLE] = 'feature1, feature2';
