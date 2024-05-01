@@ -1,14 +1,10 @@
 {
-    "reporterEnabled": "mochawesome, mocha-junit-reporter",
-    "mochawesomeReporterOptions": {
-      "reportDir": "mocha_reports",
-      "quiet": true,
-      "reportFilename": "mochawesome-report",
-      "html": false,
-      "json": true
-    },
+    "reporterEnabled": "spec, mocha-junit-reporter",
     "mochaJunitReporterReporterOptions": {
-      "mochaFile": "${MOCHA_FILE}"
-    }
+        "mochaFile": "junit/unit-test-results.xml"
+    },
+    "specReporterOptions": {
+        "colors": true
+    }    
   }
   
