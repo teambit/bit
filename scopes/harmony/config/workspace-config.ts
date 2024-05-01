@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
@@ -122,10 +123,12 @@ export class WorkspaceConfig implements HostConfig {
     return isChanged;
   }
 
-  removeExtension(extId: string): boolean {
+  removeExtension(extCompId: ComponentID): boolean {
+    const extId = extCompId.toStringWithoutVersion();
     let isChanged = false;
-    if (this.raw[extId]) {
-      delete this.raw[extId];
+    const existingKey = this.getExistingKeyIgnoreVersion(extCompId);
+    if (existingKey) {
+      delete this.raw[existingKey];
       isChanged = true;
     }
     const generatorEnvs = this.raw?.['teambit.generator/generator']?.envs;
@@ -135,6 +138,13 @@ export class WorkspaceConfig implements HostConfig {
     }
     if (isChanged) this.loadExtensions();
     return isChanged;
+  }
+
+  getExistingKeyIgnoreVersion(id: ComponentID): string | undefined {
+    const idStr = id.toStringWithoutVersion();
+    if (this.raw[idStr]) return idStr;
+    const keys = Object.keys(this.raw);
+    return keys.find((key) => key.startsWith(`${idStr}@`));
   }
 
   /**
