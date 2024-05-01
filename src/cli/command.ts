@@ -90,6 +90,11 @@ export interface Command {
   examples?: Example[];
 
   /**
+   * whether to load aspects set in workspace.jsonc before running the command.
+   */
+  loadAspects?: boolean;
+
+  /**
    * do not set this. it is being set once the command run.
    * the values are those followed `--` in the command line. (e.g. `bit import -- --no-optional`)
    */
