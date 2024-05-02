@@ -155,6 +155,9 @@ export class CLIMain {
     if (command.loader === undefined) {
       command.loader = true;
     }
+    if (command.loadAspects === undefined) {
+      command.loadAspects = true;
+    }
     if (command.helpUrl && !isFullUrl(command.helpUrl)) {
       command.helpUrl = `https://bit.dev/${command.helpUrl}`;
     }

@@ -91,6 +91,7 @@ export interface Command {
 
   /**
    * whether to load aspects set in workspace.jsonc before running the command.
+   * default is true.
    */
   loadAspects?: boolean;
 
