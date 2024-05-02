@@ -272,6 +272,7 @@ export class CloudMain {
           const { clientId: clientIdFromReq, redirectUri, username: usernameFromReq } = req.query;
           const username = typeof usernameFromReq === 'string' ? usernameFromReq : undefined;
           let { token } = req.query;
+
           if (Array.isArray(token)) {
             token = token[0];
           }

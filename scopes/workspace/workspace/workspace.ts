@@ -816,6 +816,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     });
 
     await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
+
     return results;
   }
 

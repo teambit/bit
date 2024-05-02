@@ -1,9 +1,9 @@
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql } from '@apollo/client';
+import { useQuery as useDataQuery, DocumentNode } from '@apollo/client';
+import { gql } from 'graphql-tag';
 
 import { ComponentHostModel } from './component-host-model';
 
-const COMPONENT_HOST = gql`
+const COMPONENT_HOST: DocumentNode = gql`
   {
     getHost {
       id # used for GQL caching

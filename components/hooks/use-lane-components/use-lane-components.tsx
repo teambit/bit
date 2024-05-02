@@ -1,11 +1,11 @@
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql } from '@apollo/client';
+import { useQuery as useDataQuery, DocumentNode } from '@apollo/client';
+import { gql } from 'graphql-tag';
 import { ComponentID, ComponentModel, componentOverviewFields } from '@teambit/component';
 import { LaneId } from '@teambit/lane-id';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { compact } from 'lodash';
 
-const GET_LANE_COMPONENTS = gql`
+const GET_LANE_COMPONENTS: DocumentNode = gql`
   query LaneComponent($ids: [String!], $extensionId: String, $skipList: Boolean!) {
     lanes {
       id

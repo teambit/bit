@@ -1,9 +1,11 @@
 import React, { ReactNode } from 'react';
+import { createClient } from 'graphql-ws';
+import { print } from 'graphql';
+import { Observable } from '@apollo/client/utilities';
+import { FetchResult } from '@apollo/client/core';
 import { UIRuntime } from '@teambit/ui';
-
-import { InMemoryCache, ApolloClient, ApolloLink, HttpLink, createHttpLink } from '@apollo/client';
+import { InMemoryCache, ApolloClient, createHttpLink, ApolloLink } from '@apollo/client';
 import type { NormalizedCacheObject } from '@apollo/client';
-import { WebSocketLink } from '@apollo/client/link/ws';
 import { onError } from '@apollo/client/link/error';
 
 import crossFetch from 'cross-fetch';
@@ -59,18 +61,39 @@ export class GraphqlUI {
 
   private createCache({ state }: { state?: NormalizedCacheObject } = {}) {
     const cache = new InMemoryCache();
-
     if (state) cache.restore(state);
-
     return cache;
   }
 
   private createLink(uri: string, { subscriptionUri }: { subscriptionUri?: string } = {}) {
-    const httpLink = new HttpLink({ credentials: 'include', uri });
+    const httpLink = createHttpLink({
+      credentials: 'include',
+      uri,
+      fetch: crossFetch,
+    });
+    const wsClient = subscriptionUri ? createClient({ url: subscriptionUri }) : undefined;
+
     const subsLink = subscriptionUri
-      ? new WebSocketLink({
-          uri: subscriptionUri,
-          options: { reconnect: true },
+      ? new ApolloLink((operation) => {
+          const observable = new Observable<FetchResult>((observer) => {
+            const { variables } = operation;
+            const query = print(operation.query);
+
+            const dispose = wsClient?.subscribe(
+              { query, variables },
+              {
+                next: ({ data }) => observer.next({ data }),
+                error: (error) => observer.error(error),
+                complete: () => observer.complete(),
+              }
+            );
+
+            return () => {
+              dispose?.();
+            };
+          });
+
+          return observable;
         })
       : undefined;
 

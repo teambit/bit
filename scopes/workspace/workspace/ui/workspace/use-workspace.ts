@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from 'react';
 import { ComponentModel } from '@teambit/component';
 import useLatest from '@react-hook/latest';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql } from '@apollo/client';
+import { gql } from 'graphql-tag';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import { useQuery, DocumentNode } from '@apollo/client';
 
 import { Workspace } from './workspace-model';
 
@@ -14,7 +14,7 @@ type UseWorkspaceOptions = {
 };
 type RawComponent = { id: ComponentIdObj };
 
-const wcComponentFields = gql`
+const wcComponentFields: DocumentNode = gql`
   fragment wcComponentFields on Component {
     id {
       name
@@ -55,18 +55,18 @@ const wcComponentFields = gql`
       isDeprecate
       newId
     }
-    server {
-      env
-      url
-    }
     env {
       id
       icon
     }
+    server {
+      env
+      url
+    }
   }
 `;
 
-const WORKSPACE = gql`
+const WORKSPACE: DocumentNode = gql`
   query workspace {
     workspace {
       name
@@ -80,7 +80,7 @@ const WORKSPACE = gql`
   ${wcComponentFields}
 `;
 
-const COMPONENT_SUBSCRIPTION_ADDED = gql`
+const COMPONENT_SUBSCRIPTION_ADDED: DocumentNode = gql`
   subscription OnComponentAdded {
     componentAdded {
       component {
@@ -91,7 +91,7 @@ const COMPONENT_SUBSCRIPTION_ADDED = gql`
   ${wcComponentFields}
 `;
 
-const COMPONENT_SUBSCRIPTION_CHANGED = gql`
+const COMPONENT_SUBSCRIPTION_CHANGED: DocumentNode = gql`
   subscription OnComponentChanged {
     componentChanged {
       component {
@@ -102,7 +102,7 @@ const COMPONENT_SUBSCRIPTION_CHANGED = gql`
   ${wcComponentFields}
 `;
 
-const COMPONENT_SUBSCRIPTION_REMOVED = gql`
+const COMPONENT_SUBSCRIPTION_REMOVED: DocumentNode = gql`
   subscription OnComponentRemoved {
     componentRemoved {
       componentIds {
@@ -115,7 +115,7 @@ const COMPONENT_SUBSCRIPTION_REMOVED = gql`
 `;
 
 export function useWorkspace(options: UseWorkspaceOptions = {}) {
-  const { data, subscribeToMore, ...rest } = useDataQuery(WORKSPACE);
+  const { data, subscribeToMore, ...rest } = useQuery(WORKSPACE);
   const optionsRef = useLatest(options);
 
   useEffect(() => {
@@ -148,6 +148,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
       document: COMPONENT_SUBSCRIPTION_CHANGED,
       updateQuery: (prev, { subscriptionData }) => {
         const update = subscriptionData.data;
+
         if (!update) return prev;
 
         const updatedComponent = update.componentChanged.component;
@@ -169,7 +170,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     const unSubCompRemoved = subscribeToMore({
       document: COMPONENT_SUBSCRIPTION_REMOVED,
       updateQuery: (prev, { subscriptionData }) => {
-        const idsToRemove: ComponentIdObj[] | undefined = subscriptionData.data?.componentRemoved?.componentIds;
+        const idsToRemove: ComponentIdObj[] | undefined = subscriptionData?.data?.componentRemoved?.componentIds;
         if (!idsToRemove || idsToRemove.length === 0) return prev;
 
         // side effect - trigger observers
