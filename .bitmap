@@ -1060,9 +1060,9 @@
         "mainFile": "index.ts",
         "rootDir": "components/package-json-validator",
         "config": {
-            "bitdev.node/node-env@2.0.2": {},
+            "teambit.harmony/node": {},
             "teambit.envs/envs": {
-                "env": "bitdev.node/node-env"
+                "env": "teambit.harmony/node"
             }
         }
     },
