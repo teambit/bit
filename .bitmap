@@ -1052,6 +1052,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/grouped-schema-nodes-overview-summary"
     },
+    "package-json-validator": {
+        "name": "package-json-validator",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "components/package-json-validator",
+        "config": {
+            "bitdev.node/node-env@2.0.2": {},
+            "teambit.envs/envs": {
+                "env": "bitdev.node/node-env"
+            }
+        }
+    },
     "panels": {
         "name": "panels",
         "scope": "teambit.ui-foundation",

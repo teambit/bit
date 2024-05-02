@@ -1,4 +1,4 @@
-import { PJV } from 'package-json-validator';
+import { PackageJsonValidator as PJV } from '@teambit/package-json-validator';
 import R from 'ramda';
 import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
@@ -227,7 +227,7 @@ ${duplicationStr}`);
   }
   const npmSpecs = PJV.getSpecMap('npm');
   const validatePackageJsonField = (fieldName: string, fieldValue: any): string | null | undefined => {
-    if (!npmSpecs[fieldName]) {
+    if (!npmSpecs?.[fieldName]) {
       // it's not a standard package.json field, can't validate
       return null;
     }
