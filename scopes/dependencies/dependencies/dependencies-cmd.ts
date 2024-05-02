@@ -343,3 +343,19 @@ export class SetPeerCmd implements Command {
     return `${chalk.green('successfully marked the component as a peer component')}`;
   }
 }
+
+export class UnsetPeerCmd implements Command {
+  name = 'unset-peer <component-id>';
+  arguments = [{ name: 'component-id', description: 'the component to unset as always peer' }];
+  group = 'info';
+  description = 'unset a component as always peer';
+  alias = '';
+  options = [];
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([componentId]: [string]) {
+    await this.deps.unsetPeer(componentId);
+    return `${chalk.green('successfully marked the component as not a peer component')}`;
+  }
+}
