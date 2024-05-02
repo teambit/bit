@@ -243,7 +243,7 @@ describe('Version', () => {
       version.overrides = { bin: 'my-file.js' };
       expect(validateFunc).to.not.throw();
     });
-    it.only('should show the original error from package-json-validator when overrides has a package.json field that is non-compliant npm value', () => {
+    it('should show the original error from package-json-validator when overrides has a package.json field that is non-compliant npm value', () => {
       version.overrides = { scripts: false };
       expect(validateFunc).to.throw('Type for field scripts, was expected to be object, not boolean');
     });
