@@ -37,7 +37,7 @@ export class PackageJsonValidator {
     try {
       parsed = this.parse(data);
     } catch (error: any) {
-      return { valid: false, critical: `Invalid JSON - ${error.toString()}` };
+      return { valid: false, critical: error.toString() };
     }
 
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
@@ -332,7 +332,7 @@ export class PackageJsonValidator {
     const validFieldTypes = field.types || [field.type];
     const valueType = Array.isArray(value) ? 'array' : typeof value;
     if (!validFieldTypes.includes(valueType)) {
-      errors.push(`Type for field ${name} was expected to be ${validFieldTypes.join(' or ')}, not ${valueType}`);
+      errors.push(`Type for field ${name}, was expected to be ${validFieldTypes.join(' or ')}, not ${valueType}`);
     }
     return errors;
   }
