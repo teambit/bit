@@ -1,4 +1,4 @@
-import { PackageJsonValidator as PJV } from '@teambit/package-json-validator';
+import { PackageJsonValidator as PJV } from '@teambit/pkg.package-json.validator';
 import R from 'ramda';
 import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
