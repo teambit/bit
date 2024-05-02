@@ -345,6 +345,9 @@ export default class CommandHelper {
   setPeer(componentId: string, range = '') {
     return this.runCmd(`bit set-peer ${componentId} ${range}`);
   }
+  unsetPeer(componentId: string) {
+    return this.runCmd(`bit unset-peer ${componentId}`);
+  }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
   }
