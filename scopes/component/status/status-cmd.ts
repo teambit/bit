@@ -293,7 +293,7 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
     );
 
     const remotelySoftRemovedDesc =
-      '(use "bit remove" to remove them from the workspace. use "bit recover" to undo the soft-remove)';
+      '(use "bit remove" to remove them from the workspace. use "bit recover" to undo the deletion)';
     const remotelySoftRemovedOutput = formatCategory(
       'components deleted on the remote',
       remotelySoftRemovedDesc,

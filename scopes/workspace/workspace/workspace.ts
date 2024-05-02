@@ -16,7 +16,7 @@ import {
 } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
-import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
+import { ComponentScopeDirMap, ConfigMain, WorkspaceConfig } from '@teambit/config';
 import {
   DependencyResolverMain,
   DependencyResolverAspect,
@@ -771,12 +771,19 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     await this.list();
   }
 
-  async cleanFromConfig(ids: ComponentID[]) {
+  getWorkspaceConfig(): WorkspaceConfig {
     const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
     const workspaceConfig = config.workspaceConfig;
     if (!workspaceConfig) throw new Error('workspace config is missing from Config aspect');
-    const hasChanged = ids.some((id) => workspaceConfig.removeExtension(id.toStringWithoutVersion()));
+    return workspaceConfig;
+  }
+
+  async cleanFromConfig(ids: ComponentID[]) {
+    const workspaceConfig = this.getWorkspaceConfig();
+    const wereIdsRemoved = ids.map((id) => workspaceConfig.removeExtension(id));
+    const hasChanged = wereIdsRemoved.some((isRemoved) => isRemoved);
     if (hasChanged) await workspaceConfig.write({ reasonForChange: 'remove components' });
+    return hasChanged;
   }
 
   async triggerOnComponentChange(
@@ -1148,6 +1155,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
     return workspaceAspectsLoader.use(aspectIdStr);
   }
+  async unuse(aspectIdStr: string): Promise<boolean> {
+    const compId = await this.resolveComponentId(aspectIdStr);
+    return this.cleanFromConfig([compId]);
+  }
 
   async write(component: Component, rootPath?: string) {
     await Promise.all(
@@ -1421,8 +1432,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (!isValidScopeName(scopeName)) {
       throw new InvalidScopeName(scopeName);
     }
-    const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
-    config.workspaceConfig?.setExtension(
+    const workspaceConfig = this.getWorkspaceConfig();
+    workspaceConfig.setExtension(
       WorkspaceAspect.id,
       { defaultScope: scopeName },
       { mergeIntoExisting: true, ignoreVersion: true }
@@ -1433,7 +1444,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     }
 
     this.config.defaultScope = scopeName;
-    await config.workspaceConfig?.write({ reasonForChange: `default-scope (${scopeName})` });
+    await workspaceConfig.write({ reasonForChange: `default-scope (${scopeName})` });
     await this.bitMap.write('scope-set');
   }
 
