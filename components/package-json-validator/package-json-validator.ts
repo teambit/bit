@@ -1,3 +1,7 @@
+// this implementation is a typescript version of the original package-json-validator (https://github.com/TechNickAI/package.json-validator)
+// we have forked it since the original package has a security vulnerability because of the optimist dependency they use for their cli tool
+// we have removed the cli tool and only kept the validation logic
+
 export type SpecMap = Record<string, SpecField>;
 
 export type SpecField = {
