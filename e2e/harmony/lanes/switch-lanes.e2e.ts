@@ -319,4 +319,33 @@ describe('bit lane command', function () {
       });
     }
   );
+  describe('switch to main when main has updates on the remote', () => {
+    let beforeSwitch: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      const beforeUpdatingMain = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(beforeUpdatingMain);
+      beforeSwitch = helper.scopeHelper.cloneLocalScope();
+    });
+    it('when --head is used, it should switch to the head of main ', () => {
+      helper.command.switchLocalLane('main', '-x --head');
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.2');
+    });
+    it('when --head was not used, it should switch to where the main was before', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeSwitch);
+      helper.command.switchLocalLane('main', '-x');
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.1');
+    });
+  });
 });
