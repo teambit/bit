@@ -328,7 +328,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
   }
 
   private async addRemovedDepIssue(component: Component) {
-    const dependencies = await this.depResolver.getComponentDependencies(component);
+    const dependencies = this.depResolver.getComponentDependencies(component);
     const removedWithUndefined = await Promise.all(
       dependencies.map(async (dep) => {
         const isRemoved = await this.isRemovedByIdWithoutLoadingComponent(dep.componentId);

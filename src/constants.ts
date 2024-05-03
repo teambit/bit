@@ -561,6 +561,7 @@ export const PREVIOUS_DEFAULT_LANE = 'master';
 
 export const statusInvalidComponentsMsg = 'invalid components';
 export const statusFailureMsg = 'issues found';
+export const statusWarningsMsg = 'warnings found';
 export const statusWorkspaceIsCleanMsg =
   'nothing to tag or export (use "bit create <template> <component>" to generate a new component)';
 
