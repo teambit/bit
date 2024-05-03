@@ -54,6 +54,8 @@ export function DependenciesGraph({
   const graphRef = useRef<ReactFlowInstance>();
   const elements = calcElements(graph, { rootNode });
 
+  console.log('🚀 ~ file: dependencies-graph.tsx:57 ~ elements:', elements);
+
   const context = useMemo(() => ({ componentWidgets }), [componentWidgets]);
 
   const handleLoad = useCallback(
@@ -101,7 +103,6 @@ export function DependenciesGraph({
           minZoom={0}
           {...rest}
           className={classnames(styles.graph, className)}
-          defaultViewport={{ zoom: 0, x: 0, y: 0 }}
           defaultNodes={elements.nodes}
           defaultEdges={elements.edges}
           nodeTypes={nodeTypes}
