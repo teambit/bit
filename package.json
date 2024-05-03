@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.694",
+  "version": "1.0.695",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -144,6 +144,7 @@
     "@teambit/toolbox.fs.readdir-skip-system-files": "~0.0.2",
     "@teambit/scope.modules.find-scope-path": "~0.0.1",
     "@teambit/toolbox.object.sorter": "~0.0.2",
+    "@teambit/pkg.package-json.validator": "0.0.1",
     "@viz-js/viz": "^3.4.0",
     "@types/normalize-path": "^3.0.0",
     "array-difference": "0.0.2",
@@ -207,7 +208,6 @@
     "p-queue": "6.6.2",
     "p-series": "2.1.0",
     "pretty-time": "1.1.0",
-    "package-json-validator": "0.6.3",
     "pad-right": "0.2.2",
     "parse-gitignore": "1.0.1",
     "pino": "8.7.0",
