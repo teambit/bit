@@ -61,9 +61,12 @@ export function DependenciesCompare() {
       if ((graph?.nodes.length ?? 0) <= 3) {
         graphRef.current?.fitView({
           padding: 2,
+          maxZoom: 1,
         });
       } else {
-        instance.fitView();
+        instance.fitView({
+          maxZoom: 1,
+        });
       }
     },
     [graph?.nodes.length]
