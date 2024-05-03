@@ -54,8 +54,6 @@ export function DependenciesGraph({
   const graphRef = useRef<ReactFlowInstance>();
   const elements = calcElements(graph, { rootNode });
 
-  console.log('🚀 ~ file: dependencies-graph.tsx:57 ~ elements:', elements);
-
   const context = useMemo(() => ({ componentWidgets }), [componentWidgets]);
 
   const handleLoad = useCallback(

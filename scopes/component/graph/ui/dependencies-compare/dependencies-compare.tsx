@@ -52,8 +52,14 @@ export function DependenciesCompare() {
   useEffect(() => () => (graphRef.current = undefined), []);
 
   useEffect(() => {
-    graphRef.current?.fitView();
-  }, [elements]);
+    setTimeout(() => {
+      if (graph && graph.nodes.length <= 3)
+        return graphRef.current?.fitView({
+          padding: 2,
+        });
+      return graphRef.current?.fitView();
+    }, 0);
+  }, [graph]);
 
   const handleLoad = useCallback(
     (instance: ReactFlowInstance) => {
@@ -86,7 +92,7 @@ export function DependenciesCompare() {
     setFilter(_isFiltered ? 'runtimeOnly' : undefined);
   };
 
-  if (!loading && (!baseGraph || !compareGraph)) {
+  if (!loading && !graph) {
     return <></>;
   }
 
@@ -97,33 +103,35 @@ export function DependenciesCompare() {
           <RoundLoader />
         </div>
       )}
-      <ReactFlowProvider>
-        <ReactFlow
-          draggable={false}
-          nodesDraggable={true}
-          selectNodesOnDrag={false}
-          nodesConnectable={false}
-          zoomOnDoubleClick={false}
-          elementsSelectable={false}
-          maxZoom={100}
-          minZoom={0}
-          className={dependenciesGraphStyles.graph}
-          defaultNodes={elements.nodes}
-          defaultEdges={elements.edges}
-          nodeTypes={nodeTypes}
-          onInit={handleLoad}
-        >
-          <Background />
-          <Controls className={dependenciesGraphStyles.controls} />
-          <MiniMap nodeColor={calcMinimapColors} className={dependenciesGraphStyles.minimap} />
-          <GraphFilters
-            className={graphPageStyles.filters}
-            disable={loading}
-            isFiltered={isFiltered}
-            onChangeFilter={onCheckFilter}
-          />
-        </ReactFlow>
-      </ReactFlowProvider>
+      {!loading && (
+        <ReactFlowProvider>
+          <ReactFlow
+            draggable={false}
+            nodesDraggable={true}
+            selectNodesOnDrag={false}
+            nodesConnectable={false}
+            zoomOnDoubleClick={false}
+            elementsSelectable={false}
+            maxZoom={100}
+            minZoom={0}
+            className={dependenciesGraphStyles.graph}
+            defaultNodes={elements.nodes}
+            defaultEdges={elements.edges}
+            nodeTypes={nodeTypes}
+            onInit={handleLoad}
+          >
+            <Background />
+            <Controls className={dependenciesGraphStyles.controls} />
+            <MiniMap nodeColor={calcMinimapColors} className={dependenciesGraphStyles.minimap} />
+            <GraphFilters
+              className={graphPageStyles.filters}
+              disable={loading}
+              isFiltered={isFiltered}
+              onChangeFilter={onCheckFilter}
+            />
+          </ReactFlow>
+        </ReactFlowProvider>
+      )}
     </div>
   );
 }
