@@ -348,4 +348,40 @@ describe('bit lane command', function () {
       expect(bitmap.comp1.version).to.equal('0.0.1');
     });
   });
+  describe('switch to a lane when it has updates on the remote', () => {
+    let beforeSwitch: string;
+    let firstSnap: string;
+    let headSnap: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      firstSnap = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.mergeLane('dev', '-x');
+      helper.command.export();
+      const beforeUpdatingLane = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('dev', '-x');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      headSnap = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(beforeUpdatingLane);
+      beforeSwitch = helper.scopeHelper.cloneLocalScope();
+    });
+    it('when --head is used, it should switch to the head of the lane ', () => {
+      helper.command.switchLocalLane('dev', '-x --head');
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal(headSnap);
+      expect(bitmap.comp1.version).to.not.equal(firstSnap);
+    });
+    it('when --head was not used, it should switch to where the lane was before', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeSwitch);
+      helper.command.switchLocalLane('dev', '-x');
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.not.equal(headSnap);
+      expect(bitmap.comp1.version).to.equal(firstSnap);
+    });
+  });
 });
