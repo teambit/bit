@@ -8,11 +8,11 @@ import ReactFlow, {
   Handle,
   MiniMap,
   NodeProps,
-  NodeTypesType,
-  OnLoadParams,
+  NodeTypes,
   Position,
   ReactFlowProvider,
-} from 'react-flow-renderer';
+  ReactFlowInstance,
+} from 'reactflow';
 import { useGraphQuery } from '../query';
 import { GraphFilter } from '../../model/graph-filters';
 import { GraphFilters, styles as graphPageStyles } from '../graph-page';
@@ -23,8 +23,7 @@ import { diffGraph } from './diff-graph';
 
 function ComponentNodeContainer(props: NodeProps) {
   const { sourcePosition = Position.Top, targetPosition = Position.Bottom, data, id } = props;
-  // @todo - this will be fixed as part of the react-flow-renderer v10 upgrade
-  const ReactFlowHandle = Handle as any;
+  const ReactFlowHandle = Handle;
   return (
     <div key={id}>
       <ReactFlowHandle type="target" position={targetPosition} isConnectable={false} />
@@ -34,10 +33,9 @@ function ComponentNodeContainer(props: NodeProps) {
   );
 }
 
-const NodeTypes: NodeTypesType = { ComponentNode: ComponentNodeContainer };
-
 export function DependenciesCompare() {
-  const graphRef = useRef<OnLoadParams>();
+  const nodeTypes: NodeTypes = React.useMemo(() => ({ ComponentNode: ComponentNodeContainer }), []);
+  const graphRef = useRef<ReactFlowInstance>();
   const componentCompare = useComponentCompare();
 
   const baseId = componentCompare?.base?.model.id;
@@ -58,7 +56,7 @@ export function DependenciesCompare() {
   }, [elements]);
 
   const handleLoad = useCallback(
-    (instance: OnLoadParams) => {
+    (instance: ReactFlowInstance) => {
       graphRef.current = instance;
       if ((graph?.nodes.length ?? 0) <= 3) {
         graphRef.current?.fitView({
@@ -107,9 +105,10 @@ export function DependenciesCompare() {
           maxZoom={100}
           minZoom={0}
           className={dependenciesGraphStyles.graph}
-          elements={elements}
-          nodeTypes={NodeTypes}
-          onLoad={handleLoad}
+          defaultNodes={elements.nodes}
+          defaultEdges={elements.edges}
+          nodeTypes={nodeTypes}
+          onInit={handleLoad}
         >
           <Background />
           <Controls className={dependenciesGraphStyles.controls} />

@@ -11,7 +11,7 @@ const BOTTOM_TO_TOP = 'BT';
  */
 export function calcLayout(graph: GraphModel<NodeModel, EdgeModel>) {
   const g = new graphlib.Graph();
-  g.setGraph({ rankdir: BOTTOM_TO_TOP });
+  g.setGraph({ rankdir: BOTTOM_TO_TOP, nodesep: 100, ranksep: 100, edgesep: 100 });
   g.setDefaultEdgeLabel(() => ({}));
 
   // make a new instance of { width, height } per node, or dagre will get confused and place all nodes in the same spot

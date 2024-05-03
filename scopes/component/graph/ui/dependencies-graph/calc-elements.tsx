@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ArrowHeadType, Edge, Node } from 'react-flow-renderer';
+import { MarkerType, Edge, Node } from 'reactflow';
 import { ComponentID } from '@teambit/component';
 import { calcLayout } from './calc-layout';
 import { EdgeModel, GraphModel, NodeModel } from '../query';
@@ -13,9 +13,12 @@ type ElementsOptions = {
 /**
  * generate Nodes and Edges for the ReactFlowRenderer graph renderer
  */
-export function calcElements(graph: GraphModel<NodeModel, EdgeModel> | undefined, { rootNode }: ElementsOptions) {
+export function calcElements(
+  graph: GraphModel<NodeModel, EdgeModel> | undefined,
+  { rootNode }: ElementsOptions
+): { nodes: Node[]; edges: Edge[] } {
   return useMemo(() => {
-    if (!graph) return [];
+    if (!graph) return { nodes: [], edges: [] };
 
     const positions = calcLayout(graph);
 
@@ -39,9 +42,9 @@ export function calcElements(graph: GraphModel<NodeModel, EdgeModel> | undefined
       labelBgPadding: [4, 4],
       type: 'smoothstep',
       className: depTypeToClass(e.dependencyLifecycleType),
-      arrowHeadType: ArrowHeadType.Arrow,
+      arrowHeadType: MarkerType.ArrowClosed,
     }));
 
-    return [...nodes, ...edges];
+    return { nodes, edges };
   }, [graph]);
 }

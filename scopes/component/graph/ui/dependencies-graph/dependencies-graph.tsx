@@ -6,27 +6,25 @@ import ReactFlow, {
   Handle,
   MiniMap,
   NodeProps,
-  NodeTypesType,
-  OnLoadParams,
+  NodeTypes,
+  ReactFlowInstance,
   Position,
   ReactFlowProps,
   ReactFlowProvider,
-} from 'react-flow-renderer';
+} from 'reactflow';
 import { ComponentID } from '@teambit/component';
-
 import { ComponentWidgetSlot } from '../../graph.ui.runtime';
 import { ComponentNode } from '../component-node';
 import { EdgeModel, GraphModel, NodeModel } from '../query';
 import { calcElements } from './calc-elements';
 import { calcMinimapColors } from './minimap';
 import { ComponentGraphContext } from './graph-context';
-
+import 'reactflow/dist/style.css';
 import styles from './dependencies-graph.module.scss';
 
 function ComponentNodeContainer(props: NodeProps) {
   const { sourcePosition = Position.Top, targetPosition = Position.Bottom, data, id } = props;
-  // @todo - this will be fixed as part of the react-flow-renderer v10 upgrade
-  const ReactFlowHandle = Handle as any;
+  const ReactFlowHandle = Handle;
   return (
     <div key={id}>
       <ReactFlowHandle type="target" position={targetPosition} isConnectable={false} />
@@ -36,14 +34,11 @@ function ComponentNodeContainer(props: NodeProps) {
   );
 }
 
-// @ts-ignore - incorrect NodeTypes https://github.com/wbkd/react-flow/issues/2101 (#5746)
-const NodeTypes: NodeTypesType = { ComponentNode: ComponentNodeContainer };
-
 export type DependenciesGraphProps = {
   rootNode: ComponentID;
   graph: GraphModel<NodeModel, EdgeModel>;
   componentWidgets: ComponentWidgetSlot;
-  onLoad?: (instance: OnLoadParams) => void;
+  onLoad?: (instance: ReactFlowInstance) => void;
 } & Omit<ReactFlowProps, 'elements'>;
 
 export function DependenciesGraph({
@@ -55,12 +50,14 @@ export function DependenciesGraph({
   children,
   ...rest
 }: DependenciesGraphProps) {
-  const graphRef = useRef<OnLoadParams>();
+  const nodeTypes: NodeTypes = React.useMemo(() => ({ ComponentNode: ComponentNodeContainer }), []);
+  const graphRef = useRef<ReactFlowInstance>();
   const elements = calcElements(graph, { rootNode });
+
   const context = useMemo(() => ({ componentWidgets }), [componentWidgets]);
 
   const handleLoad = useCallback(
-    (instance: OnLoadParams) => {
+    (instance: ReactFlowInstance) => {
       if ((graph?.nodes.length ?? 0) <= 3) {
         instance.fitView({
           padding: 2,
@@ -101,9 +98,11 @@ export function DependenciesGraph({
           minZoom={0}
           {...rest}
           className={classnames(styles.graph, className)}
-          elements={elements}
-          nodeTypes={NodeTypes}
-          onLoad={handleLoad}
+          defaultViewport={{ zoom: 0, x: 0, y: 0 }}
+          defaultNodes={elements.nodes}
+          defaultEdges={elements.edges}
+          nodeTypes={nodeTypes}
+          onInit={handleLoad}
         >
           <Background />
           <Controls className={styles.controls} />
