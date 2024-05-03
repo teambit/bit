@@ -61,9 +61,12 @@ export function DependenciesGraph({
       if ((graph?.nodes.length ?? 0) <= 3) {
         instance.fitView({
           padding: 2,
+          maxZoom: 1,
         });
       } else {
-        instance.fitView();
+        instance.fitView({
+          maxZoom: 1,
+        });
       }
       onLoad?.(instance);
     },

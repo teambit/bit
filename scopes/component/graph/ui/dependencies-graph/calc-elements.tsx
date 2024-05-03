@@ -42,7 +42,10 @@ export function calcElements(
       labelBgPadding: [4, 4],
       type: 'smoothstep',
       className: depTypeToClass(e.dependencyLifecycleType),
-      arrowHeadType: MarkerType.ArrowClosed,
+      arrowHeadType: MarkerType.Arrow,
+      markerEnd: {
+        type: MarkerType.Arrow,
+      },
     }));
 
     return { nodes, edges };
