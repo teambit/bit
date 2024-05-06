@@ -1,4 +1,4 @@
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
@@ -161,6 +161,5 @@ export async function addDeps(
   // it takes care of both: given dependencies (from the cli) and the overrides, which are coming from the env.
   await deps.loadDependenciesFromScope(consumerComponent, dependenciesData);
 
-  const updateDepsCompIdList = ComponentIdList.fromArray(updateDeps.map((d) => ComponentID.fromString(d)));
-  await snapping.UpdateDepsAspectsSaveIntoDepsResolver(component, updateDepsCompIdList);
+  await snapping.UpdateDepsAspectsSaveIntoDepsResolver(component, updateDeps);
 }

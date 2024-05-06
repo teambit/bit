@@ -1160,7 +1160,7 @@ another option, in case this dependency is not in main yet is to remove all refe
         dep.packageName = packageName;
       }
     });
-    await this.UpdateDepsAspectsSaveIntoDepsResolver(component, updatedIds);
+    await this.UpdateDepsAspectsSaveIntoDepsResolver(component, updatedIds.toStringArray());
   }
 
   /**
@@ -1168,19 +1168,19 @@ another option, in case this dependency is not in main yet is to remove all refe
    * 1. update extensions versions according to the version provided in updatedIds.
    * 2. save all dependencies data from the legacy into DependencyResolver aspect.
    */
-  async UpdateDepsAspectsSaveIntoDepsResolver(component: Component, updatedIds: ComponentIdList) {
+  async UpdateDepsAspectsSaveIntoDepsResolver(component: Component, updatedIds: string[]) {
     const legacyComponent: ConsumerComponent = component.state._consumer;
     legacyComponent.extensions.forEach((ext) => {
-      if (!ext.extensionId) return;
-      const updatedBitId = updatedIds.searchWithoutVersion(ext.extensionId);
-      if (updatedBitId) {
+      const extId = ext.extensionId;
+      if (!extId) return;
+      const found = updatedIds.find((d) => d.startsWith(`${extId.toStringWithoutVersion()}@`));
+      if (found) {
+        const updatedExtId = ComponentID.fromString(found);
         this.logger.debug(
-          `updating "${component.id.toString()}", extension ${ext.extensionId.toString()} to version ${
-            updatedBitId.version
-          }}`
+          `updating "${component.id.toString()}", extension ${extId.toString()} to version ${updatedExtId.version}}`
         );
-        ext.extensionId = updatedBitId;
-        if (ext.newExtensionId) ext.newExtensionId = updatedBitId;
+        ext.extensionId = updatedExtId;
+        if (ext.newExtensionId) ext.newExtensionId = updatedExtId;
       }
     });
 
