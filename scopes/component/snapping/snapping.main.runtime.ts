@@ -462,6 +462,14 @@ if you're willing to lose the history from the head to the specified version, us
     }
 
     const components = [...existingComponents, ...newComponents];
+
+    // this must be done before we load component aspects later on, because this updated deps may update aspects.
+    await pMapSeries(components, async (component) => {
+      const snapData = getSnapData(component.id);
+      // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
+      await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver);
+    });
+
     // for new components these are not needed. coz when generating them we already add the aspects and the files.
     await Promise.all(
       existingComponents.map(async (comp) => {
@@ -481,12 +489,6 @@ if you're willing to lose the history from the head to the specified version, us
 
     // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
     await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
-
-    await pMapSeries(components, async (component) => {
-      const snapData = getSnapData(component.id);
-      // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
-      await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver);
-    });
 
     const consumerComponents = components.map((c) => c.state._consumer);
     const ids = ComponentIdList.fromArray(allCompIds);

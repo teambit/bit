@@ -156,9 +156,21 @@ export async function addDeps(
     },
   };
 
+  consumerComponent.extensions.forEach((ext) => {
+    const extId = ext.extensionId;
+    if (!extId) return;
+    const found = updateDeps.find((d) => d.startsWith(`${extId.toStringWithoutVersion()}@`));
+    if (found) {
+      ext.extensionId = ComponentID.fromString(found);
+    }
+  });
+
   // add the dependencies to the legacy ConsumerComponent object
   // it takes care of both: given dependencies (from the cli) and the overrides, which are coming from the env.
   await deps.loadDependenciesFromScope(consumerComponent, dependenciesData);
+
+  // update the aspects on the Component object to sync with legacy extensions prop
+  component.state.aspects = await scope.createAspectListFromExtensionDataList(consumerComponent.extensions);
 
   // add the dependencies data to the dependency-resolver aspect
   const dependenciesListSerialized = (await depsResolver.extractDepsFromLegacy(component)).serialize();
