@@ -3,8 +3,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { CapsuleList, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import type { ScopeMain } from '@teambit/scope';
 import chalk from 'chalk';
-
-import { Workspace } from '.';
+import { Workspace } from './workspace';
 
 type CreateOpts = {
   baseDir?: string;

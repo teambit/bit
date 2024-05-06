@@ -1,4 +1,3 @@
-import findUp from 'find-up';
 import fs from 'fs-extra';
 import path from 'path';
 import gitignore from 'parse-gitignore';
@@ -7,9 +6,14 @@ import { GIT_IGNORE, IGNORE_LIST } from '../../constants';
 
 export const BIT_IGNORE = '.bitignore';
 
-async function getGitIgnoreFile(dir: string): Promise<string[]> {
-  const gitIgnoreFile = findUp.sync([GIT_IGNORE], { cwd: dir });
-  return gitIgnoreFile ? gitignore(await fs.readFile(gitIgnoreFile)) : [];
+export async function getGitIgnoreFile(dir: string): Promise<string[]> {
+  try {
+    const fileContent = await fs.readFile(path.join(dir, GIT_IGNORE));
+    return gitignore(fileContent);
+  } catch (err: any) {
+    if (err.code === 'ENOENT') return [];
+    throw err;
+  }
 }
 
 async function isBitIgnoreFileExistsInDir(dir: string): Promise<boolean> {

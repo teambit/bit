@@ -317,7 +317,7 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
   };
   const conflictMessage = getConflictMessage();
   const deprecated = importDetails.deprecated && !importDetails.removed ? chalk.yellow('deprecated') : '';
-  const removed = importDetails.removed ? chalk.red('removed') : '';
+  const removed = importDetails.removed ? chalk.red('deleted') : '';
   const missingDeps = importDetails.missingDeps.length
     ? chalk.red(`missing dependencies: ${importDetails.missingDeps.map((d) => d.toString()).join(', ')}`)
     : '';

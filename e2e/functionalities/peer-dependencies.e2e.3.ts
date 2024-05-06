@@ -213,7 +213,7 @@ describe('peer-dependencies functionality', function () {
         npmCiRegistry.configureCiInPackageJsonHarmony();
         helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
         helper.command.create('module', 'peer-dep');
-        helper.command.tagAllComponents('--build');
+        helper.command.tagAllComponents('--build --skip-tests');
         helper.command.export();
 
         helper.scopeHelper.reInitLocalScope();
