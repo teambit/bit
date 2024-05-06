@@ -467,7 +467,7 @@ if you're willing to lose the history from the head to the specified version, us
     await pMapSeries(components, async (component) => {
       const snapData = getSnapData(component.id);
       // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
-      await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver);
+      await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver, this);
     });
 
     // for new components these are not needed. coz when generating them we already add the aspects and the files.
@@ -1160,12 +1160,24 @@ another option, in case this dependency is not in main yet is to remove all refe
         dep.packageName = packageName;
       }
     });
+    await this.UpdateDepsAspectsSaveIntoDepsResolver(component, updatedIds);
+  }
+
+  /**
+   * it does two things:
+   * 1. update extensions versions according to the version provided in updatedIds.
+   * 2. save all dependencies data from the legacy into DependencyResolver aspect.
+   */
+  async UpdateDepsAspectsSaveIntoDepsResolver(component: Component, updatedIds: ComponentIdList) {
+    const legacyComponent: ConsumerComponent = component.state._consumer;
     legacyComponent.extensions.forEach((ext) => {
       if (!ext.extensionId) return;
       const updatedBitId = updatedIds.searchWithoutVersion(ext.extensionId);
       if (updatedBitId) {
         this.logger.debug(
-          `updating "${componentIdStr}", extension ${ext.extensionId.toString()} to version ${updatedBitId.version}}`
+          `updating "${component.id.toString()}", extension ${ext.extensionId.toString()} to version ${
+            updatedBitId.version
+          }}`
         );
         ext.extensionId = updatedBitId;
         if (ext.newExtensionId) ext.newExtensionId = updatedBitId;
