@@ -119,6 +119,9 @@ export function DependenciesCompare() {
             defaultEdges={elements.edges}
             nodeTypes={nodeTypes}
             onInit={handleLoad}
+            proOptions={{
+              hideAttribution: true,
+            }}
           >
             <Background />
             <Controls className={dependenciesGraphStyles.controls} />

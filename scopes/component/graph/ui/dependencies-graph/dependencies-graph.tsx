@@ -105,6 +105,9 @@ export function DependenciesGraph({
           defaultEdges={elements.edges}
           nodeTypes={nodeTypes}
           onInit={handleLoad}
+          proOptions={{
+            hideAttribution: true,
+          }}
         >
           <Background />
           <Controls className={styles.controls} />
