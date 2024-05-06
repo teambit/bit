@@ -5,7 +5,8 @@ process.on('uncaughtException', (err) => {
   console.error('uncaughtException', err);
   process.exit(1);
 });
-
+import { performance } from 'node:perf_hooks';
+performance.mark('start_bit');
 import { nativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 
 // Enable v8 compile cache, keep this before other imports

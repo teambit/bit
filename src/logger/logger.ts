@@ -5,6 +5,7 @@
  * and it throws an error if the file doesn't exists on Docker/CI.
  */
 import chalk from 'chalk';
+import { performance } from 'node:perf_hooks';
 import fs from 'fs-extra';
 import path from 'path';
 import { serializeError } from 'serialize-error';
@@ -12,7 +13,6 @@ import format from 'string-format';
 import { Logger as PinoLogger, Level } from 'pino';
 import yn from 'yn';
 import pMapSeries from 'p-map-series';
-
 import { Analytics } from '../analytics/analytics';
 import { getSync } from '../api/consumer/lib/global-config';
 import defaultHandleError from '../cli/default-error-handler';
@@ -22,6 +22,9 @@ import { getPinoLogger } from './pino-logger';
 import { Profiler } from './profiler';
 
 export { Level as LoggerLevel };
+
+const os = require('os');
+const v8 = require('v8');
 
 const jsonFormat =
   yn(getSync(CFG_LOG_JSON_FORMAT), { default: false }) || yn(process.env.JSON_LOGS, { default: false });
@@ -202,7 +205,11 @@ class BitLogger implements IBitLogger {
     this.logger[level](msg);
     this.writeCommandHistoryEnd(code);
     await this.runOnBeforeExitFns();
-    if (!this.isDaemon) process.exit(code);
+    if (this.isDaemon) return; // don't exit.
+    if (this.shouldConsoleProfiler) {
+      consoleStats(code);
+    }
+    process.exit(code);
   }
 
   private commandHistoryMsgPrefix() {
@@ -365,6 +372,47 @@ export function writeLogToScreen(levelOrPrefix = '') {
   //     ),
   //   })
   // );
+}
+
+function consoleStats(exitCode: number) {
+  performance.mark('end_bit');
+  performance.measure('Bit Command Execution', 'start_bit', 'end_bit');
+  const bitCommandPerformanceEntry = performance.getEntriesByName('Bit Command Execution')[0];
+  const heapStats = v8.getHeapStatistics();
+  const stats = {
+    cpu: os.loadavg(),
+    mem: {
+      total: os.totalmem(),
+      used: os.totalmem() - os.freemem(),
+      free: os.freemem(),
+      processRSS: process.memoryUsage.rss(),
+      processMaxRSS: process.resourceUsage().maxRSS * 1000,
+    },
+    heap: {
+      heap_size_limit: heapStats.heap_size_limit,
+      used_heap_size: heapStats.used_heap_size,
+      total_available_size: heapStats.total_available_size,
+    },
+    executionDuration: `${bitCommandPerformanceEntry.duration} ms`,
+    exitCode,
+  };
+  for (let i = 0; i < stats.cpu.length; i++) {
+    stats.cpu[i] = stats.cpu[i].toFixed(3);
+  }
+  stats.cpu = stats.cpu.join(' | ');
+  Object.keys(stats.mem).forEach(function (key) {
+    stats.mem[key] = Math.ceil(stats.mem[key] / 1000000) + 'MB';
+  });
+
+  Object.keys(stats.heap).forEach(function (key) {
+    stats.heap[key] = Math.ceil(stats.heap[key] / 1000000) + 'MB';
+  });
+  // eslint-disable-next-line no-console
+  console.log('********** Node Resource Usage Statistics **********');
+  // eslint-disable-next-line no-console
+  console.log(stats);
+  // eslint-disable-next-line no-console
+  console.log('*****************************************************');
 }
 
 export { createExtensionLogger };
