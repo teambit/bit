@@ -1766,13 +1766,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/models/lanes-model"
     },
-    "ui/navigation/lane-switcher": {
-        "name": "ui/navigation/lane-switcher",
-        "scope": "teambit.lanes",
-        "version": "0.0.225",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/navigation/lane-switcher"
-    },
     "ui/pages/preview-not-found": {
         "name": "ui/pages/preview-not-found",
         "scope": "teambit.ui-foundation",
