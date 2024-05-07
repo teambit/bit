@@ -6,6 +6,7 @@ import FixtureHelper, { GenerateEnvJsoncOptions } from './e2e-fixtures-helper';
 import FsHelper from './e2e-fs-helper';
 import ScopeHelper from './e2e-scope-helper';
 import ScopesData from './e2e-scopes';
+import { ENV_POLICY } from '../../e2e/harmony/dependencies/env-jsonc-policies.e2e';
 
 type SetCustomEnvOpts = {
   skipInstall?: boolean;
@@ -101,12 +102,12 @@ export default class EnvHelper {
   /**
    * This will generate env in the new format (using the *.bit-env.* plugin)
    * @param extensionsBaseFolder
-   * @returns
+   * @returns env name
    */
   setCustomNewEnv(
     extensionsBaseFolder = 'react-based-env',
     basePackages: string[] = ['@teambit/react.react-env'],
-    envJsoncOptions: GenerateEnvJsoncOptions,
+    envJsoncOptions: GenerateEnvJsoncOptions = { policy: ENV_POLICY },
     runInstall = true,
     targetFolder?: string,
     id?: string
