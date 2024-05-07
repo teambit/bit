@@ -99,7 +99,7 @@ describe('custom aspects', function () {
       helper.command.install();
       helper.command.compile();
       helper.command.use('main-aspect');
-      output = helper.command.listApps();
+      output = helper.command.showComponent('main-aspect');
     });
     after(() => {
       helper.scopeHelper.destroy();
@@ -125,7 +125,7 @@ describe('custom aspects', function () {
     describe('when the dep aspect is configured in workspace.jsonc', function () {
       before(() => {
         helper.command.use('ext1');
-        output = helper.command.listApps();
+        output = helper.command.showComponent('main-aspect');
       });
       it('should run main aspect provider', () => {
         expect(output).to.have.string(MAIN_ASPECT_PROVIDER_TEXT);

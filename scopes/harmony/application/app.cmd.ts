@@ -12,7 +12,6 @@ export class AppListCmd implements Command {
   group = 'apps';
   helpUrl = 'reference/reference/cli-reference';
   options = [['j', 'json', 'return the component data in json format']] as CommandOptions;
-  loadAspects = true;
 
   constructor(private applicationAspect: ApplicationMain) {}
 

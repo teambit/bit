@@ -14,7 +14,7 @@ export class LegacyCommandAdapter implements Command {
   private?: boolean;
   skipWorkspace?: boolean;
   helpUrl?: string;
-  loadAspects?: boolean | undefined;
+  loadAspects?: boolean;
   _packageManagerArgs?: string[];
   constructor(private cmd: LegacyCommand, cliExtension: CLIMain) {
     this.name = cmd.name;

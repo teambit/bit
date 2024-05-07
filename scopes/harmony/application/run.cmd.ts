@@ -15,7 +15,6 @@ export class RunCmd implements Command {
   name = 'run <app-name>';
   description = "locally run an app component (independent of bit's dev server)";
   helpUrl = 'reference/apps/apps-overview/';
-  loadAspects = true;
   arguments = [
     {
       name: 'app-name',
