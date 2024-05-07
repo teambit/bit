@@ -630,6 +630,7 @@ jobs:
             - bit/.git/bit
             - bit/.bitmap
             - bit/workspace.jsonc
+            - scopes/harmony/cli-reference
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
