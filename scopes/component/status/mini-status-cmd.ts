@@ -31,6 +31,7 @@ this command only checks source code changes, it doesn't check for config/aspect
     ],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
+  loadAspects = false;
   loader = true;
 
   constructor(private status: StatusMain) {}
