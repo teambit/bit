@@ -268,7 +268,8 @@ export class WorkspaceMain {
     component.registerHost(workspace);
 
     cli.registerOnStart(async (_hasWorkspace: boolean, currentCommand: string, commandObject?: Command) => {
-      if (commandObject && !commandObject.loadAspects) {
+      const hasSafeModeFlag = process.argv.includes('--safe-mode');
+      if (hasSafeModeFlag || (commandObject && !commandObject.loadAspects)) {
         return;
       }
       if (currentCommand === 'install') {
