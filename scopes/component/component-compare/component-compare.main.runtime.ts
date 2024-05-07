@@ -1,7 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { BuilderAspect } from '@teambit/builder';
@@ -190,6 +190,8 @@ export class ComponentCompareMain {
         throw new BitError(`component ${component.id.toString()} doesn't have any version yet`);
       }
       const repository = consumer.scope.objects;
+      const idList = ComponentIdList.fromArray([component.id.changeVersion(version)]);
+      await consumer.scope.scopeImporter.importWithoutDeps(idList, { cache: true, reason: 'to show diff' });
       const fromVersionObject: Version = await modelComponent.loadVersion(version, repository);
       const versionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
       const fsFiles = consumerComponent.files;
@@ -212,7 +214,8 @@ export class ComponentCompareMain {
         throw new BitError(`component ${id.toString()} doesn't have any version yet`);
       }
       const repository = consumer.scope.objects;
-
+      const idList = ComponentIdList.fromArray([id.changeVersion(version), id.changeVersion(toVersion)]);
+      await consumer.scope.scopeImporter.importWithoutDeps(idList, { cache: true, reason: 'to show diff' });
       const fromVersionObject: Version = await modelComponent.loadVersion(version, repository);
       const toVersionObject: Version = await modelComponent.loadVersion(toVersion, repository);
       const fromVersionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
