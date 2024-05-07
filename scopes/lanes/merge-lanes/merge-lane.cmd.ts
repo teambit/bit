@@ -45,7 +45,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       'same as "--auto-merge-resolve manual". in case of merge conflict, write the files with the conflict markers',
     ],
     [
-      '',
+      'r',
       'auto-merge-resolve <merge-strategy>',
       'in case of a merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
     ],
