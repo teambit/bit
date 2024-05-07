@@ -953,6 +953,12 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     return EjectConfResult;
   }
 
+  async getAspectConfigForComponent(id: ComponentID, aspectId: string): Promise<object | undefined> {
+    const extensions = await this.getExtensionsFromScopeAndSpecific(id);
+    const obj = extensions.toConfigObject();
+    return obj[aspectId];
+  }
+
   async getExtensionsFromScopeAndSpecific(id: ComponentID, excludeComponentJson = false): Promise<ExtensionDataList> {
     const componentFromScope = await this.scope.get(id);
     const exclude: ExtensionsOrigin[] = ['WorkspaceVariants'];
@@ -1469,9 +1475,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       await componentConfigFile.write({ override: true });
     } else {
       if (shouldMergeWithPrevious) {
-        const extensions = await this.getExtensionsFromScopeAndSpecific(id);
-        const obj = extensions.toConfigObject();
-        config = obj[aspectId] ? merge(obj[aspectId], config) : config;
+        const existingConfig = await this.getAspectConfigForComponent(id, aspectId);
+        config = existingConfig ? merge(existingConfig, config) : config;
       }
       this.bitMap.addComponentConfig(id, aspectId, config, shouldMergeWithExisting);
     }

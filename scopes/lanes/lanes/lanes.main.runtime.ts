@@ -88,6 +88,7 @@ export type CreateLaneOptions = {
 };
 
 export type SwitchLaneOptions = {
+  head?: boolean;
   alias?: string;
   merge?: MergeStrategy;
   workspaceOnly?: boolean;
@@ -562,7 +563,7 @@ please create a new lane instead, which will include all components of this lane
    */
   async switchLanes(
     laneName: string,
-    { alias, merge, pattern, workspaceOnly, skipDependencyInstallation = false }: SwitchLaneOptions
+    { alias, merge, pattern, workspaceOnly, skipDependencyInstallation = false, head }: SwitchLaneOptions
   ) {
     if (!this.workspace) {
       throw new BitError(`unable to switch lanes outside of Bit workspace`);
@@ -584,6 +585,7 @@ please create a new lane instead, which will include all components of this lane
       existingOnWorkspaceOnly: workspaceOnly,
       pattern,
       alias,
+      head,
     };
     const checkoutProps = {
       mergeStrategy,
@@ -714,7 +716,7 @@ please create a new lane instead, which will include all components of this lane
           )
         : [];
 
-    await this.importer.importObjectsFromMainIfExist(targetMainHeads);
+    await this.importer.importObjectsFromMainIfExist(targetMainHeads, { cache: true });
 
     const diffProps = compact(
       await Promise.all(

@@ -462,6 +462,14 @@ if you're willing to lose the history from the head to the specified version, us
     }
 
     const components = [...existingComponents, ...newComponents];
+
+    // this must be done before we load component aspects later on, because this updated deps may update aspects.
+    await pMapSeries(components, async (component) => {
+      const snapData = getSnapData(component.id);
+      // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
+      await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver, this);
+    });
+
     // for new components these are not needed. coz when generating them we already add the aspects and the files.
     await Promise.all(
       existingComponents.map(async (comp) => {
@@ -481,12 +489,6 @@ if you're willing to lose the history from the head to the specified version, us
 
     // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
     await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
-
-    await pMapSeries(components, async (component) => {
-      const snapData = getSnapData(component.id);
-      // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
-      await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver);
-    });
 
     const consumerComponents = components.map((c) => c.state._consumer);
     const ids = ComponentIdList.fromArray(allCompIds);
@@ -1158,15 +1160,27 @@ another option, in case this dependency is not in main yet is to remove all refe
         dep.packageName = packageName;
       }
     });
+    await this.UpdateDepsAspectsSaveIntoDepsResolver(component, updatedIds.toStringArray());
+  }
+
+  /**
+   * it does two things:
+   * 1. update extensions versions according to the version provided in updatedIds.
+   * 2. save all dependencies data from the legacy into DependencyResolver aspect.
+   */
+  async UpdateDepsAspectsSaveIntoDepsResolver(component: Component, updatedIds: string[]) {
+    const legacyComponent: ConsumerComponent = component.state._consumer;
     legacyComponent.extensions.forEach((ext) => {
-      if (!ext.extensionId) return;
-      const updatedBitId = updatedIds.searchWithoutVersion(ext.extensionId);
-      if (updatedBitId) {
+      const extId = ext.extensionId;
+      if (!extId) return;
+      const found = updatedIds.find((d) => d.startsWith(`${extId.toStringWithoutVersion()}@`));
+      if (found) {
+        const updatedExtId = ComponentID.fromString(found);
         this.logger.debug(
-          `updating "${componentIdStr}", extension ${ext.extensionId.toString()} to version ${updatedBitId.version}}`
+          `updating "${component.id.toString()}", extension ${extId.toString()} to version ${updatedExtId.version}}`
         );
-        ext.extensionId = updatedBitId;
-        if (ext.newExtensionId) ext.newExtensionId = updatedBitId;
+        ext.extensionId = updatedExtId;
+        if (ext.newExtensionId) ext.newExtensionId = updatedExtId;
       }
     });
 

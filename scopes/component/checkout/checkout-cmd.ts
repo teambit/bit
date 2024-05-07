@@ -47,7 +47,7 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       'when a component is modified and the merge process found conflicts, display options to resolve them',
     ],
     [
-      '',
+      'r',
       'auto-merge-resolve <merge-strategy>',
       'in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
     ],
