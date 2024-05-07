@@ -66,7 +66,7 @@ export class StashLoadCmd implements Command {
   group = 'development';
   options = [
     [
-      '',
+      'r',
       'auto-merge-resolve <merge-strategy>',
       'in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
     ],

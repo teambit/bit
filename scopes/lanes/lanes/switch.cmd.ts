@@ -21,7 +21,7 @@ export class SwitchCmd implements Command {
   options = [
     ['h', 'head', 'switch to the head of the lane/main (fetches the latest changes from the remote)'],
     [
-      '',
+      'r',
       'auto-merge-resolve <merge-strategy>',
       'merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"',
     ],

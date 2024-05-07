@@ -39,7 +39,7 @@ ${WILDCARD_HELP('merge')}`;
       'same as "--auto-merge-resolve manual". in case of merge conflict, write the files with the conflict markers',
     ],
     [
-      '',
+      'r',
       'auto-merge-resolve <merge-strategy>',
       'in case of a conflict, resolve according to the strategy: [ours, theirs, manual]',
     ],
