@@ -290,7 +290,7 @@ export class SnappingMain {
         };
       })
     );
-    const componentIds = tagDataPerComp.map((t) => t.componentId);
+    const componentIds = ComponentIdList.fromArray(tagDataPerComp.map((t) => t.componentId));
     // important! leave the "preferDependencyGraph" with the default - true. no need to bring all dependencies at this
     // stage. later on, they'll be imported during "snapping._addFlattenedDependenciesToComponents".
     // otherwise, the dependencies are imported without version-history and fail later when checking their origin.
@@ -318,9 +318,11 @@ if you're willing to lose the history from the head to the specified version, us
     });
     await Promise.all(
       tagDataPerComp.map(async (tagData) => {
-        tagData.dependencies = tagData.dependencies
-          ? await Promise.all(tagData.dependencies.map((d) => this.getCompIdWithExactVersionAccordingToSemver(d)))
-          : [];
+        // disregard the dependencies that are now part of the tag-from-scope. their version will be determined during the process
+        const filteredDependencies = tagData.dependencies.filter((dep) => !componentIds.hasWithoutVersion(dep));
+        tagData.dependencies = await Promise.all(
+          filteredDependencies.map((d) => this.getCompIdWithExactVersionAccordingToSemver(d))
+        );
       })
     );
     const components = await this.scope.getMany(componentIds);
