@@ -1,7 +1,7 @@
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
-import { CLIAspect, MainRuntime, CLIMain, CommandList } from '@teambit/cli';
+import { CLIAspect, MainRuntime, CLIMain, CommandList, Command } from '@teambit/cli';
 import { ComponentAspect } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -267,17 +267,16 @@ export class WorkspaceMain {
     cli.register(...commands);
     component.registerHost(workspace);
 
-    // mini-status should be super fast. login/logout don't need loading aspects
-    const commandsToSkipLoadingAspects = ['mini-status', 'ms', 'login', 'logout'];
-
-    cli.registerOnStart(async (_hasWorkspace: boolean, currentCommand: string) => {
-      if (commandsToSkipLoadingAspects.includes(currentCommand)) {
+    cli.registerOnStart(async (_hasWorkspace: boolean, currentCommand: string, commandObject?: Command) => {
+      const hasSafeModeFlag = process.argv.includes('--safe-mode');
+      if (hasSafeModeFlag || (commandObject && !commandObject.loadAspects)) {
         return;
       }
       if (currentCommand === 'install') {
         workspace.inInstallContext = true;
       }
       await workspace.importCurrentLaneIfMissing();
+      logger.profile('workspace.registerOnStart');
       const loadAspectsOpts = {
         runSubscribers: false,
         skipDeps: !config.autoLoadAspectsDeps,
@@ -293,6 +292,7 @@ export class WorkspaceMain {
       componentIds.forEach((id) => {
         workspace.clearComponentCache(id);
       });
+      logger.profile('workspace.registerOnStart');
     });
 
     // add sub-commands "set" and "unset" to envs command.
