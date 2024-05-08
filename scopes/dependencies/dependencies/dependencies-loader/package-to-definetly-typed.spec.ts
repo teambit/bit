@@ -36,7 +36,6 @@ const scenarios = new Map([
   ['socket.io-client', '@types/socket.io-client'],
   ['ua-parser-js', '@types/ua-parser-js'],
   ['url-join', '@types/url-join'],
-  ['url-parse', '@types/url-parse'],
   ['webpack', '@types/webpack'],
   ['webpack-dev-server', '@types/webpack-dev-server'],
   ['webpack-merge', '@types/webpack-merge'],
