@@ -32,9 +32,7 @@ export class CompositionsUI {
       <CompositionCompare
         emptyState={this.emptyStateSlot}
         PreviewView={(compositionProps) => {
-          return (
-            <CompositionContent {...compositionProps} allowFullScreen={true} fullContentHeight forceHeight={'100%'} />
-          );
+          return <CompositionContent {...compositionProps} fullContentHeight forceHeight={'100%'} />;
         }}
       />
     );
