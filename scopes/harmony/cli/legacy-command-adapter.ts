@@ -1,5 +1,5 @@
-import { LegacyCommand } from '@teambit/legacy/dist/cli/legacy-command';
-import { Command, CommandOptions, GenericObject } from '.';
+import { CommandOptions, LegacyCommand } from '@teambit/legacy/dist/cli/legacy-command';
+import type { Command, GenericObject } from '@teambit/legacy/dist/cli/command';
 import { CLIMain } from './cli.main.runtime';
 
 export class LegacyCommandAdapter implements Command {
@@ -14,6 +14,7 @@ export class LegacyCommandAdapter implements Command {
   private?: boolean;
   skipWorkspace?: boolean;
   helpUrl?: string;
+  loadAspects?: boolean;
   _packageManagerArgs?: string[];
   constructor(private cmd: LegacyCommand, cliExtension: CLIMain) {
     this.name = cmd.name;
@@ -26,6 +27,7 @@ export class LegacyCommandAdapter implements Command {
     this.group = cmd.group;
     this.loader = cmd.loader;
     this.private = cmd.private;
+    this.loadAspects = false;
     this.commands = (cmd.commands || []).map((sub) => new LegacyCommandAdapter(sub, cliExtension));
   }
 

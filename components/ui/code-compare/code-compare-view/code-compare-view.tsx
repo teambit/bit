@@ -209,8 +209,15 @@ export function CodeCompareView({
   useEffect(() => {
     if (!monacoRef.current?.editor) return;
     const modifiedEditor = monacoRef.current?.editor.getModifiedEditor();
+
+    if (!modifiedEditor) return;
+
     const modifiedDomNode = modifiedEditor.getDomNode()?.parentElement;
+
+    if (!modifiedDomNode) return;
+
     const modifiedDomNodeHeight = modifiedDomNode?.style.height;
+
     if (modifiedDomNodeHeight !== containerHeight) {
       modifiedDomNode.style.height = containerHeight;
       monacoRef.current?.editor.layout();

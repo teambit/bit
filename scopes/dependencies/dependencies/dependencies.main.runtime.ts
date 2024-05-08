@@ -32,6 +32,7 @@ import {
   RemoveDependenciesFlags,
   SetDependenciesFlags,
   SetPeerCmd,
+  UnsetPeerCmd,
   WhyCmd,
 } from './dependencies-cmd';
 import { DependenciesAspect } from './dependencies.aspect';
@@ -75,6 +76,23 @@ export class DependenciesMain {
     });
 
     await this.workspace.bitMap.write(`set-peer (${componentId})`);
+  }
+
+  async unsetPeer(componentId: string): Promise<void> {
+    const compId = await this.workspace.resolveComponentId(componentId);
+    // const config = { peer: true, defaultPeerRange: range };
+    const config = await this.workspace.getAspectConfigForComponent(compId, DependencyResolverAspect.id);
+    if (config) {
+      if ('peer' in config) {
+        delete config.peer;
+      }
+      if ('defaultPeerRange' in config) {
+        delete config.defaultPeerRange;
+      }
+    }
+    this.workspace.bitMap.addComponentConfig(compId, DependencyResolverAspect.id, config);
+
+    await this.workspace.bitMap.write(`unset-peer (${componentId})`);
   }
 
   async setDependency(
@@ -392,9 +410,7 @@ export class DependenciesMain {
       new DependenciesBlameCmd(depsMain),
       new DependenciesUsageCmd(depsMain),
     ];
-    const whyCmd = new WhyCmd(depsMain);
-    const setPeerCmd = new SetPeerCmd(depsMain);
-    cli.register(depsCmd, whyCmd, setPeerCmd);
+    cli.register(depsCmd, new WhyCmd(depsMain), new SetPeerCmd(depsMain), new UnsetPeerCmd(depsMain));
 
     ComponentLoader.loadDeps = depsMain.loadDependencies.bind(depsMain);
 

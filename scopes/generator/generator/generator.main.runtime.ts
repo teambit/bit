@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import camelCase from 'camelcase';
 import { resolve } from 'path';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
@@ -8,7 +9,7 @@ import ComponentConfig from '@teambit/legacy/dist/consumer/config';
 import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain, Component } from '@teambit/component';
-import { isCoreAspect, loadBit, restoreGlobals } from '@teambit/bit';
+import { isCoreAspect, loadBit, restoreGlobalsFromSnapshot } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { GitAspect, GitMain } from '@teambit/git';
 import { BitError } from '@teambit/bit-error';
@@ -196,12 +197,13 @@ export class GeneratorMain {
   private async getGlobalGeneratorEnvs(
     aspectId: string
   ): Promise<{ remoteGenerator: GeneratorMain; fullAspectId: string; remoteEnvsAspect: EnvsMain; aspect: any }> {
-    const { globalScopeHarmony, components } = await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
+    const { globalScopeHarmony, components, legacyGlobalsSnapshot } =
+      await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
     const remoteGenerator = globalScopeHarmony.get<GeneratorMain>(GeneratorAspect.id);
     const remoteEnvsAspect = globalScopeHarmony.get<EnvsMain>(EnvsAspect.id);
     const aspect = components[0];
     const fullAspectId = aspect.id.toString();
-    restoreGlobals();
+    restoreGlobalsFromSnapshot(legacyGlobalsSnapshot);
 
     return { remoteGenerator, fullAspectId, remoteEnvsAspect, aspect };
   }
@@ -312,6 +314,15 @@ export class GeneratorMain {
     const componentIds = componentNames.map((componentName) =>
       this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
     );
+
+    const componentNameSameAsTemplateName = componentIds.find((componentId) => componentId.name === templateName);
+    if (componentNameSameAsTemplateName) {
+      const compNamePascal = camelCase(templateName, { pascalCase: true });
+      throw new BitError(
+        `unable to create a component with the same name as the template "${templateName}", please use a different name.
+the reason is that after refactoring, the code will have this invalid class: "class ${compNamePascal} extends ${compNamePascal} {}"`
+      );
+    }
 
     const envId = await this.getEnvIdFromTemplateWithId(templateWithId);
 

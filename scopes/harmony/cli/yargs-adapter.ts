@@ -84,7 +84,7 @@ export class YargsAdapter implements CommandModule {
     };
     globalOptions['safe-mode'] = {
       describe:
-        'bootstrap the bare-minimum with only the CLI aspect. useful mainly for low-level commands when bit refuses to load',
+        'useful when it fails to load normally. it skips loading aspects from workspace.jsonc, and for legacy-commands it initializes only the CLI aspect',
       group: GLOBAL_GROUP,
     };
     return globalOptions;

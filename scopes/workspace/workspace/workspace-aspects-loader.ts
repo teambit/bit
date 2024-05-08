@@ -85,7 +85,6 @@ export class WorkspaceAspectsLoader {
     neededFor?: string,
     opts: WorkspaceLoadAspectsOptions = {}
   ): Promise<string[]> {
-    this.logger.profile('workspace.loadAspects');
     const calculatedThrowOnError: boolean = throwOnError ?? false;
     const defaultOpts: Required<WorkspaceLoadAspectsOptions> = {
       useScopeAspectsCapsule: false,
@@ -101,6 +100,7 @@ export class WorkspaceAspectsLoader {
     // generate a random callId to be able to identify the call from the logs
     const callId = Math.floor(Math.random() * 1000);
     const loggerPrefix = `[${callId}] loadAspects,`;
+    this.logger.profile(`[${callId}] workspace.loadAspects`);
     this.logger.info(`${loggerPrefix} loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts, null, 2)}`);
@@ -109,7 +109,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     await this.aspectLoader.loadAspectFromPath(this.workspace.localAspects);
     const notLoadedIds = nonLocalAspects.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) {
-      this.logger.profile('workspace.loadAspects');
+      this.logger.profile(`[${callId}] workspace.loadAspects`);
       return [];
     }
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -173,9 +173,9 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     );
 
     await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, undefined, { throwOnError });
-    this.logger.debug(`${loggerPrefix} finish loading aspects`);
     const manifestIds = manifests.map((manifest) => manifest.id);
-    this.logger.profile('workspace.loadAspects');
+    this.logger.debug(`${loggerPrefix} finish loading aspects`);
+    this.logger.profile(`[${callId}] workspace.loadAspects`);
     return compact(manifestIds.concat(scopeAspectIds));
   }
 
@@ -187,16 +187,10 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     const nonWorkspaceIdsString = ids.map((id) => id.toString());
     try {
-      scopeAspectIds = await this.scope.loadAspects(
-        nonWorkspaceIdsString,
-        throwOnError,
-        neededFor,
-        currentLane || undefined,
-        {
-          packageManagerConfigRootDir: this.workspace.path,
-          workspaceName: this.workspace.name,
-        }
-      );
+      scopeAspectIds = await this.scope.loadAspects(nonWorkspaceIdsString, throwOnError, neededFor, currentLane, {
+        packageManagerConfigRootDir: this.workspace.path,
+        workspaceName: this.workspace.name,
+      });
       return scopeAspectIds;
     } catch (err: any) {
       this.throwWsJsoncAspectNotFoundError(err);

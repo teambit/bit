@@ -14,6 +14,7 @@ import Scope, { ScopeDescriptor } from '../../scope';
 import loadScope from '../../scope-loader';
 import { FsScopeNotLoaded } from '../exceptions';
 import { Network } from '../network';
+import { Ref } from '../../objects';
 
 export default class Fs implements Network {
   scopePath: string;
@@ -102,5 +103,10 @@ export default class Fs implements Network {
       this.scope = scope;
       return this;
     });
+  }
+
+  async hasObjects(hashes: string[]): Promise<string[]> {
+    const results = await this.getScope().objects.hasMultiple(hashes.map((h) => Ref.from(h)));
+    return results.map((result) => result.toString());
   }
 }

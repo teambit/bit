@@ -102,6 +102,9 @@ export default function createWebpackConfig(
           'scheduler/tracing': 'scheduler/tracing-profiling',
         }),
         '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
+        '@teambit/component.ui.component-compare.context': require.resolve(
+          '@teambit/component.ui.component-compare.context'
+        ),
       },
       fallback: {
         module: false,

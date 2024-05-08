@@ -236,7 +236,6 @@ export const IGNORE_LIST = [
   '**/.env.**.local',
   '**/.bit.map.json',
   '**/.bitmap',
-  '**/.gitignore',
   '**/bit.json',
   '**/component.json',
   '**/bitBindings.js',
@@ -592,6 +591,7 @@ export enum BuildStatus {
   Pending = 'pending',
   Failed = 'failed',
   Succeed = 'succeed',
+  Skipped = 'skipped', // e.g. when a version is marked as deleted.
 }
 
 export const SOURCE_DIR_SYMLINK_TO_NM = '_src'; // symlink from node_modules to the workspace sources files

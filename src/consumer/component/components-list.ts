@@ -83,7 +83,7 @@ export default class ComponentsList {
     const mergePendingComponents = await this.listMergePendingComponents();
     const mergePendingComponentsIds = ComponentIdList.fromArray(mergePendingComponents.map((c) => c.id));
     const currentLane = await this.consumer.getCurrentLaneObject();
-    const currentLaneIds = currentLane?.toBitIds();
+    const currentLaneIds = currentLane?.toComponentIds();
     const outdatedComps: OutdatedComponent[] = [];
     await Promise.all(
       fileSystemComponents.map(async (component) => {
@@ -279,7 +279,7 @@ export default class ComponentsList {
     return ComponentIdList.fromArray(updatedIds);
   }
 
-  async listExportPendingComponents(laneObj: Lane | null): Promise<ModelComponent[]> {
+  async listExportPendingComponents(laneObj?: Lane): Promise<ModelComponent[]> {
     const exportPendingComponentsIds: ComponentIdList = await this.listExportPendingComponentsIds(laneObj);
     return Promise.all(exportPendingComponentsIds.map((id) => this.scope.getModelComponent(id)));
   }
@@ -455,7 +455,7 @@ export default class ComponentsList {
         return {
           id: component.toComponentIdWithLatestVersion(),
           deprecated: Boolean(await component.isDeprecated(scope.objects)),
-          removed: await component.isRemoved(scope.objects),
+          removed: Boolean(await component.isRemoved(scope.objects)),
           laneReadmeOf: await component.isLaneReadmeOf(scope.objects),
         };
       })

@@ -26,14 +26,20 @@ import { decoratorRenderer } from '@teambit/api-reference.renderers.decorator';
 import { SchemaNodeConstructor, SchemaRegistry, Schemas } from '@teambit/semantics.entities.semantic-schema';
 import { CodeAspect, CodeUI } from '@teambit/code';
 import { TaggedExports } from '@teambit/tagged-exports';
+import { WorkspaceAspect, WorkspaceUI } from '@teambit/workspace';
 
 import { APIReferenceAspect } from './api-reference.aspect';
 
 export type APINodeRendererSlot = SlotRegistry<APINodeRenderer[]>;
 export class APIReferenceUI {
-  constructor(private host: string, private apiNodeRendererSlot: APINodeRendererSlot, private code: CodeUI) {}
+  constructor(
+    private host: string,
+    private apiNodeRendererSlot: APINodeRendererSlot,
+    private code: CodeUI,
+    private workspace: WorkspaceUI
+  ) {}
 
-  static dependencies = [ComponentAspect, CodeAspect];
+  static dependencies = [ComponentAspect, CodeAspect, WorkspaceAspect];
   static runtime = UIRuntime;
   static slots = [Slot.withType<APINodeRenderer[]>()];
 
@@ -49,7 +55,7 @@ export class APIReferenceUI {
   TaggedAPIPage = ({ componentId }: { componentId: string }) => {
     return (
       <APIRefRenderersProvider nodeRenderers={flatten(this.apiNodeRendererSlot.values())}>
-        <TaggedExports componentId={componentId} />
+        <TaggedExports componentId={componentId} showBanner={Boolean(this.workspace)} />
       </APIRefRenderersProvider>
     );
   };
@@ -86,14 +92,14 @@ export class APIReferenceUI {
   ];
 
   static async provider(
-    [componentUI, codeUI]: [ComponentUI, CodeUI],
+    [componentUI, codeUI, workspaceUI]: [ComponentUI, CodeUI, WorkspaceUI],
     _,
     [apiNodeRendererSlot]: [APINodeRendererSlot],
     harmony: Harmony
   ) {
     const { config } = harmony;
     const host = String(config.get('teambit.harmony/bit'));
-    const apiReferenceUI = new APIReferenceUI(host, apiNodeRendererSlot, codeUI);
+    const apiReferenceUI = new APIReferenceUI(host, apiNodeRendererSlot, codeUI, workspaceUI);
     apiReferenceUI.registerAPINodeRenderer(apiReferenceUI.apiNodeRenderers);
     const apiReferenceSection = new APIRefSection(apiReferenceUI);
     componentUI.registerNavigation(apiReferenceSection.navigationLink, apiReferenceSection.order);

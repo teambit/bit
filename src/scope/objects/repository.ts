@@ -154,6 +154,19 @@ export default class Repository {
     return fs.pathExists(objectPath);
   }
 
+  async hasMultiple(refs: Ref[]): Promise<Ref[]> {
+    const concurrency = concurrentIOLimit();
+    const existingRefs = await pMap(
+      refs,
+      async (ref) => {
+        const pathExists = await this.has(ref);
+        return pathExists ? ref : null;
+      },
+      { concurrency }
+    );
+    return compact(existingRefs);
+  }
+
   async load(ref: Ref, throws = false, preferInMemoryObjects = false): Promise<BitObject> {
     if (preferInMemoryObjects) {
       // during tag, the updated objects are in `this.objects`.

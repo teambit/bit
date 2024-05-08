@@ -2,7 +2,7 @@ import { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
 import { dirname, basename } from 'path';
 import { compact, difference, partition } from 'lodash';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BIT_MAP, CFG_WATCH_USE_POLLING, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
@@ -56,6 +56,7 @@ export type WatchOptions = {
   checkTypes?: CheckTypes; // if enabled, the spawnTSServer becomes true.
   preCompile?: boolean; // whether compile all components before start watching
   compile?: boolean; // whether compile modified/added components during watch process
+  import?: boolean; // whether import objects when .bitmap got version changes
 };
 
 export type RootDirs = { [dir: PathLinux]: ComponentID };
@@ -290,8 +291,10 @@ export class Watcher {
    */
   private async handleBitmapChanges(): Promise<OnComponentEventResult[]> {
     const previewsRootDirs = { ...this.rootDirs };
+    const previewsIds = this.consumer.bitMap.getAllBitIds();
     await this.workspace._reloadConsumer();
     await this.setRootDirs();
+    await this.importObjectsIfNeeded(previewsIds);
     await this.workspace.triggerOnBitmapChange();
     const newDirs: string[] = difference(Object.keys(this.rootDirs), Object.keys(previewsRootDirs));
     const removedDirs: string[] = difference(Object.keys(previewsRootDirs), Object.keys(this.rootDirs));
@@ -307,6 +310,44 @@ export class Watcher {
     }
 
     return results;
+  }
+
+  /**
+   * needed when using git.
+   * it resolves the following issue - a user is running `git pull` which updates the components and the .bitmap file.
+   * because the objects locally are not updated, the .bitmap has new versions that don't exist in the local scope.
+   * as soon as the watcher gets an event about a file change, it loads the component which throws
+   * ComponentsPendingImport error.
+   * to resolve this, we import the new objects as soon as the .bitmap file changes.
+   * for performance reasons, we import only when: 1) the .bitmap file has version changes and 2) this new version is
+   * not already in the scope.
+   */
+  private async importObjectsIfNeeded(previewsIds: ComponentIdList) {
+    if (!this.options.import) {
+      return;
+    }
+    const currentIds = this.consumer.bitMap.getAllBitIds();
+    const hasVersionChanges = currentIds.find((id) => {
+      const prevId = previewsIds.searchWithoutVersion(id);
+      return prevId && prevId.version !== id.version;
+    });
+    if (!hasVersionChanges) {
+      return;
+    }
+    const existsInScope = await this.workspace.scope.isComponentInScope(hasVersionChanges);
+    if (existsInScope) {
+      // the .bitmap change was probably a result of tag/snap/merge, no need to import.
+      return;
+    }
+    if (this.options.verbose) {
+      logger.console(
+        `Watcher: .bitmap has changed with new versions which do not exist locally, importing the objects...`
+      );
+    }
+    await this.workspace.scope.import(currentIds, {
+      useCache: true,
+      lane: await this.workspace.getCurrentLaneObject(),
+    });
   }
 
   private async executeWatchOperationsOnRemove(componentId: ComponentID) {

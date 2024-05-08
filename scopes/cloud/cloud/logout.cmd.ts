@@ -10,6 +10,7 @@ export class LogoutCmd implements Command {
   options = [];
   loader = true;
   skipWorkspace = true;
+  loadAspects = false;
 
   constructor(private cloud: CloudMain) {}
 

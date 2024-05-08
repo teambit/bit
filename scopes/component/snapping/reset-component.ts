@@ -14,7 +14,7 @@ export type untagResult = { id: ComponentID; versions: string[]; component?: Mod
 export async function removeLocalVersion(
   scope: Scope,
   id: ComponentID,
-  lane: Lane | null,
+  lane?: Lane,
   head?: boolean,
   force = false
 ): Promise<untagResult> {
@@ -55,7 +55,7 @@ export async function removeLocalVersion(
 
 export async function removeLocalVersionsForAllComponents(
   consumer: Consumer,
-  lane: Lane | null,
+  lane?: Lane,
   head?: boolean
 ): Promise<untagResult[]> {
   const componentsToUntag = await getComponentsWithOptionToUntag(consumer);
@@ -65,7 +65,7 @@ export async function removeLocalVersionsForAllComponents(
 
 export async function removeLocalVersionsForMultipleComponents(
   componentsToUntag: ModelComponent[],
-  lane: Lane | null,
+  lane?: Lane,
   head?: boolean,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   force: boolean,

@@ -345,6 +345,9 @@ export default class CommandHelper {
   setPeer(componentId: string, range = '') {
     return this.runCmd(`bit set-peer ${componentId} ${range}`);
   }
+  unsetPeer(componentId: string) {
+    return this.runCmd(`bit unset-peer ${componentId}`);
+  }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
   }
@@ -529,6 +532,9 @@ export default class CommandHelper {
   }
   fetchLane(id: string) {
     return this.runCmd(`bit fetch ${id} --lanes`);
+  }
+  ejectFromLane(id: string) {
+    return this.runCmd(`bit lane eject ${id}`);
   }
   fetchRemoteLane(id: string) {
     return this.runCmd(`bit fetch ${this.scopes.remote}${LANE_REMOTE_DELIMITER}${id} --lanes`);
@@ -781,6 +787,9 @@ export default class CommandHelper {
   mergeAbortLane(options = '') {
     return this.runCmd(`bit lane merge-abort ${options} --silent`);
   }
+  mergeMoveLane(laneName: string, options = '') {
+    return this.runCmd(`bit lane merge-move ${laneName} ${options}`);
+  }
   mergeLaneFromScope(cwd: string, fromLane: string, options = '') {
     return this.runCmd(`bit _merge-lane ${fromLane} ${options}`, cwd);
   }
@@ -831,6 +840,9 @@ export default class CommandHelper {
   }
   runApp(name: string) {
     return this.runCmd(`bit app run ${name}`);
+  }
+  listApps() {
+    return this.runCmd(`bit app list`);
   }
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
