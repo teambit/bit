@@ -6,7 +6,6 @@ import { UIRuntime } from '@teambit/ui';
 import { CompositionCompareSection } from '@teambit/compositions.ui.composition-compare-section';
 import { CompositionCompare } from '@teambit/compositions.ui.composition-compare';
 import { ComponentCompareUI, ComponentCompareAspect } from '@teambit/component-compare';
-import { CompositionContent } from '.';
 import { CompositionsSection } from './composition.section';
 import { CompositionsAspect } from './compositions.aspect';
 import { MenuBarWidget } from './compositions';
@@ -29,16 +28,7 @@ export class CompositionsUI {
   }
 
   getCompositionsCompare = () => {
-    return (
-      <CompositionCompare
-        emptyState={this.emptyStateSlot}
-        PreviewView={(compositionProps) => {
-          return (
-            <CompositionContent {...compositionProps} allowFullScreen={true} fullContentHeight forceHeight={'100%'} />
-          );
-        }}
-      />
-    );
+    return <CompositionCompare emptyState={this.emptyStateSlot} />;
   };
 
   static dependencies = [ComponentAspect, ComponentCompareAspect];
