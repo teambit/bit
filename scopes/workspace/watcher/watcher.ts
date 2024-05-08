@@ -2,7 +2,7 @@ import { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
 import { dirname, basename } from 'path';
 import { compact, difference, partition } from 'lodash';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BIT_MAP, CFG_WATCH_USE_POLLING, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
@@ -56,7 +56,10 @@ export type WatchOptions = {
   checkTypes?: CheckTypes; // if enabled, the spawnTSServer becomes true.
   preCompile?: boolean; // whether compile all components before start watching
   compile?: boolean; // whether compile modified/added components during watch process
+  import?: boolean; // whether import objects when .bitmap got version changes
 };
+
+export type RootDirs = { [dir: PathLinux]: ComponentID };
 
 const DEBOUNCE_WAIT_MS = 100;
 type PathLinux = string; // ts fails when importing it from @teambit/legacy/dist/utils/path.
@@ -67,7 +70,7 @@ export class Watcher {
   private watchQueue = new WatchQueue();
   private bitMapChangesInProgress = false;
   private ipcEventsDir: string;
-  private trackDirs: { [dir: PathLinux]: ComponentID } = {};
+  private rootDirs: RootDirs = {};
   private verbose = false;
   private multipleWatchers: WatcherProcessData[] = [];
   constructor(
@@ -86,8 +89,8 @@ export class Watcher {
 
   async watch() {
     const { msgs, ...watchOpts } = this.options;
-    await this.setTrackDirs();
-    const componentIds = Object.values(this.trackDirs);
+    await this.setRootDirs();
+    const componentIds = Object.values(this.rootDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
     await this.createWatcher();
     const watcher = this.fsWatcher;
@@ -101,7 +104,7 @@ export class Watcher {
         if (msgs?.onAll) watcher.on('all', msgs?.onAll);
       }
       watcher.on('ready', () => {
-        msgs?.onReady(this.workspace, this.trackDirs, this.verbose);
+        msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
         // console.log(this.fsWatcher.getWatched());
         loader.stop();
       });
@@ -287,24 +290,64 @@ export class Watcher {
    * if .bitmap changed, it's possible that a new component has been added. trigger onComponentAdd.
    */
   private async handleBitmapChanges(): Promise<OnComponentEventResult[]> {
-    const previewsTrackDirs = { ...this.trackDirs };
+    const previewsRootDirs = { ...this.rootDirs };
+    const previewsIds = this.consumer.bitMap.getAllBitIds();
     await this.workspace._reloadConsumer();
-    await this.setTrackDirs();
+    await this.setRootDirs();
+    await this.importObjectsIfNeeded(previewsIds);
     await this.workspace.triggerOnBitmapChange();
-    const newDirs: string[] = difference(Object.keys(this.trackDirs), Object.keys(previewsTrackDirs));
-    const removedDirs: string[] = difference(Object.keys(previewsTrackDirs), Object.keys(this.trackDirs));
+    const newDirs: string[] = difference(Object.keys(this.rootDirs), Object.keys(previewsRootDirs));
+    const removedDirs: string[] = difference(Object.keys(previewsRootDirs), Object.keys(this.rootDirs));
     const results: OnComponentEventResult[] = [];
     if (newDirs.length) {
       const addResults = await mapSeries(newDirs, async (dir) =>
-        this.executeWatchOperationsOnComponent(this.trackDirs[dir], [], [], false)
+        this.executeWatchOperationsOnComponent(this.rootDirs[dir], [], [], false)
       );
       results.push(...addResults.flat());
     }
     if (removedDirs.length) {
-      await mapSeries(removedDirs, (dir) => this.executeWatchOperationsOnRemove(previewsTrackDirs[dir]));
+      await mapSeries(removedDirs, (dir) => this.executeWatchOperationsOnRemove(previewsRootDirs[dir]));
     }
 
     return results;
+  }
+
+  /**
+   * needed when using git.
+   * it resolves the following issue - a user is running `git pull` which updates the components and the .bitmap file.
+   * because the objects locally are not updated, the .bitmap has new versions that don't exist in the local scope.
+   * as soon as the watcher gets an event about a file change, it loads the component which throws
+   * ComponentsPendingImport error.
+   * to resolve this, we import the new objects as soon as the .bitmap file changes.
+   * for performance reasons, we import only when: 1) the .bitmap file has version changes and 2) this new version is
+   * not already in the scope.
+   */
+  private async importObjectsIfNeeded(previewsIds: ComponentIdList) {
+    if (!this.options.import) {
+      return;
+    }
+    const currentIds = this.consumer.bitMap.getAllBitIds();
+    const hasVersionChanges = currentIds.find((id) => {
+      const prevId = previewsIds.searchWithoutVersion(id);
+      return prevId && prevId.version !== id.version;
+    });
+    if (!hasVersionChanges) {
+      return;
+    }
+    const existsInScope = await this.workspace.scope.isComponentInScope(hasVersionChanges);
+    if (existsInScope) {
+      // the .bitmap change was probably a result of tag/snap/merge, no need to import.
+      return;
+    }
+    if (this.options.verbose) {
+      logger.console(
+        `Watcher: .bitmap has changed with new versions which do not exist locally, importing the objects...`
+      );
+    }
+    await this.workspace.scope.import(currentIds, {
+      useCache: true,
+      lane: await this.workspace.getCurrentLaneObject(),
+    });
   }
 
   private async executeWatchOperationsOnRemove(componentId: ComponentID) {
@@ -364,24 +407,24 @@ export class Watcher {
 
   private getComponentIdByPath(filePath: string): ComponentID | null {
     const relativeFile = this.getRelativePathLinux(filePath);
-    const trackDir = this.findTrackDirByFilePathRecursively(relativeFile);
-    if (!trackDir) {
+    const rootDir = this.findRootDirByFilePathRecursively(relativeFile);
+    if (!rootDir) {
       // the file is not part of any component. If it was a new component, or a new file of
       // existing component, then, handleBitmapChanges() should deal with it.
       return null;
     }
-    return this.trackDirs[trackDir];
+    return this.rootDirs[rootDir];
   }
 
   private getRelativePathLinux(filePath: string) {
     return pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(filePath));
   }
 
-  private findTrackDirByFilePathRecursively(filePath: string): string | null {
-    if (this.trackDirs[filePath]) return filePath;
+  private findRootDirByFilePathRecursively(filePath: string): string | null {
+    if (this.rootDirs[filePath]) return filePath;
     const parentDir = dirname(filePath);
     if (parentDir === filePath) return null;
-    return this.findTrackDirByFilePathRecursively(parentDir);
+    return this.findRootDirByFilePathRecursively(parentDir);
   }
 
   private async createWatcher() {
@@ -415,13 +458,13 @@ export class Watcher {
     }
   }
 
-  private async setTrackDirs() {
-    this.trackDirs = {};
+  private async setRootDirs() {
+    this.rootDirs = {};
     const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
     componentsFromBitMap.map((componentMap) => {
       const componentId = componentMap.id;
       const rootDir = componentMap.getRootDir();
-      this.trackDirs[rootDir] = componentId;
+      this.rootDirs[rootDir] = componentId;
     });
   }
 }

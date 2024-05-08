@@ -315,8 +315,8 @@ export default class CommandHelper {
   fork(sourceId: string, values = '') {
     return this.runCmd(`bit fork ${sourceId} ${values}`);
   }
-  forkScope(originalScope: string, newScope: string) {
-    return this.runCmd(`bit scope fork ${originalScope} ${newScope}`);
+  forkScope(originalScope: string, newScope: string, flags = '') {
+    return this.runCmd(`bit scope fork ${originalScope} ${newScope} ${flags}`);
   }
   rename(sourceId: string, targetId: string, flags = '') {
     return this.runCmd(`bit rename ${sourceId} ${targetId} ${flags}`);
@@ -344,6 +344,9 @@ export default class CommandHelper {
   }
   setPeer(componentId: string, range = '') {
     return this.runCmd(`bit set-peer ${componentId} ${range}`);
+  }
+  unsetPeer(componentId: string) {
+    return this.runCmd(`bit unset-peer ${componentId}`);
   }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
@@ -530,6 +533,9 @@ export default class CommandHelper {
   fetchLane(id: string) {
     return this.runCmd(`bit fetch ${id} --lanes`);
   }
+  ejectFromLane(id: string) {
+    return this.runCmd(`bit lane eject ${id}`);
+  }
   fetchRemoteLane(id: string) {
     return this.runCmd(`bit fetch ${this.scopes.remote}${LANE_REMOTE_DELIMITER}${id} --lanes`);
   }
@@ -701,13 +707,13 @@ export default class CommandHelper {
     return JSON.parse(output);
   }
 
-  showComponentParsedHarmony(id = 'bar/foo') {
-    const output = this.runCmd(`bit show ${id} --json`);
+  showComponentParsedHarmony(id = 'bar/foo', cwd?: string) {
+    const output = this.runCmd(`bit show ${id} --json`, cwd);
     return JSON.parse(output);
   }
 
-  showAspectConfig(compId: string, aspectId: string) {
-    const show = this.showComponentParsedHarmony(compId);
+  showAspectConfig(compId: string, aspectId: string, cwd?: string) {
+    const show = this.showComponentParsedHarmony(compId, cwd);
     return show.find((_) => _.title === 'configuration').json.find((_) => _.id === aspectId);
   }
 
@@ -781,6 +787,9 @@ export default class CommandHelper {
   mergeAbortLane(options = '') {
     return this.runCmd(`bit lane merge-abort ${options} --silent`);
   }
+  mergeMoveLane(laneName: string, options = '') {
+    return this.runCmd(`bit lane merge-move ${laneName} ${options}`);
+  }
   mergeLaneFromScope(cwd: string, fromLane: string, options = '') {
     return this.runCmd(`bit _merge-lane ${fromLane} ${options}`, cwd);
   }
@@ -831,6 +840,9 @@ export default class CommandHelper {
   }
   runApp(name: string) {
     return this.runCmd(`bit app run ${name}`);
+  }
+  listApps() {
+    return this.runCmd(`bit app list`);
   }
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);

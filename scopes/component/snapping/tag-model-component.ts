@@ -53,9 +53,14 @@ export type BasicTagParams = BasicTagSnapParams & {
 };
 
 function updateDependenciesVersions(
-  componentsToTag: ConsumerComponent[],
+  allComponentsToTag: ConsumerComponent[],
   dependencyResolver: DependencyResolverMain
-): void {
+) {
+  // filter out removed components.
+  // if a component has a deleted-component as a dependency, it was probably running "bit install <dep>" with a version
+  // from main. we want to keep it as the user requested. Otherwise, this changes the dependency version to the newly
+  // snapped one unintentionally.
+  const componentsToTag = allComponentsToTag.filter((c) => !c.isRemoved());
   const getNewDependencyVersion = (id: ComponentID): ComponentID | null => {
     const foundDependency = componentsToTag.find((component) => component.id.isEqualWithoutVersion(id));
     return foundDependency ? id.changeVersion(foundDependency.version) : null;
@@ -438,7 +443,7 @@ async function removeMergeConfigFromComponents(
 async function addComponentsToScope(
   snapping: SnappingMain,
   components: ConsumerComponent[],
-  lane: Lane | null,
+  lane: Lane | undefined,
   shouldValidateVersion: boolean,
   consumer?: Consumer,
   tagDataPerComp?: TagDataPerComp[],
@@ -535,7 +540,7 @@ function setCurrentSchema(components: ConsumerComponent[]) {
 
 function addBuildStatus(components: ConsumerComponent[], buildStatus: BuildStatus) {
   components.forEach((component) => {
-    component.buildStatus = buildStatus;
+    component.buildStatus = component.isRemoved() ? BuildStatus.Skipped : buildStatus;
   });
 }
 

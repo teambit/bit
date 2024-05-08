@@ -1,13 +1,15 @@
 import chalk from 'chalk';
 import { SchemaLocation, SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
+import { ExportSchema } from './export';
 
 export class ModuleSchema extends SchemaNode {
-  exports: SchemaNode[];
+  // exports could either be re exports (export declarations) or nodes with export modifier
+  exports: (ExportSchema | SchemaNode)[];
   internals: SchemaNode[];
   namespace?: string;
 
-  constructor(readonly location: SchemaLocation, exports: SchemaNode[], internals: SchemaNode[]) {
+  constructor(readonly location: SchemaLocation, exports: (ExportSchema | SchemaNode)[], internals: SchemaNode[]) {
     super();
     this.exports = exports;
     this.internals = internals;
@@ -25,7 +27,7 @@ export class ModuleSchema extends SchemaNode {
         return [...acc, ...exp.exports];
       }
       return [...acc, exp];
-    }, [] as SchemaNode[]);
+    }, [] as (ExportSchema | SchemaNode)[]);
   }
 
   toString() {

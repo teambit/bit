@@ -1,14 +1,15 @@
+import fs from 'fs-extra';
+import camelCase from 'camelcase';
+import { resolve } from 'path';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config';
 import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
-
 import { ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain, Component } from '@teambit/component';
-
-import { isCoreAspect, loadBit, restoreGlobals } from '@teambit/bit';
+import { isCoreAspect, loadBit, restoreGlobalsFromSnapshot } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { GitAspect, GitMain } from '@teambit/git';
 import { BitError } from '@teambit/bit-error';
@@ -35,6 +36,7 @@ import {
 import { BasicWorkspaceStarter } from './templates/basic';
 import { StarterPlugin } from './starter.plugin';
 import { GeneratorService } from './generator.service';
+import { WorkspacePathExists } from './exceptions/workspace-path-exists';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
@@ -195,12 +197,13 @@ export class GeneratorMain {
   private async getGlobalGeneratorEnvs(
     aspectId: string
   ): Promise<{ remoteGenerator: GeneratorMain; fullAspectId: string; remoteEnvsAspect: EnvsMain; aspect: any }> {
-    const { globalScopeHarmony, components } = await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
+    const { globalScopeHarmony, components, legacyGlobalsSnapshot } =
+      await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
     const remoteGenerator = globalScopeHarmony.get<GeneratorMain>(GeneratorAspect.id);
     const remoteEnvsAspect = globalScopeHarmony.get<EnvsMain>(EnvsAspect.id);
     const aspect = components[0];
     const fullAspectId = aspect.id.toString();
-    restoreGlobals();
+    restoreGlobalsFromSnapshot(legacyGlobalsSnapshot);
 
     return { remoteGenerator, fullAspectId, remoteEnvsAspect, aspect };
   }
@@ -312,6 +315,15 @@ export class GeneratorMain {
       this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
     );
 
+    const componentNameSameAsTemplateName = componentIds.find((componentId) => componentId.name === templateName);
+    if (componentNameSameAsTemplateName) {
+      const compNamePascal = camelCase(templateName, { pascalCase: true });
+      throw new BitError(
+        `unable to create a component with the same name as the template "${templateName}", please use a different name.
+the reason is that after refactoring, the code will have this invalid class: "class ${compNamePascal} extends ${compNamePascal} {}"`
+      );
+    }
+
     const envId = await this.getEnvIdFromTemplateWithId(templateWithId);
 
     const componentGenerator = new ComponentGenerator(
@@ -328,7 +340,7 @@ export class GeneratorMain {
       templateWithId.id,
       envId
     );
-    return componentGenerator.generate();
+    return componentGenerator.generate(options.force);
   }
 
   private async getEnvIdFromTemplateWithId(templateWithId: ComponentTemplateWithId): Promise<ComponentID | undefined> {
@@ -357,14 +369,18 @@ export class GeneratorMain {
     if (this.workspace) {
       throw new BitError('Error: unable to generate a new workspace inside of an existing workspace');
     }
+    const workspacePath = options.currentDir ? process.cwd() : resolve(workspaceName);
+    if (!options.currentDir && fs.existsSync(workspacePath)) {
+      throw new WorkspacePathExists(workspacePath);
+    }
     const { aspect: aspectId, loadFrom } = options;
     const { workspaceTemplate, aspect } = loadFrom
       ? await this.findTemplateInOtherWorkspace(loadFrom, templateName, aspectId)
       : await this.getWorkspaceTemplate(templateName, aspectId);
 
     if (!workspaceTemplate) throw new BitError(`template "${templateName}" was not found`);
-    const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, workspaceTemplate, aspect);
-    const workspacePath = await workspaceGenerator.generate();
+    const workspaceGenerator = new WorkspaceGenerator(workspaceName, workspacePath, options, workspaceTemplate, aspect);
+    await workspaceGenerator.generate();
     return { workspacePath, appName: workspaceTemplate.appName };
   }
 

@@ -64,4 +64,13 @@ describe('init command on Harmony', function () {
       expect(() => helper.command.install()).to.throw(`fatal: unable to load the workspace`);
     });
   });
+  describe('workspace.jsonc is missing', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fs.deletePath('workspace.jsonc');
+    });
+    it('bit init should fix it', () => {
+      expect(() => helper.command.init()).to.not.throw();
+    });
+  });
 });

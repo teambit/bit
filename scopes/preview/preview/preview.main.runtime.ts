@@ -846,7 +846,7 @@ export class PreviewMain {
   private getDefaultStrategies() {
     return [
       new EnvBundlingStrategy(this, this.pkg, this.dependencyResolver),
-      new ComponentBundlingStrategy(this, this.pkg, this.dependencyResolver),
+      new ComponentBundlingStrategy(this, this.pkg, this.dependencyResolver, this.logger),
     ];
   }
 

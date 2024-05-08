@@ -52,17 +52,18 @@ export class ComponentGenerator {
     private envId?: ComponentID
   ) {}
 
-  async generate(): Promise<GenerateResult[]> {
+  async generate(force = false): Promise<GenerateResult[]> {
     const dirsToDeleteIfFailed: string[] = [];
     const generateResults = await pMapSeries(this.componentIds, async (componentId) => {
       try {
-        const componentPath = this.newComponentHelper.getNewComponentPath(
-          componentId,
-          this.options.path,
-          this.componentIds.length
-        );
-        if (fs.existsSync(path.join(this.workspace.path, componentPath))) {
-          throw new BitError(`unable to create a component at "${componentPath}", this path already exist`);
+        const componentPath = this.newComponentHelper.getNewComponentPath(componentId, {
+          pathFromUser: this.options.path,
+          componentsToCreate: this.componentIds.length,
+        });
+        if (!force && fs.existsSync(path.join(this.workspace.path, componentPath))) {
+          throw new BitError(
+            `unable to create a component at "${componentPath}", this path already exists, please use "--path" to create the component in a different path`
+          );
         }
         dirsToDeleteIfFailed.push(componentPath);
         return await this.generateOneComponent(componentId, componentPath);
@@ -223,7 +224,15 @@ export class ComponentGenerator {
         setBy: hasEnvConfiguredOriginally ? 'workspace variants' : '<default>',
       };
     };
-    const { envId, setBy } = getEnvData();
+    // eslint-disable-next-line prefer-const
+    let { envId, setBy } = getEnvData();
+    if (envId) {
+      const isInWorkspace = this.workspace.exists(envId);
+      const isSameAsThisEnvId = envId === this.envId?.toString() || envId === this.envId?.toStringWithoutVersion();
+      if (isSameAsThisEnvId && this.envId) {
+        envId = isInWorkspace ? this.envId.toStringWithoutVersion() : this.envId.toString();
+      }
+    }
     return {
       id: componentId,
       dir: componentPath,

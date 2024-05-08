@@ -21,6 +21,7 @@ import { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } fro
 import { Logger } from '@teambit/logger';
 import { EnvsMain } from '@teambit/envs';
 import { NodeLinker } from '@teambit/dependency-resolver';
+import { BitError } from '@teambit/bit-error';
 import { ScopeMain } from './scope.main.runtime';
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
@@ -225,15 +226,28 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   private async compileIfNoDist(capsule: Capsule, component: Component) {
-    const env = this.envs.getEnv(component);
-    const compiler: Compiler = env.env.getCompiler();
+    let compiler: Compiler | undefined;
+    try {
+      const env = this.envs.getEnv(component);
+      compiler = env.env.getCompiler();
+    } catch (err: any) {
+      this.logger.info(
+        `compileIfNoDist: failed loading compiler for ${component.id.toString()} in capsule ${capsule.path}, error: ${
+          err.message
+        }`
+      );
+    }
     const distDir = compiler?.distDir || DEFAULT_DIST_DIRNAME;
     const distExists = existsSync(join(capsule.path, distDir));
     if (distExists) return;
+    if (!compiler) {
+      throw new BitError(`unable to compile aspect/env ${component.id.toString()}, no compiler found`);
+    }
 
     const compiledCode = (
       await Promise.all(
         component.filesystem.files.flatMap(async (file) => {
+          // @ts-ignore - we know it's not null, we have throw error above if yes
           if (!compiler.isFileSupported(file.path)) {
             return [
               {
@@ -242,8 +256,9 @@ needed-for: ${neededFor || '<unknown>'}`);
               },
             ] as TranspileFileOutputOneFile[];
           }
-
+          // @ts-ignore - we know it's not null, we have throw error above if yes
           if (compiler.transpileFile) {
+            // @ts-ignore - we know it's not null, we have throw error above if yes
             return compiler.transpileFile(file.contents.toString('utf8'), {
               filePath: file.path,
               componentDir: capsule.path,
@@ -257,6 +272,7 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     await Promise.all(
       compact(compiledCode).map((compiledFile) => {
+        // @ts-ignore - we know it's not null, we have throw error above if yes
         const path = compiler.getDistPathBySrcPath(compiledFile.outputPath);
         return capsule?.outputFile(path, compiledFile.outputText);
       })

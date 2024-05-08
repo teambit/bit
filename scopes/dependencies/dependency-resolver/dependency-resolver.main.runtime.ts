@@ -278,8 +278,9 @@ export class DependencyResolverMain {
     overridePrefix?: string;
     wantedRange?: string;
   }): string {
-    // A prerelease version is always added as an exact version
-    if (semver.parse(version)?.prerelease.length) {
+    // A prerelease version is always added as an exact version.
+    // A package installed by its exact version is also added as an exact version.
+    if (semver.parse(version)?.prerelease.length || wantedRange === version) {
       return version;
     }
     if (wantedRange && ['~', '^'].includes(wantedRange[0])) {
@@ -316,8 +317,13 @@ export class DependencyResolverMain {
     const legacyComponent: LegacyComponent = component.state._consumer;
     const listFactory = this.getDependencyListFactory();
     const dependencyList = await listFactory.fromLegacyComponent(legacyComponent);
+
     dependencyList.forEach((dep) => {
-      const found = componentPolicy.find(dep.id);
+      let found = componentPolicy.find(dep.id);
+      if (!found) {
+        const packageName = dep?.getPackageName?.();
+        found = packageName ? componentPolicy.find(packageName) : undefined;
+      }
       // if no policy found, the dependency was auto-resolved from the source code
       dep.source = found?.source || 'auto';
       dep.hidden = found?.hidden;

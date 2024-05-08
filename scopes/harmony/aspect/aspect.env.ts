@@ -1,5 +1,5 @@
 import { Compiler } from '@teambit/compiler';
-import type { DependenciesEnv, PackageEnv, GetNpmIgnoreContext, PreviewEnv } from '@teambit/envs';
+import type { DependenciesEnv, PackageEnv, PreviewEnv } from '@teambit/envs';
 import { merge } from 'lodash';
 import { PackageJsonProps } from '@teambit/pkg';
 import { TsConfigSourceFile } from 'typescript';
@@ -10,7 +10,6 @@ import { Bundler, BundlerContext } from '@teambit/bundler';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { Tester } from '@teambit/tester';
 import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
-import { BUNDLE_UI_DIR } from '@teambit/ui';
 import { ConfigWriterEntry } from '@teambit/workspace-config-files';
 import { PrettierConfigWriter } from '@teambit/defender.prettier-formatter';
 import { TypescriptConfigWriter } from '@teambit/typescript.typescript-compiler';
@@ -78,27 +77,8 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
     };
   }
 
-  getNpmIgnore(context?: GetNpmIgnoreContext) {
-    // ignores only .ts files in the root directory, so d.ts files inside dists are unaffected.
-    // without this change, the package has "index.ts" file in the root, causing typescript to parse it instead of the
-    // d.ts files. (changing the "types" prop in the package.json file doesn't help).
-
-    // Ignores all the contents inside the artifacts directory.
-    // Asterisk (*) is needed in order to ignore all other contents of the artifacts directory,
-    // especially when specific folders are excluded from the ignore e.g. in combination with `!artifacts/ui-bundle`.
-    const patterns = ['/*.ts', `${CAPSULE_ARTIFACTS_DIR}/*`];
-
-    // In order to load the env preview template from core aspects we need it to be in the package of the core envs
-    // This is because we don't have the core envs in the local scope so we load it from the package itself in the bvm installation
-    // as this will be excluded from the package tar by default (as it's under the CAPSULE_ARTIFACTS_DIR)
-    // we want to make sure to add it for the core envs
-    if (context && this.aspectLoader.isCoreEnv(context.component.id.toStringWithoutVersion())) {
-      patterns.push(`!${CAPSULE_ARTIFACTS_DIR}/env-template`);
-    }
-    if (context && this.aspectLoader.isCoreAspect(context.component.id.toStringWithoutVersion())) {
-      patterns.push(`!${CAPSULE_ARTIFACTS_DIR}/${BUNDLE_UI_DIR}`);
-    }
-    return patterns;
+  getNpmIgnore() {
+    return [`${CAPSULE_ARTIFACTS_DIR}/`];
   }
 
   getPreviewConfig() {

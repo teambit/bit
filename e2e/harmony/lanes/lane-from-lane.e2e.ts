@@ -39,7 +39,7 @@ describe('bit lane command', function () {
       // laneB
       helper.command.createLane('lane-b');
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
 
       beforeSwitchingBack = helper.scopeHelper.cloneLocalScope();

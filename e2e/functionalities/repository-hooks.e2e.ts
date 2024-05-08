@@ -26,7 +26,7 @@ describe('repository-hooks', function () {
       );
       helper.scopeJson.addKeyVal('hooksPath', './repository-hooks.js', helper.scopes.remotePath);
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       exportOutput = helper.command.export();
       helper.scopeHelper.reInitLocalScope();

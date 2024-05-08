@@ -94,7 +94,7 @@ export class ExportCmd implements Command {
     }
     const exportOutput = () => {
       if (isEmpty(componentsIds)) return '';
-      const lanesOutput = exportedLanes.length ? ` the lane ${chalk.bold(exportedLanes[0].name)} and` : '';
+      const lanesOutput = exportedLanes.length ? ` the lane ${chalk.bold(exportedLanes[0].id())} and` : '';
       return chalk.green(
         `exported${lanesOutput} the following ${componentsIds.length} component(s):\n${chalk.bold(
           componentsIds.join('\n')

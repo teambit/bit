@@ -109,6 +109,8 @@ export class WorkspaceComponentLoader {
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<GetManyRes> {
+    const callId = Math.floor(Math.random() * 1000); // generate a random callId to be able to identify the call from the logs
+    this.logger.profile(`getMany-${callId}`);
     const idsWithoutEmpty = compact(ids);
     this.logger.setStatusLine(`loading ${ids.length} component(s)`);
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
@@ -135,8 +137,12 @@ export class WorkspaceComponentLoader {
     const { components: loadedComponents, invalidComponents } = await this.getAndLoadSlotOrdered(
       loadOrCached.idsToLoad || [],
       loadOptsWithDefaults,
-      throwOnFailure
+      callId
     );
+
+    invalidComponents.forEach(({ err }) => {
+      if (throwOnFailure) throw err;
+    });
 
     const components = [...loadedComponents, ...loadOrCached.fromCache];
 
@@ -144,33 +150,35 @@ export class WorkspaceComponentLoader {
     components.forEach((comp) => {
       this.saveInCache(comp, { loadExtensions: true, executeLoadSlot: true });
     });
+    this.logger.profile(`getMany-${callId}`);
     return { components, invalidComponents };
   }
 
   private async getAndLoadSlotOrdered(
     ids: ComponentID[],
     loadOpts: ComponentLoadOptions,
-    throwOnFailure = true
+    callId = 0
   ): Promise<GetManyRes> {
     if (!ids?.length) return { components: [], invalidComponents: [] };
 
     const workspaceScopeIdsMap: WorkspaceScopeIdsMap = await this.groupAndUpdateIds(ids);
-
+    this.logger.profile('buildLoadGroups');
     const groupsToHandle = await this.buildLoadGroups(workspaceScopeIdsMap);
+    this.logger.profile('buildLoadGroups');
     // prefix your command with "BIT_LOG=*" to see the detailed groups
     if (process.env.BIT_LOG) {
       printGroupsToHandle(groupsToHandle, this.logger);
     }
     const groupsRes = compact(
-      await mapSeries(groupsToHandle, async (group) => {
+      await mapSeries(groupsToHandle, async (group, index) => {
         const { scopeIds, workspaceIds, aspects, core, seeders } = group;
-        if (!workspaceIds.length && !scopeIds.length) return undefined;
-        const res = await this.getAndLoadSlot(
-          workspaceIds,
-          scopeIds,
-          { ...loadOpts, core, seeders, aspects },
-          throwOnFailure
-        );
+        const groupDesc = `getMany-${callId} group ${index + 1}/${groupsToHandle.length} - ${loadGroupToStr(group)}`;
+        this.logger.profile(groupDesc);
+        if (!workspaceIds.length && !scopeIds.length) {
+          throw new Error('getAndLoadSlotOrdered - group has no ids to load');
+        }
+        const res = await this.getAndLoadSlot(workspaceIds, scopeIds, { ...loadOpts, core, seeders, aspects });
+        this.logger.profile(groupDesc);
         // We don't want to return components that were not asked originally (we do want to load them)
         if (!group.seeders) return undefined;
         return res;
@@ -225,8 +233,8 @@ export class WorkspaceComponentLoader {
 
     await this.groupAndUpdateIds(extsNotFromTheList, workspaceScopeIdsMap);
 
-    const layerdExtFromTheList = this.regroupExtIdsFromTheList(groupedByIsExtOfAnother.true);
-    const layerdExtGroups = layerdExtFromTheList.map((ids) => {
+    const layeredExtFromTheList = this.regroupExtIdsFromTheList(groupedByIsExtOfAnother.true);
+    const layeredExtGroups = layeredExtFromTheList.map((ids) => {
       return {
         ids,
         core: false,
@@ -239,10 +247,11 @@ export class WorkspaceComponentLoader {
       // Always load first core envs
       { ids: groupedByIsCoreEnvs.true || [], core: true, aspects: true, seeders: true },
       { ids: extsNotFromTheList || [], core: false, aspects: true, seeders: false },
-      ...layerdExtGroups,
+      ...layeredExtGroups,
       { ids: groupedByIsExtOfAnother.false || [], core: false, aspects: false, seeders: true },
     ];
     const groupsByWsScope = groupsToHandle.map((group) => {
+      if (!group.ids?.length) return undefined;
       const groupedByWsScope = groupBy(group.ids, (id) => {
         return workspaceScopeIdsMap.workspaceIds.has(id.toString());
       });
@@ -254,7 +263,7 @@ export class WorkspaceComponentLoader {
         seeders: group.seeders,
       };
     });
-    return groupsByWsScope;
+    return compact(groupsByWsScope);
   }
 
   private regroupExtIdsFromTheList(ids: ComponentID[]): Array<ComponentID[]> {
@@ -270,14 +279,12 @@ export class WorkspaceComponentLoader {
   private async getAndLoadSlot(
     workspaceIds: ComponentID[],
     scopeIds: ComponentID[],
-    loadOpts: GetAndLoadSlotOpts,
-    throwOnFailure = true
+    loadOpts: GetAndLoadSlotOpts
   ): Promise<GetManyRes> {
     const { workspaceComponents, scopeComponents, invalidComponents } = await this.getComponentsWithoutLoadExtensions(
       workspaceIds,
       scopeIds,
-      loadOpts,
-      throwOnFailure
+      loadOpts
     );
 
     const components = workspaceComponents.concat(scopeComponents);
@@ -289,12 +296,16 @@ export class WorkspaceComponentLoader {
     // Ensure we won't load the same extension many times
     // We don't want to ignore version here, as we do want to load different extensions with same id but different versions here
     const mergedExtensions = ExtensionDataList.mergeConfigs(allExtensions, false);
+    this.logger.profile('loadComponentsExtensions');
     await this.workspace.loadComponentsExtensions(mergedExtensions);
+    this.logger.profile('loadComponentsExtensions');
     let wsComponentsWithAspects = workspaceComponents;
     // if (loadOpts.seeders) {
+    this.logger.profile('executeLoadSlot');
     wsComponentsWithAspects = await pMapPool(workspaceComponents, (component) => this.executeLoadSlot(component), {
       concurrency: concurrentComponentsLimit(),
     });
+    this.logger.profile('executeLoadSlot');
     await this.warnAboutMisconfiguredEnvs(wsComponentsWithAspects);
     // }
 
@@ -303,6 +314,7 @@ export class WorkspaceComponentLoader {
     // It's important to load the workspace components as aspects here
     // otherwise the envs from the workspace won't be loaded at time
     // so we will get wrong dependencies from component who uses envs from the workspace
+    this.logger.profile('loadCompsAsAspects');
     if (loadOpts.loadSeedersAsAspects || (loadOpts.core && loadOpts.aspects)) {
       await this.loadCompsAsAspects(workspaceComponents.concat(scopeComponents), {
         loadApps: true,
@@ -313,6 +325,7 @@ export class WorkspaceComponentLoader {
         idsToNotLoadAsAspects: loadOpts.idsToNotLoadAsAspects,
       });
     }
+    this.logger.profile('loadCompsAsAspects');
 
     return { components: withAspects, invalidComponents };
   }
@@ -428,8 +441,7 @@ export class WorkspaceComponentLoader {
   private async getComponentsWithoutLoadExtensions(
     workspaceIds: ComponentID[],
     scopeIds: ComponentID[],
-    loadOpts: GetAndLoadSlotOpts,
-    throwOnFailure = true
+    loadOpts: GetAndLoadSlotOpts
   ) {
     const invalidComponents: InvalidComponent[] = [];
     const errors: { id: ComponentID; err: Error }[] = [];
@@ -448,7 +460,7 @@ export class WorkspaceComponentLoader {
     workspaceIds.forEach((id) => {
       idsIndex[id.toString()] = id;
     });
-
+    this.logger.profile('consumer.loadComponents');
     const {
       components: legacyComponents,
       invalidComponents: legacyInvalidComponents,
@@ -458,12 +470,13 @@ export class WorkspaceComponentLoader {
       false,
       loadOptsWithDefaults
     );
+    this.logger.profile('consumer.loadComponents');
     const allLegacyComponents = legacyComponents.concat(removedComponents);
     legacyInvalidComponents.forEach((invalidComponent) => {
       const entry = { id: idsIndex[invalidComponent.id.toString()], err: invalidComponent.error };
       if (ConsumerComponent.isComponentInvalidByErrorType(invalidComponent.error)) {
-        if (throwOnFailure) throw invalidComponent.error;
         invalidComponents.push(entry);
+        return;
       }
       if (
         this.isComponentNotExistsError(invalidComponent.error) ||
@@ -475,7 +488,7 @@ export class WorkspaceComponentLoader {
 
     const getWithCatch = (id, legacyComponent) => {
       return this.get(id, legacyComponent, undefined, undefined, loadOptsWithDefaults).catch((err) => {
-        if (ConsumerComponent.isComponentInvalidByErrorType(err) && !throwOnFailure) {
+        if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
           invalidComponents.push({
             id,
             err,
@@ -857,4 +870,15 @@ function printGroupsToHandle(groupsToHandle: Array<LoadGroup>, logger: Logger): 
       )}`
     );
   });
+}
+
+function loadGroupToStr(loadGroup: LoadGroup): string {
+  const { scopeIds, workspaceIds, aspects, core, seeders } = loadGroup;
+
+  const attr: string[] = [];
+  if (aspects) attr.push('aspects');
+  if (core) attr.push('core');
+  if (seeders) attr.push('seeders');
+
+  return `workspaceIds: ${workspaceIds.length}, scopeIds: ${scopeIds.length}, (${attr.join('+')})`;
 }

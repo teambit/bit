@@ -7,14 +7,13 @@ import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '../../
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
 import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, retrieveIgnoreList } from '../../utils';
-import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '../../utils/path';
 import { removeInternalConfigFields } from '../config/extension-data';
 import Consumer from '../consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
 import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
-import { BIT_IGNORE, getBitIgnoreFile } from '../../utils/ignore/ignore';
+import { BIT_IGNORE, getBitIgnoreFile, getGitIgnoreFile } from '../../utils/ignore/ignore';
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
 
@@ -281,21 +280,12 @@ export default class ComponentMap {
    * if the component dir has changed since the last tracking, re-scan the component-dir to get the
    * updated list of the files
    */
-  async trackDirectoryChangesHarmony(consumer: Consumer, id: ComponentID): Promise<void> {
+  async trackDirectoryChangesHarmony(consumer: Consumer): Promise<void> {
     const trackDir = this.rootDir;
     if (!trackDir) {
       return;
     }
-    const trackDirAbsolute = path.join(consumer.getPath(), trackDir);
-    const lastTrack = await consumer.componentFsCache.getLastTrackTimestamp(id.toString());
-    const wasModifiedAfterLastTrack = async () => {
-      const lastModified = await getLastModifiedDirTimestampMs(trackDirAbsolute);
-      return lastModified > lastTrack;
-    };
-    if (!(await wasModifiedAfterLastTrack())) {
-      return;
-    }
-    const gitIgnore = getGitIgnoreHarmony(consumer.getPath());
+    const gitIgnore = await getGitIgnoreHarmony(consumer.getPath());
     this.files = await getFilesByDir(trackDir, consumer.getPath(), gitIgnore);
   }
 
@@ -392,9 +382,11 @@ export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore
   // the path is relative to consumer. remove the rootDir.
   const relativePathsLinux = filteredMatches.map((match) => pathNormalizeToLinux(match).replace(`${dir}/`, ''));
   const filteredByIgnoredFromRoot = relativePathsLinux.filter((match) => !IGNORE_ROOT_ONLY_LIST.includes(match));
-  const bitIgnore = filteredByIgnoredFromRoot.includes(BIT_IGNORE) ? await getBitIgnoreFile(dir) : '';
-  const filteredByBitIgnore = bitIgnore
-    ? ignore().add(bitIgnore).filter(filteredByIgnoredFromRoot)
+  const bitOrGitIgnore = filteredByIgnoredFromRoot.includes(BIT_IGNORE)
+    ? await getBitIgnoreFile(dir)
+    : await getGitIgnoreFile(dir);
+  const filteredByBitIgnore = bitOrGitIgnore
+    ? ignore().add(bitOrGitIgnore).filter(filteredByIgnoredFromRoot)
     : filteredByIgnoredFromRoot;
   if (!filteredByBitIgnore.length) throw new IgnoredDirectory(dir);
   return filteredByBitIgnore.map((relativePath) => ({
@@ -404,13 +396,13 @@ export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore
   }));
 }
 
-export function getGitIgnoreHarmony(consumerPath: string): any {
-  const ignoreList = getIgnoreListHarmony(consumerPath);
+export async function getGitIgnoreHarmony(consumerPath: string): Promise<any> {
+  const ignoreList = await getIgnoreListHarmony(consumerPath);
   return ignore().add(ignoreList);
 }
 
-export function getIgnoreListHarmony(consumerPath: string): string[] {
-  const ignoreList = retrieveIgnoreList(consumerPath);
+export async function getIgnoreListHarmony(consumerPath: string): Promise<string[]> {
+  const ignoreList = await retrieveIgnoreList(consumerPath);
   // the ability to track package.json is deprecated since Harmony
   ignoreList.push(PACKAGE_JSON);
   return ignoreList;

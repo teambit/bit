@@ -462,6 +462,14 @@ if you're willing to lose the history from the head to the specified version, us
     }
 
     const components = [...existingComponents, ...newComponents];
+
+    // this must be done before we load component aspects later on, because this updated deps may update aspects.
+    await pMapSeries(components, async (component) => {
+      const snapData = getSnapData(component.id);
+      // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
+      await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver, this);
+    });
+
     // for new components these are not needed. coz when generating them we already add the aspects and the files.
     await Promise.all(
       existingComponents.map(async (comp) => {
@@ -481,12 +489,6 @@ if you're willing to lose the history from the head to the specified version, us
 
     // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
     await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
-
-    await pMapSeries(components, async (component) => {
-      const snapData = getSnapData(component.id);
-      // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
-      await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver);
-    });
 
     const consumerComponents = components.map((c) => c.state._consumer);
     const ids = ComponentIdList.fromArray(allCompIds);
@@ -519,7 +521,7 @@ if you're willing to lose the history from the head to the specified version, us
         ids,
         idsWithFutureScope: ids,
         allVersions: false,
-        laneObject: updatedLane || undefined,
+        laneObject: updatedLane,
         // no need other snaps. only the latest one. without this option, when snapping on lane from another-scope, it
         // may throw an error saying the previous snaps don't exist on the filesystem.
         // (see the e2e - "snap on a lane when the component is new to the lane and the scope")
@@ -731,18 +733,14 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     const lane = await getLane();
 
     if (rebuildDepsGraph) {
-      const flattenedDependenciesGetter = new FlattenedDependenciesGetter(
-        this.scope.legacyScope,
-        components,
-        lane || undefined
-      );
+      const flattenedDependenciesGetter = new FlattenedDependenciesGetter(this.scope.legacyScope, components, lane);
       await flattenedDependenciesGetter.populateFlattenedDependencies();
       loader.stop();
       await this._addFlattenedDepsGraphToComponents(components);
       return;
     }
 
-    const flattenedEdgesGetter = new FlattenedEdgesGetter(this.scope, components, this.logger, lane || undefined);
+    const flattenedEdgesGetter = new FlattenedEdgesGetter(this.scope, components, this.logger, lane);
     await flattenedEdgesGetter.buildGraph();
 
     components.forEach((component) => {
@@ -755,7 +753,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     const lane = await this.scope.legacyScope.getCurrentLaneObject();
     const allIds = ComponentIdList.fromArray(components.map((c) => c.id));
     const missingDeps = await pMapSeries(components, async (component) => {
-      return this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined);
+      return this.throwForDepsFromAnotherLaneForComp(component, allIds, lane);
     });
     const flattenedMissingDeps = ComponentIdList.uniqFromArray(
       missingDeps.flat().map((id) => id.changeVersion(undefined))
@@ -767,11 +765,11 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       cache: false,
       ignoreMissingHead: true,
       includeVersionHistory: true,
-      lane: lane || undefined,
+      lane,
       reason: 'of latest with version-history to make sure there are no dependencies from another lane',
     });
     await pMapSeries(components, async (component) => {
-      await this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined, true);
+      await this.throwForDepsFromAnotherLaneForComp(component, allIds, lane, true);
     });
   }
 
@@ -927,7 +925,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     updateDependentsOnLane = false,
   }: {
     source: ConsumerComponent;
-    lane: Lane | null;
+    lane?: Lane;
     shouldValidateVersion?: boolean;
     updateDependentsOnLane?: boolean;
   }): Promise<{
@@ -972,7 +970,7 @@ another option, in case this dependency is not in main yet is to remove all refe
 
   async _addCompFromScopeToObjects(
     source: ConsumerComponent,
-    lane: Lane | null,
+    lane?: Lane,
     updateDependentsOnLane = false
   ): Promise<{
     component: ModelComponent;
@@ -1162,15 +1160,27 @@ another option, in case this dependency is not in main yet is to remove all refe
         dep.packageName = packageName;
       }
     });
+    await this.UpdateDepsAspectsSaveIntoDepsResolver(component, updatedIds.toStringArray());
+  }
+
+  /**
+   * it does two things:
+   * 1. update extensions versions according to the version provided in updatedIds.
+   * 2. save all dependencies data from the legacy into DependencyResolver aspect.
+   */
+  async UpdateDepsAspectsSaveIntoDepsResolver(component: Component, updatedIds: string[]) {
+    const legacyComponent: ConsumerComponent = component.state._consumer;
     legacyComponent.extensions.forEach((ext) => {
-      if (!ext.extensionId) return;
-      const updatedBitId = updatedIds.searchWithoutVersion(ext.extensionId);
-      if (updatedBitId) {
+      const extId = ext.extensionId;
+      if (!extId) return;
+      const found = updatedIds.find((d) => d.startsWith(`${extId.toStringWithoutVersion()}@`));
+      if (found) {
+        const updatedExtId = ComponentID.fromString(found);
         this.logger.debug(
-          `updating "${componentIdStr}", extension ${ext.extensionId.toString()} to version ${updatedBitId.version}}`
+          `updating "${component.id.toString()}", extension ${extId.toString()} to version ${updatedExtId.version}}`
         );
-        ext.extensionId = updatedBitId;
-        if (ext.newExtensionId) ext.newExtensionId = updatedBitId;
+        ext.extensionId = updatedExtId;
+        if (ext.newExtensionId) ext.newExtensionId = updatedExtId;
       }
     });
 

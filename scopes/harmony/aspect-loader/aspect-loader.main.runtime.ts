@@ -1,4 +1,4 @@
-import { join, resolve } from 'path';
+import { join, resolve, extname } from 'path';
 import { NativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 import esmLoader from '@teambit/node.utils.esm-loader';
 // import findRoot from 'find-root';
@@ -16,7 +16,7 @@ import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { replaceFileExtToJs } from '@teambit/compilation.modules.babel-compiler';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { loadBit } from '@teambit/bit';
+import { LegacyGlobal, loadBit, takeLegacyGlobalsSnapshot } from '@teambit/bit';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import mapSeries from 'p-map-series';
@@ -538,15 +538,36 @@ export class AspectLoaderMain {
     return !isEmpty(files);
   }
 
+  private searchDistFile(rootDir: string, relativePath: string) {
+    const defaultDistDir = join(rootDir, 'dist');
+    const fileExtension = extname(relativePath);
+    const fileNames = ['ts', 'js', 'tsx', 'jsx'].map((ext) =>
+      relativePath.replace(new RegExp(`${fileExtension}$`), `.${ext}`)
+    );
+    const defaultDistPath = fileNames.map((fileName) => join(defaultDistDir, fileName));
+    const found = defaultDistPath.find((distPath) => existsSync(distPath));
+    return found;
+  }
+
   pluginFileResolver(component: Component, rootDir: string) {
     return (relativePath: string) => {
-      const compiler = this.getCompiler(component);
-      if (!compiler) {
-        return join(rootDir, relativePath);
-      }
+      try {
+        const compiler = this.getCompiler(component);
+        if (!compiler) {
+          const distFile = this.searchDistFile(rootDir, relativePath);
+          return distFile || join(rootDir, relativePath);
+        }
 
-      const dist = compiler.getDistPathBySrcPath(relativePath);
-      return join(rootDir, dist);
+        const dist = compiler.getDistPathBySrcPath(relativePath);
+        return join(rootDir, dist);
+      } catch (err) {
+        // This might happen for example when loading an env from the global scope, and the env of the env / aspect is not a core one
+        this.logger.info(
+          `pluginFileResolver: got an error during get compiler for component ${component.id.toString()}, probably the env is not loaded yet ${err}`
+        );
+        const distFile = this.searchDistFile(rootDir, relativePath);
+        return distFile || join(rootDir, relativePath);
+      }
     };
   }
 
@@ -568,9 +589,10 @@ export class AspectLoaderMain {
    */
   async loadAspectsFromGlobalScope(
     aspectIds: string[]
-  ): Promise<{ components: Component[]; globalScopeHarmony: Harmony }> {
+  ): Promise<{ components: Component[]; globalScopeHarmony: Harmony; legacyGlobalsSnapshot: LegacyGlobal[] }> {
     const globalScope = await LegacyScope.ensure(GLOBAL_SCOPE, 'global-scope');
     await globalScope.ensureDir();
+    const legacyGlobalsSnapshot = takeLegacyGlobalsSnapshot();
     const globalScopeHarmony = await loadBit(globalScope.path);
     const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
     const aspectLoader = globalScopeHarmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
@@ -598,7 +620,7 @@ export class AspectLoaderMain {
       }
     }
 
-    return { components, globalScopeHarmony };
+    return { components, globalScopeHarmony, legacyGlobalsSnapshot };
   }
 
   filterAspectDefs(

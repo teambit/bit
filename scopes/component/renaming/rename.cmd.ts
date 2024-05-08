@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { RenamingMain } from '.';
+import { RenamingMain } from './renaming.main.runtime';
 
 export type RenameOptions = {
   scope?: string;
@@ -30,7 +30,7 @@ export class RenameCmd implements Command {
   skipWorkspace = true;
   alias = '';
   options = [
-    ['s', 'scope <scope-name>', 'define the scope for the newly created component'],
+    ['s', 'scope <scope-name>', 'define the scope for the new component'],
     ['r', 'refactor', 'update the import/require statements in all dependent components (in the same workspace)'],
     ['', 'preserve', 'avoid renaming files and variables/classes according to the new component name'],
     ['', 'ast', 'EXPERIMENTAL. use ast to transform files instead of regex'],

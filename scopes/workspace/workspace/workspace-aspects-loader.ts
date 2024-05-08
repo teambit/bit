@@ -100,6 +100,7 @@ export class WorkspaceAspectsLoader {
     // generate a random callId to be able to identify the call from the logs
     const callId = Math.floor(Math.random() * 1000);
     const loggerPrefix = `[${callId}] loadAspects,`;
+    this.logger.profile(`[${callId}] workspace.loadAspects`);
     this.logger.info(`${loggerPrefix} loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts, null, 2)}`);
@@ -107,7 +108,10 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     this.workspace.localAspects = localAspects;
     await this.aspectLoader.loadAspectFromPath(this.workspace.localAspects);
     const notLoadedIds = nonLocalAspects.filter((id) => !this.aspectLoader.isAspectLoaded(id));
-    if (!notLoadedIds.length) return [];
+    if (!notLoadedIds.length) {
+      this.logger.profile(`[${callId}] workspace.loadAspects`);
+      return [];
+    }
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
 
@@ -169,8 +173,9 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     );
 
     await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, undefined, { throwOnError });
-    this.logger.debug(`${loggerPrefix} finish loading aspects`);
     const manifestIds = manifests.map((manifest) => manifest.id);
+    this.logger.debug(`${loggerPrefix} finish loading aspects`);
+    this.logger.profile(`[${callId}] workspace.loadAspects`);
     return compact(manifestIds.concat(scopeAspectIds));
   }
 
@@ -182,16 +187,10 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     const nonWorkspaceIdsString = ids.map((id) => id.toString());
     try {
-      scopeAspectIds = await this.scope.loadAspects(
-        nonWorkspaceIdsString,
-        throwOnError,
-        neededFor,
-        currentLane || undefined,
-        {
-          packageManagerConfigRootDir: this.workspace.path,
-          workspaceName: this.workspace.name,
-        }
-      );
+      scopeAspectIds = await this.scope.loadAspects(nonWorkspaceIdsString, throwOnError, neededFor, currentLane, {
+        packageManagerConfigRootDir: this.workspace.path,
+        workspaceName: this.workspace.name,
+      });
       return scopeAspectIds;
     } catch (err: any) {
       this.throwWsJsoncAspectNotFoundError(err);
@@ -275,8 +274,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       : difference(this.harmony.extensionsIds, coreAspectsIds);
     const rootAspectsIds: string[] = difference(configuredAspects, coreAspectsIds);
     const componentIdsToResolve = await this.workspace.resolveMultipleComponentIds(userAspectsIds);
-    const components = await this.importAndGetAspects(componentIdsToResolve);
-
+    const components = await this.importAndGetAspects(componentIdsToResolve, opts?.throwOnError);
     // Run the on load slot
     await this.runOnAspectsResolveFunctions(components);
 
@@ -753,7 +751,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   /**
    * same as `this.importAndGetMany()` with a specific error handling of ComponentNotFound
    */
-  private async importAndGetAspects(componentIds: ComponentID[]): Promise<Component[]> {
+  private async importAndGetAspects(componentIds: ComponentID[], throwOnError = true): Promise<Component[]> {
     try {
       // We don't want to load the seeders as aspects as it will cause an infinite loop
       // once you try to load the seeder it will try to load the workspace component
@@ -761,7 +759,12 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       const loadOpts: ComponentLoadOptions = {
         idsToNotLoadAsAspects: componentIds.map((id) => id.toString()),
       };
-      return await this.workspace.importAndGetMany(componentIds, 'to load aspects from the workspace', loadOpts);
+      return await this.workspace.importAndGetMany(
+        componentIds,
+        'to load aspects from the workspace',
+        loadOpts,
+        throwOnError
+      );
     } catch (err: any) {
       this.throwWsJsoncAspectNotFoundError(err);
 

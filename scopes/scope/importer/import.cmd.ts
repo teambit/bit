@@ -299,7 +299,9 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
     if (importDetails.latestVersion) {
       return `${importDetails.versions.length} new version(s) available, latest ${importDetails.latestVersion}`;
     }
-    return `new versions: ${importDetails.versions.join(', ')}`;
+    return importDetails.versions.length > 5
+      ? `${importDetails.versions.length} new versions`
+      : `new versions: ${importDetails.versions.join(', ')}`;
   };
   const versions = getVersionsOutput();
   const usedVersion = status === 'added' ? `, currently used version ${bitId.version}` : '';
@@ -315,7 +317,7 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
   };
   const conflictMessage = getConflictMessage();
   const deprecated = importDetails.deprecated && !importDetails.removed ? chalk.yellow('deprecated') : '';
-  const removed = importDetails.removed ? chalk.red('removed') : '';
+  const removed = importDetails.removed ? chalk.red('deleted') : '';
   const missingDeps = importDetails.missingDeps.length
     ? chalk.red(`missing dependencies: ${importDetails.missingDeps.map((d) => d.toString()).join(', ')}`)
     : '';

@@ -1,7 +1,7 @@
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
-import { CLIAspect, MainRuntime, CLIMain, CommandList } from '@teambit/cli';
+import { CLIAspect, MainRuntime, CLIMain, CommandList, Command } from '@teambit/cli';
 import { ComponentAspect } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -38,6 +38,7 @@ import { EnvsReplaceCmd } from './envs-subcommands/envs-replace.cmd';
 import { ScopeSetCmd } from './scope-subcommands/scope-set.cmd';
 import { UseCmd } from './use.cmd';
 import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
+import { UnuseCmd } from './unuse.cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -255,20 +256,27 @@ export class WorkspaceMain {
     });
     graphql.register(workspaceSchema);
     const capsuleCmd = getCapsulesCommands(isolator, scope, workspace);
-    const commands: CommandList = [new EjectConfCmd(workspace), capsuleCmd, new UseCmd(workspace)];
+    const commands: CommandList = [
+      new EjectConfCmd(workspace),
+      capsuleCmd,
+      new UseCmd(workspace),
+      new UnuseCmd(workspace),
+    ];
 
     commands.push(new PatternCommand(workspace));
     cli.register(...commands);
     component.registerHost(workspace);
 
-    cli.registerOnStart(async (_hasWorkspace: boolean, currentCommand: string) => {
-      if (currentCommand === 'mini-status' || currentCommand === 'ms') {
-        return; // mini-status should be super fast.
+    cli.registerOnStart(async (_hasWorkspace: boolean, currentCommand: string, commandObject?: Command) => {
+      const hasSafeModeFlag = process.argv.includes('--safe-mode');
+      if (hasSafeModeFlag || (commandObject && !commandObject.loadAspects)) {
+        return;
       }
       if (currentCommand === 'install') {
         workspace.inInstallContext = true;
       }
       await workspace.importCurrentLaneIfMissing();
+      logger.profile('workspace.registerOnStart');
       const loadAspectsOpts = {
         runSubscribers: false,
         skipDeps: !config.autoLoadAspectsDeps,
@@ -284,6 +292,7 @@ export class WorkspaceMain {
       componentIds.forEach((id) => {
         workspace.clearComponentCache(id);
       });
+      logger.profile('workspace.registerOnStart');
     });
 
     // add sub-commands "set" and "unset" to envs command.

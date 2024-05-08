@@ -19,24 +19,25 @@ export class SwitchCmd implements Command {
     },
   ];
   options = [
+    ['h', 'head', 'switch to the head of the lane/main (fetches the latest changes from the remote)'],
     [
-      'n',
-      'alias <string>',
-      "relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote",
-    ],
-    [
-      'm',
-      'merge [strategy]',
+      'r',
+      'auto-merge-resolve <merge-strategy>',
       'merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"',
     ],
     ['a', 'get-all', 'DEPRECATED. this is currently the default behavior'],
-    ['a', 'workspace-only', 'checkout only the components in the workspace to the selected lane'],
+    ['', 'workspace-only', 'checkout only the components in the workspace to the selected lane'],
     ['x', 'skip-dependency-installation', 'do not install dependencies of the imported components'],
     [
       'p',
       'pattern <component-pattern>',
       `switch only the lane components matching the specified component-pattern. only works when the workspace is empty\n
 ${COMPONENT_PATTERN_HELP}`,
+    ],
+    [
+      'n',
+      'alias <string>',
+      "relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote",
     ],
     ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
@@ -47,16 +48,18 @@ ${COMPONENT_PATTERN_HELP}`,
   async report(
     [lane]: [string],
     {
+      head,
       alias,
-      merge,
+      autoMergeResolve,
       getAll = false,
       workspaceOnly = false,
       skipDependencyInstallation = false,
       pattern,
       json = false,
     }: {
+      head?: boolean;
       alias?: string;
-      merge?: MergeStrategy;
+      autoMergeResolve?: MergeStrategy;
       getAll?: boolean;
       workspaceOnly?: boolean;
       skipDependencyInstallation?: boolean;
@@ -66,8 +69,9 @@ ${COMPONENT_PATTERN_HELP}`,
     }
   ) {
     const { components, failedComponents, installationError, compilationError } = await this.lanes.switchLanes(lane, {
+      head,
       alias,
-      merge,
+      merge: autoMergeResolve,
       workspaceOnly,
       pattern,
       skipDependencyInstallation,

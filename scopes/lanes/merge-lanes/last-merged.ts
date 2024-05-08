@@ -78,6 +78,20 @@ export class LastMerged {
     }
   }
 
+  async restoreLaneObjectFromLastMerged() {
+    if (!fs.pathExistsSync(this.path)) {
+      throw new BitError(`unable to abort the last lane-merge because "bit export" was running since then`);
+    }
+    const lastLane = await this.getLastMergedLaneContentIfExists();
+    if (!lastLane) {
+      throw new BitError(
+        `unable to revert the last lane-merge because the ${LAST_MERGED_LANE_FILENAME} is missing from ${this.path}`
+      );
+    }
+    const laneFromBackup = await BitObject.parseObject(lastLane, LAST_MERGED_LANE_FILENAME);
+    await this.scope.legacyScope.objects.writeObjectsToTheFS([laneFromBackup]);
+  }
+
   async restoreFromLastMerged(mergeAbortOpts: MergeAbortOpts, currentLane?: Lane | null) {
     if (!fs.pathExistsSync(this.path)) {
       throw new BitError(`unable to abort the last lane-merge because "bit export" was running since then`);

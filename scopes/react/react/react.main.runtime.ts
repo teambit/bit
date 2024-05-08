@@ -28,8 +28,7 @@ import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { FormatterContext } from '@teambit/formatter';
 import { LinterContext } from '@teambit/linter';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
-import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
+import { EslintConfigTransformer } from '@teambit/defender.eslint.config-mutator';
 import { WorkerAspect, WorkerMain } from '@teambit/worker';
 
 import { ReactAspect } from './react.aspect';
@@ -40,6 +39,7 @@ import { getTemplates } from './react.templates';
 import { ReactAppOptions } from './apps/web/react-app-options';
 import { ReactSchema } from './react.schema';
 import { ReactAPITransformer } from './react.api.transformer';
+import { PrettierConfigTransformer } from '@teambit/defender.prettier.config-mutator';
 
 type ReactDeps = [
   EnvsMain,
@@ -51,8 +51,6 @@ type ReactDeps = [
   GraphqlMain,
   PkgMain,
   TesterMain,
-  ESLintMain,
-  PrettierMain,
   ApplicationMain,
   GeneratorMain,
   DependencyResolverMain,
@@ -410,8 +408,6 @@ export class ReactMain {
     GraphqlAspect,
     PkgAspect,
     TesterAspect,
-    ESLintAspect,
-    PrettierAspect,
     ApplicationAspect,
     GeneratorAspect,
     DependencyResolverAspect,
@@ -431,8 +427,6 @@ export class ReactMain {
       graphql,
       pkg,
       tester,
-      eslint,
-      prettier,
       application,
       generator,
       dependencyResolver,
@@ -454,8 +448,6 @@ export class ReactMain {
       pkg,
       tester,
       config,
-      eslint,
-      prettier,
       dependencyResolver,
       logger,
       CompilerAspect.id

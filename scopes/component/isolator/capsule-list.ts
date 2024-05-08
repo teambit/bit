@@ -26,6 +26,24 @@ export default class CapsuleList extends Array<Capsule> {
   getAllComponents(): Component[] {
     return this.map((c) => c.component);
   }
+  getGraphIds(): Graph<Component, string> {
+    const components = this.getAllComponents();
+    const graph = new Graph<Component, string>();
+
+    components.forEach((comp: Component) => graph.setNode(new Node(comp.id.toString(), comp)));
+    const compIdsStr = components.map((c) => c.id.toString());
+
+    components.forEach((comp) => {
+      const deps = comp.getDependencies();
+      deps.forEach((dep) => {
+        if (compIdsStr.includes(dep.id)) {
+          graph.setEdge(new Edge(comp.id.toString(), dep.id, dep.type));
+        }
+      });
+    });
+
+    return graph;
+  }
   // Sort the capsules by their dependencies. The capsules with no dependencies will be first. Returns a new array.
   async toposort(depResolver: DependencyResolverMain): Promise<CapsuleList> {
     const components = this.getAllComponents();

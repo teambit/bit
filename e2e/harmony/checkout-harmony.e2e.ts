@@ -6,7 +6,7 @@ import * as path from 'path';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import { NewerVersionFound } from '../../src/consumer/exceptions';
 import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
-import { FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
+import { Extensions, FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -35,7 +35,7 @@ describe('bit checkout command', function () {
   describe('after the component was created', () => {
     before(() => {
       helper.fixtures.createComponentBarFoo(barFooV1);
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
     });
     it('before tagging it should show an error saying the component was not tagged yet', () => {
       const output = helper.general.runWithTryCatch('bit checkout 1.0.0 bar/foo');
@@ -181,7 +181,7 @@ describe('bit checkout command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
       helper.fs.outputFile('bar/foo2.js');
       helper.command.tagAllWithoutBuild();
@@ -273,7 +273,7 @@ describe('bit checkout command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo(`${barFooV1}\n`);
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.fixtures.createComponentBarFoo(`${barFooV2}\n`);
       helper.fixtures.tagComponentBarFoo();
@@ -627,6 +627,25 @@ describe('bit checkout command', function () {
       expect(policy).to.have.string('"lodash.get": "4.4.1"');
       expect(policy).to.have.string('"lodash.get": "^4.4.2"');
       expect(policy).to.have.string('>>>>>>> theirs');
+    });
+  });
+  describe('checkout reset with changes in component.json', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.ejectConf('comp1');
+      helper.componentJson.setExtension(Extensions.pkg, { name: 'new-name' }, 'comp1');
+      // an intermediate step make sure the component is modified
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(1);
+
+      helper.command.checkoutReset('-a -x');
+    });
+    it('status should not show the component as modified', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(0);
     });
   });
 });

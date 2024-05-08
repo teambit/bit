@@ -9,6 +9,8 @@ export class LoginCmd implements Command {
   group = 'general';
   alias = '';
   options = [
+    ['', 'skip-config-update', 'skip writing to the .npmrc file'],
+    ['', 'refresh-token', 'force refresh token even when logged in'],
     ['d', 'cloud-domain <domain>', 'login cloud domain (default bit.cloud)'],
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
     ['', 'no-browser', 'do not open a browser for authentication'],
@@ -22,6 +24,7 @@ export class LoginCmd implements Command {
   loader = true;
   remoteOp = true;
   skipWorkspace = true;
+  loadAspects = false;
 
   private port?: string;
 
@@ -37,20 +40,50 @@ export class LoginCmd implements Command {
       suppressBrowserLaunch,
       noBrowser,
       machineName,
+      skipConfigUpdate,
+      refreshToken,
     }: {
       cloudDomain?: string;
       port: string;
       suppressBrowserLaunch?: boolean;
       noBrowser?: boolean;
       machineName?: string;
+      skipConfigUpdate?: boolean;
+      refreshToken?: boolean;
     }
   ): Promise<string> {
     noBrowser = noBrowser || suppressBrowserLaunch;
 
-    const result = await this.cloud.login(port || this.port, noBrowser, machineName, cloudDomain, undefined);
+    if (refreshToken) {
+      this.cloud.logout();
+    }
+
+    const isLoggedIn = this.cloud.isLoggedIn();
+
+    if (isLoggedIn) {
+      this.cloud.logger.clearStatusLine();
+      const reLoginPrompt = chalk.yellow(
+        'You are already logged in. Do you want to re-login to refresh your access token? [yes(y)/no(n)]'
+      );
+      const ok = await yesno({ question: reLoginPrompt });
+      if (!ok) {
+        return chalk.green(`Logged in as ${this.cloud.getUsername()}`);
+      }
+      this.cloud.logout();
+    }
+
+    const result = await this.cloud.login(
+      port || this.port,
+      noBrowser,
+      machineName,
+      cloudDomain,
+      undefined,
+      skipConfigUpdate
+    );
+
     let message = chalk.green(`Logged in as ${result?.username}`);
 
-    if (result?.isAlreadyLoggedIn) {
+    if (skipConfigUpdate) {
       return message;
     }
 
@@ -72,18 +105,20 @@ export class LoginCmd implements Command {
       suppressBrowserLaunch,
       noBrowser,
       machineName,
+      skipConfigUpdate,
     }: {
       cloudDomain?: string;
       port: string;
       suppressBrowserLaunch?: boolean;
       noBrowser?: boolean;
       machineName?: string;
+      skipConfigUpdate?: boolean;
     }
   ): Promise<{ username?: string; token?: string; successfullyUpdatedNpmrc?: boolean }> {
     if (suppressBrowserLaunch) {
       noBrowser = true;
     }
-    const result = await this.cloud.login(port, noBrowser, machineName, cloudDomain);
+    const result = await this.cloud.login(port, noBrowser, machineName, cloudDomain, undefined, skipConfigUpdate);
     return {
       username: result?.username,
       token: result?.token,
