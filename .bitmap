@@ -1776,7 +1776,7 @@
     "ui/pages/static-error": {
         "name": "ui/pages/static-error",
         "scope": "teambit.ui-foundation",
-        "version": "0.0.102",
+        "version": "0.0.104",
         "mainFile": "index.ts",
         "rootDir": "components/ui/pages/static-error"
     },
