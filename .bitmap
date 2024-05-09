@@ -1533,7 +1533,10 @@
         "scope": "teambit.code",
         "version": "0.0.299",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/code-compare"
+        "rootDir": "components/ui/code-compare",
+        "config": {
+            "teambit.react/v17/react-env@1.1.20": {}
+        }
     },
     "ui/code-tab-page": {
         "name": "ui/code-tab-page",
@@ -1561,7 +1564,10 @@
         "scope": "teambit.component",
         "version": "0.0.182",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/component-compare"
+        "rootDir": "components/ui/component-compare/component-compare",
+        "config": {
+            "teambit.react/v17/react-env@1.1.20": {}
+        }
     },
     "ui/component-compare/context": {
         "name": "ui/component-compare/context",
@@ -1575,7 +1581,10 @@
         "scope": "teambit.component",
         "version": "0.0.108",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/models/component-compare-props"
+        "rootDir": "components/ui/component-compare/models/component-compare-props",
+        "config": {
+            "teambit.react/v17/react-env@1.1.20": {}
+        }
     },
     "ui/component-compare/utils/lazy-loading": {
         "name": "ui/component-compare/utils/lazy-loading",
@@ -1776,7 +1785,7 @@
     "ui/pages/static-error": {
         "name": "ui/pages/static-error",
         "scope": "teambit.ui-foundation",
-        "version": "0.0.102",
+        "version": "0.0.104",
         "mainFile": "index.ts",
         "rootDir": "components/ui/pages/static-error"
     },
@@ -1799,7 +1808,10 @@
         "scope": "teambit.ui-foundation",
         "version": "0.0.508",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/react-router/slot-router"
+        "rootDir": "components/ui/react-router/slot-router",
+        "config": {
+            "teambit.react/v17/react-env@1.1.20": {}
+        }
     },
     "ui/rendering/html": {
         "name": "ui/rendering/html",
