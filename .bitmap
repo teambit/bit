@@ -1521,6 +1521,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/ui/aspect-box"
     },
+    "ui/avatar": {
+        "name": "ui/avatar",
+        "scope": "teambit.design",
+        "version": "1.0.30",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/avatar"
+    },
     "ui/buttons/collapser": {
         "name": "ui/buttons/collapser",
         "scope": "teambit.ui-foundation",
@@ -1833,6 +1840,32 @@
         "version": "0.0.40",
         "mainFile": "index.ts",
         "rootDir": "components/ui/test-page"
+    },
+    "ui/time-ago": {
+        "name": "ui/time-ago",
+        "scope": "teambit.design",
+        "version": "0.0.369",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/time-ago",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
+    "ui/tooltip": {
+        "name": "ui/tooltip",
+        "scope": "teambit.design",
+        "version": "0.0.367",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/tooltip",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "ui/user-bar": {
         "name": "ui/user-bar",
