@@ -24,6 +24,7 @@ export class LoginCmd implements Command {
   loader = true;
   remoteOp = true;
   skipWorkspace = true;
+  loadAspects = false;
 
   private port?: string;
 

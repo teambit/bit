@@ -115,9 +115,9 @@ export class ImporterMain {
     return importComponents.importComponents();
   }
 
-  async importObjectsFromMainIfExist(ids: ComponentID[]) {
+  async importObjectsFromMainIfExist(ids: ComponentID[], { cache } = { cache: false }) {
     await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(ids), {
-      cache: false,
+      cache,
       includeVersionHistory: true,
       ignoreMissingHead: true,
     });

@@ -804,6 +804,9 @@ importers:
       '@teambit/lanes.ui.menus.lanes-overview-menu':
         specifier: ^0.0.10
         version: 0.0.10(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
+      '@teambit/lanes.ui.navigation.lane-switcher':
+        specifier: ^0.0.225
+        version: 0.0.225(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
       '@teambit/legacy-bit-id':
         specifier: ^1.1.1
         version: 1.1.1
@@ -4345,70 +4348,6 @@ importers:
         specifier: 5.9.5
         version: 5.9.5
 
-  components/ui/navigation/lane-switcher:
-    dependencies:
-      '@apollo/client':
-        specifier: ^3.8.8
-        version: 3.9.6(@types/react@17.0.75)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@mdx-js/react':
-        specifier: 1.6.22
-        version: 1.6.22(react@17.0.2)
-      '@teambit/base-ui.loaders.skeleton':
-        specifier: 1.0.1
-        version: 1.0.1(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/design.ui.surfaces.menu.link-item':
-        specifier: 1.0.0
-        version: 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lane-id':
-        specifier: ~0.0.311
-        version: 0.0.311
-      '@teambit/mdx.ui.mdx-scope-context':
-        specifier: 1.0.7
-        version: 1.0.7(@types/react@17.0.75)(react@17.0.2)
-      '@testing-library/react':
-        specifier: ^12.0.0
-        version: 12.1.5(react-dom@17.0.2)(react@17.0.2)
-      '@testing-library/react-hooks':
-        specifier: ^8.0.1
-        version: 8.0.1(@types/react@17.0.75)(react-dom@17.0.2)(react-test-renderer@17.0.2)(react@17.0.2)
-      '@types/jest':
-        specifier: ^29.2.2
-        version: 29.5.12
-      '@types/react':
-        specifier: ^17.0.67
-        version: 17.0.75
-      '@types/react-dom':
-        specifier: ^17.0.21
-        version: 17.0.25
-      classnames:
-        specifier: 2.2.6
-        version: 2.2.6
-      graphql:
-        specifier: 15.8.0
-        version: 15.8.0
-      jest:
-        specifier: 29.3.1
-        version: 29.3.1(@types/node@20.2.5)
-      react:
-        specifier: ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^17.0.0
-        version: 17.0.2(react@17.0.2)
-      react-router-dom:
-        specifier: ^6.16.0
-        version: 6.22.3(react-dom@17.0.2)(react@17.0.2)
-    devDependencies:
-      '@teambit/react.v17.react-env':
-        specifier: 1.1.6
-        version: 1.1.6(@babel/core@7.19.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1)(@typescript-eslint/parser@7.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.0)(lightningcss@1.24.0)(puppeteer@13.7.0)(react-test-renderer@17.0.2)(subscriptions-transport-ws@0.9.18)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
-      '@types/classnames':
-        specifier: 2.2.11
-        version: 2.2.11
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-
   components/ui/pages/preview-not-found:
     dependencies:
       core-js:
@@ -5511,9 +5450,6 @@ importers:
       '@teambit/lanes.ui.models.lanes-model':
         specifier: workspace:*
         version: file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.navigation.lane-switcher':
-        specifier: workspace:*
-        version: file:components/ui/navigation/lane-switcher(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/legacy-component-log':
         specifier: workspace:*
         version: file:components/legacy-component-log
@@ -6194,8 +6130,6 @@ importers:
       '@teambit/lanes.ui.menus.use-lanes-menu':
         injected: true
       '@teambit/lanes.ui.models.lanes-model':
-        injected: true
-      '@teambit/lanes.ui.navigation.lane-switcher':
         injected: true
       '@teambit/legacy-component-log':
         injected: true
@@ -6937,9 +6871,6 @@ importers:
       '@teambit/lanes.ui.models.lanes-model':
         specifier: workspace:*
         version: file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.navigation.lane-switcher':
-        specifier: workspace:*
-        version: file:components/ui/navigation/lane-switcher(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/legacy-component-log':
         specifier: workspace:*
         version: file:components/legacy-component-log
@@ -7638,8 +7569,6 @@ importers:
       '@teambit/lanes.ui.menus.use-lanes-menu':
         injected: true
       '@teambit/lanes.ui.models.lanes-model':
-        injected: true
-      '@teambit/lanes.ui.navigation.lane-switcher':
         injected: true
       '@teambit/legacy-component-log':
         injected: true
@@ -8381,9 +8310,6 @@ importers:
       '@teambit/lanes.ui.models.lanes-model':
         specifier: workspace:*
         version: file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.navigation.lane-switcher':
-        specifier: workspace:*
-        version: file:components/ui/navigation/lane-switcher(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/legacy-component-log':
         specifier: workspace:*
         version: file:components/legacy-component-log
@@ -9082,8 +9008,6 @@ importers:
       '@teambit/lanes.ui.menus.use-lanes-menu':
         injected: true
       '@teambit/lanes.ui.models.lanes-model':
-        injected: true
-      '@teambit/lanes.ui.navigation.lane-switcher':
         injected: true
       '@teambit/legacy-component-log':
         injected: true
@@ -9819,9 +9743,6 @@ importers:
       '@teambit/lanes.ui.models.lanes-model':
         specifier: workspace:*
         version: file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.navigation.lane-switcher':
-        specifier: workspace:*
-        version: file:components/ui/navigation/lane-switcher(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/legacy-component-log':
         specifier: workspace:*
         version: file:components/legacy-component-log
@@ -10496,8 +10417,6 @@ importers:
       '@teambit/lanes.ui.menus.use-lanes-menu':
         injected: true
       '@teambit/lanes.ui.models.lanes-model':
-        injected: true
-      '@teambit/lanes.ui.navigation.lane-switcher':
         injected: true
       '@teambit/legacy-component-log':
         injected: true
@@ -11233,9 +11152,6 @@ importers:
       '@teambit/lanes.ui.models.lanes-model':
         specifier: workspace:*
         version: file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.navigation.lane-switcher':
-        specifier: workspace:*
-        version: file:components/ui/navigation/lane-switcher(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/legacy-component-log':
         specifier: workspace:*
         version: file:components/legacy-component-log
@@ -11916,8 +11832,6 @@ importers:
       '@teambit/lanes.ui.menus.use-lanes-menu':
         injected: true
       '@teambit/lanes.ui.models.lanes-model':
-        injected: true
-      '@teambit/lanes.ui.navigation.lane-switcher':
         injected: true
       '@teambit/legacy-component-log':
         injected: true
@@ -12653,9 +12567,6 @@ importers:
       '@teambit/lanes.ui.models.lanes-model':
         specifier: workspace:*
         version: file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.navigation.lane-switcher':
-        specifier: workspace:*
-        version: file:components/ui/navigation/lane-switcher(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/legacy-component-log':
         specifier: workspace:*
         version: file:components/legacy-component-log
@@ -13336,8 +13247,6 @@ importers:
       '@teambit/lanes.ui.menus.use-lanes-menu':
         injected: true
       '@teambit/lanes.ui.models.lanes-model':
-        injected: true
-      '@teambit/lanes.ui.navigation.lane-switcher':
         injected: true
       '@teambit/legacy-component-log':
         injected: true
@@ -14079,9 +13988,6 @@ importers:
       '@teambit/lanes.ui.models.lanes-model':
         specifier: workspace:*
         version: file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.navigation.lane-switcher':
-        specifier: workspace:*
-        version: file:components/ui/navigation/lane-switcher(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/legacy-component-log':
         specifier: workspace:*
         version: file:components/legacy-component-log
@@ -14792,8 +14698,6 @@ importers:
       '@teambit/lanes.ui.menus.use-lanes-menu':
         injected: true
       '@teambit/lanes.ui.models.lanes-model':
-        injected: true
-      '@teambit/lanes.ui.navigation.lane-switcher':
         injected: true
       '@teambit/legacy-component-log':
         injected: true
@@ -22485,6 +22389,9 @@ importers:
       '@teambit/lanes.ui.menus.lanes-overview-menu':
         specifier: ^0.0.10
         version: 0.0.10(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
+      '@teambit/lanes.ui.navigation.lane-switcher':
+        specifier: ^0.0.225
+        version: 0.0.225(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
       '@teambit/legacy-bit-id':
         specifier: ^1.1.1
         version: 1.1.1
@@ -42866,6 +42773,76 @@ packages:
       - '@types/react'
     dev: false
 
+  /@teambit/lanes.ui.inputs.lane-selector@0.0.225(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2):
+    resolution: {integrity: sha512-k6YcN0JnBzVqcLS+8OyewsMDUUq8O4MgKYs/rVEkjTyLRYaTouWYxb37gYMTn195/eDr5l7ALO4RO5srLirfDA==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+      react-router-dom: ^6.22.3
+    dependencies:
+      '@teambit/design.elements.icon': 1.0.5(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.inputs.dropdown': 1.2.16(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.inputs.input-text': 1.0.21(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.avatar': 1.0.29(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.styles.ellipsis': 0.0.357(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.surfaces.menu.link-item': 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.time-ago': 0.0.366(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/evangelist.elements.icon': 1.0.2(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lane-id': 0.0.311
+      '@teambit/lanes.hooks.use-lanes': 0.0.264(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.icons.lane-icon': 0.0.9(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.models.lanes-model': 0.0.216(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.constants.z-indexes': 0.0.504(react-dom@17.0.2)(react@17.0.2)
+      classnames: 2.2.6
+      core-js: 3.13.0
+      fuse.js: 6.6.2
+      lodash: 4.17.21
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+      react-router-dom: 6.22.3(react-dom@17.0.2)(react@17.0.2)
+    transitivePeerDependencies:
+      - '@apollo/client'
+      - '@teambit/base-react.navigation.link'
+      - '@testing-library/react'
+      - '@types/react'
+    dev: false
+
+  /@teambit/lanes.ui.inputs.lane-selector@0.0.225(@apollo/client@3.9.6)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2):
+    resolution: {integrity: sha512-k6YcN0JnBzVqcLS+8OyewsMDUUq8O4MgKYs/rVEkjTyLRYaTouWYxb37gYMTn195/eDr5l7ALO4RO5srLirfDA==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+      react-router-dom: ^6.22.3
+    dependencies:
+      '@teambit/design.elements.icon': 1.0.5(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.inputs.dropdown': 1.2.16(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.inputs.input-text': 1.0.21(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.avatar': 1.0.29(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.styles.ellipsis': 0.0.357(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.surfaces.menu.link-item': 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.time-ago': 0.0.366(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/evangelist.elements.icon': 1.0.2(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lane-id': 0.0.311
+      '@teambit/lanes.hooks.use-lanes': 0.0.264(@apollo/client@3.9.6)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.icons.lane-icon': 0.0.9(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.models.lanes-model': 0.0.216(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.constants.z-indexes': 0.0.504(react-dom@17.0.2)(react@17.0.2)
+      classnames: 2.2.6
+      core-js: 3.13.0
+      fuse.js: 6.6.2
+      lodash: 4.17.21
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+      react-router-dom: 6.22.3(react-dom@17.0.2)(react@17.0.2)
+    transitivePeerDependencies:
+      - '@apollo/client'
+      - '@teambit/base-react.navigation.link'
+      - '@testing-library/react'
+      - '@types/react'
+    dev: false
+
   /@teambit/lanes.ui.lane-details@0.0.204(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-7ViNe0YEWGJQ0T1tSx+6AeMVZGw2sMjpniHsryzT2zpHOOnFR0eGXO9+3C350cetA0phel2hXetQNSTqU/bFag==}
     engines: {node: '>=12.22.0'}
@@ -42938,6 +42915,54 @@ packages:
       path-to-regexp: 6.2.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  /@teambit/lanes.ui.navigation.lane-switcher@0.0.225(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2):
+    resolution: {integrity: sha512-TdSW2XHNyeMaWkzf7F0wIO+P4NPCVAfU70ndWwJesoqk4j0k2zxQYvc7fCkKjSyYsGoczCIkft2vxGWEKb/chw==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      '@types/react': ^17.0.67
+      react: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-ui.loaders.skeleton': 1.0.1(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.surfaces.menu.link-item': 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lane-id': 0.0.311
+      '@teambit/lanes.hooks.use-lanes': 0.0.264(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.inputs.lane-selector': 0.0.225(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
+      '@teambit/lanes.ui.models.lanes-model': 0.0.216(react-dom@17.0.2)(react@17.0.2)
+      '@types/react': 17.0.75
+      classnames: 2.2.6
+      react: 17.0.2
+    transitivePeerDependencies:
+      - '@apollo/client'
+      - '@teambit/base-react.navigation.link'
+      - '@testing-library/react'
+      - react-dom
+      - react-router-dom
+    dev: false
+
+  /@teambit/lanes.ui.navigation.lane-switcher@0.0.225(@apollo/client@3.9.6)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2):
+    resolution: {integrity: sha512-TdSW2XHNyeMaWkzf7F0wIO+P4NPCVAfU70ndWwJesoqk4j0k2zxQYvc7fCkKjSyYsGoczCIkft2vxGWEKb/chw==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      '@types/react': ^17.0.67
+      react: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-ui.loaders.skeleton': 1.0.1(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/design.ui.surfaces.menu.link-item': 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lane-id': 0.0.311
+      '@teambit/lanes.hooks.use-lanes': 0.0.264(@apollo/client@3.9.6)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.inputs.lane-selector': 0.0.225(@apollo/client@3.9.6)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
+      '@teambit/lanes.ui.models.lanes-model': 0.0.216(react-dom@17.0.2)(react@17.0.2)
+      '@types/react': 17.0.75
+      classnames: 2.2.6
+      react: 17.0.2
+    transitivePeerDependencies:
+      - '@apollo/client'
+      - '@teambit/base-react.navigation.link'
+      - '@testing-library/react'
+      - react-dom
+      - react-router-dom
     dev: false
 
   /@teambit/legacy-bit-id@0.0.368(react-dom@17.0.2)(react@17.0.2):
@@ -48543,7 +48568,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.3
       '@yarnpkg/fslib': 3.0.2
-      '@yarnpkg/libzip': 3.0.1(@yarnpkg/fslib@3.0.2)
+      '@yarnpkg/libzip': 3.0.1
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -48574,7 +48599,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.3
       '@yarnpkg/fslib': 3.0.2
-      '@yarnpkg/libzip': 3.0.1(@yarnpkg/fslib@3.0.2)
+      '@yarnpkg/libzip': 3.0.1
       '@yarnpkg/parsers': 3.0.0
       '@yarnpkg/shell': 4.0.0
       camelcase: 5.3.1
@@ -48655,11 +48680,9 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/libzip@3.0.1(@yarnpkg/fslib@3.0.2):
+  /@yarnpkg/libzip@3.0.1:
     resolution: {integrity: sha512-fiqRLk2fyd2r34/Qc7HlP8fKIo1CK5CZpLNObJwnbFmZQN2hVanovFlG++3oH3qYJymEmjPl5EGsygcEJZl4Pg==}
     engines: {node: '>=18.12.0'}
-    peerDependencies:
-      '@yarnpkg/fslib': ^3.0.2
     dependencies:
       '@types/emscripten': 1.39.10
       '@yarnpkg/fslib': 3.0.2
@@ -72736,46 +72759,6 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:components/ui/navigation/lane-switcher(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18):
-    resolution: {directory: components/ui/navigation/lane-switcher, type: directory}
-    id: file:components/ui/navigation/lane-switcher
-    name: '@teambit/lanes.ui.navigation.lane-switcher'
-    peerDependencies:
-      '@types/react': ^17.0.67
-      react: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@apollo/client': 3.9.6(@types/react@17.0.75)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/base-ui.loaders.skeleton': 1.0.1(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/design.ui.surfaces.menu.link-item': 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lane-id': 0.0.311
-      '@teambit/lanes.hooks.use-lanes': file:components/hooks/use-lanes(@apollo/client@3.9.6)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.inputs.lane-selector': file:components/ui/inputs/lane-selector_1(@apollo/client@3.9.6)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
-      '@teambit/lanes.ui.models.lanes-model': file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': 1.0.7(@types/react@17.0.75)(react@17.0.2)
-      '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
-      '@testing-library/react-hooks': 8.0.1(@types/react@17.0.75)(react-dom@17.0.2)(react-test-renderer@17.0.2)(react@17.0.2)
-      '@types/jest': 29.5.12
-      '@types/react': 17.0.75
-      '@types/react-dom': 17.0.25
-      classnames: 2.2.6
-      graphql: 15.8.0
-      jest: 29.3.1(@types/node@20.2.5)
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-      react-router-dom: 6.22.3(react-dom@17.0.2)(react@17.0.2)
-    transitivePeerDependencies:
-      - '@teambit/base-react.navigation.link'
-      - '@types/node'
-      - babel-plugin-macros
-      - graphql-ws
-      - node-notifier
-      - react-test-renderer
-      - subscriptions-transport-ws
-      - supports-color
-      - ts-node
-    dev: false
-
   file:components/ui/pages/preview-not-found(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: components/ui/pages/preview-not-found, type: directory}
     id: file:components/ui/pages/preview-not-found
@@ -77065,7 +77048,7 @@ packages:
       '@teambit/lanes.ui.menus.lanes-overview-menu': 0.0.10(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
       '@teambit/lanes.ui.menus.use-lanes-menu': file:components/ui/menus/use-lanes-menu(@teambit/base-react.navigation.link@2.0.27)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model': file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.navigation.lane-switcher': file:components/ui/navigation/lane-switcher(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+      '@teambit/lanes.ui.navigation.lane-switcher': 0.0.225(@apollo/client@3.6.9)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
       '@teambit/legacy-bit-id': 1.1.1
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/scope.ui.scope-icon': 0.0.91(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
@@ -77129,7 +77112,7 @@ packages:
       '@teambit/lanes.ui.menus.lanes-overview-menu': 0.0.10(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
       '@teambit/lanes.ui.menus.use-lanes-menu': file:components/ui/menus/use-lanes-menu(@teambit/base-react.navigation.link@2.0.27)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model': file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.navigation.lane-switcher': file:components/ui/navigation/lane-switcher(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
+      '@teambit/lanes.ui.navigation.lane-switcher': 0.0.225(@apollo/client@3.9.6)(@teambit/base-react.navigation.link@2.0.27)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
       '@teambit/legacy-bit-id': 1.1.1
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/scope.ui.scope-icon': 0.0.91(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
