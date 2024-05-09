@@ -1,6 +1,6 @@
 import React from 'react';
 import { Section } from '@teambit/component';
-import { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
+import type { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import { ComponentCompareUI } from './component-compare.ui.runtime';
 
