@@ -208,7 +208,7 @@
     "babel/bit-react-transformer": {
         "name": "babel/bit-react-transformer",
         "scope": "teambit.react",
-        "version": "1.0.21",
+        "version": "1.0.22",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/bit-react-transformer"
     },
@@ -1524,7 +1524,7 @@
     "ui/buttons/collapser": {
         "name": "ui/buttons/collapser",
         "scope": "teambit.ui-foundation",
-        "version": "0.0.219",
+        "version": "0.0.220",
         "mainFile": "index.ts",
         "rootDir": "components/ui/buttons/collapser"
     },
@@ -1573,7 +1573,7 @@
     "ui/component-compare/models/component-compare-props": {
         "name": "ui/component-compare/models/component-compare-props",
         "scope": "teambit.component",
-        "version": "0.0.105",
+        "version": "0.0.108",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/models/component-compare-props"
     },
@@ -1650,7 +1650,7 @@
     "ui/docs-app": {
         "name": "ui/docs-app",
         "scope": "teambit.react",
-        "version": "1.0.18",
+        "version": "1.0.21",
         "mainFile": "index.tsx",
         "rootDir": "scopes/react/ui/docs-app"
     },
@@ -1671,7 +1671,7 @@
     "ui/docs/docs-content": {
         "name": "ui/docs/docs-content",
         "scope": "teambit.react",
-        "version": "0.0.27",
+        "version": "0.0.30",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/docs/docs-content"
     },
@@ -1699,7 +1699,7 @@
     "ui/highlighter-provider": {
         "name": "ui/highlighter-provider",
         "scope": "teambit.react",
-        "version": "0.0.210",
+        "version": "0.0.211",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/highlighter-provider"
     },
@@ -1727,7 +1727,7 @@
     "ui/inputs/lane-selector": {
         "name": "ui/inputs/lane-selector",
         "scope": "teambit.lanes",
-        "version": "0.0.225",
+        "version": "0.0.226",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inputs/lane-selector_1"
     },
@@ -1776,7 +1776,7 @@
     "ui/pages/static-error": {
         "name": "ui/pages/static-error",
         "scope": "teambit.ui-foundation",
-        "version": "0.0.99",
+        "version": "0.0.102",
         "mainFile": "index.ts",
         "rootDir": "components/ui/pages/static-error"
     },
