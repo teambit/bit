@@ -7,7 +7,6 @@ import * as ini from 'ini';
 import { createLinkOrSymlink } from '@teambit/toolbox.fs.link-or-symlink';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { IS_WINDOWS } from '../constants';
-import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import NpmHelper from './e2e-npm-helper';
@@ -127,11 +126,6 @@ export default class ScopeHelper {
   initWorkspace(workspacePath?: string, options?: Record<string, any>) {
     const opts = this.command.parseOptions(options);
     return this.command.runCmd(`bit init ${opts}`, workspacePath);
-  }
-
-  async initInteractive(inputs: InteractiveInputs) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.command.runInteractiveCmd({ args: ['init', '--interactive'], inputs });
   }
 
   initLocalScopeWithOptions(options: Record<string, any>) {
