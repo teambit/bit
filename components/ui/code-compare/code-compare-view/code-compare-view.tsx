@@ -320,14 +320,16 @@ export function CodeCompareView({
 
   const codeContainerHeightStyle = isFullScreen ? 'calc(100% - 30px)' : containerHeight ?? '220px';
   const fileCompareDataByName = componentCompareContext?.fileCompareDataByName;
-  const codeNavFiles = files.filter((file) => {
-    const codeCompareDataForFile = fileCompareDataByName?.get(fileName) ?? null;
-    const status = codeCompareDataForFile?.status;
-    if (componentCompareContext?.compare && !componentCompareContext.base && !status) return true;
-    if (file === fileName) return true;
-    if (status && status !== 'UNCHANGED') return true;
-    return false;
-  });
+  const codeNavFiles = React.useMemo(() => {
+    return files.filter((file) => {
+      if (file === fileName) return true;
+      const codeCompareDataForFile = fileCompareDataByName?.get(file) ?? null;
+      const status = codeCompareDataForFile?.status;
+      if (componentCompareContext?.compare && !componentCompareContext.base && !status) return true;
+      if (status && status !== 'UNCHANGED') return true;
+      return false;
+    });
+  }, [files.length, fileName, fileCompareDataByName?.size]);
 
   return (
     <div

@@ -1,15 +1,11 @@
 import chalk from 'chalk';
 import * as pathlib from 'path';
-import R from 'ramda';
 import { BitError } from '@teambit/bit-error';
 import { init } from '../../../api/consumer';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import { initScope } from '../../../api/scope';
-import { CFG_INIT_INTERACTIVE, CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '../../../constants';
+import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '../../../constants';
 import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
-import { initInteractive } from '../../../interactive';
-import shouldShowInteractive from '../../../interactive/utils/should-show-interactive';
-import clean from '../../../utils/object-clean';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
@@ -55,14 +51,9 @@ export default class Init implements LegacyCommand {
     ],
     ['', 'default-scope <default-scope>', 'set the default scope for components in the workspace'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
-    ['I', 'interactive', 'EXPERIMENTAL. start an interactive process'],
   ] as CommandOptions;
 
   action([path]: [string], flags: Record<string, any>): Promise<{ [key: string]: any }> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (!_isAnyNotInteractiveFlagUsed(flags) && (flags.interactive || shouldShowInteractive(CFG_INIT_INTERACTIVE))) {
-      return initInteractive();
-    }
     const {
       bare,
       shared,
@@ -138,27 +129,3 @@ export default class Init implements LegacyCommand {
     return initMessage;
   }
 }
-
-function _isAnyNotInteractiveFlagUsed(flags: Record<string, any>) {
-  const withoutInteractive = R.omit(['interactive'], flags);
-  const cleaned = clean(withoutInteractive);
-  return !R.isEmpty(cleaned);
-}
-
-// function _generateAddedGitHooksTemplate(addedGitHooks) {
-//   if (addedGitHooks && addedGitHooks.length > 0) {
-//     return chalk.green(`the following git hooks were added: ${addedGitHooks.join(', ')}`);
-//   }
-//   return '';
-// }
-
-// function _generateExistingGitHooksTemplate(existingGitHooks) {
-//   if (existingGitHooks && existingGitHooks.length > 0) {
-//     return chalk.yellow(
-//       `warning: the following git hooks are already existing: ${existingGitHooks.join(
-//         ', '
-//       )}\nplease add the following code to your hooks: \`bit import\``
-//     );
-//   }
-//   return '';
-// }
