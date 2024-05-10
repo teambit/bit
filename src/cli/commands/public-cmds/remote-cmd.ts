@@ -7,7 +7,6 @@ import { forEach, isEmpty } from 'lodash';
 import { remoteAdd, remoteList, remoteRm } from '../../../api/consumer';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
-import RemoteUndefined from '../exceptions/remote-undefined';
 
 class RemoteAdd implements LegacyCommand {
   name = 'add <url>';
@@ -18,12 +17,7 @@ for example: "http://localhost:3000", "file:///tmp/local-scope"`;
   opts = [['g', 'global', 'configure a remote bit scope']] as CommandOptions;
 
   action([url]: [string], { global }: { global: boolean }): Promise<any> {
-    try {
-      if (!url) return Promise.reject(new RemoteUndefined());
-      return remoteAdd(url, global);
-    } catch (err: any) {
-      return Promise.reject(err);
-    }
+    return remoteAdd(url, global);
   }
 
   report({ name, host }: { name: string; host: string }): string {

@@ -26,7 +26,6 @@ import LegacyScope, { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope
 import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
-import { PersistOptions } from '@teambit/legacy/dist/scope/types';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { DependencyResolverAspect, DependencyResolverMain, NodeLinker } from '@teambit/dependency-resolver';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
@@ -432,14 +431,6 @@ export class ScopeMain implements ComponentFactory {
    * This will only fetch the object and won't write the files to the actual FS
    */
   fetch(ids: ComponentIdList) {} // eslint-disable-line @typescript-eslint/no-unused-vars
-
-  /**
-   * This function will get a component and sealed it's current state into the scope
-   *
-   * @param {Component[]} components A list of components to seal with specific persist options (such as message and version number)
-   * @param {PersistOptions} persistGeneralOptions General persistence options such as verbose
-   */
-  persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
   async delete(
     { ids, force, lanes }: { ids: string[]; force: boolean; lanes: boolean },
