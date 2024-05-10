@@ -20,6 +20,7 @@ import { ExternalEnvWithoutVersion } from './external-env-without-version';
 import { RemovedDependencies } from './removed-dependencies';
 import { SelfReference } from './self-reference';
 import { ImportFromDirectory } from './import-from-directory';
+import { DeprecatedDependencies } from './deprecated-dependencies';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
@@ -41,6 +42,7 @@ export const IssuesClasses = {
   NonLoadedEnv,
   ExternalEnvWithoutVersion,
   RemovedDependencies,
+  DeprecatedDependencies,
   SelfReference,
   ImportFromDirectory,
 };
@@ -90,6 +92,10 @@ export class IssuesList {
 
   delete(IssueClass: typeof ComponentIssue) {
     this._issues = this._issues.filter((issue) => issue.constructor.name !== IssueClass.name);
+  }
+
+  hasTagBlockerIssues(): boolean {
+    return this._issues.some((issue) => issue.isTagBlocker);
   }
 
   getIssue<T extends ComponentIssue>(IssueClass: { new (): T }): T | undefined {
