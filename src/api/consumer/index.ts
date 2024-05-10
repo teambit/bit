@@ -1,4 +1,3 @@
-import dependencyStatus from './lib/dependency_status';
 import getComponentLogs from './lib/get-component-logs';
 import getConsumerComponent from './lib/get-consumer-component';
 import getScopeComponent from './lib/get-scope-component';
@@ -20,7 +19,6 @@ export {
   remoteAdd,
   remoteList,
   remoteRm,
-  dependencyStatus,
   show,
   clearCache,
 };
