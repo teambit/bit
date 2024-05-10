@@ -352,6 +352,10 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
           // depInCompVer is a version, depInWsVer is a range
           const potentialRangeChar = depInWsVer[0];
           const newRange = potentialRangeChar + depInCompVer;
+          if (newRange === depInWsVer) {
+            addNotUpdateToLogs(`the min version from ws ${depInWsVer} is the same as ${depInCompVer} from comp`);
+            return;
+          }
           if (!semver.validRange(newRange)) {
             const warnMsg = `failed to add the range "${potentialRangeChar}" to ${depInCompVer}, the result is not a valid range`;
             this.logger.warn(warnMsg);
