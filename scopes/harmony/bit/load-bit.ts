@@ -6,11 +6,6 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-import { nativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
-
-// Enable v8 compile cache, keep this before other imports
-nativeCompileCache?.install();
-
 import './hook-require';
 
 import {
@@ -213,10 +208,28 @@ function getMainAspect() {
  */
 function shouldLoadInSafeMode() {
   const currentCommand = process.argv[2];
-  const safeModeCommands = ['init', 'cat-scope', 'cat-object', 'cat-component', 'cmp', 'cat-lane', 'config', 'remote'];
+  const commandsToAlwaysRunInSafeMode = [
+    'init',
+    'cat-scope',
+    'cat-object',
+    'cat-component',
+    'cmp',
+    'cat-lane',
+    'config',
+    'remote',
+  ];
+  // only legacy commands can ignore all aspects and load only the CLI aspect.
+  // harmony commands need the aspects to be loaded and register to the CLI aspect in order to work properly.
+  const commandsThatCanRunInSafeMode = [
+    ...commandsToAlwaysRunInSafeMode,
+    'dependents',
+    'doctor',
+    'cat-version-history',
+    'run-action',
+  ];
   const hasSafeModeFlag = process.argv.includes('--safe-mode');
-  const isSafeModeCommand = safeModeCommands.includes(currentCommand) || isClearCacheCommand();
-  return isSafeModeCommand || hasSafeModeFlag;
+  const isSafeModeCommand = commandsToAlwaysRunInSafeMode.includes(currentCommand) || isClearCacheCommand();
+  return isSafeModeCommand || (hasSafeModeFlag && commandsThatCanRunInSafeMode.includes(currentCommand));
 }
 
 function isClearCacheCommand() {
