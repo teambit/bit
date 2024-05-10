@@ -1,6 +1,5 @@
 import cliSpinners from 'cli-spinners';
 import * as path from 'path';
-import format from 'string-format';
 import { homedir, platform } from 'os';
 
 import { PathOsBased } from './utils/path';
@@ -320,7 +319,6 @@ export const CFG_INTERACTIVE = 'interactive';
 // Template for interactive config for specific command like interactive.init
 export const CFG_COMMAND_INTERACTIVE_TEMPLATE = 'interactive.{commandName}';
 
-export const CFG_INIT_INTERACTIVE = format(CFG_COMMAND_INTERACTIVE_TEMPLATE, { commandName: INIT_COMMAND });
 export const CFG_INIT_DEFAULT_SCOPE = 'default_scope';
 export const CFG_INIT_DEFAULT_DIRECTORY = 'default_directory';
 
