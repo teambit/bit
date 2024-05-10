@@ -8,7 +8,7 @@ import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnos
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
-import { BASE_DOCS_DOMAIN, BASE_LEGACY_DOCS_DOMAIN } from '../constants';
+import { BASE_DOCS_DOMAIN } from '../constants';
 import { InvalidBitMap, MissingMainFile } from '../consumer/bit-map/exceptions';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import {
@@ -232,11 +232,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     GitNotFound,
     () =>
       "error: unable to run command because git executable not found. please ensure git is installed and/or git_path is configured using the 'bit config set git_path <GIT_PATH>'",
-  ],
-  [
-    AuthenticationFailed,
-    (err) =>
-      `authentication failed. see troubleshooting at https://${BASE_LEGACY_DOCS_DOMAIN}/setup-authentication#autentication-issues.html\n\n${err.debugInfo}`,
   ],
   [
     ObjectsWithoutConsumer,
