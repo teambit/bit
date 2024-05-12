@@ -1524,14 +1524,14 @@
     "ui/avatar": {
         "name": "ui/avatar",
         "scope": "teambit.design",
-        "version": "1.0.31",
+        "version": "1.0.32",
         "mainFile": "index.ts",
         "rootDir": "components/ui/avatar"
     },
     "ui/buttons/collapser": {
         "name": "ui/buttons/collapser",
         "scope": "teambit.ui-foundation",
-        "version": "0.0.221",
+        "version": "0.0.222",
         "mainFile": "index.ts",
         "rootDir": "components/ui/buttons/collapser"
     },
@@ -1734,7 +1734,7 @@
     "ui/inputs/lane-selector": {
         "name": "ui/inputs/lane-selector",
         "scope": "teambit.lanes",
-        "version": "0.0.227",
+        "version": "0.0.228",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inputs/lane-selector_1"
     },
@@ -1832,14 +1832,14 @@
     "ui/time-ago": {
         "name": "ui/time-ago",
         "scope": "teambit.design",
-        "version": "0.0.370",
+        "version": "0.0.371",
         "mainFile": "index.ts",
         "rootDir": "components/ui/time-ago"
     },
     "ui/tooltip": {
         "name": "ui/tooltip",
         "scope": "teambit.design",
-        "version": "0.0.368",
+        "version": "0.0.369",
         "mainFile": "index.ts",
         "rootDir": "components/ui/tooltip"
     },
