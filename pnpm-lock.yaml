@@ -964,8 +964,8 @@ importers:
         specifier: ^0.0.500
         version: 0.0.500(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-is-mobile':
-        specifier: ^0.0.197
-        version: 0.0.197(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.198
+        version: 0.0.198(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-user-agent':
         specifier: ^0.0.197
         version: 0.0.197(react-dom@17.0.2)(react@17.0.2)
@@ -3361,8 +3361,8 @@ importers:
         specifier: ^0.0.504
         version: 0.0.504(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-is-mobile':
-        specifier: ^0.0.197
-        version: 0.0.197(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.198
+        version: 0.0.198(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.tree-node':
         specifier: ^0.0.513
         version: 0.0.513(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
@@ -4749,8 +4749,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-is-mobile':
-        specifier: ^0.0.197
-        version: 0.0.197(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.198
+        version: 0.0.198(react-dom@17.0.2)(react@17.0.2)
       '@tippyjs/react':
         specifier: 4.2.0
         version: 4.2.0(react-dom@17.0.2)(react@17.0.2)
@@ -15772,8 +15772,8 @@ importers:
         specifier: ^0.0.504
         version: 0.0.504(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-is-mobile':
-        specifier: ^0.0.197
-        version: 0.0.197(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.198
+        version: 0.0.198(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query':
         specifier: ^0.0.501
         version: 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
@@ -18909,8 +18909,8 @@ importers:
         specifier: ^0.0.504
         version: 0.0.504(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-is-mobile':
-        specifier: ^0.0.197
-        version: 0.0.197(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.198
+        version: 0.0.198(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.menu-widget-icon':
         specifier: ^0.0.502
         version: 0.0.502(react-dom@17.0.2)(react@17.0.2)
@@ -24884,8 +24884,8 @@ importers:
         specifier: ^0.0.500
         version: 0.0.500(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-is-mobile':
-        specifier: ^0.0.197
-        version: 0.0.197(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.0.198
+        version: 0.0.198(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.main-dropdown':
         specifier: ^0.0.502
         version: 0.0.502(react-dom@17.0.2)(react@17.0.2)
@@ -26457,15 +26457,9 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
-      assert:
-        specifier: ^2.1.0
-        version: 2.1.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
-      buffer:
-        specifier: 6.0.3
-        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -26520,9 +26514,6 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
-      punycode:
-        specifier: ^2.3.1
-        version: 2.3.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -26544,21 +26535,12 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
-      string_decoder:
-        specifier: ^1.3.0
-        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
-      url:
-        specifier: ^0.11.3
-        version: 0.11.3
-      util:
-        specifier: ^0.12.5
-        version: 0.12.5
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -46698,6 +46680,21 @@ packages:
       - supports-color
     dev: false
 
+  /@teambit/ui-foundation.ui.hooks.use-is-mobile@0.0.198(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-Mwq7tGv7+ChERbmRCK9nnQoWsAmzAY3VWaKODlpn0KOX3wsMR7N2J7MGUkleOsOF8xQmDZhpyWWh0IoN35vtVA==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/ui-foundation.ui.hooks.use-user-agent': 0.0.198(react-dom@17.0.2)(react@17.0.2)
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
   /@teambit/ui-foundation.ui.hooks.use-user-agent@0.0.197(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-4D6z3ctnJPilpI7NFVCANgtg5SI3PLFTK7I55xCBQFRhb8Sj85z7AXHxxjgE2YtpHYy22h4fQ/HoStp3TTQjNw==}
     engines: {node: '>=12.22.0'}
@@ -46710,6 +46707,22 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
       ua-parser-js: 0.7.24
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
+  /@teambit/ui-foundation.ui.hooks.use-user-agent@0.0.198(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-YvIutW/WocBWmDxdniPvh7FGtnFtmHHkk1x4Gqp1bH4+dwIh3/hF2z1AVxO5Eqs++xij4GpKNElFPggUhrgKxQ==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/react.rendering.ssr': 0.0.3(react-dom@17.0.2)(react@17.0.2)
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+      ua-parser-js: 1.0.37
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -72710,7 +72723,7 @@ packages:
       '@teambit/documenter.ui.label': 4.0.3(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.buttons.collapser': file:components/ui/buttons/collapser(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.constants.z-indexes': 0.0.504(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.197(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.198(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.tree-node': 0.0.513(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
@@ -72750,7 +72763,7 @@ packages:
       '@teambit/documenter.ui.label': 4.0.3(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.buttons.collapser': file:components/ui/buttons/collapser(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.constants.z-indexes': 0.0.504(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.197(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.198(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.tree-node': 0.0.513(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
@@ -73629,7 +73642,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.theme.dark-theme': 1.0.2(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.197(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.198(react-dom@17.0.2)(react@17.0.2)
       '@tippyjs/react': 4.2.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
@@ -74217,7 +74230,7 @@ packages:
       '@teambit/documenter.ui.heading': 4.1.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.buttons.collapser': file:components/ui/buttons/collapser(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.constants.z-indexes': 0.0.504(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.197(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.198(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
@@ -74254,7 +74267,7 @@ packages:
       '@teambit/documenter.ui.heading': 4.1.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.buttons.collapser': file:components/ui/buttons/collapser(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.constants.z-indexes': 0.0.504(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.197(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.198(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.75)(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
@@ -75993,7 +76006,7 @@ packages:
       '@teambit/toolbox.path.match-patterns': file:scopes/toolbox/path/match-patterns
       '@teambit/ui-foundation.ui.buttons.collapser': file:components/ui/buttons/collapser(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.constants.z-indexes': 0.0.504(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.197(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.198(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.menu-widget-icon': 0.0.502(react-dom@17.0.2)(react@17.0.2)
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
@@ -76051,7 +76064,7 @@ packages:
       '@teambit/toolbox.path.match-patterns': file:scopes/toolbox/path/match-patterns
       '@teambit/ui-foundation.ui.buttons.collapser': file:components/ui/buttons/collapser(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.constants.z-indexes': 0.0.504(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.197(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.198(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.menu-widget-icon': 0.0.502(react-dom@17.0.2)(react@17.0.2)
       '@types/react': 17.0.75
       '@types/react-dom': 17.0.25
@@ -78780,7 +78793,7 @@ packages:
       '@teambit/ui-foundation.ui.constants.z-indexes': 0.0.504(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.corner': 0.0.520(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
       '@teambit/ui-foundation.ui.full-loader': 0.0.500(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.197(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.198(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.502(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.menu': 0.0.502(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router': file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-router-dom@6.22.3)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
@@ -78869,7 +78882,7 @@ packages:
       '@teambit/ui-foundation.ui.constants.z-indexes': 0.0.504(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.corner': 0.0.520(react-dom@17.0.2)(react-router-dom@6.22.3)(react@17.0.2)
       '@teambit/ui-foundation.ui.full-loader': 0.0.500(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.197(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.hooks.use-is-mobile': 0.0.198(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.502(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.menu': 0.0.502(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router': file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.27)(@types/node@20.2.5)(@types/react@17.0.75)(react-router-dom@6.22.3)(react-test-renderer@17.0.2)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
