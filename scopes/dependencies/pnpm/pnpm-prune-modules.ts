@@ -3,6 +3,7 @@ import path from 'path';
 import { difference } from 'lodash';
 import { readCurrentLockfile } from '@pnpm/lockfile-file';
 import { depPathToFilename } from '@pnpm/dependency-path';
+import { getVirtualStoreDirMaxLength } from './get-virtual-store-dir-max-length';
 
 /**
  * Reads the private lockfile at node_modules/.pnpm/lock.yaml
@@ -13,7 +14,10 @@ export async function pnpmPruneModules(rootDir: string): Promise<void> {
   const pkgDirs = await readPackageDirsFromVirtualStore(virtualStoreDir);
   if (pkgDirs.length === 0) return;
   const lockfile = await readCurrentLockfile(virtualStoreDir, { ignoreIncompatible: false });
-  const dirsShouldBePresent = Object.keys(lockfile?.packages ?? {}).map(depPathToFilename);
+  const virtualStoreDirMaxLength = getVirtualStoreDirMaxLength();
+  const dirsShouldBePresent = Object.keys(lockfile?.packages ?? {}).map((depPath) =>
+    depPathToFilename(depPath, virtualStoreDirMaxLength)
+  );
   await Promise.all(difference(pkgDirs, dirsShouldBePresent).map((dir) => fs.remove(path.join(virtualStoreDir, dir))));
 }
 
