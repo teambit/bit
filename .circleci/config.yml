@@ -474,7 +474,7 @@ jobs:
       - run: bvm config set RELEASE_TYPE nightly
       # - run: bvm install 0.0.910
       # - run: bvm upgrade
-      - run: bvm install 1.6.162
+      - run: bvm install 1.6.163
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
