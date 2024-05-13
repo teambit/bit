@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
+import { NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from './tag-cmd';
 import { DEFAULT_BIT_RELEASE_TYPE } from '@teambit/legacy/dist/constants';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import { IssuesClasses } from '@teambit/component-issues';

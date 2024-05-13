@@ -50,7 +50,6 @@ export default class Init implements LegacyCommand {
       'set the default directory pattern to import/create components into',
     ],
     ['', 'default-scope <default-scope>', 'set the default scope for components in the workspace'],
-    ['p', 'package-manager <package-manager>', 'set the package manager (npm or yarn) to be used in the workspace'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
   ] as CommandOptions;
 
@@ -68,7 +67,6 @@ export default class Init implements LegacyCommand {
       force,
       defaultDirectory,
       defaultScope,
-      packageManager,
     } = flags;
     if (path) path = pathlib.resolve(path);
     if (bare) {
@@ -88,7 +86,6 @@ export default class Init implements LegacyCommand {
     const workspaceConfigFileProps: WorkspaceConfigProps = {
       componentsDefaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),
       defaultScope: defaultScope ?? getSync(CFG_INIT_DEFAULT_SCOPE),
-      packageManager,
     };
     return init(
       path,
