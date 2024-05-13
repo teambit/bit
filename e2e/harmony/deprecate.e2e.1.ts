@@ -211,5 +211,13 @@ describe('bit deprecate and undeprecate commands', function () {
     it('bit status should show the DeprecatedDependencies component-issue', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.DeprecatedDependencies.name);
     });
+    describe('un-deprecating it', () => {
+      before(() => {
+        helper.command.undeprecateComponent('comp2');
+      });
+      it('bit status should not show the DeprecatedDependencies component-issue anymore', () => {
+        helper.command.expectStatusToNotHaveIssue(IssuesClasses.DeprecatedDependencies.name);
+      });
+    });
   });
 });
