@@ -317,6 +317,16 @@ export default class ComponentMap {
     if (!removeAspectConf) return false;
     return removeAspectConf !== '-' && removeAspectConf.removed === false;
   }
+  isDeprecated() {
+    const deprecationConf = this.config?.[Extensions.deprecation];
+    if (!deprecationConf) return false;
+    return deprecationConf !== '-' && deprecationConf.deprecate;
+  }
+  isUndeprecated() {
+    const deprecationConf = this.config?.[Extensions.deprecation];
+    if (!deprecationConf) return false;
+    return deprecationConf !== '-' && deprecationConf.deprecate === false;
+  }
 
   sort() {
     this.files = R.sortBy(R.prop('relativePath'), this.files);
