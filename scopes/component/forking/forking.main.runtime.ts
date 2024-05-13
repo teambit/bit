@@ -190,6 +190,7 @@ export class ForkingMain {
     pattern?: string,
     options?: ScopeForkOptions
   ): Promise<ComponentID[]> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const allIdsFromOriginalScope = await this.workspace.scope.listRemoteScope(originalScope);
     if (!allIdsFromOriginalScope.length) {
       throw new Error(`unable to find components to fork from ${originalScope}`);
