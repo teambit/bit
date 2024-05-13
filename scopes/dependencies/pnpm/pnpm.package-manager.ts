@@ -31,7 +31,6 @@ import { join } from 'path';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
-import { getVirtualStoreDirMaxLength } from './get-virtual-store-dir-max-length';
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
@@ -104,14 +103,14 @@ export class PnpmPackageManager implements PackageManager {
         nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
         includeOptionalDeps: installOptions.includeOptionalDeps,
         ignorePackageManifest: installOptions.ignorePackageManifest,
-        dedupeInjectedDeps: installOptions.dedupeInjectedDeps ?? false,
+        dedupeInjectedDeps: installOptions.dedupeInjectedDeps,
         dryRun: installOptions.dryRun,
         overrides: installOptions.overrides,
         hoistPattern: installOptions.hoistPatterns ?? config.hoistPattern,
         publicHoistPattern: config.shamefullyHoist
           ? ['*']
           : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
-        hoistWorkspacePackages: installOptions.hoistWorkspacePackages ?? false,
+        hoistWorkspacePackages: installOptions.hoistWorkspacePackages,
         hoistInjectedDependencies: installOptions.hoistInjectedDependencies,
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
         preferOffline: installOptions.preferOffline,
@@ -314,7 +313,6 @@ export class PnpmPackageManager implements PackageManager {
           default: 'https://registry.npmjs.org',
         },
         search,
-        virtualStoreDirMaxLength: getVirtualStoreDirMaxLength(),
       })
     ).map(([projectPath, builtDependenciesHierarchy]) => {
       pkgNamesToComponentIds(builtDependenciesHierarchy, { cache, getPkgLocation });
