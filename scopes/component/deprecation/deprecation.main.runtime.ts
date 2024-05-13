@@ -129,6 +129,9 @@ export class DeprecationMain {
    */
   private async isDeprecatedByIdWithoutLoadingComponent(componentId: ComponentID): Promise<boolean> {
     if (!componentId.hasVersion()) return false;
+    const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(componentId);
+    if (bitmapEntry && bitmapEntry.isDeprecated()) return true;
+    if (bitmapEntry && bitmapEntry.isUndeprecated()) return false;
     const modelComp = await this.workspace.scope.getBitObjectModelComponent(componentId);
     if (!modelComp) return false;
     const isDeprecated = await modelComp.isDeprecated(
