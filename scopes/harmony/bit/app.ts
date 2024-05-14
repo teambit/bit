@@ -9,6 +9,11 @@ import './hook-require';
 import { bootstrap } from '@teambit/legacy/dist/bootstrap';
 import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
 import { runCLI } from './load-bit';
+import { autocomplete } from './autocomplete';
+
+if (process.argv.includes('--get-yargs-completions')) {
+  autocomplete();
+}
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 initApp();
