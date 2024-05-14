@@ -3,6 +3,7 @@ import { pickBy } from 'lodash';
 import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
+import { v4 } from 'uuid';
 import { BuildStatus, DEFAULT_BUNDLE_FILENAME, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { isSchemaSupport, SchemaFeature, SchemaName } from '../../consumer/component/component-schema';
@@ -13,7 +14,7 @@ import { ComponentOverridesData } from '../../consumer/config/component-override
 import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/extension-data';
 import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
-import { getStringifyArgs } from '../../utils';
+import { getStringifyArgs, sha1 } from '../../utils';
 import { PathLinux, pathNormalizeToLinux } from '../../utils/path';
 import VersionInvalid from '../exceptions/version-invalid';
 import { BitObject, Ref } from '../objects';
@@ -680,8 +681,7 @@ export default class Version extends BitObject {
   }
 
   setNewHash() {
-    // @todo: after v15 is deployed, this can be changed to generate a random uuid
-    this._hash = this.calculateHash().toString();
+    this._hash = sha1(v4());
   }
 
   get ignoreSharedDir(): boolean {
