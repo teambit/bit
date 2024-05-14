@@ -262,9 +262,9 @@ export class MergingMain {
 
     const allConfigMerge = compact(succeededComponents.map((c) => c.configMergeResult));
 
-    const { workspaceDepsUpdates, workspaceDepsConflicts } = this.workspace
+    const { workspaceDepsUpdates, workspaceDepsConflicts, workspaceDepsUnchanged } = this.workspace
       ? await this.configMerger.updateWorkspaceJsoncWithDepsIfNeeded(allConfigMerge)
-      : { workspaceDepsUpdates: undefined, workspaceDepsConflicts: undefined };
+      : { workspaceDepsUpdates: undefined, workspaceDepsConflicts: undefined, workspaceDepsUnchanged: undefined };
 
     let workspaceConfigConflictWriteError: Error | undefined;
     if (workspaceDepsConflicts) {
@@ -343,6 +343,7 @@ export class MergingMain {
       workspaceConfigUpdateResult: {
         workspaceDepsUpdates,
         workspaceDepsConflicts,
+        workspaceDepsUnchanged,
         workspaceConfigConflictWriteError,
       },
       leftUnresolvedConflicts,
