@@ -7,14 +7,12 @@ import rightpad from 'pad-right';
 import * as path from 'path';
 import tar from 'tar';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
+import { NOTHING_TO_TAG_MSG } from '@teambit/snapping';
 import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
-import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
 import { Extensions, NOTHING_TO_SNAP_MSG } from '../constants';
-import runInteractive, { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { removeChalkCharacters } from '../utils';
 import ScopesData from './e2e-scopes';
 
-const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 // The default value of maxBuffer is 1024*1024, which is not enough for some of the tests.
 // If a command has a lot of output, it will throw this error:
 // Error: spawnSync /bin/sh ENOBUFS
@@ -960,37 +958,5 @@ export default class CommandHelper {
 
   init(options = '') {
     return this.runCmd(`bit init ${options}`);
-  }
-
-  async runInteractiveCmd({
-    args = [],
-    inputs = [],
-    // Options for the process (execa)
-    processOpts = {
-      cwd: this.scopes.localPath,
-    },
-    // opts for interactive
-    opts = {
-      defaultIntervalBetweenInputs: DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS,
-      verbose: false,
-    },
-  }: {
-    args: string[];
-    inputs: InteractiveInputs;
-    processOpts: Record<string, any>;
-    opts: {
-      // Default interval between inputs in case there is no specific interval
-      defaultIntervalBetweenInputs: number;
-      verbose: boolean;
-    };
-  }) {
-    const processName = this.bitBin || 'bit';
-    opts.verbose = !!this.debugMode;
-    const { stdout } = await runInteractive({ processName, args, inputs, processOpts, opts });
-    if (this.debugMode) {
-      console.log(rightpad(chalk.green('output: \n'), 20, ' ')); // eslint-disable-line no-console
-      console.log(chalk.cyan(stdout)); // eslint-disable-line no-console
-    }
-    return stdout;
   }
 }

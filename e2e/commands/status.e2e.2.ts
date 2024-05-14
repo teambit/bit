@@ -350,7 +350,7 @@ describe('bit status command', function () {
         expect(output).to.have.string('component files were deleted');
       });
       describe('running bit diff', () => {
-        it('should throw an exception MissingFilesFromComponent', () => {
+        it('should throw an exception ComponentNotFoundInPath', () => {
           const diffFunc = () => helper.command.diff('bar/foo');
           const error = new ComponentNotFoundInPath('bar');
           helper.general.expectToThrow(diffFunc, error);
