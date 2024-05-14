@@ -198,7 +198,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     const workspaceJsonConflicts = { dependencies: [], peerDependencies: [] };
     const conflictPackagesToRemoveFromConfigMerge: string[] = [];
     conflictedPackages.forEach((pkgName) => {
-      if (conflictDeps.hasSameVersions(pkgName)) {
+      if (!conflictDeps.hasSameVersions(pkgName)) {
         // we only want the deps that the other lane has them in the workspace.json and that all comps use the same dep.
         workspaceDepsUnchanged[pkgName] = conflictDeps.reportMultipleVersions(pkgName);
         return;

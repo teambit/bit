@@ -37,7 +37,7 @@ export class AggregatedDeps {
       .map((version) => {
         const compIds = compIdsPerVersion[version];
         const compIdsStr = compIds.length > 1 ? `${compIds[0]} and ${compIds.length - 1} more` : compIds[0];
-        return `${version} (by ${compIdsStr})`;
+        return `${this.getVersionStr(version)} (by ${compIdsStr})`;
       })
       .join(', ');
     return `multiple versions found. ${multipleVerStr}`;
@@ -45,6 +45,15 @@ export class AggregatedDeps {
 
   toString(): string {
     return JSON.stringify(this.deps, null, 2);
+  }
+
+  private getVersionStr(version: string): string {
+    if (version.includes('::')) {
+      // in case of a conflict, the version is in a format of CONFLICT::OURS::THEIRS
+      const [, , otherVal] = version.split('::');
+      return otherVal;
+    }
+    return version;
   }
 
   private getCompIdsPerVersion(pkgName: string): { [version: string]: string[] } {
