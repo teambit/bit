@@ -186,11 +186,12 @@ export class ForkingMain {
    */
   async forkScope(
     originalScope: string,
-    newScope: string,
+    newScope?: string,
     pattern?: string,
     options?: ScopeForkOptions
   ): Promise<ComponentID[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
+    if (!newScope) newScope = this.workspace.defaultScope;
     const allIdsFromOriginalScope = await this.workspace.scope.listRemoteScope(originalScope);
     if (!allIdsFromOriginalScope.length) {
       throw new Error(`unable to find components to fork from ${originalScope}`);
