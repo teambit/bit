@@ -40,21 +40,38 @@ function getAutocompleteResults(): string[] {
   }
 
   // argv has at least 2 elements, the first one is the command name.
-  const command = argv[0];
+  const commandName = argv[0];
   const allCommands = getAllCommands();
-  const matchedCommand = allCommands.find((cmd) => cmd.name === command || cmd.name.startsWith(`${command} `));
+  const matchedCommand = findCommandByName(commandName, allCommands);
   if (!matchedCommand) {
     return [];
   }
-  log(`matchedCommand: ${matchedCommand.name}`);
+  const possiblySubCommandName = argv[1];
+  const matchedSubCommand = possiblySubCommandName
+    ? findCommandByName(possiblySubCommandName, matchedCommand.commands || [])
+    : undefined;
+
+  log(`matchedCommand: ${matchedCommand.name}, subCommand: ${matchedSubCommand?.name}`);
+  const currentCommand = matchedSubCommand || matchedCommand;
+
+  // examples:
+  // "bit nev set ", the user is at arg location 0
+  // "bit nev set teambit.wor", the user is at arg location 1
+  // "bit build ", the user is at arg location 0
+  // "bit build teambit.wor", the user is at arg location 1
+  const argLocation = matchedSubCommand ? argv.length - 3 : argv.length - 2;
+  log(`argLocation: ${argLocation}`);
+
   const currentArg = argv.length ? argv[argv.length - 1] : '';
+  const flags = getCommandFlags(currentCommand);
   if (currentArg.startsWith('-')) {
-    return getCommandFlags(matchedCommand);
+    return flags;
   }
-  const commandArgs = matchedCommand.name.split(' ').slice(1);
-  const firstCmdArg = commandArgs[0];
+  const commandArgs = currentCommand.name.split(' ').slice(1);
+  const currentCmdArg = commandArgs[argLocation];
+  log(`currentCmdArg: ${currentCmdArg}`);
   const commandNamePrefixes = ['<component-name', '<component-pattern', '[component-name', '[component-pattern'];
-  if (firstCmdArg && commandNamePrefixes.some((prefix) => firstCmdArg.startsWith(prefix))) {
+  if (currentCmdArg && commandNamePrefixes.some((prefix) => currentCmdArg.startsWith(prefix))) {
     log(`completing component name`);
     return getCompsFromBitmap();
   }
@@ -62,7 +79,15 @@ function getAutocompleteResults(): string[] {
   if (subCommands.length && argv.length === 2) {
     return getCommandNames(subCommands);
   }
+  if (!currentCmdArg && flags.length) {
+    // either no args, or user already typed all args, probably the user wants to add flags
+    return flags;
+  }
   return [];
+}
+
+function findCommandByName(name: string, commands: Cmd[]): Cmd | undefined {
+  return commands.find((cmd) => cmd.name === name || cmd.name.startsWith(`${name} `));
 }
 
 function getCommandFlags(cmd: Cmd): string[] {
