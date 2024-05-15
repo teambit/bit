@@ -22,7 +22,7 @@ describe('peer-dependencies functionality', function () {
       helper.workspaceJsonc.addPolicyToDependencyResolver({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
       helper.npm.addFakeNpmPackage('chai', '2.4');
       helper.fixtures.createComponentBarFoo("import chai from 'chai';");
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       catComponent = helper.command.catComponent('bar/foo@latest');
     });
@@ -67,7 +67,7 @@ describe('peer-dependencies functionality', function () {
       helper.workspaceJsonc.addPolicyToDependencyResolver({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
       helper.npm.addFakeNpmPackage('chai', '2.4');
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
     });
     it('should not save the peer dependencies in the model', () => {
@@ -213,7 +213,7 @@ describe('peer-dependencies functionality', function () {
         npmCiRegistry.configureCiInPackageJsonHarmony();
         helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
         helper.command.create('module', 'peer-dep');
-        helper.command.tagAllComponents('--build');
+        helper.command.tagAllComponents('--build --skip-tests');
         helper.command.export();
 
         helper.scopeHelper.reInitLocalScope();

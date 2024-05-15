@@ -137,9 +137,9 @@ describe('run bit init', function () {
         helper.scopeHelper.reInitLocalScope();
         helper.workspaceJsonc.corrupt();
       });
-      it('bit status should throw an exception InvalidBitJson', () => {
+      it('bit status should throw a descriptive error', () => {
         const statusCmd = () => helper.command.runCmd('bit status');
-        expect(statusCmd).to.throw('failed to read config from path');
+        expect(statusCmd).to.throw('failed parsing the workspace.jsonc file at');
       });
     });
   });
@@ -151,7 +151,7 @@ describe('run bit init', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir(); // this modifies bitMap
+      helper.fixtures.addComponentBarFoo(); // this modifies bitMap
       helper.command.tagAllWithoutBuild(); // this creates objects in .bit dir
 
       bitMap = helper.bitMap.read();

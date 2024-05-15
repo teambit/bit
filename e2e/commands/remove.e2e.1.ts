@@ -22,7 +22,7 @@ describe('bit remove command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       output = helper.command.removeComponent('bar/foo');
     });
@@ -45,7 +45,7 @@ describe('bit remove command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.removeComponent('bar/foo', '-t --keep-files');
     });
@@ -65,7 +65,7 @@ describe('bit remove command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.export();
     });
@@ -125,7 +125,7 @@ describe('bit remove command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.export();
 
@@ -145,7 +145,7 @@ describe('bit remove command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.fs.appendFile('bar/foo.js');
     });
@@ -281,7 +281,7 @@ describe('bit remove command', function () {
             importOutput = helper.command.importComponent('comp2');
           });
           it('should indicate that the component is removed', () => {
-            expect(importOutput).to.have.string('removed');
+            expect(importOutput).to.have.string('deleted');
           });
           it('bit status should show them as remotelySoftRemoved', () => {
             const status = helper.command.statusJson();
@@ -473,7 +473,7 @@ describe('bit remove command', function () {
     it('should not build the removed component', () => {
       expect(snapOutput).to.not.have.string('pipeline');
       const versionObj = helper.command.catComponent('comp1@latest');
-      expect(versionObj.buildStatus).to.equal('pending');
+      expect(versionObj.buildStatus).to.equal('skipped');
     });
     it('should remove successfully', () => {
       const versionObj = helper.command.catComponent('comp1@latest');

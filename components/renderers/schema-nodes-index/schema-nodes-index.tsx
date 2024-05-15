@@ -4,9 +4,12 @@ import classnames from 'classnames';
 import { classes } from '@teambit/design.ui.surfaces.menu.item';
 import flatten from 'lodash.flatten';
 import { trackedElementClassName } from '@teambit/api-reference.renderers.schema-node-member-summary';
-import { useLocation, Link } from '@teambit/base-react.navigation.link';
+import { useLocation, Link as BaseLink } from '@teambit/base-react.navigation.link';
 
 import styles from './schema-nodes-index.module.scss';
+
+// @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
+const Link = BaseLink as any;
 
 export type SchemaNodesIndexProps = {
   title?: string;

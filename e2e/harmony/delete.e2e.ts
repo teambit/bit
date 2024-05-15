@@ -9,7 +9,6 @@ chai.use(require('chai-fs'));
 describe('bit delete command', function () {
   let helper: Helper;
   let npmCiRegistry: NpmCiRegistry;
-  let output: string;
   this.timeout(0);
   before(() => {
     helper = new Helper();
@@ -26,6 +25,7 @@ describe('bit delete command', function () {
   (supportNpmCiRegistryTesting ? describe : describe.skip)(
     'deleting two components which are dependency of each other then installing the missing dep',
     () => {
+      let output: string;
       before(async () => {
         helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
         helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -48,8 +48,12 @@ describe('bit delete command', function () {
       it('bit status should not show RemovedDependencies issues', () => {
         helper.command.expectStatusToNotHaveIssue(IssuesClasses.RemovedDependencies.name);
       });
-      it('bit snap should not fail due to removedDependencies error', () => {
+      it('bit snap should not fail due to removedDependencies error, also it should save the correct dep version', () => {
         expect(() => helper.command.snapAllComponentsWithoutBuild()).not.to.throw();
+
+        const catComp1 = helper.command.catComponent('comp1@latest');
+        expect(catComp1.dependencies[0].id.name).to.equal('comp2');
+        expect(catComp1.dependencies[0].id.version).to.equal('0.0.1');
       });
       it('bit snap output should be relevant for lanes when --lane command used', () => {
         expect(output).to.not.have.string('will mark the component as deleted');
@@ -187,6 +191,80 @@ describe('bit delete command', function () {
         expect(status.mergePendingComponents).to.have.lengthOf(2);
         expect(status.locallySoftRemoved).to.have.lengthOf(1);
       });
+    });
+  });
+  describe('delete previous versions', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.fixtures.populateComponents(2, undefined, 'version2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.softRemoveComponent('comp2', '--range 0.0.1');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+    });
+    it('should not show the current version as deleted', () => {
+      const deletionData = helper.command.showComponentParsedHarmonyByTitle('comp2', 'removed');
+      expect(deletionData.removed).to.be.false;
+      expect(deletionData.range).to.equal('0.0.1');
+    });
+    it('should show the previous version as deleted', () => {
+      const deletionData = helper.command.showComponentParsedHarmonyByTitle('comp2@0.0.1', 'removed');
+      expect(deletionData.removed).to.be.true;
+      expect(deletionData.range).to.equal('0.0.1');
+    });
+    it('bit log should show only 0.0.1 as deleted', () => {
+      const log = helper.command.logParsed('comp2');
+      const logOf0_0_1 = log.find((l) => l.tag === '0.0.1');
+      expect(logOf0_0_1.deleted).to.be.true;
+      const logOf0_0_2 = log.find((l) => l.tag === '0.0.2');
+      expect(logOf0_0_2.deleted).to.be.false;
+    });
+    it('bit list should show the component, because it is not deleted in head', () => {
+      const list = helper.command.listParsed();
+      const comp2 = list.find((c) => c.id === `${helper.scopes.remote}/comp2`);
+      expect(comp2).to.be.ok;
+    });
+    it('recovering the component should remove the range data', () => {
+      helper.command.recover('comp2');
+
+      const deletionData = helper.command.showComponentParsedHarmonyByTitle('comp2@0.0.1', 'removed');
+      expect(deletionData.removed).to.be.false;
+      expect(deletionData).to.not.have.property('range');
+    });
+    describe('importing the component', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+      });
+      it('import the latest version should not show the deleted message', () => {
+        const output = helper.command.importComponent('comp2', '-x');
+        expect(output).to.not.have.string('deleted');
+      });
+      it('import the previous version should show the deleted message', () => {
+        const output = helper.command.importComponent('comp2@0.0.1', '-x --override');
+        expect(output).to.have.string('deleted');
+      });
+    });
+  });
+  describe('deleting with --range when it overlaps the current version', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.softRemoveComponent('comp1', '--range "<1.0.0"');
+      helper.command.tagAllWithoutBuild();
+    });
+    it('should show the component as deleted', () => {
+      const deletionData = helper.command.showComponentParsedHarmonyByTitle('comp1', 'removed');
+      expect(deletionData.removed).to.be.true;
+      expect(deletionData.range).to.equal('<1.0.0');
+    });
+    it('when the range is outside the current version it should not show as deleted', () => {
+      helper.command.tagAllWithoutBuild('--ver 2.0.0 --unmodified');
+      const deletionData = helper.command.showComponentParsedHarmonyByTitle('comp1', 'removed');
+      expect(deletionData.removed).to.be.false;
     });
   });
 });

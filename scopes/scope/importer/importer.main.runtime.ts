@@ -115,9 +115,9 @@ export class ImporterMain {
     return importComponents.importComponents();
   }
 
-  async importObjectsFromMainIfExist(ids: ComponentID[]) {
+  async importObjectsFromMainIfExist(ids: ComponentID[], { cache } = { cache: false }) {
     await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(ids), {
-      cache: false,
+      cache,
       includeVersionHistory: true,
       ignoreMissingHead: true,
     });
@@ -127,8 +127,8 @@ export class ImporterMain {
    * fetch lane's components and save them in the local scope.
    * once done, merge the lane object and save it as well.
    */
-  async fetchLaneComponents(lane: Lane) {
-    const ids = lane.toComponentIds();
+  async fetchLaneComponents(lane: Lane, includeUpdateDependents = false) {
+    const ids = includeUpdateDependents ? lane.toComponentIdsIncludeUpdateDependents() : lane.toComponentIds();
     await this.scope.legacyScope.scopeImporter.importMany({
       ids,
       lane,

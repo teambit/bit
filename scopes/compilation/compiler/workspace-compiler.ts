@@ -6,6 +6,7 @@ import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
 import { WatcherMain, WatchOptions } from '@teambit/watcher';
 import path from 'path';
+import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -27,10 +28,14 @@ import type { PreStartOpts } from '@teambit/ui';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { MultiCompiler } from '@teambit/multi-compiler';
 import { CompilerAspect } from './compiler.aspect';
-import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
+import { CompilerErrorEvent } from './events';
 import { Compiler, CompilationInitiator } from './types';
 
-export type BuildResult = { component: string; buildResults: string[] | null | undefined };
+export type BuildResult = {
+  component: string;
+  buildResults: string[];
+  errors: CompileError[];
+};
 
 export type CompileOptions = {
   changed?: boolean; // compile only new and modified components
@@ -65,10 +70,11 @@ export class ComponentCompiler {
   async compile(noThrow = true, options: CompileOptions): Promise<BuildResult> {
     let dataToPersist;
     const deleteDistDir = options.deleteDistDir ?? this.compilerInstance.deleteDistDir;
+    const distDirs = await this.distDirs();
     // delete dist folder before transpilation (because some compilers (like ngPackagr) can generate files there during the compilation process)
     if (deleteDistDir) {
       dataToPersist = new DataToPersist();
-      for (const distDir of await this.distDirs()) {
+      for (const distDir of distDirs) {
         dataToPersist.removePath(new RemovePath(distDir));
       }
       dataToPersist.addBasePath(this.workspace.path);
@@ -83,12 +89,14 @@ export class ComponentCompiler {
 
     if (canTranspileFile) {
       await Promise.all(
-        this.component.filesystem.files.map((file: AbstractVinyl) => this.compileOneFile(file, options.initiator))
+        this.component.filesystem.files.map((file: AbstractVinyl) =>
+          this.compileOneFile(file, options.initiator, distDirs)
+        )
       );
     }
 
     if (canTranspileComponent) {
-      await this.compileAllFiles(this.component, options.initiator);
+      await this.compileAllFiles(this.component, options.initiator, distDirs);
     }
 
     if (!canTranspileFile && !canTranspileComponent) {
@@ -110,11 +118,8 @@ export class ComponentCompiler {
     }
     const buildResults = this.dists.map((distFile) => distFile.path);
     if (this.component.state._consumer.compiler) loader.succeed();
-    this.pubsub.pub(
-      CompilerAspect.id,
-      new ComponentCompilationOnDoneEvent(this.compileErrors, this.component, buildResults)
-    );
-    return { component: this.component.id.toString(), buildResults };
+
+    return { component: this.component.id.toString(), buildResults, errors: this.compileErrors };
   }
 
   private throwOnCompileErrors(noThrow = true) {
@@ -156,7 +161,11 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     return this.workspace.componentDir(this.component.id);
   }
 
-  private async compileOneFile(file: AbstractVinyl, initiator: CompilationInitiator): Promise<void> {
+  private async compileOneFile(
+    file: AbstractVinyl,
+    initiator: CompilationInitiator,
+    distDirs: PathOsBasedRelative[]
+  ): Promise<void> {
     const options = { componentDir: this.componentDir, filePath: file.relative, initiator };
     const isFileSupported = this.compilerInstance.isFileSupported(file.path);
     let compileResults;
@@ -168,7 +177,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
         return;
       }
     }
-    for (const base of await this.distDirs()) {
+    for (const base of distDirs) {
       if (isFileSupported && compileResults) {
         this.dists.push(
           ...compileResults.map(
@@ -187,9 +196,13 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 
-  private async compileAllFiles(component: Component, initiator: CompilationInitiator): Promise<void> {
+  private async compileAllFiles(
+    component: Component,
+    initiator: CompilationInitiator,
+    distDirs: PathOsBasedRelative[]
+  ): Promise<void> {
     const filesToCompile: AbstractVinyl[] = [];
-    for (const base of await this.distDirs()) {
+    for (const base of distDirs) {
       component.filesystem.files.forEach((file: AbstractVinyl) => {
         const isFileSupported = this.compilerInstance.isFileSupported(file.path);
         if (isFileSupported) {
@@ -290,11 +303,10 @@ export class WorkspaceCompiler {
       { initiator: watchOpts.initiator || CompilationInitiator.ComponentChanged, deleteDistDir },
       true
     );
-    // await linkToNodeModulesByComponents([component], this.workspace);
     return {
       results: buildResults,
       toString() {
-        return `${buildResults[0]?.buildResults?.join('\n\t')}`;
+        return formatCompileResults(buildResults, watchOpts.verbose);
       },
     };
   }
@@ -323,7 +335,6 @@ export class WorkspaceCompiler {
     const getManyOpts =
       options.initiator === CompilationInitiator.AspectLoadFail ? { loadSeedersAsAspects: false } : undefined;
     const components = await this.workspace.getMany(componentIds, getManyOpts);
-
     const grouped = this.groupByIsEnv(components);
     const envsResults = grouped.envs ? await this.runCompileComponents(grouped.envs, options, noThrow) : [];
     const otherResults = grouped.other ? await this.runCompileComponents(grouped.other, options, noThrow) : [];
@@ -392,4 +403,18 @@ export class WorkspaceCompiler {
     }
     return this.workspace.listIds();
   }
+}
+
+function formatCompileResults(buildResults: BuildResult[], verbose?: boolean) {
+  if (!buildResults.length) return '';
+  // this gets called when a file is changed, so the buildResults array always has only one item
+  const buildResult = buildResults[0];
+  const title = ` ${chalk.underline('STATUS\tCOMPONENT ID')}`;
+  const verboseComponentFilesArrayToString = () => {
+    return buildResult.buildResults.map((filePath) => ` \t - ${filePath}`).join('\n');
+  };
+
+  return `${title}
+  ${Logger.successSymbol()}SUCCESS\t${buildResult.component}\n
+  ${verbose ? `${verboseComponentFilesArrayToString()}\n` : ''}`;
 }

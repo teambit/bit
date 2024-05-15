@@ -1,5 +1,5 @@
 import { ClientError, gql, GraphQLClient } from 'graphql-request';
-import fetch, { Response } from 'cross-fetch';
+import nodeFetch from '@pnpm/node-fetch';
 import retry from 'async-retry';
 import readLine from 'readline';
 import HttpAgent from 'agentkeepalive';
@@ -57,6 +57,8 @@ import loader from '../../../cli/loader';
 import { UnexpectedNetworkError } from '../exceptions';
 import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '../../../api/consumer/lib/feature-toggle';
 
+const _fetch: typeof fetch = nodeFetch as unknown as typeof fetch;
+
 export enum Verb {
   WRITE = 'write',
   READ = 'read',
@@ -95,6 +97,7 @@ export type NetworkConfig = {
   cafile?: string;
   cert?: string | string[];
   key?: string;
+  userAgent?: string;
 };
 
 type Agent = HttpsProxyAgent | HttpAgent | HttpAgent.HttpsAgent | HttpProxyAgent | SocksProxyAgent | undefined;
@@ -223,7 +226,7 @@ export class Http implements Network {
       body,
       headers,
     });
-    const res = await fetch(`${this.url}/${route}`, opts);
+    const res = await _fetch(`${this.url}/${route}`, opts);
     await this.throwForNonOkStatus(res);
     const results = await this.getJsonResponse(res);
     return RemovedObjects.fromObjects(results);
@@ -240,7 +243,7 @@ export class Http implements Network {
       body,
       headers,
     });
-    const res = await fetch(`${this.url}/${route}`, opts);
+    const res = await _fetch(`${this.url}/${route}`, opts);
     await this.throwForNonOkStatus(res);
     const ids = await this.getJsonResponse(res);
     return ids;
@@ -264,7 +267,7 @@ export class Http implements Network {
       body: pack,
       headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
     });
-    const res = await fetch(`${this.url}/${route}`, opts);
+    const res = await _fetch(`${this.url}/${route}`, opts);
     logger.debug(
       `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
     );
@@ -304,7 +307,7 @@ export class Http implements Network {
         'x-verb': Verb.WRITE,
       }),
     });
-    const res = await fetch(`${this.url}/${route}`, opts);
+    const res = await _fetch(`${this.url}/${route}`, opts);
     logger.debug(
       `Http.deleteViaCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
     );
@@ -332,7 +335,7 @@ export class Http implements Network {
       body,
       headers,
     });
-    const res = await fetch(`${this.url}/${route}`, opts);
+    const res = await _fetch(`${this.url}/${route}`, opts);
     await this.throwForNonOkStatus(res);
     const results = await this.getJsonResponse(res);
     return results;
@@ -369,7 +372,7 @@ export class Http implements Network {
 
     const res = await retry(
       async () => {
-        const retiedRes = await fetch(urlToFetch, opts);
+        const retiedRes = await _fetch(urlToFetch, opts);
         return retiedRes;
       },
       {
@@ -616,6 +619,19 @@ export class Http implements Network {
     }));
   }
 
+  async hasObjects(hashes: string[]): Promise<string[]> {
+    const HAS_OBJECTS = gql`
+      query hasObjects($hashes: [String!]) {
+        scope {
+          hasObjects(hashes: $hashes)
+        }
+      }
+    `;
+    const res = await this.graphClientRequest(HAS_OBJECTS, Verb.READ, { hashes });
+
+    return res;
+  }
+
   private getHeaders(headers: { [key: string]: string } = {}) {
     const authHeader = this.token ? getAuthHeader(this.token) : {};
     const localScope = this.localScopeName ? { 'x-request-scope': this.localScopeName } : {};
@@ -659,10 +675,15 @@ export function getAuthHeader(token: string) {
   };
 }
 
+export async function fetchWithAgent(uri: string, opts) {
+  const fetcherWithAgent = await getFetcherWithAgent(uri);
+  return fetcherWithAgent(uri, opts);
+}
+
 /**
  * Read the proxy config from the global config, and wrap fetch with fetch with proxy
  */
-export async function getFetcherWithAgent(uri: string) {
+export async function getFetcherWithAgent(uri: string): Promise<typeof fetch> {
   const proxyConfig = await Http.getProxyConfig();
   const networkConfig = await Http.getNetworkConfig();
   const agent = await Http.getAgent(uri, {

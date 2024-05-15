@@ -323,7 +323,7 @@ export default class Component extends BitObject {
     });
   }
 
-  async populateLocalAndRemoteHeads(repo: Repository, lane: Lane | null) {
+  async populateLocalAndRemoteHeads(repo: Repository, lane?: Lane) {
     this.setLaneHeadLocal(lane);
     if (lane) this.laneId = lane.toLaneId();
     if (!this.scope) {
@@ -351,7 +351,7 @@ export default class Component extends BitObject {
     this.calculatedRemoteHeadWhenOnLane = await calculateRemote();
   }
 
-  setLaneHeadLocal(lane: Lane | null) {
+  setLaneHeadLocal(lane?: Lane) {
     if (lane) {
       this.laneHeadLocal = lane.getComponentHead(this.toComponentId());
     }
@@ -526,6 +526,13 @@ export default class Component extends BitObject {
       }
     }
 
+    const head = this.getHeadRegardlessOfLane();
+    const headVersion = head ? ((await repo.load(head)) as Version) : undefined;
+    const removeAspect = headVersion?.extensions.findCoreExtension(Extensions.remove);
+    const removeRange = removeAspect?.config.range;
+    const deprecationAspect = headVersion?.extensions.findCoreExtension(Extensions.deprecation);
+    const deprecationRange = deprecationAspect?.config.range;
+
     const getRef = (ref: Ref) => (shortHash ? ref.toShortString() : ref.toString());
     const results = versionsInfo.map((versionInfo) => {
       const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };
@@ -538,6 +545,8 @@ export default class Component extends BitObject {
         hash: getRef(versionInfo.ref),
         parents: versionInfo.parents.map((parent) => getRef(parent)),
         onLane: versionInfo.onLane,
+        deleted: versionInfo.tag && removeRange && semver.satisfies(versionInfo.tag, removeRange),
+        deprecated: versionInfo.tag && deprecationRange && semver.satisfies(versionInfo.tag, deprecationRange),
       };
     });
     // sort from earliest to latest
@@ -622,7 +631,7 @@ export default class Component extends BitObject {
   addVersion(
     version: Version,
     versionToAdd: string,
-    lane: Lane | null,
+    lane?: Lane,
     previouslyUsedVersion?: string,
     addToUpdateDependentsInLane = false
   ): string {
@@ -931,18 +940,30 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return false;
   }
 
-  async isRemoved(repo: Repository): Promise<boolean> {
+  async isRemoved(repo: Repository, specificVersion?: string): Promise<boolean | null> {
     const head = this.getHeadRegardlessOfLane();
     if (!head) {
       // it's new or only on lane
       return false;
     }
-    const version = (await repo.load(head)) as Version;
-    if (!version) {
+    const headVersion = (await repo.load(head)) as Version;
+    if (!headVersion) {
       // the head Version doesn't exist locally, there is no way to know whether it's removed
+      return null;
+    }
+    const removeAspect = headVersion.extensions.findCoreExtension(Extensions.remove);
+    if (!removeAspect) {
       return false;
     }
-    return version.isRemoved();
+    if (removeAspect.config.removed) {
+      return true;
+    }
+    if (specificVersion && removeAspect.config.range) {
+      const tag = this.getTag(specificVersion);
+      if (!tag) return false; // it's a snap. "range" doesn't support snaps. only semver.
+      return semver.satisfies(tag, removeAspect.config.range);
+    }
+    return false;
   }
 
   async isLaneReadmeOf(repo: Repository): Promise<string[]> {
@@ -1174,21 +1195,30 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   async updateVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory> {
     const versionHistory = await this.getVersionHistory(repo);
     versionHistory.addFromVersionsObjects(versions);
+    logger.debug(`updating version history of ${this.id()} with ${versions.length} versions`);
     return versionHistory;
   }
 
   async populateVersionHistoryIfMissingGracefully(
     repo: Repository,
     versionHistory: VersionHistory,
-    head: Ref
+    head: Ref,
+    /**
+     * during traversal, if a hash is found in the VersionHistory it probably means that it has all history until this
+     * point, so we can stop there for better performance. In some rare cases (e.g. the export was interrupted), we
+     * need the ability of full traversal to repair the VersionHistory.
+     */
+    exitWhenFind = true
   ): Promise<{ err?: Error; added?: VersionParents[] }> {
-    if (versionHistory.hasHash(head)) return {};
+    const headExists = versionHistory.hasHash(head);
+    if (exitWhenFind && headExists) return {};
     const getVersionObj = async (ref: Ref) => (await ref.load(repo)) as Version | undefined;
     const versionsToAdd: Version[] = [];
     let err: Error | undefined;
     const addParentsRecursively = async (version: Version) => {
       await pMapSeries(version.parents, async (parent) => {
-        if (versionHistory.hasHash(parent) || versionsToAdd.find((v) => v.hash().isEqual(parent))) {
+        const foundParent = versionHistory.hasHash(parent) || versionsToAdd.find((v) => v.hash().isEqual(parent));
+        if (exitWhenFind && foundParent) {
           return;
         }
         const parentVersion = await getVersionObj(parent);
@@ -1208,13 +1238,16 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       return { err: new HeadNotFound(this.id(), head.toString()) };
     }
     return this.populateVersionHistoryMutex.runExclusive(async () => {
-      versionsToAdd.push(headVer);
+      if (!headExists) versionsToAdd.push(headVer);
       await addParentsRecursively(headVer);
       const added = versionsToAdd.map((v) => getVersionParentsFromVersion(v));
       if (err) {
         return { err, added };
       }
       versionHistory.addFromVersionsObjects(versionsToAdd);
+      logger.debug(
+        `populateVersionHistoryIfMissingGracefully, updating ${this.id()} with ${versionsToAdd.length} versions`
+      );
       await repo.writeObjectsToTheFS([versionHistory]);
       return { added };
     });

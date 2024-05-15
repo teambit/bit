@@ -26,7 +26,6 @@ import LegacyScope, { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope
 import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
-import { PersistOptions } from '@teambit/legacy/dist/scope/types';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { DependencyResolverAspect, DependencyResolverMain, NodeLinker } from '@teambit/dependency-resolver';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
@@ -51,6 +50,8 @@ import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/cons
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { compact, slice, difference, partition } from 'lodash';
 import { DepEdge } from '@teambit/legacy/dist/scope/models/version';
+import { getGlobalConfigPath } from '@teambit/legacy/dist/global-config/config';
+import { invalidateCache } from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
@@ -309,6 +310,14 @@ export class ScopeMain implements ComponentFactory {
     return component;
   }
 
+  getDependencies(component: Component) {
+    return this.dependencyResolver.getDependencies(component);
+  }
+
+  componentPackageName(component: Component): string {
+    return this.dependencyResolver.getPackageName(component);
+  }
+
   private async upsertExtensionData(component: Component, extension: string, data: any) {
     if (!data) return;
     const existingExtension = component.state._consumer.extensions.findExtension(extension);
@@ -423,14 +432,6 @@ export class ScopeMain implements ComponentFactory {
    */
   fetch(ids: ComponentIdList) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
-  /**
-   * This function will get a component and sealed it's current state into the scope
-   *
-   * @param {Component[]} components A list of components to seal with specific persist options (such as message and version number)
-   * @param {PersistOptions} persistGeneralOptions General persistence options such as verbose
-   */
-  persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
-
   async delete(
     { ids, force, lanes }: { ids: string[]; force: boolean; lanes: boolean },
     headers?: Record<string, any>
@@ -464,13 +465,15 @@ export class ScopeMain implements ComponentFactory {
    * for long-running processes, such as `bit start` or `bit watch`, it's important to keep the following data up to date:
    * 1. scope-index (.bit/index.json file).
    * 2. remote-refs (.bit/refs/*).
+   * 3. global config. so for example if a user logs in or out it would be reflected.
    * it's possible that other commands (e.g. `bit import`) modified these files, while these processes are running.
    * Because these data are kept in memory, they're not up to date anymore.
    */
   async watchScopeInternalFiles() {
     const scopeIndexFile = this.legacyScope.objects.scopeIndex.getPath();
     const remoteLanesDir = this.legacyScope.objects.remoteLanes.basePath;
-    const pathsToWatch = [scopeIndexFile, remoteLanesDir];
+    const globalConfigFile = getGlobalConfigPath();
+    const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile];
     const watcher = chokidar.watch(pathsToWatch);
     watcher.on('ready', () => {
       this.logger.debug(`watchSystemFiles has started, watching ${pathsToWatch.join(', ')}`);
@@ -482,6 +485,9 @@ export class ScopeMain implements ComponentFactory {
         await this.legacyScope.objects.reLoadScopeIndex();
       } else if (filePath.startsWith(remoteLanesDir)) {
         this.legacyScope.objects.remoteLanes.removeFromCacheByFilePath(filePath);
+      } else if (filePath === globalConfigFile) {
+        this.logger.debug('global config file has been changed, invalidating its cache');
+        invalidateCache();
       } else {
         this.logger.error(
           'unknown file has been changed, please check why it is watched by scope.watchSystemFiles',
@@ -554,7 +560,7 @@ export class ScopeMain implements ComponentFactory {
     }
 
     // there are components that don't have the graph saved, create the graph by using Version objects of all flattened
-    const lane = (await this.legacyScope.getCurrentLaneObject()) || undefined;
+    const lane = await this.legacyScope.getCurrentLaneObject();
     await this.import(
       componentsWithoutSavedGraph.map((c) => c.id),
       { reFetchUnBuiltVersion: false, lane, reason: `to build graph-ids from the scope` }
@@ -838,7 +844,7 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
-   * wether a component is soft-removed.
+   * whether a component is soft-removed.
    * the version is required as it can be removed on a lane. in which case, the version is the head in the lane.
    */
   async isComponentRemoved(id: ComponentID): Promise<Boolean> {
@@ -847,6 +853,13 @@ export class ScopeMain implements ComponentFactory {
     const modelComponent = await this.legacyScope.getModelComponent(id);
     const versionObj = await modelComponent.loadVersion(version, this.legacyScope.objects);
     return versionObj.isRemoved();
+  }
+
+  /**
+   * whether the id with the specified version exits in the local scope.
+   */
+  async isComponentInScope(id: ComponentID): Promise<boolean> {
+    return this.legacyScope.isComponentInScope(id);
   }
 
   /**
@@ -1131,6 +1144,12 @@ export class ScopeMain implements ComponentFactory {
     // no-op (it's relevant for the workspace only)
   }
 
+  async hasObjects(hashes: string[]): Promise<string[]> {
+    const refs = hashes.map((h) => Ref.from(h));
+    const results = await this.legacyScope.objects.hasMultiple(refs);
+    return results.map((r) => r.hash);
+  }
+
   /**
    * declare the slots of scope extension.
    */
@@ -1195,6 +1214,7 @@ export class ScopeMain implements ComponentFactory {
     harmony: Harmony
   ) {
     const bitConfig: any = harmony.config.get('teambit.harmony/bit');
+    cli.register(new ScopeCmd());
     const legacyScope = await loadScopeIfExist(bitConfig?.cwd);
     if (!legacyScope) {
       return undefined;
@@ -1223,7 +1243,6 @@ export class ScopeMain implements ComponentFactory {
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions(), undefined, 'scope.cli.registerOnStart');
     });
-    cli.register(new ScopeCmd());
 
     const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
       logger.debug(`onPutHook, started. (${ids.length} components)`);

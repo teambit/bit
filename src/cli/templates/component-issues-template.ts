@@ -7,7 +7,6 @@ export function getInvalidComponentLabel(error: Error) {
   switch (error.name) {
     case 'MainFileRemoved':
       return 'main-file was removed (use "bit add" with "--main" and "--id" flags to add a main file)';
-    case 'MissingFilesFromComponent':
     case 'ComponentNotFoundInPath':
       return 'component files were deleted (use "bit remove [component_id]") or moved (use "bit move <old-dir> <new-dir>"). to restore use "bit checkout reset [component_id]"';
     case 'ExtensionFileNotFound':

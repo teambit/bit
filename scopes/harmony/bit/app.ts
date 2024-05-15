@@ -1,15 +1,9 @@
-/* eslint-disable import/no-dynamic-require */
 /* eslint-disable import/first */
 process.on('uncaughtException', (err) => {
   // eslint-disable-next-line no-console
   console.error('uncaughtException', err);
   process.exit(1);
 });
-
-import { nativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
-
-// Enable v8 compile cache, keep this before other imports
-nativeCompileCache?.install();
 
 import './hook-require';
 import { bootstrap } from '@teambit/legacy/dist/bootstrap';

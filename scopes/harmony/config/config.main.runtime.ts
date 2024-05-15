@@ -7,7 +7,6 @@ import {
 } from '@teambit/legacy/dist/consumer/config';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigEnsureFunction,
-  WorkspaceConfigIsExistFunction,
   WorkspaceConfigLoadFunction,
 } from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -101,7 +100,6 @@ export class ConfigMain {
   static dependencies = [];
   static config = {};
   static async provider(_deps, _config, _slots, harmony: Harmony) {
-    LegacyWorkspaceConfig.registerOnWorkspaceConfigIsExist(onLegacyWorkspaceConfigIsExist());
     LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());
 
     let configMain: ConfigMain | any;
@@ -133,12 +131,6 @@ async function loadWorkspaceConfigIfExist(cwd = process.cwd()): Promise<Workspac
   const scopePath = findScopePath(configDirPath);
   const workspaceConfig = await WorkspaceConfig.loadIfExist(configDirPath, scopePath);
   return workspaceConfig;
-}
-
-function onLegacyWorkspaceConfigIsExist(): WorkspaceConfigIsExistFunction {
-  return async (dirPath: PathOsBased): Promise<boolean | undefined> => {
-    return WorkspaceConfig.isExist(dirPath);
-  };
 }
 
 function onLegacyWorkspaceLoad(config?: ConfigMain): WorkspaceConfigLoadFunction {

@@ -109,7 +109,7 @@ describe('install generator configured envs', function () {
       envs: ['teambit.react/react-env', 'teambit.react/react'],
     };
     helper.extensions.workspaceJsonc.addKeyVal('teambit.generator/generator', generatorConfig);
-    await helper.command.install();
+    helper.command.install();
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -195,7 +195,7 @@ describe('install new dependencies', function () {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
-      helper.command.install('is-positive@~1.0.0 is-odd@1.0.0 is-even@1 is-negative');
+      helper.command.install('is-positive@~1.0.0 is-odd@3.0.0 is-even@1 is-negative semver@2.0.0-beta');
       workspaceJsonc = helper.workspaceJsonc.read();
     });
     after(() => {
@@ -206,9 +206,12 @@ describe('install new dependencies', function () {
         '~1.0.0'
       );
     });
-    it('should add new dependency with ^ prefix if the dependency was installed by specifying the exact version', () => {
+    it('should add new dependency with exact version if the dependency was installed by specifying the exact version', () => {
       expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal(
-        '^1.0.0'
+        '3.0.0'
+      );
+      expect(fs.readJsonSync(path.join(helper.scopes.localPath, 'node_modules/is-odd/package.json')).version).to.equal(
+        '3.0.0'
       );
     });
     it('should add new dependency with ^ prefix if the dependency was installed by specifying a range not using ~', () => {
@@ -219,6 +222,11 @@ describe('install new dependencies', function () {
     it('should add new dependency with ^ prefix by default', () => {
       expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative'][0]).to.equal(
         '^'
+      );
+    });
+    it('should add prerelease version as exact version', () => {
+      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies.semver).to.equal(
+        '2.0.0-beta'
       );
     });
   });
@@ -238,9 +246,9 @@ describe('install new dependencies', function () {
         '~1.0.0'
       );
     });
-    it('should add new dependency with ^ prefix if the dependency was installed by specifying the exact version', () => {
+    it('should add new dependency with exact version if the dependency was installed by specifying the exact version', () => {
       expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal(
-        '^1.0.0'
+        '1.0.0'
       );
     });
     it('should add new dependency with ^ prefix if the dependency was installed by specifying a range not using ~', () => {
@@ -286,7 +294,7 @@ describe('install with --lockfile-only', function () {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
-    helper.command.install('is-positive@1.0.0 --lockfile-only');
+    helper.command.install('is-positive@^1.0.0 --lockfile-only');
     workspaceJsonc = helper.workspaceJsonc.read();
   });
   after(() => {

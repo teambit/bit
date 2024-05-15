@@ -14,7 +14,7 @@ import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-c
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { RefactoringAspect, MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
 import pMapSeries from 'p-map-series';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { isValidIdChunk, InvalidName } from '@teambit/legacy-bit-id';
@@ -152,11 +152,12 @@ make sure this argument is the name only, without the scope-name. to change the 
         }
         if (!targetComp) throw new Error(`renameMultiple, targetComp is missing`);
         await this.refactoring.refactorVariableAndClasses(targetComp, sourceId, targetId, options);
+        const compPath = this.newComponentHelper.getNewComponentPath(targetId);
         this.refactoring.refactorFilenames(targetComp, sourceId, targetId);
         await this.componentWriter.writeMany({
           components: [targetComp.state._consumer],
           skipDependencyInstallation: true,
-          writeToPath: this.newComponentHelper.getNewComponentPath(targetId),
+          writeToPath: path.join(this.workspace.path, compPath),
           reasonForBitmapChange: 'rename',
         });
       });
@@ -184,16 +185,16 @@ make sure this argument is the name only, without the scope-name. to change the 
   }
 
   /**
-   * change the default-scope for new components. optionally (if refactor is true), change the source code to match the
-   * new scope-name.
-   * keep in mind that this is working for new components only, for tagged/exported it's impossible. See the errors
-   * thrown in such cases in this method.
+   * change the default-scope for new components.
+   * for tagged/exported components, delete (or deprecate - depends on the flag) the original ones and create new ones.
+   * optionally (if refactor is true), change the source code to match the new scope-name.
    */
   async renameScope(
     oldScope: string,
     newScope: string,
-    options: { refactor?: boolean; deprecate?: boolean } = {}
+    options: { refactor?: boolean; deprecate?: boolean; preserve?: boolean } = {}
   ): Promise<RenameResult> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const allComponentsIds = this.workspace.listIds();
     const componentsUsingOldScope = allComponentsIds.filter((compId) => compId.scope === oldScope);
     if (!componentsUsingOldScope.length && this.workspace.defaultScope !== oldScope) {
@@ -206,7 +207,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       const targetId = ComponentID.fromObject({ name: compId.fullName }, newScope);
       return { sourceId: compId, targetId };
     });
-    return this.renameMultiple(multipleIds, { ...options, preserve: true });
+    return this.renameMultiple(multipleIds, options);
   }
 
   /**
@@ -220,8 +221,8 @@ make sure this argument is the name only, without the scope-name. to change the 
     newOwner: string,
     options: { refactor?: boolean; ast?: boolean }
   ): Promise<RenameResult> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const isScopeUsesOldOwner = (scope: string) => scope.startsWith(`${oldOwner}.`);
-
     const allComponentsIds = this.workspace.listIds();
     const componentsUsingOldScope = allComponentsIds.filter((compId) => isScopeUsesOldOwner(compId.scope));
     if (!componentsUsingOldScope.length && !isScopeUsesOldOwner(this.workspace.defaultScope)) {
@@ -245,12 +246,13 @@ make sure this argument is the name only, without the scope-name. to change the 
   private async renameAspectIdsInWorkspaceConfig(ids: RenameId[]) {
     const config = this.config.workspaceConfig;
     if (!config) throw new Error('unable to get workspace config');
-    const hasChanged = ids.some((renameId) =>
+    const wereChangesDone = ids.map((renameId) =>
       config.renameExtensionInRaw(
         renameId.sourceId.toStringWithoutVersion(),
         renameId.targetId.toStringWithoutVersion()
       )
     );
+    const hasChanged = wereChangesDone.some((isChanged) => isChanged);
     if (hasChanged) await config.write({ reasonForChange: 'rename' });
   }
   private async changeEnvsAccordingToNewIds(renameData: RenameData[]) {

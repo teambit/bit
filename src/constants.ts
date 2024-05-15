@@ -1,6 +1,5 @@
 import cliSpinners from 'cli-spinners';
 import * as path from 'path';
-import format from 'string-format';
 import { homedir, platform } from 'os';
 
 import { PathOsBased } from './utils/path';
@@ -236,7 +235,6 @@ export const IGNORE_LIST = [
   '**/.env.**.local',
   '**/.bit.map.json',
   '**/.bitmap',
-  '**/.gitignore',
   '**/bit.json',
   '**/component.json',
   '**/bitBindings.js',
@@ -321,7 +319,6 @@ export const CFG_INTERACTIVE = 'interactive';
 // Template for interactive config for specific command like interactive.init
 export const CFG_COMMAND_INTERACTIVE_TEMPLATE = 'interactive.{commandName}';
 
-export const CFG_INIT_INTERACTIVE = format(CFG_COMMAND_INTERACTIVE_TEMPLATE, { commandName: INIT_COMMAND });
 export const CFG_INIT_DEFAULT_SCOPE = 'default_scope';
 export const CFG_INIT_DEFAULT_DIRECTORY = 'default_directory';
 
@@ -562,6 +559,7 @@ export const PREVIOUS_DEFAULT_LANE = 'master';
 
 export const statusInvalidComponentsMsg = 'invalid components';
 export const statusFailureMsg = 'issues found';
+export const statusWarningsMsg = 'warnings found';
 export const statusWorkspaceIsCleanMsg =
   'nothing to tag or export (use "bit create <template> <component>" to generate a new component)';
 
@@ -592,6 +590,7 @@ export enum BuildStatus {
   Pending = 'pending',
   Failed = 'failed',
   Succeed = 'succeed',
+  Skipped = 'skipped', // e.g. when a version is marked as deleted.
 }
 
 export const SOURCE_DIR_SYMLINK_TO_NM = '_src'; // symlink from node_modules to the workspace sources files

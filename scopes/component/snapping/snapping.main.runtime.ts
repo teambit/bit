@@ -39,7 +39,12 @@ import {
   ArtifactSource,
   getArtifactsFiles,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import { VersionNotFound, ComponentNotFound, HeadNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import {
+  VersionNotFound,
+  ComponentNotFound,
+  HeadNotFound,
+  ParentNotFound,
+} from '@teambit/legacy/dist/scope/exceptions';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { DependenciesAspect, DependenciesMain } from '@teambit/dependencies';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
@@ -285,7 +290,7 @@ export class SnappingMain {
         };
       })
     );
-    const componentIds = tagDataPerComp.map((t) => t.componentId);
+    const componentIds = ComponentIdList.fromArray(tagDataPerComp.map((t) => t.componentId));
     // important! leave the "preferDependencyGraph" with the default - true. no need to bring all dependencies at this
     // stage. later on, they'll be imported during "snapping._addFlattenedDependenciesToComponents".
     // otherwise, the dependencies are imported without version-history and fail later when checking their origin.
@@ -313,9 +318,11 @@ if you're willing to lose the history from the head to the specified version, us
     });
     await Promise.all(
       tagDataPerComp.map(async (tagData) => {
-        tagData.dependencies = tagData.dependencies
-          ? await Promise.all(tagData.dependencies.map((d) => this.getCompIdWithExactVersionAccordingToSemver(d)))
-          : [];
+        // disregard the dependencies that are now part of the tag-from-scope. their version will be determined during the process
+        const filteredDependencies = tagData.dependencies.filter((dep) => !componentIds.hasWithoutVersion(dep));
+        tagData.dependencies = await Promise.all(
+          filteredDependencies.map((d) => this.getCompIdWithExactVersionAccordingToSemver(d))
+        );
       })
     );
     const components = await this.scope.getMany(componentIds);
@@ -457,6 +464,14 @@ if you're willing to lose the history from the head to the specified version, us
     }
 
     const components = [...existingComponents, ...newComponents];
+
+    // this must be done before we load component aspects later on, because this updated deps may update aspects.
+    await pMapSeries(components, async (component) => {
+      const snapData = getSnapData(component.id);
+      // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
+      await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver, this);
+    });
+
     // for new components these are not needed. coz when generating them we already add the aspects and the files.
     await Promise.all(
       existingComponents.map(async (comp) => {
@@ -476,12 +491,6 @@ if you're willing to lose the history from the head to the specified version, us
 
     // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
     await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
-
-    await pMapSeries(components, async (component) => {
-      const snapData = getSnapData(component.id);
-      // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
-      await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver);
-    });
 
     const consumerComponents = components.map((c) => c.state._consumer);
     const ids = ComponentIdList.fromArray(allCompIds);
@@ -514,7 +523,7 @@ if you're willing to lose the history from the head to the specified version, us
         ids,
         idsWithFutureScope: ids,
         allVersions: false,
-        laneObject: updatedLane || undefined,
+        laneObject: updatedLane,
         // no need other snaps. only the latest one. without this option, when snapping on lane from another-scope, it
         // may throw an error saying the previous snaps don't exist on the filesystem.
         // (see the e2e - "snap on a lane when the component is new to the lane and the scope")
@@ -636,7 +645,8 @@ if you're willing to lose the history from the head to the specified version, us
         const allTagPending = await workspace.listPotentialTagIds();
         if (allTagPending.length) {
           throw new BitError(`unable to find matching for "${pattern}" pattern among modified/new components.
-there are matching among unmodified components thought. consider using --unmodified flag if needed`);
+there are matching among unmodified components though. consider using --unmodified flag if needed.
+in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
         }
       }
       if (!componentIds.length) {
@@ -725,18 +735,14 @@ there are matching among unmodified components thought. consider using --unmodif
     const lane = await getLane();
 
     if (rebuildDepsGraph) {
-      const flattenedDependenciesGetter = new FlattenedDependenciesGetter(
-        this.scope.legacyScope,
-        components,
-        lane || undefined
-      );
+      const flattenedDependenciesGetter = new FlattenedDependenciesGetter(this.scope.legacyScope, components, lane);
       await flattenedDependenciesGetter.populateFlattenedDependencies();
       loader.stop();
       await this._addFlattenedDepsGraphToComponents(components);
       return;
     }
 
-    const flattenedEdgesGetter = new FlattenedEdgesGetter(this.scope, components, this.logger, lane || undefined);
+    const flattenedEdgesGetter = new FlattenedEdgesGetter(this.scope, components, this.logger, lane);
     await flattenedEdgesGetter.buildGraph();
 
     components.forEach((component) => {
@@ -749,7 +755,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const lane = await this.scope.legacyScope.getCurrentLaneObject();
     const allIds = ComponentIdList.fromArray(components.map((c) => c.id));
     const missingDeps = await pMapSeries(components, async (component) => {
-      return this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined);
+      return this.throwForDepsFromAnotherLaneForComp(component, allIds, lane);
     });
     const flattenedMissingDeps = ComponentIdList.uniqFromArray(
       missingDeps.flat().map((id) => id.changeVersion(undefined))
@@ -761,11 +767,11 @@ there are matching among unmodified components thought. consider using --unmodif
       cache: false,
       ignoreMissingHead: true,
       includeVersionHistory: true,
-      lane: lane || undefined,
+      lane,
       reason: 'of latest with version-history to make sure there are no dependencies from another lane',
     });
     await pMapSeries(components, async (component) => {
-      await this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined, true);
+      await this.throwForDepsFromAnotherLaneForComp(component, allIds, lane, true);
     });
   }
 
@@ -798,7 +804,12 @@ there are matching among unmodified components thought. consider using --unmodif
             : await this.scope.legacyScope.isPartOfMainHistory(dep.id);
         } catch (err) {
           if (throwForMissingObjects) throw err;
-          if (err instanceof VersionNotFound || err instanceof ComponentNotFound || err instanceof HeadNotFound) {
+          if (
+            err instanceof VersionNotFound ||
+            err instanceof ComponentNotFound ||
+            err instanceof HeadNotFound ||
+            err instanceof ParentNotFound
+          ) {
             missingDeps.push(dep.id);
             return;
           }
@@ -916,7 +927,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     updateDependentsOnLane = false,
   }: {
     source: ConsumerComponent;
-    lane: Lane | null;
+    lane?: Lane;
     shouldValidateVersion?: boolean;
     updateDependentsOnLane?: boolean;
   }): Promise<{
@@ -961,7 +972,7 @@ another option, in case this dependency is not in main yet is to remove all refe
 
   async _addCompFromScopeToObjects(
     source: ConsumerComponent,
-    lane: Lane | null,
+    lane?: Lane,
     updateDependentsOnLane = false
   ): Promise<{
     component: ModelComponent;
@@ -1151,15 +1162,27 @@ another option, in case this dependency is not in main yet is to remove all refe
         dep.packageName = packageName;
       }
     });
+    await this.UpdateDepsAspectsSaveIntoDepsResolver(component, updatedIds.toStringArray());
+  }
+
+  /**
+   * it does two things:
+   * 1. update extensions versions according to the version provided in updatedIds.
+   * 2. save all dependencies data from the legacy into DependencyResolver aspect.
+   */
+  async UpdateDepsAspectsSaveIntoDepsResolver(component: Component, updatedIds: string[]) {
+    const legacyComponent: ConsumerComponent = component.state._consumer;
     legacyComponent.extensions.forEach((ext) => {
-      if (!ext.extensionId) return;
-      const updatedBitId = updatedIds.searchWithoutVersion(ext.extensionId);
-      if (updatedBitId) {
+      const extId = ext.extensionId;
+      if (!extId) return;
+      const found = updatedIds.find((d) => d.startsWith(`${extId.toStringWithoutVersion()}@`));
+      if (found) {
+        const updatedExtId = ComponentID.fromString(found);
         this.logger.debug(
-          `updating "${componentIdStr}", extension ${ext.extensionId.toString()} to version ${updatedBitId.version}}`
+          `updating "${component.id.toString()}", extension ${extId.toString()} to version ${updatedExtId.version}}`
         );
-        ext.extensionId = updatedBitId;
-        if (ext.newExtensionId) ext.newExtensionId = updatedBitId;
+        ext.extensionId = updatedExtId;
+        if (ext.newExtensionId) ext.newExtensionId = updatedExtId;
       }
     });
 

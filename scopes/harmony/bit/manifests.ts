@@ -100,6 +100,7 @@ import { StashAspect } from '@teambit/stash/stash.aspect';
 import { GitAspect } from '@teambit/git/git.aspect';
 import { IpcEventsAspect } from '@teambit/ipc-events/ipc-events.aspect';
 import { ConfigMergerAspect } from '@teambit/config-merger/config-merger.aspect';
+import { VersionHistoryAspect } from '@teambit/version-history/version-history.aspect';
 
 import { AspectMain } from '@teambit/aspect/aspect.main.runtime';
 import { AspectLoaderMain } from '@teambit/aspect-loader/aspect-loader.main.runtime';
@@ -193,7 +194,7 @@ import { StashMain } from '@teambit/stash/stash.main.runtime';
 import { GitMain } from '@teambit/git/git.main.runtime';
 import { IpcEventsMain } from '@teambit/ipc-events/ipc-events.main.runtime';
 import { ConfigMergerMain } from '@teambit/config-merger/config-merger.main.runtime';
-
+import { VersionHistoryMain } from '@teambit/version-history/version-history.main.runtime';
 
 import { BitMain } from './bit.main.runtime';
 import { BitAspect } from './bit.aspect';
@@ -301,6 +302,8 @@ export function getManifestsMap() {
     [GitAspect.id]: GitAspect,
     [IpcEventsAspect.id]: IpcEventsAspect,
     [ConfigMergerAspect.id]: ConfigMergerAspect,
+    [VersionHistoryAspect.id]: VersionHistoryAspect,
+    [VersionHistoryAspect.id]: VersionHistoryAspect,
   };
   return manifestsMap;
 }
@@ -398,6 +401,7 @@ export const runtimesMap = {
   [GitAspect.id]: GitMain,
   [IpcEventsAspect.id]: IpcEventsMain,
   [ConfigMergerAspect.id]: ConfigMergerMain,
+  [VersionHistoryAspect.id]: VersionHistoryMain,
   [BitAspect.id]: BitMain,
 };
 

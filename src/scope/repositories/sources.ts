@@ -79,7 +79,7 @@ export default class SourceRepository {
     if (!ids.length) return [];
     const concurrency = concurrentComponentsLimit();
     logger.trace(`sources.getMany, Ids: ${ids.join(', ')}`);
-    logger.debug(`sources.getMany, ${ids.length} Ids`);
+    logger.trace(`sources.getMany, ${ids.length} Ids`);
     return pMapPool(
       ids,
       async (id) => {
@@ -122,7 +122,12 @@ export default class SourceRepository {
     if (!bitId.hasVersion()) return component;
 
     const returnComponent = async (version: Version): Promise<ModelComponent | undefined> => {
-      if (bitId.isLocal(this.scope.name) || version.buildStatus === BuildStatus.Succeed || !versionShouldBeBuilt) {
+      if (
+        bitId.isLocal(this.scope.name) ||
+        version.buildStatus === BuildStatus.Succeed ||
+        version.buildStatus === BuildStatus.Skipped ||
+        !versionShouldBeBuilt
+      ) {
         return component;
       }
       const hash = component.getRef(bitId.version as string);
@@ -327,7 +332,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     component: ModelComponent,
     versionsRefs: Ref[],
     versions: string[],
-    lane: Lane | null,
+    lane?: Lane,
     removeOnlyHead?: boolean
   ) {
     logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);

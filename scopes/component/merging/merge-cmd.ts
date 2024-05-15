@@ -39,7 +39,7 @@ ${WILDCARD_HELP('merge')}`;
       'same as "--auto-merge-resolve manual". in case of merge conflict, write the files with the conflict markers',
     ],
     [
-      '',
+      'r',
       'auto-merge-resolve <merge-strategy>',
       'in case of a conflict, resolve according to the strategy: [ours, theirs, manual]',
     ],
@@ -263,7 +263,7 @@ ${mergeSnapError.message}
 
 export function getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult): string {
   if (!workspaceConfigUpdateResult) return '';
-  const { workspaceConfigConflictWriteError, workspaceDepsConflicts, workspaceDepsUpdates } =
+  const { workspaceConfigConflictWriteError, workspaceDepsConflicts, workspaceDepsUpdates, workspaceDepsUnchanged } =
     workspaceConfigUpdateResult;
 
   const getWorkspaceConflictsOutput = () => {
@@ -274,7 +274,23 @@ export function getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult?: Wor
     return chalk.yellow('workspace.jsonc has conflicts, please edit the file and fix them');
   };
 
-  return compact([getWorkspaceDepsOutput(workspaceDepsUpdates), getWorkspaceConflictsOutput()]).join('\n\n');
+  const getWorkspaceUnchangedDepsOutput = () => {
+    if (!workspaceDepsUnchanged) return '';
+    const title = '\nworkspace.jsonc was unable to update the following dependencies';
+    const body = Object.keys(workspaceDepsUnchanged)
+      .map((pkgName) => {
+        return `  ${pkgName}: ${workspaceDepsUnchanged[pkgName]}`;
+      })
+      .join('\n');
+
+    return `${chalk.underline(title)}\n${body}`;
+  };
+
+  return compact([
+    getWorkspaceUnchangedDepsOutput(),
+    getWorkspaceDepsOutput(workspaceDepsUpdates),
+    getWorkspaceConflictsOutput(),
+  ]).join('\n\n');
 }
 
 function getWorkspaceDepsOutput(workspaceDepsUpdates?: WorkspaceDepsUpdates): string {

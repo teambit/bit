@@ -186,7 +186,7 @@ describe('snap components from scope', function () {
       helper.command.export();
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
@@ -500,6 +500,40 @@ export const BasicIdInput = () => {
       const depResolver = comp.extensions.find((e) => e.name === Extensions.dependencyResolver).data;
       const lodash = depResolver.dependencies.find((p) => p.id === 'lodash.get');
       expect(lodash.version).to.equal('4.5.0');
+    });
+  });
+  describe('update-dependents when the dependency is an env', () => {
+    let snapResult;
+    let bareSnap;
+    let envSnapOnLane: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      const envName = helper.env.setCustomNewEnv();
+      helper.fixtures.populateComponents(1);
+      helper.command.setEnv('comp1', envName);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild(envName, '--skip-auto-snap --unmodified');
+      envSnapOnLane = helper.command.getHeadOfLane('dev', envName);
+      helper.command.export();
+      bareSnap = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareSnap.scopePath);
+      const data = [
+        {
+          componentId: `${helper.scopes.remote}/comp1`,
+          message: 'msg',
+        },
+      ];
+      const flags = `--lane ${helper.scopes.remote}/dev --update-dependents `;
+      // console.log(`bit _snap '${JSON.stringify(data)}' ${flags}`);
+      snapResult = helper.command.snapFromScopeParsed(bareSnap.scopePath, data, flags);
+    });
+    it('should save the env with the version it has on the lane', () => {
+      const snappedId = snapResult.snappedIds[0];
+      const catComp1 = helper.command.catComponent(snappedId, bareSnap.scopePath);
+      expect(catComp1.extensions[0].extensionId.version).to.equal(envSnapOnLane);
+      expect(catComp1.extensions[0].extensionId.version).to.not.equal('0.0.1');
     });
   });
 });

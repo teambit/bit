@@ -10,7 +10,6 @@ import {
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
-import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
 import { ImporterMain } from './importer.main.runtime';
 import { ImportOptions, ImportDetails, ImportStatus, ImportResult } from './import-components';
 
@@ -31,6 +30,7 @@ type ImportFlags = {
   dependents?: boolean;
   dependentsDryRun?: boolean;
   dependentsVia?: string;
+  dependentsAll?: boolean;
   silent?: boolean;
   allHistory?: boolean;
   fetchDeps?: boolean;
@@ -84,6 +84,11 @@ export class ImportCmd implements Command {
       '',
       'dependents-via <string>',
       'same as --dependents except the traversal must go through the specified component. to specify multiple components, wrap with quotes and separate by a comma',
+    ],
+    [
+      '',
+      'dependents-all',
+      'same as --dependents except not prompting for selecting paths but rather selecting all paths and showing final confirmation before importing',
     ],
     [
       '',
@@ -155,14 +160,10 @@ export class ImportCmd implements Command {
       return formatPlainComponentItemWithVersions(bitId, details);
     });
     const getWsConfigUpdateLogs = () => {
-      // @TODO: uncomment the line below once UPDATE_DEPS_ON_IMPORT is enabled by default
-      // if (!importFlags.verbose) return '';
       const logs = workspaceConfigUpdateResult?.logs;
       if (!logs || !logs.length) return '';
       const logsStr = logs.join('\n');
-      return `${chalk.underline(
-        'verbose logs of workspace config update'
-      )}\n(this is temporarily. once this feature is enabled, use --verbose to see these logs)\n${logsStr}`;
+      return `${chalk.underline('verbose logs of workspace config update')}\n${logsStr}`;
     };
     const upToDateSuffix = lane ? ' on the lane' : '';
     const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date${upToDateSuffix}`;
@@ -214,6 +215,7 @@ export class ImportCmd implements Command {
       dependentsDryRun = false,
       silent,
       dependentsVia,
+      dependentsAll,
       allHistory = false,
       fetchDeps = false,
       trackOnly = false,
@@ -268,6 +270,7 @@ export class ImportCmd implements Command {
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
       dependentsVia,
+      dependentsAll,
       silent,
       allHistory,
       fetchDeps,
@@ -287,6 +290,14 @@ Also, check that the requested version exists on main or the checked out lane`;
   return `${title}\n${subTitle}\n${body}`;
 }
 
+function formatPlainComponentItem({ scope, name, version, deprecated }: any) {
+  return chalk.cyan(
+    `- ${scope ? `${scope}/` : ''}${name}@${version ? version.toString() : 'latest'}  ${
+      deprecated ? chalk.yellow('[deprecated]') : ''
+    }`
+  );
+}
+
 function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails: ImportDetails) {
   const status: ImportStatus = importDetails.status;
   const id = bitId.toStringWithoutVersion();
@@ -295,7 +306,9 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
     if (importDetails.latestVersion) {
       return `${importDetails.versions.length} new version(s) available, latest ${importDetails.latestVersion}`;
     }
-    return `new versions: ${importDetails.versions.join(', ')}`;
+    return importDetails.versions.length > 5
+      ? `${importDetails.versions.length} new versions`
+      : `new versions: ${importDetails.versions.join(', ')}`;
   };
   const versions = getVersionsOutput();
   const usedVersion = status === 'added' ? `, currently used version ${bitId.version}` : '';
@@ -311,7 +324,7 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
   };
   const conflictMessage = getConflictMessage();
   const deprecated = importDetails.deprecated && !importDetails.removed ? chalk.yellow('deprecated') : '';
-  const removed = importDetails.removed ? chalk.red('removed') : '';
+  const removed = importDetails.removed ? chalk.red('deleted') : '';
   const missingDeps = importDetails.missingDeps.length
     ? chalk.red(`missing dependencies: ${importDetails.missingDeps.map((d) => d.toString()).join(', ')}`)
     : '';

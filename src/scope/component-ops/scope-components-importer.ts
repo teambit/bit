@@ -54,6 +54,13 @@ export default class ScopeComponentsImporter {
     TIMEOUT_FOR_MUTEX,
     new BitError(`error: fetch-multiple-objects timeout exceeded (${TIMEOUT_FOR_MUTEX} minutes)`)
   );
+  /**
+   * important!
+   * refrain from using this. it's a workaround for bare-scopes to import from the lane when the call is
+   * very deep in the stack and is hard to pass the lane object.
+   * this can be an issue in case we deliberately want to fetch from main.
+   * (especially when "importer" is not used, because the importer has a fallback to go to the main scope).
+   */
   shouldOnlyFetchFromCurrentLane = false;
   private constructor(private scope: Scope) {
     if (!scope) throw new Error('unable to instantiate ScopeComponentsImporter without Scope');
@@ -505,10 +512,28 @@ export default class ScopeComponentsImporter {
     });
   }
 
-  async checkWhatHashesExistOnRemote(remote: string, hashes: string[]): Promise<string[]> {
-    const remotes = await getScopeRemotes(this.scope);
-    const multipleStreams = await remotes.fetch({ [remote]: hashes }, this.scope, { type: 'object' });
-    const existing = await this.streamToHashes(remote, multipleStreams[remote]);
+  async checkWhatHashesExistOnRemote(remoteName: string, hashes: string[]): Promise<string[]> {
+    const remotes: Remotes = await getScopeRemotes(this.scope);
+    const remote = await remotes.resolve(remoteName);
+    const getExistingLegacy = async () => {
+      const multipleStreams = await remotes.fetch({ [remoteName]: hashes }, this.scope, { type: 'object' });
+      const existing = await this.streamToHashes(remoteName, multipleStreams[remoteName]);
+      return existing;
+    };
+
+    // @todo: this is supported since version > 1.6.150. once all remote scopes are updated, then change the below
+    // call `const existing = await getExistingLegacy();` to `const existing = await getExisting();`
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const getExisting = async () => {
+      try {
+        return await remote.hasObjects(hashes);
+      } catch (err: any) {
+        if (err.name !== 'GraphQLClientError') throw err;
+        // probably not supported by the server
+        return getExistingLegacy();
+      }
+    };
+    const existing = await getExistingLegacy();
     logger.debug(
       `checkWhatHashesExistOnRemote, searched for ${hashes.length} hashes, found ${existing.length} hashes on ${remote}`
     );
@@ -729,7 +754,7 @@ export default class ScopeComponentsImporter {
             `ScopeComponentImporter, expect ${id.toString()} to have a Version object of "${versionComp.version}"`
           );
         }
-        if (onlyIfBuilt && version.buildStatus !== BuildStatus.Succeed) {
+        if (onlyIfBuilt && version.buildStatus !== BuildStatus.Succeed && version.buildStatus !== BuildStatus.Skipped) {
           logger.debug(
             `multipleCompsDefsToVersionDeps, id: ${id.toString()} is skipped because its build-status is ${
               version.buildStatus

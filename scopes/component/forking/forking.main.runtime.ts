@@ -186,10 +186,12 @@ export class ForkingMain {
    */
   async forkScope(
     originalScope: string,
-    newScope: string,
+    newOptionalScope?: string, // if not specified, it'll be the default scope
     pattern?: string,
     options?: ScopeForkOptions
   ): Promise<ComponentID[]> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    const newScope = newOptionalScope || this.workspace.defaultScope;
     const allIdsFromOriginalScope = await this.workspace.scope.listRemoteScope(originalScope);
     if (!allIdsFromOriginalScope.length) {
       throw new Error(`unable to find components to fork from ${originalScope}`);
@@ -218,7 +220,15 @@ export class ForkingMain {
     await pMapSeries(components, async (component) => {
       const config = await this.getConfig(component);
       const targetCompId = ComponentID.fromObject({ name: component.id.fullName }, newScope);
-      await this.newComponentHelper.writeAndAddNewComp(component, targetCompId, { scope: newScope }, config);
+      await this.newComponentHelper.writeAndAddNewComp(
+        component,
+        targetCompId,
+        {
+          scope: newScope,
+          incrementPathIfConflicted: true,
+        },
+        config
+      );
       multipleForkInfo.push({ targetCompId, sourceId: component.id.toStringWithoutVersion(), component });
     });
     await this.refactorMultipleAndInstall(multipleForkInfo, {

@@ -130,7 +130,5 @@ function clearGlobalsIfNeeded() {
   // @ts-ignore
   WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;
   // @ts-ignore
-  WorkspaceConfig.workspaceConfigIsExistRegistry = undefined;
-  // @ts-ignore
   WorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
 }

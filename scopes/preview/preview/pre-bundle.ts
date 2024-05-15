@@ -14,6 +14,9 @@ import { promisify } from 'util';
 import { PreviewAspect } from './preview.aspect';
 import { createWebpackConfig } from './webpack/webpack.config';
 import { clearConsole } from './pre-bundle-utils';
+import { getPreviewDistDir } from './mk-temp-dir';
+
+const previewDistDir = getPreviewDistDir();
 
 export const RUNTIME_NAME = 'preview';
 export const PUBLIC_DIR = join('public', 'bit-preview');
@@ -131,7 +134,7 @@ export async function generateBundlePreviewEntry(rootAspectId: string, previewPr
   config['teambit.harmony/bit'] = rootAspectId;
 
   const contents = [imports, `run(${JSON.stringify(config, null, 2)});`].join('\n');
-  const previewRuntime = resolve(join(__dirname, `preview.entry.${sha1(contents)}.js`));
+  const previewRuntime = resolve(join(previewDistDir, `preview.entry.${sha1(contents)}.js`));
 
   if (!existsSync(previewRuntime)) {
     outputFileSync(previewRuntime, contents);

@@ -19,7 +19,7 @@ import { Scope } from '../scope';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
-import { generateRandomStr } from '../utils';
+import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import { composeComponentPath } from '../utils/bit/compose-component-path';
 import {
@@ -166,7 +166,7 @@ export default class Consumer {
     return this.getCurrentLaneId().isDefault();
   }
 
-  async getCurrentLaneObject(): Promise<Lane | null> {
+  async getCurrentLaneObject(): Promise<Lane | undefined> {
     return this.scope.loadLane(this.getCurrentLaneId());
   }
 

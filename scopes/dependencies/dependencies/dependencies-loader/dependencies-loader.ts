@@ -39,7 +39,7 @@ export class DependenciesLoader {
     applyOverrides.issues = dependenciesData.issues;
     const results = await applyOverrides.getDependenciesData();
     this.setDependenciesDataOnComponent(results.dependenciesData, results.overridesDependencies);
-    updateDependenciesVersions(
+    await updateDependenciesVersions(
       this.depsResolver,
       workspace,
       this.component,

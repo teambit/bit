@@ -5,7 +5,6 @@ import { CatVersionHistoryCmd } from './commands/private-cmds/cat-version-histor
 import CatLane from './commands/private-cmds/cat-lane-cmd';
 import CatObject from './commands/private-cmds/cat-object-cmd';
 import CatScope from './commands/private-cmds/cat-scope-cmd';
-import DependencyStatus from './commands/private-cmds/dependency-status-cmd';
 import Config from './commands/public-cmds/config-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
 import Init from './commands/public-cmds/init-cmd';
@@ -26,7 +25,6 @@ export default function registerCommands(): CommandRegistry {
     new CatScope(),
     new CatVersionHistoryCmd(),
     new ScopeConfig(),
-    new DependencyStatus(),
     new Doctor(),
     new RunAction(),
   ]);

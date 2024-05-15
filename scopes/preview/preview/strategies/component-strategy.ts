@@ -10,6 +10,7 @@ import { CAPSULE_ARTIFACTS_DIR, ComponentResult } from '@teambit/builder';
 import type { PkgMain } from '@teambit/pkg';
 import { BitError } from '@teambit/bit-error';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { Logger } from '@teambit/logger';
 import type { BundlerResult, BundlerContext, Asset, BundlerEntryMap, EntriesAssetsMap, Target } from '@teambit/bundler';
 import { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
 import type { PreviewDefinition } from '../preview-definition';
@@ -35,7 +36,12 @@ type ComponentEntry = {
 export class ComponentBundlingStrategy implements BundlingStrategy {
   name = 'component';
 
-  constructor(private preview: PreviewMain, private pkg: PkgMain, private dependencyResolver: DependencyResolverMain) {}
+  constructor(
+    private preview: PreviewMain,
+    private pkg: PkgMain,
+    private dependencyResolver: DependencyResolverMain,
+    private logger: Logger
+  ) {}
 
   async computeTargets(context: ComputeTargetsContext, previewDefs: PreviewDefinition[]): Promise<Target[]> {
     const outputPath = this.getOutputPath(context);
@@ -244,8 +250,13 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       return {};
     }
     const files = (result.entriesAssetsMap[componentEntryId]?.assets || []).map((file) => {
+      const UNKNOWN = 'unknown';
+      const name = file.name ? basename(file.name) : UNKNOWN;
+      if (name === UNKNOWN) {
+        this.logger.warn(`computeComponentMetadata: unable to get the name of the asset ${file}`);
+      }
       return {
-        name: basename(file.name),
+        name,
         size: file.size,
         compressedSize: file.compressedSize,
       };
@@ -253,8 +264,13 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     const filesTotalSize = result.entriesAssetsMap[componentEntryId]?.assetsSize || 0;
     const compressedTotalFiles = result.entriesAssetsMap[componentEntryId]?.compressedAssetsSize || 0;
     const assets = (result.entriesAssetsMap[componentEntryId]?.auxiliaryAssets || []).map((file) => {
+      const UNKNOWN = 'unknown';
+      const name = file.name ? basename(file.name) : UNKNOWN;
+      if (name === UNKNOWN) {
+        this.logger.warn(`computeComponentMetadata: unable to get the name of the auxiliary asset ${file}`);
+      }
       return {
-        name: basename(file.name),
+        name,
         size: file.size,
         compressedSize: file.compressedSize,
       };

@@ -47,7 +47,7 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       'when a component is modified and the merge process found conflicts, display options to resolve them',
     ],
     [
-      '',
+      'r',
       'auto-merge-resolve <merge-strategy>',
       'in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
     ],
@@ -183,14 +183,10 @@ export function checkoutOutput(
     return `${chalk.underline(title)}\n${body}`;
   };
   const getWsConfigUpdateLogs = () => {
-    // @TODO: uncomment the line below once UPDATE_DEPS_ON_IMPORT is enabled by default
-    // if (!importFlags.verbose) return '';
     const logs = workspaceConfigUpdateResult?.logs;
     if (!logs || !logs.length) return '';
     const logsStr = logs.join('\n');
-    return `${chalk.underline(
-      'verbose logs of workspace config update'
-    )}\n(this is temporarily. once this feature is enabled, use --verbose to see these logs)\n${logsStr}`;
+    return `${chalk.underline('verbose logs of workspace config update')}\n${logsStr}`;
   };
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';

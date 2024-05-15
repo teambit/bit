@@ -76,29 +76,15 @@ export class BuildPipe {
    * execute a pipeline of build tasks.
    */
   async execute(): Promise<TaskResultsList> {
-    this.addSignalListener();
     await this.executePreBuild();
     this.longProcessLogger = this.logger.createLongProcessLogger('running tasks', this.tasksQueue.length);
     await mapSeries(this.tasksQueue, async ({ task, env }) => this.executeTask(task, env));
     this.longProcessLogger.end();
     const capsuleRootDir = Object.values(this.envsBuildContext)[0]?.capsuleNetwork.capsulesRootDir;
-    const tasksResultsList = new TaskResultsList(this.tasksQueue, this.taskResults, capsuleRootDir);
+    const tasksResultsList = new TaskResultsList(this.tasksQueue, this.taskResults, capsuleRootDir, this.logger);
     await this.executePostBuild(tasksResultsList);
 
     return tasksResultsList;
-  }
-
-  /**
-   * for some reason, some tasks (such as typescript compilation) ignore ctrl+C. this fixes it.
-   */
-  private addSignalListener() {
-    process.on('SIGTERM', () => {
-      process.exit();
-    });
-
-    process.on('SIGINT', () => {
-      process.exit();
-    });
   }
 
   private async executePreBuild() {

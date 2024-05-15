@@ -1,3 +1,4 @@
+import { CloudMain } from '@teambit/cloud';
 import {
   DependencyResolverMain,
   extendWithComponentsFromDir,
@@ -16,7 +17,7 @@ import { Logger } from '@teambit/logger';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
-import { readModulesManifest } from '@pnpm/modules-yaml';
+import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
 import {
   buildDependenciesHierarchy,
   DependenciesHierarchy,
@@ -33,6 +34,8 @@ import type { RebuildFn } from './lynx';
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
+  readonly modulesManifestCache: Map<string, Modules> = new Map();
+  private username: string;
 
   private _readConfig = async (dir?: string) => {
     const { config, warnings } = await readConfig(dir);
@@ -46,7 +49,7 @@ export class PnpmPackageManager implements PackageManager {
 
   public readConfig = memoize(this._readConfig);
 
-  constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
+  constructor(private depResolver: DependencyResolverMain, private logger: Logger, private cloud: CloudMain) {}
 
   async install(
     { rootDir, manifests }: InstallationContext,
@@ -81,6 +84,7 @@ export class PnpmPackageManager implements PackageManager {
         }
       });
     }
+    this.modulesManifestCache.delete(rootDir);
     const { dependenciesChanged, rebuild, storeDir } = await install(
       rootDir,
       manifests,
@@ -90,7 +94,7 @@ export class PnpmPackageManager implements PackageManager {
       proxyConfig,
       networkConfig,
       {
-        autoInstallPeers: installOptions.autoInstallPeers ?? true,
+        autoInstallPeers: installOptions.autoInstallPeers ?? false,
         engineStrict: installOptions.engineStrict ?? config.engineStrict,
         excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
         lockfileOnly: installOptions.lockfileOnly,
@@ -107,11 +111,11 @@ export class PnpmPackageManager implements PackageManager {
           ? ['*']
           : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
         hoistWorkspacePackages: installOptions.hoistWorkspacePackages,
+        hoistInjectedDependencies: installOptions.hoistInjectedDependencies,
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
         preferOffline: installOptions.preferOffline,
         rootComponents: installOptions.rootComponents,
         rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
-        peerDependencyRules: installOptions.peerDependencyRules,
         sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
         sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
         pnpmHomeDir: config.pnpmHomeDir,
@@ -122,6 +126,7 @@ export class PnpmPackageManager implements PackageManager {
           throttleProgress: installOptions.throttleProgress,
           hideProgressPrefix: installOptions.hideProgressPrefix,
           hideLifecycleOutput: installOptions.hideLifecycleOutput,
+          peerDependencyRules: installOptions.peerDependencyRules,
         },
       },
       this.logger
@@ -182,22 +187,45 @@ export class PnpmPackageManager implements PackageManager {
 
   async getNetworkConfig?(): Promise<PackageManagerNetworkConfig> {
     const { config } = await this.readConfig();
+    if (!this.username) {
+      this.username = (await this.cloud.getCurrentUser())?.username ?? 'anonymous';
+    }
     // We need to use config.rawConfig as it will only contain the settings defined by the user.
     // config contains default values of the settings when they are not defined by the user.
-    return {
-      maxSockets: config.rawConfig['max-sockets'],
-      networkConcurrency: config.rawConfig['network-concurrency'],
-      fetchRetries: config.rawConfig['fetch-retries'],
-      fetchTimeout: config.rawConfig['fetch-timeout'],
-      fetchRetryMaxtimeout: config.rawConfig['fetch-retry-maxtimeout'],
-      fetchRetryMintimeout: config.rawConfig['fetch-retry-mintimeout'],
-      strictSSL: config.rawConfig['strict-ssl'],
-      // These settings don't have default value, so it is safe to read them from config
-      // ca is automatically populated from the content of the file specified by cafile.
-      ca: config.ca,
-      cert: config.cert,
-      key: config.key,
+    const result: PackageManagerNetworkConfig = {
+      userAgent: `bit user/${this.username}`,
     };
+    if (config.rawConfig['max-sockets'] != null) {
+      result.maxSockets = config.rawConfig['max-sockets'];
+    }
+    if (config.rawConfig['network-concurrency'] != null) {
+      result.networkConcurrency = config.rawConfig['network-concurrency'];
+    }
+    if (config.rawConfig['fetch-retries'] != null) {
+      result.fetchRetries = config.rawConfig['fetch-retries'];
+    }
+    if (config.rawConfig['fetch-timeout'] != null) {
+      result.fetchTimeout = config.rawConfig['fetch-timeout'];
+    }
+    if (config.rawConfig['fetch-retry-maxtimeout'] != null) {
+      result.fetchRetryMaxtimeout = config.rawConfig['fetch-retry-maxtimeout'];
+    }
+    if (config.rawConfig['fetch-retry-mintimeout'] != null) {
+      result.fetchRetryMintimeout = config.rawConfig['fetch-retry-mintimeout'];
+    }
+    if (config.rawConfig['strict-ssl'] != null) {
+      result.strictSSL = config.rawConfig['strict-ssl'];
+    }
+    if (config.ca != null) {
+      result.ca = config.ca;
+    }
+    if (config.cert != null) {
+      result.cert = config.cert;
+    }
+    if (config.key != null) {
+      result.key = config.key;
+    }
+    return result;
   }
 
   async getRegistries(): Promise<Registries> {
@@ -241,8 +269,15 @@ export class PnpmPackageManager implements PackageManager {
     return modulesState.injectedDeps[`node_modules/${packageName}`] ?? modulesState.injectedDeps[componentDir] ?? [];
   }
 
-  _readModulesManifest(lockfileDir: string) {
-    return readModulesManifest(join(lockfileDir, 'node_modules'));
+  async _readModulesManifest(lockfileDir: string): Promise<Modules | undefined> {
+    if (this.modulesManifestCache.has(lockfileDir)) {
+      return this.modulesManifestCache.get(lockfileDir);
+    }
+    const modulesManifest = await readModulesManifest(join(lockfileDir, 'node_modules'));
+    if (modulesManifest) {
+      this.modulesManifestCache.set(lockfileDir, modulesManifest);
+    }
+    return modulesManifest ?? undefined;
   }
 
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {

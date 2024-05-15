@@ -1,6 +1,16 @@
 import { cloneDeep, set, get, has } from 'lodash';
 import { Linter } from 'eslint';
-import { ESLintOptions } from '@teambit/eslint';
+// import { ESLintOptions } from '@teambit/eslint';
+import { ESLintOptions } from '@teambit/defender.eslint-linter';
+
+export type EslintConfigTransformContext = {
+  fix: boolean;
+};
+
+export type EslintConfigTransformer = (
+  config: EslintConfigMutator,
+  context: EslintConfigTransformContext
+) => EslintConfigMutator;
 
 export class EslintConfigMutator {
   constructor(public raw: ESLintOptions) {}
@@ -24,13 +34,13 @@ export class EslintConfigMutator {
     return this;
   }
 
-  setTsConfig(tsconfig: Record<string, any>): EslintConfigMutator {
-    this.raw.tsConfig = tsconfig;
+  setTsConfig(tsconfig: string): EslintConfigMutator {
+    this.raw.tsconfig = tsconfig;
     return this;
   }
 
   setPluginPath(newPath: string): EslintConfigMutator {
-    this.raw.pluginPath = newPath;
+    this.raw.pluginsPath = newPath;
     return this;
   }
 

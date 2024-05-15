@@ -12,6 +12,7 @@ import { approveOperation } from '@teambit/legacy/dist/prompts';
 import { COMPONENT_PATTERN_HELP, DEFAULT_CLOUD_DOMAIN } from '@teambit/legacy/dist/constants';
 import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
 import { SwitchCmd } from './switch.cmd';
+import { FetchCmd } from '@teambit/importer';
 
 type LaneOptions = {
   details?: boolean;
@@ -230,7 +231,7 @@ a lane created from another lane contains all the components of the original lan
         )}. you can change the lane's scope, before it is exported, with the "bit lane change-scope" command`;
     const title = chalk.green(
       `successfully added and checked out to the new lane ${chalk.bold(result.alias || result.laneId.name)}
-      ${currentLane !== null ? chalk.yellow(`\nnote - your new lane will be based on lane ${currentLane.name}`) : ''}
+      ${currentLane ? chalk.yellow(`\nnote - your new lane will be based on lane ${currentLane.name}`) : ''}
       `
     );
     const remoteScopeOutput = `this lane will be exported to ${remoteScopeOrDefaultScope}`;
@@ -347,6 +348,31 @@ export class LaneHistoryCmd implements Command {
       return `${uuid} ${date} ${historyItem.log.username} ${message}`;
     });
     return items.join('\n');
+  }
+}
+
+export class LaneEjectCmd implements Command {
+  name = 'eject <component-pattern>';
+  description = `delete a component from the lane and install it as a package from main`;
+  extendedDescription = `NOTE: unlike "bit eject" on main, this command doesn't only remove the component from the
+workspace, but also mark it as deleted from the lane, so it won't be merged later on.`;
+  alias = '';
+  arguments = [
+    {
+      name: 'component-pattern',
+      description: COMPONENT_PATTERN_HELP,
+    },
+  ];
+  options = [] as CommandOptions;
+  loader = true;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([pattern]: [string]) {
+    const results = await this.lanes.eject(pattern);
+    const title = chalk.green('successfully ejected the following components');
+    const body = results.map((r) => r.toString()).join('\n');
+    return `${title}\n${body}`;
   }
 }
 
@@ -489,7 +515,31 @@ export class LaneImportCmd implements Command {
     [lane]: [string],
     { skipDependencyInstallation = false, pattern }: { skipDependencyInstallation: boolean; pattern?: string }
   ): Promise<string> {
-    return this.switchCmd.report([lane], { getAll: true, skipDependencyInstallation, pattern });
+    return this.switchCmd.report([lane], { skipDependencyInstallation, pattern });
+  }
+}
+
+export class LaneFetchCmd implements Command {
+  name = 'fetch [lane-id]';
+  description = `fetch component objects from lanes. if no lane-id is provided, it fetches from the current lane`;
+  extendedDescription = `note, it does not save the remote lanes objects locally, only the refs`;
+  alias = '';
+  options = [['a', 'all', 'fetch all remote lanes']] as CommandOptions;
+  loader = true;
+
+  constructor(private fetchCmd: FetchCmd, private lanes: LanesMain) {}
+
+  async report([laneId]: [string], { all }: { all?: boolean }): Promise<string> {
+    if (all) return this.fetchCmd.report([[]], { lanes: true });
+    const getLaneIdStr = () => {
+      if (laneId) return laneId;
+      const currentLane = this.lanes.getCurrentLaneId();
+      if (!currentLane || currentLane.isDefault())
+        throw new BitError('you are not checked out to any lane. please specify a lane-id to fetch or use --all flag');
+      return currentLane.toString();
+    };
+    const lane = getLaneIdStr();
+    return this.fetchCmd.report([[lane]], { lanes: true });
   }
 }
 

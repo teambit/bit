@@ -3,6 +3,7 @@ import { pickBy } from 'lodash';
 import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
+import { v4 } from 'uuid';
 import { BuildStatus, DEFAULT_BUNDLE_FILENAME, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { isSchemaSupport, SchemaFeature, SchemaName } from '../../consumer/component/component-schema';
@@ -13,7 +14,7 @@ import { ComponentOverridesData } from '../../consumer/config/component-override
 import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/extension-data';
 import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
-import { getStringifyArgs } from '../../utils';
+import { getStringifyArgs, sha1 } from '../../utils';
 import { PathLinux, pathNormalizeToLinux } from '../../utils/path';
 import VersionInvalid from '../exceptions/version-invalid';
 import { BitObject, Ref } from '../objects';
@@ -180,7 +181,9 @@ export default class Version extends BitObject {
         const flattenedEdgesSource = (await repo.load(this.flattenedEdgesRef, throws)) as Source | undefined;
         if (flattenedEdgesSource) {
           const flattenedEdgesJson = JSON.parse(flattenedEdgesSource.contents.toString());
-          return flattenedEdgesJson.map((item) => Version.depEdgeFromObject(item));
+          return flattenedEdgesJson.map((item) =>
+            Array.isArray(item) ? Version.depEdgeFromArray(item) : Version.depEdgeFromObject(item)
+          );
         }
       }
       return this.flattenedEdges || [];
@@ -384,8 +387,22 @@ export default class Version extends BitObject {
       type: depEdgeObj.type,
     };
   }
+  static depEdgeToArray(depEdge: DepEdge): Record<string, any> {
+    return [depEdge.source.toString(), depEdge.target.toString(), depEdge.type];
+  }
+  static depEdgeFromArray(depEdgeArr: string[]): DepEdge {
+    const [sourceStr, targetStr, type] = depEdgeArr;
+    return {
+      source: ComponentID.fromString(sourceStr),
+      target: ComponentID.fromString(targetStr),
+      type: type as DepEdgeType,
+    };
+  }
   static flattenedEdgeToSource(flattenedEdges?: DepEdge[]): Source | undefined {
     if (!flattenedEdges) return undefined;
+    // @todo: around August 2024, uncomment this line and delete the next one.
+    // it'll make this object much much smaller (for 604 edges, it's now 143KB, with the array format it's 6KB!)
+    // const flattenedEdgesObj = flattenedEdges.map((f) => Version.depEdgeToArray(f));
     const flattenedEdgesObj = flattenedEdges.map((f) => Version.depEdgeToObject(f));
     const flattenedEdgesBuffer = Buffer.from(JSON.stringify(flattenedEdgesObj));
     return Source.from(flattenedEdgesBuffer);
@@ -664,8 +681,7 @@ export default class Version extends BitObject {
   }
 
   setNewHash() {
-    // @todo: after v15 is deployed, this can be changed to generate a random uuid
-    this._hash = this.calculateHash().toString();
+    this._hash = sha1(v4());
   }
 
   get ignoreSharedDir(): boolean {

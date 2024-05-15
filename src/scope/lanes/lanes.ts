@@ -24,11 +24,11 @@ export default class Lanes {
   }
 
   /** don't use it outside of Lanes. Use scope.loadLane instead */
-  async loadLane(id: LaneId): Promise<Lane | null> {
-    if (id.isDefault()) return null; // main lane is not saved
+  async loadLane(id: LaneId): Promise<Lane | undefined> {
+    if (id.isDefault()) return undefined; // main lane is not saved
     const filter = (lane: LaneItem) => lane.toLaneId().isEqual(id);
     const hash = this.objects.getHashFromIndex(IndexType.lanes, filter);
-    if (!hash) return null;
+    if (!hash) return undefined;
     // this makes sure to delete index.json in case it's outdated
     const obj = await this.objects._getBitObjectsByHashes([hash]);
     const lane = obj[0] as Lane;

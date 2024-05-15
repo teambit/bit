@@ -13,7 +13,7 @@ import { connect } from '../scope/network';
 import { Network } from '../scope/network/network';
 import { ObjectItemsStream, ObjectList } from '../scope/objects/object-list';
 import RemovedObjects from '../scope/removed-components';
-import { cleanBang, isBitUrl } from '../utils';
+import { isBitUrl } from '../utils';
 import { InvalidRemote } from './exceptions';
 
 /**
@@ -104,6 +104,9 @@ export default class Remote {
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]> {
     return this.connect().then((network) => network.listLanes(name, mergeData));
   }
+  async hasObjects(hashes: string[]): Promise<string[]> {
+    return this.connect().then((network) => network.hasObjects(hashes));
+  }
   async action<Options extends Record<string, any>, Result>(name: string, options: Options): Promise<Result> {
     const network = await this.connect();
     logger.debug(`[-] Running action ${name} on a remote ${this.name}, options: ${JSON.stringify(options)}`);
@@ -114,7 +117,7 @@ export default class Remote {
 
   static load(name: string, host: string, thisScope?: Scope): Remote {
     const primary = isPrimary(name);
-    if (primary) name = cleanBang(name);
+    if (primary) name = name.replace('!', '');
 
     return new Remote(name, host, primary, thisScope?.name);
   }

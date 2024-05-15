@@ -5,7 +5,7 @@ import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { BuildStatus } from '@teambit/legacy/dist/constants';
 import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
-
+import type { DependencyList } from '@teambit/dependency-resolver';
 import { slice } from 'lodash';
 import { ComponentFactory } from './component-factory';
 import ComponentFS from './component-fs';
@@ -146,6 +146,14 @@ export class Component implements IComponent {
     return filteredLogs;
   }
 
+  getDependencies(): DependencyList {
+    return this.factory.getDependencies(this);
+  }
+
+  getPackageName(): string {
+    return this.factory.componentPackageName(this);
+  }
+
   stringify(): string {
     return JSON.stringify({
       id: this.id,
@@ -190,6 +198,8 @@ export class Component implements IComponent {
 
   /**
    * whether a component is marked as deleted.
+   * warning! if this component is not the head, it might be deleted by a range later on.
+   * to get accurate results, please use teambit.component/remove aspect, "isDeleted" method.
    */
   isDeleted(): boolean {
     return this.state._consumer.isRemoved();
@@ -309,6 +319,16 @@ export class Component implements IComponent {
     const tag = this.tags.byVersion(this.id.version);
     if (tag) return tag.hash;
     return this.id.version;
+  }
+
+  /**
+   * in case a component is new, it returns undefined.
+   * otherwise, it returns the Snap object (hash/parents/log) of the current component (according to the version in the id)
+   */
+  async getCurrentSnap(): Promise<Snap | undefined> {
+    const snap = this.getSnapHash();
+    if (!snap) return undefined;
+    return this.loadSnap(snap);
   }
 
   /**
