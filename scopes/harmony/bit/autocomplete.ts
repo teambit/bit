@@ -29,6 +29,7 @@ export function autocomplete() {
   if (!matchedCommand) {
     return;
   }
+  log(`matchedCommand: ${matchedCommand.name}`);
   const currentArg = argv.length ? argv[argv.length - 1] : '';
   if (currentArg.startsWith('-')) {
     printCommandFlags(matchedCommand);
@@ -38,9 +39,11 @@ export function autocomplete() {
   const firstCmdArg = commandArgs[0];
   const commandNamePrefixes = ['<component-name', '<component-pattern', '[component-name', '[component-pattern'];
   if (firstCmdArg && commandNamePrefixes.some((prefix) => firstCmdArg.startsWith(prefix))) {
+    log(`completing component name`);
     const compIds = getCompsFromBitmap();
     process.stdout.write(compIds.join('\n'));
   }
+  process.exit(0);
 }
 
 function printCommandFlags(cmd: Cmd): void {
