@@ -849,7 +849,7 @@
         ]
       },
       {
-        "name": "fork <original-scope> <new-scope> [pattern]",
+        "name": "fork <original-scope> [new-scope] [pattern]",
         "options": [
           [
             "",
@@ -872,7 +872,7 @@
           },
           {
             "name": "new-scope",
-            "description": "the new scope to fork to"
+            "description": "the new scope to fork to, default to the default-scope of the workspace"
           },
           {
             "name": "pattern",
