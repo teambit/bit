@@ -3,26 +3,13 @@ import json from 'comment-json';
 
 const COMPLETION_FLAG = '--get-yargs-completions';
 
-// to get the log working, add `export BIT_DEBUG_AUTOCOMPLETE=true` to your bash profile
-// prefixing the command with this won't work for some reason.
-const shouldLog = process.env.BIT_DEBUG_AUTOCOMPLETE === 'true';
-const logFile = 'compilation.log';
-if (shouldLog) fs.ensureFileSync(logFile);
-const log = (msg: string) => (shouldLog ? fs.appendFileSync(logFile, `${msg}\n`) : null);
-
 type Cmd = { name: string; options: string[]; description?: string; commands?: Cmd[] };
 
 export function autocomplete() {
   log('[*] autocomplete started');
   const results = getAutocompleteResults();
-  if (!results.length) {
-    log(`[*] autocomplete completed, no results found`);
-    return;
-  }
   log(`[*] autocomplete completed with ${results.length} results`);
-  process.stdout.write(results.join('\n'), () => {
-    process.exit(0);
-  });
+  if (results.length) process.stdout.write(results.join('\n'));
 }
 
 function getAutocompleteResults(): string[] {
@@ -46,6 +33,7 @@ function getAutocompleteResults(): string[] {
   if (!matchedCommand) {
     return [];
   }
+  // the second element can be a sub-command or an arg or a flag
   const possiblySubCommandName = argv[1];
   const matchedSubCommand = possiblySubCommandName
     ? findCommandByName(possiblySubCommandName, matchedCommand.commands || [])
@@ -127,4 +115,13 @@ function getCompsFromBitmap(): string[] {
     compIds.push(`${scope}/${name}`);
   });
   return compIds;
+}
+
+// to get the log working, add `export BIT_DEBUG_AUTOCOMPLETE=true` to your bash profile
+// prefixing the command with this won't work for some reason.
+const shouldLog = process.env.BIT_DEBUG_AUTOCOMPLETE === 'true';
+const logFile = 'compilation.log';
+if (shouldLog) fs.ensureFileSync(logFile);
+function log(msg: string) {
+  if (shouldLog) fs.appendFileSync(logFile, `${msg}\n`);
 }

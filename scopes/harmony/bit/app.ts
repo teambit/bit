@@ -13,6 +13,7 @@ import { autocomplete } from './autocomplete';
 
 if (process.argv.includes('--get-yargs-completions')) {
   autocomplete();
+  process.exit(0);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
