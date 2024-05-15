@@ -7,6 +7,7 @@ import { getInvalidComponentLabel } from '@teambit/legacy/dist/cli/templates/com
 import {
   IMPORT_PENDING_MSG,
   statusFailureMsg,
+  statusWarningsMsg,
   statusInvalidComponentsMsg,
   statusWorkspaceIsCleanMsg,
   BASE_DOCS_DOMAIN,
@@ -169,7 +170,9 @@ export class StatusCmd implements Command {
       const isSoftTagged = Boolean(softTaggedComponents.find((softTaggedId) => softTaggedId.isEqual(id)));
       const getStatusText = () => {
         if (message) return message;
-        if (idWithIssues) return statusFailureMsg;
+        if (idWithIssues) {
+          return idWithIssues.issues.hasTagBlockerIssues() ? statusFailureMsg : statusWarningsMsg;
+        }
         return 'ok';
       };
       const getColor = () => {
@@ -200,7 +203,8 @@ export class StatusCmd implements Command {
       idFormatted += ' ... ';
       if (showIssues && idWithIssues) {
         showTroubleshootingLink = true;
-        return `${idFormatted} ${chalk.red(statusFailureMsg)}${formatIssues(idWithIssues.issues)}`;
+        const issuesTxt = idWithIssues.issues.hasTagBlockerIssues() ? statusFailureMsg : statusWarningsMsg;
+        return `${idFormatted} ${chalk.red(issuesTxt)}${formatIssues(idWithIssues.issues)}`;
       }
       return `${idFormatted}${messageStatus}`;
     }

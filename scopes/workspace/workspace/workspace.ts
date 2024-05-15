@@ -38,7 +38,6 @@ import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map
 import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
 import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
-import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import {
@@ -1207,9 +1206,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   ): PathOsBased {
     const componentMap = this.consumer.bitMap.getComponent(bitId, bitMapOptions);
     const relativeComponentDir = componentMap.getComponentDir();
-    if (!relativeComponentDir) {
-      throw new NoComponentDir(bitId.toString());
-    }
     if (options.relative) {
       return relativeComponentDir;
     }

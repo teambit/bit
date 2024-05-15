@@ -14,7 +14,7 @@ import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-c
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { RefactoringAspect, MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
 import pMapSeries from 'p-map-series';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { isValidIdChunk, InvalidName } from '@teambit/legacy-bit-id';
@@ -194,6 +194,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     newScope: string,
     options: { refactor?: boolean; deprecate?: boolean; preserve?: boolean } = {}
   ): Promise<RenameResult> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const allComponentsIds = this.workspace.listIds();
     const componentsUsingOldScope = allComponentsIds.filter((compId) => compId.scope === oldScope);
     if (!componentsUsingOldScope.length && this.workspace.defaultScope !== oldScope) {
@@ -220,8 +221,8 @@ make sure this argument is the name only, without the scope-name. to change the 
     newOwner: string,
     options: { refactor?: boolean; ast?: boolean }
   ): Promise<RenameResult> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const isScopeUsesOldOwner = (scope: string) => scope.startsWith(`${oldOwner}.`);
-
     const allComponentsIds = this.workspace.listIds();
     const componentsUsingOldScope = allComponentsIds.filter((compId) => isScopeUsesOldOwner(compId.scope));
     if (!componentsUsingOldScope.length && !isScopeUsesOldOwner(this.workspace.defaultScope)) {

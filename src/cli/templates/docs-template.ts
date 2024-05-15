@@ -3,10 +3,14 @@ import R from 'ramda';
 import Table from 'cli-table';
 
 import { Doclet } from '../../jsdoc/types';
-import { paintHeader } from '../chalk-box';
 
 const paintExample = (example) => {
   return example.raw;
+};
+
+const paintHeader = (value: string) => {
+  if (!value) return '';
+  return `${c.underline(value)}\n`;
 };
 
 const paintExamples = (examples) => {

@@ -10,7 +10,6 @@ import {
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
-import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
 import { ImporterMain } from './importer.main.runtime';
 import { ImportOptions, ImportDetails, ImportStatus, ImportResult } from './import-components';
 
@@ -289,6 +288,14 @@ function formatMissingComponents(missing?: string[]) {
 Also, check that the requested version exists on main or the checked out lane`;
   const body = chalk.red(missing.join('\n'));
   return `${title}\n${subTitle}\n${body}`;
+}
+
+function formatPlainComponentItem({ scope, name, version, deprecated }: any) {
+  return chalk.cyan(
+    `- ${scope ? `${scope}/` : ''}${name}@${version ? version.toString() : 'latest'}  ${
+      deprecated ? chalk.yellow('[deprecated]') : ''
+    }`
+  );
 }
 
 function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails: ImportDetails) {
