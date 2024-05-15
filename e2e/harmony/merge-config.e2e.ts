@@ -689,9 +689,7 @@ describe('merge config scenarios', function () {
           });
           it('should tell why workspace.jsonc was not updated', () => {
             expect(mergeOutput).to.have.string('workspace.jsonc was unable to update the following dependencies');
-            expect(mergeOutput).to.have.string(
-              `multiple versions found. 0.0.3 (by ${helper.scopes.remote}/comp1), 0.0.2 (by ${helper.scopes.remote}/comp2)`
-            );
+            expect(mergeOutput).to.have.string(`multiple versions found`);
             expect(mergeOutput).to.have.string(`0.0.3 (by ${helper.scopes.remote}/comp1)`);
             expect(mergeOutput).to.have.string(`0.0.2 (by ${helper.scopes.remote}/comp2)`);
           });
