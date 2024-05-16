@@ -16,11 +16,17 @@ import { compact, groupBy, partition } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import { StatusMain, StatusResult } from './status.main.runtime';
 
-const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
-  `learn more at about Bit component: ${BASE_DOCS_DOMAIN}reference/components/component-anatomy/`
-)}`;
+const TROUBLESHOOTING_MESSAGE = chalk.yellow(
+  `learn more about Bit components: ${BASE_DOCS_DOMAIN}reference/components/component-anatomy`
+);
 
-type StatusFlags = { strict?: boolean; verbose?: boolean; lanes?: boolean; ignoreCircularDependencies?: boolean };
+type StatusFlags = {
+  strict?: boolean;
+  verbose?: boolean;
+  lanes?: boolean;
+  ignoreCircularDependencies?: boolean;
+  warnings?: boolean;
+};
 
 type StatusJsonResults = {
   newComponents: string[];
@@ -66,6 +72,7 @@ export class StatusCmd implements Command {
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],
+    ['w', 'warnings', 'show warnings. by default, only issues that block tag/snap are shown'],
     ['', 'verbose', 'show extra data: full snap hashes for staged components, and divergence point for lanes'],
     ['l', 'lanes', 'when on a lane, show updates from main and updates from forked lanes'],
     ['', 'strict', 'in case issues found, exit with code 1'],
@@ -132,7 +139,7 @@ export class StatusCmd implements Command {
   }
 
   // eslint-disable-next-line complexity
-  async report(_args, { strict, verbose, lanes, ignoreCircularDependencies }: StatusFlags) {
+  async report(_args, { strict, verbose, lanes, ignoreCircularDependencies, warnings }: StatusFlags) {
     const {
       newComponents,
       modifiedComponents,
@@ -177,7 +184,7 @@ export class StatusCmd implements Command {
       };
       const getColor = () => {
         if (message) return 'yellow';
-        if (idWithIssues) return 'red';
+        if (idWithIssues) return idWithIssues.issues.hasTagBlockerIssues() ? 'red' : 'yellow';
         return 'green';
       };
       const messageStatusText = getStatusText();
@@ -204,7 +211,8 @@ export class StatusCmd implements Command {
       if (showIssues && idWithIssues) {
         showTroubleshootingLink = true;
         const issuesTxt = idWithIssues.issues.hasTagBlockerIssues() ? statusFailureMsg : statusWarningsMsg;
-        return `${idFormatted} ${chalk.red(issuesTxt)}${formatIssues(idWithIssues.issues)}`;
+        const issuesColor = idWithIssues.issues.hasTagBlockerIssues() ? 'red' : 'yellow';
+        return `${idFormatted} ${chalk[issuesColor](issuesTxt)}${formatIssues(idWithIssues.issues)}`;
       }
       return `${idFormatted}${messageStatus}`;
     }
@@ -277,11 +285,12 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
       autoTagPendingComponents.map((c) => format(c))
     );
 
+    const componentsWithIssuesToPrint = componentsWithIssues.filter((c) => c.issues.hasTagBlockerIssues() || warnings);
     const compWithIssuesDesc = '(fix the issues according to the suggested solution)';
     const compWithIssuesOutput = formatCategory(
       'components with issues',
       compWithIssuesDesc,
-      componentsWithIssues.map((c) => format(c.id, true)).sort()
+      componentsWithIssuesToPrint.map((c) => format(c.id, true)).sort()
     );
 
     const invalidDesc = 'these components failed to load';
@@ -374,6 +383,10 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
     };
 
     const troubleshootingStr = showTroubleshootingLink ? `\n${TROUBLESHOOTING_MESSAGE}` : '';
+    const wereWarningsFilteredOut = componentsWithIssuesToPrint.length < componentsWithIssues.length;
+    const showWarningsStr = wereWarningsFilteredOut
+      ? `\n${chalk.yellow('to view the warnings, use --warnings flag.')}`
+      : '';
 
     const statusMsg =
       importPendingWarning +
@@ -395,6 +408,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
         locallySoftRemovedOutput,
         remotelySoftRemovedOutput,
       ]).join(chalk.underline('\n                         \n') + chalk.white('\n')) +
+      showWarningsStr +
       troubleshootingStr;
 
     const results = (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + getWorkspaceIssuesOutput() + getLaneStr();
