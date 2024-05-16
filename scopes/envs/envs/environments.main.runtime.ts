@@ -1,4 +1,7 @@
+import findRoot from 'find-root';
+import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { isCoreAspect } from '@teambit/bit';
+import { existsSync, readFileSync } from 'fs-extra';
 import pLocate from 'p-locate';
 import { parse } from 'comment-json';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
@@ -28,6 +31,7 @@ import { EnvsCmd, GetEnvCmd, ListEnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
 import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
 import { EnvPlugin } from './env.plugin';
+import { join } from 'path';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -283,8 +287,78 @@ export class EnvsMain {
 
     if (!envJson) return undefined;
 
-    const object = parse(envJson.contents.toString('utf8'));
+    const object = parse(envJson.contents.toString('utf8'), undefined, true);
+    const resolvedObject = this.recursivelyMergeWithParentManifest(object, envJson.path);
+    if (object.extends) {
+      throw new Error('g');
+    }
     return object;
+  }
+
+  recursivelyMergeWithParentManifest(object: any, originPath: string) {
+    if (!object.extends) return object;
+    const parentPackageName = object.extends;
+    const parentPath = resolveFrom(originPath, [parentPackageName]);
+    const parentResolvedPath = findRoot(parentPath);
+    if (!parentResolvedPath || !existsSync(parentResolvedPath)) {
+      this.logger.info(`failed finding parent manifest for ${parentPackageName} at ${parentResolvedPath}`);
+    }
+    const parentEnvJsoncPath = ['env.jsonc', 'env.json']
+      .map((fileName) => join(parentResolvedPath, fileName))
+      .find((filePath) => {
+        return existsSync(filePath);
+      });
+    if (!parentEnvJsoncPath) {
+      this.logger.consoleWarning(
+        `failed finding parent manifest for ${parentPackageName} at ${parentResolvedPath} referred from ${originPath}`
+      );
+      return object;
+    }
+    const parentStr = readFileSync(parentEnvJsoncPath).toString('utf8');
+    const parentObject = parse(parentStr, undefined, true);
+    const mergedObjects = this.mergeEnvManifests(parentObject, object);
+    if (mergedObjects.extends) {
+      return this.recursivelyMergeWithParentManifest(mergedObjects, parentEnvJsoncPath);
+    }
+    return object;
+  }
+
+  mergeEnvManifests(parent: object, child: object): Object {
+    let merged = {};
+    // Take extends specifically from the parent so we can propagate it to the next parent
+    if (parent.extends) {
+      merged.extends = parent.extends;
+    }
+    merged.patterns = { ...(parent.patterns || {}), ...(child.patterns || {}) };
+    merged.policy = this.mergeEnvManifestPolicy(parent, child);
+    return merged;
+  }
+
+  /**
+   * Merge policy from parent and child env.jsonc files
+   * The rule is that for each type of dependency (dev, runtime, peer) we check each item.
+   * if a dep with a name exists on the child we will take the entire object from the child (including the version,
+   * supported range, force etc')
+   * if a dep exists with a version value "-" we will remove it from the policy
+   */
+  mergeEnvManifestPolicy(parent: object, child: object): Object {
+    const policy = {};
+    ['peers', 'dev', 'runtime'].forEach((key) => {
+      policy[key] = parent.policy?.[key] || [];
+      const childEntries = child.policy?.[key] || [];
+
+      policy[key] = policy[key].filter((entry) => {
+        return !childEntries.find((childEntry) => {
+          return childEntry.name === entry.name;
+        });
+      });
+      policy[key] = policy[key].concat(childEntries);
+
+      policy[key] = policy[key].filter((entry) => {
+        return entry.version !== '-';
+      });
+    });
+    return policy;
   }
 
   async hasEnvManifestById(envId: string, requesting: string): Promise<boolean | undefined> {
