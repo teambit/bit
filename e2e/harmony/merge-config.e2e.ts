@@ -621,6 +621,82 @@ describe('merge config scenarios', function () {
       });
     }
   );
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'diverge with multiple components, each has a different dependency version',
+    () => {
+      let npmCiRegistry: NpmCiRegistry;
+      let beforeDiverge: string;
+      let barPkgName: string;
+      // let barCompName: string;
+      let pkgHelper: Helper;
+      let laneWs: string;
+      before(async () => {
+        pkgHelper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        pkgHelper.scopeHelper.setNewLocalAndRemoteScopes();
+        pkgHelper.fixtures.createComponentBarFoo();
+        pkgHelper.fixtures.addComponentBarFoo();
+        npmCiRegistry = new NpmCiRegistry(pkgHelper);
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        await npmCiRegistry.init();
+        pkgHelper.command.tagAllComponents();
+        barPkgName = pkgHelper.general.getPackageNameByCompName('bar/foo');
+        // barCompName = `${pkgHelper.scopes.remote}/bar/foo`;
+        pkgHelper.command.export();
+
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.addRemoteScope(pkgHelper.scopes.remotePath);
+        helper.fixtures.populateComponents(2);
+        helper.fs.outputFile('comp1/index.js', `require("${barPkgName}");`);
+        helper.fs.outputFile('comp2/index.js', `require("${barPkgName}");`);
+        helper.command.install(barPkgName);
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+        beforeDiverge = helper.scopeHelper.cloneLocalScope();
+
+        helper.command.createLane();
+        helper.command.snapAllComponentsWithoutBuild('--unmodified'); // add another snap to make it diverged from main.
+        helper.command.export();
+        laneWs = helper.scopeHelper.cloneLocalScope();
+
+        pkgHelper.command.tagAllComponents('--unmodified'); // 0.0.2
+        pkgHelper.command.export();
+
+        helper.scopeHelper.getClonedLocalScope(beforeDiverge);
+        helper.command.install(`${barPkgName}@0.0.2`);
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+
+        pkgHelper.command.tagAllComponents('--unmodified'); // 0.0.3
+        pkgHelper.command.export();
+
+        helper.command.install(`${barPkgName}@0.0.3`);
+        helper.command.tagComponent('comp1');
+        helper.command.export();
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      describe('when the dep was updated on the lane only, not on main', () => {
+        describe('when the dep is in workspace.jsonc', () => {
+          let mergeOutput: string;
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(laneWs);
+            mergeOutput = helper.command.mergeLane(`main --no-snap -x`);
+          });
+          it('should not update workspace.jsonc', () => {
+            const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+            expect(policy.dependencies[barPkgName]).to.equal('^0.0.1');
+          });
+          it('should tell why workspace.jsonc was not updated', () => {
+            expect(mergeOutput).to.have.string('workspace.jsonc was unable to update the following dependencies');
+            expect(mergeOutput).to.have.string(`multiple versions found`);
+            expect(mergeOutput).to.have.string(`0.0.3 (by ${helper.scopes.remote}/comp1)`);
+            expect(mergeOutput).to.have.string(`0.0.2 (by ${helper.scopes.remote}/comp2)`);
+          });
+        });
+      });
+    }
+  );
   describe('diverge with merge-able auto-detected dependencies config and pre-config explicitly set', () => {
     let mainBeforeDiverge: string;
     before(() => {

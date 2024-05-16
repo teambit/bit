@@ -77154,6 +77154,7 @@ packages:
       '@teambit/component-id': 1.2.0
       '@teambit/design.ui.brand.logo': 1.96.2(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
+      '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(react-dom@17.0.2)(react@17.0.2)
       '@teambit/legacy-bit-id': 1.1.1
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/scope.modules.find-scope-path': 0.0.1

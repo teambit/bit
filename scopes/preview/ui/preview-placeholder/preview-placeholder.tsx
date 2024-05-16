@@ -5,7 +5,7 @@ import { capitalize } from '@teambit/toolbox.string.capitalize';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { ComponentModel } from '@teambit/component';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
-import DocsAspect from '@teambit/docs';
+import { DocsAspect } from '@teambit/docs';
 
 import styles from './preview-placeholder.module.scss';
 

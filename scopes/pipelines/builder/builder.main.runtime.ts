@@ -9,7 +9,7 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import AspectAspect from '@teambit/aspect';
+import { AspectAspect } from '@teambit/aspect';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';

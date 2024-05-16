@@ -948,7 +948,15 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   }
 
   async isRemoved(repo: Repository, specificVersion?: string): Promise<boolean | null> {
-    const head = this.getHeadRegardlessOfLane();
+    const getHead = () => {
+      if (!this.laneHeadLocal) return this.getHead();
+      // you're checked out to a lane.
+      if (!specificVersion) return this.laneHeadLocal;
+      // it's possible that this specificVersion is from main.
+      if (specificVersion === this.laneHeadLocal.toString()) return this.laneHeadLocal;
+      return this.getHead();
+    };
+    const head = getHead();
     if (!head) {
       // it's new or only on lane
       return false;
