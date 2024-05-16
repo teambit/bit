@@ -10,7 +10,7 @@ import {
   WorkspaceData,
   setWorkspaceConfig,
 } from '@teambit/workspace.testing.mock-workspace';
-import IssuesAspect from '@teambit/issues';
+import { IssuesAspect } from '@teambit/issues';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';

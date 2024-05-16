@@ -1,7 +1,7 @@
 import { BuilderAspect } from '@teambit/builder';
 import { MainRuntime } from '@teambit/cli';
 import { WebpackAspect } from '@teambit/webpack';
-import ScopeAspect from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 import { ExpressAspect } from '@teambit/express';
 import { ModuleFederationAspect } from './module-federation.aspect';
 

@@ -7,7 +7,7 @@ import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
-import EnvsAspect from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
 import { getPathStatIfExist } from '@teambit/legacy/dist/utils/fs/last-modified';
 import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 

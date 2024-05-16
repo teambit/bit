@@ -66,7 +66,7 @@ import { createLane, createLaneInScope, throwForInvalidLaneName } from './create
 import { LanesCreateRoute } from './lanes.create.route';
 import { LanesDeleteRoute } from './lanes.delete.route';
 import { LanesRestoreRoute } from './lanes.restore.route';
-import InstallAspect, { InstallMain } from '@teambit/install';
+import { InstallAspect, InstallMain } from '@teambit/install';
 
 export { Lane };
 

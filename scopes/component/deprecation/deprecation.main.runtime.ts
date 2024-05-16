@@ -10,9 +10,9 @@ import { deprecationSchema } from './deprecation.graphql';
 import { DeprecationFragment } from './deprecation.fragment';
 import { DeprecateCmd } from './deprecate-cmd';
 import { UndeprecateCmd } from './undeprecate-cmd';
-import IssuesAspect, { IssuesMain } from '@teambit/issues';
+import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
-import DependencyResolverAspect, { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { compact } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
 
