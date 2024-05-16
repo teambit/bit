@@ -10,7 +10,7 @@ import {
   VersionHistoryGraphCmd,
   VersionHistoryShowCmd,
 } from './version-history-cmd';
-import ScopeAspect, { ScopeMain } from '@teambit/scope';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { ModelComponent, VersionHistory } from '@teambit/legacy/dist/scope/models';
