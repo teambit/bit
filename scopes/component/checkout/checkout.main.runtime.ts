@@ -28,6 +28,7 @@ export type CheckoutProps = {
   version?: string; // if reset/head/latest is true, the version is undefined
   ids?: ComponentID[];
   head?: boolean;
+  ancestor?: number; // how many generations to go backward
   latest?: boolean;
   main?: boolean; // relevant for "revert" only
   promptMergeOptions?: boolean;
@@ -332,6 +333,7 @@ export class CheckoutMain {
     const {
       version,
       head: headVersion,
+      ancestor,
       reset,
       revert,
       main,
@@ -388,6 +390,10 @@ export class CheckoutMain {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (reset) return component!.id.version as string;
       if (headVersion) return componentModel.headIncludeRemote(repo);
+      if (ancestor) {
+        const previousParent = await componentModel.getRefOfAncestor(repo, ancestor);
+        return componentModel.getTagOfRefIfExists(previousParent)?.toString() || previousParent.toString();
+      }
       // we verified previously that head exists in case of "main"
       if (main) return componentModel.head?.toString() as string;
       if (latestVersion) {

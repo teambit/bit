@@ -383,7 +383,7 @@ export default class ComponentsList {
     const idsFilteredByWildcards = namespacesUsingWildcards
       ? ComponentsList.filterComponentsByWildcard(allIds, `**/${namespacesUsingWildcards}`)
       : allIds;
-    const idsSorted = ComponentsList.sortComponentsByName(idsFilteredByWildcards);
+    const idsSorted = ComponentID.sortIds(idsFilteredByWildcards);
     const listAllResults: ListScopeResult[] = await Promise.all(
       idsSorted.map(async (id: ComponentID) => {
         const component = modelComponents.find((c) => c.toComponentId().isEqualWithoutVersion(id));
@@ -472,6 +472,8 @@ export default class ComponentsList {
       else if (R.is(Component, component)) name = component.componentId.toString();
       else if (R.is(ComponentID, component)) name = component.toString();
       else name = component;
+      if (typeof name !== 'string')
+        throw new Error(`sortComponentsByName expects name to be a string, got: ${name}, type: ${typeof name}`);
       return name.toUpperCase(); // ignore upper and lowercase
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

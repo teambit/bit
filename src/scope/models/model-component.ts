@@ -440,6 +440,13 @@ export default class Component extends BitObject {
     return divergeData.isTargetAhead() ? remoteHead.toString() : latestLocally;
   }
 
+  async getRefOfAncestor(repo: Repository, generationsToGoBack: number): Promise<Ref> {
+    const head = this.getHeadRegardlessOfLane();
+    if (!head) throw new BitError(`getRefOfAncestor failed to find the head of ${this.id()}`);
+    const versionHistory = await this.getAndPopulateVersionHistory(repo, head);
+    return versionHistory.getAncestor(generationsToGoBack, head);
+  }
+
   latestVersion(): string {
     if (isEmpty(this.versions)) return VERSION_ZERO;
     return getLatestVersion(this.listVersions());
