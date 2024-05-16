@@ -1,4 +1,4 @@
-import CLIAspect, { CLIMain, MainRuntime } from '@teambit/cli';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import { VersionHistoryAspect } from './version-history.aspect';
@@ -10,7 +10,7 @@ import {
   VersionHistoryGraphCmd,
   VersionHistoryShowCmd,
 } from './version-history-cmd';
-import ScopeAspect, { ScopeMain } from '@teambit/scope';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { ModelComponent, VersionHistory } from '@teambit/legacy/dist/scope/models';

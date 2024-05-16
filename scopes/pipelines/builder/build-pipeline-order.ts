@@ -1,5 +1,5 @@
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
-import TesterAspect from '@teambit/tester';
+import { TesterAspect } from '@teambit/tester';
 import { EnvDefinition, Environment } from '@teambit/envs';
 import { BuildTask, BuildTaskHelper } from './build-task';
 import type { TaskSlot } from './builder.main.runtime';

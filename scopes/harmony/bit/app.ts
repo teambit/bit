@@ -9,6 +9,12 @@ import './hook-require';
 import { bootstrap } from '@teambit/legacy/dist/bootstrap';
 import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
 import { runCLI } from './load-bit';
+import { autocomplete } from './autocomplete';
+
+if (process.argv.includes('--get-yargs-completions')) {
+  autocomplete();
+  process.exit(0);
+}
 
 // Export APIs from all core aspects to be used in the bundled app
 export * from './core-aspects-exports';

@@ -23,7 +23,7 @@ import { RemoveAspect } from './remove.aspect';
 import { RemoveFragment } from './remove.fragment';
 import { RecoverCmd, RecoverOptions } from './recover-cmd';
 import { DeleteCmd } from './delete-cmd';
-import ScopeAspect, { ScopeMain } from '@teambit/scope';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 
 const BEFORE_REMOVE = 'removing components';
 
@@ -305,7 +305,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(componentId);
     if (bitmapEntry && bitmapEntry.isRemoved()) return true;
     if (bitmapEntry && bitmapEntry.isRecovered()) return false;
-    const modelComp = await this.workspace.scope.getBitObjectModelComponent(componentId);
+    const modelComp = await this.workspace.scope.getBitObjectModelComponent(componentId.changeVersion(undefined));
     if (!modelComp) return false;
     const isRemoved = await modelComp.isRemoved(
       this.workspace.scope.legacyScope.objects,

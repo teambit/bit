@@ -32,7 +32,7 @@ import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-o
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { satisfies } from 'semver';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
-import ClearCacheAspect from '@teambit/clear-cache';
+import { ClearCacheAspect } from '@teambit/clear-cache';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';

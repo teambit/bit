@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import CloudAspect, { CloudMain } from '@teambit/cloud';
+import { CloudAspect, CloudMain } from '@teambit/cloud';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 
