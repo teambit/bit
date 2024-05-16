@@ -7,7 +7,7 @@ import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents } from '@teambit/component.testing.mock-components';
-import ListerAspect, { ListerMain } from '@teambit/lister';
+import { ListerAspect, ListerMain } from '@teambit/lister';
 import { CheckoutMain } from './checkout.main.runtime';
 import { CheckoutAspect } from './checkout.aspect';
 
