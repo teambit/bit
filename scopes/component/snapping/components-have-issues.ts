@@ -1,5 +1,5 @@
 import { BitError } from '@teambit/bit-error';
-import IssuesAspect from '@teambit/issues';
+import { IssuesAspect } from '@teambit/issues';
 import { formatIssues } from '@teambit/legacy/dist/cli/templates/component-issues-template';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import chalk from 'chalk';

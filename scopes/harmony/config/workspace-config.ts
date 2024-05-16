@@ -13,7 +13,7 @@ import { assign, parse, stringify, CommentJSONValue } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { isEmpty, omit } from 'lodash';
-import WorkspaceAspect from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { SetExtensionOptions } from './config.main.runtime';
 import { ExtensionAlreadyConfigured } from './exceptions';
 import InvalidConfigFile from './exceptions/invalid-config-file';

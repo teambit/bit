@@ -1,7 +1,7 @@
 import { ComponentID } from '@teambit/component-id';
 import semver from 'semver';
 import { Logger } from '@teambit/logger';
-import BuilderAspect from '@teambit/builder';
+import { BuilderAspect } from '@teambit/builder';
 import { isHash } from '@teambit/component-version';
 import {
   DependencyResolverAspect,

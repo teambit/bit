@@ -13,7 +13,7 @@ import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-conf
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
-import DependenciesAspect from '@teambit/dependencies';
+import { DependenciesAspect } from '@teambit/dependencies';
 
 function getPackageName(aspect: any, id: ComponentID) {
   return `@teambit/${id.name}`;
