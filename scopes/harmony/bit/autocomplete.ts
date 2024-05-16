@@ -3,7 +3,7 @@ import json from 'comment-json';
 
 const COMPLETION_FLAG = '--get-yargs-completions';
 
-type Cmd = { name: string; options: string[]; description?: string; commands?: Cmd[] };
+type Cmd = { name: string; options: string[]; description?: string; commands?: Cmd[]; private?: boolean };
 
 export function autocomplete() {
   log('[*] autocomplete started');
@@ -87,7 +87,8 @@ function getCommandFlags(cmd: Cmd): string[] {
 
 function getAllCommandNames(): string[] {
   const allCommands = getAllCommands();
-  return getCommandNames(allCommands);
+  const publicCommands = allCommands.filter((cmd) => !cmd.private);
+  return getCommandNames(publicCommands);
 }
 
 function getCommandNames(commands: Cmd[]): string[] {
