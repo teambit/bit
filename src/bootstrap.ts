@@ -130,8 +130,17 @@ function enableLoaderIfPossible() {
 export function getHarmonyVersion(showValidSemver = false) {
   try {
     const teambitBit = require.resolve('@teambit/bit');
+    // For bundle cases, the teambitBit point to a flat folder that contains the package.json
+    let packageJsonPath = path.join(teambitBit, '../', 'package.json');
+    if (!fs.existsSync(packageJsonPath)) {
+      // for dev cases, the teambitBit point to the dist folder that doesn't contains the package.json
+      packageJsonPath = path.join(teambitBit, '../..', 'package.json');
+    }
+    if (!fs.existsSync(packageJsonPath)) {
+      throw new Error('unable to find Bit version (package.json not found)');
+    }
     // eslint-disable-next-line
-    const packageJson = require(path.join(teambitBit, '../..', 'package.json'));
+    const packageJson = require(packageJsonPath);
     if (packageJson.version) return packageJson.version;
     // this is running locally
     if (packageJson.componentId && packageJson.componentId.version) {
