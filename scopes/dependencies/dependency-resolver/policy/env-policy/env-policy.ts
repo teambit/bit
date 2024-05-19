@@ -49,7 +49,7 @@ export class EnvPolicy extends VariantPolicy {
   }
 
   static fromConfigObject(
-    configObject,
+    configObject: EnvPolicyConfigObject,
     { includeLegacyPeersInSelfPolicy }: VariantPolicyFromConfigObjectOptions = {}
   ): EnvPolicy {
     validateEnvPolicyConfigObject(configObject);
