@@ -3196,13 +3196,13 @@
       ]
     ],
     "description": "switch between component versions or remove local changes",
-    "extendedDescription": "\n`bit checkout <version> [component-pattern]` => checkout the specified ids (or all components when --all is used) to the specified version\n`bit checkout head [component-pattern]` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all\n`bit checkout latest [component-pattern]` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all\n`bit checkout reset [component-pattern]` => remove local modifications from the specified ids (or all components when --all is used). also, if a component dir is deleted from the filesystem, it'll be restored\nwhen on a lane, \"checkout head\" only checks out components on this lane. to update main components, run \"bit lane merge main\"",
+    "extendedDescription": "\n`bit checkout <version> [component-pattern]` => checkout the specified ids (or all components when --all is used) to the specified version\n`bit checkout head [component-pattern]` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all\n`bit checkout head~x [component-pattern]` => go backward x generations from the head and checkout to that version\n`bit checkout latest [component-pattern]` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all\n`bit checkout reset [component-pattern]` => remove local modifications from the specified ids (or all components when --all is used). also, if a component dir is deleted from the filesystem, it'll be restored\nwhen on a lane, \"checkout head\" only checks out components on this lane. to update main components, run \"bit lane merge main\"",
     "group": "development",
     "private": false,
     "arguments": [
       {
         "name": "to",
-        "description": "permitted values: [head, latest, reset, specific-version]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes"
+        "description": "permitted values: [head, latest, reset, {specific-version}, {head~x}]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes"
       },
       {
         "name": "component-pattern",
@@ -4507,6 +4507,11 @@
         "j",
         "json",
         "return a json version of the component"
+      ],
+      [
+        "w",
+        "warnings",
+        "show warnings. by default, only issues that block tag/snap are shown"
       ],
       [
         "",

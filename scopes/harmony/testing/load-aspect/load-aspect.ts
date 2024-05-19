@@ -34,8 +34,10 @@ export async function loadAspect<T>(targetAspect: Aspect, cwd = process.cwd(), r
 }
 
 /**
- * returns an instance of Harmony. with this instance, you can get any aspect you loaded.
+ * returns an instance of Harmony. with this instance, you can get any aspect you loaded (or its dependencies).
  * e.g. `const workspace = harmony.get<Workspace>(WorkspaceAspect.id);`
+ * when used for tests, specify all aspects you need and call it once. this way, you make sure all of them are in sync
+ * and use the same instances of each other.
  */
 export async function loadManyAspects(
   targetAspects: Aspect[],
