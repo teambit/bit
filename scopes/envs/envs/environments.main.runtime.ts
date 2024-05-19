@@ -1,3 +1,4 @@
+import { join } from 'path';
 import findRoot from 'find-root';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { isCoreAspect } from '@teambit/bit';
@@ -33,7 +34,6 @@ import { EnvsCmd, GetEnvCmd, ListEnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
 import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
 import { EnvPlugin } from './env.plugin';
-import { join } from 'path';
 
 export type EnvJsonc = {
   extends?: string;
