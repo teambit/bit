@@ -34,10 +34,10 @@ type DevPattern = string[] | DevPatternDescriptor;
 export type DevPatterns = ((component: Component) => DevPattern) | DevPattern;
 
 export type EnvJsoncPatterns = {
-  compositions: string[];
-  docs: string[];
-  tests: string[];
-  [key: string]: string[];
+  compositions?: string[];
+  docs?: string[];
+  tests?: string[];
+  [key: string]: string[] | undefined;
 };
 
 /**
@@ -139,7 +139,7 @@ export class DevFilesMain {
   }
 
   mergeEnvManifestPatterns(parent: EnvJsonc, child: EnvJsonc): Partial<EnvJsonc> {
-    const merged = {
+    const merged: Partial<EnvJsonc> = {
       patterns: { ...(parent.patterns || {}), ...(child.patterns || {}) },
     };
     return merged;
