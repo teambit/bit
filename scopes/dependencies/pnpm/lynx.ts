@@ -43,8 +43,6 @@ type RegistriesMap = {
   [registryName: string]: string;
 };
 
-const STORE_CACHE: Record<string, { ctrl: StoreController; dir: string }> = {};
-
 async function createStoreController(
   options: {
     rootDir: string;
@@ -85,15 +83,7 @@ async function createStoreController(
     fetchTimeout: options.networkConfig.fetchTimeout,
     virtualStoreDirMaxLength: getVirtualStoreDirMaxLength(),
   };
-  // We should avoid the recreation of store.
-  // The store holds cache that makes subsequent resolutions faster.
-  const cacheKey = JSON.stringify(opts);
-  if (!STORE_CACHE[cacheKey]) {
-    // Although it would be enough to call createNewStoreController(),
-    // that doesn't resolve the store directory location.
-    STORE_CACHE[cacheKey] = await createOrConnectStoreController(opts);
-  }
-  return STORE_CACHE[cacheKey];
+  return createOrConnectStoreController(opts);
 }
 
 async function generateResolverAndFetcher(
