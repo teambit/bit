@@ -97,20 +97,20 @@ importers:
         specifier: 0.5.4
         version: 0.5.4(@types/webpack@5.28.1)(react-refresh@0.10.0)(webpack-dev-server@4.15.0)(webpack@5.84.1)
       '@pnpm/client':
-        specifier: 11.0.6
-        version: 11.0.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+        specifier: 11.1.0
+        version: 11.1.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@pnpm/colorize-semver-diff':
         specifier: 1.0.1
         version: 1.0.1
       '@pnpm/config':
-        specifier: 21.2.2
-        version: 21.2.2(@pnpm/logger@5.0.0)
+        specifier: 21.2.3
+        version: 21.2.3(@pnpm/logger@5.0.0)
       '@pnpm/core':
-        specifier: 14.1.4
-        version: 14.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
+        specifier: 14.1.5
+        version: 14.1.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
       '@pnpm/default-reporter':
-        specifier: 13.1.1
-        version: 13.1.1(@pnpm/logger@5.0.0)
+        specifier: 13.1.2
+        version: 13.1.2(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path':
         specifier: 5.0.0
         version: 5.0.0
@@ -139,8 +139,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       '@pnpm/package-store':
-        specifier: 20.1.2
-        version: 20.1.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+        specifier: 20.2.0
+        version: 20.2.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@pnpm/parse-overrides':
         specifier: 5.0.1
         version: 5.0.1
@@ -148,11 +148,11 @@ importers:
         specifier: 6.0.1
         version: 6.0.1
       '@pnpm/plugin-commands-publishing':
-        specifier: 8.1.4
-        version: 8.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+        specifier: 8.1.5
+        version: 8.1.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@pnpm/plugin-commands-rebuild':
-        specifier: 11.1.4
-        version: 11.1.4(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+        specifier: 11.1.5
+        version: 11.1.5(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       '@pnpm/registry-mock':
         specifier: 3.4.0
         version: 3.4.0
@@ -166,17 +166,17 @@ importers:
         specifier: 6.0.2
         version: 6.0.2
       '@pnpm/store-connection-manager':
-        specifier: 8.1.4
-        version: 8.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+        specifier: 8.2.0
+        version: 8.2.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@pnpm/types':
         specifier: 10.1.0
         version: 10.1.0
       '@pnpm/worker':
-        specifier: 1.0.2
-        version: 1.0.2(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+        specifier: 1.0.3
+        version: 1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       '@pnpm/workspace.pkgs-graph':
-        specifier: 3.0.4
-        version: 3.0.4(@pnpm/logger@5.0.0)
+        specifier: 3.0.5
+        version: 3.0.5(@pnpm/logger@5.0.0)
       '@prerenderer/prerenderer':
         specifier: ^1.2.0
         version: 1.2.4(@types/express@4.17.13)(debug@4.3.4)
@@ -5425,7 +5425,7 @@ importers:
         version: file:scopes/dependencies/fs/linked-dependencies
       '@teambit/dependency-resolver':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2)
+        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2)
       '@teambit/deprecation':
         specifier: workspace:*
         version: file:scopes/component/deprecation(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
@@ -5650,7 +5650,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
+        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
@@ -6858,7 +6858,7 @@ importers:
         version: file:scopes/dependencies/fs/linked-dependencies
       '@teambit/dependency-resolver':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2)
+        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2)
       '@teambit/deprecation':
         specifier: workspace:*
         version: file:scopes/component/deprecation(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
@@ -7089,7 +7089,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
+        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
@@ -8312,7 +8312,7 @@ importers:
         version: file:scopes/dependencies/fs/linked-dependencies
       '@teambit/dependency-resolver':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2)
+        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2)
       '@teambit/deprecation':
         specifier: workspace:*
         version: file:scopes/component/deprecation(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
@@ -8543,7 +8543,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
+        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
@@ -9763,7 +9763,7 @@ importers:
         version: file:scopes/dependencies/fs/linked-dependencies
       '@teambit/dependency-resolver':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2)
+        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2)
       '@teambit/deprecation':
         specifier: workspace:*
         version: file:scopes/component/deprecation(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
@@ -9988,7 +9988,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
+        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
@@ -11187,7 +11187,7 @@ importers:
         version: file:scopes/dependencies/fs/linked-dependencies
       '@teambit/dependency-resolver':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2)
+        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2)
       '@teambit/deprecation':
         specifier: workspace:*
         version: file:scopes/component/deprecation(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
@@ -11412,7 +11412,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
+        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
@@ -12617,7 +12617,7 @@ importers:
         version: file:scopes/dependencies/fs/linked-dependencies
       '@teambit/dependency-resolver':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2)
+        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2)
       '@teambit/deprecation':
         specifier: workspace:*
         version: file:scopes/component/deprecation(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
@@ -12842,7 +12842,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
+        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
@@ -14053,7 +14053,7 @@ importers:
         version: file:scopes/dependencies/fs/linked-dependencies
       '@teambit/dependency-resolver':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2)
+        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2)
       '@teambit/deprecation':
         specifier: workspace:*
         version: file:scopes/component/deprecation(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
@@ -14281,7 +14281,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
+        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
@@ -19899,8 +19899,8 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@pnpm/core':
-        specifier: 14.1.4
-        version: 14.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
+        specifier: 14.1.5
+        version: 14.1.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
       '@pnpm/network.ca-file':
         specifier: 3.0.0
         version: 3.0.0
@@ -20047,17 +20047,17 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@pnpm/client':
-        specifier: 11.0.6
-        version: 11.0.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+        specifier: 11.1.0
+        version: 11.1.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@pnpm/config':
-        specifier: 21.2.2
-        version: 21.2.2(@pnpm/logger@5.0.0)
+        specifier: 21.2.3
+        version: 21.2.3(@pnpm/logger@5.0.0)
       '@pnpm/core':
-        specifier: 14.1.4
-        version: 14.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
+        specifier: 14.1.5
+        version: 14.1.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
       '@pnpm/default-reporter':
-        specifier: 13.1.1
-        version: 13.1.1(@pnpm/logger@5.0.0)
+        specifier: 13.1.2
+        version: 13.1.2(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path':
         specifier: 5.0.0
         version: 5.0.0
@@ -20077,14 +20077,14 @@ importers:
         specifier: 13.1.1
         version: 13.1.1
       '@pnpm/package-store':
-        specifier: 20.1.2
-        version: 20.1.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+        specifier: 20.2.0
+        version: 20.2.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@pnpm/pick-registry-for-package':
         specifier: 6.0.1
         version: 6.0.1
       '@pnpm/plugin-commands-rebuild':
-        specifier: 11.1.4
-        version: 11.1.4(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+        specifier: 11.1.5
+        version: 11.1.5(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       '@pnpm/reviewing.dependencies-hierarchy':
         specifier: ^3.1.3
         version: 3.1.3(@pnpm/logger@5.0.0)
@@ -20092,17 +20092,17 @@ importers:
         specifier: 6.0.2
         version: 6.0.2
       '@pnpm/store-connection-manager':
-        specifier: 8.1.4
-        version: 8.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+        specifier: 8.2.0
+        version: 8.2.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@pnpm/types':
         specifier: 10.1.0
         version: 10.1.0
       '@pnpm/worker':
-        specifier: 1.0.2
-        version: 1.0.2(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+        specifier: 1.0.3
+        version: 1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       '@pnpm/workspace.pkgs-graph':
-        specifier: 3.0.4
-        version: 3.0.4(@pnpm/logger@5.0.0)
+        specifier: 3.0.5
+        version: 3.0.5(@pnpm/logger@5.0.0)
       '@teambit/bit-error':
         specifier: ~0.0.404
         version: 0.0.404
@@ -23276,8 +23276,8 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@pnpm/plugin-commands-publishing':
-        specifier: 8.1.4
-        version: 8.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+        specifier: 8.1.5
+        version: 8.1.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@teambit/bit-error':
         specifier: ~0.0.404
         version: 0.0.404
@@ -32645,7 +32645,7 @@ packages:
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
       '@npmcli/name-from-folder': 2.0.0
-      glob: 10.3.10
+      glob: 10.3.14
       minimatch: 9.0.3
       read-package-json-fast: 3.0.2
 
@@ -32759,8 +32759,8 @@ packages:
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.84.1)
     dev: false
 
-  /@pnpm/build-modules@13.0.0(@pnpm/logger@5.0.0)(@types/node@20.2.5):
-    resolution: {integrity: sha512-7YKk+flbdpcgXYFvHdQilH2OgMKv55pNZ+IjxXPzSqVnC5xxOIQmWEcccZ9E2sQ2CHk0nFV3U8ucb9WumUxz8A==}
+  /@pnpm/build-modules@13.0.1(@pnpm/logger@5.0.0)(@types/node@20.2.5):
+    resolution: {integrity: sha512-qWAuHLqtdcEf3AomwYmotw9QtLD0X5h7UEeHz7TMrxsdazguN6ua5E2ZSJZoe+VXTXdsHcJ2elU8SnIaLjQPww==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -32769,14 +32769,14 @@ packages:
       '@pnpm/core-loggers': 10.0.1(@pnpm/logger@5.0.0)
       '@pnpm/deps.graph-sequencer': 2.0.1
       '@pnpm/fs.hard-link-dir': 4.0.0(@pnpm/logger@5.0.0)
-      '@pnpm/lifecycle': 17.0.3(@pnpm/logger@5.0.0)
+      '@pnpm/lifecycle': 17.0.4(@pnpm/logger@5.0.0)
       '@pnpm/link-bins': 10.0.2(@pnpm/logger@5.0.0)
       '@pnpm/logger': 5.0.0
       '@pnpm/patching.apply-patch': 3.0.1
       '@pnpm/read-package-json': 9.0.2
-      '@pnpm/store-controller-types': 18.0.1
+      '@pnpm/store-controller-types': 18.1.0
       '@pnpm/types': 10.1.0
-      '@pnpm/worker': 1.0.2(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+      '@pnpm/worker': 1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       p-defer: 3.0.0
       ramda: /@pnpm/ramda@0.28.1
       run-groups: 3.0.1
@@ -32821,15 +32821,15 @@ packages:
       load-json-file: 6.2.0
     dev: false
 
-  /@pnpm/cli-utils@3.0.6(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-Ba3Xg16RMOrXAG4ISo2qvo/3se8nAVmewejhUGj+2gP/wcAsMncpXqsHvKILSQmMBFrHEa7uNUw+Ob1ek5c5iA==}
+  /@pnpm/cli-utils@3.0.7(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-xca/+l2bsSZBm0qmpDk1N2sraTjBDSARFnxOGglDZCzo9bwryagUBoX5D86+Y3pIR2xochV+yJGi1zx6HZ4npw==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/cli-meta': 6.0.1
-      '@pnpm/config': 21.2.2(@pnpm/logger@5.0.0)
-      '@pnpm/default-reporter': 13.1.1(@pnpm/logger@5.0.0)
+      '@pnpm/config': 21.2.3(@pnpm/logger@5.0.0)
+      '@pnpm/default-reporter': 13.1.2(@pnpm/logger@5.0.0)
       '@pnpm/error': 6.0.1
       '@pnpm/logger': 5.0.0
       '@pnpm/manifest-utils': 6.0.2(@pnpm/logger@5.0.0)
@@ -32840,18 +32840,18 @@ packages:
       load-json-file: 6.2.0
     dev: false
 
-  /@pnpm/client@11.0.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2):
-    resolution: {integrity: sha512-Vg5S8iVKRnJuHZowpDL2UyRugGSTVKJtfta9ECDNFw+dtr9dWLZU0rkJK8gjkrGEk/2so6mE3TNJixfcp4Hfjg==}
+  /@pnpm/client@11.1.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3):
+    resolution: {integrity: sha512-I94UWLyUY654duVHjgU0jovn8Qp+EP5csx/A+/7kAp4HaekdsadUn0Eki3vIjiOGEiOEiZABUII+iW9mTmd7bw==}
     engines: {node: '>=18.12'}
     dependencies:
-      '@pnpm/default-resolver': 19.0.5(@pnpm/logger@5.0.0)
+      '@pnpm/default-resolver': 20.0.0(@pnpm/logger@5.0.0)
       '@pnpm/directory-fetcher': 8.0.2(@pnpm/logger@5.0.0)
       '@pnpm/fetch': 8.0.1(@pnpm/logger@5.0.0)
       '@pnpm/fetching-types': 6.0.0
-      '@pnpm/git-fetcher': 13.0.3(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+      '@pnpm/git-fetcher': 13.0.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@pnpm/network.auth-header': 3.0.1
       '@pnpm/resolver-base': 12.0.1
-      '@pnpm/tarball-fetcher': 19.0.3(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+      '@pnpm/tarball-fetcher': 19.0.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@pnpm/types': 10.1.0
       ramda: /@pnpm/ramda@0.28.1
     transitivePeerDependencies:
@@ -32883,8 +32883,8 @@ packages:
     engines: {node: '>=18.12'}
     dev: false
 
-  /@pnpm/config@21.2.2(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-PgjYp7bFQTClvyq1ap+iB1axlMmnmRB6ZG3YzCJk5BLbyQz5Ag2goL5iWUpLzayR3+zS+cbPajX00OXWusYddg==}
+  /@pnpm/config@21.2.3(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-RgnEkWE45AeVbYUdM23Ja/FHj2FWlCQKJk2Innrae/RuSEAoH7Foan4Vt+XoP+MqtkwqbCLBWcuyWMmeCcs6AA==}
     engines: {node: '>=18.12'}
     dependencies:
       '@pnpm/config.env-replace': 3.0.0
@@ -32893,7 +32893,7 @@ packages:
       '@pnpm/git-utils': 2.0.0
       '@pnpm/matcher': 6.0.0
       '@pnpm/npm-conf': 2.2.2
-      '@pnpm/pnpmfile': 6.0.2(@pnpm/logger@5.0.0)
+      '@pnpm/pnpmfile': 6.0.3(@pnpm/logger@5.0.0)
       '@pnpm/read-project-manifest': 6.0.2
       '@pnpm/types': 10.1.0
       better-path-resolve: 1.0.0
@@ -32933,14 +32933,14 @@ packages:
       '@pnpm/types': 10.1.0
     dev: false
 
-  /@pnpm/core@14.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5)(@yarnpkg/core@3.5.2):
-    resolution: {integrity: sha512-v9l3jwyTz6AIFFDilUtkmrDlsjiXkiB348Xom5xOYf0T6I8qgdaPES9WuqVvdZTnoUai8r56mDd1PDwJFOZ5uA==}
+  /@pnpm/core@14.1.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5)(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-sWVcr643K7TNvYfUHzuJGWgh10FK9bxWjdGd2KRax2Tf96fYpRxQH9m+yqsDUTgXQFtwqyfCvZ2LE+XGL92XZw==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
-      '@pnpm/worker': ^1.0.2
+      '@pnpm/worker': ^1.0.3
     dependencies:
-      '@pnpm/build-modules': 13.0.0(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+      '@pnpm/build-modules': 13.0.1(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       '@pnpm/builder.policy': 3.0.0
       '@pnpm/calc-dep-state': 7.0.0
       '@pnpm/constants': 8.0.0
@@ -32951,11 +32951,11 @@ packages:
       '@pnpm/error': 6.0.1
       '@pnpm/filter-lockfile': 9.0.5(@pnpm/logger@5.0.0)
       '@pnpm/get-context': 11.1.3(@pnpm/logger@5.0.0)
-      '@pnpm/headless': 23.1.3(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5)
+      '@pnpm/headless': 23.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5)
       '@pnpm/hoist': 9.1.3(@pnpm/logger@5.0.0)
       '@pnpm/hooks.read-package-hook': 4.0.3(@yarnpkg/core@3.5.2)
       '@pnpm/hooks.types': 2.0.1
-      '@pnpm/lifecycle': 17.0.3(@pnpm/logger@5.0.0)
+      '@pnpm/lifecycle': 17.0.4(@pnpm/logger@5.0.0)
       '@pnpm/link-bins': 10.0.2(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-file': 9.0.6(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-to-pnp': 4.1.3(@pnpm/logger@5.0.0)
@@ -32965,11 +32965,11 @@ packages:
       '@pnpm/logger': 5.0.0
       '@pnpm/manifest-utils': 6.0.2(@pnpm/logger@5.0.0)
       '@pnpm/matcher': 6.0.0
-      '@pnpm/modules-cleaner': 15.1.3(@pnpm/logger@5.0.0)
+      '@pnpm/modules-cleaner': 15.1.4(@pnpm/logger@5.0.0)
       '@pnpm/modules-yaml': 13.1.1
       '@pnpm/normalize-registries': 6.0.1
       '@pnpm/npm-package-arg': 1.0.0
-      '@pnpm/package-requester': 25.1.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+      '@pnpm/package-requester': 25.1.3(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@pnpm/parse-wanted-dependency': 6.0.0
       '@pnpm/pkg-manager.direct-dep-linker': 3.0.1(@pnpm/logger@5.0.0)
       '@pnpm/prune-lockfile': 6.0.2
@@ -32977,13 +32977,13 @@ packages:
       '@pnpm/read-package-json': 9.0.2
       '@pnpm/read-project-manifest': 6.0.2
       '@pnpm/remove-bins': 6.0.2(@pnpm/logger@5.0.0)
-      '@pnpm/resolve-dependencies': 33.0.0(@pnpm/logger@5.0.0)
+      '@pnpm/resolve-dependencies': 33.0.1(@pnpm/logger@5.0.0)
       '@pnpm/resolver-base': 12.0.1
-      '@pnpm/store-controller-types': 18.0.1
+      '@pnpm/store-controller-types': 18.1.0
       '@pnpm/symlink-dependency': 8.0.1(@pnpm/logger@5.0.0)
       '@pnpm/types': 10.1.0
       '@pnpm/which-version-is-pinned': 6.0.0
-      '@pnpm/worker': 1.0.2(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+      '@pnpm/worker': 1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       '@zkochan/rimraf': 2.1.3
       is-inner-link: 4.0.0
       load-json-file: 6.2.0
@@ -33005,18 +33005,18 @@ packages:
       - supports-color
     dev: false
 
-  /@pnpm/create-cafs-store@7.0.1(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-c2JyBvuOcnYn1Iulk3w8qYI782oRa2If+ho9JHNb3Tff63vUyY9qXUQm718qHcZIfgZE0auVz4AxQLeWqVsbjQ==}
+  /@pnpm/create-cafs-store@7.0.2(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-wt1xXAtVcCgS1PIRfng82vHJf37tOEdvHdDP0oSG0UYIq4Z2k+A11lStuKQKBiPjoNhnRbxJVbqWZtUHV0RgXg==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/exec.pkg-requires-build': 1.0.1
       '@pnpm/fetcher-base': 16.0.1
-      '@pnpm/fs.indexed-pkg-importer': 6.0.1(@pnpm/logger@5.0.0)
+      '@pnpm/fs.indexed-pkg-importer': 6.0.2(@pnpm/logger@5.0.0)
       '@pnpm/logger': 5.0.0
-      '@pnpm/store-controller-types': 18.0.1
-      '@pnpm/store.cafs': 3.0.1
+      '@pnpm/store-controller-types': 18.1.0
+      '@pnpm/store.cafs': 3.0.2
       mem: 8.1.1
       path-temp: 2.1.0
       ramda: /@pnpm/ramda@0.28.1
@@ -33050,13 +33050,13 @@ packages:
     engines: {node: '>=18.12'}
     dev: false
 
-  /@pnpm/default-reporter@13.1.1(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-gZu4Z5Vswn1wFo1LTS6nxtwLczw7vy+Xr6Vq06VajMkN6Y3LTfSAnap5MYHnDk0xLSmkhKgHBQ3KbQiMW7ZJMA==}
+  /@pnpm/default-reporter@13.1.2(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-jvh2eMCPA0jSGkyVk3XPModQrCy5WdLcbz8pBEHv5AQKhv69WSCpaRmdXRTkiSbk/AfxFbDX/7CnhJEPzWtOhA==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
-      '@pnpm/config': 21.2.2(@pnpm/logger@5.0.0)
+      '@pnpm/config': 21.2.3(@pnpm/logger@5.0.0)
       '@pnpm/core-loggers': 10.0.1(@pnpm/logger@5.0.0)
       '@pnpm/dedupe.issues-renderer': 2.0.0
       '@pnpm/dedupe.types': 2.0.0
@@ -33078,15 +33078,15 @@ packages:
       string-length: 4.0.2
     dev: false
 
-  /@pnpm/default-resolver@19.0.5(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-euZ7k5M21JlznjJoT106brbLjLD5Y5b30JJnRC+bewjC+dt+AYfwCNSCLH37qOxREU3wsTqe8z0ZVHIDgRqpmg==}
+  /@pnpm/default-resolver@20.0.0(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-cPpLlTTnRTvmT7zr1Z9Z+JWnyc5Pde6TFYr836hgw7/ZuqzctZReRbaNzXAb9y6skG83DCA6wTqVTC5VWH09Nw==}
     engines: {node: '>=18.12'}
     dependencies:
       '@pnpm/error': 6.0.1
       '@pnpm/fetching-types': 6.0.0
       '@pnpm/git-resolver': 9.0.2(@pnpm/logger@5.0.0)
       '@pnpm/local-resolver': 12.0.2(@pnpm/logger@5.0.0)
-      '@pnpm/npm-resolver': 19.0.4(@pnpm/logger@5.0.0)
+      '@pnpm/npm-resolver': 20.0.0(@pnpm/logger@5.0.0)
       '@pnpm/resolver-base': 12.0.1
       '@pnpm/tarball-resolver': 9.0.1
     transitivePeerDependencies:
@@ -33104,8 +33104,8 @@ packages:
       semver: 7.6.0
     dev: false
 
-  /@pnpm/deps.graph-builder@1.1.3(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-PDP3FNrGluxW7mloNf9DCV8o2FQebgRKMVzqpCvrhxyjgVAdyyFh5sRvBHQ79qVJD9JiFkO/4Wbzj4QwRZv4PQ==}
+  /@pnpm/deps.graph-builder@1.1.4(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-Zm5XbkVZjEbd4GP217cpbJFH9CnLkEnCvFcVJUavdQ2+2vfv+MMv5c6/VrkaeNr3ttxv6z0AtrXpVWEpC5rYXA==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -33118,7 +33118,7 @@ packages:
       '@pnpm/logger': 5.0.0
       '@pnpm/modules-yaml': 13.1.1
       '@pnpm/package-is-installable': 9.0.2(@pnpm/logger@5.0.0)
-      '@pnpm/store-controller-types': 18.0.1
+      '@pnpm/store-controller-types': 18.1.0
       '@pnpm/types': 10.1.0
       path-exists: 4.0.0
       ramda: /@pnpm/ramda@0.28.1
@@ -33254,8 +33254,8 @@ packages:
       '@pnpm/logger': 5.0.0
     dev: false
 
-  /@pnpm/fs.indexed-pkg-importer@6.0.1(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-kNQD0oZBfPxZihqGALkduZHX2oRUGGDlY9aonmdlBPQbfJHsZzWdxCMGWSVwHK9pstdBd+oZ2WuUL3YK6Nz9rA==}
+  /@pnpm/fs.indexed-pkg-importer@6.0.2(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-sPgl6nLERAtF8Q3kFath0Zlf5fPDov9gH99m1J6wTnK7uCC4MxOf2dt0PF14SdygU4sh011I/3/q8vqCvZSjWA==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -33263,7 +33263,7 @@ packages:
       '@pnpm/core-loggers': 10.0.1(@pnpm/logger@5.0.0)
       '@pnpm/graceful-fs': 4.0.0
       '@pnpm/logger': 5.0.0
-      '@pnpm/store-controller-types': 18.0.1
+      '@pnpm/store-controller-types': 18.1.0
       '@reflink/reflink': 0.1.16
       '@zkochan/rimraf': 2.1.3
       fs-extra: 11.2.0
@@ -33306,18 +33306,18 @@ packages:
       - supports-color
     dev: false
 
-  /@pnpm/git-fetcher@13.0.3(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2):
-    resolution: {integrity: sha512-fulZY12/DzgXtEKcNorlqN/vYy56VK5BguEOa95zGD9wmmwUnBhbbWKzv25WU2p0WnECse8DNqHePaov3P+8GQ==}
+  /@pnpm/git-fetcher@13.0.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3):
+    resolution: {integrity: sha512-zNQGHIPa+447WRI6+a9S6iKiQXkO8zEhdYeBpHRGIlPCWd80bHaGwfF8fhhS9+fqiPG0x5cVVDkaDv/lEaiQ5g==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
-      '@pnpm/worker': ^1.0.2
+      '@pnpm/worker': ^1.0.3
     dependencies:
       '@pnpm/fetcher-base': 16.0.1
       '@pnpm/fs.packlist': 2.0.0
       '@pnpm/logger': 5.0.0
-      '@pnpm/prepare-package': 6.0.3(@pnpm/logger@5.0.0)
-      '@pnpm/worker': 1.0.2(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+      '@pnpm/prepare-package': 6.0.4(@pnpm/logger@5.0.0)
+      '@pnpm/worker': 1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       '@zkochan/rimraf': 2.1.3
       execa: /safe-execa@0.1.2
     transitivePeerDependencies:
@@ -33353,41 +33353,41 @@ packages:
       graceful-fs: 4.2.11
     dev: false
 
-  /@pnpm/headless@23.1.3(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5):
-    resolution: {integrity: sha512-chkaRMEuqN436fVIn9qrL2c8BC5PF8TzCAC0TAIAB5sStu0yIxnh03erxAbiADtQFZ37Nkyq4/B6o5BZwdnlAg==}
+  /@pnpm/headless@23.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5):
+    resolution: {integrity: sha512-AY/kiQ9yKy6SYWU0HF2IEZYsvxMiUL84MJZ9yBQ+VQmgFZzGWFwpuTBCINlkhUXJ3pcOEPq2mr3uG3rfcYG3vA==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
-      '@pnpm/worker': ^1.0.2
+      '@pnpm/worker': ^1.0.3
     dependencies:
-      '@pnpm/build-modules': 13.0.0(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+      '@pnpm/build-modules': 13.0.1(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       '@pnpm/builder.policy': 3.0.0
       '@pnpm/calc-dep-state': 7.0.0
       '@pnpm/constants': 8.0.0
       '@pnpm/core-loggers': 10.0.1(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path': 5.0.0
-      '@pnpm/deps.graph-builder': 1.1.3(@pnpm/logger@5.0.0)
+      '@pnpm/deps.graph-builder': 1.1.4(@pnpm/logger@5.0.0)
       '@pnpm/error': 6.0.1
       '@pnpm/filter-lockfile': 9.0.5(@pnpm/logger@5.0.0)
       '@pnpm/hoist': 9.1.3(@pnpm/logger@5.0.0)
-      '@pnpm/lifecycle': 17.0.3(@pnpm/logger@5.0.0)
+      '@pnpm/lifecycle': 17.0.4(@pnpm/logger@5.0.0)
       '@pnpm/link-bins': 10.0.2(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-file': 9.0.6(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-to-pnp': 4.1.3(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-utils': 11.0.0
       '@pnpm/logger': 5.0.0
-      '@pnpm/modules-cleaner': 15.1.3(@pnpm/logger@5.0.0)
+      '@pnpm/modules-cleaner': 15.1.4(@pnpm/logger@5.0.0)
       '@pnpm/modules-yaml': 13.1.1
       '@pnpm/package-is-installable': 9.0.2(@pnpm/logger@5.0.0)
-      '@pnpm/package-requester': 25.1.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+      '@pnpm/package-requester': 25.1.3(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@pnpm/pkg-manager.direct-dep-linker': 3.0.1(@pnpm/logger@5.0.0)
       '@pnpm/read-package-json': 9.0.2
       '@pnpm/read-project-manifest': 6.0.2
       '@pnpm/real-hoist': 3.0.4
-      '@pnpm/store-controller-types': 18.0.1
+      '@pnpm/store-controller-types': 18.1.0
       '@pnpm/symlink-dependency': 8.0.1(@pnpm/logger@5.0.0)
       '@pnpm/types': 10.1.0
-      '@pnpm/worker': 1.0.2(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+      '@pnpm/worker': 1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       '@zkochan/rimraf': 2.1.3
       p-limit: 3.1.0
       path-absolute: 1.0.1
@@ -33455,8 +33455,8 @@ packages:
       lru-cache: 6.0.0
     dev: false
 
-  /@pnpm/lifecycle@17.0.3(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-AXaBMbBDB8RUelFNIu+G2h9A7NYo1mYO9uiKOuRTSWWXULFgdGdblKgG47iqSPqzIMl/hoEHC/8UUbOpOmtz2Q==}
+  /@pnpm/lifecycle@17.0.4(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-JB9/3Zi/x79INOhtFNLokKTnDmsM92i+xKeXwO/gnxYJ7AywYb130z/1qLe/H1F+hFpx3o6ibL7pro8ADbg8Bg==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -33468,7 +33468,7 @@ packages:
       '@pnpm/logger': 5.0.0
       '@pnpm/npm-lifecycle': 3.0.4
       '@pnpm/read-package-json': 9.0.2
-      '@pnpm/store-controller-types': 18.0.1
+      '@pnpm/store-controller-types': 18.1.0
       '@pnpm/types': 10.1.0
       is-windows: 1.0.2
       path-exists: 4.0.0
@@ -33675,8 +33675,8 @@ packages:
       semver: 7.6.0
     dev: false
 
-  /@pnpm/modules-cleaner@15.1.3(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-tRw8VPZw5l4lPRh+TKhZ6flfETW+L5Kk3r6tSQ5n8iwcEj2o6SUV+kEt6ZdgerTnzfO4MgRc5UAZ4JWfNKcI8w==}
+  /@pnpm/modules-cleaner@15.1.4(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-jcBXLnW2Z7Z0zHtoNKXZ+VBbsT0ZIUXD1/XZtt9qhCn6PM+ZuuU+6gMt31vE9YjJxWskDsmC7JM9IzB/Tr3rPw==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -33689,7 +33689,7 @@ packages:
       '@pnpm/logger': 5.0.0
       '@pnpm/read-modules-dir': 7.0.0
       '@pnpm/remove-bins': 6.0.2(@pnpm/logger@5.0.0)
-      '@pnpm/store-controller-types': 18.0.1
+      '@pnpm/store-controller-types': 18.1.0
       '@pnpm/types': 10.1.0
       '@zkochan/rimraf': 2.1.3
       ramda: /@pnpm/ramda@0.28.1
@@ -33838,8 +33838,8 @@ packages:
       validate-npm-package-name: 4.0.0
     dev: false
 
-  /@pnpm/npm-resolver@19.0.4(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-PuZUQICgAuwE0/kl/uhemmu9nPSDnDDMUmrj45+ZVUmo9ZBzVFJqDRkJgCwxw/u9lI4RVSjAAc0Cxf4nXnfhHQ==}
+  /@pnpm/npm-resolver@20.0.0(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-lH3hrln2jjKOgs0Uidu+hJE3vSVufnrRFwlW6CN9HnD+wMqsVYmURa1cIrqaCUOUdHL5PiWndL8d+6P/uw2BMw==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -33896,12 +33896,12 @@ packages:
       semver: 7.6.0
     dev: false
 
-  /@pnpm/package-requester@25.1.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2):
-    resolution: {integrity: sha512-yAl6wnPvYn1/zEem2wqn+Sq8yAIT4iia3PItCKMOAoaeguGOukRbFaRm4zZqadqRUt0aWW0XIX/fog67Ju6mXQ==}
+  /@pnpm/package-requester@25.1.3(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3):
+    resolution: {integrity: sha512-tPoSSfQbFm5w1PvC4+CS9Le8wv9nhkkSGnjK/PrtuyihSH7Ma56zyq1o/8PTIyEgzjlP2G7kGetajyn0+q9oyA==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
-      '@pnpm/worker': ^1.0.2
+      '@pnpm/worker': ^1.0.3
     dependencies:
       '@pnpm/core-loggers': 10.0.1(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path': 5.0.0
@@ -33913,10 +33913,10 @@ packages:
       '@pnpm/pick-fetcher': 3.0.0
       '@pnpm/read-package-json': 9.0.2
       '@pnpm/resolver-base': 12.0.1
-      '@pnpm/store-controller-types': 18.0.1
-      '@pnpm/store.cafs': 3.0.1
+      '@pnpm/store-controller-types': 18.1.0
+      '@pnpm/store.cafs': 3.0.2
       '@pnpm/types': 10.1.0
-      '@pnpm/worker': 1.0.2(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+      '@pnpm/worker': 1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       p-defer: 3.0.0
       p-limit: 3.1.0
       p-queue: 6.6.2
@@ -33926,22 +33926,22 @@ packages:
       ssri: 10.0.5
     dev: false
 
-  /@pnpm/package-store@20.1.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2):
-    resolution: {integrity: sha512-dM03iOmwPCSsiDUf9A7ouR+96GnBgoYYAforpj/vKxb5CmiNT1W7jNJUUVWn6ui6LUIs45miRUfU4+aywa3IgQ==}
+  /@pnpm/package-store@20.2.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3):
+    resolution: {integrity: sha512-e7oA2o6SqGnV+NHoFX4cNW34cBuFNDoBbB33Re4aPoG7Q9s3gIm0ZoP49sT1pZ9R4jfMAeSZLrRqeBVY6MFjUQ==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
-      '@pnpm/worker': ^1.0.2
+      '@pnpm/worker': ^1.0.3
     dependencies:
-      '@pnpm/create-cafs-store': 7.0.1(@pnpm/logger@5.0.0)
+      '@pnpm/create-cafs-store': 7.0.2(@pnpm/logger@5.0.0)
       '@pnpm/fetcher-base': 16.0.1
       '@pnpm/logger': 5.0.0
-      '@pnpm/package-requester': 25.1.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+      '@pnpm/package-requester': 25.1.3(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@pnpm/resolver-base': 12.0.1
-      '@pnpm/store-controller-types': 18.0.1
-      '@pnpm/store.cafs': 3.0.1
+      '@pnpm/store-controller-types': 18.1.0
+      '@pnpm/store.cafs': 3.0.2
       '@pnpm/types': 10.1.0
-      '@pnpm/worker': 1.0.2(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+      '@pnpm/worker': 1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       '@zkochan/rimraf': 2.1.3
       load-json-file: 6.2.0
       ramda: /@pnpm/ramda@0.28.1
@@ -34019,21 +34019,21 @@ packages:
       resolve-link-target: 2.0.0
     dev: false
 
-  /@pnpm/plugin-commands-publishing@8.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2):
-    resolution: {integrity: sha512-azdFgPNsiSBv2Qe63G5h8T54wAf46QQ4m6itCuwhWdD/nRuEnmqcvtNz/DeTdd3pDl/tr0KWrEvZ6VdTqRWWXw==}
+  /@pnpm/plugin-commands-publishing@8.1.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3):
+    resolution: {integrity: sha512-Wn+sZM0/maAWaE+tg6dJ5ninSx4Pb9+s96UKKgI/wQFtOuUUPZneNs4MX3aI6fQnKMzFzb2duJLhBa4G3JwAiQ==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
-      '@pnpm/cli-utils': 3.0.6(@pnpm/logger@5.0.0)
-      '@pnpm/client': 11.0.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+      '@pnpm/cli-utils': 3.0.7(@pnpm/logger@5.0.0)
+      '@pnpm/client': 11.1.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@pnpm/common-cli-options-help': 2.0.0
-      '@pnpm/config': 21.2.2(@pnpm/logger@5.0.0)
+      '@pnpm/config': 21.2.3(@pnpm/logger@5.0.0)
       '@pnpm/error': 6.0.1
       '@pnpm/exportable-manifest': 6.0.2
       '@pnpm/fs.packlist': 2.0.0
       '@pnpm/git-utils': 2.0.0
-      '@pnpm/lifecycle': 17.0.3(@pnpm/logger@5.0.0)
+      '@pnpm/lifecycle': 17.0.4(@pnpm/logger@5.0.0)
       '@pnpm/logger': 5.0.0
       '@pnpm/network.auth-header': 3.0.1
       '@pnpm/package-bins': 9.0.1
@@ -34059,24 +34059,24 @@ packages:
       - supports-color
     dev: false
 
-  /@pnpm/plugin-commands-rebuild@11.1.4(@pnpm/logger@5.0.0)(@types/node@20.2.5):
-    resolution: {integrity: sha512-0EeN/QJGX/6lOCC5H9tc+Ij86OeDfmkvgJ8BtT5JRDhzUKHSI2fxTcrFsbOEdzGf52Y+3i7m7xsht5Vx7OKB3g==}
+  /@pnpm/plugin-commands-rebuild@11.1.5(@pnpm/logger@5.0.0)(@types/node@20.2.5):
+    resolution: {integrity: sha512-pBThvlmIz3A2cyU/GaZ+jCNnMkIJQpvwxBBgX6duGjdKc6oKfywOZhTx19r24U07mi5/cdgVZdBRtLab0WPJyw==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/builder.policy': 3.0.0
       '@pnpm/calc-dep-state': 7.0.0
-      '@pnpm/cli-utils': 3.0.6(@pnpm/logger@5.0.0)
+      '@pnpm/cli-utils': 3.0.7(@pnpm/logger@5.0.0)
       '@pnpm/common-cli-options-help': 2.0.0
-      '@pnpm/config': 21.2.2(@pnpm/logger@5.0.0)
+      '@pnpm/config': 21.2.3(@pnpm/logger@5.0.0)
       '@pnpm/constants': 8.0.0
       '@pnpm/core-loggers': 10.0.1(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path': 5.0.0
       '@pnpm/deps.graph-sequencer': 2.0.1
       '@pnpm/error': 6.0.1
       '@pnpm/get-context': 11.1.3(@pnpm/logger@5.0.0)
-      '@pnpm/lifecycle': 17.0.3(@pnpm/logger@5.0.0)
+      '@pnpm/lifecycle': 17.0.4(@pnpm/logger@5.0.0)
       '@pnpm/link-bins': 10.0.2(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-types': 7.0.0
       '@pnpm/lockfile-utils': 11.0.0
@@ -34086,12 +34086,12 @@ packages:
       '@pnpm/normalize-registries': 6.0.1
       '@pnpm/npm-package-arg': 1.0.0
       '@pnpm/sort-packages': 6.0.2
-      '@pnpm/store-connection-manager': 8.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
-      '@pnpm/store-controller-types': 18.0.1
-      '@pnpm/store.cafs': 3.0.1
+      '@pnpm/store-connection-manager': 8.2.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
+      '@pnpm/store-controller-types': 18.1.0
+      '@pnpm/store.cafs': 3.0.2
       '@pnpm/types': 10.1.0
-      '@pnpm/worker': 1.0.2(@pnpm/logger@5.0.0)(@types/node@20.2.5)
-      '@pnpm/workspace.find-packages': 2.0.6(@pnpm/logger@5.0.0)
+      '@pnpm/worker': 1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+      '@pnpm/workspace.find-packages': 2.0.7(@pnpm/logger@5.0.0)
       load-json-file: 6.2.0
       mem: 8.1.1
       p-limit: 3.1.0
@@ -34105,8 +34105,8 @@ packages:
       - supports-color
     dev: false
 
-  /@pnpm/pnpmfile@6.0.2(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-E5mC7uyZNItyvenkiZjYPJCsUoFBEIf+6YYYrmhf9fmJj6BHNnOZ5vvR1Nf8li2s66Smu4Iwh6HDpkt9dCPz9g==}
+  /@pnpm/pnpmfile@6.0.3(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-tQ7Ci200LTLMeF9P+rPyVuQ0ukiF8MY0I2dhtijafhyxm5M7jGh4+B3h+otr48nLEVOPlNjodxZF9wK2P0daQw==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -34117,18 +34117,18 @@ packages:
       '@pnpm/hooks.types': 2.0.1
       '@pnpm/lockfile-types': 7.0.0
       '@pnpm/logger': 5.0.0
-      '@pnpm/store-controller-types': 18.0.1
+      '@pnpm/store-controller-types': 18.1.0
       '@pnpm/types': 10.1.0
       chalk: 4.1.2
       path-absolute: 1.0.1
     dev: false
 
-  /@pnpm/prepare-package@6.0.3(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-o20s5KgBbKL1FNOz8dRVn/9PnzpReoukn6E2x/TZfmnb7eY4qlcWX4I5mWP8qB8ReZYz6G1110wSqGNYIwld2g==}
+  /@pnpm/prepare-package@6.0.4(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-VG1+T4V1gnP6uteH6DeiyoRFpELlXKf+yFTCjqUED9pH/7WCoblrgyhNsD2f77483FW3T4xSyFvpFxiibqBCLA==}
     engines: {node: '>=18.12'}
     dependencies:
       '@pnpm/error': 6.0.1
-      '@pnpm/lifecycle': 17.0.3(@pnpm/logger@5.0.0)
+      '@pnpm/lifecycle': 17.0.4(@pnpm/logger@5.0.0)
       '@pnpm/read-package-json': 9.0.2
       '@pnpm/types': 10.1.0
       '@zkochan/rimraf': 2.1.3
@@ -34267,8 +34267,8 @@ packages:
       semver: 7.6.0
     dev: false
 
-  /@pnpm/resolve-dependencies@33.0.0(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-22Fd+2GrE1U24LmDANByIKq+FlbDc3TgbXeVuWeT3OdOEVJfTjeNGPA8iovjgeduQ0JK2XPuIDfMiqhJoJQWgg==}
+  /@pnpm/resolve-dependencies@33.0.1(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-EQIyueT+QKK4OOziwr9FQYKNepuWpAID02y9nH9vmee7mg4IM4nSgLwSA1OK8LQpshTZH6YoebV5mMz8TFl91A==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -34282,13 +34282,13 @@ packages:
       '@pnpm/lockfile.preferred-versions': 1.0.4(@pnpm/logger@5.0.0)
       '@pnpm/logger': 5.0.0
       '@pnpm/manifest-utils': 6.0.2(@pnpm/logger@5.0.0)
-      '@pnpm/npm-resolver': 19.0.4(@pnpm/logger@5.0.0)
+      '@pnpm/npm-resolver': 20.0.0(@pnpm/logger@5.0.0)
       '@pnpm/pick-fetcher': 3.0.0
       '@pnpm/pick-registry-for-package': 6.0.1
       '@pnpm/prune-lockfile': 6.0.2
       '@pnpm/read-package-json': 9.0.2
       '@pnpm/resolver-base': 12.0.1
-      '@pnpm/store-controller-types': 18.0.1
+      '@pnpm/store-controller-types': 18.1.0
       '@pnpm/types': 10.1.0
       '@pnpm/which-version-is-pinned': 6.0.0
       '@pnpm/workspace.spec-parser': 1.0.0
@@ -34364,15 +34364,15 @@ packages:
     engines: {node: '>=8.15'}
     dev: false
 
-  /@pnpm/server@18.1.1(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-s+MUYzF1NWu5ZA+x6CbmRXGYDjSZg2vzQoyzx9A+QolUjb8RT6/iLdWdnHmWnQkTHZlpONPR0wi+1yLcLoxowA==}
+  /@pnpm/server@18.2.0(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-93VSCEg/M1eDieMCI6HlLJq3ojyOVVZYX9uifdV/TAhKtLYMSdsvdgNY8zQHGCDC4nBFz9kAUHVC+4s4rLfKsA==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/fetch': 8.0.1(@pnpm/logger@5.0.0)
       '@pnpm/logger': 5.0.0
-      '@pnpm/store-controller-types': 18.0.1
+      '@pnpm/store-controller-types': 18.1.0
       '@pnpm/types': 10.1.0
       p-limit: 3.1.0
       promise-share: 1.0.0
@@ -34390,19 +34390,19 @@ packages:
       '@pnpm/types': 10.1.0
     dev: false
 
-  /@pnpm/store-connection-manager@8.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2):
-    resolution: {integrity: sha512-e1oE2jhmRgwT0mLzUPxto7Z4TroukJsqhAA4CVkbXegRAnnBU78/5aycW1i9yOO7hnoQqHpPw9g+smXYOkfiug==}
+  /@pnpm/store-connection-manager@8.2.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3):
+    resolution: {integrity: sha512-N3apCZe0hbXZK5CvLisjRnGonfd2+Q/eGGeuR+39rBFkTTUMaUwxuZ66lKxNzLRjo7ydGE3FFBohlHTBtOBZJQ==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/cli-meta': 6.0.1
-      '@pnpm/client': 11.0.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
-      '@pnpm/config': 21.2.2(@pnpm/logger@5.0.0)
+      '@pnpm/client': 11.1.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
+      '@pnpm/config': 21.2.3(@pnpm/logger@5.0.0)
       '@pnpm/error': 6.0.1
       '@pnpm/logger': 5.0.0
-      '@pnpm/package-store': 20.1.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
-      '@pnpm/server': 18.1.1(@pnpm/logger@5.0.0)
+      '@pnpm/package-store': 20.2.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
+      '@pnpm/server': 18.2.0(@pnpm/logger@5.0.0)
       '@pnpm/store-path': 9.0.1
       '@zkochan/diable': 1.0.2
       delay: 5.0.0
@@ -34413,8 +34413,8 @@ packages:
       - supports-color
     dev: false
 
-  /@pnpm/store-controller-types@18.0.1:
-    resolution: {integrity: sha512-j3/Krr0YgfJdOXk6TjpY2rpyUtZgHdaPEzAHC/u2doyU4gVQ7941QTg9giWJvFKEQYiTjBDQ5vC+1gHivbksjQ==}
+  /@pnpm/store-controller-types@18.1.0:
+    resolution: {integrity: sha512-3FvgGtnWlKlC8CztqMqT5w2VTdOjKCu1ZrH+d5xFuVHyb2weIz9hxQo/3VHT+qdcN8O7q+rpzRgh3YtgO+r+tA==}
     engines: {node: '>=18.12'}
     dependencies:
       '@pnpm/fetcher-base': 16.0.1
@@ -34435,13 +34435,13 @@ packages:
       touch: 3.1.0
     dev: false
 
-  /@pnpm/store.cafs@3.0.1:
-    resolution: {integrity: sha512-BR8ALUuIEvlKPFi5/DN3otoiW8unGqIeaqJkjVFttP8P43gmt3qCNgwBdSlpos0ra5nn31sQYQrvqRz9rXFYzw==}
+  /@pnpm/store.cafs@3.0.2:
+    resolution: {integrity: sha512-WrrJsCsHnGtBdhi/cRFVs0lXp6zESDw3Q9yiExchp+WYX1yUKqMfmPrJ6i9hjhZorw9c54azh6M8c14kwQg4fQ==}
     engines: {node: '>=18.12'}
     dependencies:
       '@pnpm/fetcher-base': 16.0.1
       '@pnpm/graceful-fs': 4.0.0
-      '@pnpm/store-controller-types': 18.0.1
+      '@pnpm/store-controller-types': 18.1.0
       '@zkochan/rimraf': 2.1.3
       is-gzip: 2.0.0
       p-limit: 3.1.0
@@ -34462,12 +34462,12 @@ packages:
       symlink-dir: 6.0.0
     dev: false
 
-  /@pnpm/tarball-fetcher@19.0.3(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2):
-    resolution: {integrity: sha512-iXYe9sZ25W02Fx9bNlEFV8Bltl8YE/dgt3PHepZsxfMDS6Vh984OQVoyypJrrOBv2rvF5Vary6TOn/FqtvQOcQ==}
+  /@pnpm/tarball-fetcher@19.0.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3):
+    resolution: {integrity: sha512-7QgPBuNzOeulCxJFi18PjmfcBy8BreqLyFY8ICZIvwH29EGTzx7c7Eypc9us5V5bu9ZvjyvEYjSseoiciMxUMA==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
-      '@pnpm/worker': ^1.0.2
+      '@pnpm/worker': ^1.0.3
     dependencies:
       '@pnpm/core-loggers': 10.0.1(@pnpm/logger@5.0.0)
       '@pnpm/error': 6.0.1
@@ -34476,8 +34476,8 @@ packages:
       '@pnpm/fs.packlist': 2.0.0
       '@pnpm/graceful-fs': 4.0.0
       '@pnpm/logger': 5.0.0
-      '@pnpm/prepare-package': 6.0.3(@pnpm/logger@5.0.0)
-      '@pnpm/worker': 1.0.2(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+      '@pnpm/prepare-package': 6.0.4(@pnpm/logger@5.0.0)
+      '@pnpm/worker': 1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       '@zkochan/retry': 0.2.0
       lodash.throttle: 4.1.1
       p-map-values: 1.0.0
@@ -34520,20 +34520,20 @@ packages:
       semver-utils: 1.1.4
     dev: false
 
-  /@pnpm/worker@1.0.2(@pnpm/logger@5.0.0)(@types/node@20.2.5):
-    resolution: {integrity: sha512-SdKjLE76pNo32LWVekMQgma5OXs5NM/LZhznjIW2BUw2ZefvXGtCGG0i37K6EREDwR9T+H4ekqXmVBNBsPYyPg==}
+  /@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5):
+    resolution: {integrity: sha512-SsSDHu465Z+uGVcAp/tbknSvY1o8vhQfMUWPEtqKVzicxVSft0uBv7CC7AnXP9FYJl2afjPB2iz3tDDV4nwR1A==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/cafs-types': 5.0.0
-      '@pnpm/create-cafs-store': 7.0.1(@pnpm/logger@5.0.0)
+      '@pnpm/create-cafs-store': 7.0.2(@pnpm/logger@5.0.0)
       '@pnpm/error': 6.0.1
       '@pnpm/exec.pkg-requires-build': 1.0.1
       '@pnpm/fs.hard-link-dir': 4.0.0(@pnpm/logger@5.0.0)
       '@pnpm/graceful-fs': 4.0.0
       '@pnpm/logger': 5.0.0
-      '@pnpm/store.cafs': 3.0.1
+      '@pnpm/store.cafs': 3.0.2
       '@pnpm/symlink-dependency': 8.0.1(@pnpm/logger@5.0.0)
       '@rushstack/worker-pool': 0.4.9(@types/node@20.2.5)
       load-json-file: 6.2.0
@@ -34541,13 +34541,13 @@ packages:
       - '@types/node'
     dev: false
 
-  /@pnpm/workspace.find-packages@2.0.6(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-5tJPY7HzKDKhl2+L4wEVwEnWytb2BiYwtD6H25ZIiTe01IyBJlWlUpwvJi9FJtMq6xuTZ3mEoBL5+oTqtL4fIw==}
+  /@pnpm/workspace.find-packages@2.0.7(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-Nsjpby7gbmFvIaZM+dEBIo7mwGYweEoVM8FojUaohhcGbeB8xQ/1iqof5ApZEWwQ7BhKlDZEVRErrdj3ZX6Y/w==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
-      '@pnpm/cli-utils': 3.0.6(@pnpm/logger@5.0.0)
+      '@pnpm/cli-utils': 3.0.7(@pnpm/logger@5.0.0)
       '@pnpm/fs.find-packages': 3.0.2
       '@pnpm/logger': 5.0.0
       '@pnpm/types': 10.1.0
@@ -34555,12 +34555,12 @@ packages:
       '@pnpm/workspace.read-manifest': 2.0.1
     dev: false
 
-  /@pnpm/workspace.pkgs-graph@3.0.4(@pnpm/logger@5.0.0):
-    resolution: {integrity: sha512-wtbnhQDM/vDB1q6XxkcL5A4t/cdcoqMVXQLzK8tyJWBBRchoPeyLOA7WpVaILZlpl+ytIcoRIXFfLntUPGfdkQ==}
+  /@pnpm/workspace.pkgs-graph@3.0.5(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-dCjeG47dkVWMLwj15g8ffuMt4R4+L4uBbhckYZ9Na22hHIAZzEIHp6bdGnBkljyF52p8Sd1WniovipmklDX1tg==}
     engines: {node: '>=18.12'}
     dependencies:
       '@pnpm/npm-package-arg': 1.0.0
-      '@pnpm/npm-resolver': 19.0.4(@pnpm/logger@5.0.0)
+      '@pnpm/npm-resolver': 20.0.0(@pnpm/logger@5.0.0)
       '@pnpm/resolve-workspace-range': 6.0.0
       '@pnpm/types': 10.1.0
       ramda: /@pnpm/ramda@0.28.1
@@ -76521,7 +76521,7 @@ packages:
       semver: 7.5.2
     dev: false
 
-  file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2):
+  file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5)(@types/react@17.0.75)(@yarnpkg/core@3.5.2)(react@17.0.2):
     resolution: {directory: scopes/dependencies/dependency-resolver, type: directory}
     id: file:scopes/dependencies/dependency-resolver
     name: '@teambit/dependency-resolver'
@@ -76530,7 +76530,7 @@ packages:
       react: ^17.0.0 || ^18.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@pnpm/core': 14.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
+      '@pnpm/core': 14.1.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
       '@pnpm/network.ca-file': 3.0.0
       '@pnpm/types': 10.1.0
       '@teambit/bit-error': 0.0.404
@@ -76594,25 +76594,25 @@ packages:
       react: ^17.0.0 || ^18.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@pnpm/client': 11.0.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
-      '@pnpm/config': 21.2.2(@pnpm/logger@5.0.0)
-      '@pnpm/core': 14.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
-      '@pnpm/default-reporter': 13.1.1(@pnpm/logger@5.0.0)
+      '@pnpm/client': 11.1.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
+      '@pnpm/config': 21.2.3(@pnpm/logger@5.0.0)
+      '@pnpm/core': 14.1.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@types/node@20.2.5)(@yarnpkg/core@3.5.2)
+      '@pnpm/default-reporter': 13.1.2(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path': 5.0.0
       '@pnpm/error': 6.0.1
       '@pnpm/list': 10.1.3(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-file': 9.0.6(@pnpm/logger@5.0.0)
       '@pnpm/logger': 5.0.0
       '@pnpm/modules-yaml': 13.1.1
-      '@pnpm/package-store': 20.1.2(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+      '@pnpm/package-store': 20.2.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@pnpm/pick-registry-for-package': 6.0.1
-      '@pnpm/plugin-commands-rebuild': 11.1.4(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+      '@pnpm/plugin-commands-rebuild': 11.1.5(@pnpm/logger@5.0.0)(@types/node@20.2.5)
       '@pnpm/reviewing.dependencies-hierarchy': 3.1.3(@pnpm/logger@5.0.0)
       '@pnpm/sort-packages': 6.0.2
-      '@pnpm/store-connection-manager': 8.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+      '@pnpm/store-connection-manager': 8.2.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@pnpm/types': 10.1.0
-      '@pnpm/worker': 1.0.2(@pnpm/logger@5.0.0)(@types/node@20.2.5)
-      '@pnpm/workspace.pkgs-graph': 3.0.4(@pnpm/logger@5.0.0)
+      '@pnpm/worker': 1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5)
+      '@pnpm/workspace.pkgs-graph': 3.0.5(@pnpm/logger@5.0.0)
       '@teambit/bit-error': 0.0.404
       '@teambit/dependencies.aspect-docs.pnpm': file:scopes/dependencies/aspect-docs/pnpm(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
@@ -78069,7 +78069,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2):
+  file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)(@testing-library/react@12.1.5)(@types/react@17.0.75)(react@17.0.2):
     resolution: {directory: scopes/pkg/pkg, type: directory}
     id: file:scopes/pkg/pkg
     name: '@teambit/pkg'
@@ -78078,7 +78078,7 @@ packages:
       react: ^17.0.0 || ^18.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@pnpm/plugin-commands-publishing': 8.1.4(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.2)
+      '@pnpm/plugin-commands-publishing': 8.1.5(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3)
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.0
       '@teambit/component-issues': file:components/component-issues
