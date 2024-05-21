@@ -326,11 +326,11 @@ export class EnvsMain {
     }
     const parentStr = readFileSync(parentEnvJsoncPath).toString('utf8');
     const parentObject: EnvJsonc = parse(parentStr, undefined, true);
-    const mergedObjects = this.mergeEnvManifests(parentObject, object);
-    if (mergedObjects.extends) {
-      return this.recursivelyMergeWithParentManifest(mergedObjects, parentEnvJsoncPath);
+    const mergedObject = this.mergeEnvManifests(parentObject, object);
+    if (mergedObject.extends) {
+      return this.recursivelyMergeWithParentManifest(mergedObject, parentEnvJsoncPath);
     }
-    return object;
+    return mergedObject;
   }
 
   mergeEnvManifests(parent: EnvJsonc, child: EnvJsonc): EnvJsonc {

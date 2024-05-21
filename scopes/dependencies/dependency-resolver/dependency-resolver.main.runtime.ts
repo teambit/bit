@@ -6,7 +6,7 @@ import { getRelativeRootComponentDir } from '@teambit/bit-roots';
 import { ComponentAspect, Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
-import { compact, get, pick, uniq, omit } from 'lodash';
+import { compact, get, pick, uniq, omit, cloneDeep } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect } from '@teambit/envs';
 import type { DependenciesEnv, EnvDefinition, EnvJsonc, EnvsMain } from '@teambit/envs';
@@ -1024,16 +1024,16 @@ export class DependencyResolverMain {
   mergeEnvManifestPolicy(parent: EnvJsonc, child: EnvJsonc): Object {
     const policy = {};
     ['peers', 'dev', 'runtime'].forEach((key) => {
-      policy[key] = parent.policy?.[key] || [];
-      const childEntries = child.policy?.[key] || [];
+      policy[key] = cloneDeep(parent.policy?.[key] || []);
+      const childEntries = cloneDeep(child.policy?.[key] || []);
 
       policy[key] = policy[key].filter((entry) => {
-        return !childEntries.find((childEntry) => {
+        const foundChildEntry = childEntries.find((childEntry) => {
           return childEntry.name === entry.name;
         });
+        return !foundChildEntry;
       });
       policy[key] = policy[key].concat(childEntries);
-
       policy[key] = policy[key].filter((entry) => {
         return entry.version !== '-';
       });
