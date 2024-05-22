@@ -230,7 +230,7 @@ commands: # reusable commands
           name: Install pnpm
           command: >
             npm config set prefix '~/.npm-global' &&
-            npm install --global pnpm@8.10.4 &&
+            npm install --global pnpm@9.1.2 &&
             echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
 
   compress_bit:
@@ -677,6 +677,7 @@ jobs:
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values linux --values linux &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm add @teambit/bit
       - compress_bit
       - run:
@@ -723,6 +724,7 @@ jobs:
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values darwin --values darwin &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm add @teambit/bit
       - compress_bit
       - run:
@@ -771,6 +773,7 @@ jobs:
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values win32 --values win32 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.neverBuiltDependencies --values cpu-features --values ssh2 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm add @teambit/bit
       - compress_bit
       - run:
