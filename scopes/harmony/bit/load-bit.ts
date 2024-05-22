@@ -6,6 +6,8 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
+process.env.BROWSERSLIST_IGNORE_OLD_DATA = 'true';
+
 import './hook-require';
 
 import {
