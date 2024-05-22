@@ -244,6 +244,12 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       // exact version, expect the entered version to be okay.
       return compId;
     }
+    if (this.laneObj) {
+      // for "update-dependents" feature, we need the components from update-dependents prop of the lane to have get
+      // the updated versions of the dependencies from the lane.
+      const fromLane = this.laneObj.getCompHeadIncludeUpdateDependents(compId);
+      if (fromLane) return compId.changeVersion(fromLane.toString());
+    }
     return this.snapping.getCompIdWithExactVersionAccordingToSemver(compId);
   }
 
