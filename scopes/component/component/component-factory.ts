@@ -184,6 +184,11 @@ export interface ComponentFactory {
   isModified(component: Component): Promise<boolean>;
 
   /**
+   * whether the component exists on the remote.
+   */
+  isExported(componentId: ComponentID): boolean;
+
+  /**
    * write the component to the filesystem when applicable (no-op for scope).
    * to change the component-path, specify the "rootPath", which should be a relative path inside the workspace.
    */

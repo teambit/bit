@@ -80,10 +80,9 @@ to see the legacy bit show, please use "--legacy" flag`);
     const table = new CLITable([], compact(rows));
     const renderedTable = table.render();
     if (browser) {
-      // TODO: change to check if it's exported instead of if it's new
-      const isNew = await component.isNew();
-      if (isNew) {
-        this.logger.consoleWarning(`unable to open browser, the component ${idStr} is not tagged yet`);
+      const isExported = component.isExported();
+      if (!isExported) {
+        this.logger.consoleWarning(`unable to open the browser, the component "${idStr}" has not been exported yet`);
         return renderedTable;
       }
       const homepageUrl = component.homepage;

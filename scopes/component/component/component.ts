@@ -227,6 +227,13 @@ export class Component implements IComponent {
     return Promise.resolve(this.head === null);
   }
 
+  /**
+   * whether the component exists on the remote.
+   */
+  isExported(): boolean {
+    return this.factory.isExported(this.id);
+  }
+
   // TODO: @david after snap we need to make sure to refactor here.
   loadState(snapId: string): Promise<State> {
     return this.factory.getState(this.id, snapId);
