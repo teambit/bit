@@ -116,11 +116,11 @@ Head over to your bit.cloud account to see your components build progress. Once 
 npm install @my-org/my-project.hello-world
 ```
 
-## Learn more
+## Next steps
 
-- [Try out our Quick Starts](https://bit.dev/docs/quick-start/react)
-- [Create shell applications](https://bit.dev/docs/getting-started/composing/create-apps)
+- [Create more components](https://bit.dev/docs/getting-started/composing/creating-components/)
 - [Setup your editor](https://bit.dev/docs/getting-started/installing-bit/editor-setup)
+- [Configure CI of choice](https://bit.dev/docs/getting-started/collaborate/exporting-components/#ci-scripts)
 - [Start from an existing project](https://bit.dev/docs/getting-started/installing-bit/start-from-existing-project)
 
 ## Contributors
