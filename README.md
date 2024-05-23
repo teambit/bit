@@ -86,7 +86,7 @@ After creating a new component, start using it by adding an import statement in 
 import { Button } from '@org/scope-name.buttons.button';
 ```
 
-Once added, Bit will autodetect the dependency between these components. Use `bit show` or the VSCode plugin to view the list of dependencies Bit detected for your components.
+Once added, Bit will autodetect the dependency between these components. Use `bit show` or the [VSCode plugin](https://bit.dev/docs/getting-started/installing-bit/editor-setup) to view the list of dependencies Bit detected for your components.
 
 ### Release components
 
