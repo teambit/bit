@@ -93,6 +93,10 @@ export class Component implements IComponent {
     return this._state._consumer.buildStatus;
   }
 
+  get homepage(): string | undefined {
+    return this._state._consumer._getHomepage();
+  }
+
   get headTag() {
     if (!this.head) return undefined;
     return this.tags.byHash(this.head.hash);
