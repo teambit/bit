@@ -494,6 +494,22 @@ describe('custom env', function () {
       helper.command.status();
     });
   });
+  describe('ejecting conf when current env exists locally', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.env.setCustomEnv();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.setEnv('comp1', 'node-env');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.ejectConf('comp1');
+    });
+    it('should write the env aspect without a version to the component.json file', () => {
+      const compJson = helper.componentJson.read('comp1');
+      expect(compJson.extensions).to.have.property(`${helper.scopes.remote}/node-env`);
+      expect(compJson.extensions).to.not.have.property(`${helper.scopes.remote}/node-env@0.0.1`);
+    });
+  });
 });
 
 function getEnvIdFromModel(compModel: any): string {
