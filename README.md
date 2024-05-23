@@ -110,7 +110,7 @@ After versioning, you can proceed to release your components:
 bit export
 ```
 
-Head over to your bit.cloud account to see your components build progress. Once the build process is completed, the components will be available for use using standard package managers. 🎉🎉🎉
+Head over to your [bit.cloud account](https://bit.cloud) to see your components build progress. Once the build process is completed, the components will be available for use using standard package managers:
 
 ```bash
 npm install @my-org/my-project.hello-world
