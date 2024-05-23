@@ -168,7 +168,7 @@ export interface ComponentFactory {
    */
   idsByPattern(pattern: string, throwForNoMatch?: boolean): Promise<ComponentID[]>;
 
-  hasId(componentId: ComponentID): Promise<boolean>;
+  hasId(componentId: ComponentID): Promise<boolean> | boolean;
 
   /**
    * Check if the host has the id, if no, search for the id in inner host (for example, workspace will search in the scope)
