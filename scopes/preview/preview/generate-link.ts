@@ -53,7 +53,7 @@ export function generateLink(
   });
 
   const contents = `
-import { linkModules } from '${previewDistDir}/preview.preview.runtime.js';
+import { linkModules } from '${toWindowsCompatiblePath(join(previewDistDir, 'preview.preview.runtime.js'))}';
 
 ${getModuleImports(moduleLinks, tempPackageDir)}
 
@@ -96,7 +96,7 @@ function getEnvVarName(envId: string) {
 function getModuleImports(moduleLinks: ModuleLink[] = [], tempPackageDir?: string): string {
   const hash = objectHash(moduleLinks);
   const tempFileName = `preview-modules-${hash}.mjs`;
-  const tempFilePath = join(tempPackageDir || previewDistDir, tempFileName);
+  const tempFilePath = toWindowsCompatiblePath(join(tempPackageDir || previewDistDir, tempFileName));
   const tempFileContents = moduleLinks
     .map((module) => `export * as ${module.varName} from "${module.resolveFrom}";`)
     .join('\n');
