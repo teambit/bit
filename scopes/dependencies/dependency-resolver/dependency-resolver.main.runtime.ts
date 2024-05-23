@@ -6,9 +6,10 @@ import { getRelativeRootComponentDir } from '@teambit/bit-roots';
 import { ComponentAspect, Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
-import { compact, get, pick, uniq, omit } from 'lodash';
+import { compact, get, pick, uniq, omit, cloneDeep } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
-import { DependenciesEnv, EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { DependenciesEnv, EnvDefinition, EnvJsonc, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { LoggerMain } from '@teambit/logger';
@@ -1013,6 +1014,33 @@ export class DependencyResolverMain {
     return allPoliciesFromEnv;
   }
 
+  /**
+   * Merge policy from parent and child env.jsonc files
+   * The rule is that for each type of dependency (dev, runtime, peer) we check each item.
+   * if a dep with a name exists on the child we will take the entire object from the child (including the version,
+   * supported range, force etc')
+   * if a dep exists with a version value "-" we will remove it from the policy
+   */
+  mergeEnvManifestPolicy(parent: EnvJsonc, child: EnvJsonc): Object {
+    const policy = {};
+    ['peers', 'dev', 'runtime'].forEach((key) => {
+      policy[key] = cloneDeep(parent.policy?.[key] || []);
+      const childEntries = cloneDeep(child.policy?.[key] || []);
+
+      policy[key] = policy[key].filter((entry) => {
+        const foundChildEntry = childEntries.find((childEntry) => {
+          return childEntry.name === entry.name;
+        });
+        return !foundChildEntry;
+      });
+      policy[key] = policy[key].concat(childEntries);
+      policy[key] = policy[key].filter((entry) => {
+        return entry.version !== '-';
+      });
+    });
+    return { policy };
+  }
+
   private async getEnvPolicyFromFile(envId: string, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
     if (isCoreEnv) return undefined;
@@ -1487,6 +1515,7 @@ export class DependencyResolverMain {
 
     graphql.register(dependencyResolverSchema(dependencyResolver));
     envs.registerService(new DependenciesService());
+    envs.registerEnvJsoncMergeCustomizer(dependencyResolver.mergeEnvManifestPolicy.bind(dependencyResolver));
 
     // this is needed because during tag process, the data.dependencies can be loaded and the componentId can become
     // an instance of ComponentID class. it needs to be serialized before saved into objects.

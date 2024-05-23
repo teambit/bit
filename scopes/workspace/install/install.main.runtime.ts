@@ -430,6 +430,7 @@ export class InstallMain {
       return { componentsAndManifests, mergedRootPolicy };
     }
     const mergedRootPolicyWithMissingDeps = await this.addConfiguredAspectsToWorkspacePolicy();
+    await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicyWithMissingDeps);
     return {
       mergedRootPolicy: mergedRootPolicyWithMissingDeps,
       componentsAndManifests: await this._getComponentsManifests(installer, mergedRootPolicyWithMissingDeps, options),

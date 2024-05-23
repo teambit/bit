@@ -283,6 +283,7 @@ with no args, only workspace's capsules are deleted
 
 `bit checkout <version> [component-pattern]` => checkout the specified ids (or all components when --all is used) to the specified version  
 `bit checkout head [component-pattern]` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all  
+`bit checkout head~x [component-pattern]` => go backward x generations from the head and checkout to that version  
 `bit checkout latest [component-pattern]` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all  
 `bit checkout reset [component-pattern]` => remove local modifications from the specified ids (or all components when --all is used). also, if a component dir is deleted from the filesystem, it'll be restored  
 when on a lane, "checkout head" only checks out components on this lane. to update main components, run "bit lane merge main"
@@ -291,7 +292,7 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
 
 | **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
 | ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| `to`                |                                                                                                                                                permitted values: [head, latest, reset, specific-version]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes                                                                                                                                                 |
+| `to`                |                                                                                                                                          permitted values: [head, latest, reset, {specific-version}, {head~x}]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes                                                                                                                                           |
 | `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
 | **Option**                              | **Option alias** | **Description**                                                                                                                          |
@@ -1984,6 +1985,7 @@ optionally, provide [pattern] to limit the fork to specific components
 | **Option**                       | **Option alias** | **Description**                                                                         |
 | -------------------------------- | :--------------: | --------------------------------------------------------------------------------------- |
 | `--json`                         |       `-j`       | return a json version of the component                                                  |
+| `--warnings`                     |       `-w`       | show warnings. by default, only issues that block tag/snap are shown                    |
 | `--verbose`                      |                  | show extra data: full snap hashes for staged components, and divergence point for lanes |
 | `--lanes`                        |       `-l`       | when on a lane, show updates from main and updates from forked lanes                    |
 | `--strict`                       |                  | in case issues found, exit with code 1                                                  |

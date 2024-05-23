@@ -33,6 +33,7 @@ import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
+import { getVirtualStoreDirMaxLength } from './get-virtual-store-dir-max-length';
 
 const installsRunning: Record<string, Promise<any>> = {};
 const cafsLocker = new Map<string, number>();
@@ -41,8 +42,6 @@ type RegistriesMap = {
   default: string;
   [registryName: string]: string;
 };
-
-const STORE_CACHE: Record<string, { ctrl: StoreController; dir: string }> = {};
 
 async function createStoreController(
   options: {
@@ -82,16 +81,9 @@ async function createStoreController(
     fetchRetryMaxtimeout: options.networkConfig.fetchRetryMaxtimeout,
     fetchRetryMintimeout: options.networkConfig.fetchRetryMintimeout,
     fetchTimeout: options.networkConfig.fetchTimeout,
+    virtualStoreDirMaxLength: getVirtualStoreDirMaxLength(),
   };
-  // We should avoid the recreation of store.
-  // The store holds cache that makes subsequent resolutions faster.
-  const cacheKey = JSON.stringify(opts);
-  if (!STORE_CACHE[cacheKey]) {
-    // Although it would be enough to call createNewStoreController(),
-    // that doesn't resolve the store directory location.
-    STORE_CACHE[cacheKey] = await createOrConnectStoreController(opts);
-  }
-  return STORE_CACHE[cacheKey];
+  return createOrConnectStoreController(opts);
 }
 
 async function generateResolverAndFetcher(
@@ -163,6 +155,7 @@ export async function getPeerDependencyIssues(
     overrides: opts.overrides,
     workspacePackages,
     registries: registriesMap,
+    virtualStoreDirMaxLength: getVirtualStoreDirMaxLength(),
   });
 }
 
@@ -206,7 +199,6 @@ export async function install(
     | 'nodeVersion'
     | 'engineStrict'
     | 'excludeLinksFromLockfile'
-    | 'peerDependencyRules'
     | 'neverBuiltDependencies'
     | 'ignorePackageManifest'
     | 'hoistWorkspacePackages'
@@ -267,7 +259,6 @@ export async function install(
     confirmModulesPurge: false,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
-    dedupeInjectedDeps: options.dedupeInjectedDeps,
     dir: rootDir,
     storeController: storeController.ctrl,
     workspacePackages,
@@ -296,6 +287,7 @@ export async function install(
     depth: options.updateAll ? Infinity : 0,
     disableRelinkLocalDirDeps: true,
     hoistPattern,
+    virtualStoreDirMaxLength: getVirtualStoreDirMaxLength(),
   };
 
   let dependenciesChanged = false;
