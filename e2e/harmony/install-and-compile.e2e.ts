@@ -172,6 +172,7 @@ describe('do not fail on environment loading files from a location inside node_m
   before(() => {
     helper = new Helper();
     helper.fixtures.copyFixtureDir('workspace-with-tsconfig-issue', helper.scopes.localPath);
+    helper.command.init();
   });
   it('should not fail', () => {
     helper.command.install();
