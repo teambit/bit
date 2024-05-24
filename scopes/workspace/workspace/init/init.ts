@@ -1,11 +1,11 @@
 import fs from 'fs-extra';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
-import { Consumer, getConsumerInfo } from '../../../consumer';
-import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
-import { Scope } from '../../../scope';
-import { Repository } from '../../../scope/objects';
-import { isDirEmpty } from '../../../utils';
-import ObjectsWithoutConsumer from './exceptions/objects-without-consumer';
+import { Consumer, getConsumerInfo } from '@teambit/legacy/dist/consumer';
+import { WorkspaceConfigProps } from '@teambit/legacy/dist/consumer/config/workspace-config';
+import { Scope } from '@teambit/legacy/dist/scope';
+import { Repository } from '@teambit/legacy/dist/scope/objects';
+import { isDirEmpty } from '@teambit/legacy/dist/utils';
+import ObjectsWithoutConsumer from '@teambit/legacy/dist/api/consumer/lib/exceptions/objects-without-consumer';
 
 export default async function init(
   absPath?: string,

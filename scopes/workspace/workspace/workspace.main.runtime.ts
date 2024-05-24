@@ -39,7 +39,7 @@ import { ScopeSetCmd } from './scope-subcommands/scope-set.cmd';
 import { UseCmd } from './use.cmd';
 import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
 import { UnuseCmd } from './unuse.cmd';
-import { InitCmd } from './init-cmd';
+import { InitCmd } from './init/init-cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
