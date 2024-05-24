@@ -62,6 +62,7 @@ export default function render(...props) {
         if (isBrowser) {
           return rootExtension.render(${rootId}, ...props);
         } else {
+          console.trace(props)
           return rootExtension.renderSsr(${rootId}, ...props);
         }
       })

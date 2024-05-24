@@ -10,8 +10,7 @@ import { APIRefQueryParams } from '@teambit/api-reference.hooks.use-api-ref-url'
 import { useNavigate } from 'react-router-dom';
 import { APINode } from '@teambit/api-reference.models.api-reference-model';
 import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
-import { OnMount, Monaco } from '@monaco-editor/react';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+// import { OnMount } from '@monaco-editor/react';
 
 import styles from './api-node-details.module.scss';
 
@@ -46,11 +45,11 @@ export function APINodeDetails({
   const navigate = useNavigate();
   const Editor = useCodeEditor();
 
-  const signatureEditorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
-  const signatureMonacoRef = useRef<Monaco>();
+  const signatureEditorRef = useRef<any>();
+  const signatureMonacoRef = useRef<any>();
 
-  const exampleEditorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
-  const exampleMonacoRef = useRef<Monaco>();
+  const exampleEditorRef = useRef<any>();
+  const exampleMonacoRef = useRef<any>();
 
   const routeToAPICmdId = useRef<string | null>(null);
   const apiUrlToRoute = useRef<string | null>(null);
@@ -138,11 +137,7 @@ export function APINodeDetails({
   };
 
   const updateEditorHeight =
-    (
-      editorRef: React.MutableRefObject<monaco.editor.IStandaloneCodeEditor | undefined>,
-      monacoRef: React.MutableRefObject<Monaco | undefined>
-    ) =>
-    () => {
+    (editorRef: React.MutableRefObject<any | undefined>, monacoRef: React.MutableRefObject<any | undefined>) => () => {
       if (!monacoRef.current) return undefined;
 
       const editor = editorRef.current;
@@ -186,13 +181,13 @@ export function APINodeDetails({
   // const updateEditorHeight = _.throttle<typeof _updateEditorHeight>(_updateEditorHeight, 300) as _.DebouncedFunc<any>;
 
   const handleEditorDidMount: (
-    monacoRef: React.MutableRefObject<Monaco | undefined>,
-    editorRef: React.MutableRefObject<monaco.editor.IStandaloneCodeEditor | undefined>,
+    monacoRef: React.MutableRefObject<any | undefined>,
+    editorRef: React.MutableRefObject<any | undefined>,
     containerRef: React.MutableRefObject<HTMLDivElement | null>,
     setHeight?: React.Dispatch<React.SetStateAction<string | undefined>>,
-    onMount?: (monaco: Monaco, editor: monaco.editor.IStandaloneCodeEditor) => void,
+    onMount?: (monaco: any, editor: any) => void,
     onUnMount?: () => void
-  ) => OnMount = React.useCallback(
+  ) => any = React.useCallback(
     (monacoRef, editorRef, containerRef, setHeight, onMount, unMount) => (editor, _monaco) => {
       /**
        * disable syntax check
@@ -212,7 +207,7 @@ export function APINodeDetails({
         esModuleInterop: true,
       });
 
-      monaco.editor.defineTheme('bit', {
+      monacoRef.current.editor.defineTheme('bit', {
         base: 'vs-dark',
         inherit: true,
         rules: [],
@@ -226,7 +221,7 @@ export function APINodeDetails({
         },
       });
 
-      monaco.editor.setTheme('bit');
+      monacoRef.current.editor.setTheme('bit');
 
       onMount?.(monacoRef.current, editorRef.current);
 
