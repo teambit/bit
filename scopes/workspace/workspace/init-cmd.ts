@@ -1,26 +1,24 @@
 import chalk from 'chalk';
 import * as pathlib from 'path';
 import { BitError } from '@teambit/bit-error';
-import { init } from '../../../api/consumer';
-import { getSync } from '../../../api/consumer/lib/global-config';
-import { initScope } from '../../../api/scope';
-import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '../../../constants';
-import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
-import { Group } from '../../command-groups';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import { init } from '@teambit/legacy/dist/api/consumer';
+import { getSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import { initScope } from '@teambit/legacy/dist/api/scope';
+import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy/dist/constants';
+import { WorkspaceConfigProps } from '@teambit/legacy/dist/consumer/config/workspace-config';
+import { Command, CommandOptions } from '@teambit/cli';
 
-export default class Init implements LegacyCommand {
+export class Init implements Command {
   name = 'init [path]';
   skipWorkspace = true;
   description = 'create or reinitialize an empty workspace';
   helpUrl = 'reference/workspace/creating-workspaces/?new_existing_project=1';
-  group: Group = 'start';
+  group = 'start';
   extendedDescription =
     'if the current directory is already a workspace, it validates that bit files are correct and rewrite them if needed.';
   alias = '';
-  opts = [
-    ['b', 'bare [name]', 'initialize an empty bit bare scope'],
-    ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
+  loadAspects = false;
+  options = [
     [
       'T',
       'standalone',
@@ -51,9 +49,11 @@ export default class Init implements LegacyCommand {
     ],
     ['', 'default-scope <default-scope>', 'set the default scope for components in the workspace'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
+    ['b', 'bare [name]', 'initialize an empty bit bare scope'],
+    ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
   ] as CommandOptions;
 
-  action([path]: [string], flags: Record<string, any>): Promise<{ [key: string]: any }> {
+  async report([path]: [string], flags: Record<string, any>) {
     const {
       bare,
       shared,
@@ -73,12 +73,8 @@ export default class Init implements LegacyCommand {
       if (reset || resetHard) throw new BitError('--reset and --reset-hard flags are not available for bare scope');
       // Handle both cases init --bare and init --bare [scopeName]
       const bareVal = bare === true ? '' : bare;
-      return initScope(path, bareVal, shared).then(({ created }) => {
-        return {
-          created,
-          bare: true,
-        };
-      });
+      await initScope(path, bareVal, shared);
+      return `${chalk.green('successfully initialized an empty bare bit scope.')}`;
     }
     if (reset && resetHard) {
       throw new BitError('cannot use both --reset and --reset-hard, please use only one of them');
@@ -87,7 +83,7 @@ export default class Init implements LegacyCommand {
       componentsDefaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),
       defaultScope: defaultScope ?? getSync(CFG_INIT_DEFAULT_SCOPE),
     };
-    return init(
+    const { created } = await init(
       path,
       standalone,
       noPackageJson,
@@ -98,24 +94,7 @@ export default class Init implements LegacyCommand {
       resetScope,
       force,
       workspaceConfigFileProps
-    ).then(({ created, addedGitHooks, existingGitHooks }) => {
-      return {
-        created,
-        addedGitHooks,
-        existingGitHooks,
-        reset,
-        resetHard,
-        resetScope,
-      };
-    });
-  }
-
-  report({ created, bare, reset, resetHard, resetScope }: any): string {
-    if (bare) {
-      // if (!created) return `${chalk.grey('successfully reinitialized a bare bit scope.')}`;
-      // @TODO - a case that you already have a bit scope
-      return `${chalk.green('successfully initialized an empty bare bit scope.')}`;
-    }
+    );
 
     let initMessage = `${chalk.green('successfully initialized a bit workspace.')}`;
 
@@ -123,9 +102,7 @@ export default class Init implements LegacyCommand {
     if (reset) initMessage = `${chalk.grey('your bit workspace has been reset successfully.')}`;
     if (resetHard) initMessage = `${chalk.grey('your bit workspace has been hard-reset successfully.')}`;
     if (resetScope) initMessage = `${chalk.grey('your local scope has been reset successfully.')}`;
-    // const addedGitHooksTemplate = _generateAddedGitHooksTemplate(addedGitHooks);
-    // const existingGitHooksTemplate = _generateExistingGitHooksTemplate(existingGitHooks);
-    // return `${initMessage}\n${addedGitHooksTemplate}\n${existingGitHooksTemplate}`;
+
     return initMessage;
   }
 }

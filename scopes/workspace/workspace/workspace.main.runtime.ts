@@ -39,6 +39,7 @@ import { ScopeSetCmd } from './scope-subcommands/scope-set.cmd';
 import { UseCmd } from './use.cmd';
 import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
 import { UnuseCmd } from './unuse.cmd';
+import { Init } from './init-cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -144,11 +145,12 @@ export class WorkspaceMain {
     ],
     harmony: Harmony
   ) {
+    const initCmd = new Init();
     const bitConfig: any = harmony.config.get('teambit.harmony/bit');
     const consumer = await getConsumer(bitConfig.cwd);
     if (!consumer) {
       const capsuleCmd = getCapsulesCommands(isolator, scope, undefined);
-      cli.register(capsuleCmd);
+      cli.register(capsuleCmd, initCmd);
       return undefined;
     }
     // TODO: get the 'workspace' name in a better way
@@ -261,6 +263,7 @@ export class WorkspaceMain {
       capsuleCmd,
       new UseCmd(workspace),
       new UnuseCmd(workspace),
+      initCmd,
     ];
 
     commands.push(new PatternCommand(workspace));

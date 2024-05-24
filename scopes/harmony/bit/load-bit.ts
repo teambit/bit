@@ -211,7 +211,6 @@ function getMainAspect() {
 function shouldLoadInSafeMode() {
   const currentCommand = process.argv[2];
   const commandsToAlwaysRunInSafeMode = [
-    'init',
     'cat-scope',
     'cat-object',
     'cat-component',
