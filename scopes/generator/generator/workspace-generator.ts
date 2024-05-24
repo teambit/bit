@@ -16,6 +16,7 @@ import { join } from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { GitAspect, GitMain } from '@teambit/git';
 import { InstallAspect, InstallMain } from '@teambit/install';
+import { HostInitializerMain } from '@teambit/host-initializer';
 import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 // import { ComponentGenerator } from './component-generator';
 import { WorkspaceTemplate, WorkspaceContext } from './workspace-template';
@@ -49,7 +50,7 @@ export class WorkspaceGenerator {
     try {
       process.chdir(this.workspacePath);
       await this.initGit();
-      await this.workspace.init(
+      await HostInitializerMain.init(
         this.workspacePath,
         this.options.skipGit,
         false,

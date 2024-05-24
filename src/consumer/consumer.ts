@@ -20,7 +20,7 @@ import { Scope } from '../scope';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
-import { generateRandomStr } from '@teambit/toolbox.string.random';
+// import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import { composeComponentPath } from '../utils/bit/compose-component-path';
 import {
@@ -38,7 +38,7 @@ import ComponentLoader, { ComponentLoadOptions, LoadManyResult } from './compone
 import { Dependencies } from './component/dependencies';
 import PackageJsonFile from './component/package-json-file';
 import { ILegacyWorkspaceConfig } from './config';
-import WorkspaceConfig, { WorkspaceConfigProps } from './config/workspace-config';
+import WorkspaceConfig from './config/workspace-config';
 import { getConsumerInfo } from './consumer-locator';
 import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound } from './exceptions';
@@ -428,15 +428,6 @@ export default class Consumer {
     return path.join(...addToPath);
   }
 
-  static create(
-    projectPath: PathOsBasedAbsolute,
-    noGit = false,
-    noPackageJson = false,
-    workspaceConfigProps?: WorkspaceConfigProps
-  ): Promise<Consumer> {
-    return this.ensure(projectPath, noGit, noPackageJson, workspaceConfigProps);
-  }
-
   static _getScopePath(projectPath: PathOsBasedAbsolute, noGit: boolean): PathOsBasedAbsolute {
     const gitDirPath = path.join(projectPath, DOT_GIT_DIR);
     let resolvedScopePath = path.join(projectPath, BIT_HIDDEN_DIR);
@@ -446,34 +437,34 @@ export default class Consumer {
     return resolvedScopePath;
   }
 
-  static async ensure(
-    projectPath: PathOsBasedAbsolute,
-    standAlone = false,
-    noPackageJson = false,
-    workspaceConfigProps?: WorkspaceConfigProps
-  ): Promise<Consumer> {
-    const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
-    let existingGitHooks;
-    // avoid using the default scope-name `path.basename(process.cwd())` when generated from the workspace.
-    // otherwise, components with the same scope-name will get ComponentNotFound on import
-    const scopeName = `${path.basename(process.cwd())}-local-${generateRandomStr()}`;
-    const scope = await Scope.ensure(resolvedScopePath, scopeName);
-    const config = await WorkspaceConfig.ensure(projectPath, scope.path, standAlone, workspaceConfigProps);
-    const consumer = new Consumer({
-      projectPath,
-      created: true,
-      scope,
-      config,
-      existingGitHooks,
-    });
-    await consumer.setBitMap();
-    if (!noPackageJson) {
-      consumer.setPackageJsonWithTypeModule();
-    }
-    return consumer;
-  }
+  // static async ensure(
+  //   projectPath: PathOsBasedAbsolute,
+  //   standAlone = false,
+  //   noPackageJson = false,
+  //   workspaceConfigProps?: WorkspaceConfigProps
+  // ): Promise<Consumer> {
+  //   const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
+  //   let existingGitHooks;
+  //   // avoid using the default scope-name `path.basename(process.cwd())` when generated from the workspace.
+  //   // otherwise, components with the same scope-name will get ComponentNotFound on import
+  //   const scopeName = `${path.basename(process.cwd())}-local-${generateRandomStr()}`;
+  //   const scope = await Scope.ensure(resolvedScopePath, scopeName);
+  //   const config = await WorkspaceConfig.ensure(projectPath, scope.path, standAlone, workspaceConfigProps);
+  //   const consumer = new Consumer({
+  //     projectPath,
+  //     created: true,
+  //     scope,
+  //     config,
+  //     existingGitHooks,
+  //   });
+  //   await consumer.setBitMap();
+  //   if (!noPackageJson) {
+  //     consumer.setPackageJsonWithTypeModule();
+  //   }
+  //   return consumer;
+  // }
 
-  private setPackageJsonWithTypeModule() {
+  setPackageJsonWithTypeModule() {
     const exists = this.packageJson && this.packageJson.fileExist;
     if (exists) {
       const content = this.packageJson.packageJsonObject;
@@ -503,18 +494,18 @@ export default class Consumer {
     fs.writeJSONSync(packageJsonPath, jsonContent, { spaces: 2 });
   }
 
-  /**
-   * if resetHard, delete consumer-files: bitMap and workspace.jsonc and also the local scope (.bit dir).
-   * otherwise, delete the consumer-files only when they are corrupted
-   */
-  static async reset(projectPath: PathOsBasedAbsolute, resetHard: boolean, noGit = false): Promise<void> {
-    const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
-    BitMap.reset(projectPath, resetHard);
-    const scopeP = Scope.reset(resolvedScopePath, resetHard);
-    const configP = WorkspaceConfig.reset(projectPath, resolvedScopePath, resetHard);
-    const packageJsonP = PackageJsonFile.reset(projectPath);
-    await Promise.all([scopeP, configP, packageJsonP]);
-  }
+  // /**
+  //  * if resetHard, delete consumer-files: bitMap and workspace.jsonc and also the local scope (.bit dir).
+  //  * otherwise, delete the consumer-files only when they are corrupted
+  //  */
+  // static async reset(projectPath: PathOsBasedAbsolute, resetHard: boolean, noGit = false): Promise<void> {
+  //   const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
+  //   BitMap.reset(projectPath, resetHard);
+  //   const scopeP = Scope.reset(resolvedScopePath, resetHard);
+  //   const configP = WorkspaceConfig.reset(projectPath, resolvedScopePath, resetHard);
+  //   const packageJsonP = PackageJsonFile.reset(projectPath);
+  //   await Promise.all([scopeP, configP, packageJsonP]);
+  // }
 
   async resetNew() {
     this.bitMap.resetToNewComponents();

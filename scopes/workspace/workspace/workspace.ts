@@ -118,8 +118,6 @@ import {
   ComponentStatusLoader,
   ComponentStatusResult,
 } from './workspace-component/component-status-loader';
-import { init } from './init/init';
-import { WorkspaceConfigProps } from '@teambit/legacy/dist/consumer/config/workspace-config';
 
 export type EjectConfResult = {
   configPath: string;
@@ -2131,32 +2129,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   async getComponentStatusById(id: ComponentID): Promise<ComponentStatusLegacy> {
     return this.componentStatusLoader.getComponentStatusById(id);
-  }
-
-  init(
-    absPath?: string,
-    noGit = false,
-    noPackageJson = false,
-    reset = false,
-    resetNew = false,
-    resetLaneNew = false,
-    resetHard = false,
-    resetScope = false,
-    force = false,
-    workspaceConfigProps: WorkspaceConfigProps = {}
-  ) {
-    return init(
-      absPath,
-      noGit,
-      noPackageJson,
-      reset,
-      resetNew,
-      resetLaneNew,
-      resetHard,
-      resetScope,
-      force,
-      workspaceConfigProps
-    );
   }
 }
 

@@ -688,6 +688,20 @@
         "mainFile": "index.ts",
         "rootDir": "components/hooks/use-viewed-lane-from-url_1"
     },
+    "host-initializer": {
+        "name": "host-initializer",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/host-initializer",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
+    },
     "html": {
         "name": "html",
         "scope": "teambit.html",

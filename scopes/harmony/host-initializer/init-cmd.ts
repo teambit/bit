@@ -6,7 +6,7 @@ import { initScope } from '@teambit/legacy/dist/api/scope';
 import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy/dist/constants';
 import { WorkspaceConfigProps } from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { Command, CommandOptions } from '@teambit/cli';
-import { init } from './init';
+import { HostInitializerMain } from './host-initializer.main.runtime';
 
 export class InitCmd implements Command {
   name = 'init [path]';
@@ -53,6 +53,8 @@ export class InitCmd implements Command {
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
   ] as CommandOptions;
 
+  constructor(private hostInitializer: HostInitializerMain) {}
+
   async report([path]: [string], flags: Record<string, any>) {
     const {
       bare,
@@ -83,7 +85,7 @@ export class InitCmd implements Command {
       componentsDefaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),
       defaultScope: defaultScope ?? getSync(CFG_INIT_DEFAULT_SCOPE),
     };
-    const { created } = await init(
+    const { created } = await HostInitializerMain.init(
       path,
       standalone,
       noPackageJson,

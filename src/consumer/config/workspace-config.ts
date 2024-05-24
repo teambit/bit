@@ -118,25 +118,25 @@ export default class WorkspaceConfig extends AbstractConfig {
     return new WorkspaceConfig(workspaceConfigProps);
   }
 
-  static async ensure(
-    workspacePath: PathOsBasedAbsolute,
-    scopePath: PathOsBasedAbsolute,
-    standAlone = false,
-    workspaceConfigProps: WorkspaceConfigProps = {} as any
-  ): Promise<ILegacyWorkspaceConfig> {
-    const ensureFunc = this.workspaceConfigEnsuringRegistry;
-    return ensureFunc(workspacePath, scopePath, standAlone, workspaceConfigProps);
-  }
+  // static async ensure(
+  //   workspacePath: PathOsBasedAbsolute,
+  //   scopePath: PathOsBasedAbsolute,
+  //   standAlone = false,
+  //   workspaceConfigProps: WorkspaceConfigProps = {} as any
+  // ): Promise<ILegacyWorkspaceConfig> {
+  //   const ensureFunc = this.workspaceConfigEnsuringRegistry;
+  //   return ensureFunc(workspacePath, scopePath, standAlone, workspaceConfigProps);
+  // }
 
-  static async reset(
-    workspacePath: PathOsBasedAbsolute,
-    scopePath: PathOsBasedAbsolute,
-    resetHard: boolean
-  ): Promise<void> {
-    const resetFunc = this.workspaceConfigResetRegistry;
-    await resetFunc(workspacePath, resetHard);
-    await WorkspaceConfig.ensure(workspacePath, scopePath);
-  }
+  // static async reset(
+  //   workspacePath: PathOsBasedAbsolute,
+  //   scopePath: PathOsBasedAbsolute,
+  //   resetHard: boolean
+  // ): Promise<void> {
+  //   const resetFunc = this.workspaceConfigResetRegistry;
+  //   await resetFunc(workspacePath, resetHard);
+  //   await WorkspaceConfig.ensure(workspacePath, scopePath);
+  // }
 
   static async loadIfExist(
     dirPath: string | PathOsBased,

@@ -6,7 +6,7 @@ import {
   LegacyWorkspaceConfigProps,
 } from '@teambit/legacy/dist/consumer/config';
 import LegacyWorkspaceConfig, {
-  WorkspaceConfigEnsureFunction,
+  // WorkspaceConfigEnsureFunction,
   WorkspaceConfigLoadFunction,
 } from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -94,12 +94,27 @@ export class ConfigMain {
     return config;
   }
 
+  static async workspaceEnsureLegacy(
+    workspacePath: string,
+    scopePath: string,
+    standAlone?: boolean,
+    legacyWorkspaceConfigProps?: LegacyWorkspaceConfigProps
+  ) {
+    let workspaceConfigProps;
+    if (legacyWorkspaceConfigProps) {
+      workspaceConfigProps = transformLegacyPropsToExtensions(legacyWorkspaceConfigProps);
+    }
+    const config = await ConfigMain.ensureWorkspace(workspacePath, scopePath, workspaceConfigProps);
+    const workspaceConfig = config.config;
+    return (workspaceConfig as WorkspaceConfig).toLegacy();
+  }
+
   static runtime = MainRuntime;
   static slots = [];
   static dependencies = [];
   static config = {};
   static async provider(_deps, _config, _slots, harmony: Harmony) {
-    LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());
+    // LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());
 
     let configMain: ConfigMain | any;
     const bitConfig = harmony.config.raw.get('teambit.harmony/bit') as any;
@@ -141,20 +156,20 @@ function onLegacyWorkspaceLoad(config?: ConfigMain): WorkspaceConfigLoadFunction
   };
 }
 
-function onLegacyWorkspaceEnsure(): WorkspaceConfigEnsureFunction {
-  const func: WorkspaceConfigEnsureFunction = async (
-    workspacePath: string,
-    scopePath: string,
-    standAlone,
-    legacyWorkspaceConfigProps?: LegacyWorkspaceConfigProps
-  ) => {
-    let workspaceConfigProps;
-    if (legacyWorkspaceConfigProps) {
-      workspaceConfigProps = transformLegacyPropsToExtensions(legacyWorkspaceConfigProps);
-    }
-    const config = await ConfigMain.ensureWorkspace(workspacePath, scopePath, workspaceConfigProps);
-    const workspaceConfig = config.config;
-    return (workspaceConfig as WorkspaceConfig).toLegacy();
-  };
-  return func;
-}
+// function onLegacyWorkspaceEnsure(): WorkspaceConfigEnsureFunction {
+//   const func: WorkspaceConfigEnsureFunction = async (
+//     workspacePath: string,
+//     scopePath: string,
+//     standAlone,
+//     legacyWorkspaceConfigProps?: LegacyWorkspaceConfigProps
+//   ) => {
+//     let workspaceConfigProps;
+//     if (legacyWorkspaceConfigProps) {
+//       workspaceConfigProps = transformLegacyPropsToExtensions(legacyWorkspaceConfigProps);
+//     }
+//     const config = await ConfigMain.ensureWorkspace(workspacePath, scopePath, workspaceConfigProps);
+//     const workspaceConfig = config.config;
+//     return (workspaceConfig as WorkspaceConfig).toLegacy();
+//   };
+//   return func;
+// }
