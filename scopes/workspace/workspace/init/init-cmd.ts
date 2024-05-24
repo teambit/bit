@@ -1,12 +1,12 @@
 import chalk from 'chalk';
 import * as pathlib from 'path';
 import { BitError } from '@teambit/bit-error';
-import { init } from '@teambit/legacy/dist/api/consumer';
 import { getSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import { initScope } from '@teambit/legacy/dist/api/scope';
 import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy/dist/constants';
 import { WorkspaceConfigProps } from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { Command, CommandOptions } from '@teambit/cli';
+import { init } from './init';
 
 export class InitCmd implements Command {
   name = 'init [path]';

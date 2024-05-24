@@ -7,7 +7,7 @@ import { Repository } from '@teambit/legacy/dist/scope/objects';
 import { isDirEmpty } from '@teambit/legacy/dist/utils';
 import ObjectsWithoutConsumer from '@teambit/legacy/dist/api/consumer/lib/exceptions/objects-without-consumer';
 
-export default async function init(
+export async function init(
   absPath?: string,
   noGit = false,
   noPackageJson = false,
