@@ -8,7 +8,7 @@ import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/leg
 import { WorkspaceConfigProps } from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { Command, CommandOptions } from '@teambit/cli';
 
-export class Init implements Command {
+export class InitCmd implements Command {
   name = 'init [path]';
   skipWorkspace = true;
   description = 'create or reinitialize an empty workspace';

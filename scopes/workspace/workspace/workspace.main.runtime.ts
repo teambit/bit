@@ -39,7 +39,7 @@ import { ScopeSetCmd } from './scope-subcommands/scope-set.cmd';
 import { UseCmd } from './use.cmd';
 import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
 import { UnuseCmd } from './unuse.cmd';
-import { Init } from './init-cmd';
+import { InitCmd } from './init-cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -145,7 +145,13 @@ export class WorkspaceMain {
     ],
     harmony: Harmony
   ) {
-    const initCmd = new Init();
+    const initCmd = new InitCmd();
+    const currentCmd = process.argv[2];
+    if (currentCmd === 'init') {
+      // avoid loading the consumer/workspace for "bit init". otherwise, "bit init --reset" can't fix corrupted .bitmap
+      cli.register(initCmd);
+      return undefined;
+    }
     const bitConfig: any = harmony.config.get('teambit.harmony/bit');
     const consumer = await getConsumer(bitConfig.cwd);
     if (!consumer) {
