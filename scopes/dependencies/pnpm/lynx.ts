@@ -197,6 +197,7 @@ export async function install(
     | 'hoistPattern'
     | 'lockfileOnly'
     | 'nodeVersion'
+    | 'enableModulesDir'
     | 'engineStrict'
     | 'excludeLinksFromLockfile'
     | 'neverBuiltDependencies'
