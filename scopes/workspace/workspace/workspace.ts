@@ -13,6 +13,7 @@ import {
   ComponentFactory,
   InvalidComponent,
   ResolveAspectsOptions,
+  AspectList,
 } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
@@ -417,8 +418,8 @@ export class Workspace implements ComponentFactory {
    * Check if a specific id exist in the workspace
    * @param componentId
    */
-  async hasId(componentId: ComponentID): Promise<boolean> {
-    const ids = await this.listIds();
+  hasId(componentId: ComponentID): boolean {
+    const ids = this.listIds();
     const found = ids.find((id) => {
       return id.isEqual(componentId);
     });
@@ -933,9 +934,21 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     const componentId = await this.resolveComponentId(id);
     const extensions = await this.getExtensionsFromScopeAndSpecific(id, excludeLocalChanges);
     const aspects = await this.createAspectList(extensions);
+    this.removeEnvVersionIfExistsLocally(aspects);
     const componentDir = this.componentDir(id, { ignoreVersion: true }, { relative: true });
     const configFile = new ComponentConfigFile(componentId, aspects, componentDir, options.propagate);
     return configFile.toVinylFile(options);
+  }
+
+  private removeEnvVersionIfExistsLocally(aspects: AspectList) {
+    const env = aspects.get(EnvsAspect.id)?.config?.env;
+    if (!env) return;
+    const envAspect = aspects.get(env);
+    if (!envAspect) return;
+    const envExtId = envAspect.id;
+    if (!envExtId?.hasVersion()) return;
+    if (!this.exists(envExtId)) return;
+    envAspect.id = envExtId.changeVersion(undefined);
   }
 
   async ejectMultipleConfigs(ids: ComponentID[], options: EjectConfOptions): Promise<EjectConfResult[]> {
