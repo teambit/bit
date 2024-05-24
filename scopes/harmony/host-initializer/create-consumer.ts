@@ -6,6 +6,7 @@ import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
 import { ConfigMain, WorkspaceConfig, WorkspaceExtensionProps, WorkspaceConfigFileProps } from '@teambit/config';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
+import { pickBy } from 'lodash';
 
 export async function createConsumer(
   projectPath: PathOsBasedAbsolute,
@@ -21,7 +22,7 @@ export async function createConsumer(
   const scope = await Scope.ensure(resolvedScopePath, scopeName);
   const workspaceConfigProps = workspaceExtensionProps
     ? ({
-        'teambit.workspace/workspace': workspaceExtensionProps,
+        'teambit.workspace/workspace': pickBy(workspaceExtensionProps), // remove empty values
         'teambit.dependencies/dependency-resolver': {},
       } as WorkspaceConfigFileProps)
     : undefined;
