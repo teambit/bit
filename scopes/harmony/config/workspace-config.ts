@@ -3,16 +3,14 @@ import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constant
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
-import LegacyWorkspaceConfig, {
-  WorkspaceConfigProps as LegacyWorkspaceConfigProps,
-} from '@teambit/legacy/dist/consumer/config/workspace-config';
+import LegacyWorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { currentDateAndTimeToFileName } from '@teambit/legacy/dist/consumer/consumer';
 import { assign, parse, stringify, CommentJSONValue } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { isEmpty, omit } from 'lodash';
+import { omit } from 'lodash';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { SetExtensionOptions } from './config.main.runtime';
 import { ExtensionAlreadyConfigured } from './exceptions';
@@ -29,7 +27,7 @@ export type WorkspaceConfigFileProps = {
   // TODO: make it no optional
   $schema?: string;
   $schemaVersion?: string;
-} & ExtensionsDefs;
+} & WorkspaceSettingsNewProps;
 
 export type ComponentScopeDirMapEntry = {
   defaultScope?: string;
@@ -59,8 +57,6 @@ export type WorkspaceSettingsNewProps = {
   'teambit.workspace/workspace': WorkspaceExtensionProps;
   'teambit.dependencies/dependency-resolver': DependencyResolverExtensionProps;
 };
-
-export type ExtensionsDefs = WorkspaceSettingsNewProps;
 
 export class WorkspaceConfig implements HostConfig {
   raw?: any;
@@ -368,42 +364,6 @@ export class WorkspaceConfig implements HostConfig {
       _legacyPlainObject: () => undefined,
     };
   }
-}
-
-export function transformLegacyPropsToExtensions(
-  legacyConfig: LegacyWorkspaceConfig | LegacyWorkspaceConfigProps
-): ExtensionsDefs {
-  // TODO: move to utils
-  const removeUndefined = (obj) => {
-    // const res = omit(mapObjIndexed((val) => val === undefined))(obj);
-    // return res;
-    Object.entries(obj).forEach((e) => {
-      if (e[1] === undefined) delete obj[e[0]];
-    });
-    return obj;
-  };
-
-  const workspace = removeUndefined({
-    defaultScope: legacyConfig.defaultScope,
-    defaultDirectory: legacyConfig.componentsDefaultDirectory,
-  });
-  const dependencyResolver = removeUndefined({
-    packageManager: legacyConfig.packageManager,
-    // strictPeerDependencies: false,
-    extraArgs: legacyConfig.packageManagerArgs,
-    packageManagerProcessOptions: legacyConfig.packageManagerProcessOptions,
-    manageWorkspaces: legacyConfig.manageWorkspaces,
-    useWorkspaces: legacyConfig.useWorkspaces,
-  });
-  const data = {};
-  if (workspace && !isEmpty(workspace)) {
-    data['teambit.workspace/workspace'] = workspace;
-  }
-  if (dependencyResolver && !isEmpty(dependencyResolver)) {
-    data['teambit.dependencies/dependency-resolver'] = dependencyResolver;
-  }
-  // @ts-ignore
-  return data;
 }
 
 export async function getWorkspaceConfigTemplateParsed(): Promise<CommentJSONValue> {

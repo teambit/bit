@@ -4,7 +4,7 @@ import { BitError } from '@teambit/bit-error';
 import { getSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import { initScope } from '@teambit/legacy/dist/api/scope';
 import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy/dist/constants';
-import { WorkspaceConfigProps } from '@teambit/legacy/dist/consumer/config/workspace-config';
+import { WorkspaceExtensionProps } from '@teambit/config';
 import { Command, CommandOptions } from '@teambit/cli';
 import { HostInitializerMain } from './host-initializer.main.runtime';
 
@@ -81,8 +81,8 @@ export class InitCmd implements Command {
     if (reset && resetHard) {
       throw new BitError('cannot use both --reset and --reset-hard, please use only one of them');
     }
-    const workspaceConfigFileProps: WorkspaceConfigProps = {
-      componentsDefaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),
+    const workspaceExtensionProps: WorkspaceExtensionProps = {
+      defaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),
       defaultScope: defaultScope ?? getSync(CFG_INIT_DEFAULT_SCOPE),
     };
     const { created } = await HostInitializerMain.init(
@@ -95,7 +95,7 @@ export class InitCmd implements Command {
       resetHard,
       resetScope,
       force,
-      workspaceConfigFileProps
+      workspaceExtensionProps
     );
 
     let initMessage = `${chalk.green('successfully initialized a bit workspace.')}`;

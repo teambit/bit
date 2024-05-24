@@ -353,12 +353,6 @@ export function takeLegacyGlobalsSnapshot(): LegacyGlobal[] {
     },
     {
       classInstance: WorkspaceConfig,
-      methodName: 'workspaceConfigEnsuringRegistry',
-      value: WorkspaceConfig.workspaceConfigEnsuringRegistry,
-      empty: undefined,
-    },
-    {
-      classInstance: WorkspaceConfig,
       methodName: 'workspaceConfigLoadingRegistry',
       value: WorkspaceConfig.workspaceConfigLoadingRegistry,
       empty: undefined,

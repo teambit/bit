@@ -1,10 +1,10 @@
 import fs from 'fs-extra';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { Consumer, getConsumerInfo } from '@teambit/legacy/dist/consumer';
-import { WorkspaceConfigProps } from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Repository } from '@teambit/legacy/dist/scope/objects';
 import { isDirEmpty } from '@teambit/legacy/dist/utils';
+import { WorkspaceExtensionProps } from '@teambit/config';
 import ObjectsWithoutConsumer from '@teambit/legacy/dist/api/consumer/lib/exceptions/objects-without-consumer';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { HostInitializerAspect } from './host-initializer.aspect';
@@ -22,7 +22,7 @@ export class HostInitializerMain {
     resetHard = false,
     resetScope = false,
     force = false,
-    workspaceConfigProps: WorkspaceConfigProps = {}
+    workspaceConfigProps: WorkspaceExtensionProps = {}
   ): Promise<Consumer> {
     const consumerInfo = await getConsumerInfo(absPath || process.cwd());
     // if "bit init" was running without any flags, the user is probably trying to init a new workspace but wasn't aware

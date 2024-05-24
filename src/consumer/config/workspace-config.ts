@@ -18,15 +18,6 @@ export type WorkspaceConfigLoadFunction = (
   scopePath: PathOsBasedAbsolute
 ) => Promise<ILegacyWorkspaceConfig | undefined>;
 
-export type WorkspaceConfigEnsureFunction = (
-  workspacePath: PathOsBasedAbsolute,
-  scopePath: PathOsBasedAbsolute,
-  standAlone: boolean,
-  workspaceConfigProps: WorkspaceConfigProps
-) => Promise<ILegacyWorkspaceConfig>;
-
-export type WorkspaceConfigResetFunction = (dirPath: PathOsBasedAbsolute, resetHard: boolean) => Promise<void>;
-
 export type WorkspaceConfigProps = {
   lang?: string;
   componentsDefaultDirectory?: string;
@@ -52,14 +43,6 @@ export default class WorkspaceConfig extends AbstractConfig {
   static workspaceConfigLoadingRegistry: WorkspaceConfigLoadFunction;
   static registerOnWorkspaceConfigLoading(func: WorkspaceConfigLoadFunction) {
     this.workspaceConfigLoadingRegistry = func;
-  }
-  static workspaceConfigEnsuringRegistry: WorkspaceConfigEnsureFunction;
-  static registerOnWorkspaceConfigEnsuring(func: WorkspaceConfigEnsureFunction) {
-    this.workspaceConfigEnsuringRegistry = func;
-  }
-  static workspaceConfigResetRegistry: WorkspaceConfigResetFunction;
-  static registerOnWorkspaceConfigReset(func: WorkspaceConfigResetFunction) {
-    this.workspaceConfigResetRegistry = func;
   }
 
   constructor({

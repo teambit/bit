@@ -1,18 +1,17 @@
 import path from 'path';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { WorkspaceConfigProps } from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
-import { ConfigMain, WorkspaceConfig } from '@teambit/config';
+import { ConfigMain, WorkspaceConfig, WorkspaceExtensionProps, WorkspaceConfigFileProps } from '@teambit/config';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 
 export async function createConsumer(
   projectPath: PathOsBasedAbsolute,
   standAlone = false, // no git
   noPackageJson = false,
-  workspaceConfigProps?: WorkspaceConfigProps
+  workspaceExtensionProps?: WorkspaceExtensionProps
 ): Promise<Consumer> {
   const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
   let existingGitHooks;
@@ -20,12 +19,19 @@ export async function createConsumer(
   // otherwise, components with the same scope-name will get ComponentNotFound on import
   const scopeName = `${path.basename(process.cwd())}-local-${generateRandomStr()}`;
   const scope = await Scope.ensure(resolvedScopePath, scopeName);
-  const config = await ConfigMain.workspaceEnsureLegacy(projectPath, scope.path, standAlone, workspaceConfigProps);
+  const workspaceConfigProps = workspaceExtensionProps
+    ? ({
+        'teambit.workspace/workspace': workspaceExtensionProps,
+        'teambit.dependencies/dependency-resolver': {},
+      } as WorkspaceConfigFileProps)
+    : undefined;
+  const config = await ConfigMain.ensureWorkspace(projectPath, scope.path, workspaceConfigProps);
+  const legacyConfig = (config.config as WorkspaceConfig).toLegacy();
   const consumer = new Consumer({
     projectPath,
     created: true,
     scope,
-    config,
+    config: legacyConfig,
     existingGitHooks,
   });
   await consumer.setBitMap();
@@ -48,6 +54,6 @@ export async function resetConsumer(
   BitMap.reset(projectPath, resetHard);
   await Scope.reset(resolvedScopePath, resetHard);
   await WorkspaceConfig.reset(projectPath, resetHard);
-  await ConfigMain.workspaceEnsureLegacy(projectPath, resolvedScopePath);
+  await WorkspaceConfig.ensure(projectPath, resolvedScopePath);
   await PackageJsonFile.reset(projectPath);
 }

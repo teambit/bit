@@ -1,12 +1,6 @@
 import { getConsumerInfo } from '@teambit/legacy/dist/consumer';
-import {
-  ExtensionDataEntry,
-  ExtensionDataList,
-  ILegacyWorkspaceConfig,
-  LegacyWorkspaceConfigProps,
-} from '@teambit/legacy/dist/consumer/config';
+import { ExtensionDataEntry, ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
 import LegacyWorkspaceConfig, {
-  // WorkspaceConfigEnsureFunction,
   WorkspaceConfigLoadFunction,
 } from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -14,7 +8,7 @@ import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { MainRuntime } from '@teambit/cli';
 import { GlobalConfig, Harmony } from '@teambit/harmony';
 import path from 'path';
-import { transformLegacyPropsToExtensions, WorkspaceConfig, WorkspaceConfigFileProps } from './workspace-config';
+import { WorkspaceConfig, WorkspaceConfigFileProps, WorkspaceExtensionProps } from './workspace-config';
 import { ConfigType, HostConfig } from './types';
 import { ConfigAspect } from './config.aspect';
 
@@ -97,12 +91,11 @@ export class ConfigMain {
   static async workspaceEnsureLegacy(
     workspacePath: string,
     scopePath: string,
-    standAlone?: boolean,
-    legacyWorkspaceConfigProps?: LegacyWorkspaceConfigProps
+    workspaceExtensionProps?: WorkspaceExtensionProps
   ) {
     let workspaceConfigProps;
-    if (legacyWorkspaceConfigProps) {
-      workspaceConfigProps = transformLegacyPropsToExtensions(legacyWorkspaceConfigProps);
+    if (workspaceExtensionProps) {
+      workspaceConfigProps = { 'teambit.workspace/workspace': workspaceExtensionProps };
     }
     const config = await ConfigMain.ensureWorkspace(workspacePath, scopePath, workspaceConfigProps);
     const workspaceConfig = config.config;
@@ -155,21 +148,3 @@ function onLegacyWorkspaceLoad(config?: ConfigMain): WorkspaceConfigLoadFunction
     return undefined;
   };
 }
-
-// function onLegacyWorkspaceEnsure(): WorkspaceConfigEnsureFunction {
-//   const func: WorkspaceConfigEnsureFunction = async (
-//     workspacePath: string,
-//     scopePath: string,
-//     standAlone,
-//     legacyWorkspaceConfigProps?: LegacyWorkspaceConfigProps
-//   ) => {
-//     let workspaceConfigProps;
-//     if (legacyWorkspaceConfigProps) {
-//       workspaceConfigProps = transformLegacyPropsToExtensions(legacyWorkspaceConfigProps);
-//     }
-//     const config = await ConfigMain.ensureWorkspace(workspacePath, scopePath, workspaceConfigProps);
-//     const workspaceConfig = config.config;
-//     return (workspaceConfig as WorkspaceConfig).toLegacy();
-//   };
-//   return func;
-// }
