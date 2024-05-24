@@ -494,6 +494,11 @@
         "show data for a remote component"
       ],
       [
+        "b",
+        "browser",
+        "open the component page in the browser"
+      ],
+      [
         "c",
         "compare",
         "legacy-only. compare current file system component to its latest tagged version [default=latest]"
