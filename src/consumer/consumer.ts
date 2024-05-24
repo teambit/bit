@@ -5,6 +5,7 @@ import { compact, isEmpty } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
+import { BitError } from '@teambit/bit-error';
 import { Analytics } from '../analytics/analytics';
 import {
   BIT_GIT_DIR,
@@ -531,21 +532,14 @@ export default class Consumer {
     if (!consumerInfo) {
       return Promise.reject(new ConsumerNotFound());
     }
-    if (!consumerInfo.hasBitMap && !consumerInfo.hasScope && consumerInfo.hasConsumerConfig) {
-      throw new Error(
-        `fatal: unable to load the workspace. workspace.jsonc exists, but the .bitmap and local-scope are missing. run "bit init" to generate the missing files`
+    if (!consumerInfo.hasBitMap || !consumerInfo.hasScope || !consumerInfo.hasConsumerConfig) {
+      throw new BitError(
+        `fatal: unable to load the workspace. workspace.jsonc or .bitmap or local-scope are missing. run "bit init" to generate the missing files`
       );
     }
-    let consumer: Consumer | undefined;
-
-    if ((!consumerInfo.hasConsumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
-      consumer = await Consumer.create(consumerInfo.path);
-      await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
-    }
-    const scope = consumer?.scope || (await Scope.load(consumerInfo.path));
-    const config =
-      consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path, scope.path);
-    consumer = new Consumer({
+    const scope = await Scope.load(consumerInfo.path);
+    const config = await WorkspaceConfig.loadIfExist(consumerInfo.path, scope.path);
+    const consumer = new Consumer({
       projectPath: consumerInfo.path,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config,
