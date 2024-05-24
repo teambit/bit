@@ -119,9 +119,6 @@ export class ConfigMain {
       configMain = {};
     }
     LegacyWorkspaceConfig.registerOnWorkspaceConfigLoading(onLegacyWorkspaceLoad(configMain));
-    LegacyWorkspaceConfig.registerOnWorkspaceConfigReset((dirPath, resetHard) =>
-      WorkspaceConfig.reset(dirPath, resetHard)
-    );
     return configMain;
   }
 }
