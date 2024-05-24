@@ -437,33 +437,6 @@ export default class Consumer {
     return resolvedScopePath;
   }
 
-  // static async ensure(
-  //   projectPath: PathOsBasedAbsolute,
-  //   standAlone = false,
-  //   noPackageJson = false,
-  //   workspaceConfigProps?: WorkspaceConfigProps
-  // ): Promise<Consumer> {
-  //   const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
-  //   let existingGitHooks;
-  //   // avoid using the default scope-name `path.basename(process.cwd())` when generated from the workspace.
-  //   // otherwise, components with the same scope-name will get ComponentNotFound on import
-  //   const scopeName = `${path.basename(process.cwd())}-local-${generateRandomStr()}`;
-  //   const scope = await Scope.ensure(resolvedScopePath, scopeName);
-  //   const config = await WorkspaceConfig.ensure(projectPath, scope.path, standAlone, workspaceConfigProps);
-  //   const consumer = new Consumer({
-  //     projectPath,
-  //     created: true,
-  //     scope,
-  //     config,
-  //     existingGitHooks,
-  //   });
-  //   await consumer.setBitMap();
-  //   if (!noPackageJson) {
-  //     consumer.setPackageJsonWithTypeModule();
-  //   }
-  //   return consumer;
-  // }
-
   setPackageJsonWithTypeModule() {
     const exists = this.packageJson && this.packageJson.fileExist;
     if (exists) {
