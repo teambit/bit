@@ -211,7 +211,6 @@ function getMainAspect() {
 function shouldLoadInSafeMode() {
   const currentCommand = process.argv[2];
   const commandsToAlwaysRunInSafeMode = [
-    'init',
     'cat-scope',
     'cat-object',
     'cat-component',
@@ -351,12 +350,6 @@ export function takeLegacyGlobalsSnapshot(): LegacyGlobal[] {
       methodName: 'toModelObjectsHook',
       value: ExtensionDataList.toModelObjectsHook,
       empty: [],
-    },
-    {
-      classInstance: WorkspaceConfig,
-      methodName: 'workspaceConfigEnsuringRegistry',
-      value: WorkspaceConfig.workspaceConfigEnsuringRegistry,
-      empty: undefined,
     },
     {
       classInstance: WorkspaceConfig,

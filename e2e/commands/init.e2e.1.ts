@@ -258,7 +258,8 @@ describe('run bit init', function () {
       });
     });
   });
-  describe('when there is .bitmap, bit.json but not .bit dir', () => {
+  // no good reason to have it. it's ok to throw an error and telling the user to run "bit init"
+  describe.skip('when there is .bitmap, bit.json but not .bit dir', () => {
     describe('when .bit located directly on workspace root', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();

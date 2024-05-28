@@ -144,6 +144,11 @@ export class WorkspaceMain {
     ],
     harmony: Harmony
   ) {
+    const currentCmd = process.argv[2];
+    if (currentCmd === 'init') {
+      // avoid loading the consumer/workspace for "bit init". otherwise, "bit init --reset" can't fix corrupted .bitmap
+      return undefined;
+    }
     const bitConfig: any = harmony.config.get('teambit.harmony/bit');
     const consumer = await getConsumer(bitConfig.cwd);
     if (!consumer) {

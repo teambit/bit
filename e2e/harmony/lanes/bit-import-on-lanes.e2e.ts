@@ -171,6 +171,7 @@ describe('bit lane command', function () {
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
         helper.command.export();
         helper.fs.deletePath('.bit');
+        helper.command.init();
         helper.scopeHelper.addRemoteScope();
       });
       // previously, it was throwing the following error:
@@ -195,6 +196,7 @@ describe('bit lane command', function () {
         helper.command.export();
         helper.command.switchLocalLane('dev', '--skip-dependency-installation');
         helper.fs.deletePath('.bit');
+        helper.command.init();
         helper.scopeHelper.addRemoteScope();
         helper.command.import();
         localScope = helper.scopeHelper.cloneLocalScope();

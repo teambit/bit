@@ -1294,6 +1294,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.exportLane();
       helper.fs.deletePath('.bit');
+      helper.command.init();
       helper.scopeHelper.addRemoteScope();
     });
     it('should re-create scope.json with checkout to the lane specified in the .bitmap file', () => {
@@ -1349,6 +1350,7 @@ describe('bit lane command', function () {
       helper.command.export();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.fs.deletePath('.bit');
+      helper.command.init();
       helper.scopeHelper.addRemoteScope();
     });
     it('bit status should not throw', () => {

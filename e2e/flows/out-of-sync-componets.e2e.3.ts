@@ -190,6 +190,7 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.fixtures.tagComponentBarFoo();
       helper.command.export();
       helper.fs.deletePath('.bit');
+      helper.command.init();
       scopeOutOfSync = helper.scopeHelper.cloneLocalScope();
     });
     describe('bit tag', () => {
