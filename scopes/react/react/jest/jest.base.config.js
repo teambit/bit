@@ -7,15 +7,15 @@ module.exports = {
   //   "!src/**/*.d.ts"
   // ],
   setupFiles: [require.resolve('react-app-polyfill/jsdom')],
-  setupFilesAfterEnv: [require.resolve('./setupTests.js')],
+  setupFilesAfterEnv: [require.resolve('./setupTests')],
   // "testMatch": [
   // "<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
   // "<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}"
   // ],
   testEnvironment: require.resolve('jest-environment-jsdom'),
   transform: {
-    '^.+\\.css$': require.resolve('./transformers/css-transform.js'),
-    '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': require.resolve('./transformers/file-transform.js'),
+    '^.+\\.css$': require.resolve('./transformers/css-transform'),
+    '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': require.resolve('./transformers/file-transform'),
     // '^(?!.*\\.(svg|png|jpg|jpeg|gif|webp|woff|ttf|woff2)$)': require.resolve('./file-transform.js'),
   },
   transformIgnorePatterns: ['[/\\\\]node_modules[/\\\\].+\\.(js|jsx|ts|tsx|cjs)$', '^.+\\.module\\.(css|sass|scss)$'],

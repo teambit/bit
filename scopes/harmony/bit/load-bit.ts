@@ -19,7 +19,7 @@ import {
 } from '@teambit/aspect-loader';
 import json from 'comment-json';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { ConfigAspect, ConfigRuntime } from '@teambit/config';
+import { ConfigRuntime, getConfigAspect } from '@teambit/config';
 import { Harmony, RuntimeDefinition, Extension } from '@teambit/harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
 import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
@@ -43,14 +43,18 @@ import logger from '@teambit/legacy/dist/logger/logger';
 import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
 import { readdir, readFile } from 'fs-extra';
 import { resolve, join } from 'path';
-import { manifestsMap } from './manifests';
+import { getManifestsMap } from './manifests';
 import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
 import { BitConfig } from './bit.provider';
 
+const manifestsMap = getManifestsMap();
+
 async function loadLegacyConfig(config: any) {
-  const harmony = await Harmony.load([ConfigAspect], ConfigRuntime.name, config.toObject());
-  await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+  const aspectsToLoad = [getConfigAspect()];
+  const harmony = await Harmony.load(aspectsToLoad, ConfigRuntime.name, config.toObject());
+  // await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+  await harmony.run();
 }
 
 async function getConfig(cwd = process.cwd()) {
@@ -177,11 +181,11 @@ export async function requireAspects(aspect: Extension, runtime: RuntimeDefiniti
 }
 
 function getMainAspect() {
-  const mainAspectDir = getAspectDir(BitAspect.id);
-  let version: string | undefined;
   const packageName = getCoreAspectPackageName(BitAspect.id);
-
+  let version: string | undefined;
+  let mainAspectDir = '';
   try {
+    mainAspectDir = getAspectDir(BitAspect.id);
     // eslint-disable-next-line global-require
     const packageJson = require(`${mainAspectDir}/package.json`);
     version = packageJson.version;
@@ -257,14 +261,17 @@ export async function loadBit(path = process.cwd()) {
   const loadCLIOnly = shouldLoadInSafeMode();
   if (isClearCacheCommand()) aspectsToLoad.push(ClearCacheAspect);
   if (!loadCLIOnly) {
-    aspectsToLoad.push(BitAspect);
+    // aspectsToLoad.push(BitAspect);
+    aspectsToLoad.push(...Object.values(manifestsMap));
   }
   if (shouldRunAsDaemon()) {
     logger.isDaemon = true;
   }
   const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
 
-  await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+  // await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+  await harmony.run();
+
   if (loadCLIOnly) return harmony;
   const aspectLoader = harmony.get<AspectLoaderMain>('teambit.harmony/aspect-loader');
   aspectLoader.setCoreAspects(Object.values(manifestsMap));

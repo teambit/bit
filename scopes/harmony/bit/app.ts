@@ -16,6 +16,9 @@ if (process.argv.includes('--get-yargs-completions')) {
   process.exit(0);
 }
 
+// Export APIs from all core aspects to be used in the bundled app
+export * from './core-aspects-exports';
+
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 initApp();
 
