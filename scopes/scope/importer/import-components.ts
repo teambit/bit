@@ -48,6 +48,7 @@ export type ImportOptions = {
   writeConfigFiles: boolean; // default: true
   objectsOnly?: boolean;
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages, not as imported
+  importHeadDependenciesDirectly?: boolean; // default: false, similar to importDependenciesDirectly, but it checks out to their head
   importDependents?: boolean;
   dependentsVia?: string;
   dependentsAll?: boolean;
@@ -444,8 +445,10 @@ if you just want to get a quick look into this snap, create a new workspace and 
       : await this.getBitIdsForNonLanes();
     const shouldImportDependents =
       this.options.importDependents || this.options.dependentsVia || this.options.dependentsAll;
-    if (this.options.importDependenciesDirectly || shouldImportDependents) {
-      if (this.options.importDependenciesDirectly) {
+    const shouldImportDependencies =
+      this.options.importDependenciesDirectly || this.options.importHeadDependenciesDirectly;
+    if (shouldImportDependencies || shouldImportDependents) {
+      if (shouldImportDependencies) {
         const dependenciesIds = await this.getFlattenedDepsUnique(bitIds);
         bitIds.push(...dependenciesIds);
       }
@@ -467,8 +470,14 @@ if you just want to get a quick look into this snap, create a new workspace and 
       return ComponentIdList.uniqFromArray(flattenedDeps);
     };
     const flattened = getFlattened();
-    const withLatest = this.removeMultipleVersionsKeepLatest(flattened);
-    return withLatest;
+    return this.options.importHeadDependenciesDirectly
+      ? this.uniqWithoutVersions(flattened)
+      : this.removeMultipleVersionsKeepLatest(flattened);
+  }
+
+  private uniqWithoutVersions(flattened: ComponentIdList) {
+    const latest = flattened.toVersionLatest();
+    return ComponentIdList.uniqFromArray(latest);
   }
 
   private removeMultipleVersionsKeepLatest(flattened: ComponentIdList): ComponentID[] {
@@ -476,8 +485,14 @@ if you just want to get a quick look into this snap, create a new workspace and 
     const latestVersions = Object.keys(grouped).map((key) => {
       const ids = grouped[key];
       if (ids.length === 1) return ids[0];
-      const latest = getLatestVersionNumber(ids, ids[0].changeVersion(LATEST_VERSION));
-      return latest;
+      try {
+        const latest = getLatestVersionNumber(ids, ids[0].changeVersion(LATEST_VERSION));
+        return latest;
+      } catch (err: any) {
+        throw new Error(`a dependency "${key}" was found with multiple versions, unable to find which one of them is newer.
+error: ${err.message}
+consider running with "--dependencies-head" flag instead, which checks out to the head of the dependencies`);
+      }
     });
 
     return latestVersions;

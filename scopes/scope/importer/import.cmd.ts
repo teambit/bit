@@ -27,6 +27,7 @@ type ImportFlags = {
   filterEnvs?: string;
   saveInLane?: boolean;
   dependencies?: boolean;
+  dependenciesHead?: boolean;
   dependents?: boolean;
   dependentsDryRun?: boolean;
   dependentsVia?: string;
@@ -75,6 +76,7 @@ export class ImportCmd implements Command {
       'dependencies',
       'import all dependencies (bit components only) of imported components and write them to the workspace',
     ],
+    ['', 'dependencies-head', 'same as --dependencies, except it imports the dependencies with their head version'],
     [
       '',
       'dependents',
@@ -211,6 +213,7 @@ export class ImportCmd implements Command {
       filterEnvs,
       saveInLane = false,
       dependencies = false,
+      dependenciesHead = false,
       dependents = false,
       dependentsDryRun = false,
       silent,
@@ -233,6 +236,9 @@ export class ImportCmd implements Command {
     }
     if (!ids.length && dependencies) {
       throw new BitError('you have to specify ids to use "--dependencies" flag');
+    }
+    if (!ids.length && dependenciesHead) {
+      throw new BitError('you have to specify ids to use "--dependencies-head" flag');
     }
     if (!ids.length && dependents) {
       throw new BitError('you have to specify ids to use "--dependents" flag');
@@ -268,6 +274,7 @@ export class ImportCmd implements Command {
       writeConfigFiles: !skipWriteConfigFiles,
       saveInLane,
       importDependenciesDirectly: dependencies,
+      importHeadDependenciesDirectly: dependenciesHead,
       importDependents: dependents,
       dependentsVia,
       dependentsAll,
