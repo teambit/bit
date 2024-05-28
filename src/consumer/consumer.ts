@@ -467,19 +467,6 @@ export default class Consumer {
     fs.writeJSONSync(packageJsonPath, jsonContent, { spaces: 2 });
   }
 
-  // /**
-  //  * if resetHard, delete consumer-files: bitMap and workspace.jsonc and also the local scope (.bit dir).
-  //  * otherwise, delete the consumer-files only when they are corrupted
-  //  */
-  // static async reset(projectPath: PathOsBasedAbsolute, resetHard: boolean, noGit = false): Promise<void> {
-  //   const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
-  //   BitMap.reset(projectPath, resetHard);
-  //   const scopeP = Scope.reset(resolvedScopePath, resetHard);
-  //   const configP = WorkspaceConfig.reset(projectPath, resolvedScopePath, resetHard);
-  //   const packageJsonP = PackageJsonFile.reset(projectPath);
-  //   await Promise.all([scopeP, configP, packageJsonP]);
-  // }
-
   async resetNew() {
     this.bitMap.resetToNewComponents();
     await Scope.reset(this.scope.path, true);
