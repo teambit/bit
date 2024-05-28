@@ -19,6 +19,7 @@ export class InitCmd implements Command {
   alias = '';
   loadAspects = false;
   options = [
+    ['n', 'name <workspace-name>', 'name of the workspace'],
     [
       'T',
       'standalone',
@@ -57,6 +58,7 @@ export class InitCmd implements Command {
 
   async report([path]: [string], flags: Record<string, any>) {
     const {
+      name,
       bare,
       shared,
       standalone,
@@ -84,6 +86,7 @@ export class InitCmd implements Command {
     const workspaceExtensionProps: WorkspaceExtensionProps = {
       defaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),
       defaultScope: defaultScope ?? getSync(CFG_INIT_DEFAULT_SCOPE),
+      name,
     };
     const { created } = await HostInitializerMain.init(
       path,

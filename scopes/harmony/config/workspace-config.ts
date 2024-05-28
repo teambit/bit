@@ -37,6 +37,7 @@ export type ComponentScopeDirMapEntry = {
 export type ComponentScopeDirMap = Array<ComponentScopeDirMapEntry>;
 
 export type WorkspaceExtensionProps = {
+  name?: string;
   defaultScope?: string;
   defaultDirectory?: string;
   components?: ComponentScopeDirMap;
