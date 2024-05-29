@@ -1,76 +1,5 @@
 [
   {
-    "name": "init [path]",
-    "alias": "",
-    "options": [
-      [
-        "b",
-        "bare [name]",
-        "initialize an empty bit bare scope"
-      ],
-      [
-        "s",
-        "shared <groupname>",
-        "add group write permissions to a scope properly"
-      ],
-      [
-        "T",
-        "standalone",
-        "do not nest component store within .git directory and do not write config data inside package.json"
-      ],
-      [
-        "",
-        "no-package-json",
-        "do not generate package.json"
-      ],
-      [
-        "r",
-        "reset",
-        "write missing or damaged Bit files"
-      ],
-      [
-        "",
-        "reset-new",
-        "reset .bitmap file as if the components were newly added and remove all model data (objects)"
-      ],
-      [
-        "",
-        "reset-lane-new",
-        "same as reset-new, but it only resets components belong to lanes. main components are left intact"
-      ],
-      [
-        "",
-        "reset-hard",
-        "delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-starting workspace from scratch"
-      ],
-      [
-        "",
-        "reset-scope",
-        "removes local scope (.bit or .git/bit). tags/snaps that have not been exported will be lost. workspace is left intact"
-      ],
-      [
-        "d",
-        "default-directory <default-directory>",
-        "set the default directory pattern to import/create components into"
-      ],
-      [
-        "",
-        "default-scope <default-scope>",
-        "set the default scope for components in the workspace"
-      ],
-      [
-        "f",
-        "force",
-        "force workspace initialization without clearing local objects"
-      ]
-    ],
-    "description": "create or reinitialize an empty workspace",
-    "extendedDescription": "if the current directory is already a workspace, it validates that bit files are correct and rewrite them if needed.",
-    "group": "start",
-    "private": false,
-    "skipWorkspace": true
-  },
-  {
     "name": "config",
     "alias": "",
     "options": [],
@@ -438,6 +367,82 @@
     "extendedDescription": "",
     "group": "general",
     "private": false
+  },
+  {
+    "name": "init [path]",
+    "alias": "",
+    "options": [
+      [
+        "n",
+        "name <workspace-name>",
+        "name of the workspace"
+      ],
+      [
+        "T",
+        "standalone",
+        "do not nest component store within .git directory and do not write config data inside package.json"
+      ],
+      [
+        "",
+        "no-package-json",
+        "do not generate package.json"
+      ],
+      [
+        "r",
+        "reset",
+        "write missing or damaged Bit files"
+      ],
+      [
+        "",
+        "reset-new",
+        "reset .bitmap file as if the components were newly added and remove all model data (objects)"
+      ],
+      [
+        "",
+        "reset-lane-new",
+        "same as reset-new, but it only resets components belong to lanes. main components are left intact"
+      ],
+      [
+        "",
+        "reset-hard",
+        "delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-starting workspace from scratch"
+      ],
+      [
+        "",
+        "reset-scope",
+        "removes local scope (.bit or .git/bit). tags/snaps that have not been exported will be lost. workspace is left intact"
+      ],
+      [
+        "d",
+        "default-directory <default-directory>",
+        "set the default directory pattern to import/create components into"
+      ],
+      [
+        "",
+        "default-scope <default-scope>",
+        "set the default scope for components in the workspace"
+      ],
+      [
+        "f",
+        "force",
+        "force workspace initialization without clearing local objects"
+      ],
+      [
+        "b",
+        "bare [name]",
+        "initialize an empty bit bare scope"
+      ],
+      [
+        "s",
+        "shared <groupname>",
+        "add group write permissions to a scope properly"
+      ]
+    ],
+    "description": "create or reinitialize an empty workspace",
+    "extendedDescription": "if the current directory is already a workspace, it validates that bit files are correct and rewrite them if needed.",
+    "group": "start",
+    "private": false,
+    "skipWorkspace": true
   },
   {
     "name": "globals",
@@ -2342,6 +2347,11 @@
         "",
         "dependencies",
         "import all dependencies (bit components only) of imported components and write them to the workspace"
+      ],
+      [
+        "",
+        "dependencies-head",
+        "same as --dependencies, except it imports the dependencies with their head version"
       ],
       [
         "",

@@ -924,6 +924,7 @@ bit export => export all staged snaps/tags of components to their remote scope. 
 | `--skip-write-config-files`      |                  | do not write config files (such as eslint, tsconfig, prettier, etc...)                                                                                                            |
 | `--merge [strategy]`             |       `-m`       | merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"                                                                                    |
 | `--dependencies`                 |                  | import all dependencies (bit components only) of imported components and write them to the workspace                                                                              |
+| `--dependencies-head`            |                  | same as --dependencies, except it imports the dependencies with their head version                                                                                                |
 | `--dependents`                   |                  | import components found while traversing from the imported components upwards to the workspace components                                                                         |
 | `--dependents-via <string>`      |                  | same as --dependents except the traversal must go through the specified component. to specify multiple components, wrap with quotes and separate by a comma                       |
 | `--dependents-all`               |                  | same as --dependents except not prompting for selecting paths but rather selecting all paths and showing final confirmation before importing                                      |
@@ -947,8 +948,7 @@ if the current directory is already a workspace, it validates that bit files are
 
 | **Option**                                | **Option alias** | **Description**                                                                                                                           |
 | ----------------------------------------- | :--------------: | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `--bare [name]`                           |       `-b`       | initialize an empty bit bare scope                                                                                                        |
-| `--shared <groupname>`                    |       `-s`       | add group write permissions to a scope properly                                                                                           |
+| `--name <workspace-name>`                 |       `-n`       | name of the workspace                                                                                                                     |
 | `--standalone`                            |       `-T`       | do not nest component store within .git directory and do not write config data inside package.json                                        |
 | `--no-package-json`                       |                  | do not generate package.json                                                                                                              |
 | `--reset`                                 |       `-r`       | write missing or damaged Bit files                                                                                                        |
@@ -959,6 +959,8 @@ if the current directory is already a workspace, it validates that bit files are
 | `--default-directory <default-directory>` |       `-d`       | set the default directory pattern to import/create components into                                                                        |
 | `--default-scope <default-scope>`         |                  | set the default scope for components in the workspace                                                                                     |
 | `--force`                                 |       `-f`       | force workspace initialization without clearing local objects                                                                             |
+| `--bare [name]`                           |       `-b`       | initialize an empty bit bare scope                                                                                                        |
+| `--shared <groupname>`                    |       `-s`       | add group write permissions to a scope properly                                                                                           |
 
 ---
 
