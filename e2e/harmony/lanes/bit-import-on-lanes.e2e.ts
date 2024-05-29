@@ -171,7 +171,6 @@ describe('bit lane command', function () {
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
         helper.command.export();
         helper.fs.deletePath('.bit');
-        helper.command.init();
         helper.scopeHelper.addRemoteScope();
       });
       // previously, it was throwing the following error:
