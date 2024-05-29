@@ -106,8 +106,8 @@ importers:
         specifier: 21.2.3
         version: 21.2.3(@pnpm/logger@5.0.0)
       '@pnpm/core':
-        specifier: 14.1.6
-        version: 14.1.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(@types/node@20.2.5)(@yarnpkg/core@3.5.2(typanion@3.14.0))(typanion@3.14.0)
+        specifier: 14.1.7
+        version: 14.1.7(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(@types/node@20.2.5)(@yarnpkg/core@3.5.2(typanion@3.14.0))(typanion@3.14.0)
       '@pnpm/default-reporter':
         specifier: 13.1.2
         version: 13.1.2(@pnpm/logger@5.0.0)
@@ -21366,8 +21366,8 @@ importers:
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
       '@pnpm/core':
-        specifier: 14.1.6
-        version: 14.1.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(@types/node@20.2.5)(@yarnpkg/core@4.0.5(typanion@3.14.0))(typanion@3.14.0)
+        specifier: 14.1.7
+        version: 14.1.7(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(@types/node@20.2.5)(@yarnpkg/core@4.0.5(typanion@3.14.0))(typanion@3.14.0)
       '@pnpm/network.ca-file':
         specifier: 3.0.0
         version: 3.0.0
@@ -21467,7 +21467,7 @@ importers:
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env-jest':
         specifier: 0.0.14
-        version: 0.0.14(@babel/core@7.20.2)(@babel/traverse@7.24.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1(esbuild@0.14.29))(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.5.0(webpack@5.91.0(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.91.0(esbuild@0.14.29)))
+        version: 0.0.14(@babel/core@7.11.6)(@babel/traverse@7.24.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1(esbuild@0.14.29))(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.5.0(webpack@5.91.0(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.91.0(esbuild@0.14.29)))
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -21520,8 +21520,8 @@ importers:
         specifier: 21.2.3
         version: 21.2.3(@pnpm/logger@5.0.0)
       '@pnpm/core':
-        specifier: 14.1.6
-        version: 14.1.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(@types/node@20.2.5)(@yarnpkg/core@4.0.5(typanion@3.14.0))(typanion@3.14.0)
+        specifier: 14.1.7
+        version: 14.1.7(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(@types/node@20.2.5)(@yarnpkg/core@4.0.5(typanion@3.14.0))(typanion@3.14.0)
       '@pnpm/default-reporter':
         specifier: 13.1.2
         version: 13.1.2(@pnpm/logger@5.0.0)
@@ -27988,9 +27988,15 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.21
         version: 17.0.25
+      assert:
+        specifier: ^2.1.0
+        version: 2.1.0
       browserify-zlib:
         specifier: 0.2.0
         version: 0.2.0
+      buffer:
+        specifier: 6.0.3
+        version: 6.0.3
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
@@ -28045,6 +28051,9 @@ importers:
       process:
         specifier: 0.11.10
         version: 0.11.10
+      punycode:
+        specifier: ^2.3.1
+        version: 2.3.1
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -28066,12 +28075,21 @@ importers:
       stream-http:
         specifier: 3.2.0
         version: 3.2.0
+      string_decoder:
+        specifier: ^1.3.0
+        version: 1.3.0
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
       tty-browserify:
         specifier: 0.0.1
         version: 0.0.1
+      url:
+        specifier: ^0.11.3
+        version: 0.11.3
+      util:
+        specifier: ^0.12.5
+        version: 0.12.5
       vm-browserify:
         specifier: 1.1.2
         version: 1.1.2
@@ -30528,8 +30546,8 @@ packages:
     peerDependencies:
       '@pnpm/logger': ^5.0.0
 
-  '@pnpm/core@14.1.6':
-    resolution: {integrity: sha512-LlQ4SOG38HN9HqiBmvDmexo4Zyto2gZEhQKL6N3eAmXUUKKFAep6gF7Qt0DCwNrxq/S726GGOgd5wg4DbfJAXQ==}
+  '@pnpm/core@14.1.7':
+    resolution: {integrity: sha512-H5jiO2EFaU2I7Stgv0weW0ChY32KA4FgOCQz+y5j9mayWesqP1GeawEh4Q2NLFnLN6oSTLm1Cc7VaQ3CS7YfkQ==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -30952,8 +30970,8 @@ packages:
     resolution: {integrity: sha512-/nqcyEczeV+hPibC27zzyqYX34mJp6aOlv+WCR+RDVcUVZ0oVjhLvyAVLgA12fJLhfB1eP9iitRV5WKkT6ac9w==}
     engines: {node: '>=18.12'}
 
-  '@pnpm/resolve-dependencies@33.0.2':
-    resolution: {integrity: sha512-phEL67wC9kVVBS2IFACWirNTKI7lsW/YKozSRQqY2MxipqhPHFUjMfcKQYti5tZGAba8r4jCFIEBiu8qNE1KOQ==}
+  '@pnpm/resolve-dependencies@33.0.3':
+    resolution: {integrity: sha512-NpA8MJIUdoTaNtB+sEolxBwJSRWOhZ7v/PGEjftwl0Tf4cNskwUuLWLzQqOoGYJRmqd2Ko6CgPxWxj2eoeYIMg==}
     engines: {node: '>=18.12'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -55408,7 +55426,7 @@ snapshots:
       '@pnpm/logger': 5.0.0
       '@pnpm/types': 10.1.0
 
-  '@pnpm/core@14.1.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(@types/node@20.2.5)(@yarnpkg/core@3.5.2(typanion@3.14.0))(typanion@3.14.0)':
+  '@pnpm/core@14.1.7(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(@types/node@20.2.5)(@yarnpkg/core@3.5.2(typanion@3.14.0))(typanion@3.14.0)':
     dependencies:
       '@pnpm/build-modules': 13.0.1(@pnpm/logger@5.0.0)(@types/node@20.2.5)(typanion@3.14.0)
       '@pnpm/builder.policy': 3.0.0
@@ -55447,7 +55465,7 @@ snapshots:
       '@pnpm/read-package-json': 9.0.2
       '@pnpm/read-project-manifest': 6.0.2
       '@pnpm/remove-bins': 6.0.2(@pnpm/logger@5.0.0)
-      '@pnpm/resolve-dependencies': 33.0.2(@pnpm/logger@5.0.0)(typanion@3.14.0)
+      '@pnpm/resolve-dependencies': 33.0.3(@pnpm/logger@5.0.0)(typanion@3.14.0)
       '@pnpm/resolver-base': 12.0.1
       '@pnpm/store-controller-types': 18.1.0
       '@pnpm/symlink-dependency': 8.0.1(@pnpm/logger@5.0.0)
@@ -55475,7 +55493,7 @@ snapshots:
       - supports-color
       - typanion
 
-  '@pnpm/core@14.1.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(@types/node@20.2.5)(@yarnpkg/core@4.0.5(typanion@3.14.0))(typanion@3.14.0)':
+  '@pnpm/core@14.1.7(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(@types/node@20.2.5)(@yarnpkg/core@4.0.5(typanion@3.14.0))(typanion@3.14.0)':
     dependencies:
       '@pnpm/build-modules': 13.0.1(@pnpm/logger@5.0.0)(@types/node@20.2.5)(typanion@3.14.0)
       '@pnpm/builder.policy': 3.0.0
@@ -55514,7 +55532,7 @@ snapshots:
       '@pnpm/read-package-json': 9.0.2
       '@pnpm/read-project-manifest': 6.0.2
       '@pnpm/remove-bins': 6.0.2(@pnpm/logger@5.0.0)
-      '@pnpm/resolve-dependencies': 33.0.2(@pnpm/logger@5.0.0)(typanion@3.14.0)
+      '@pnpm/resolve-dependencies': 33.0.3(@pnpm/logger@5.0.0)(typanion@3.14.0)
       '@pnpm/resolver-base': 12.0.1
       '@pnpm/store-controller-types': 18.1.0
       '@pnpm/symlink-dependency': 8.0.1(@pnpm/logger@5.0.0)
@@ -56500,7 +56518,7 @@ snapshots:
       cli-columns: 4.0.0
       semver: 7.6.2
 
-  '@pnpm/resolve-dependencies@33.0.2(@pnpm/logger@5.0.0)(typanion@3.14.0)':
+  '@pnpm/resolve-dependencies@33.0.3(@pnpm/logger@5.0.0)(typanion@3.14.0)':
     dependencies:
       '@pnpm/constants': 8.0.0
       '@pnpm/core-loggers': 10.0.1(@pnpm/logger@5.0.0)
@@ -59288,7 +59306,6 @@ snapshots:
       '@teambit/component-id': 1.2.0
       '@teambit/design.ui.brand.logo': 1.96.2(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
       '@teambit/harmony': 0.4.6
-      '@teambit/host-initializer': file:scopes/harmony/host-initializer(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
       '@teambit/legacy-bit-id': 1.1.1
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
       '@teambit/scope.modules.find-scope-path': 0.0.1
@@ -62338,7 +62355,7 @@ snapshots:
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(@types/node@20.2.5)(@types/react@17.0.80)(@yarnpkg/core@3.5.2(typanion@3.14.0))(react@17.0.2)(typanion@3.14.0)':
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@pnpm/core': 14.1.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(@types/node@20.2.5)(@yarnpkg/core@3.5.2(typanion@3.14.0))(typanion@3.14.0)
+      '@pnpm/core': 14.1.7(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(@types/node@20.2.5)(@yarnpkg/core@3.5.2(typanion@3.14.0))(typanion@3.14.0)
       '@pnpm/network.ca-file': 3.0.0
       '@pnpm/types': 10.1.0
       '@teambit/bit-error': 0.0.404
@@ -64819,7 +64836,6 @@ snapshots:
       '@teambit/generator.aspect-docs.generator': file:scopes/generator/aspect-docs/generator(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
       '@teambit/git.modules.git-ignore': 1.0.2
       '@teambit/harmony': 0.4.6
-      '@teambit/host-initializer': file:scopes/harmony/host-initializer(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
       '@types/react': 17.0.80
@@ -65070,6 +65086,67 @@ snapshots:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
 
+  '@teambit/harmony.envs.core-aspect-env-jest@0.0.14(@babel/core@7.11.6)(@babel/traverse@7.24.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1(esbuild@0.14.29))(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.5.0(webpack@5.91.0(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.91.0(esbuild@0.14.29)))':
+    dependencies:
+      '@babel/runtime': 7.20.0
+      '@mdx-js/react': 1.6.22(react@17.0.2)
+      '@teambit/compilation.babel-compiler': 1.1.8
+      '@teambit/defender.jest-tester': 1.0.25(@babel/traverse@7.24.6)(@types/node@20.2.5)(babel-plugin-macros@3.1.0)
+      '@teambit/harmony.envs.core-aspect-env': 0.0.33(@babel/core@7.11.6)(@babel/traverse@7.24.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1(esbuild@0.14.29))(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.5.0(webpack@5.91.0(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.91.0(esbuild@0.14.29)))
+      '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
+      '@teambit/react.jest.react-jest': 1.0.20(@babel/core@7.11.6)(@babel/traverse@7.24.6)(@types/node@20.2.5)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+      '@teambit/typescript.typescript-compiler': 2.0.26
+      '@types/react': 17.0.80
+      '@types/react-dom': 17.0.25
+      core-js: 3.13.0
+      graphql: 15.8.0
+      jest-environment-node: 29.3.1
+      mocha: 10.2.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+      react-router-dom: 6.23.1(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@babel/traverse'
+      - '@parcel/css'
+      - '@swc/core'
+      - '@swc/css'
+      - '@testing-library/react'
+      - '@types/express'
+      - '@types/node'
+      - '@types/webpack'
+      - babel-plugin-macros
+      - bufferutil
+      - canvas
+      - clean-css
+      - csso
+      - debug
+      - encoding
+      - esbuild
+      - eslint
+      - eslint-import-resolver-typescript
+      - eslint-import-resolver-webpack
+      - fibers
+      - html-webpack-plugin
+      - less
+      - lightningcss
+      - node-notifier
+      - node-sass
+      - puppeteer
+      - sass-embedded
+      - sockjs-client
+      - supports-color
+      - ts-node
+      - type-fest
+      - typescript
+      - uglify-js
+      - utf-8-validate
+      - vue-template-compiler
+      - webpack-cli
+      - webpack-dev-server
+      - webpack-hot-middleware
+      - webpack-plugin-serve
+
   '@teambit/harmony.envs.core-aspect-env-jest@0.0.14(@babel/core@7.19.6)(@babel/traverse@7.24.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1(esbuild@0.14.29))(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2(webpack@5.84.1(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(type-fest@0.21.3)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.84.1(esbuild@0.14.29)))':
     dependencies:
       '@babel/runtime': 7.20.0
@@ -65192,22 +65269,34 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/harmony.envs.core-aspect-env-jest@0.0.14(@babel/core@7.20.2)(@babel/traverse@7.24.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1(esbuild@0.14.29))(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.5.0(webpack@5.91.0(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.91.0(esbuild@0.14.29)))':
+  '@teambit/harmony.envs.core-aspect-env@0.0.33(@babel/core@7.11.6)(@babel/traverse@7.24.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1(esbuild@0.14.29))(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.5.0(webpack@5.84.1(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.84.1(esbuild@0.14.29)))':
     dependencies:
+      '@babel/plugin-proposal-decorators': 7.24.6(@babel/core@7.11.6)
+      '@babel/plugin-transform-class-properties': 7.24.6(@babel/core@7.11.6)
+      '@babel/plugin-transform-modules-commonjs': 7.24.6(@babel/core@7.11.6)
+      '@babel/plugin-transform-object-rest-spread': 7.24.6(@babel/core@7.11.6)
+      '@babel/preset-env': 7.24.6(@babel/core@7.11.6)
+      '@babel/preset-react': 7.24.6(@babel/core@7.11.6)
+      '@babel/preset-typescript': 7.24.6(@babel/core@7.11.6)
       '@babel/runtime': 7.20.0
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/compilation.babel-compiler': 1.1.8
-      '@teambit/defender.jest-tester': 1.0.25(@babel/traverse@7.24.6)(@types/node@20.2.5)(babel-plugin-macros@3.1.0)
-      '@teambit/harmony.envs.core-aspect-env': 0.0.33(@babel/core@7.20.2)(@babel/traverse@7.24.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1(esbuild@0.14.29))(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.5.0(webpack@5.91.0(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.91.0(esbuild@0.14.29)))
+      '@teambit/defender.eslint-linter': 1.0.22(eslint@8.56.0)
+      '@teambit/defender.mocha-tester': 1.0.19
+      '@teambit/defender.prettier-formatter': 1.0.11
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
-      '@teambit/react.jest.react-jest': 1.0.20(@babel/core@7.20.2)(@babel/traverse@7.24.6)(@types/node@20.2.5)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+      '@teambit/preview.react-preview': 1.0.25(@babel/core@7.11.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/react@17.0.80)(@types/webpack@5.28.1(esbuild@0.14.29))(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(eslint@8.56.0)(graphql@15.8.0)(less@4.2.0)(lightningcss@1.25.1)(react-dom@17.0.2(react@17.0.2))(react@17.0.2)(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)
+      '@teambit/react.react-env': 1.0.54(@babel/core@7.11.6)(@babel/traverse@7.24.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1(esbuild@0.14.29))(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(html-webpack-plugin@5.5.0(webpack@5.84.1(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(type-fest@3.13.1)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.84.1(esbuild@0.14.29)))
+      '@teambit/react.v17.docs-template': 1.0.0(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/react@17.0.80)(encoding@0.1.13)(graphql@15.8.0)(react-dom@17.0.2(react@17.0.2))(react@17.0.2)(typescript@5.3.3)
+      '@teambit/react.v17.mounter': 1.0.1(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
       '@teambit/typescript.typescript-compiler': 2.0.26
       '@types/react': 17.0.80
       '@types/react-dom': 17.0.25
+      babel-plugin-transform-typescript-metadata: 0.3.2(@babel/core@7.11.6)(@babel/traverse@7.24.6)
       core-js: 3.13.0
       graphql: 15.8.0
-      jest-environment-node: 29.3.1
       mocha: 10.2.0
+      ramda: 0.29.1
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
       react-router-dom: 6.23.1(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
@@ -65253,7 +65342,7 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/harmony.envs.core-aspect-env@0.0.33(@babel/core@7.11.6)(@babel/traverse@7.24.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1(esbuild@0.14.29))(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.5.0(webpack@5.84.1(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.84.1(esbuild@0.14.29)))':
+  '@teambit/harmony.envs.core-aspect-env@0.0.33(@babel/core@7.11.6)(@babel/traverse@7.24.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1(esbuild@0.14.29))(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.5.0(webpack@5.91.0(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.91.0(esbuild@0.14.29)))':
     dependencies:
       '@babel/plugin-proposal-decorators': 7.24.6(@babel/core@7.11.6)
       '@babel/plugin-transform-class-properties': 7.24.6(@babel/core@7.11.6)
@@ -65270,7 +65359,7 @@ snapshots:
       '@teambit/defender.prettier-formatter': 1.0.11
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
       '@teambit/preview.react-preview': 1.0.25(@babel/core@7.11.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/react@17.0.80)(@types/webpack@5.28.1(esbuild@0.14.29))(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(eslint@8.56.0)(graphql@15.8.0)(less@4.2.0)(lightningcss@1.25.1)(react-dom@17.0.2(react@17.0.2))(react@17.0.2)(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)
-      '@teambit/react.react-env': 1.0.54(@babel/core@7.11.6)(@babel/traverse@7.24.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1(esbuild@0.14.29))(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(html-webpack-plugin@5.5.0(webpack@5.84.1(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(type-fest@3.13.1)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.84.1(esbuild@0.14.29)))
+      '@teambit/react.react-env': 1.0.54(@babel/core@7.11.6)(@babel/traverse@7.24.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1(esbuild@0.14.29))(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(html-webpack-plugin@5.5.0(webpack@5.91.0(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(type-fest@3.13.1)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.91.0(esbuild@0.14.29)))
       '@teambit/react.v17.docs-template': 1.0.0(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/react@17.0.80)(encoding@0.1.13)(graphql@15.8.0)(react-dom@17.0.2(react@17.0.2))(react@17.0.2)(typescript@5.3.3)
       '@teambit/react.v17.mounter': 1.0.1(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
       '@teambit/typescript.typescript-compiler': 2.0.26
@@ -67775,7 +67864,7 @@ snapshots:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@pnpm/client': 11.1.0(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(typanion@3.14.0)
       '@pnpm/config': 21.2.3(@pnpm/logger@5.0.0)
-      '@pnpm/core': 14.1.6(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(@types/node@20.2.5)(@yarnpkg/core@3.5.2(typanion@3.14.0))(typanion@3.14.0)
+      '@pnpm/core': 14.1.7(@pnpm/logger@5.0.0)(@pnpm/worker@1.0.3(@pnpm/logger@5.0.0)(@types/node@20.2.5))(@types/node@20.2.5)(@yarnpkg/core@3.5.2(typanion@3.14.0))(typanion@3.14.0)
       '@pnpm/default-reporter': 13.1.2(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path': 5.0.0
       '@pnpm/error': 6.0.1
@@ -68966,6 +69055,62 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
+  '@teambit/react.apps.react-app-types@1.0.21(@babel/core@7.11.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/react@17.0.80)(@types/webpack@5.28.1(esbuild@0.14.29))(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.5.0(webpack@5.91.0(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.91.0(esbuild@0.14.29)))':
+    dependencies:
+      '@prerenderer/prerenderer': 1.2.5(@types/express@4.17.13)(debug@4.3.4)
+      '@prerenderer/renderer-jsdom': 1.1.9(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+      '@prerenderer/webpack-plugin': 5.3.10(@types/express@4.17.13)(debug@4.3.4)(html-webpack-plugin@5.5.0(webpack@5.91.0(esbuild@0.14.29)))(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(webpack@5.91.0(esbuild@0.14.29))
+      '@teambit/bit-error': 0.0.402
+      '@teambit/react.rendering.ssr': 1.0.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@teambit/react.webpack.react-webpack': 1.0.25(@babel/core@7.11.6)(@types/webpack@5.28.1(esbuild@0.14.29))(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.0)(react@18.3.1)(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.91.0(esbuild@0.14.29)))
+      '@teambit/toolbox.network.get-port': 1.0.0
+      '@teambit/ui-foundation.ui.pages.static-error': 0.0.88(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/react@17.0.80)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@teambit/webpack.transformers.favicon-reload': 1.0.0
+      '@teambit/webpack.webpack-bundler': 1.0.7(@parcel/css@1.14.0)(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.25.1)
+      '@teambit/webpack.webpack-dev-server': 1.0.8(@parcel/css@1.14.0)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.25.1)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack@5.91.0(esbuild@0.14.29))
+      express: 4.18.2
+      fs-extra: 10.1.0
+      lodash: 4.17.21
+      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.91.0(esbuild@0.14.29))
+      url-join: 4.0.0
+      webpack: 5.91.0(esbuild@0.14.29)
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@parcel/css'
+      - '@swc/core'
+      - '@swc/css'
+      - '@testing-library/react'
+      - '@types/express'
+      - '@types/react'
+      - '@types/webpack'
+      - bufferutil
+      - canvas
+      - clean-css
+      - csso
+      - debug
+      - esbuild
+      - eslint
+      - fibers
+      - html-webpack-plugin
+      - less
+      - lightningcss
+      - node-sass
+      - puppeteer
+      - react
+      - react-dom
+      - sass-embedded
+      - sockjs-client
+      - supports-color
+      - type-fest
+      - typescript
+      - uglify-js
+      - utf-8-validate
+      - vue-template-compiler
+      - webpack-cli
+      - webpack-dev-server
+      - webpack-hot-middleware
+      - webpack-plugin-serve
+
   '@teambit/react.apps.react-app-types@1.0.21(@babel/core@7.12.9)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/react@17.0.80)(@types/webpack@5.28.1(esbuild@0.14.29))(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.5.0(webpack@5.91.0(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.91.0(esbuild@0.14.29)))':
     dependencies:
       '@prerenderer/prerenderer': 1.2.5(@types/express@4.17.13)(debug@4.3.4)
@@ -69853,6 +69998,84 @@ snapshots:
       '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@teambit/preview.react-preview': 1.0.25(@babel/core@7.11.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/react@17.0.80)(@types/webpack@5.28.1(esbuild@0.14.29))(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(eslint@8.56.0)(graphql@15.8.0)(less@4.2.0)(lightningcss@1.25.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)
       '@teambit/react.apps.react-app-types': 1.0.21(@babel/core@7.11.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/react@17.0.80)(@types/webpack@5.28.1(esbuild@0.14.29))(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.5.0(webpack@5.84.1(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.84.1(esbuild@0.14.29)))
+      '@teambit/react.eslint-config-bit-react': 1.0.141(eslint-plugin-import@2.29.1(@typescript-eslint/parser@6.19.1(eslint@8.56.0)(typescript@5.3.3))(eslint@8.56.0))(eslint-plugin-jsx-a11y@6.8.0(eslint@8.56.0))(eslint-plugin-react-hooks@4.6.0(eslint@8.56.0))(eslint-plugin-react@7.33.2(eslint@8.56.0))(eslint@8.56.0)(typescript@5.3.3)
+      '@teambit/react.generator.react-starters': 1.0.8
+      '@teambit/react.generator.react-templates': 1.0.11
+      '@teambit/react.jest.react-jest': 1.0.20(@babel/core@7.11.6)(@babel/traverse@7.24.6)(@types/node@20.2.5)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+      '@teambit/react.mounter': 1.0.3
+      '@teambit/typescript.typescript-compiler': 2.0.24
+      '@testing-library/jest-dom': 5.16.5
+      '@types/react': 17.0.80
+      '@types/react-dom': 17.0.25
+      '@typescript-eslint/eslint-plugin': 6.19.1(@typescript-eslint/parser@6.19.1(eslint@8.56.0)(typescript@5.3.3))(eslint@8.56.0)(typescript@5.3.3)
+      '@typescript-eslint/parser': 6.19.1(eslint@8.56.0)(typescript@5.3.3)
+      browserslist: 4.21.4
+      core-js: 3.13.0
+      eslint: 8.56.0
+      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.19.1(eslint@8.56.0)(typescript@5.3.3))(eslint@8.56.0)
+      eslint-plugin-jest: 27.6.3(@typescript-eslint/eslint-plugin@6.19.1(@typescript-eslint/parser@6.19.1(eslint@8.56.0)(typescript@5.3.3))(eslint@8.56.0)(typescript@5.3.3))(eslint@8.56.0)(jest@29.3.1(@types/node@20.2.5)(babel-plugin-macros@3.1.0))(typescript@5.3.3)
+      eslint-plugin-jsx-a11y: 6.8.0(eslint@8.56.0)
+      eslint-plugin-mdx: 3.1.5(eslint@8.56.0)
+      eslint-plugin-react: 7.33.2(eslint@8.56.0)
+      eslint-plugin-react-hooks: 4.6.0(eslint@8.56.0)
+      graphql: 15.8.0
+      jest: 29.3.1(@types/node@20.2.5)(babel-plugin-macros@3.1.0)
+      pino-pretty: 4.5.0
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      typescript: 5.3.3
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@babel/traverse'
+      - '@parcel/css'
+      - '@swc/core'
+      - '@swc/css'
+      - '@testing-library/react'
+      - '@types/express'
+      - '@types/node'
+      - '@types/webpack'
+      - babel-plugin-macros
+      - bufferutil
+      - canvas
+      - clean-css
+      - csso
+      - debug
+      - encoding
+      - esbuild
+      - eslint-import-resolver-typescript
+      - eslint-import-resolver-webpack
+      - fibers
+      - html-webpack-plugin
+      - less
+      - lightningcss
+      - node-notifier
+      - node-sass
+      - puppeteer
+      - sass-embedded
+      - sockjs-client
+      - supports-color
+      - ts-node
+      - type-fest
+      - uglify-js
+      - utf-8-validate
+      - vue-template-compiler
+      - webpack-cli
+      - webpack-dev-server
+      - webpack-hot-middleware
+      - webpack-plugin-serve
+
+  '@teambit/react.react-env@1.0.54(@babel/core@7.11.6)(@babel/traverse@7.24.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/node@20.2.5)(@types/webpack@5.28.1(esbuild@0.14.29))(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(html-webpack-plugin@5.5.0(webpack@5.91.0(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(type-fest@3.13.1)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.91.0(esbuild@0.14.29)))':
+    dependencies:
+      '@babel/runtime': 7.20.0
+      '@mdx-js/react': 1.6.22(react@18.3.1)
+      '@teambit/defender.eslint-linter': 1.0.22(eslint@8.56.0)
+      '@teambit/defender.jest-tester': 1.0.25(@babel/traverse@7.24.6)(@types/node@20.2.5)(babel-plugin-macros@3.1.0)
+      '@teambit/defender.prettier-formatter': 1.0.11
+      '@teambit/dependencies.modules.packages-excluder': 1.0.8(react@18.3.1)
+      '@teambit/docs.docs-template': 1.0.4(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/react@17.0.80)(encoding@0.1.13)(graphql@15.8.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.3.3)
+      '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@teambit/preview.react-preview': 1.0.25(@babel/core@7.11.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/react@17.0.80)(@types/webpack@5.28.1(esbuild@0.14.29))(bufferutil@4.0.3)(debug@4.3.4)(encoding@0.1.13)(esbuild@0.14.29)(eslint@8.56.0)(graphql@15.8.0)(less@4.2.0)(lightningcss@1.25.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)
+      '@teambit/react.apps.react-app-types': 1.0.21(@babel/core@7.11.6)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@testing-library/react@12.1.5(react-dom@17.0.2(react@17.0.2))(react@17.0.2))(@types/express@4.17.13)(@types/react@17.0.80)(@types/webpack@5.28.1(esbuild@0.14.29))(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.5.0(webpack@5.91.0(esbuild@0.14.29)))(less@4.2.0)(lightningcss@1.25.1)(puppeteer@13.7.0(bufferutil@4.0.3)(encoding@0.1.13)(utf-8-validate@5.0.5))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@3.13.1)(typescript@5.3.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.91.0(esbuild@0.14.29)))
       '@teambit/react.eslint-config-bit-react': 1.0.141(eslint-plugin-import@2.29.1(@typescript-eslint/parser@6.19.1(eslint@8.56.0)(typescript@5.3.3))(eslint@8.56.0))(eslint-plugin-jsx-a11y@6.8.0(eslint@8.56.0))(eslint-plugin-react-hooks@4.6.0(eslint@8.56.0))(eslint-plugin-react@7.33.2(eslint@8.56.0))(eslint@8.56.0)(typescript@5.3.3)
       '@teambit/react.generator.react-starters': 1.0.8
       '@teambit/react.generator.react-templates': 1.0.11
@@ -75787,7 +76010,9 @@ snapshots:
       '@teambit/webpack.plugins.inject-head-webpack-plugin': file:scopes/webpack/plugins/inject-head-webpack-plugin(html-webpack-plugin@5.3.2(webpack@5.84.1(esbuild@0.14.29)))
       '@types/react': 17.0.80
       '@types/react-dom': 17.0.25
+      assert: 2.1.0
       browserify-zlib: 0.2.0
+      buffer: 6.0.3
       camelcase: 6.2.0
       compression-webpack-plugin: 11.0.0(webpack@5.84.1(esbuild@0.14.29))
       constants-browserify: 1.0.0
@@ -75806,6 +76031,7 @@ snapshots:
       p-map-series: 2.1.0
       path-browserify: 1.0.1
       process: 0.11.10
+      punycode: 2.3.1
       querystring-es3: 0.2.1
       react: 17.0.2
       react-dev-utils: 11.0.4(eslint@8.56.0)(typescript@5.3.3)(webpack@5.84.1(esbuild@0.14.29))
@@ -75813,8 +76039,11 @@ snapshots:
       react-router-dom: 6.23.1(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
       stream-browserify: 3.0.0
       stream-http: 3.2.0
+      string_decoder: 1.3.0
       timers-browserify: 2.0.12
       tty-browserify: 0.0.1
+      url: 0.11.3
+      util: 0.12.5
       vm-browserify: 1.1.2
       webpack: 5.84.1(esbuild@0.14.29)
       webpack-assets-manifest: 5.1.0(webpack@5.84.1(esbuild@0.14.29))
@@ -79528,7 +79757,7 @@ snapshots:
   buffer@4.9.2:
     dependencies:
       base64-js: 1.5.1
-      ieee754: 1.1.13
+      ieee754: 1.2.1
       isarray: 1.0.0
 
   buffer@5.7.1:
