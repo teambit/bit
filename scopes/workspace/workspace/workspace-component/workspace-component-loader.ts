@@ -302,8 +302,17 @@ export class WorkspaceComponentLoader {
     let wsComponentsWithAspects = workspaceComponents;
     // if (loadOpts.seeders) {
     this.logger.profile('executeLoadSlot');
+    const isDepsCacheEmpty = await this.workspace.consumer.componentFsCache.isDependenciesDataCacheEmpty();
+    // If the deps cache is empty, we should load the components one by one, to prevent race conditions, and improve
+    // performance during the deps calculation.
+    // otherwise, we need to load them concurrently
+    const concurrency = isDepsCacheEmpty ? 1 : concurrentComponentsLimit();
+    this.logger.debug(
+      `workspace-component-loader, getAndLoadSlot, loading with concurrency: ${concurrency}, isDepsCacheEmpty: ${isDepsCacheEmpty}`
+    );
+
     wsComponentsWithAspects = await pMapPool(workspaceComponents, (component) => this.executeLoadSlot(component), {
-      concurrency: concurrentComponentsLimit(),
+      concurrency,
     });
     this.logger.profile('executeLoadSlot');
     await this.warnAboutMisconfiguredEnvs(wsComponentsWithAspects);

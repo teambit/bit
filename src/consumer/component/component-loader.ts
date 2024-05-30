@@ -151,6 +151,15 @@ export default class ComponentLoader {
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents, removedComponents };
     const storeInCache = loadOptsWithDefaults?.storeInCache ?? true;
     const allComponents: Component[] = [];
+    const isDepsCacheEmpty = await this.componentFsCache.isDependenciesDataCacheEmpty();
+    // If the deps cache is empty, we should load the components one by one, to prevent race conditions, and improve
+    // performance during the deps calculation.
+    // otherwise, we need to load them concurrently
+    const concurrency = isDepsCacheEmpty ? 1 : concurrentComponentsLimit();
+    logger.debug(
+      `workspace-component-loader, getAndLoadSlot, loading with concurrency: ${concurrency}, isDepsCacheEmpty: ${isDepsCacheEmpty}`
+    );
+
     // await mapSeries(idsToProcess, async (id: BitId) => {
     // await Promise.all(
     await pMapPool(
@@ -173,7 +182,7 @@ export default class ComponentLoader {
           allComponents.push(component);
         }
       },
-      { concurrency: concurrentComponentsLimit() }
+      { concurrency }
     );
 
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents, removedComponents };

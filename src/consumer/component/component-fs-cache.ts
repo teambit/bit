@@ -1,5 +1,6 @@
 import cacache, { GetCacheObject } from 'cacache';
 import path from 'path';
+import { isEmpty } from 'lodash';
 import fs from 'fs-extra';
 import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '../../api/consumer/lib/feature-toggle';
 import { PathOsBasedAbsolute } from '../../utils/path';
@@ -64,6 +65,11 @@ export class ComponentFsCache {
 
   async listDependenciesDataCache() {
     return cacache.ls(this.getCachePath(DEPS));
+  }
+
+  async isDependenciesDataCacheEmpty() {
+    const cache = await cacache.ls(this.getCachePath(DEPS));
+    return isEmpty(cache);
   }
 
   async getVersionsDataFromCache(idStr: string): Promise<{ timestamp: number; data: string } | null> {
