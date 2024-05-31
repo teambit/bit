@@ -151,8 +151,8 @@ export default class ComponentLoader {
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents, removedComponents };
     const storeInCache = loadOptsWithDefaults?.storeInCache ?? true;
     const allComponents: Component[] = [];
-    // await mapSeries(idsToProcess, async (id: BitId) => {
-    // await Promise.all(
+    const shouldRunInParallel = await this.shouldRunInParallel(idsToProcess);
+    logger.debug(`loading ${idsToProcess.length} components in parallel: ${shouldRunInParallel.toString()}`);
     await pMapPool(
       idsToProcess,
       async (id: ComponentID) => {
@@ -173,7 +173,7 @@ export default class ComponentLoader {
           allComponents.push(component);
         }
       },
-      { concurrency: concurrentComponentsLimit() }
+      { concurrency: shouldRunInParallel ? concurrentComponentsLimit() : 1 }
     );
 
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents, removedComponents };
@@ -238,7 +238,6 @@ export default class ComponentLoader {
     component.componentMap = this.consumer.bitMap.getComponent(updatedId);
 
     const loadDependencies = async () => {
-      await this.invalidateDependenciesCacheIfNeeded();
       await ComponentLoader.loadDeps(component, {
         cacheResolvedDependencies: this.cacheResolvedDependencies,
         cacheProjectAst: this.cacheProjectAst,
@@ -273,6 +272,27 @@ export default class ComponentLoader {
         component.issues.add(issue);
       });
     });
+  }
+
+  /**
+   * when multiple components don't have the dependencies cache, we have to parse lots of files to get the dependencies.
+   * in many cases, the same files are parsed for multiple components, so loading multiple components in parallel hurts
+   * the performance by making unnecessary fs calls.
+   * this function returns true only if the dependencies cache has all the components. or when only one component is missing.
+   */
+  private async shouldRunInParallel(ids: ComponentID[]): Promise<boolean> {
+    if (ids.length < 2) {
+      return false;
+    }
+    await this.invalidateDependenciesCacheIfNeeded();
+    const dependenciesCacheList = await this.componentFsCache.listDependenciesDataCache();
+    const depsInCache = Object.keys(dependenciesCacheList);
+    if (!depsInCache.length) {
+      return false;
+    }
+    const idsStr = ids.map((id) => id.toString());
+    const notInCache = idsStr.filter((id) => !depsInCache.includes(id));
+    return notInCache.length < 2;
   }
 
   private async _handleOutOfSyncScenarios(componentMap: ComponentMap): Promise<ComponentID | undefined> {
