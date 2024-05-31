@@ -18,6 +18,7 @@ import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import mergeFiles, { MergeFileParams } from '@teambit/legacy/dist/utils/merge-files';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
+import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { ConfigMergeResult, parseVersionLineWithConflict } from './config-merge-result';
 import { ConfigMergerAspect } from './config-merger.aspect';
 import { AggregatedDeps } from './aggregated-deps';
@@ -262,7 +263,14 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     };
   }
 
-  async updateDepsInWorkspaceConfig(components: ConsumerComponent[]): Promise<WorkspaceConfigUpdateResult | undefined> {
+  async updateDepsInWorkspaceConfig(
+    components: ConsumerComponent[],
+    mergeStrategy?: MergeStrategy
+  ): Promise<WorkspaceConfigUpdateResult | undefined> {
+    if (mergeStrategy === 'ours') {
+      this.logger.debug('mergeStrategy is "ours", skipping the workspace.jsonc update');
+      return undefined;
+    }
     const workspacePolicy = this.depsResolver.getWorkspacePolicyFromConfig();
     const workspacePolicyObj = workspacePolicy.entries.reduce((acc, current) => {
       acc[current.dependencyId] = current.value.version;
@@ -359,6 +367,10 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
         }
       };
       const addToConflict = () => {
+        if (mergeStrategy === 'theirs') {
+          addToUpdate();
+          return;
+        }
         workspaceDepsConflicts[lifeCycle].push({ name: depId, version: `CONFLICT::${depInWsVer}::${depInCompVer}` });
         logs.push(`${depId} - conflict. ours: ${depInWsVer}, theirs: ${depInCompVer}`);
       };
