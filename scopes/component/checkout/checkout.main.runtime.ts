@@ -32,7 +32,7 @@ export type CheckoutProps = {
   latest?: boolean;
   main?: boolean; // relevant for "revert" only
   promptMergeOptions?: boolean;
-  mergeStrategy?: MergeStrategy | null; // strategy to use in case of conflicts
+  mergeStrategy?: MergeStrategy; // strategy to use in case of conflicts
   forceOurs?: boolean; // regardless of conflicts, use ours
   forceTheirs?: boolean; // regardless of conflicts, use theirs
   verbose?: boolean;
@@ -168,6 +168,7 @@ export class CheckoutMain {
         skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap || checkoutProps.revert,
         shouldUpdateWorkspaceConfig: true,
         reasonForBitmapChange: 'checkout',
+        mergeStrategy: checkoutProps.mergeStrategy,
       };
       componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
     }
