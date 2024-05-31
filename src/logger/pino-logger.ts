@@ -58,7 +58,7 @@ export function getPinoLogger(
 
   const prettyPrintConsole = {
     colorize: true,
-    ignore: 'hostname,pid,time,level,severity',
+    ignore: 'hostname,pid,level,severity',
   };
 
   if (useWorkers) {
