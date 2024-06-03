@@ -26,18 +26,24 @@ export class SystemLogCmd implements Command {
   group = 'workspace';
   alias = '';
   loader = false;
-  options = [
-    ['t', 'tail', 'similar to "tail -f" command, print the log file to the screen as it is being written'],
-  ] as CommandOptions;
+  options = [] as CommandOptions;
 
-  // @ts-ignore
-  async report([]: [], { tail }: { tail?: boolean }) {
-    if (tail) {
-      cp.execSync(`tail -f ${DEBUG_LOG}`, { stdio: 'inherit' });
-      // wait indefinitely for a promise to keep the process running
-      return new Promise(() => {});
-    }
+  async report() {
     const logFile = fs.readFileSync(DEBUG_LOG, 'utf8');
     return logFile;
+  }
+}
+
+export class SystemTailLogCmd implements Command {
+  name = 'tail-log';
+  description = `print the log file to the screen as it is being written`;
+  extendedDescription = 'similar to linux "tail -f" command';
+  group = 'workspace';
+  alias = '';
+  loader = false;
+  options = [] as CommandOptions;
+
+  async wait() {
+    cp.execSync(`tail -f ${DEBUG_LOG}`, { stdio: 'inherit' });
   }
 }
