@@ -237,7 +237,7 @@ export class InstallMain {
       addMissingDeps: installMissing,
       skipIfExisting: true,
       writeConfigFiles: false,
-      // skipPrune: true,
+      skipPrune: true,
     });
   }
 
