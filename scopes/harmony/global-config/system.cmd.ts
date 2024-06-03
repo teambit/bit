@@ -2,6 +2,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import fs from 'fs-extra';
 import chalk from 'chalk';
+import cp from 'child_process';
 import { DEBUG_LOG } from '@teambit/legacy/dist/constants';
 
 export class SystemCmd implements Command {
@@ -24,9 +25,18 @@ export class SystemLogCmd implements Command {
   description = `print debug.log to the screen`;
   group = 'workspace';
   alias = '';
-  options = [] as CommandOptions;
+  loader = false;
+  options = [
+    ['t', 'tail', 'similar to "tail -f" command, print the log file to the screen as it is being written'],
+  ] as CommandOptions;
 
-  async report() {
+  // @ts-ignore
+  async report([]: [], { tail }: { tail?: boolean }) {
+    if (tail) {
+      cp.execSync(`tail -f ${DEBUG_LOG}`, { stdio: 'inherit' });
+      // wait indefinitely for a promise to keep the process running
+      return new Promise(() => {});
+    }
     const logFile = fs.readFileSync(DEBUG_LOG, 'utf8');
     return logFile;
   }
