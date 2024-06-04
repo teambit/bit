@@ -13,6 +13,7 @@ import {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
+import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path'
 import { Logger } from '@teambit/logger';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
@@ -31,7 +32,6 @@ import { join } from 'path';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
-import { getVirtualStoreDirMaxLength } from './get-virtual-store-dir-max-length';
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
@@ -315,7 +315,7 @@ export class PnpmPackageManager implements PackageManager {
           default: 'https://registry.npmjs.org',
         },
         search,
-        virtualStoreDirMaxLength: getVirtualStoreDirMaxLength(),
+        virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
       })
     ).map(([projectPath, builtDependenciesHierarchy]) => {
       pkgNamesToComponentIds(builtDependenciesHierarchy, { cache, getPkgLocation });

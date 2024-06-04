@@ -30,10 +30,10 @@ import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
 import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
+import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path'
 import toNerfDart from 'nerf-dart';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
-import { getVirtualStoreDirMaxLength } from './get-virtual-store-dir-max-length';
 
 const installsRunning: Record<string, Promise<any>> = {};
 const cafsLocker = new Map<string, number>();
@@ -81,7 +81,7 @@ async function createStoreController(
     fetchRetryMaxtimeout: options.networkConfig.fetchRetryMaxtimeout,
     fetchRetryMintimeout: options.networkConfig.fetchRetryMintimeout,
     fetchTimeout: options.networkConfig.fetchTimeout,
-    virtualStoreDirMaxLength: getVirtualStoreDirMaxLength(),
+    virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
   };
   return createOrConnectStoreController(opts);
 }
@@ -155,7 +155,7 @@ export async function getPeerDependencyIssues(
     overrides: opts.overrides,
     workspacePackages,
     registries: registriesMap,
-    virtualStoreDirMaxLength: getVirtualStoreDirMaxLength(),
+    virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
   });
 }
 
@@ -288,7 +288,7 @@ export async function install(
     depth: options.updateAll ? Infinity : 0,
     disableRelinkLocalDirDeps: true,
     hoistPattern,
-    virtualStoreDirMaxLength: getVirtualStoreDirMaxLength(),
+    virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
   };
 
   let dependenciesChanged = false;
