@@ -476,6 +476,15 @@
         "extendedDescription": "",
         "group": "workspace",
         "private": false
+      },
+      {
+        "name": "tail-log",
+        "alias": "",
+        "options": [],
+        "description": "print the log file to the screen as it is being written",
+        "extendedDescription": "similar to linux \"tail -f\" command",
+        "group": "workspace",
+        "private": false
       }
     ]
   },
