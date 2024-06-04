@@ -405,7 +405,7 @@ if you're willing to lose the history from the head to the specified version, us
       this.scope.legacyScope.setCurrentLaneId(laneId);
       this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
     }
-    const laneCompIds = lane?.toComponentIds();
+    const laneCompIds = lane?.toComponentIdsIncludeUpdateDependents();
     const snapDataPerComp = snapDataPerCompRaw.map((snapData) => {
       return {
         componentId: ComponentID.fromString(snapData.componentId),
