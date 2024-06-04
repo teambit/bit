@@ -152,7 +152,7 @@ class BitLogger implements IBitLogger {
         this.trace('a wrong color provided to logger.console method');
       }
     }
-    pinoLoggerConsole[level](messageStr);
+    console.log(messageStr); // eslint-disable-line no-console
   }
 
   /**
