@@ -364,7 +364,7 @@ once done, to continue working, please run "bit cc"`
 
   async isPartOfLaneHistory(id: ComponentID, lane: Lane) {
     if (!id.version) throw new Error(`isIdOnGivenLane expects id with version, got ${id.toString()}`);
-    const laneIds = lane.toBitIds();
+    const laneIds = lane.toComponentIdsIncludeUpdateDependents();
     if (laneIds.has(id)) return true; // in the lane with the same version
     const laneIdWithDifferentVersion = laneIds.searchWithoutVersion(id);
     if (!laneIdWithDifferentVersion) return false; // not in the lane at all
