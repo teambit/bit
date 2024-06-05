@@ -68,13 +68,7 @@ export default class NodeModuleLinker {
       );
       // if this cache is not cleared, then when asking workspace.get again to the same component, it returns it with
       // component-issues like "MissingLinksFromNodeModulesToSrc" incorrectly.
-
-      // TODO: this is now being commented to improve perf, it might be needed in some cases
-      // that we don't think of now.
-      // if you see issues with the envs after the install, try to uncomment this line.
-      // and WRITE A TEST FOR IT
-      // this.workspace.clearAllComponentsCache();
-      await this.workspace.clearCache();
+      this.workspace.clearAllComponentsCache();
     }
 
     await linkPkgsToBitRoots(
