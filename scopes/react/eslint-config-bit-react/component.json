@@ -49,9 +49,9 @@
         }
       }
     },
-    "teambit.harmony/node": {},
+    "teambit.node/node@1.0.18": {},
     "teambit.envs/envs": {
-      "env": "teambit.harmony/node"
+      "env": "teambit.node/node"
     }
   }
 }

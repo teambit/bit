@@ -966,7 +966,13 @@
         "scope": "teambit.workspace",
         "version": "0.0.173",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/modules/node-modules-linker"
+        "rootDir": "scopes/workspace/modules/node-modules-linker",
+        "config": {
+            "teambit.node/node@1.0.18": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/node"
+            }
+        }
     },
     "modules/requireable-component": {
         "name": "modules/requireable-component",
