@@ -397,7 +397,11 @@ export class InstallMain {
       // Otherwise, we might load an env from a location that we later remove.
       await installer.pruneModules(this.workspace.path);
     }
-    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
+    // this is now commented out because we assume we don't need it anymore.
+    // even when the env was not loaded before and it is loaded now, it should be fine because the dependencies-data
+    // is only about the auto-detect-deps. there are two more steps: version-resolution and apply-overrides that
+    // disregard the dependencies-cache.
+    // await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
   }
