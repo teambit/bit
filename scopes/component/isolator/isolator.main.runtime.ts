@@ -593,7 +593,6 @@ export class IsolatorMain {
     legacyScope?: Scope
   ): Promise<CapsuleList> {
     this.logger.debug(`createCapsules, ${components.length} components`);
-
     let longProcessLogger;
     if (opts.context?.aspects) {
       // const wsPath = opts.host?.path || 'unknown';
@@ -772,6 +771,7 @@ export class IsolatorMain {
       nodeLinker?: NodeLinker;
     }
   ) {
+    this.logger.profile(`installInCapsules ${capsulesDir}`);
     const installer = this.dependencyResolver.getInstaller({
       rootDir: capsulesDir,
       cacheRootDirectory: opts.cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
@@ -815,6 +815,7 @@ export class IsolatorMain {
       installOptions,
       packageManagerInstallOptions
     );
+    this.logger.profile(`installInCapsules ${capsulesDir}`);
   }
 
   private async linkInCapsules(
@@ -1025,6 +1026,7 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions
   ): Promise<Capsule[]> {
     this.logger.debug(`createCapsulesFromComponents: ${components.length} components`);
+    this.logger.profile(`createCapsulesFromComponents, total: ${components.length} components`);
     const capsules: Capsule[] = await pMap(
       components,
       (component: Component) => {
@@ -1032,6 +1034,7 @@ export class IsolatorMain {
       },
       { concurrency: concurrentComponentsLimit() }
     );
+    this.logger.profile(`createCapsulesFromComponents, total: ${components.length} components`);
     return capsules;
   }
 
