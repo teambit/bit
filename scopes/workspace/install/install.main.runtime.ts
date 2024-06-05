@@ -365,14 +365,7 @@ export class InstallMain {
         this.logger.setStatusLine(compileOutputMessage);
         if (shouldClearCacheOnInstall) {
           // We need to clear cache before compiling the components or it might compile them with the default env
-          // incorrectly in case the env was not loaded correctly before the install
-
-          // TODO: this is now being commented to improve perf, it might be needed in some cases
-          // that we don't think of now.
-          // if you see issues with the envs after the install, try to uncomment this line.
-          // and WRITE A TEST FOR IT
-          // this.workspace.consumer.componentLoader.clearComponentsCache();
-
+          // incorrectly in case the env was not loaded correctly before the installation.
           // We don't want to clear the failed to load envs because we want to show the warning at the end
           await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
           cacheCleared = true;
