@@ -358,21 +358,23 @@ export class InstallMain {
       );
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
+      const shouldClearCacheOnInstall = this.shouldClearCacheOnInstall();
       if (options?.compile ?? true) {
         const compileStartTime = process.hrtime();
         const compileOutputMessage = `compiling components`;
         this.logger.setStatusLine(compileOutputMessage);
-        // We need to clear cache before compiling the components or it might compile them with the default env
-        // incorrectly in case the env was not loaded correctly before the install
-        this.workspace.consumer.componentLoader.clearComponentsCache();
-        // We don't want to clear the failed to load envs because we want to show the warning at the end
-        await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
-        cacheCleared = true;
+        if (shouldClearCacheOnInstall) {
+          // We need to clear cache before compiling the components or it might compile them with the default env
+          // incorrectly in case the env was not loaded correctly before the installation.
+          // We don't want to clear the failed to load envs because we want to show the warning at the end
+          await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+          cacheCleared = true;
+        }
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
         this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
       if (options?.writeConfigFiles ?? true) {
-        await this.tryWriteConfigFiles(!cacheCleared);
+        await this.tryWriteConfigFiles(!cacheCleared && shouldClearCacheOnInstall);
       }
       if (!dependenciesChanged) break;
       if (!options?.recurringInstall) break;
@@ -381,9 +383,9 @@ export class InstallMain {
       prevManifests.add(manifestsHash(current.manifests));
       // If we run compile we do the clear cache before the compilation so no need to clean it again (it's an expensive
       // operation)
-      if (!cacheCleared) {
+      if (!cacheCleared && shouldClearCacheOnInstall) {
         // We need to clear cache before creating the new component manifests.
-        this.workspace.consumer.componentLoader.clearComponentsCache();
+        // this.workspace.consumer.componentLoader.clearComponentsCache();
         // We don't want to clear the failed to load envs because we want to show the warning at the end
         await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
       }
@@ -395,9 +397,18 @@ export class InstallMain {
       // Otherwise, we might load an env from a location that we later remove.
       await installer.pruneModules(this.workspace.path);
     }
-    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
+    // this is now commented out because we assume we don't need it anymore.
+    // even when the env was not loaded before and it is loaded now, it should be fine because the dependencies-data
+    // is only about the auto-detect-deps. there are two more steps: version-resolution and apply-overrides that
+    // disregard the dependencies-cache.
+    // await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
+  }
+
+  private shouldClearCacheOnInstall(): boolean {
+    const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
+    return nonLoadedEnvs.length > 0;
   }
 
   private async _getComponentsManifestsAndRootPolicy(

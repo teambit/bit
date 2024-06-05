@@ -741,17 +741,23 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     return workspaceAspectsLoader.getConfiguredUserAspectsPackages(options);
   }
 
+  /**
+   * clears workspace, scope and all components caches.
+   * doesn't clear the dependencies-data from the filesystem-cache.
+   */
   async clearCache(options: ClearCacheOptions = {}) {
+    this.logger.debug('clearing the workspace and scope caches');
     this.aspectLoader.resetFailedLoadAspects();
     if (!options.skipClearFailedToLoadEnvs) this.envs.resetFailedToLoadEnvs();
-    this.logger.debug('clearing the workspace and scope caches');
-    this.componentLoader.clearCache();
-    this.componentStatusLoader.clearCache();
     await this.scope.clearCache();
-    this.componentList = new ComponentsList(this.consumer);
     this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized.clear();
+    this.clearAllComponentsCache();
   }
 
+  /**
+   * clear the cache of all components in the workspace.
+   * doesn't clear the dependencies-data from the filesystem-cache.
+   */
   clearAllComponentsCache() {
     this.logger.debug('clearing all components caches');
     this.componentLoader.clearCache();

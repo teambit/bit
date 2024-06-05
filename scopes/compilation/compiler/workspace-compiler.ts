@@ -112,10 +112,6 @@ export class ComponentCompiler {
     dataToPersist.addManyFiles(this.dists);
     dataToPersist.addBasePath(this.workspace.path);
     await dataToPersist.persistAllToFS();
-    const linkComponents = options.linkComponents ?? true;
-    if (linkComponents) {
-      await linkToNodeModulesByComponents([this.component], this.workspace);
-    }
     const buildResults = this.dists.map((distFile) => distFile.path);
     if (this.component.state._consumer.compiler) loader.succeed();
 
@@ -338,6 +334,10 @@ export class WorkspaceCompiler {
     const grouped = this.groupByIsEnv(components);
     const envsResults = grouped.envs ? await this.runCompileComponents(grouped.envs, options, noThrow) : [];
     const otherResults = grouped.other ? await this.runCompileComponents(grouped.other, options, noThrow) : [];
+    const linkComponents = options.linkComponents ?? true;
+    if (linkComponents) {
+      await linkToNodeModulesByComponents(components, this.workspace);
+    }
     return [...envsResults, ...otherResults];
   }
 
