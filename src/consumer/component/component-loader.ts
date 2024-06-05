@@ -283,10 +283,10 @@ export default class ComponentLoader {
    * this function returns true only if the dependencies cache has all the components. or when only one component is missing.
    */
   private async shouldRunInParallel(ids: ComponentID[]): Promise<boolean> {
+    await this.invalidateDependenciesCacheIfNeeded();
     if (ids.length < 2) {
       return false;
     }
-    await this.invalidateDependenciesCacheIfNeeded();
     const dependenciesCacheList = await this.componentFsCache.listDependenciesDataCache();
     const depsInCache = Object.keys(dependenciesCacheList);
     if (!depsInCache.length) {
