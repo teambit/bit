@@ -1828,7 +1828,12 @@
       [
         "i",
         "import",
-        "helpful when using git. import component objects if .bitmap changed not by bit"
+        "DEPRECATED. it is now the default. helpful when using git. import component objects if .bitmap changed not by bit"
+      ],
+      [
+        "",
+        "skip-import",
+        "do not import component objects if .bitmap changed not by bit"
       ]
     ],
     "description": "automatically recompile modified components (on save)",

@@ -2248,7 +2248,8 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
 | `--verbose`              |       `-v`       | show all watch events and compiler verbose output                                                                                                 |
 | `--skip-pre-compilation` |                  | skip compilation step before starting to watch                                                                                                    |
 | `--check-types [string]` |       `-t`       | EXPERIMENTAL. show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project |
-| `--import`               |       `-i`       | helpful when using git. import component objects if .bitmap changed not by bit                                                                    |
+| `--import`               |       `-i`       | DEPRECATED. it is now the default. helpful when using git. import component objects if .bitmap changed not by bit                                 |
+| `--skip-import`          |                  | do not import component objects if .bitmap changed not by bit                                                                                     |
 
 ---
 
