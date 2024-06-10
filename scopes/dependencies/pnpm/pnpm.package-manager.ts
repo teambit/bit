@@ -33,6 +33,14 @@ import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
 
+export type { RebuildFn }
+
+export interface InstallResult {
+  dependenciesChanged: boolean;
+  rebuild: RebuildFn;
+  storeDir: string;
+}
+
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
   readonly modulesManifestCache: Map<string, Modules> = new Map();
@@ -55,7 +63,7 @@ export class PnpmPackageManager implements PackageManager {
   async install(
     { rootDir, manifests }: InstallationContext,
     installOptions: PackageManagerInstallOptions = {}
-  ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string }> {
+  ): Promise<InstallResult> {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
