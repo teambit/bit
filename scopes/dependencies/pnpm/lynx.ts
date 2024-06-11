@@ -285,6 +285,13 @@ export async function install(
       optionalDependencies: options?.includeOptionalDeps !== false,
     },
     userAgent: networkConfig.userAgent,
+    packageManager: {
+      name: 'pnpm',
+      // We specify the approximate pnpm version in order to avoid failure
+      // if a dependency specified pnpm in the engines field of package.json.
+      // This is a temporary workaround as pnpm should just ignore that field in dependencies.
+      version: '9.3.0',
+    },
     ...options,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     depth: options.updateAll ? Infinity : 0,
