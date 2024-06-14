@@ -81,8 +81,8 @@ function getScopedCredentials(nerfed: string, scope: string, config: Record<stri
 
   if (username && password) {
     return {
-      originalAuthType: `user-pass`,
-      originalAuthValue: `${username}:${password}`,
+      originalAuthType: `auth`,
+      originalAuthValue: Buffer.from(`${username}:${password}`).toString('base64'),
     };
   }
 

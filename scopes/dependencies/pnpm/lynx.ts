@@ -621,17 +621,5 @@ function getAuthTokenForRegistry(registry: Registry, isDefault = false): { keyNa
       },
     ];
   }
-  if (registry.originalAuthType === 'user-pass') {
-    return [
-      {
-        keyName: `${nerfed}:username`,
-        val: registry.originalAuthValue?.split(':')[0] || '',
-      },
-      {
-        keyName: `${nerfed}:_password`,
-        val: registry.originalAuthValue?.split(':')[1] || '',
-      },
-    ];
-  }
   return [];
 }
