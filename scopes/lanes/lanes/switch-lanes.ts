@@ -70,11 +70,15 @@ export class LaneSwitcher {
 
     const localLane = await this.consumer.scope.loadLane(laneId);
     const getMainIds = async () => {
-      const mainIds = await this.consumer.getIdsOfDefaultLane();
       if (this.switchProps.head) {
-        await this.workspace.scope.legacyScope.scopeImporter.importWithoutDeps(mainIds, { cache: false });
+        const allIds = this.workspace.listIds();
+        await this.workspace.scope.legacyScope.scopeImporter.importWithoutDeps(allIds, {
+          cache: false,
+          ignoreMissingHead: true,
+        });
         return this.consumer.getIdsOfDefaultLane();
       }
+      const mainIds = await this.consumer.getIdsOfDefaultLane();
       return mainIds;
     };
     const mainIds = await getMainIds();
@@ -105,8 +109,7 @@ export class LaneSwitcher {
       throw new BitError('error: use --pattern only when the workspace is empty');
     }
     const allIds = this.switchProps.ids || [];
-    const patternIds = await this.workspace.filterIdsFromPoolIdsByPattern(this.switchProps.pattern, allIds);
-    this.switchProps.ids = patternIds.map((id) => id);
+    this.switchProps.ids = await this.workspace.filterIdsFromPoolIdsByPattern(this.switchProps.pattern, allIds);
   }
 
   private async populatePropsAccordingToRemoteLane(remoteLaneId: LaneId): Promise<ComponentID[]> {
