@@ -217,6 +217,12 @@ function toJsonLintResults(results: EnvsExecutionResult<LintResults>): JsonLintD
 
     return compact(resultsWithoutComponent);
   });
+
+  const isClean =
+    totalComponentsWithErrorCount === 0 &&
+    totalComponentsWithWarningCount === 0 &&
+    totalComponentsWithFatalErrorCount === 0;
+
   return {
     results: compact(flatten(newResults)),
     totalErrorCount,
@@ -229,6 +235,7 @@ function toJsonLintResults(results: EnvsExecutionResult<LintResults>): JsonLintD
     totalComponentsWithFixableErrorCount,
     totalComponentsWithFixableWarningCount,
     totalComponentsWithWarningCount,
+    isClean,
     errors: results?.errors,
   };
 }
