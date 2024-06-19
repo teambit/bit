@@ -5,7 +5,7 @@ import { ComponentFactory, ComponentID } from '@teambit/component';
 import chalk from 'chalk';
 import { EnvsExecutionResult } from '@teambit/envs';
 import { Workspace } from '@teambit/workspace';
-import { compact, flatten, omit } from 'lodash';
+import { compact, flatten, groupBy, omit } from 'lodash';
 import { LinterMain } from './linter.main.runtime';
 import { ComponentLintResult, LintResults } from './linter';
 import { FixTypes, LinterOptions } from './linter-context';
@@ -63,7 +63,16 @@ export class LintCmd implements Command {
       )}'`
     );
 
-    const componentsOutputs = lintResults.results
+    const groupedByIsClean = groupBy(lintResults.results, (res) => {
+      if (res.isClean !== undefined) {
+        return res.isClean;
+      }
+      // The is clean field was added in a later version of the linter, so if it's not there, we will calculate it
+      // based on the errors/warnings count
+      return res.totalErrorCount + (res.totalFatalErrorCount || 0) + res.totalWarningCount === 0;
+    });
+
+    const dirtyComponentsOutputs = (groupedByIsClean.false || [])
       .map((lintRes) => {
         const compTitle = chalk.bold.cyan(lintRes.componentId.toString({ ignoreVersion: true }));
         const compOutput = lintRes.output;
@@ -71,8 +80,14 @@ export class LintCmd implements Command {
       })
       .join('\n');
 
+    const cleanComponentsCount = groupedByIsClean.true?.length || 0;
+    const cleanComponentsOutput = cleanComponentsCount
+      ? `total of ${chalk.green(cleanComponentsCount.toString())} component(s) has no linting issues`
+      : '';
+
     const summary = this.getSummarySection(data);
-    return { code, data: `${title}\n\n${componentsOutputs}\n\n${summary}` };
+    const finalOutput = compact([title, dirtyComponentsOutputs, cleanComponentsOutput, summary]).join('\n\n');
+    return { code, data: finalOutput };
   }
 
   private getSummarySection(data: JsonLintResultsData) {
