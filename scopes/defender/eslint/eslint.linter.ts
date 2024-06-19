@@ -98,6 +98,7 @@ export class ESLintLinter implements Linter {
       totalComponentsWithFixableErrorCount,
       totalComponentsWithFixableWarningCount,
       totalComponentsWithWarningCount,
+      isClean,
     } = this.computeManyComponentsTotals(results);
 
     return {
@@ -111,6 +112,7 @@ export class ESLintLinter implements Linter {
       totalComponentsWithFixableErrorCount,
       totalComponentsWithFixableWarningCount,
       totalComponentsWithWarningCount,
+      isClean,
       results,
       errors: [],
     };
