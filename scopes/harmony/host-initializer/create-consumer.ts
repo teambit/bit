@@ -12,7 +12,8 @@ export async function createConsumer(
   projectPath: PathOsBasedAbsolute,
   standAlone = false, // no git
   noPackageJson = false,
-  workspaceExtensionProps?: WorkspaceExtensionProps
+  workspaceExtensionProps?: WorkspaceExtensionProps,
+  generator?: string
 ): Promise<Consumer> {
   const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
   let existingGitHooks;
@@ -26,7 +27,7 @@ export async function createConsumer(
         'teambit.dependencies/dependency-resolver': {},
       } as WorkspaceConfigFileProps)
     : undefined;
-  const config = await ConfigMain.ensureWorkspace(projectPath, scope.path, workspaceConfigProps);
+  const config = await ConfigMain.ensureWorkspace(projectPath, scope.path, workspaceConfigProps, generator);
   const legacyConfig = (config.config as WorkspaceConfig).toLegacy();
   const consumer = new Consumer({
     projectPath,
