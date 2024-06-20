@@ -22,6 +22,7 @@ import { AlertCard } from '@teambit/design.ui.alert-card';
 import { Link as BaseLink, useNavigate, useLocation } from '@teambit/base-react.navigation.link';
 import { OptionButton } from '@teambit/design.ui.input.option-button';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 import { EmptyStateSlot } from './compositions.ui.runtime';
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
@@ -29,7 +30,6 @@ import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import type { CompositionsMenuSlot } from './compositions.ui.runtime';
 import { ComponentCompositionProps } from './ui/composition-preview';
-import { Tooltip } from '@teambit/design.ui.tooltip';
 
 // @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
 const Link = BaseLink as any;
