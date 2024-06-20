@@ -222,10 +222,10 @@ export class MergingMain {
     allComponentsStatus: ComponentMergeStatus[];
     otherLaneId: LaneId;
     currentLane?: Lane;
-    noSnap: boolean;
+    noSnap?: boolean;
     tag?: boolean;
-    snapMessage: string;
-    build: boolean;
+    snapMessage?: string;
+    build?: boolean;
     skipDependencyInstallation?: boolean;
   }): Promise<ApplyVersionResults> {
     const consumer = this.workspace?.consumer;
@@ -605,8 +605,8 @@ export class MergingMain {
   }
 
   private async snapResolvedComponents(
-    snapMessage: string,
-    build: boolean,
+    snapMessage?: string,
+    build?: boolean,
     laneId?: LaneId
   ): Promise<MergeSnapResults> {
     const unmergedComponents = this.scope.legacyScope.objects.unmergedComponents.getComponents();
@@ -633,8 +633,8 @@ export class MergingMain {
 
   private async tagAllLaneComponent(
     idsToTag: ComponentID[],
-    tagMessage: string,
-    build: boolean
+    tagMessage?: string,
+    build?: boolean
   ): Promise<TagResults | null> {
     const ids = idsToTag.map((id) => {
       return id.toStringWithoutVersion();
