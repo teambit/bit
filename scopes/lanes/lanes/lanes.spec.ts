@@ -14,7 +14,7 @@ import { mockComponents, modifyMockedComponents } from '@teambit/component.testi
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { LanesAspect } from './lanes.aspect';
 import { LanesMain } from './lanes.main.runtime';
-import MergeLanesAspect, { MergeLanesMain } from '@teambit/merge-lanes';
+import { MergeLanesAspect, MergeLanesMain } from '@teambit/merge-lanes';
 
 describe('LanesAspect', function () {
   this.timeout(0);
