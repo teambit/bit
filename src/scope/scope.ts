@@ -372,6 +372,8 @@ once done, to continue working, please run "bit cc"`
     // component is in the lane object but with a different version.
     // we have to figure out whether this version is part of the lane history
     const component = await this.getModelComponent(id.changeVersion(undefined));
+    const version = await component.loadVersion(id.version as string, this.objects, false);
+    if (version?.originLaneId?.isEqual(lane.toLaneId())) return true;
     const laneVersionRef = Ref.from(laneIdWithDifferentVersion.version as string);
     const verHistory = await component.getAndPopulateVersionHistory(this.objects, laneVersionRef);
     const verRef = component.getRef(id.version);
