@@ -25,7 +25,7 @@ import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-
 import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-compare';
 import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
 import { ScopeIcon } from '@teambit/scope.ui.scope-icon';
-import CommandBarAspect, { CommandBarUI } from '@teambit/command-bar';
+import { CommandBarUI, CommandBarAspect } from '@teambit/command-bar';
 
 import { LanesAspect } from './lanes.aspect';
 import styles from './lanes.ui.module.scss';
