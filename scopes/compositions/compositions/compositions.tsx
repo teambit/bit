@@ -29,6 +29,7 @@ import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import type { CompositionsMenuSlot } from './compositions.ui.runtime';
 import { ComponentCompositionProps } from './ui/composition-preview';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 
 // @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
 const Link = BaseLink as any;
@@ -86,9 +87,11 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
       <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
         <Pane className={styles.left}>
           <CompositionsMenuBar menuBarWidgets={menuBarWidgets} className={styles.menuBar}>
-            <Link external href={currentCompositionFullUrl} className={styles.openInNewTab}>
-              <OptionButton icon="open-tab" />
-            </Link>
+            <Tooltip content={'Open in new tab'} placement="right">
+              <Link external href={currentCompositionFullUrl} className={styles.openInNewTab}>
+                <OptionButton icon="open-tab" />
+              </Link>
+            </Tooltip>
           </CompositionsMenuBar>
           <CompositionContent
             className={styles.compositionPanel}
