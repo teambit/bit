@@ -16,6 +16,7 @@ import { KeyEvent } from './model/key-event';
 import { MousetrapStub } from './mousetrap-stub';
 import { openCommandBarKeybinding } from './keybinding';
 import styles from './command-bar.module.scss';
+import { CommandBarButton } from './command-bar.button';
 
 const RESULT_LIMIT = 5;
 type SearcherSlot = SlotRegistry<SearchProvider[]>;
@@ -165,6 +166,8 @@ export class CommandBarUI {
       />
     );
   };
+
+  CommandBarButton = () => <CommandBarButton onClick={() => this.setVisibility?.(true)} />;
 
   constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot, private config: CommandBarConfig) {}
 
