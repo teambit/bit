@@ -692,6 +692,10 @@ export default class Version extends BitObject {
     return !this.schema || this.schema === SchemaName.Legacy;
   }
 
+  get originLaneId(): LaneId | undefined {
+    return this.origin?.lane ? new LaneId({ name: this.origin.lane.name, scope: this.origin.lane.scope }) : undefined;
+  }
+
   setDist(dist: Source | undefined) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.dist = dist
