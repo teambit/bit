@@ -21,6 +21,11 @@ export class InitCmd implements Command {
   options = [
     ['n', 'name <workspace-name>', 'name of the workspace'],
     [
+      '',
+      'generator <env-id>',
+      'add env-id into the generators field in the workspace config for future "bit create" templates',
+    ],
+    [
       'T',
       'standalone',
       'do not nest component store within .git directory and do not write config data inside package.json',
@@ -59,6 +64,7 @@ export class InitCmd implements Command {
   async report([path]: [string], flags: Record<string, any>) {
     const {
       name,
+      generator,
       bare,
       shared,
       standalone,
@@ -98,7 +104,8 @@ export class InitCmd implements Command {
       resetHard,
       resetScope,
       force,
-      workspaceExtensionProps
+      workspaceExtensionProps,
+      generator
     );
 
     let initMessage = `${chalk.green('successfully initialized a bit workspace.')}`;

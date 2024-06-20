@@ -61,9 +61,10 @@ export class ConfigMain {
   static async ensureWorkspace(
     workspacePath: PathOsBasedAbsolute,
     scopePath: PathOsBasedAbsolute,
-    workspaceConfigProps: WorkspaceConfigFileProps = {} as any
+    workspaceConfigProps: WorkspaceConfigFileProps = {} as any,
+    generator?: string
   ): Promise<ConfigMain> {
-    const workspaceConfig = await WorkspaceConfig.ensure(workspacePath, scopePath, workspaceConfigProps);
+    const workspaceConfig = await WorkspaceConfig.ensure(workspacePath, scopePath, workspaceConfigProps, generator);
     return new ConfigMain(workspaceConfig);
   }
 
@@ -91,13 +92,14 @@ export class ConfigMain {
   static async workspaceEnsureLegacy(
     workspacePath: string,
     scopePath: string,
-    workspaceExtensionProps?: WorkspaceExtensionProps
+    workspaceExtensionProps?: WorkspaceExtensionProps,
+    generator?: string
   ) {
     let workspaceConfigProps;
     if (workspaceExtensionProps) {
       workspaceConfigProps = { 'teambit.workspace/workspace': workspaceExtensionProps };
     }
-    const config = await ConfigMain.ensureWorkspace(workspacePath, scopePath, workspaceConfigProps);
+    const config = await ConfigMain.ensureWorkspace(workspacePath, scopePath, workspaceConfigProps, generator);
     const workspaceConfig = config.config;
     return (workspaceConfig as WorkspaceConfig).toLegacy();
   }
