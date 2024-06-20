@@ -164,12 +164,20 @@ export class WorkspaceConfig implements HostConfig {
    * @returns
    * @memberof WorkspaceConfig
    */
-  static async create(props: WorkspaceConfigFileProps, dirPath: PathOsBasedAbsolute, scopePath: PathOsBasedAbsolute) {
+  static async create(
+    props: WorkspaceConfigFileProps,
+    dirPath: PathOsBasedAbsolute,
+    scopePath: PathOsBasedAbsolute,
+    generator?: string
+  ) {
     const template = await getWorkspaceConfigTemplateParsed();
     // previously, we just did `assign(template, props)`, but it was replacing the entire workspace config with the "props".
     // so for example, if the props only had defaultScope, it was removing the defaultDirectory.
     const workspaceAspectConf = assign(template[WorkspaceAspect.id], props[WorkspaceAspect.id]);
     const merged = assign(template, { [WorkspaceAspect.id]: workspaceAspectConf });
+    if (generator) {
+      merged['teambit.generator/generator'] = { envs: [generator] };
+    }
     return new WorkspaceConfig(merged, WorkspaceConfig.composeWorkspaceJsoncPath(dirPath), scopePath);
   }
 
@@ -186,18 +194,19 @@ export class WorkspaceConfig implements HostConfig {
   static async ensure(
     dirPath: PathOsBasedAbsolute,
     scopePath: PathOsBasedAbsolute,
-    workspaceConfigProps: WorkspaceConfigFileProps = {} as any
+    workspaceConfigProps: WorkspaceConfigFileProps = {} as any,
+    generator?: string
   ): Promise<WorkspaceConfig> {
     try {
       let workspaceConfig = await this.loadIfExist(dirPath, scopePath);
       if (workspaceConfig) {
         return workspaceConfig;
       }
-      workspaceConfig = await this.create(workspaceConfigProps, dirPath, scopePath);
+      workspaceConfig = await this.create(workspaceConfigProps, dirPath, scopePath, generator);
       return workspaceConfig;
     } catch (err: any) {
       if (err instanceof InvalidConfigFile) {
-        const workspaceConfig = this.create(workspaceConfigProps, dirPath, scopePath);
+        const workspaceConfig = this.create(workspaceConfigProps, dirPath, scopePath, generator);
         return workspaceConfig;
       }
       throw err;
