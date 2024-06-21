@@ -113,7 +113,17 @@ export class ApplicationMain {
   }
 
   /**
+   * instead of adding apps to workspace.jsonc, this method gets all apps components and load them as aspects so then
+   * they could register to the apps slots and be available to list/run etc.
+   */
+  async loadAllAppsAsAspects() {
+    const apps = await this.listAppsComponents();
+    await this.componentAspect.getHost().loadAspects(apps.map((a) => a.id.toString()));
+  }
+
+  /**
    * list apps by a component id.
+   * make sure to call `this.loadAllAppsAsAspects` before calling this method in case the app is not listed in workspace.jsonc
    */
   listAppsById(id?: ComponentID): Application[] | undefined {
     if (!id) return undefined;
@@ -122,6 +132,7 @@ export class ApplicationMain {
 
   /**
    * get an application by a component id.
+   * make sure to call `this.loadAllAppsAsAspects` before calling this method in case the app is not listed in workspace.jsonc
    */
   async getAppById(id: ComponentID) {
     const apps = await this.listAppsById(id);
@@ -232,6 +243,7 @@ export class ApplicationMain {
 
   /**
    * get an app.
+   * make sure to call `this.loadAllAppsAsAspects` before calling this method in case the app is not listed in workspace.jsonc
    */
   getApp(appName: string, id?: ComponentID): Application | undefined {
     const apps = id ? this.listAppsById(id) : this.listApps();
@@ -279,6 +291,7 @@ export class ApplicationMain {
 
   /**
    * get app to throw.
+   * make sure to call `this.loadAllAppsAsAspects` before calling this method in case the app is not listed in workspace.jsonc
    */
   getAppOrThrow(appName: string): Application {
     const app = this.getAppByNameOrId(appName);
@@ -305,6 +318,10 @@ export class ApplicationMain {
     return this;
   }
 
+  /**
+   * run an app.
+   * make sure to call `this.loadAllAppsAsAspects` before calling this method in case the app is not listed in workspace.jsonc
+   */
   async runApp(
     appName: string,
     options?: ServeAppOptions
