@@ -1,7 +1,7 @@
 import { MainRuntime } from '@teambit/cli';
 import type { TransformOptions } from '@babel/core';
-import type Mocha from 'mocha';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type Mocha from 'mocha';
 import { MochaAspect } from './mocha.aspect';
 import { MochaTester } from './mocha.tester';
 

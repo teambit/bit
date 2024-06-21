@@ -13,11 +13,10 @@ import {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
-import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path'
+import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { Logger } from '@teambit/logger';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
-import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
 import {
   buildDependenciesHierarchy,
@@ -29,11 +28,12 @@ import { renderTree } from '@pnpm/list';
 import { readWantedLockfile } from '@pnpm/lockfile-file';
 import { ProjectManifest } from '@pnpm/types';
 import { join } from 'path';
+import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
 
-export type { RebuildFn }
+export type { RebuildFn };
 
 export interface InstallResult {
   dependenciesChanged: boolean;

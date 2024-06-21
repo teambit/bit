@@ -79,6 +79,26 @@ module.exports = {
     'prefer-object-spread': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     'import/no-cycle': 'off',
+    'import/order': [
+      'error',
+      {
+        groups: [
+          ['builtin', 'external'],
+          ['internal', 'parent', 'sibling', 'index'],
+        ],
+        pathGroups: [
+          {
+            pattern: '@teambit/**',
+            group: 'external',
+          },
+          {
+            pattern: 'react-dev-utils/**',
+            group: 'external',
+          },
+        ],
+        pathGroupsExcludedImportTypes: ['builtin'],
+      },
+    ],
     'import/no-useless-path-segments': 'off',
     'lines-between-class-members': 'off',
     radix: 'off',

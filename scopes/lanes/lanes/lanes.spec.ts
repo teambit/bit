@@ -12,9 +12,9 @@ import { SUPPORT_LANE_HISTORY, addFeature, removeFeature } from '@teambit/legacy
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
+import { MergeLanesAspect, MergeLanesMain } from '@teambit/merge-lanes';
 import { LanesAspect } from './lanes.aspect';
 import { LanesMain } from './lanes.main.runtime';
-import { MergeLanesAspect, MergeLanesMain } from '@teambit/merge-lanes';
 
 describe('LanesAspect', function () {
   this.timeout(0);

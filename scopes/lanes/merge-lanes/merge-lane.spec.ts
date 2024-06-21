@@ -10,10 +10,10 @@ import {
 import { ScopeAspect } from '@teambit/scope';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { mockComponents } from '@teambit/component.testing.mock-components';
-import { MergeLanesAspect } from './merge-lanes.aspect';
-import { MergeFromScopeResult, MergeLanesMain } from './merge-lanes.main.runtime';
 import { LanesAspect, LanesMain } from '@teambit/lanes';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
+import { MergeLanesAspect } from './merge-lanes.aspect';
+import { MergeFromScopeResult, MergeLanesMain } from './merge-lanes.main.runtime';
 
 describe('MergeLane aspect', function () {
   this.timeout(0);

@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { MergeLanesMain } from './merge-lanes.main.runtime';
 import { BitError } from '@teambit/bit-error';
+import { MergeLanesMain } from './merge-lanes.main.runtime';
 
 export type MergeAbortOpts = {
   silent?: boolean; // don't show prompt before aborting

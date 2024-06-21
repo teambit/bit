@@ -17,13 +17,13 @@ import pMapSeries from 'p-map-series';
 import { NoHeadNoVersion } from '@teambit/legacy/dist/scope/exceptions/no-head-no-version';
 import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
 import { removeComponentsFromNodeModules } from '@teambit/legacy/dist/consumer/component/package-json-utils';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { RemoveCmd } from './remove-cmd';
 import { RemoveComponentsResult, removeComponents } from './remove-components';
 import { RemoveAspect } from './remove.aspect';
 import { RemoveFragment } from './remove.fragment';
 import { RecoverCmd, RecoverOptions } from './recover-cmd';
 import { DeleteCmd } from './delete-cmd';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
 
 const BEFORE_REMOVE = 'removing components';
 

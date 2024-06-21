@@ -1,9 +1,9 @@
 import fs from 'fs-extra';
 // it's a hack, but I didn't find a better way to access the getCacheDir() function
 import { __TEST__ as v8CompileCache } from 'v8-compile-cache';
+import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { Consumer, getConsumerInfo, loadConsumerIfExist } from '../../../consumer';
 import { ComponentFsCache } from '../../../consumer/component/component-fs-cache';
-import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import ScopeIndex from '../../../scope/objects/scope-index';
 
 export type CacheClearResult = { succeed: string[]; failed: string[] };

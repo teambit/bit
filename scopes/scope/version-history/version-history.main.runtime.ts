@@ -1,7 +1,16 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
-import { VersionHistoryAspect } from './version-history.aspect';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { BitError } from '@teambit/bit-error';
+import { ModelComponent, VersionHistory } from '@teambit/legacy/dist/scope/models';
+import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { compact } from 'lodash';
+import { VersionHistoryGraph } from '@teambit/legacy/dist/scope/models/version-history';
+import { BuildVersionHistoryAction } from './build-version-history-action';
 import {
   BuildOptions,
   ShowOptions,
@@ -10,16 +19,7 @@ import {
   VersionHistoryGraphCmd,
   VersionHistoryShowCmd,
 } from './version-history-cmd';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BitError } from '@teambit/bit-error';
-import { ModelComponent, VersionHistory } from '@teambit/legacy/dist/scope/models';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
-import { BuildVersionHistoryAction } from './build-version-history-action';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { compact } from 'lodash';
-import { VersionHistoryGraph } from '@teambit/legacy/dist/scope/models/version-history';
+import { VersionHistoryAspect } from './version-history.aspect';
 
 type BuildResult = { err?: Error; added?: string[] };
 type ShowResult = { node: string; pointers: string[]; edges: Array<{ hash: string; type: string }> };
