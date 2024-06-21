@@ -40,7 +40,6 @@ import {
   OutdatedIndexJson,
   ParentNotFound,
   ScopeJsonNotFound,
-  ScopeNotFound,
   VersionAlreadyExists,
 } from '../scope/exceptions';
 import {
@@ -122,7 +121,6 @@ ${err.message ? `server responded with: "${err.message}"` : ''}`,
 To rebuild the file, please run ${chalk.bold('bit init --reset')}.
 Original Error: ${err.message}`,
   ],
-  [ScopeNotFound, (err) => `error: scope not found at ${chalk.bold(err.scopePath)}`],
   [
     ScopeJsonNotFound,
     (err) =>

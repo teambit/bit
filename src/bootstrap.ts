@@ -11,7 +11,7 @@ import HooksManager from './hooks';
 import { printWarning, shouldDisableConsole, shouldDisableLoader } from './logger/logger';
 import loader from './cli/loader';
 
-const RECOMMENDED_NODE_VERSIONS = '>=18.12.0 <21.0.0';
+const RECOMMENDED_NODE_VERSIONS = '>=20.0.0 <21.0.0';
 const SUPPORTED_NODE_VERSIONS = '>=16.0.0 <21.0.0';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs

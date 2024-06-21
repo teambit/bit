@@ -18,7 +18,7 @@ import {
 import logger from '../logger/logger';
 import { Scope } from '../scope';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
-import { ComponentNotFound } from '../scope/exceptions';
+import { ComponentNotFound, ScopeNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
@@ -488,7 +488,12 @@ export default class Consumer {
         `fatal: unable to load the workspace. workspace.jsonc or .bitmap or local-scope are missing. run "bit init" to generate the missing files`
       );
     }
-    const scope = await Scope.load(consumerInfo.path);
+    const scope = await Scope.load(consumerInfo.path).catch((err) => {
+      if (err instanceof ScopeNotFound) {
+        throw new BitError(`${err.message}\nplease run "bit init" to re-initialize the local-scope`);
+      }
+      throw err;
+    });
     const config = await WorkspaceConfig.loadIfExist(consumerInfo.path, scope.path);
     const consumer = new Consumer({
       projectPath: consumerInfo.path,
