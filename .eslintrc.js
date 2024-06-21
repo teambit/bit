@@ -95,6 +95,10 @@ module.exports = {
             pattern: 'react-dev-utils/**',
             group: 'external',
           },
+          {
+            pattern: '@{*,**}',
+            group: 'external',
+          },
         ],
         pathGroupsExcludedImportTypes: ['builtin'],
       },
