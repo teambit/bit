@@ -358,6 +358,10 @@ export class ComponentUI {
     componentUI.registerRoute(aspectSection.route);
     componentUI.registerWidget(aspectSection.navigationLink, aspectSection.order);
     componentUI.registerConsumeMethod(componentUI.bitMethod);
+    componentUI.registerRightSideMenuItem({
+      item: <commandBarUI.CommandBarButton />,
+      order: 90,
+    });
     return componentUI;
   }
 }

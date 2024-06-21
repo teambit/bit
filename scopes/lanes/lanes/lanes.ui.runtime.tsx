@@ -25,6 +25,7 @@ import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-
 import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-compare';
 import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
 import { ScopeIcon } from '@teambit/scope.ui.scope-icon';
+import { CommandBarUI, CommandBarAspect } from '@teambit/command-bar';
 
 import { LanesAspect } from './lanes.aspect';
 import styles from './lanes.ui.module.scss';
@@ -84,7 +85,14 @@ export function useComponentId() {
 }
 
 export class LanesUI {
-  static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, ComponentCompareAspect];
+  static dependencies = [
+    UIAspect,
+    ComponentAspect,
+    WorkspaceAspect,
+    ScopeAspect,
+    ComponentCompareAspect,
+    CommandBarAspect,
+  ];
 
   static runtime = UIRuntime;
   static slots = [
@@ -346,12 +354,13 @@ export class LanesUI {
   };
 
   static async provider(
-    [uiUi, componentUI, workspaceUi, scopeUi, componentCompareUI]: [
+    [uiUi, componentUI, workspaceUi, scopeUi, componentCompareUI, commandBarUI]: [
       UiUI,
       ComponentUI,
       WorkspaceUI,
       ScopeUI,
-      ComponentCompareUI
+      ComponentCompareUI,
+      CommandBarUI
     ],
     _,
     [routeSlot, overviewSlot, navSlot, menuWidgetSlot, laneProviderIgnoreSlot]: [
@@ -401,6 +410,9 @@ export class LanesUI {
       );
     });
     lanesUi.registerLanesDropdown();
+    if (workspace) {
+      lanesUi.registerMenuWidget(commandBarUI.CommandBarButton);
+    }
     return lanesUi;
   }
 }
