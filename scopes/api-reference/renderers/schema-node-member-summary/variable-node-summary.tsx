@@ -65,7 +65,7 @@ export function VariableNodeSummary({
       }}
       row={{
         name: sanitizedName,
-        description: doc?.comment || '',
+        description: doc?.comment || doc?.tags?.join() || '',
         required: isOptional !== undefined && !isOptional,
         type: '',
         default:
