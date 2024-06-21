@@ -42,6 +42,7 @@ export class RunCmd implements Command {
   ) {}
 
   async wait([appName]: [string], { dev, watch, ssr, port: exactPort }: RunOptions) {
+    await this.application.loadAllAppsAsAspects();
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
     this.logger.off();
     const { port, errors, isOldApi } = await this.application.runApp(appName, {
