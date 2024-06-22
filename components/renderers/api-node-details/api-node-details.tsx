@@ -81,6 +81,21 @@ export function APINodeDetails({
   const comment =
     doc?.comment ??
     doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n` ?? ''), '');
+  const linkComment = doc?.tags?.find((tag) => tag.tagName === 'link')?.comment;
+
+  let linkPlaceholder: string | undefined;
+  let linkURL: string | undefined;
+
+  if (linkComment) {
+    const parts = linkComment.split(' ');
+    linkURL = parts.find((part) => part.startsWith('http'));
+    if (linkURL) {
+      linkPlaceholder = parts.filter((part) => part !== linkURL).join(' ');
+    } else {
+      linkPlaceholder = parts.join(' ');
+    }
+  }
+
   const signature = displaySignature || defaultSignature;
 
   const getAPINodeUrl = useCallback((queryParams: APIRefQueryParams) => {
@@ -252,6 +267,14 @@ export function APINodeDetails({
     >
       <div className={styles.apiDetails} ref={apiRef}>
         {comment && <div className={styles.apiNodeDetailsComment}>{comment}</div>}
+        {linkComment && (
+          <div className={styles.apiNodeDetailsLink}>
+            {linkPlaceholder && <span>{linkPlaceholder}: </span>}
+            <a href={linkURL} target="_blank" rel="noopener noreferrer">
+              {linkURL}
+            </a>
+          </div>
+        )}
         {signature && (
           <div
             className={classnames(styles.apiNodeDetailsSignatureContainer, styles.codeEditorContainer)}
