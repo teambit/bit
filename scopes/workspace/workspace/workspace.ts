@@ -141,6 +141,13 @@ export type ComponentExtensionsOpts = {
   loadExtensions?: boolean;
 };
 
+type ComponentExtensionsResponse = {
+  extensions: ExtensionDataList;
+  beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>; // useful for debugging
+  errors?: Error[];
+  envId?: string;
+};
+
 export type ExtensionsOrigin =
   | 'BitmapFile'
   | 'ModelSpecific'
@@ -1289,20 +1296,21 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     componentFromScope?: Component,
     excludeOrigins: ExtensionsOrigin[] = [],
     opts: ComponentExtensionsOpts = {}
-  ): Promise<{
-    extensions: ExtensionDataList;
-    beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>; // useful for debugging
-    errors?: Error[];
-  }> {
+  ): Promise<ComponentExtensionsResponse> {
     const optsWithDefaults: ComponentExtensionsOpts = Object.assign({ loadExtensions: true }, opts);
-    const mergeRes = await this.aspectsMerger.merge(componentId, componentFromScope, excludeOrigins);
+    const mergeRes: ComponentExtensionsResponse = await this.aspectsMerger.merge(
+      componentId,
+      componentFromScope,
+      excludeOrigins
+    );
+    const envId = await this.envs.getEnvIdFromEnvsLegacyExtensions(mergeRes.extensions);
     if (optsWithDefaults.loadExtensions) {
       await this.loadComponentsExtensions(mergeRes.extensions, componentId);
-      const envId = await this.envs.getEnvIdFromEnvsLegacyExtensions(mergeRes.extensions);
       if (envId) {
         await this.warnAboutMisconfiguredEnv(envId);
       }
     }
+    mergeRes.envId = envId;
     return mergeRes;
   }
 
