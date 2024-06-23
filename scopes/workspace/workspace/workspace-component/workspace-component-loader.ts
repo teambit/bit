@@ -318,8 +318,9 @@ export class WorkspaceComponentLoader {
       loadOpts
     );
 
+    // If we are here it means we are on workspace, in that case we don't want to load
+    // aspects of scope components as aspects only aspects of workspace components
     // const components = workspaceComponents.concat(scopeComponents);
-
     const allExtensions: ExtensionDataList[] = workspaceComponents.map((component) => {
       return component.state._consumer.extensions;
     });
