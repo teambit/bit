@@ -41,6 +41,7 @@ type LoadGroupMetadata = {
   core?: boolean;
   aspects?: boolean;
   seeders?: boolean;
+  envs?: boolean;
 };
 
 type GetAndLoadSlotOpts = ComponentLoadOptions & LoadGroupMetadata;
@@ -92,7 +93,11 @@ export class WorkspaceComponentLoader {
    * Cache extension list for components. used by get many for perf improvements.
    * And to make sure we load extensions first.
    */
-  private componentsExtensionsCache: InMemoryCache<{ extensions: ExtensionDataList; errors: Error[] | undefined }>;
+  private componentsExtensionsCache: InMemoryCache<{
+    extensions: ExtensionDataList;
+    errors: Error[] | undefined;
+    envId: string | undefined;
+  }>;
 
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   constructor(
@@ -171,13 +176,13 @@ export class WorkspaceComponentLoader {
     }
     const groupsRes = compact(
       await mapSeries(groupsToHandle, async (group, index) => {
-        const { scopeIds, workspaceIds, aspects, core, seeders } = group;
+        const { scopeIds, workspaceIds, aspects, core, seeders, envs } = group;
         const groupDesc = `getMany-${callId} group ${index + 1}/${groupsToHandle.length} - ${loadGroupToStr(group)}`;
         this.logger.profile(groupDesc);
         if (!workspaceIds.length && !scopeIds.length) {
           throw new Error('getAndLoadSlotOrdered - group has no ids to load');
         }
-        const res = await this.getAndLoadSlot(workspaceIds, scopeIds, { ...loadOpts, core, seeders, aspects });
+        const res = await this.getAndLoadSlot(workspaceIds, scopeIds, { ...loadOpts, core, seeders, aspects, envs });
         this.logger.profile(groupDesc);
         // We don't want to return components that were not asked originally (we do want to load them)
         if (!group.seeders) return undefined;
@@ -197,7 +202,9 @@ export class WorkspaceComponentLoader {
   }
 
   private async buildLoadGroups(workspaceScopeIdsMap: WorkspaceScopeIdsMap): Promise<Array<LoadGroup>> {
-    const allIds = [...workspaceScopeIdsMap.workspaceIds.values(), ...workspaceScopeIdsMap.scopeIds.values()];
+    const wsIds = Array.from(workspaceScopeIdsMap.workspaceIds.values());
+    const scopeIds = Array.from(workspaceScopeIdsMap.scopeIds.values());
+    const allIds = [...wsIds, ...scopeIds];
     const groupedByIsCoreEnvs = groupBy(allIds, (id) => {
       return this.envs.isCoreEnv(id.toStringWithoutVersion());
     });
@@ -219,9 +226,30 @@ export class WorkspaceComponentLoader {
     const allExtCompIds = Array.from(allExtIds.values());
     await this.populateScopeAndExtensionsCache(allExtCompIds || [], workspaceScopeIdsMap);
 
-    const allExtIdsStr = allExtCompIds.map((id) => id.toString());
+    // const allExtIdsStr = allExtCompIds.map((id) => id.toString());
+
+    const envsIdsOfWsComps = new Set<string>();
+    wsIds.forEach((id) => {
+      const idStr = id.toString();
+      const fromCache = this.componentsExtensionsCache.get(idStr);
+      if (!fromCache || !fromCache.extensions) {
+        return;
+      }
+      const envId = fromCache.envId;
+      if (envId) {
+        envsIdsOfWsComps.add(envId);
+      }
+    });
+
+    const groupedByIsEnvOfWsComps = groupBy(allExtCompIds, (id) => {
+      const idStr = id.toString();
+      const withoutVersion = idStr.split('@')[0];
+      return envsIdsOfWsComps.has(idStr) || envsIdsOfWsComps.has(withoutVersion);
+    });
+    const notEnvOfWsCompsStrs = (groupedByIsEnvOfWsComps.false || []).map((id) => id.toString());
+
     const groupedByIsExtOfAnother = groupBy(nonCoreEnvs, (id) => {
-      return allExtIdsStr.includes(id.toString());
+      return notEnvOfWsCompsStrs.includes(id.toString());
     });
     const extIdsFromTheList = (groupedByIsExtOfAnother.true || []).map((id) => id.toString());
     const extsNotFromTheList: ComponentID[] = [];
@@ -240,15 +268,17 @@ export class WorkspaceComponentLoader {
         core: false,
         aspects: true,
         seeders: true,
+        envs: false,
       };
     });
 
     const groupsToHandle = [
       // Always load first core envs
-      { ids: groupedByIsCoreEnvs.true || [], core: true, aspects: true, seeders: true },
-      { ids: extsNotFromTheList || [], core: false, aspects: true, seeders: false },
+      { ids: groupedByIsCoreEnvs.true || [], core: true, aspects: true, seeders: true, envs: true },
+      { ids: groupedByIsEnvOfWsComps.true || [], core: false, aspects: true, seeders: false, envs: true },
+      { ids: extsNotFromTheList || [], core: false, aspects: true, seeders: false, envs: false },
       ...layeredExtGroups,
-      { ids: groupedByIsExtOfAnother.false || [], core: false, aspects: false, seeders: true },
+      { ids: groupedByIsExtOfAnother.false || [], core: false, aspects: false, seeders: true, envs: false },
     ];
     const groupsByWsScope = groupsToHandle.map((group) => {
       if (!group.ids?.length) return undefined;
@@ -261,6 +291,7 @@ export class WorkspaceComponentLoader {
         core: group.core,
         aspects: group.aspects,
         seeders: group.seeders,
+        envs: group.envs,
       };
     });
     return compact(groupsByWsScope);
@@ -287,9 +318,10 @@ export class WorkspaceComponentLoader {
       loadOpts
     );
 
-    const components = workspaceComponents.concat(scopeComponents);
-
-    const allExtensions: ExtensionDataList[] = components.map((component) => {
+    // If we are here it means we are on workspace, in that case we don't want to load
+    // aspects of scope components as aspects only aspects of workspace components
+    // const components = workspaceComponents.concat(scopeComponents);
+    const allExtensions: ExtensionDataList[] = workspaceComponents.map((component) => {
       return component.state._consumer.extensions;
     });
 
@@ -392,10 +424,15 @@ export class WorkspaceComponentLoader {
       }
       if (!this.componentsExtensionsCache.has(idStr) && workspaceScopeIdsMap.workspaceIds.has(idStr)) {
         componentFromScope = componentFromScope || this.scopeComponentsCache.get(idStr);
-        const { extensions, errors } = await this.workspace.componentExtensions(id, componentFromScope, undefined, {
-          loadExtensions: false,
-        });
-        this.componentsExtensionsCache.set(idStr, { extensions, errors });
+        const { extensions, errors, envId } = await this.workspace.componentExtensions(
+          id,
+          componentFromScope,
+          undefined,
+          {
+            loadExtensions: false,
+          }
+        );
+        this.componentsExtensionsCache.set(idStr, { extensions, errors, envId });
       }
     });
   }
@@ -537,11 +574,14 @@ export class WorkspaceComponentLoader {
     // as when loading the next batch of components (next group) we won't have the envs loaded
 
     try {
+      const scopeComponents = await this.workspace.scope.getMany(scopeIds);
+
       // We don't want to load envs as part of this step, they will be loaded later
-      const scopeComponents = await this.workspace.scope.loadMany(scopeIds, undefined, {
-        loadApps: false,
-        loadEnvs: false,
-      });
+      // const scopeComponents = await this.workspace.scope.loadMany(scopeIds, undefined, {
+      //   loadApps: false,
+      //   loadEnvs: true,
+      //   loadCompAspects: false,
+      // });
       return {
         workspaceComponents: components,
         scopeComponents,
@@ -855,7 +895,7 @@ function sortKeys(obj: Object) {
 
 function printGroupsToHandle(groupsToHandle: Array<LoadGroup>, logger: Logger): void {
   groupsToHandle.forEach((group) => {
-    const { scopeIds, workspaceIds, aspects, core, seeders } = group;
+    const { scopeIds, workspaceIds, aspects, core, seeders, envs } = group;
     logger.console(
       `workspace-component-loader ~ groupsToHandle ${JSON.stringify(
         {
@@ -864,6 +904,7 @@ function printGroupsToHandle(groupsToHandle: Array<LoadGroup>, logger: Logger): 
           aspects,
           core,
           seeders,
+          envs,
         },
         null,
         2
@@ -873,12 +914,13 @@ function printGroupsToHandle(groupsToHandle: Array<LoadGroup>, logger: Logger): 
 }
 
 function loadGroupToStr(loadGroup: LoadGroup): string {
-  const { scopeIds, workspaceIds, aspects, core, seeders } = loadGroup;
+  const { scopeIds, workspaceIds, aspects, core, seeders, envs } = loadGroup;
 
   const attr: string[] = [];
   if (aspects) attr.push('aspects');
   if (core) attr.push('core');
   if (seeders) attr.push('seeders');
+  if (envs) attr.push('envs');
 
   return `workspaceIds: ${workspaceIds.length}, scopeIds: ${scopeIds.length}, (${attr.join('+')})`;
 }

@@ -378,6 +378,11 @@
         "name of the workspace"
       ],
       [
+        "",
+        "generator <env-id>",
+        "add env-id into the generators field in the workspace config for future \"bit create\" templates"
+      ],
+      [
         "T",
         "standalone",
         "do not nest component store within .git directory and do not write config data inside package.json"
