@@ -701,7 +701,7 @@ export async function getFetcherWithAgent(uri: string): Promise<typeof fetch> {
 export function wrapFetcherWithAgent(agent: Agent) {
   return (url, opts) => {
     const actualOpts = Object.assign({}, opts, { agent });
-    return fetch(url, actualOpts);
+    return _fetch(url, actualOpts);
   };
 }
 
