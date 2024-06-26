@@ -134,7 +134,9 @@ export async function removeFilesIfNeeded(
       // @ts-ignore todo: typescript has a good point here. it should be the string "removed", not chalk.green(removed).
       filesStatus[filename] = FileStatus.removed;
     }
-    dataToPersist.removePath(new RemovePath(file.path));
+    if (filesStatus[filename] === FileStatus.removed) {
+      dataToPersist.removePath(new RemovePath(file.path));
+    }
   });
   await dataToPersist.persistAllToFS();
 }
