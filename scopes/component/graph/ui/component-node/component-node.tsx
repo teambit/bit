@@ -22,13 +22,13 @@ export interface IComponentNode extends CardProps {
 
 export function ComponentNode({ node, type = 'defaultNode', ...rest }: IComponentNode) {
   const graphContext = useContext(ComponentGraphContext);
-  const { component } = node;
-  const { id } = component;
+  const { component, componentId } = node;
+  const id = component?.id || componentId;
 
   return (
     <Card className={classnames(styles.compNode, variants[type])} elevation="none" {...rest}>
       <div className={styles.firstRow}>
-        <EnvIcon component={component} className={styles.envIcon} />
+        {component && <EnvIcon component={component} className={styles.envIcon} />}
         <Breadcrumbs componentId={id} className={mutedText} />
       </div>
       <div className={styles.nameLine}>
@@ -38,8 +38,9 @@ export function ComponentNode({ node, type = 'defaultNode', ...rest }: IComponen
         {id.version && <span className={classnames(styles.version, ellipsis)}>{id.version}</span>}
 
         <div className={styles.buffs}>
-          <DeprecationIcon component={component} />
-          {graphContext &&
+          {component && <DeprecationIcon component={component} />}
+          {component &&
+            graphContext &&
             graphContext.componentWidgets
               .toArray()
               .map(([widgetId, Widget]) => <Widget key={widgetId} component={component} />)}
