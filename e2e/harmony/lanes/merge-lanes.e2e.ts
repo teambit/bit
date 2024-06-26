@@ -1338,6 +1338,30 @@ describe('merge lanes', function () {
       expect(path.join(helper.scopes.localPath, 'comp1/foo.js')).to.not.be.a.path();
     });
   });
+  describe('when a file was deleted on the other lane but exist current and on the base and both lanes are diverged', () => {
+    let mergeOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile('comp1/foo.js');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-a');
+      helper.fs.deletePath('comp1/foo.js');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+      mergeOutput = helper.command.mergeLane('lane-a', '-x --no-snap --no-squash');
+    });
+    it('should indicate that this file was removed in the output', () => {
+      expect(mergeOutput).to.have.string('removed foo.js');
+    });
+    it('should remove this file from the filesystem ', () => {
+      expect(path.join(helper.scopes.localPath, 'comp1/foo.js')).to.not.be.a.path();
+    });
+  });
   describe('naming conflict introduced during the merge', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
