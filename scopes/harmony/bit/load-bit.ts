@@ -279,7 +279,8 @@ function verifyEngine(bitConfig: BitConfig) {
   if (satisfies(bitVersion, bitConfig.engine)) {
     return;
   }
-  const msg = `your bit version "${bitVersion}" doesn't satisfies the required "${bitConfig.engine}" version`;
+  const msg = `your bit version "${bitVersion}" doesn't satisfies the required "${bitConfig.engine}" version
+please run "bvm install ${bitConfig.engine}" to install and use a specific version of Bit.`;
   if (bitConfig.engineStrict) {
     throw new Error(`error: ${msg}`);
   }
