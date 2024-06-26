@@ -11,6 +11,7 @@ import ReactFlow, {
   Position,
   ReactFlowProps,
   ReactFlowProvider,
+  useNodesState,
 } from 'reactflow';
 import { ComponentID } from '@teambit/component';
 import { ComponentWidgetSlot } from '../../graph.ui.runtime';
@@ -55,10 +56,13 @@ export function DependenciesGraph({
   const nodeTypes: NodeTypes = React.useMemo(() => ({ ComponentNode: ComponentNodeContainer }), []);
   const graphRef = useRef<ReactFlowInstance>();
   const elements = calcElements(graph, { rootNode });
-  const context = useMemo(
-    () => ({ componentWidgets, loadingGraphMetadata }),
-    [componentWidgets, loadingGraphMetadata, className]
-  );
+  const [nodes, setNodes] = useNodesState(elements.nodes);
+
+  useEffect(() => {
+    setNodes(elements.nodes);
+  }, [elements.nodes]);
+
+  const context = useMemo(() => ({ componentWidgets, loadingGraphMetadata }), [componentWidgets, loadingGraphMetadata]);
 
   const handleLoad = useCallback(
     (instance: ReactFlowInstance) => {
@@ -111,7 +115,7 @@ export function DependenciesGraph({
           minZoom={0}
           {...rest}
           className={classnames(styles.graph, className)}
-          nodes={elements.nodes}
+          nodes={nodes}
           edges={elements.edges}
           nodeTypes={nodeTypes}
           onInit={handleLoad}
