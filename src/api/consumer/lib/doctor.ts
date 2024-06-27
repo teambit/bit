@@ -5,6 +5,7 @@ import Stream from 'stream';
 import path from 'path';
 import tar from 'tar-stream';
 import tarFS from 'tar-fs';
+import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { getHarmonyVersion } from '../../../bootstrap';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '../../../constants';
 import BitMap from '../../../consumer/bit-map';
@@ -15,7 +16,6 @@ import DoctorRegistrar from '../../../doctor/doctor-registrar';
 import registerCoreAndExtensionsDiagnoses from '../../../doctor/doctor-registrar-builder';
 import logger from '../../../logger/logger';
 import { getExt, getWithoutExt, removeChalkCharacters } from '../../../utils';
-import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 
 import DiagnosisNotFound from './exceptions/diagnosis-not-found';
 import MissingDiagnosisName from './exceptions/missing-diagnosis-name';

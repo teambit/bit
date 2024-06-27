@@ -10,9 +10,9 @@ import { LaneData, serializeLaneData } from '@teambit/legacy/dist/scope/lanes/la
 import { BitError } from '@teambit/bit-error';
 import { approveOperation } from '@teambit/legacy/dist/prompts';
 import { COMPONENT_PATTERN_HELP, DEFAULT_CLOUD_DOMAIN } from '@teambit/legacy/dist/constants';
+import { FetchCmd } from '@teambit/importer';
 import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
 import { SwitchCmd } from './switch.cmd';
-import { FetchCmd } from '@teambit/importer';
 
 type LaneOptions = {
   details?: boolean;

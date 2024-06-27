@@ -1,6 +1,6 @@
-import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
 import { ComponentMap } from '@teambit/component';
+import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { Registries } from './registry';
 import { DepsFilterFn } from './manifest';
 import { NetworkConfig, ProxyConfig } from './dependency-resolver.main.runtime';

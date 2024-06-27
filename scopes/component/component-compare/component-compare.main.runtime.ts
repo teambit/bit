@@ -24,10 +24,10 @@ import {
 import { diffBetweenComponentsObjects } from '@teambit/legacy/dist/consumer/component-ops/components-object-diff';
 import { TesterMain, TesterAspect } from '@teambit/tester';
 import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
+import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { componentCompareSchema } from './component-compare.graphql';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { DiffCmd } from './diff-cmd';
-import { ImporterAspect, ImporterMain } from '@teambit/importer';
 
 export type ComponentCompareResult = {
   id: string;

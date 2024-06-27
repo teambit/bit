@@ -1,7 +1,7 @@
 import { expect } from 'chai';
+import { IssuesClasses } from '@teambit/component-issues';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { IssuesClasses } from '@teambit/component-issues';
 
 describe('bit deprecate and undeprecate commands', function () {
   this.timeout(0);

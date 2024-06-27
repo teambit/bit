@@ -16,6 +16,15 @@ import {
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
+import { createClient, ClientOptions } from '@pnpm/client';
+import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
+import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
+import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
+import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
+import { Logger } from '@teambit/logger';
+import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
+import toNerfDart from 'nerf-dart';
+import * as pnpm from '@pnpm/core';
 import {
   MutatedProject,
   mutateModules,
@@ -23,15 +32,6 @@ import {
   PeerDependencyIssuesByProjects,
   ProjectOptions,
 } from '@pnpm/core';
-import * as pnpm from '@pnpm/core';
-import { createClient, ClientOptions } from '@pnpm/client';
-import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
-import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
-import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
-import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
-import { Logger } from '@teambit/logger';
-import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path'
-import toNerfDart from 'nerf-dart';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 

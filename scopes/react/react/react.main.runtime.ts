@@ -31,6 +31,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { EslintConfigTransformer } from '@teambit/defender.eslint.config-mutator';
 import { WorkerAspect, WorkerMain } from '@teambit/worker';
 
+import { PrettierConfigTransformer } from '@teambit/defender.prettier.config-mutator';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { ReactAppType } from './apps/web';
@@ -39,7 +40,6 @@ import { getTemplates } from './react.templates';
 import { ReactAppOptions } from './apps/web/react-app-options';
 import { ReactSchema } from './react.schema';
 import { ReactAPITransformer } from './react.api.transformer';
-import { PrettierConfigTransformer } from '@teambit/defender.prettier.config-mutator';
 
 type ReactDeps = [
   EnvsMain,

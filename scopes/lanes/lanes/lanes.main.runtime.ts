@@ -36,6 +36,7 @@ import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
 import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { InstallAspect, InstallMain } from '@teambit/install';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -65,7 +66,6 @@ import { createLane, createLaneInScope, throwForInvalidLaneName } from './create
 import { LanesCreateRoute } from './lanes.create.route';
 import { LanesDeleteRoute } from './lanes.delete.route';
 import { LanesRestoreRoute } from './lanes.restore.route';
-import { InstallAspect, InstallMain } from '@teambit/install';
 
 export { Lane };
 

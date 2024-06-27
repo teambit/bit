@@ -1,12 +1,12 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from './tag-cmd';
 import { DEFAULT_BIT_RELEASE_TYPE } from '@teambit/legacy/dist/constants';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
+import { NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from './tag-cmd';
 import { SnappingMain, TagResults } from './snapping.main.runtime';
 import { BasicTagParams } from './tag-model-component';
 

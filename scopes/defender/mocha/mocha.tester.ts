@@ -1,12 +1,12 @@
 import { Logger } from '@teambit/logger';
 import { ComponentsResults, Tester, CallbackFn, TesterContext, Tests } from '@teambit/tester';
-import Mocha, { Test } from 'mocha';
 import babelRegister from '@babel/register';
 import type { TransformOptions } from '@babel/core';
 import { TestResult, TestsFiles, TestsResult } from '@teambit/tests-results';
 import pMapSeries from 'p-map-series';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { compact } from 'lodash';
+import Mocha, { Test } from 'mocha';
 
 export class MochaTester implements Tester {
   _callback: CallbackFn | undefined;

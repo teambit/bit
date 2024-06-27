@@ -13,8 +13,8 @@ import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { PkgAspect } from '@teambit/pkg';
 import { RenamingAspect } from '@teambit/renaming';
 import { EnvsAspect } from '@teambit/envs';
-import { NewComponentHelperAspect } from './new-component-helper.aspect';
 import { incrementPathRecursively } from '@teambit/component-writer';
+import { NewComponentHelperAspect } from './new-component-helper.aspect';
 
 const aspectsConfigToIgnore: string[] = [PkgAspect.id, RenamingAspect.id];
 

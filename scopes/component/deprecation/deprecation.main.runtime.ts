@@ -5,16 +5,16 @@ import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ComponentIdObj } from '@teambit/component-id';
-import { DeprecationAspect } from './deprecation.aspect';
-import { deprecationSchema } from './deprecation.graphql';
-import { DeprecationFragment } from './deprecation.fragment';
-import { DeprecateCmd } from './deprecate-cmd';
-import { UndeprecateCmd } from './undeprecate-cmd';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { compact } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
+import { DeprecationAspect } from './deprecation.aspect';
+import { deprecationSchema } from './deprecation.graphql';
+import { DeprecationFragment } from './deprecation.fragment';
+import { DeprecateCmd } from './deprecate-cmd';
+import { UndeprecateCmd } from './undeprecate-cmd';
 
 export type DeprecationInfo = {
   isDeprecate: boolean;

@@ -6,6 +6,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
+import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import { Analytics } from '../analytics/analytics';
 import {
   BIT_GIT_DIR,
@@ -21,7 +22,6 @@ import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound, ScopeNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
-import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import { composeComponentPath } from '../utils/bit/compose-component-path';
 import {
   PathAbsolute,
