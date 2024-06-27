@@ -9,10 +9,10 @@ import {
   compilationErrorOutput,
   getRemovedOutput,
   getAddedOutput,
+  MergeStrategy,
   getWorkspaceConfigUpdateOutput,
 } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP, HEAD, LATEST } from '@teambit/legacy/dist/constants';
-import { MergeStrategy } from '@teambit/merging';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { CheckoutMain, CheckoutProps } from './checkout.main.runtime';

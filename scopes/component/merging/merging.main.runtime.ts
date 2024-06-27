@@ -44,10 +44,15 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { MergeCmd } from './merge-cmd';
-import { MergeResultsThreeWay } from './merge-version';
 import { MergingAspect } from './merging.aspect';
 import { MergeStatusProvider, MergeStatusProviderOptions } from './merge-status-provider';
-import { MergeStrategy, FileStatus, getMergeStrategyInteractive, MergeOptions } from './merge-version';
+import {
+  MergeStrategy,
+  FileStatus,
+  getMergeStrategyInteractive,
+  MergeResultsThreeWay,
+  MergeOptions,
+} from './merge-version';
 
 type ResolveUnrelatedData = {
   strategy: MergeStrategy;

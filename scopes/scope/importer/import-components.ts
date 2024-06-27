@@ -11,8 +11,15 @@ import { getLatestVersionNumber, pathNormalizeToLinux } from '@teambit/legacy/di
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import Component from '@teambit/legacy/dist/consumer/component';
 import { applyModifiedVersion } from '@teambit/checkout';
-import { FileStatus, getMergeStrategyInteractive, MergeOptions, threeWayMerge, MergeStrategy } from '@teambit/merging';
-import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
+import {
+  FileStatus,
+  getMergeStrategyInteractive,
+  MergeOptions,
+  threeWayMerge,
+  MergeStrategy,
+  MergeResultsThreeWay,
+  FilesStatus,
+} from '@teambit/merging';
 import ComponentsPendingMerge from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-merge';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import VersionDependencies, {
@@ -24,7 +31,6 @@ import { ComponentWriterMain, ComponentWriterResults, ManyComponentsWriterParams
 import { LATEST_VERSION } from '@teambit/component-version';
 import { EnvsMain } from '@teambit/envs';
 import { compact, difference, fromPairs } from 'lodash';
-import { FilesStatus } from '@teambit/merging';
 import { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import { Logger } from '@teambit/logger';
 import { DependentsGetter } from './dependents-getter';
