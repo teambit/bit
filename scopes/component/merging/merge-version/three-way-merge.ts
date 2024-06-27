@@ -3,7 +3,7 @@ import { Source, Version } from '@teambit/legacy/dist/scope/models';
 import { SourceFileModel } from '@teambit/legacy/dist/scope/models/version';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { eol, sha1 } from '@teambit/legacy/dist/utils';
-import mergeFiles, { MergeFileParams, MergeFileResult } from '@teambit/legacy/dist/utils/merge-files';
+import { mergeFiles, MergeFileParams, MergeFileResult } from '../merge-files';
 import { PathLinux, pathNormalizeToLinux, PathOsBased } from '@teambit/legacy/dist/utils/path';
 import Component from '@teambit/legacy/dist/consumer/component';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
