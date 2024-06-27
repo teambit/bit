@@ -116,6 +116,7 @@
     "yaml": "1.10.2",
     "@pnpm/node-fetch": "^1.0.0",
     "@teambit/defender.fs.global-bit-temp-dir": "0.0.1",
+    "@teambit/legacy.analytics": "~0.0.1",
     "@teambit/bit-error": "~0.0.404",
     "@teambit/bit-roots": "~0.0.133",
     "@teambit/lane-id": "~0.0.311",
