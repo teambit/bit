@@ -10,15 +10,15 @@ import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '@teambit/legac
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { ConsumerInfo, getConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
-import Diagnosis, { ExamineResult } from '@teambit/legacy/dist/doctor/diagnosis';
-import DoctorRegistrar from '@teambit/legacy/dist/doctor/doctor-registrar';
-import registerCoreAndExtensionsDiagnoses from '@teambit/legacy/dist/doctor/doctor-registrar-builder';
+import Diagnosis, { ExamineResult } from './diagnosis';
+import DoctorRegistrar from './doctor-registrar';
+import registerCoreAndExtensionsDiagnoses from './doctor-registrar-builder';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { getExt, getWithoutExt, removeChalkCharacters } from '@teambit/legacy/dist/utils';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
-import { getNpmVersion } from '@teambit/legacy/dist/doctor/core-diagnoses/validate-npm-exec';
-import { getYarnVersion } from '@teambit/legacy/dist/doctor/core-diagnoses/validate-yarn-exec';
+import { getNpmVersion } from './core-diagnoses/validate-npm-exec';
+import { getYarnVersion } from './core-diagnoses/validate-yarn-exec';
 import { DiagnosisNotFound } from './exceptions/diagnosis-not-found';
 import { MissingDiagnosisName } from './exceptions/missing-diagnosis-name';
 
