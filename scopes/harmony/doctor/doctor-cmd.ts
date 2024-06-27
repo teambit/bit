@@ -17,6 +17,7 @@ export class DoctorCmd implements Command {
   description = 'diagnose a bit workspace';
   group = 'general';
   alias = '';
+  loadAspects = false;
   options = [
     ['j', 'json', 'return diagnoses in json format'],
     ['', 'list', 'list all available diagnoses'],
