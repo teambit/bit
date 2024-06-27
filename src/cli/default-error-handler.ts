@@ -3,8 +3,6 @@
 import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
 import { Analytics, LEVEL } from '@teambit/legacy.analytics';
-import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-found';
-import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnosis-name';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
@@ -128,8 +126,6 @@ Original Error: ${err.message}`,
         'bit init'
       )} to recreate the file`,
   ],
-  [MissingDiagnosisName, () => 'error: please provide a diagnosis name'],
-  [DiagnosisNotFound, (err) => `error: diagnosis ${chalk.bold(err.diagnosisName)} not found`],
   [
     ComponentOutOfSync,
     (err) => `component ${chalk.bold(err.id)} is not in-sync between the consumer and the scope.

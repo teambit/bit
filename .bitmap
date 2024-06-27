@@ -472,6 +472,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/docs"
     },
+    "doctor": {
+        "name": "doctor",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/doctor",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
+    },
     "eject": {
         "name": "eject",
         "scope": "teambit.workspace",

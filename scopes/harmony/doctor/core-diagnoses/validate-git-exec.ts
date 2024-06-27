@@ -1,17 +1,15 @@
 import execa from 'execa';
-import R from 'ramda';
-
-import getGitExecutablePath from '../../utils/git/git-executable';
+import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
-export const DIAGNOSIS_NAME = 'validate git exec';
+export const DIAGNOSIS_NAME_VALIDATE_GIT_EXEC = 'validate git exec';
 export default class ValidateGitExec extends Diagnosis {
-  name = DIAGNOSIS_NAME;
+  name = DIAGNOSIS_NAME_VALIDATE_GIT_EXEC;
   description = 'validate that git executable found';
   category = 'vendors';
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
-    const gitExecutablePath = R.path(['data', 'gitExecutablePath'], bareResult);
+    const gitExecutablePath = bareResult?.data?.gitExecutablePath;
     return `git executable not found (path '${gitExecutablePath}')`;
   }
 

@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { table } from 'table';
 
-import Diagnosis from '../../doctor/diagnosis';
+import Diagnosis from './diagnosis';
 
 // const NAME_COLUMN_WIDTH = 100;
 // const DESCRIPTION_COLUMN_WIDTH = 30;
