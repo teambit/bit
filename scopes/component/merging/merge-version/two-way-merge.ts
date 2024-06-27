@@ -1,13 +1,13 @@
 import R from 'ramda';
 
 import { BitError } from '@teambit/bit-error';
-import Tmp from '../../../scope/repositories/tmp';
-import { pathNormalizeToLinux, sha1 } from '../../../utils';
-import mergeFiles, { MergeFileParams, MergeFileResult } from '../../../utils/merge-files';
-import { PathLinux, PathOsBased } from '../../../utils/path';
-import Component from '../../component/consumer-component';
-import { SourceFile } from '../../component/sources';
-import Consumer from '../../consumer';
+import Tmp from '@teambit/legacy/dist/scope/repositories/tmp';
+import { pathNormalizeToLinux, sha1 } from '@teambit/legacy/dist/utils';
+import mergeFiles, { MergeFileParams, MergeFileResult } from '@teambit/legacy/dist/utils/merge-files';
+import { PathLinux, PathOsBased } from '@teambit/legacy/dist/utils/path';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
 
 export type MergeResultsTwoWay = {
   addFiles: Array<{

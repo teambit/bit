@@ -2,12 +2,6 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
-import {
-  MergeStrategy,
-  FileStatus,
-  getMergeStrategyInteractive,
-  MergeOptions,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { SnappingAspect, SnappingMain, TagResults } from '@teambit/snapping';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import mapSeries from 'p-map-series';
@@ -28,7 +22,6 @@ import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { compact } from 'lodash';
-import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import {
   ApplyVersionWithComps,
   CheckoutAspect,
@@ -51,8 +44,10 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { MergeCmd } from './merge-cmd';
+import { MergeResultsThreeWay } from './merge-version';
 import { MergingAspect } from './merging.aspect';
 import { MergeStatusProvider, MergeStatusProviderOptions } from './merge-status-provider';
+import { MergeStrategy, FileStatus, getMergeStrategyInteractive, MergeOptions } from './merge-version';
 
 type ResolveUnrelatedData = {
   strategy: MergeStrategy;

@@ -6,12 +6,17 @@ import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { pathNormalizeToLinux, PathOsBased } from '@teambit/legacy/dist/utils/path';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
-import { FileStatus, MergeOptions, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
-import { ApplyVersionResult, FilesStatus } from '@teambit/merging';
+import {
+  ApplyVersionResult,
+  FilesStatus,
+  FileStatus,
+  MergeOptions,
+  MergeStrategy,
+  MergeResultsThreeWay,
+} from '@teambit/merging';
 import { CheckoutProps } from './checkout.main.runtime';
 
 export type ComponentStatusBase = {

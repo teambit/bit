@@ -5,15 +5,16 @@ import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { ApplyVersionResults, FailedComponents } from '@teambit/merging';
+import {
+  ApplyVersionResults,
+  FailedComponents,
+  threeWayMerge,
+  getMergeStrategyInteractive,
+  MergeStrategy,
+} from '@teambit/merging';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import {
-  getMergeStrategyInteractive,
-  MergeStrategy,
-  threeWayMerge,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import mapSeries from 'p-map-series';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Version, ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';

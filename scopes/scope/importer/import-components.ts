@@ -11,13 +11,7 @@ import { getLatestVersionNumber, pathNormalizeToLinux } from '@teambit/legacy/di
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import Component from '@teambit/legacy/dist/consumer/component';
 import { applyModifiedVersion } from '@teambit/checkout';
-import {
-  FileStatus,
-  getMergeStrategyInteractive,
-  MergeOptions,
-  threeWayMerge,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
+import { FileStatus, getMergeStrategyInteractive, MergeOptions, threeWayMerge, MergeStrategy } from '@teambit/merging';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ComponentsPendingMerge from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-merge';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';

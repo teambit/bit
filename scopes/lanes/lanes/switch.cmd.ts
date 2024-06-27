@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { compact } from 'lodash';
 import { applyVersionReport, installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
 import { Command, CommandOptions } from '@teambit/cli';
-import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { MergeStrategy } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { LanesMain } from './lanes.main.runtime';
 
