@@ -49,10 +49,11 @@ export class DoctorCmd implements Command {
     if (flags.list) {
       return res;
     }
-    const { examineResult, savedFilePath } = res;
+    const { examineResults, examineResult, savedFilePath } = res;
     const fullJson = {
       savedFilePath,
       examineResult,
+      examineResults,
     };
     return fullJson;
   }
