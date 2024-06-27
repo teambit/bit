@@ -1,4 +1,3 @@
-import R from 'ramda';
 import { BitError } from '@teambit/bit-error';
 import { Source, Version } from '@teambit/legacy/dist/scope/models';
 import { SourceFileModel } from '@teambit/legacy/dist/scope/models/version';
@@ -9,6 +8,7 @@ import { PathLinux, pathNormalizeToLinux, PathOsBased } from '@teambit/legacy/di
 import Component from '@teambit/legacy/dist/consumer/component';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { Scope } from '@teambit/legacy/dist/scope';
+import { isEmpty } from 'lodash';
 
 export type MergeResultsThreeWay = {
   addFiles: Array<{
@@ -63,7 +63,7 @@ export type MergeResultsThreeWay = {
  * to the filesystem. other-file is the one the user wants to checkout to. base-file is the original file where both:
  * base-file and other-file were originated from.
  */
-export default async function threeWayMergeVersions({
+export async function threeWayMerge({
   scope,
   otherComponent,
   otherLabel,
@@ -191,7 +191,7 @@ export default async function threeWayMergeVersions({
       results.deletedConflictFiles.push({ filePath: file.relativePath, fsFile });
     })
   );
-  if (R.isEmpty(results.modifiedFiles)) return results;
+  if (isEmpty(results.modifiedFiles)) return results;
 
   const conflictResults = await getMergeResults(scope, results.modifiedFiles);
   conflictResults.forEach((conflictResult: MergeFileResult) => {
