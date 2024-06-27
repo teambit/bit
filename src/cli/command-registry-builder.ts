@@ -6,7 +6,6 @@ import CatLane from './commands/private-cmds/cat-lane-cmd';
 import CatObject from './commands/private-cmds/cat-object-cmd';
 import CatScope from './commands/private-cmds/cat-scope-cmd';
 import Config from './commands/public-cmds/config-cmd';
-import Doctor from './commands/public-cmds/doctor-cmd';
 import Dependents from './commands/public-cmds/dependents-cmd';
 import Remote from './commands/public-cmds/remote-cmd';
 import ScopeConfig from './commands/public-cmds/scope-config-cmd';
@@ -23,7 +22,6 @@ export default function registerCommands(): CommandRegistry {
     new CatScope(),
     new CatVersionHistoryCmd(),
     new ScopeConfig(),
-    new Doctor(),
     new RunAction(),
   ]);
 }

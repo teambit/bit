@@ -1,7 +1,5 @@
-import R from 'ramda';
-
-import { loadConsumer } from '../../consumer';
-import WorkspaceConfig from '../../consumer/config/workspace-config';
+import { loadConsumer } from '@teambit/legacy/dist/consumer';
+import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
 export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
@@ -10,7 +8,7 @@ export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
   category = 'configuration';
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
-    const bitJsonPath = R.path(['data', 'bitJsonPath'], bareResult);
+    const bitJsonPath = bareResult?.data?.bitJsonPath;
     return `invalid workspace.jsonc: ${bitJsonPath} is not a valid JSON file.`;
   }
 

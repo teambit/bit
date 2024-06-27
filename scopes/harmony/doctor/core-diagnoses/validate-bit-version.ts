@@ -1,6 +1,6 @@
 import semver from 'semver';
 import { listRemote } from '@teambit/bvm.list';
-import { getHarmonyVersion } from '../../bootstrap';
+import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
 export default class ValidateBitVersion extends Diagnosis {

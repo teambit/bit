@@ -1,6 +1,6 @@
 import execa from 'execa';
+import logger from '@teambit/legacy/dist/logger/logger';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
-import logger from '../../logger/logger';
 
 export default class ValidateNpmExec extends Diagnosis {
   name = 'validate npm exec';
