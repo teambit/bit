@@ -1,11 +1,10 @@
 import fs from 'fs-extra';
 import glob from 'glob';
-import * as path from 'path';
-import R from 'ramda';
-
-import { loadConsumer } from '../../consumer';
-import { Scope } from '../../scope';
+import path from 'path';
+import { loadConsumer } from '@teambit/legacy/dist/consumer';
+import { Scope } from '@teambit/legacy/dist/scope';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
+import { uniq } from 'lodash';
 
 type BrokenSymlink = { symlinkPath: string; brokenPath: string; pathToDelete: string };
 export const DIAGNOSIS_NAME = 'check environment symlinks';
@@ -28,8 +27,7 @@ export default class BrokenSymlinkFiles extends Diagnosis {
 
   _formatManualTreat(bareResult: ExamineBareResult) {
     if (!bareResult.data) throw new Error('BrokenSymlinkFiles, bareResult.data is missing');
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const toString = R.uniq(bareResult.data.brokenSymlinks.map((b) => b.pathToDelete)).join('\n');
+    const toString = uniq(bareResult.data.brokenSymlinks.map((b) => b.pathToDelete)).join('\n');
     return `please delete the following paths:\n${toString}`;
   }
 
