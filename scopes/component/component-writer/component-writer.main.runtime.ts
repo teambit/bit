@@ -16,7 +16,7 @@ import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { ConfigMergerAspect, ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
-import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { MergeStrategy } from '@teambit/merging';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import ComponentWriter, { ComponentWriterProps } from './component-writer';
 import { ComponentWriterAspect } from './component-writer.aspect';

@@ -1,9 +1,9 @@
 import chalk from 'chalk';
 import execa from 'execa';
-import logger from '../logger/logger';
-import { PathLinux, PathOsBased } from '../utils/path';
-import GitNotFound from './git/exceptions/git-not-found';
-import getGitExecutablePath from './git/git-executable';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { PathLinux, PathOsBased } from '@teambit/legacy/dist/utils/path';
+import GitNotFound from '@teambit/legacy/dist/utils/git/exceptions/git-not-found';
+import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable';
 
 export type MergeFileResult = {
   filePath: PathLinux;
@@ -35,7 +35,7 @@ export type MergeFileParams = {
  * Here, we are not going to write the result into current-file. Instead, we'll use the "-p" flag,
  * to just return the results.
  */
-export default async function mergeFiles({
+export async function mergeFiles({
   filePath,
   currentFile,
   baseFile,

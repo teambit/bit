@@ -9,10 +9,10 @@ import {
   FILE_CHANGES_CHECKOUT_MSG,
   CFG_FORCE_LOCAL_BUILD,
 } from '@teambit/legacy/dist/constants';
-import { FileStatus, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { ConfigMergeResult, WorkspaceConfigUpdateResult, WorkspaceDepsUpdates } from '@teambit/config-merger';
 import { BitError } from '@teambit/bit-error';
+import { FileStatus, MergeStrategy } from './merge-version';
 import { ApplyVersionResults, MergingMain, ApplyVersionResult } from './merging.main.runtime';
 
 export class MergeCmd implements Command {
