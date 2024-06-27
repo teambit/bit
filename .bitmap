@@ -9,6 +9,14 @@
  */
 
 {
+    "analytics": {
+        "name": "analytics",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/analytics"
+    },
     "api-reference": {
         "name": "api-reference",
         "scope": "teambit.api-reference",

@@ -2,7 +2,7 @@
 // if you handle the error, then return true
 import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
-import { Analytics, LEVEL } from '../analytics/analytics';
+import { Analytics, LEVEL } from '@teambit/legacy.analytics';
 import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-found';
 import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnosis-name';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';

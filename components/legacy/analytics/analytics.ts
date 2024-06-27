@@ -1,16 +1,14 @@
 /* eslint max-classes-per-file: 0 */
 import { fork } from 'child_process';
 import hashObj from 'object-hash';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import os from 'os';
 import * as path from 'path';
 import R from 'ramda';
 import { serializeError } from 'serialize-error';
 import uniqid from 'uniqid';
 import yn from 'yn';
-
-import { getSync, setSync } from '../api/consumer/lib/global-config';
-import { CLIArgs } from '../cli/command';
+import { getSync, setSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import { CLIArgs } from '@teambit/legacy/dist/cli/command';
 import {
   BIT_VERSION,
   CFG_ANALYTICS_ANONYMOUS_KEY,
@@ -21,8 +19,8 @@ import {
   CFG_USER_EMAIL_KEY,
   CFG_USER_NAME_KEY,
   DEFAULT_BIT_ENV,
-} from '../constants';
-import { analyticsPrompt, errorReportingPrompt } from '../prompts';
+} from '@teambit/legacy/dist/constants';
+import { analyticsPrompt, errorReportingPrompt } from '@teambit/legacy/dist/prompts';
 
 const LEVEL = {
   DEBUG: 'debug',
