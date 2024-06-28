@@ -25,6 +25,7 @@ import { ImportCmd } from './import.cmd';
 import { ImporterAspect } from './importer.aspect';
 import { FetchCmd } from './fetch-cmd';
 import ImportComponents, { ImportOptions, ImportResult } from './import-components';
+import { ListerAspect, ListerMain } from '@teambit/lister';
 
 export class ImporterMain {
   constructor(
@@ -34,7 +35,8 @@ export class ImporterMain {
     private scope: ScopeMain,
     private componentWriter: ComponentWriterMain,
     private envs: EnvsMain,
-    readonly logger: Logger
+    readonly logger: Logger,
+    private lister: ListerMain
   ) {}
 
   async import(importOptions: ImportOptions, packageManagerArgs: string[] = []): Promise<ImportResult> {
@@ -218,6 +220,7 @@ export class ImporterMain {
       this.componentWriter,
       this.envs,
       this.logger,
+      this.lister,
       importOptions
     );
   }
@@ -298,9 +301,21 @@ export class ImporterMain {
     InstallAspect,
     EnvsAspect,
     LoggerAspect,
+    ListerAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, depResolver, graph, scope, componentWriter, install, envs, loggerMain]: [
+  static async provider([
+    cli,
+    workspace,
+    depResolver,
+    graph,
+    scope,
+    componentWriter,
+    install,
+    envs,
+    loggerMain,
+    lister,
+  ]: [
     CLIMain,
     Workspace,
     DependencyResolverMain,
@@ -309,10 +324,11 @@ export class ImporterMain {
     ComponentWriterMain,
     InstallMain,
     EnvsMain,
-    LoggerMain
+    LoggerMain,
+    ListerMain
   ]) {
     const logger = loggerMain.createLogger(ImporterAspect.id);
-    const importerMain = new ImporterMain(workspace, depResolver, graph, scope, componentWriter, envs, logger);
+    const importerMain = new ImporterMain(workspace, depResolver, graph, scope, componentWriter, envs, logger, lister);
     install.registerPreInstall(async (opts) => {
       if (!opts?.import) return;
       logger.setStatusLine('importing missing objects');
