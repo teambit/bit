@@ -210,15 +210,7 @@ function getMainAspect() {
  */
 function shouldLoadInSafeMode() {
   const currentCommand = process.argv[2];
-  const commandsToAlwaysRunInSafeMode = [
-    'cat-scope',
-    'cat-object',
-    'cat-component',
-    'cmp',
-    'cat-lane',
-    'config',
-    'remote',
-  ];
+  const commandsToAlwaysRunInSafeMode = ['remote'];
   // only legacy commands can ignore all aspects and load only the CLI aspect.
   // harmony commands need the aspects to be loaded and register to the CLI aspect in order to work properly.
   const commandsThatCanRunInSafeMode = [

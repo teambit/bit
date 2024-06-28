@@ -1,8 +1,8 @@
-import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../../../constants';
-import { loadScope, Scope } from '../../../scope';
-import Version from '../../../scope/models/version';
+import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '@teambit/legacy/dist/constants';
+import { loadScope, Scope } from '@teambit/legacy/dist/scope';
+import Version from '@teambit/legacy/dist/scope/models/version';
 
-export default (async function catComponent(id: string) {
+export async function catComponent(id: string): Promise<Record<string, any>> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const scope: Scope = await loadScope();
   const bitId = await scope.getParsedId(id);
@@ -18,4 +18,4 @@ export default (async function catComponent(id: string) {
     return version.toObject();
   }
   return component.toObject();
-});
+}
