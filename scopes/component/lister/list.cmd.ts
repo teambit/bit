@@ -72,10 +72,10 @@ export class ListCmd implements Command {
       if (hasWildcard(namespace)) return namespace;
       return `${namespace}/*`;
     };
-    const namespaceWithWildcard = getNamespaceWithWildcard();
+    const namespacesUsingWildcards = getNamespaceWithWildcard();
 
     return scopeName
-      ? this.lister.remoteList(scopeName, namespaceWithWildcard)
-      : this.lister.localList(scope, outdated, namespaceWithWildcard);
+      ? this.lister.remoteList(scopeName, { namespacesUsingWildcards })
+      : this.lister.localList(scope, outdated, namespacesUsingWildcards);
   }
 }

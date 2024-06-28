@@ -34,6 +34,7 @@ import { compact, difference, fromPairs } from 'lodash';
 import { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import { Logger } from '@teambit/logger';
 import { DependentsGetter } from './dependents-getter';
+import { ListerMain } from '@teambit/lister';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -106,6 +107,7 @@ export default class ImportComponents {
     private componentWriter: ComponentWriterMain,
     private envs: EnvsMain,
     private logger: Logger,
+    private lister: ListerMain,
     public options: ImportOptions
   ) {
     this.consumer = this.workspace.consumer;
@@ -408,7 +410,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
       if (existingOnLanes.length) {
         bitIds.push(...existingOnLanes);
       } else {
-        const idsFromRemote = await getRemoteBitIdsByWildcards(idStr, this.options.includeDeprecated);
+        const idsFromRemote = await this.lister.getRemoteCompIdsByWildcards(idStr, this.options.includeDeprecated);
         bitIds.push(...idsFromRemote);
       }
     });
