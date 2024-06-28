@@ -4,7 +4,6 @@ import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
 import { Analytics, LEVEL } from '@teambit/legacy.analytics';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
-import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
 import { BASE_DOCS_DOMAIN } from '../constants';
 import { InvalidBitMap, MissingMainFile } from '../consumer/bit-map/exceptions';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
@@ -224,15 +223,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     GitNotFound,
     () =>
       "error: unable to run command because git executable not found. please ensure git is installed and/or git_path is configured using the 'bit config set git_path <GIT_PATH>'",
-  ],
-  [
-    ObjectsWithoutConsumer,
-    (err) => `error: unable to initialize a bit workspace. bit has found undeleted local objects at ${chalk.bold(
-      err.scopePath
-    )}.
-1. use the ${chalk.bold('--reset-hard')} flag to clear all data and initialize an empty workspace.
-2. if deleted by mistake, please restore .bitmap and workspace.jsonc.
-3. force workspace initialization without clearing data use the ${chalk.bold('--force')} flag.`,
   ],
 ];
 
