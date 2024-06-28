@@ -240,51 +240,6 @@
     ]
   },
   {
-    "name": "doctor [diagnosis-name]",
-    "alias": "",
-    "options": [
-      [
-        "j",
-        "json",
-        "return diagnoses in json format"
-      ],
-      [
-        "",
-        "list",
-        "list all available diagnoses"
-      ],
-      [
-        "s",
-        "save [filePath]",
-        "save diagnoses to a file"
-      ],
-      [
-        "a",
-        "archive [filePath]",
-        "archive the workspace including diagnosis info (by default exclude node-modules and include .bit)"
-      ],
-      [
-        "n",
-        "include-node-modules",
-        "relevant for --archive. include node_modules in the archive file"
-      ],
-      [
-        "p",
-        "include-public",
-        "relevant for --archive. include public folder in the archive file"
-      ],
-      [
-        "e",
-        "exclude-local-scope",
-        "relevant for --archive. exclude .bit or .git/bit from the archive file"
-      ]
-    ],
-    "description": "diagnose a bit workspace",
-    "extendedDescription": "",
-    "group": "general",
-    "private": false
-  },
-  {
     "name": "run-action <action-name> <remote> <options>",
     "alias": "",
     "options": [],
@@ -364,6 +319,51 @@
       ]
     ],
     "description": "shows bit version",
+    "extendedDescription": "",
+    "group": "general",
+    "private": false
+  },
+  {
+    "name": "doctor [diagnosis-name]",
+    "alias": "",
+    "options": [
+      [
+        "j",
+        "json",
+        "return diagnoses in json format"
+      ],
+      [
+        "",
+        "list",
+        "list all available diagnoses"
+      ],
+      [
+        "s",
+        "save [filePath]",
+        "save diagnoses to a file"
+      ],
+      [
+        "a",
+        "archive [filePath]",
+        "archive the workspace including diagnosis info (by default exclude node-modules and include .bit)"
+      ],
+      [
+        "n",
+        "include-node-modules",
+        "relevant for --archive. include node_modules in the archive file"
+      ],
+      [
+        "p",
+        "include-public",
+        "relevant for --archive. include public folder in the archive file"
+      ],
+      [
+        "e",
+        "exclude-local-scope",
+        "relevant for --archive. exclude .bit or .git/bit from the archive file"
+      ]
+    ],
+    "description": "diagnose a bit workspace",
     "extendedDescription": "",
     "group": "general",
     "private": false
