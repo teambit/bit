@@ -4,7 +4,6 @@ import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
 import { Analytics, LEVEL } from '@teambit/legacy.analytics';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
-import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
 import { BASE_DOCS_DOMAIN } from '../constants';
 import { InvalidBitMap, MissingMainFile } from '../consumer/bit-map/exceptions';
@@ -215,7 +214,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     NoIdMatchWildcard,
     (err) => `unable to find component ids that match the following: ${err.idsWithWildcards.join(', ')}`,
   ],
-  [NothingToCompareTo, () => 'no previous versions to compare'],
   [
     NewerVersionFound,
     // err => JSON.stringify(err.newerVersions)
