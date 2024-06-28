@@ -14,6 +14,7 @@ for example, "user.token" becomes "BIT_CONFIG_USER_TOKEN"`;
   alias = '';
   skipWorkspace = true;
   options = [] as CommandOptions;
+  loadAspects = false;
 
   async report([key, value]: [string, string]) {
     await config.set(key, value);

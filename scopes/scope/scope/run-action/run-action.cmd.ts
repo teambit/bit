@@ -7,6 +7,7 @@ export class RunActionCmd implements Command {
   private = true;
   alias = '';
   options = [] as CommandOptions;
+  loadAspects = false;
 
   async report([actionName, remote, options]: [string, string, string]) {
     const optionsParsed = JSON.parse(options);

@@ -15,6 +15,7 @@ export class CatScopeCmd implements Command {
     ['j', 'json', 'print the objects as a json format'],
     ['e', 'json-extra', 'add hash and object type to the json'],
   ] as CommandOptions;
+  loadAspects = false;
 
   async report([scopePath]: [string], { full }: Flags) {
     const payload = await catScope(scopePath || process.cwd(), full);

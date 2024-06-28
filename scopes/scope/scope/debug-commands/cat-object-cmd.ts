@@ -12,6 +12,7 @@ export default class CatObjectCmd implements Command {
     ['s', 'stringify', 'JSON.stringify the object to see special characters, such as "\n"'],
     ['', 'headers', 'shows the headers only'],
   ] as CommandOptions;
+  loadAspects = false;
 
   async report(
     [hash]: [string],

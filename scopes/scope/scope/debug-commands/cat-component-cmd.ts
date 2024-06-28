@@ -10,6 +10,7 @@ export class CatComponentCmd implements Command {
     // json is also the default for this command. it's only needed to suppress the logger.console
     ['j', 'json', 'json format'],
   ] as CommandOptions;
+  loadAspects = false;
 
   async report([id]: [string]) {
     const result = await catComponent(id);
