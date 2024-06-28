@@ -16,4 +16,8 @@ export class CatVersionHistoryCmd implements Command {
     const result = await catVersionHistory(id);
     return JSON.stringify(result, null, 4);
   }
+
+  async json([id]: [string]) {
+    return catVersionHistory(id);
+  }
 }

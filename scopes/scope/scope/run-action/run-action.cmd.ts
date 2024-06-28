@@ -11,6 +11,7 @@ export class RunActionCmd implements Command {
 
   async report([actionName, remote, options]: [string, string, string]) {
     const optionsParsed = JSON.parse(options);
-    return runAction(actionName, remote, optionsParsed);
+    const result = await runAction(actionName, remote, optionsParsed);
+    return result || '';
   }
 }
