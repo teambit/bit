@@ -1,15 +1,11 @@
 /* eslint max-classes-per-file: 0 */
 import chalk from 'chalk';
 import rightpad from 'pad-right';
+import * as config from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
+import { Command, CommandOptions } from '@teambit/cli';
 
-// import { config } from '../../../api/consumer';
-// const config = require('../../../api/consumer/lib/global-config');
-import * as config from '../../../api/consumer/lib/global-config';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
-import { Group } from '../../command-groups';
-import { LegacyCommand } from '../../legacy-command';
-
-class ConfigSet implements LegacyCommand {
+class ConfigSet implements Command {
   name = 'set <key> <val>';
   description = 'set a global configuration';
   extendedDescription = `to set temporary configuration by env variable, prefix with "BIT_CONFIG", replace "." with "_" and change to upper case.
@@ -17,43 +13,34 @@ for example, "user.token" becomes "BIT_CONFIG_USER_TOKEN"`;
   baseUrl = 'reference/config/bit-config/';
   alias = '';
   skipWorkspace = true;
-  opts = [];
+  options = [] as CommandOptions;
 
-  action([key, value]: [string, string]): Promise<any> {
-    return config.set(key, value);
-  }
-
-  report(): string {
+  async report([key, value]: [string, string]) {
+    await config.set(key, value);
     return chalk.green('added configuration successfully');
   }
 }
 
-class ConfigGet implements LegacyCommand {
+class ConfigGet implements Command {
   name = 'get <key>';
   description = 'get a value from global configuration';
   alias = '';
-  opts = [];
+  options = [] as CommandOptions;
 
-  action([key]: [string]): Promise<any> {
-    return config.get(key);
-  }
-
-  report(value: string): string {
-    return value;
+  async report([key]: [string]) {
+    const value = await config.get(key);
+    return value || '';
   }
 }
 
-class ConfigList implements LegacyCommand {
+class ConfigList implements Command {
   name = 'list';
   description = 'list all configuration(s)';
   alias = '';
-  opts = [];
+  options = [] as CommandOptions;
 
-  action(): Promise<any> {
-    return config.list();
-  }
-
-  report(conf: { [key: string]: string }): string {
+  async report() {
+    const conf: { [key: string]: string } = await config.list();
     return Object.entries(conf)
       .map((tuple) => {
         return tuple.join('     ');
@@ -62,35 +49,29 @@ class ConfigList implements LegacyCommand {
   }
 }
 
-class ConfigDel implements LegacyCommand {
+class ConfigDel implements Command {
   name = 'del <key>';
   description = 'delete given key from global configuration';
   alias = '';
-  opts = [];
+  options = [] as CommandOptions;
 
-  action([key]: [string]): Promise<any> {
-    return config.del(key);
-  }
-
-  report(): string {
+  async report([key]: [string]) {
+    await config.del(key);
     return chalk.green('deleted successfully');
   }
 }
 
-export default class Config implements LegacyCommand {
+export class ConfigCmd implements Command {
   name = 'config';
   description = 'global config management';
   extendedDescription = `${BASE_DOCS_DOMAIN}reference/config/bit-config`;
-  group: Group = 'general';
+  group = 'general';
   alias = '';
   commands = [new ConfigSet(), new ConfigDel(), new ConfigGet(), new ConfigList()];
-  opts = [];
+  options = [] as CommandOptions;
 
-  action(): Promise<any> {
-    return config.list();
-  }
-
-  report(conf: { [key: string]: string }): string {
+  async report() {
+    const conf: { [key: string]: string } = await config.list();
     return Object.entries(conf)
       .map((tuple) => {
         tuple[0] = rightpad(tuple[0], 45, ' ');

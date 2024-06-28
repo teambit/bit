@@ -1,19 +1,15 @@
-import { runAction } from '../../../api/scope/lib/run-action';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import { runAction } from './run-action';
+import { Command, CommandOptions } from '@teambit/cli';
 
-export default class RunAction implements LegacyCommand {
+export class RunActionCmd implements Command {
   name = 'run-action <action-name> <remote> <options>';
   description = 'run an action on a remote';
   private = true;
   alias = '';
-  opts = [] as CommandOptions;
+  options = [] as CommandOptions;
 
-  action([actionName, remote, options]: [string, string, string]): Promise<any> {
+  async report([actionName, remote, options]: [string, string, string]) {
     const optionsParsed = JSON.parse(options);
     return runAction(actionName, remote, optionsParsed);
-  }
-
-  report(results): string {
-    return results;
   }
 }

@@ -67,6 +67,7 @@ import { CatScopeCmd } from './debug-commands/cat-scope-cmd';
 import { CatComponentCmd } from './debug-commands/cat-component-cmd';
 import CatObjectCmd from './debug-commands/cat-object-cmd';
 import CatLaneCmd from './debug-commands/cat-lane-cmd';
+import { RunActionCmd } from './run-action/run-action.cmd';
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
@@ -1227,7 +1228,7 @@ export class ScopeMain implements ComponentFactory {
   ) {
     const bitConfig: any = harmony.config.get('teambit.harmony/bit');
     const debugCommands = [new CatScopeCmd(), new CatComponentCmd(), new CatObjectCmd(), new CatLaneCmd()];
-    cli.register(new ScopeCmd(), ...debugCommands);
+    cli.register(new ScopeCmd(), ...debugCommands, new RunActionCmd());
     const legacyScope = await loadScopeIfExist(bitConfig?.cwd);
     if (!legacyScope) {
       return undefined;

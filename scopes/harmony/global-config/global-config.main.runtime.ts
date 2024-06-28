@@ -22,6 +22,7 @@ import { GlobalConfig } from '@teambit/legacy/dist/global-config';
 import { GlobalConfigAspect } from './global-config.aspect';
 import { GlobalsCmd } from './globals.cmd';
 import { SystemCmd, SystemLogCmd, SystemTailLogCmd } from './system.cmd';
+import { ConfigCmd } from './config-cmd';
 
 export class GlobalConfigMain {
   static runtime = MainRuntime;
@@ -89,7 +90,7 @@ export class GlobalConfigMain {
     const globalConfig = new GlobalConfigMain();
     const systemCmd = new SystemCmd();
     systemCmd.commands = [new SystemLogCmd(), new SystemTailLogCmd()];
-    cli.register(new GlobalsCmd(globalConfig), systemCmd);
+    cli.register(new GlobalsCmd(globalConfig), systemCmd, new ConfigCmd());
     return globalConfig;
   }
 }
