@@ -3,7 +3,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import { compact } from 'lodash';
 import {
-  WILDCARD_HELP,
+  COMPONENT_PATTERN_HELP,
   AUTO_SNAPPED_MSG,
   MergeConfigFilename,
   FILE_CHANGES_CHECKOUT_MSG,
@@ -16,15 +16,15 @@ import { FileStatus, MergeStrategy } from './merge-version';
 import { ApplyVersionResults, MergingMain, ApplyVersionResult } from './merging.main.runtime';
 
 export class MergeCmd implements Command {
-  name = 'merge [ids...]';
+  name = 'merge [component-pattern]';
   description = 'merge changes of the remote head into local - auto-snaps all merged components';
   helpUrl = 'reference/components/merging-changes';
   group = 'development';
+  arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   extendedDescription = `merge changes of the remote head into local when they are diverged. when on a lane, merge the remote head of the lane into the local
 and creates snaps for merged components that have diverged, on the lane.
 if no ids are specified, all pending-merge components will be merged. (run "bit status" to list them).
-optionally use '--abort' to revert the last merge. to revert a lane merge, use "bit lane merge-abort" command.
-${WILDCARD_HELP('merge')}`;
+optionally use '--abort' to revert the last merge. to revert a lane merge, use "bit lane merge-abort" command.`;
   alias = '';
   options = [
     ['', 'ours', 'DEPRECATED. use --auto-merge-resolve. in case of a conflict, keep the local modification'],
@@ -56,7 +56,7 @@ ${WILDCARD_HELP('merge')}`;
   constructor(private merging: MergingMain, private globalConfig: GlobalConfigMain) {}
 
   async report(
-    [ids = []]: [string[]],
+    [pattern]: [string],
     {
       ours = false,
       theirs = false,
@@ -107,7 +107,7 @@ ${WILDCARD_HELP('merge')}`;
       mergeSnapResults,
       mergeSnapError,
     }: ApplyVersionResults = await this.merging.merge(
-      ids,
+      pattern,
       autoMergeResolve as any,
       abort,
       resolve,

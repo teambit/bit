@@ -3,7 +3,6 @@ import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/work
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { SnappingAspect, SnappingMain, TagResults } from '@teambit/snapping';
-import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
@@ -128,7 +127,7 @@ export class MergingMain {
   ) {}
 
   async merge(
-    ids: string[],
+    pattern: string,
     mergeStrategy: MergeStrategy,
     abort: boolean,
     resolve: boolean,
@@ -141,11 +140,11 @@ export class MergingMain {
     const consumer: Consumer = this.workspace.consumer;
     let mergeResults;
     if (resolve) {
-      mergeResults = await this.resolveMerge(ids, message, build);
+      mergeResults = await this.resolveMerge(pattern, message, build);
     } else if (abort) {
-      mergeResults = await this.abortMerge(ids);
+      mergeResults = await this.abortMerge(pattern);
     } else {
-      const bitIds = await this.getComponentsToMerge(consumer, ids);
+      const bitIds = await this.getComponentsToMerge(consumer, pattern);
       mergeResults = await this.mergeComponentsFromRemote(
         consumer,
         bitIds,
@@ -562,17 +561,17 @@ export class MergingMain {
     };
   }
 
-  private async abortMerge(values: string[]): Promise<ApplyVersionResults> {
+  private async abortMerge(pattern: string): Promise<ApplyVersionResults> {
     const consumer = this.workspace.consumer;
-    const ids = await this.getIdsForUnmerged(values);
+    const ids = await this.getIdsForUnmerged(pattern);
     const results = await this.checkout.checkout({ ids, reset: true });
     ids.forEach((id) => consumer.scope.objects.unmergedComponents.removeComponent(id));
     await consumer.scope.objects.unmergedComponents.write();
     return { abortedComponents: results.components };
   }
 
-  private async resolveMerge(values: string[], snapMessage: string, build: boolean): Promise<ApplyVersionResults> {
-    const ids = await this.getIdsForUnmerged(values);
+  private async resolveMerge(pattern: string, snapMessage: string, build: boolean): Promise<ApplyVersionResults> {
+    const ids = await this.getIdsForUnmerged(pattern);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { snappedComponents } = await this.snapping.snap({
       legacyBitIds: ComponentIdList.fromArray(ids.map((id) => id)),
@@ -648,9 +647,9 @@ export class MergingMain {
     });
   }
 
-  private async getIdsForUnmerged(idsStr?: string[]): Promise<ComponentID[]> {
-    if (idsStr && idsStr.length) {
-      const componentIds = await this.workspace.resolveMultipleComponentIds(idsStr);
+  private async getIdsForUnmerged(pattern?: string): Promise<ComponentID[]> {
+    if (pattern) {
+      const componentIds = await this.workspace.idsByPattern(pattern);
       componentIds.forEach((id) => {
         const entry = this.workspace.consumer.scope.objects.unmergedComponents.getEntry(id);
         if (!entry) {
@@ -664,16 +663,13 @@ export class MergingMain {
     return unresolvedComponents.map((u) => ComponentID.fromObject(u.id));
   }
 
-  private async getComponentsToMerge(consumer: Consumer, ids: string[]): Promise<ComponentID[]> {
+  private async getComponentsToMerge(consumer: Consumer, pattern?: string): Promise<ComponentID[]> {
+    if (pattern) {
+      return this.workspace.idsByPattern(pattern);
+    }
     const componentsList = new ComponentsList(consumer);
-    if (!ids.length) {
-      const mergePending = await componentsList.listMergePendingComponents();
-      return mergePending.map((c) => c.id);
-    }
-    if (hasWildcard(ids)) {
-      return componentsList.listComponentsByIdsWithWildcard(ids);
-    }
-    return ids.map((id) => consumer.getParsedId(id));
+    const mergePending = await componentsList.listMergePendingComponents();
+    return mergePending.map((c) => c.id);
   }
 
   static slots = [];

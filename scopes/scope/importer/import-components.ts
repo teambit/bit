@@ -1,7 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
-import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/lib/list-scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { BEFORE_IMPORT_ACTION } from '@teambit/legacy/dist/cli/loader/loader-messages';
@@ -34,6 +33,7 @@ import { compact, difference, fromPairs } from 'lodash';
 import { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import { Logger } from '@teambit/logger';
 import { DependentsGetter } from './dependents-getter';
+import { ListerMain } from '@teambit/lister';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -106,6 +106,7 @@ export default class ImportComponents {
     private componentWriter: ComponentWriterMain,
     private envs: EnvsMain,
     private logger: Logger,
+    private lister: ListerMain,
     public options: ImportOptions
   ) {
     this.consumer = this.workspace.consumer;
@@ -408,7 +409,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
       if (existingOnLanes.length) {
         bitIds.push(...existingOnLanes);
       } else {
-        const idsFromRemote = await getRemoteBitIdsByWildcards(idStr, this.options.includeDeprecated);
+        const idsFromRemote = await this.lister.getRemoteCompIdsByWildcards(idStr, this.options.includeDeprecated);
         bitIds.push(...idsFromRemote);
       }
     });
@@ -426,7 +427,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
     await Promise.all(
       this.options.ids.map(async (idStr: string) => {
         if (hasWildcard(idStr)) {
-          const ids = await getRemoteBitIdsByWildcards(idStr, this.options.includeDeprecated);
+          const ids = await this.lister.getRemoteCompIdsByWildcards(idStr, this.options.includeDeprecated);
           this.logger.setStatusLine(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
           bitIds.push(...ids);
         } else {
