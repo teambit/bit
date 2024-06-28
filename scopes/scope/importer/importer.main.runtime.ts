@@ -25,7 +25,7 @@ import { ImportCmd } from './import.cmd';
 import { ImporterAspect } from './importer.aspect';
 import { FetchCmd } from './fetch-cmd';
 import ImportComponents, { ImportOptions, ImportResult } from './import-components';
-import ListerAspect, { ListerMain } from '@teambit/lister';
+import { ListerAspect, ListerMain } from '@teambit/lister';
 
 export class ImporterMain {
   constructor(

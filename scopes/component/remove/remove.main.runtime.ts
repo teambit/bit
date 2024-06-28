@@ -23,7 +23,7 @@ import { RemoveFragment } from './remove.fragment';
 import { RecoverCmd, RecoverOptions } from './recover-cmd';
 import { DeleteCmd } from './delete-cmd';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import ListerAspect, { ListerMain } from '@teambit/lister';
+import { ListerAspect, ListerMain } from '@teambit/lister';
 
 const BEFORE_REMOVE = 'removing components';
 
