@@ -37,6 +37,7 @@ import {
 } from './dependencies-cmd';
 import { DependenciesAspect } from './dependencies.aspect';
 import { DebugDependencies } from './dependencies-loader/auto-detect-deps';
+import { DependentsCmd } from './dependents-cmd';
 
 export type RemoveDependencyResult = { id: ComponentID; removedPackages: string[] };
 export type SetDependenciesResult = { changedComps: string[]; addedPackages: Record<string, string> };
@@ -410,7 +411,13 @@ export class DependenciesMain {
       new DependenciesBlameCmd(depsMain),
       new DependenciesUsageCmd(depsMain),
     ];
-    cli.register(depsCmd, new WhyCmd(depsMain), new SetPeerCmd(depsMain), new UnsetPeerCmd(depsMain));
+    cli.register(
+      depsCmd,
+      new WhyCmd(depsMain),
+      new SetPeerCmd(depsMain),
+      new UnsetPeerCmd(depsMain),
+      new DependentsCmd()
+    );
 
     ComponentLoader.loadDeps = depsMain.loadDependencies.bind(depsMain);
 
