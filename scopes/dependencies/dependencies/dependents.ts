@@ -1,8 +1,8 @@
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { loadConsumerIfExist, Consumer } from '../../../consumer';
-import ConsumerNotFound from '../../../consumer/exceptions/consumer-not-found';
-import DependencyGraph, { DependenciesInfo } from '../../../scope/graph/scope-graph';
+import { loadConsumerIfExist, Consumer } from '@teambit/legacy/dist/consumer';
+import ConsumerNotFound from '@teambit/legacy/dist/consumer/exceptions/consumer-not-found';
+import DependencyGraph, { DependenciesInfo } from '@teambit/legacy/dist/scope/graph/scope-graph';
 
 export type DependentsResults = {
   scopeDependents: DependenciesInfo[];

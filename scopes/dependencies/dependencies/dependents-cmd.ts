@@ -1,28 +1,24 @@
 import chalk from 'chalk';
-import { dependents, DependentsResults } from '../../../api/consumer/lib/dependents';
-import { Group } from '../../command-groups';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
-import { generateDependentsInfoTable } from '../../templates/component-template';
+import { Command, CommandOptions } from '@teambit/cli';
+import { dependents, DependentsResults } from './dependents';
+import { generateDependentsInfoTable } from '@teambit/legacy/dist/cli/templates/component-template';
 
-export default class Dependents implements LegacyCommand {
+export class DependentsCmd implements Command {
   name = 'dependents <component-name>';
   helpUrl = 'reference/dependencies/inspecting-dependencies#review-dependents';
   arguments = [
     {
-      names: 'component-name',
+      name: 'component-name',
       description: 'component name or component id',
     },
   ];
   description = 'show dependents of the given component';
-  group: Group = 'info';
+  group = 'info';
   alias = '';
-  opts = [] as CommandOptions;
+  options = [] as CommandOptions;
 
-  action([id]: [string]): Promise<any> {
-    return dependents(id);
-  }
-
-  report(results: DependentsResults): string {
+  async report([id]: [string]) {
+    const results: DependentsResults = await dependents(id);
     if (!results.scopeDependents.length && !results.workspaceDependents.length) {
       return `no dependents found for ${results.id.toString()}.
 try running "bit cat-component ${results.id.toStringWithoutVersion()}" to see whether the component/version exists locally`;
