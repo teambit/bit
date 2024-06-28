@@ -1,15 +1,15 @@
 import { BitError } from '@teambit/bit-error';
-import { GlobalRemotes } from '../../../global-config';
-import { Remote } from '../../../remotes';
-import { loadScope } from '../../../scope';
-import { getScopeRemotes } from '../../../scope/scope-remotes';
+import { GlobalRemotes } from '@teambit/legacy/dist/global-config';
+import { Remote } from '@teambit/legacy/dist/remotes';
+import { loadScope } from '@teambit/legacy/dist/scope';
+import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 
 function buildRemote(url: string): Remote {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return new Remote(url);
 }
 
-export function add(url: string, global: boolean) {
+export async function add(url: string, global: boolean) {
   const remote = buildRemote(url);
   return remote.scope().then((scopeDesc) => {
     remote.name = scopeDesc.name;
@@ -56,7 +56,7 @@ export async function remove(name: string, global: boolean) {
   return name;
 }
 
-export function list(global: boolean) {
+export async function list(global: boolean) {
   if (global) {
     return GlobalRemotes.load().then((globalRemotes) => globalRemotes.toPlainObject());
   }
@@ -66,5 +66,3 @@ export function list(global: boolean) {
     return getScopeRemotes(scope).then((remotes) => remotes.toPlainObject());
   });
 }
-
-export function refresh() {}
