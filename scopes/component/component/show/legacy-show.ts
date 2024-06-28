@@ -1,6 +1,8 @@
-import { getConsumerComponent, getScopeComponent } from '..';
-import loader from '../../../cli/loader/loader';
-import { BEFORE_SHOW_REMOTE } from '../../../cli/loader/loader-messages';
+import { getConsumerComponent } from './get-consumer-component';
+import { getScopeComponent } from './get-scope-component';
+import loader from '@teambit/legacy/dist/cli/loader/loader';
+
+const BEFORE_SHOW_REMOTE = 'showing a component...';
 
 export default async function show({
   id,
