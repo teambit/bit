@@ -33,7 +33,7 @@ import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/a
 import { WatcherAspect, WatcherMain } from '@teambit/watcher';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { ONLY_OVERVIEW, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { ONLY_OVERVIEW, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { BundlingStrategyNotFound } from './exceptions';
 import { generateLink, MainModulesMap } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';

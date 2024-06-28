@@ -912,6 +912,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/diff"
     },
+    "modules/feature-toggle": {
+        "name": "modules/feature-toggle",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "feature-toggle.ts",
+        "rootDir": "components/modules/feature-toggle"
+    },
     "modules/fetch-html-from-url": {
         "name": "modules/fetch-html-from-url",
         "scope": "teambit.html",
