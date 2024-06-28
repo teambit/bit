@@ -914,9 +914,8 @@
     },
     "modules/feature-toggle": {
         "name": "modules/feature-toggle",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.harmony",
+        "scope": "teambit.harmony",
+        "version": "0.0.1",
         "mainFile": "feature-toggle.ts",
         "rootDir": "scopes/harmony/modules/feature-toggle"
     },
