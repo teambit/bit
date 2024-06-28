@@ -20,6 +20,7 @@ import { BuildVersionHistoryAction } from './build-version-history-action';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { compact } from 'lodash';
 import { VersionHistoryGraph } from '@teambit/legacy/dist/scope/models/version-history';
+import { CatVersionHistoryCmd } from './cat-version-history-cmd';
 
 type BuildResult = { err?: Error; added?: string[] };
 type ShowResult = { node: string; pointers: string[]; edges: Array<{ hash: string; type: string }> };
@@ -166,7 +167,7 @@ export class VersionHistoryMain {
       new VersionHistoryShowCmd(versionHistory),
       new VersionHistoryBuildCmd(versionHistory),
     ];
-    cli.register(versionHistoryCmd);
+    cli.register(versionHistoryCmd, new CatVersionHistoryCmd());
     ExternalActions.externalActions.push(new BuildVersionHistoryAction(versionHistory));
     return versionHistory;
   }
