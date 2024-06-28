@@ -14,11 +14,8 @@ for example: "http://localhost:3000", "file:///tmp/local-scope"`;
   alias = '';
   options = [['g', 'global', 'configure a remote bit scope']] as CommandOptions;
 
-  action([url]: [string], { global }: { global: boolean }): Promise<any> {
-    return add(url, global);
-  }
-
-  report({ name, host }: { name: string; host: string }): string {
+  async report([url]: [string], { global }: { global: boolean }) {
+    const { name, host }: { name: string; host: string } = await add(url, global);
     return chalk.green(`added remote scope '${chalk.bold(name)}' with host '${chalk.bold(host)}'`);
   }
 }
