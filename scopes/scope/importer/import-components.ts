@@ -427,7 +427,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
     await Promise.all(
       this.options.ids.map(async (idStr: string) => {
         if (hasWildcard(idStr)) {
-          const ids = await getRemoteBitIdsByWildcards(idStr, this.options.includeDeprecated);
+          const ids = await this.lister.getRemoteCompIdsByWildcards(idStr, this.options.includeDeprecated);
           this.logger.setStatusLine(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
           bitIds.push(...ids);
         } else {
