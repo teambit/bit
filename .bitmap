@@ -918,7 +918,7 @@
         "version": "",
         "defaultScope": "teambit.harmony",
         "mainFile": "feature-toggle.ts",
-        "rootDir": "components/modules/feature-toggle"
+        "rootDir": "scopes/harmony/modules/feature-toggle"
     },
     "modules/fetch-html-from-url": {
         "name": "modules/fetch-html-from-url",
