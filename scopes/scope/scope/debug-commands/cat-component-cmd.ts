@@ -16,4 +16,8 @@ export class CatComponentCmd implements Command {
     const result = await catComponent(id);
     return JSON.stringify(result, null, 4);
   }
+
+  async json([id]: [string]) {
+    return catComponent(id);
+  }
 }

@@ -2,7 +2,7 @@ import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '@teambit/legacy/dist/cons
 import { loadScope, Scope } from '@teambit/legacy/dist/scope';
 import Version from '@teambit/legacy/dist/scope/models/version';
 
-export async function catComponent(id: string) {
+export async function catComponent(id: string): Promise<Record<string, any>> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const scope: Scope = await loadScope();
   const bitId = await scope.getParsedId(id);
