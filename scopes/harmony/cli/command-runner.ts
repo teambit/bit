@@ -5,7 +5,7 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
 import { TOKEN_FLAG_NAME } from '@teambit/legacy/dist/constants';
 import globalFlags from '@teambit/legacy/dist/cli/global-flags';
-import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
+import { Analytics } from '@teambit/legacy.analytics';
 import { OnCommandStartSlot } from './cli.main.runtime';
 import pMapSeries from 'p-map-series';
 

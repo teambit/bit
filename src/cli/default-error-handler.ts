@@ -2,7 +2,7 @@
 // if you handle the error, then return true
 import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
-import { Analytics, LEVEL } from '../analytics/analytics';
+import { Analytics, LEVEL } from '@teambit/legacy.analytics';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';

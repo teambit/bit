@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { BitError } from '@teambit/bit-error';
-import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
+import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import loader from '@teambit/legacy/dist/cli/loader';
 import {

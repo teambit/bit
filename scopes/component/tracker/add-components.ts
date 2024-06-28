@@ -4,7 +4,7 @@ import ignore from 'ignore';
 import * as path from 'path';
 import { compact, groupBy, isEmpty, unionBy, uniq } from 'lodash';
 import format from 'string-format';
-import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
+import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID } from '@teambit/component-id';
 import { BitIdStr, BitId } from '@teambit/legacy-bit-id';
 import { PACKAGE_JSON, VERSION_DELIMITER } from '@teambit/legacy/dist/constants';

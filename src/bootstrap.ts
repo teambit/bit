@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import semver from 'semver';
 
-import { Analytics } from './analytics/analytics';
+import { Analytics } from '@teambit/legacy.analytics';
 import { handleUnhandledRejection } from './cli/handle-errors';
 import { BIT_VERSION, GLOBAL_CONFIG, GLOBAL_LOGS } from './constants';
 import HooksManager from './hooks';

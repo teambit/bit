@@ -6,7 +6,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
-import { Analytics } from '../analytics/analytics';
+import { Analytics } from '@teambit/legacy.analytics';
 import {
   BIT_GIT_DIR,
   BIT_HIDDEN_DIR,

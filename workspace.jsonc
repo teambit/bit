@@ -693,6 +693,9 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {}
       }
+    },
+    "components/legacy": {
+      "teambit.pkg/pkg": {}
     }
   }
 }

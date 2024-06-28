@@ -9,7 +9,7 @@ import { BitError } from '@teambit/bit-error';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { isTag } from '@teambit/component-version';
 import { readDirIgnoreSystemFilesSync } from '@teambit/toolbox.fs.readdir-skip-system-files';
-import { Analytics } from '../analytics/analytics';
+import { Analytics } from '@teambit/legacy.analytics';
 import {
   BIT_GIT_DIR,
   BIT_HIDDEN_DIR,
