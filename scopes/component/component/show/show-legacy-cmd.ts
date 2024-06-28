@@ -1,5 +1,5 @@
 import { BitError } from '@teambit/bit-error';
-import { show } from '@teambit/legacy/dist/api/consumer';
+import { show } from './legacy-show';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { DependenciesInfo } from '@teambit/legacy/dist/scope/graph/scope-graph';
 import paintComponent from '@teambit/legacy/dist/cli/templates/component-template';

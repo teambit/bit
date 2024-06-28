@@ -4,7 +4,7 @@ import loader from '@teambit/legacy/dist/cli/loader/loader';
 
 const BEFORE_SHOW_REMOTE = 'showing a component...';
 
-export default async function show({
+export async function show({
   id,
   json,
   versions,
