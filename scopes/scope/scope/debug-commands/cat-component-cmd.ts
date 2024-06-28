@@ -1,21 +1,18 @@
-import { catComponent } from '../../../api/scope';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import { catComponent } from './cat-component';
+import { Command, CommandOptions } from '@teambit/cli';
 
-export default class CatComponent implements LegacyCommand {
+export class CatComponentCmd implements Command {
   name = 'cat-component [id]';
   description = 'cat a bit object by component-id';
   private = true;
   alias = 'cmp';
-  opts = [
+  options = [
     // json is also the default for this command. it's only needed to suppress the logger.console
     ['j', 'json', 'json format'],
   ] as CommandOptions;
 
-  action([id]: [string]): Promise<any> {
-    return catComponent(id);
-  }
-
-  report(result: any): string {
+  async report([id]: [string]) {
+    const result = await catComponent(id);
     return JSON.stringify(result, null, 4);
   }
 }

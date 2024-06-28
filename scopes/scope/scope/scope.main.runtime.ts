@@ -63,6 +63,10 @@ import { StagedConfig } from './staged-config';
 import { NoIdMatchPattern } from './exceptions/no-id-match-pattern';
 import { ScopeAspectsLoader, ScopeLoadAspectsOptions } from './scope-aspects-loader';
 import { ClearCacheAction } from './clear-cache-action';
+import { CatScopeCmd } from './debug-commands/cat-scope-cmd';
+import { CatComponentCmd } from './debug-commands/cat-component-cmd';
+import CatObjectCmd from './debug-commands/cat-object-cmd';
+import CatLaneCmd from './debug-commands/cat-lane-cmd';
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
@@ -1222,7 +1226,8 @@ export class ScopeMain implements ComponentFactory {
     harmony: Harmony
   ) {
     const bitConfig: any = harmony.config.get('teambit.harmony/bit');
-    cli.register(new ScopeCmd());
+    const debugCommands = [new CatScopeCmd(), new CatComponentCmd(), new CatObjectCmd(), new CatLaneCmd()];
+    cli.register(new ScopeCmd(), ...debugCommands);
     const legacyScope = await loadScopeIfExist(bitConfig?.cwd);
     if (!legacyScope) {
       return undefined;

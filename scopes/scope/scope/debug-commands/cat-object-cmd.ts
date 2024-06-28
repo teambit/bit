@@ -1,26 +1,23 @@
-import { catObject } from '../../../api/scope';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import { catObject } from './cat-object';
+import { Command, CommandOptions } from '@teambit/cli';
 
-export default class CatObject implements LegacyCommand {
+export default class CatObjectCmd implements Command {
   name = 'cat-object <hash>';
   description = 'cat a bit object by hash';
   private = true;
   loader = false;
   alias = '';
-  opts = [
+  options = [
     ['p', 'pretty', 'pretty print for the objects'],
     ['s', 'stringify', 'JSON.stringify the object to see special characters, such as "\n"'],
     ['', 'headers', 'shows the headers only'],
   ] as CommandOptions;
 
-  action(
+  async report(
     [hash]: [string],
     { pretty, stringify, headers }: { pretty: boolean; stringify: boolean; headers: boolean }
-  ): Promise<any> {
-    return catObject(hash, pretty, stringify, headers);
-  }
-
-  report(file: any): string {
+  ) {
+    const file = await catObject(hash, pretty, stringify, headers);
     return file.toString();
   }
 }
