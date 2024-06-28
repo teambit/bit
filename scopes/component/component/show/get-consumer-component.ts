@@ -1,8 +1,8 @@
-import { Consumer, loadConsumer } from '../../../consumer';
-import DependencyGraph, { DependenciesInfo } from '../../../scope/graph/scope-graph';
-import NothingToCompareTo from './exceptions/nothing-to-compare-to';
+import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
+import DependencyGraph, { DependenciesInfo } from '@teambit/legacy/dist/scope/graph/scope-graph';
+import { NothingToCompareTo } from './nothing-to-compare-to';
 
-export default (async function getConsumerBit({
+export async function getConsumerComponent({
   id,
   compare,
   allVersions,
@@ -46,4 +46,4 @@ export default (async function getConsumerBit({
   }
   await consumer.onDestroy('get-component');
   return { component, dependentsInfo, dependenciesInfo };
-});
+}

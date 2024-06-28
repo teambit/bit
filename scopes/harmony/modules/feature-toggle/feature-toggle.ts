@@ -12,8 +12,8 @@
  * per command. see the docs of CommandHelper class for more info.
  */
 
-import { CFG_FEATURE_TOGGLE } from '../../../constants';
-import { getSync } from './global-config';
+import { CFG_FEATURE_TOGGLE } from '@teambit/legacy/dist/constants';
+import { getSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
 
 export const ENV_VAR_FEATURE_TOGGLE = 'BIT_FEATURES';
 

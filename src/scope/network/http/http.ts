@@ -7,6 +7,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpProxyAgent } from 'http-proxy-agent';
+import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { LaneId } from '@teambit/lane-id';
 import { getAgent, AgentOptions } from '@teambit/toolbox.network.agent';
 import { Network } from '../network';
@@ -55,7 +56,6 @@ import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
 import loader from '../../../cli/loader';
 import { UnexpectedNetworkError } from '../exceptions';
-import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '../../../api/consumer/lib/feature-toggle';
 
 const _fetch: typeof fetch = nodeFetch as unknown as typeof fetch;
 

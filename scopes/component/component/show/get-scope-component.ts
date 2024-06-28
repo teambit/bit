@@ -1,13 +1,12 @@
 import { ComponentID } from '@teambit/component-id';
-import loader from '../../../cli/loader';
-import { BEFORE_REMOTE_SHOW } from '../../../cli/loader/loader-messages';
-import { Consumer, loadConsumerIfExist } from '../../../consumer';
-import Component from '../../../consumer/component';
-import getRemoteByName from '../../../remotes/get-remote-by-name';
-import { loadScope, Scope } from '../../../scope';
-import { DependenciesInfo } from '../../../scope/graph/scope-graph';
+import loader from '@teambit/legacy/dist/cli/loader';
+import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
+import Component from '@teambit/legacy/dist/consumer/component';
+import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
+import { loadScope, Scope } from '@teambit/legacy/dist/scope';
+import { DependenciesInfo } from '@teambit/legacy/dist/scope/graph/scope-graph';
 
-export default async function getScopeComponent({
+export async function getScopeComponent({
   id,
   allVersions,
   scopePath,
@@ -33,7 +32,7 @@ export default async function getScopeComponent({
 
   const consumer: Consumer | undefined = await loadConsumerIfExist();
   const remote = await getRemoteByName(bitId.scope, consumer);
-  loader.start(BEFORE_REMOTE_SHOW);
+  loader.start('showing a component...');
   const component = await remote.show(bitId);
   let dependenciesInfo: DependenciesInfo[] = [];
   let dependentsInfo: DependenciesInfo[] = [];
