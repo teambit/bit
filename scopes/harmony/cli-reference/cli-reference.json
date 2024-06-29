@@ -1,53 +1,5 @@
 [
   {
-    "name": "config",
-    "alias": "",
-    "options": [],
-    "description": "global config management",
-    "extendedDescription": "https://bit.dev/reference/config/bit-config",
-    "group": "general",
-    "private": false,
-    "commands": [
-      {
-        "name": "set <key> <val>",
-        "alias": "",
-        "options": [],
-        "description": "set a global configuration",
-        "extendedDescription": "to set temporary configuration by env variable, prefix with \"BIT_CONFIG\", replace \".\" with \"_\" and change to upper case.\nfor example, \"user.token\" becomes \"BIT_CONFIG_USER_TOKEN\"",
-        "group": "ungrouped",
-        "private": false,
-        "skipWorkspace": true
-      },
-      {
-        "name": "del <key>",
-        "alias": "",
-        "options": [],
-        "description": "delete given key from global configuration",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false
-      },
-      {
-        "name": "get <key>",
-        "alias": "",
-        "options": [],
-        "description": "get a value from global configuration",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false
-      },
-      {
-        "name": "list",
-        "alias": "",
-        "options": [],
-        "description": "list all configuration(s)",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false
-      }
-    ]
-  },
-  {
     "name": "remote",
     "alias": "",
     "options": [
@@ -93,160 +45,6 @@
         "private": false
       }
     ]
-  },
-  {
-    "name": "cat-object <hash>",
-    "alias": "",
-    "options": [
-      [
-        "p",
-        "pretty",
-        "pretty print for the objects"
-      ],
-      [
-        "s",
-        "stringify",
-        "JSON.stringify the object to see special characters, such as \"\n\""
-      ],
-      [
-        "",
-        "headers",
-        "shows the headers only"
-      ]
-    ],
-    "description": "cat a bit object by hash",
-    "extendedDescription": "",
-    "group": "ungrouped",
-    "private": true
-  },
-  {
-    "name": "cat-component [id]",
-    "alias": "cmp",
-    "options": [
-      [
-        "j",
-        "json",
-        "json format"
-      ]
-    ],
-    "description": "cat a bit object by component-id",
-    "extendedDescription": "",
-    "group": "ungrouped",
-    "private": true
-  },
-  {
-    "name": "cat-lane <id>",
-    "alias": "cl",
-    "options": [],
-    "description": "cat a bit object by lane-name",
-    "extendedDescription": "",
-    "group": "ungrouped",
-    "private": true
-  },
-  {
-    "name": "dependents <component-name>",
-    "alias": "",
-    "options": [],
-    "description": "show dependents of the given component",
-    "extendedDescription": "",
-    "group": "info",
-    "private": false
-  },
-  {
-    "name": "cat-scope [scopePath]",
-    "alias": "",
-    "options": [
-      [
-        "f",
-        "full",
-        "show all of the objects in the scope (except \"Source\")"
-      ],
-      [
-        "j",
-        "json",
-        "print the objects as a json format"
-      ],
-      [
-        "e",
-        "json-extra",
-        "add hash and object type to the json"
-      ]
-    ],
-    "description": "cat a scope and show all the contents",
-    "extendedDescription": "",
-    "group": "ungrouped",
-    "private": true
-  },
-  {
-    "name": "cat-version-history <id>",
-    "alias": "cvh",
-    "options": [
-      [
-        "j",
-        "json",
-        "json format"
-      ]
-    ],
-    "description": "cat version-history object by component-id",
-    "extendedDescription": "",
-    "group": "ungrouped",
-    "private": true
-  },
-  {
-    "name": "scope-config",
-    "alias": "",
-    "options": [],
-    "description": "scope config management",
-    "extendedDescription": "",
-    "group": "general",
-    "private": false,
-    "commands": [
-      {
-        "name": "set <key> <val>",
-        "alias": "",
-        "options": [],
-        "description": "set a scope configuration",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": true
-      },
-      {
-        "name": "del <key>",
-        "alias": "",
-        "options": [],
-        "description": "delete given key from global configuration",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false
-      },
-      {
-        "name": "get <key>",
-        "alias": "",
-        "options": [],
-        "description": "get a scope configuration",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": true
-      },
-      {
-        "name": "list",
-        "alias": "",
-        "options": [],
-        "description": "list all scope configuration(s)",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false
-      }
-    ]
-  },
-  {
-    "name": "run-action <action-name> <remote> <options>",
-    "alias": "",
-    "options": [],
-    "description": "run an action on a remote",
-    "extendedDescription": "",
-    "group": "ungrouped",
-    "private": true
   },
   {
     "name": "completion",
@@ -489,6 +287,54 @@
         "description": "print the log file to the screen as it is being written",
         "extendedDescription": "similar to linux \"tail -f\" command",
         "group": "workspace",
+        "private": false
+      }
+    ]
+  },
+  {
+    "name": "config",
+    "alias": "",
+    "options": [],
+    "description": "global config management",
+    "extendedDescription": "https://bit.dev/reference/config/bit-config",
+    "group": "general",
+    "private": false,
+    "commands": [
+      {
+        "name": "set <key> <val>",
+        "alias": "",
+        "options": [],
+        "description": "set a global configuration",
+        "extendedDescription": "to set temporary configuration by env variable, prefix with \"BIT_CONFIG\", replace \".\" with \"_\" and change to upper case.\nfor example, \"user.token\" becomes \"BIT_CONFIG_USER_TOKEN\"",
+        "group": "ungrouped",
+        "private": false,
+        "skipWorkspace": true
+      },
+      {
+        "name": "del <key>",
+        "alias": "",
+        "options": [],
+        "description": "delete given key from global configuration",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false
+      },
+      {
+        "name": "get <key>",
+        "alias": "",
+        "options": [],
+        "description": "get a value from global configuration",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false
+      },
+      {
+        "name": "list",
+        "alias": "",
+        "options": [],
+        "description": "list all configuration(s)",
+        "extendedDescription": "",
+        "group": "ungrouped",
         "private": false
       }
     ]
@@ -907,6 +753,89 @@
     ]
   },
   {
+    "name": "cat-scope [scopePath]",
+    "alias": "",
+    "options": [
+      [
+        "f",
+        "full",
+        "show all of the objects in the scope (except \"Source\")"
+      ],
+      [
+        "j",
+        "json",
+        "print the objects as a json format"
+      ],
+      [
+        "e",
+        "json-extra",
+        "add hash and object type to the json"
+      ]
+    ],
+    "description": "cat a scope and show all the contents",
+    "extendedDescription": "",
+    "group": "ungrouped",
+    "private": true
+  },
+  {
+    "name": "cat-component [id]",
+    "alias": "cmp",
+    "options": [
+      [
+        "j",
+        "json",
+        "json format"
+      ]
+    ],
+    "description": "cat a bit object by component-id",
+    "extendedDescription": "",
+    "group": "ungrouped",
+    "private": true
+  },
+  {
+    "name": "cat-object <hash>",
+    "alias": "",
+    "options": [
+      [
+        "p",
+        "pretty",
+        "pretty print for the objects"
+      ],
+      [
+        "s",
+        "stringify",
+        "JSON.stringify the object to see special characters, such as \"\n\""
+      ],
+      [
+        "",
+        "headers",
+        "shows the headers only"
+      ]
+    ],
+    "description": "cat a bit object by hash",
+    "extendedDescription": "",
+    "group": "ungrouped",
+    "private": true
+  },
+  {
+    "name": "cat-lane <id>",
+    "alias": "cl",
+    "options": [],
+    "description": "cat a bit object by lane-name",
+    "extendedDescription": "",
+    "group": "ungrouped",
+    "private": true
+  },
+  {
+    "name": "run-action <action-name> <remote> <options>",
+    "alias": "",
+    "options": [],
+    "description": "run an action on a remote",
+    "extendedDescription": "",
+    "group": "ungrouped",
+    "private": true
+  },
+  {
     "name": "version-history <sub-command>",
     "alias": "vh",
     "options": [],
@@ -1002,6 +931,21 @@
         ]
       }
     ]
+  },
+  {
+    "name": "cat-version-history <id>",
+    "alias": "cvh",
+    "options": [
+      [
+        "j",
+        "json",
+        "json format"
+      ]
+    ],
+    "description": "cat version-history object by component-id",
+    "extendedDescription": "",
+    "group": "ungrouped",
+    "private": true
   },
   {
     "name": "eject-conf <pattern>",
@@ -1501,6 +1445,58 @@
         "description": "the component to unset as always peer"
       }
     ]
+  },
+  {
+    "name": "dependents <component-name>",
+    "alias": "",
+    "options": [],
+    "description": "show dependents of the given component",
+    "extendedDescription": "",
+    "group": "info",
+    "private": false,
+    "arguments": [
+      {
+        "name": "component-name",
+        "description": "component name or component id"
+      }
+    ]
+  },
+  {
+    "name": "list [remote-scope]",
+    "alias": "ls",
+    "options": [
+      [
+        "i",
+        "ids",
+        "show only component ids, unformatted"
+      ],
+      [
+        "s",
+        "scope",
+        "show only components stored in the local scope, including indirect dependencies"
+      ],
+      [
+        "o",
+        "outdated",
+        "highlight outdated components, in comparison with their latest remote version (if one exists)"
+      ],
+      [
+        "j",
+        "json",
+        "show the output in JSON format"
+      ],
+      [
+        "n",
+        "namespace <string>",
+        "show only components in the specified namespace/s e.g. '-n ui' or '*/ui'"
+      ]
+    ],
+    "description": "list components on a workspace or a remote scope (with flag).",
+    "extendedDescription": "",
+    "group": "discover",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true
   },
   {
     "name": "ws-config <sub-command>",
@@ -3537,7 +3533,7 @@
     ]
   },
   {
-    "name": "merge [ids...]",
+    "name": "merge [component-pattern]",
     "alias": "",
     "options": [
       [
@@ -3597,9 +3593,15 @@
       ]
     ],
     "description": "merge changes of the remote head into local - auto-snaps all merged components",
-    "extendedDescription": "merge changes of the remote head into local when they are diverged. when on a lane, merge the remote head of the lane into the local\nand creates snaps for merged components that have diverged, on the lane.\nif no ids are specified, all pending-merge components will be merged. (run \"bit status\" to list them).\noptionally use '--abort' to revert the last merge. to revert a lane merge, use \"bit lane merge-abort\" command.\nyou can use a pattern for multiple ids, such as bit merge \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
+    "extendedDescription": "merge changes of the remote head into local when they are diverged. when on a lane, merge the remote head of the lane into the local\nand creates snaps for merged components that have diverged, on the lane.\nif no ids are specified, all pending-merge components will be merged. (run \"bit status\" to list them).\noptionally use '--abort' to revert the last merge. to revert a lane merge, use \"bit lane merge-abort\" command.",
     "group": "development",
-    "private": false
+    "private": false,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
   },
   {
     "name": "lane [sub-command]",
@@ -4309,43 +4311,6 @@
         "description": "lane-id to merge to. default is \"main\""
       }
     ]
-  },
-  {
-    "name": "list [remote-scope]",
-    "alias": "ls",
-    "options": [
-      [
-        "i",
-        "ids",
-        "show only component ids, unformatted"
-      ],
-      [
-        "s",
-        "scope",
-        "show only components stored in the local scope, including indirect dependencies"
-      ],
-      [
-        "o",
-        "outdated",
-        "highlight outdated components, in comparison with their latest remote version (if one exists)"
-      ],
-      [
-        "j",
-        "json",
-        "show the output in JSON format"
-      ],
-      [
-        "n",
-        "namespace <string>",
-        "show only components in the specified namespace/s e.g. '-n ui' or '*/ui'"
-      ]
-    ],
-    "description": "list components on a workspace or a remote scope (with flag).",
-    "extendedDescription": "",
-    "group": "discover",
-    "private": false,
-    "remoteOp": true,
-    "skipWorkspace": true
   },
   {
     "name": "pack <componentId> [scopePath]",
