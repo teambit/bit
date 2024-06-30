@@ -392,6 +392,7 @@
         "eslint-config-airbnb-typescript": "17.1.0",
         "eslint-import-resolver-node": "0.3.4",
         "eventemitter2": "6.4.4",
+        "events": "^3.3.0",
         "expose-loader": "3.1.0",
         "express": "4.17.1",
         "express-graphql": "0.12.0",
