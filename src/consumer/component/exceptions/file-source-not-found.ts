@@ -1,10 +1,10 @@
-import AbstractError from '../../../error/abstract-error';
+import { BitError } from '@teambit/bit-error';
 
-export default class FileSourceNotFound extends AbstractError {
+export default class FileSourceNotFound extends BitError {
   path: string;
 
   constructor(path: string) {
-    super();
+    super(`file or directory "${path}" was not found`);
     this.path = path;
   }
 }

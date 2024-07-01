@@ -1,9 +1,10 @@
-import AbstractError from '../../../../error/abstract-error';
+import { BitError } from '@teambit/bit-error';
+import chalk from 'chalk';
 
-export default class PathOutsideConsumer extends AbstractError {
+export default class PathOutsideConsumer extends BitError {
   path: string;
   constructor(path: string) {
-    super();
+    super(`error: file or directory "${chalk.bold(path)}" is located outside of the workspace.`);
     this.path = path;
   }
 }
