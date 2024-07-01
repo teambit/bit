@@ -1,6 +1,5 @@
 import { BitError } from '@teambit/bit-error';
 import { IssuesAspect } from '@teambit/issues';
-import { formatIssues } from '@teambit/legacy/dist/cli/templates/component-issues-template';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import chalk from 'chalk';
 import { uniq } from 'lodash';
@@ -27,6 +26,10 @@ while highly not recommended, it's possible to ignore issues in two ways:
 }
 `);
   }
+}
+
+function formatIssues(compWithIssues: ConsumerComponent) {
+  return `       ${compWithIssues.issues?.outputForCLI()}\n`;
 }
 
 function componentIssuesTemplate(components: ConsumerComponent[]) {
