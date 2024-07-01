@@ -3,8 +3,8 @@ import c from 'chalk';
 import rightpad from 'pad-right';
 import { table } from 'table';
 import { componentToPrintableForDiff, getDiffBetweenObjects, prettifyFieldName } from '@teambit/legacy.component-diff';
-import paintDocumentation from '@teambit/legacy/dist/cli/templates/docs-template';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import paintDocumentation from './docs-template';
 
 export function actionLegacy(
   [id]: [string],

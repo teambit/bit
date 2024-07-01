@@ -1,8 +1,7 @@
 import c from 'chalk';
-import R from 'ramda';
 import Table from 'cli-table';
-
-import { Doclet } from '../../jsdoc/types';
+import { isEmpty, isNil } from 'lodash';
+import { Doclet } from '@teambit/legacy/dist/jsdoc/types';
 
 const paintExample = (example) => {
   return example.raw;
@@ -14,7 +13,7 @@ const paintHeader = (value: string) => {
 };
 
 const paintExamples = (examples) => {
-  if (R.isEmpty(examples) || R.isNil(examples)) {
+  if (isEmpty(examples) || isNil(examples)) {
     return '';
   }
 
@@ -69,7 +68,7 @@ export const paintDoc = (doc: Doclet) => {
 };
 
 export default (docs: Doclet[] | null | undefined) => {
-  if (R.isEmpty(docs) || R.isNil(docs)) {
+  if (isEmpty(docs) || isNil(docs)) {
     return '\nNo documentation found';
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
