@@ -210,19 +210,20 @@ function getMainAspect() {
  */
 function shouldLoadInSafeMode() {
   const currentCommand = process.argv[2];
-  const commandsToAlwaysRunInSafeMode = ['remote'];
-  // only legacy commands can ignore all aspects and load only the CLI aspect.
   // harmony commands need the aspects to be loaded and register to the CLI aspect in order to work properly.
   const commandsThatCanRunInSafeMode = [
-    ...commandsToAlwaysRunInSafeMode,
     'dependents',
+    'remote',
     'doctor',
     'cat-version-history',
+    'cat-component',
+    'cat-scope',
+    'cat-object',
+    'config',
     'run-action',
   ];
   const hasSafeModeFlag = process.argv.includes('--safe-mode');
-  const isSafeModeCommand = commandsToAlwaysRunInSafeMode.includes(currentCommand) || isClearCacheCommand();
-  return isSafeModeCommand || (hasSafeModeFlag && commandsThatCanRunInSafeMode.includes(currentCommand));
+  return isClearCacheCommand() || (hasSafeModeFlag && commandsThatCanRunInSafeMode.includes(currentCommand));
 }
 
 function isClearCacheCommand() {

@@ -1,5 +1,7 @@
 import { Group } from './command-groups';
-import { CommandOptions } from './legacy-command';
+
+type CommandOption = [string, string, string];
+export type CommandOptions = Array<CommandOption>;
 
 export interface Command {
   /**

@@ -23,6 +23,7 @@ import { GlobalConfigAspect } from './global-config.aspect';
 import { GlobalsCmd } from './globals.cmd';
 import { SystemCmd, SystemLogCmd, SystemTailLogCmd } from './system.cmd';
 import { ConfigCmd } from './config-cmd';
+import { RemoteCmd } from './remote-cmd';
 
 export class GlobalConfigMain {
   static runtime = MainRuntime;
@@ -90,7 +91,7 @@ export class GlobalConfigMain {
     const globalConfig = new GlobalConfigMain();
     const systemCmd = new SystemCmd();
     systemCmd.commands = [new SystemLogCmd(), new SystemTailLogCmd()];
-    cli.register(new GlobalsCmd(globalConfig), systemCmd, new ConfigCmd());
+    cli.register(new GlobalsCmd(globalConfig), systemCmd, new ConfigCmd(), new RemoteCmd());
     return globalConfig;
   }
 }
