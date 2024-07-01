@@ -35,6 +35,7 @@ export default class Fs implements Network {
   }
 
   pushMany(objectList: ObjectList, pushOptions: PushOptions): Promise<string[]> {
+    // @ts-ignore for some reason, it finds two different ObjectList. try to remove it once all legacy are gone
     return put({ path: this.scopePath, objectList }, pushOptions);
   }
 
