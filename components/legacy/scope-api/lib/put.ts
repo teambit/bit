@@ -1,10 +1,10 @@
 import R from 'ramda';
 import { ComponentIdList } from '@teambit/component-id';
-import { POST_RECEIVE_OBJECTS, PRE_RECEIVE_OBJECTS } from '../../../constants';
-import HooksManager from '../../../hooks';
-import { loadScope } from '../../../scope';
-import { exportManyBareScope } from '../../../scope/component-ops/export-scope-components';
-import { ObjectList } from '../../../scope/objects/object-list';
+import { POST_RECEIVE_OBJECTS, PRE_RECEIVE_OBJECTS } from '@teambit/legacy/dist/constants';
+import HooksManager from '@teambit/legacy/dist/hooks';
+import { loadScope } from '@teambit/legacy/dist/scope';
+import { exportManyBareScope } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
+import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -18,7 +18,7 @@ export type PushOptions = {
   persist?: boolean; // persist the objects immediately with no validation. (for legacy and bit-sign).
 };
 
-export default async function put(
+export async function put(
   { path, objectList }: ComponentObjectsInput,
   pushOptions: PushOptions,
   headers?: Record<string, any>

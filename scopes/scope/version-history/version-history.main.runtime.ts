@@ -15,7 +15,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { ModelComponent, VersionHistory } from '@teambit/legacy/dist/scope/models';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
+import { ExternalActions } from '@teambit/legacy.scope-api';
 import { BuildVersionHistoryAction } from './build-version-history-action';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { compact } from 'lodash';

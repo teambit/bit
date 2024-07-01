@@ -3,18 +3,18 @@ import Queue from 'p-queue';
 import { ComponentIdList } from '@teambit/component-id';
 import semver from 'semver';
 import { LaneId } from '@teambit/lane-id';
-import { LATEST_BIT_VERSION, POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
-import HooksManager from '../../../hooks';
-import logger from '../../../logger/logger';
-import { loadScope, Scope } from '../../../scope';
-import { Ref } from '../../../scope/objects';
-import { ObjectList } from '../../../scope/objects/object-list';
+import { LATEST_BIT_VERSION, POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '@teambit/legacy/dist/constants';
+import HooksManager from '@teambit/legacy/dist/hooks';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { loadScope, Scope } from '@teambit/legacy/dist/scope';
+import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import {
   ComponentWithCollectOptions,
   ObjectsReadableGenerator,
-} from '../../../scope/objects/objects-readable-generator';
+} from '@teambit/legacy/dist/scope/objects/objects-readable-generator';
 import { LaneNotFound } from './exceptions/lane-not-found';
-import { Lane, LaneHistory } from '../../../scope/models';
+import { Lane, LaneHistory } from '@teambit/legacy/dist/scope/models';
 
 /**
  * 'component-delta' is not supported anymore in fetchSchema of 0.0.3 and above.
@@ -102,7 +102,7 @@ fastQueue.on('add', () => {
   logger.debug(`scope.fetch fastQueue added task for connection [${fetchCounter}], queue pending: ${fastQueue.size}`);
 });
 
-export default async function fetch(
+export async function fetch(
   path: string,
   ids: string[], // ids type are determined by the fetchOptions.type
   fetchOptions: FETCH_OPTIONS,

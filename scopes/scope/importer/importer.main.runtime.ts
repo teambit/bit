@@ -19,7 +19,7 @@ import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { GraphAspect, GraphMain } from '@teambit/graph';
-import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
+import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { BitError } from '@teambit/bit-error';
 import { ImportCmd } from './import.cmd';
 import { ImporterAspect } from './importer.aspect';

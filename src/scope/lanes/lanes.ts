@@ -2,7 +2,7 @@ import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { ComponentID } from '@teambit/component-id';
 import { Scope } from '..';
-import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
+import { LaneNotFound } from '@teambit/legacy.scope-api';
 import logger from '../../logger/logger';
 import { Lane, LaneHistory, Version } from '../models';
 import { BitObject, Repository } from '../objects';

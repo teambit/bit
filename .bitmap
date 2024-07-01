@@ -1388,6 +1388,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/scope"
     },
+    "scope-api": {
+        "name": "scope-api",
+        "scope": "teambit.legacy",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/scope-api"
+    },
     "sections/api-reference-page": {
         "name": "sections/api-reference-page",
         "scope": "teambit.api-reference",

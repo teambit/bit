@@ -1,6 +1,5 @@
 import { ComponentID } from '@teambit/component-id';
-import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '../api/scope/lib/fetch';
-import { PushOptions } from '../api/scope/lib/put';
+import { PushOptions, CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import { ListScopeResult } from '../consumer/component/components-list';
 import Component from '../consumer/component/consumer-component';
 import logger from '../logger/logger';

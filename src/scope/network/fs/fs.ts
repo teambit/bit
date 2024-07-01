@@ -1,8 +1,5 @@
 import { ComponentID } from '@teambit/component-id';
-import { fetch, put, remove } from '../../../api/scope';
-import { action } from '../../../api/scope/lib/action';
-import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
-import { PushOptions } from '../../../api/scope/lib/put';
+import { fetch, put, remove, action, FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
 import ComponentsList, { ListScopeResult } from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component/consumer-component';
 import DependencyGraph from '../../graph/scope-graph';
@@ -38,6 +35,7 @@ export default class Fs implements Network {
   }
 
   pushMany(objectList: ObjectList, pushOptions: PushOptions): Promise<string[]> {
+    // @ts-ignore for some reason, it finds two different ObjectList. try to remove it once all legacy are gone
     return put({ path: this.scopePath, objectList }, pushOptions);
   }
 

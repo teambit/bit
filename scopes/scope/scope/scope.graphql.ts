@@ -1,6 +1,6 @@
 import { ComponentID } from '@teambit/component';
 import { gql } from 'graphql-tag';
-import { latestVersions } from '@teambit/legacy/dist/api/scope';
+import { latestVersions } from '@teambit/legacy.scope-api';
 import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import { ScopeMain } from './scope.main.runtime';

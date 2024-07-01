@@ -28,7 +28,7 @@ import { BuildStatus } from '../../constants';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
 import { getAllVersionHashes } from './traverse-versions';
-import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
+import { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import { pMapPool } from '../../utils/promise-with-concurrent';
 
 type HashesPerRemote = { [remoteName: string]: string[] };
