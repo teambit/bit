@@ -1,8 +1,8 @@
 import { ComponentIdList } from '@teambit/component-id';
-import { POST_REMOVE_REMOTE, PRE_REMOVE_REMOTE } from '../../../constants';
-import HooksManager from '../../../hooks';
-import { loadScope } from '../../../scope';
-import RemovedObjects, { RemovedObjectSerialized } from '../../../scope/removed-components';
+import { POST_REMOVE_REMOTE, PRE_REMOVE_REMOTE } from '@teambit/legacy/dist/constants';
+import HooksManager from '@teambit/legacy/dist/hooks';
+import { loadScope } from '@teambit/legacy/dist/scope';
+import RemovedObjects, { RemovedObjectSerialized } from '@teambit/legacy/dist/scope/removed-components';
 
 const HooksManagerInstance = HooksManager.getInstance();
 

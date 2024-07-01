@@ -40,7 +40,7 @@ import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-conf
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
+import { ExternalActions } from '@teambit/legacy.scope-api';
 import { readdir, readFile } from 'fs-extra';
 import { resolve, join } from 'path';
 import { manifestsMap } from './manifests';
