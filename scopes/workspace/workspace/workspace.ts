@@ -36,8 +36,7 @@ import { InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName, BitId }
 import { LaneId } from '@teambit/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
-import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
-import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
+import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { pathIsInside } from '@teambit/legacy/dist/utils';
