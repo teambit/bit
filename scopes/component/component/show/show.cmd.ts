@@ -7,7 +7,7 @@ import { CLITable } from '@teambit/cli-table';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { ComponentID } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
-import { reportLegacy, actionLegacy } from './show-legacy-cmd';
+import { reportLegacy, actionLegacy } from './legacy-show/show-legacy-cmd';
 import { ComponentMain } from '../component.main.runtime';
 
 export class ShowCmd implements Command {

@@ -1,9 +1,9 @@
-import { show } from './legacy-show';
 import c from 'chalk';
 import rightpad from 'pad-right';
 import { table } from 'table';
 import { componentToPrintableForDiff, getDiffBetweenObjects, prettifyFieldName } from '@teambit/legacy.component-diff';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { show } from './legacy-show';
 import paintDocumentation from './docs-template';
 
 export function actionLegacy(
