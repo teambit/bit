@@ -13,9 +13,8 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import { Logger } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
-import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
+import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
-import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
 import { ComponentLoadOptions as LegacyComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { pMapPool } from '@teambit/legacy/dist/utils/promise-with-concurrent';

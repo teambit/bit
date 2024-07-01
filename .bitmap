@@ -954,6 +954,14 @@
         "mainFile": "index.ts",
         "rootDir": "components/modules/harmony-root-generator"
     },
+    "modules/in-memory-cache": {
+        "name": "modules/in-memory-cache",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/modules/in-memory-cache"
+    },
     "modules/match-pattern": {
         "name": "modules/match-pattern",
         "scope": "teambit.workspace",
