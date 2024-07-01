@@ -1,6 +1,6 @@
-import AbstractError from '../../error/abstract-error';
+import { BitError } from '@teambit/bit-error';
 
-export default class HookAlreadyExists extends AbstractError {
+export default class HookAlreadyExists extends BitError {
   hookName: string;
 
   constructor(hookName: string) {

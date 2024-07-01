@@ -1,9 +1,9 @@
-import AbstractError from '../../../../error/abstract-error';
+import { BitError } from '@teambit/bit-error';
 
-export class AddingIndividualFiles extends AbstractError {
+export class AddingIndividualFiles extends BitError {
   file: string;
   constructor(file: string) {
-    super();
+    super(`error: adding individual files is blocked ("${file}"), and only directories can be added`);
     this.file = file;
   }
 }
