@@ -12,6 +12,7 @@ class RemoteAdd implements Command {
   extendedDescription = `supported protocols are [file, http].
 for example: "http://localhost:3000", "file:///tmp/local-scope"`;
   alias = '';
+  loadAspects = false;
   options = [['g', 'global', 'configure a remote bit scope']] as CommandOptions;
 
   async report([url]: [string], { global }: { global: boolean }) {
@@ -24,6 +25,7 @@ class RemoteRm implements Command {
   name = 'del <name>';
   description = 'remove a tracked bit remote';
   alias = '';
+  loadAspects = false;
   options = [['g', 'global', 'remove a globally configured remote scope']] as CommandOptions;
 
   async report([name]: [string], { global }: { global: boolean }) {

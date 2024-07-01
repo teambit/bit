@@ -27,6 +27,7 @@ class ConfigGet implements Command {
   description = 'get a value from global configuration';
   alias = '';
   options = [] as CommandOptions;
+  loadAspects = false;
 
   async report([key]: [string]) {
     const value = await config.get(key);
@@ -39,6 +40,7 @@ class ConfigList implements Command {
   description = 'list all configuration(s)';
   alias = '';
   options = [] as CommandOptions;
+  loadAspects = false;
 
   async report() {
     const conf: { [key: string]: string } = await config.list();
@@ -55,6 +57,7 @@ class ConfigDel implements Command {
   description = 'delete given key from global configuration';
   alias = '';
   options = [] as CommandOptions;
+  loadAspects = false;
 
   async report([key]: [string]) {
     await config.del(key);
@@ -68,6 +71,7 @@ export class ConfigCmd implements Command {
   extendedDescription = `${BASE_DOCS_DOMAIN}reference/config/bit-config`;
   group = 'general';
   alias = '';
+  loadAspects = false;
   commands = [new ConfigSet(), new ConfigDel(), new ConfigGet(), new ConfigList()];
   options = [] as CommandOptions;
 
