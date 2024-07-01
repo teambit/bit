@@ -1,83 +1,41 @@
-import { BitError } from '@teambit/bit-error';
 import { show } from './legacy-show';
+import c from 'chalk';
+import rightpad from 'pad-right';
+import { table } from 'table';
+import { componentToPrintableForDiff, getDiffBetweenObjects, prettifyFieldName } from '@teambit/legacy.component-diff';
+import paintDocumentation from '@teambit/legacy/dist/cli/templates/docs-template';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
-import { DependenciesInfo } from '@teambit/legacy/dist/scope/graph/scope-graph';
-import paintComponent from '@teambit/legacy/dist/cli/templates/component-template';
 
 export function actionLegacy(
   [id]: [string],
   {
     json,
-    versions,
     remote = false,
-    outdated = false,
     compare = false,
-    detailed = false,
-    dependents = false,
-    dependencies = false,
   }: {
     json?: boolean;
-    versions: boolean | null | undefined;
     remote: boolean;
-    outdated?: boolean;
     compare?: boolean;
-    detailed?: boolean;
-    dependents?: boolean;
-    dependencies?: boolean;
   }
 ): Promise<any> {
-  if (versions && (compare || outdated)) {
-    throw new BitError('the [--compare] or [--outdated] flag cannot be used along with --versions');
-  }
-  if (versions && remote) {
-    throw new BitError('the [--versions] and [--remote] flags cannot be used together');
-  }
-  if (compare && outdated) {
-    throw new BitError('the [--compare] and [--outdated] flags cannot be used together');
-  }
-
   return show({
     id,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     json,
-    versions,
     remote,
-    outdated,
     compare,
-    detailed,
-    dependents,
-    dependencies,
   });
 }
 
 export function reportLegacy({
   component,
   componentModel,
-  dependenciesInfo,
-  dependentsInfo,
   json,
-  versions,
-  components,
-  outdated,
-  detailed,
 }: {
   component: ConsumerComponent;
   componentModel?: ConsumerComponent;
-  dependenciesInfo: DependenciesInfo[];
-  dependentsInfo: DependenciesInfo[];
   json: boolean | null | undefined;
-  versions: boolean | null | undefined;
-  components: ConsumerComponent[] | null | undefined;
-  outdated: boolean;
-  detailed: boolean;
 }): string {
-  if (versions) {
-    return JSON.stringify(
-      (components || []).map((c) => c.toObject()),
-      null,
-      '  '
-    );
-  }
   if (component.componentFromModel) {
     component.scopesList = component.componentFromModel.scopesList;
   }
@@ -94,14 +52,6 @@ export function reportLegacy({
       return componentObj;
     };
     const componentFromFileSystem = makeComponentReadable(component);
-    if (dependenciesInfo) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      componentFromFileSystem.dependenciesInfo = dependenciesInfo;
-    }
-    if (dependentsInfo) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      componentFromFileSystem.dependentsInfo = dependentsInfo;
-    }
     if (component.scopesList) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentFromFileSystem.scopesList = component.scopesList;
@@ -110,5 +60,159 @@ export function reportLegacy({
     const jsonObject = componentFromModel ? { componentFromFileSystem, componentFromModel } : componentFromFileSystem;
     return JSON.stringify(jsonObject, null, '  ');
   }
-  return paintComponent(component, componentModel, outdated, detailed, dependenciesInfo, dependentsInfo);
+  return paintComponent(component, componentModel);
+}
+
+const COLUMN_WIDTH = 50;
+const tableColumnConfig = {
+  columns: {
+    1: {
+      alignment: 'left',
+      width: COLUMN_WIDTH,
+    },
+    2: {
+      alignment: 'left',
+      width: COLUMN_WIDTH,
+    },
+  },
+};
+
+function paintComponent(component: ConsumerComponent, componentModel: ConsumerComponent | undefined) {
+  return componentModel ? paintWithCompare() : paintWithoutCompare();
+
+  function paintWithoutCompare() {
+    const printableComponent = componentToPrintableForDiff(component);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    printableComponent.scopesList = (component.scopesList || []).map((s) => s.name).join('\n');
+    const rows = getFields()
+      .map((field) => {
+        const arr = [];
+
+        const title = prettifyFieldName(field);
+        if (!printableComponent[field]) return null;
+
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        arr.push(c.cyan(title));
+        if (!printableComponent[field]) return null;
+
+        if (printableComponent[field]) {
+          if (printableComponent[field] instanceof Array) {
+            arr.push(
+              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+              printableComponent[field]
+                .map((str) => calculatePadRightLength(str, COLUMN_WIDTH))
+                .join(' ')
+                .trim()
+            );
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          } else arr.push(printableComponent[field]);
+        }
+        return arr;
+      })
+      .filter((x) => x);
+
+    const componentTable = table(rows, tableColumnConfig);
+    return componentTable + paintDocumentation(component.docs);
+  }
+
+  function paintWithCompare() {
+    if (!componentModel) throw new Error('paintWithCompare, componentModel must be defined');
+    const printableOriginalComponent = componentToPrintableForDiff(component);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    printableOriginalComponent.id += ' [file system]';
+    const printableComponentToCompare = componentToPrintableForDiff(componentModel);
+
+    const componentsDiffs = getDiffBetweenObjects(printableOriginalComponent, printableComponentToCompare);
+
+    const rows = getFields()
+      .map((field) => {
+        const arr = [];
+        if (!printableOriginalComponent[field] && !printableComponentToCompare[field]) return null;
+        const title = `${field[0].toUpperCase()}${field.slice(1)}`.replace(/([A-Z])/g, ' $1').trim();
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        arr.push(field in componentsDiffs && field !== 'id' ? c.red(title) : c.cyan(title));
+        if (printableComponentToCompare[field] instanceof Array) {
+          arr.push(
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            printableComponentToCompare[field]
+              .map((str) => calculatePadRightLength(str, COLUMN_WIDTH))
+              .join(' ')
+              .trim()
+          );
+        } else {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          arr.push(printableComponentToCompare[field]);
+        }
+        if (printableOriginalComponent[field] instanceof Array) {
+          arr.push(
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            printableOriginalComponent[field]
+              .map((str) => calculatePadRightLength(str, COLUMN_WIDTH))
+              .join(' ')
+              .trim()
+          );
+        } else {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          arr.push(printableOriginalComponent[field]);
+        }
+        return arr;
+      })
+      .filter((x) => x);
+
+    const componentTable = table(rows, tableColumnConfig);
+    const dependenciesTableStr = generateDependenciesTable();
+    return componentTable + dependenciesTableStr;
+  }
+
+  function getFields() {
+    const fields = [
+      'id',
+      'compiler',
+      'tester',
+      'language',
+      'mainFile',
+      'dependencies',
+      'devDependencies',
+      'packages',
+      'devPackages',
+      'peerDependencies',
+      'files',
+      'specs',
+      'deprecated',
+    ];
+    return fields;
+  }
+
+  function generateDependenciesTable() {
+    if (!component.hasDependencies()) {
+      return '';
+    }
+
+    const dependencyHeader = [];
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    dependencyHeader.push(['Dependencies']);
+    const getDependenciesRows = (dependencies, title?: string) => {
+      const dependencyRows = [];
+      dependencies.forEach((dependency) => {
+        let dependencyId = dependency.id.toString();
+        dependencyId = title ? `${dependencyId} (${title})` : dependencyId;
+        const row = [dependencyId];
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        dependencyRows.push(row);
+      });
+      return dependencyRows;
+    };
+    const dependenciesRows = getDependenciesRows(component.dependencies.get());
+    const devDependenciesRows = getDependenciesRows(component.devDependencies.get(), 'dev');
+    const allDependenciesRows = [...dependenciesRows, ...devDependenciesRows];
+
+    const dependenciesTable = table(dependencyHeader.concat(allDependenciesRows));
+    return dependenciesTable;
+  }
+
+  function calculatePadRightLength(str: string, columnWidth: number): string {
+    if (!str) return '';
+    const padRightCount = Math.ceil(str.length / columnWidth) * columnWidth;
+    return str.length > columnWidth ? rightpad(str, padRightCount, ' ') : rightpad(str, columnWidth, ' ');
+  }
 }

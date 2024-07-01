@@ -2,9 +2,9 @@ import chalk from 'chalk';
 import tempy from 'tempy';
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
-import diffFiles from '../../utils/diff-files';
-import { PathOsBased } from '../../utils/path';
-import { SourceFile } from '../component/sources';
+import diffFiles from '@teambit/legacy/dist/utils/diff-files';
+import { PathOsBased } from '@teambit/legacy/dist/utils/path';
+import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 
 export type DiffStatus = 'MODIFIED' | 'UNCHANGED' | 'NEW' | 'DELETED';
 

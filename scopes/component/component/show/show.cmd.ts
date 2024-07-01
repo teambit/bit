@@ -53,7 +53,6 @@ to see the legacy bit show, please use "--legacy" flag`);
   async useLegacy(id: string, json = false, remote = false, compare = false) {
     const showData = await actionLegacy([id], {
       json,
-      versions: undefined,
       remote,
       compare,
     });
