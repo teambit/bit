@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { addFeature, ENV_VAR_FEATURE_TOGGLE, isFeatureEnabled } from './feature-toggle';
 
 describe('featureToggle', () => {
-  after(() => {
+  afterAll(() => {
     process.env[ENV_VAR_FEATURE_TOGGLE] = '';
   });
   describe('isFeatureEnabled', () => {
