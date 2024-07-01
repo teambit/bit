@@ -1,5 +1,4 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { buildRegistry } from '@teambit/legacy/dist/cli';
 import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { CLIArgs, Flags, Command } from '@teambit/legacy/dist/cli/command';
 import pMapSeries from 'p-map-series';
@@ -10,7 +9,6 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { getCommandId } from './get-command-id';
-import { LegacyCommandAdapter } from './legacy-command-adapter';
 import { CLIParser, findCommandByArgv } from './cli-parser';
 import { CompletionCmd } from './completion.cmd';
 import { CliCmd, CliGenerateCmd } from './cli.cmd';
@@ -185,15 +183,12 @@ export class CLIMain {
   ) {
     const logger = loggerMain.createLogger(CLIAspect.id);
     const cliMain = new CLIMain(commandsSlot, onStartSlot, onCommandStartSlot, onBeforeExitSlot, logger);
-    const legacyRegistry = buildRegistry();
     await ensureWorkspaceAndScope();
-    const legacyCommands = legacyRegistry.commands;
-    const legacyCommandsAdapters = legacyCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
     const cliGenerateCmd = new CliGenerateCmd(cliMain);
     const cliCmd = new CliCmd(cliMain);
     const helpCmd = new HelpCmd(cliMain);
     cliCmd.commands.push(cliGenerateCmd);
-    cliMain.register(...legacyCommandsAdapters, new CompletionCmd(), cliCmd, helpCmd, new VersionCmd());
+    cliMain.register(new CompletionCmd(), cliCmd, helpCmd, new VersionCmd());
     return cliMain;
   }
 }
