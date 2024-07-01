@@ -956,9 +956,8 @@
     },
     "modules/in-memory-cache": {
         "name": "modules/in-memory-cache",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.harmony",
+        "scope": "teambit.harmony",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/in-memory-cache"
     },
