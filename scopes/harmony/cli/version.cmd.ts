@@ -1,5 +1,4 @@
-import type { Command } from '@teambit/legacy/dist/cli/command';
-import type { CommandOptions } from '@teambit/legacy/dist/cli/legacy-command';
+import type { CommandOptions, Command } from '@teambit/legacy/dist/cli/command';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 
 export class VersionCmd implements Command {

@@ -259,9 +259,6 @@ export const BITMAP_PREFIX_MESSAGE = `/**
  * See the docs (${BASE_DOCS_DOMAIN}reference/components/removing-components) for more information, or use "bit remove --help".
  */\n\n`;
 
-export const BIT_DESCRIPTION =
-  'bit is a free and open source tool designed for easy use, maintenance and discovery of code components.';
-
 /**
  * bit commands
  */
