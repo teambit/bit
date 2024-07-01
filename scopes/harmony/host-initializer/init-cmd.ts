@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import * as pathlib from 'path';
 import { BitError } from '@teambit/bit-error';
 import { getSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
-import { initScope } from '@teambit/legacy/dist/api/scope';
+import { initScope } from '@teambit/legacy.scope-api';
 import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy/dist/constants';
 import { WorkspaceExtensionProps } from '@teambit/config';
 import { Command, CommandOptions } from '@teambit/cli';

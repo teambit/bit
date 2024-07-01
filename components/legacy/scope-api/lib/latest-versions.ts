@@ -1,5 +1,5 @@
 import { ComponentID } from '@teambit/component-id';
-import { loadScope, Scope } from '../../../scope';
+import { loadScope, Scope } from '@teambit/legacy/dist/scope';
 
 export default (async function latestVersions(path: string, componentIdsStr: string[]): Promise<string[]> {
   const scope: Scope = await loadScope(path);
