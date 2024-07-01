@@ -1383,9 +1383,8 @@
     },
     "scope-api": {
         "name": "scope-api",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.legacy",
+        "scope": "teambit.legacy",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "components/legacy/scope-api"
     },
