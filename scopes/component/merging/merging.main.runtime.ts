@@ -13,7 +13,7 @@ import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import chalk from 'chalk';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
-import { RemoveAspect, RemoveMain } from '@teambit/remove';
+import { RemoveAspect, RemoveMain, deleteComponentsFiles } from '@teambit/remove';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
@@ -30,7 +30,6 @@ import {
   removeFilesIfNeeded,
   updateFileStatus,
 } from '@teambit/checkout';
-import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import {
   ConfigMergerAspect,
   ConfigMergerMain,
