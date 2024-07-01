@@ -7,10 +7,10 @@ import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { Remote } from '@teambit/legacy/dist/remotes';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import { BitError } from '@teambit/bit-error';
 import { ListCmd } from './list.cmd';
 import { ListerAspect } from './lister.aspect';
-import NoIdMatchWildcard from '@teambit/legacy/dist/api/consumer/lib/exceptions/no-id-match-wildcard';
-import { BitError } from '@teambit/bit-error';
+import { NoIdMatchWildcard } from './no-id-match-wildcard';
 
 export type ListScopeResult = {
   id: ComponentID;

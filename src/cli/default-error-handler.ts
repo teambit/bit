@@ -3,7 +3,6 @@
 import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
 import { Analytics, LEVEL } from '@teambit/legacy.analytics';
-import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { BASE_DOCS_DOMAIN } from '../constants';
 import { InvalidBitMap, MissingMainFile } from '../consumer/bit-map/exceptions';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
@@ -208,10 +207,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
           } components with the same ID: ${chalk.bold(key)} : ${err.componentObject[key]}\n`;
         })
         .join(' '),
-  ],
-  [
-    NoIdMatchWildcard,
-    (err) => `unable to find component ids that match the following: ${err.idsWithWildcards.join(', ')}`,
   ],
   [
     NewerVersionFound,
