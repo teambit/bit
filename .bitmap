@@ -1571,13 +1571,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/typescript/typescript"
     },
-    "typescript-compiler": {
-        "name": "typescript-compiler",
-        "scope": "teambit.typescript",
-        "version": "2.0.36",
-        "mainFile": "index.ts",
-        "rootDir": "components/typescript-compiler"
-    },
     "ui": {
         "name": "ui",
         "scope": "teambit.ui-foundation",
