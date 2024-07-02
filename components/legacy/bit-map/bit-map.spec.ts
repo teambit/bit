@@ -30,11 +30,11 @@ describe('BitMap', function () {
   // @ts-ignore
   logger.info = () => {};
   // @ts-ignore
-  this.timeout(0);
+  // this.timeout(0);
   describe('toObject', () => {
     let bitMap: BitMap;
     let componentMap;
-    before(async () => {
+    beforeAll(async () => {
       bitMap = await getBitmapInstance();
       bitMap.addComponent(addComponentParamsFixture);
       const allComponents = bitMap.toObjects();
@@ -68,7 +68,7 @@ describe('BitMap', function () {
   });
   describe('loadComponents', () => {
     let bitMap: BitMap;
-    before(async () => {
+    beforeAll(async () => {
       bitMap = await getBitmapInstance();
     });
     it('should throw DuplicateRootDir error when multiple ids have the same rootDir', () => {
