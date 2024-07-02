@@ -118,6 +118,8 @@
     "@teambit/defender.fs.global-bit-temp-dir": "0.0.1",
     "@teambit/legacy.analytics": "~0.0.1",
     "@teambit/bit.get-bit-version": "~0.0.1",
+    "@teambit/legacy.utils": "~0.0.2",
+    "@teambit/legacy.bit-map": "~0.0.4",
     "@teambit/harmony.modules.in-memory-cache": "~0.0.1",
     "@teambit/harmony.modules.feature-toggle": "~0.0.4",
     "@teambit/legacy.scope-api": "~0.0.1",
