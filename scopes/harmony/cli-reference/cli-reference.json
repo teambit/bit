@@ -1,52 +1,5 @@
 [
   {
-    "name": "remote",
-    "alias": "",
-    "options": [
-      [
-        "g",
-        "global",
-        "see globally configured remotes"
-      ]
-    ],
-    "description": "manage set of tracked bit scope(s)",
-    "extendedDescription": "",
-    "group": "collaborate",
-    "private": false,
-    "commands": [
-      {
-        "name": "add <url>",
-        "alias": "",
-        "options": [
-          [
-            "g",
-            "global",
-            "configure a remote bit scope"
-          ]
-        ],
-        "description": "add a bare-scope as a remote",
-        "extendedDescription": "supported protocols are [file, http].\nfor example: \"http://localhost:3000\", \"file:///tmp/local-scope\"",
-        "group": "ungrouped",
-        "private": false
-      },
-      {
-        "name": "del <name>",
-        "alias": "",
-        "options": [
-          [
-            "g",
-            "global",
-            "remove a globally configured remote scope"
-          ]
-        ],
-        "description": "remove a tracked bit remote",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false
-      }
-    ]
-  },
-  {
     "name": "completion",
     "alias": "",
     "options": [],
@@ -333,6 +286,53 @@
         "alias": "",
         "options": [],
         "description": "list all configuration(s)",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false
+      }
+    ]
+  },
+  {
+    "name": "remote",
+    "alias": "",
+    "options": [
+      [
+        "g",
+        "global",
+        "see globally configured remotes"
+      ]
+    ],
+    "description": "manage set of tracked bit scope(s)",
+    "extendedDescription": "",
+    "group": "collaborate",
+    "private": false,
+    "commands": [
+      {
+        "name": "add <url>",
+        "alias": "",
+        "options": [
+          [
+            "g",
+            "global",
+            "configure a remote bit scope"
+          ]
+        ],
+        "description": "add a bare-scope as a remote",
+        "extendedDescription": "supported protocols are [file, http].\nfor example: \"http://localhost:3000\", \"file:///tmp/local-scope\"",
+        "group": "ungrouped",
+        "private": false
+      },
+      {
+        "name": "del <name>",
+        "alias": "",
+        "options": [
+          [
+            "g",
+            "global",
+            "remove a globally configured remote scope"
+          ]
+        ],
+        "description": "remove a tracked bit remote",
         "extendedDescription": "",
         "group": "ungrouped",
         "private": false
