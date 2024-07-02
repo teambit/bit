@@ -9,7 +9,7 @@ import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
-import type { Consumer } from '..';
+import type { Consumer } from '@teambit/legacy/dist/consumer';
 import {
   AUTO_GENERATED_MSG,
   AUTO_GENERATED_STAMP,
@@ -17,11 +17,18 @@ import {
   OLD_BIT_MAP,
   VERSION_DELIMITER,
   BITMAP_PREFIX_MESSAGE,
-} from '../../constants';
-import logger from '../../logger/logger';
-import { pathJoinLinux, pathNormalizeToLinux } from '../../utils';
-import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
-import ComponentMap, {
+} from '@teambit/legacy/dist/constants';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { pathJoinLinux, pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import {
+  PathLinux,
+  PathLinuxRelative,
+  PathOsBased,
+  PathOsBasedAbsolute,
+  PathOsBasedRelative,
+} from '@teambit/legacy/dist/utils/path';
+import {
+  ComponentMap,
   ComponentMapFile,
   Config,
   PathChange,
@@ -49,7 +56,7 @@ export const LANE_KEY = '_bit_lane';
 export const CURRENT_BITMAP_SCHEMA = '17.0.0';
 export const SCHEMA_FIELD = '$schema-version';
 
-export default class BitMap {
+export class BitMap {
   components: ComponentMap[];
   hasChanged: boolean;
   paths: { [path: string]: ComponentID }; // path => componentId

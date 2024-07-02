@@ -3,17 +3,23 @@ import globby from 'globby';
 import ignore from 'ignore';
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
-import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '../../constants';
-import ValidationError from '../../error/validation-error';
-import logger from '../../logger/logger';
-import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, retrieveIgnoreList } from '../../utils';
-import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '../../utils/path';
-import { removeInternalConfigFields } from '../config/extension-data';
-import Consumer from '../consumer';
+import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '@teambit/legacy/dist/constants';
+import ValidationError from '@teambit/legacy/dist/error/validation-error';
+import logger from '@teambit/legacy/dist/logger/logger';
+import {
+  isValidPath,
+  pathJoinLinux,
+  pathNormalizeToLinux,
+  pathRelativeLinux,
+  retrieveIgnoreList,
+} from '@teambit/legacy/dist/utils';
+import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
+import { removeInternalConfigFields } from '@teambit/legacy/dist/consumer/config/extension-data';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
-import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
-import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
-import { BIT_IGNORE, getBitIgnoreFile, getGitIgnoreFile } from '../../utils/ignore/ignore';
+import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
+import { IgnoredDirectory } from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/ignored-directory';
+import { BIT_IGNORE, getBitIgnoreFile, getGitIgnoreFile } from '@teambit/legacy/dist/utils/ignore/ignore';
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
 
@@ -48,7 +54,7 @@ export type ComponentMapData = {
 
 export type PathChange = { from: PathLinux; to: PathLinux };
 
-export default class ComponentMap {
+export class ComponentMap {
   id: ComponentID;
   files: ComponentMapFile[];
   defaultScope?: string;
@@ -145,7 +151,7 @@ export default class ComponentMap {
 
   static getPathWithoutRootDir(rootDir: PathLinux, filePath: PathLinux): PathLinux {
     const newPath = pathRelativeLinux(rootDir, filePath);
-    if (newPath.startsWith('..')) {
+    if (newPath.startsWith('@teambit/legacy/dist/consumer')) {
       // this is forbidden for security reasons. Allowing files to be written outside the components directory may
       // result in overriding OS files.
       throw new OutsideRootDir(filePath, rootDir);
