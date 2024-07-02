@@ -10,7 +10,7 @@ import ModelComponent from '../../scope/models/model-component';
 import Scope from '../../scope/scope';
 import { fetchRemoteVersions } from '../../scope/scope-remotes';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
-import { BitMap, ComponentMap } from '@teambit/legacy/bit-map';
+import { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
 import Component from '../component';
 import { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';

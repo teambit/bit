@@ -12,7 +12,7 @@ import { MoverAspect, MoverMain } from '@teambit/mover';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { isDir, isDirEmptySync } from '@teambit/legacy/dist/utils';
 import { PathLinuxRelative, pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import { ComponentMap } from '@teambit/legacy/bit-map';
+import { ComponentMap } from '@teambit/legacy.bit-map';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { ConfigMergerAspect, ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';

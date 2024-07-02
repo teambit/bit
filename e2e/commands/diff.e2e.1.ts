@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 
-import { MissingBitMapComponent } from '@teambit/legacy/bit-map';
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { VersionNotFound } from '../../src/scope/exceptions';

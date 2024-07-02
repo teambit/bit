@@ -4,7 +4,7 @@ import { compact } from 'lodash';
 // import { Logger } from '@teambit/logger';
 // import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
-import { MissingBitMapComponent } from '@teambit/legacy/bit-map';
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { ComponentID } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
 import { reportLegacy, actionLegacy } from './show-legacy-cmd';

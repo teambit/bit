@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import detectIndent from 'detect-indent';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { CURRENT_BITMAP_SCHEMA, SCHEMA_FIELD, InvalidBitMap } from '@teambit/legacy/bit-map';
+import { CURRENT_BITMAP_SCHEMA, SCHEMA_FIELD, InvalidBitMap } from '@teambit/legacy.bit-map';
 import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 

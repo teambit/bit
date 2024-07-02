@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-import { LANE_KEY } from '@teambit/legacy/bit-map';
+import { LANE_KEY } from '@teambit/legacy.bit-map';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));

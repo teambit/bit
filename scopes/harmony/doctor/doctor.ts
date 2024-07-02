@@ -7,7 +7,7 @@ import tar from 'tar-stream';
 import tarFS from 'tar-fs';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '@teambit/legacy/dist/constants';
-import { BitMap } from '@teambit/legacy/bit-map';
+import { BitMap } from '@teambit/legacy.bit-map';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { ConsumerInfo, getConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
 import Diagnosis, { ExamineResult } from './diagnosis';

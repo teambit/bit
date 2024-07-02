@@ -11,7 +11,7 @@ import { Workspace } from '@teambit/workspace';
 import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import { ComponentMap } from '@teambit/legacy/bit-map';
+import { ComponentMap } from '@teambit/legacy.bit-map';
 import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';
 import { DebugDependencies, FileType } from './auto-detect-deps';

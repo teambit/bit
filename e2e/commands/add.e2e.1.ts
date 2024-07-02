@@ -5,7 +5,7 @@ import * as path from 'path';
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import { InvalidName } from '@teambit/legacy-bit-id';
 import { statusInvalidComponentsMsg } from '../../src/constants';
-import { MissingMainFile } from '@teambit/legacy/bit-map';
+import { MissingMainFile } from '@teambit/legacy.bit-map';
 import {
   MainFileIsDir,
   PathOutsideConsumer,

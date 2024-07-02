@@ -1,6 +1,6 @@
 import { isEqual, merge } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
-import { BitMap as LegacyBitMap, ComponentMap, GetBitMapComponentOptions } from '@teambit/legacy/bit-map';
+import { BitMap as LegacyBitMap, ComponentMap, GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { BitError } from '@teambit/bit-error';

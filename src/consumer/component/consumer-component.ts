@@ -14,7 +14,7 @@ import { ScopeListItem } from '../../scope/models/model-component';
 import Version, { DepEdge, Log } from '../../scope/models/version';
 import { pathNormalizeToLinux, sha1 } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedRelative } from '../../utils/path';
-import { ComponentMap } from '@teambit/legacy/bit-map';
+import { ComponentMap } from '@teambit/legacy.bit-map';
 import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import { Dist, License, SourceFile } from '../component/sources';

@@ -230,7 +230,7 @@
         "name": "bit-map",
         "scope": "",
         "version": "",
-        "defaultScope": "teambit/legacy",
+        "defaultScope": "teambit.legacy",
         "mainFile": "index.ts",
         "rootDir": "components/legacy/bit-map"
     },

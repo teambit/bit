@@ -15,7 +15,7 @@ import {
   Config,
   getIgnoreListHarmony,
   MissingMainFile,
-} from '@teambit/legacy/bit-map';
+} from '@teambit/legacy.bit-map';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { BitError } from '@teambit/bit-error';
 import logger from '@teambit/legacy/dist/logger/logger';

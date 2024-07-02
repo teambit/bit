@@ -3,7 +3,7 @@ import tempy from 'tempy';
 import fs from 'fs-extra';
 import yesno from 'yesno';
 import chalk from 'chalk';
-import { BitMap } from '@teambit/legacy/bit-map';
+import { BitMap } from '@teambit/legacy.bit-map';
 import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
 import { ScopeMain } from '@teambit/scope';
 import { Lane } from '@teambit/legacy/dist/scope/models';

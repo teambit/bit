@@ -11,7 +11,7 @@ import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/legacy/dist/utils';
 import { PathLinux, PathLinuxRelative, PathOsBased, removeFileExtension } from '@teambit/legacy/dist/utils/path';
-import { ComponentMap } from '@teambit/legacy/bit-map';
+import { ComponentMap } from '@teambit/legacy.bit-map';
 import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';

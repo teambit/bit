@@ -3,7 +3,7 @@ import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import { BitMap } from '@teambit/legacy/bit-map';
+import { BitMap } from '@teambit/legacy.bit-map';
 import { ConfigMain, WorkspaceConfig, WorkspaceExtensionProps, WorkspaceConfigFileProps } from '@teambit/config';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import { pickBy } from 'lodash';
