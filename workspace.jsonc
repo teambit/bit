@@ -697,6 +697,9 @@
     },
     "components/legacy": {
       "teambit.pkg/pkg": {}
+    },
+    "components/bit": {
+      "teambit.pkg/pkg": {}
     }
   }
 }

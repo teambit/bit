@@ -612,6 +612,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/generator/generator"
     },
+    "get-bit-version": {
+        "name": "get-bit-version",
+        "scope": "teambit.bit",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/bit/get-bit-version"
+    },
     "git": {
         "name": "git",
         "scope": "teambit.git",

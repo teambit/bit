@@ -21,8 +21,8 @@ import { ObjectItem } from '../objects/object-list';
 import Repository from '../objects/repository';
 import validateVersionInstance from '../version-validator';
 import Source from './source';
-import { getHarmonyVersion } from '../../bootstrap';
 import { BitIdCompIdError } from '../exceptions/bit-id-comp-id-err';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 
 export type SourceFileModel = {
   name: string;
@@ -668,7 +668,7 @@ export default class Version extends BitObject {
       extensions: component.extensions,
       buildStatus: component.buildStatus,
       componentId: component.id,
-      bitVersion: getHarmonyVersion(true),
+      bitVersion: getBitVersion(),
     });
     if (isSnap(component.version)) {
       version._hash = component.version as string;
