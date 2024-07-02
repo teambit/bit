@@ -607,9 +607,8 @@
     },
     "get-bit-version": {
         "name": "get-bit-version",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.bit",
+        "scope": "teambit.bit",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "components/bit/get-bit-version"
     },
