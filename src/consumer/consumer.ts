@@ -96,6 +96,7 @@ export default class Consumer {
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
   async setBitMap() {
+    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = await BitMap.load(this);
   }
 
