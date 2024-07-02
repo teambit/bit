@@ -1,7 +1,6 @@
 import doctrine from 'doctrine';
 
-import { pathNormalizeToLinux } from '@teambit/legacy.utils';
-import { PathOsBased } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux, PathOsBased } from '@teambit/legacy.utils';
 import exampleTagParser from './example-tag-parser';
 import { Doclet } from './types';
 

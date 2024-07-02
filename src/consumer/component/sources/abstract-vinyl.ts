@@ -4,8 +4,7 @@ import Vinyl from 'vinyl';
 
 import logger from '../../../logger/logger';
 import Source from '../../../scope/models/source';
-import { eol } from '@teambit/legacy.utils';
-import { PathOsBased } from '@teambit/legacy.utils';
+import { eol, PathOsBased } from '@teambit/legacy.utils';
 import { FileConstructor } from './vinyl-types';
 
 type AbstractVinylProps = {

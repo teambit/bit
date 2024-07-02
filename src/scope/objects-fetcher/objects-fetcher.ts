@@ -16,11 +16,10 @@ import { ObjectItemsStream } from '../objects/object-list';
 import { ObjectsWritable } from './objects-writable-stream';
 import { WriteObjectsQueue } from './write-objects-queue';
 import { groupByScopeName } from '../component-ops/scope-components-importer';
-import { concurrentFetchLimit } from '@teambit/legacy.utils';
+import { concurrentFetchLimit, pMapPool } from '@teambit/legacy.utils';
 import { ScopeNotFoundOrDenied } from '../../remotes/exceptions/scope-not-found-or-denied';
 import { Lane } from '../models';
 import { ComponentsPerRemote, MultipleComponentMerger } from '../component-ops/multiple-component-merger';
-import { pMapPool } from '@teambit/legacy.utils';
 
 /**
  * due to the use of streams, this is memory efficient and can handle easily GBs of objects.

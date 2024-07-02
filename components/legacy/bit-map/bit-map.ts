@@ -19,8 +19,9 @@ import {
   BITMAP_PREFIX_MESSAGE,
 } from '@teambit/legacy/dist/constants';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { pathJoinLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import {
+  pathJoinLinux,
+  pathNormalizeToLinux,
   PathLinux,
   PathLinuxRelative,
   PathOsBased,

@@ -1,5 +1,4 @@
-import { concurrentComponentsLimit } from '@teambit/legacy.utils';
-import { pMapPool } from '@teambit/legacy.utils';
+import { concurrentComponentsLimit, pMapPool } from '@teambit/legacy.utils';
 import { ModelComponent } from '../models';
 import { SourceRepository } from '../repositories';
 import { ModelComponentMerger } from './model-components-merger';

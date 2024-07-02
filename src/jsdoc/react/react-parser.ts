@@ -2,8 +2,7 @@ import doctrine from 'doctrine';
 import * as reactDocs from 'react-docgen';
 
 import logger from '../../logger/logger';
-import { pathNormalizeToLinux } from '@teambit/legacy.utils';
-import { PathOsBased } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux, PathOsBased } from '@teambit/legacy.utils';
 import extractDataRegex from '../extract-data-regex';
 import { Doclet } from '../types';
 

@@ -7,14 +7,13 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { BIT_MAP, CFG_WATCH_USE_POLLING, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { pathNormalizeToLinux } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import mapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import { UNMERGED_FILENAME } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import chokidar, { FSWatcher } from '@teambit/chokidar';
 import { ComponentMap } from '@teambit/legacy.bit-map';
-import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { CompilationInitiator } from '@teambit/compiler';
 import {
   WorkspaceAspect,

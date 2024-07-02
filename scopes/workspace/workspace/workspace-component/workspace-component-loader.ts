@@ -1,12 +1,11 @@
 import pMap from 'p-map';
-import { concurrentComponentsLimit } from '@teambit/legacy.utils';
+import { concurrentComponentsLimit, getLatestVersionNumber, pMapPool } from '@teambit/legacy.utils';
 import { Component, ComponentFS, Config, InvalidComponent, State, TagMap } from '@teambit/component';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import mapSeries from 'p-map-series';
 import { compact, fromPairs, groupBy, pick, uniq } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
-import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -17,7 +16,6 @@ import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@te
 import { AspectLoaderMain } from '@teambit/aspect-loader';
 import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
 import { ComponentLoadOptions as LegacyComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
-import { pMapPool } from '@teambit/legacy.utils';
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 import { MergeConfigConflict } from '../exceptions/merge-config-conflict';

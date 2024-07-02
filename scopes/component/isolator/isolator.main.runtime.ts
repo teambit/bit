@@ -42,7 +42,12 @@ import {
   getArtifactFilesExcludeExtension,
   importMultipleDistsArtifacts,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import {
+  pathNormalizeToLinux,
+  PathOsBasedAbsolute,
+  componentIdToPackageName,
+  concurrentComponentsLimit,
+} from '@teambit/legacy.utils';
 import { Scope } from '@teambit/legacy/dist/scope';
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
@@ -52,8 +57,6 @@ import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-p
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
-import { componentIdToPackageName } from '@teambit/legacy.utils';
-import { concurrentComponentsLimit } from '@teambit/legacy.utils';
 import pMap from 'p-map';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';

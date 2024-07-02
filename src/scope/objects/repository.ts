@@ -8,10 +8,16 @@ import * as path from 'path';
 import pMap from 'p-map';
 import { OBJECTS_DIR } from '../../constants';
 import logger from '../../logger/logger';
-import { glob, resolveGroupId, writeFile } from '@teambit/legacy.utils';
-import { removeEmptyDir } from '@teambit/legacy.utils';
-import { ChownOptions } from '@teambit/legacy.utils';
-import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import {
+  glob,
+  resolveGroupId,
+  writeFile,
+  removeEmptyDir,
+  ChownOptions,
+  PathOsBasedAbsolute,
+  concurrentIOLimit,
+  pMapPool,
+} from '@teambit/legacy.utils';
 import { HashNotFound, OutdatedIndexJson } from '../exceptions';
 import RemoteLanes from '../lanes/remote-lanes';
 import UnmergedComponents from '../lanes/unmerged-components';
@@ -23,12 +29,10 @@ import { ObjectItem, ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
 import { ContentTransformer, onPersist, onRead } from './repository-hooks';
-import { concurrentIOLimit } from '@teambit/legacy.utils';
 import { getMaxSizeForObjects, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { Types } from '../object-registrar';
 import { Lane, ModelComponent } from '../models';
 import { ComponentFsCache } from '../../consumer/component/component-fs-cache';
-import { pMapPool } from '@teambit/legacy.utils';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';

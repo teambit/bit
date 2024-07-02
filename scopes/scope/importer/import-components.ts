@@ -6,8 +6,7 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import { BEFORE_IMPORT_ACTION } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
-import { getLatestVersionNumber, pathNormalizeToLinux } from '@teambit/legacy.utils';
-import { hasWildcard } from '@teambit/legacy.utils';
+import { getLatestVersionNumber, pathNormalizeToLinux, hasWildcard } from '@teambit/legacy.utils';
 import Component from '@teambit/legacy/dist/consumer/component';
 import { applyModifiedVersion } from '@teambit/checkout';
 import {

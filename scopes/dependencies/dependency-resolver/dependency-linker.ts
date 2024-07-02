@@ -7,9 +7,8 @@ import resolveFrom from 'resolve-from';
 import { findCurrentBvmDir } from '@teambit/bvm.path';
 import { ComponentMap, Component, ComponentID, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
-import { PathAbsolute } from '@teambit/legacy.utils';
+import { PathAbsolute, componentIdToPackageName } from '@teambit/legacy.utils';
 import { BitError } from '@teambit/bit-error';
-import { componentIdToPackageName } from '@teambit/legacy.utils';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 import {
