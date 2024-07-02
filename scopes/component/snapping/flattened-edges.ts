@@ -6,7 +6,7 @@ import { Lane } from '@teambit/legacy/dist/scope/models';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DepEdge } from '@teambit/legacy/dist/scope/models/version';
 import { Logger } from '@teambit/logger';
-import { pMapPool } from '@teambit/legacy/dist/utils/promise-with-concurrent';
+import { pMapPool } from '@teambit/legacy.utils';
 import { BitError } from '@teambit/bit-error';
 
 /**

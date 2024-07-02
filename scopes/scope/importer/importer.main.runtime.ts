@@ -3,7 +3,7 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Analytics } from '@teambit/legacy.analytics';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { componentIdToPackageName } from '@teambit/legacy.utils';
 import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import pMapSeries from 'p-map-series';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';

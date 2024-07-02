@@ -1,7 +1,7 @@
 // This file meant to bridge the new workspace config and the legacy one
 // when loading the workspace config we actually loading the new one, and it return something that implement this interface
 
-import { PathOsBasedAbsolute } from '../../utils/path';
+import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { AbstractVinyl } from '../component/sources';
 
 // to make sure all the legacy code can work without need to change

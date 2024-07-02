@@ -3,11 +3,11 @@ import { Workspace } from '@teambit/workspace';
 import { IssuesClasses, RelativeComponentsAuthoredEntry } from '@teambit/component-issues';
 import { Component } from '@teambit/component';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/legacy/dist/utils';
+import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/legacy.utils';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import replacePackageName from '@teambit/legacy/dist/utils/string/replace-package-name';
+import { componentIdToPackageName } from '@teambit/legacy.utils';
+import { replacePackageName } from '@teambit/legacy.utils';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 
 export type CodemodResult = {

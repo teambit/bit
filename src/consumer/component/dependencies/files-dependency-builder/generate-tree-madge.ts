@@ -5,7 +5,7 @@ import os from 'os';
 import path from 'path';
 
 import dependencyTree from './dependency-tree';
-import { PathLinuxRelative } from '../../../../utils/path';
+import { PathLinuxRelative } from '@teambit/legacy.utils';
 
 /**
  * Check if running on Windows.

@@ -1,7 +1,7 @@
 import { CloudUser } from '@teambit/cloud.models.cloud-user';
-import { CFG_USER_TOKEN_KEY, getCloudDomain } from '../../constants';
-import * as globalConfig from '../../api/consumer/lib/global-config';
-import { fetchWithAgent as fetch } from '../../scope/network/http/http';
+import { CFG_USER_TOKEN_KEY, getCloudDomain } from '@teambit/legacy/dist/constants';
+import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import { fetchWithAgent as fetch } from '@teambit/legacy/dist/scope/network/http/http';
 
 export async function getBitCloudUser(): Promise<CloudUser | undefined> {
   const token = await globalConfig.get(CFG_USER_TOKEN_KEY);

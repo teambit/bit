@@ -6,7 +6,7 @@ import { BitObject } from '.';
 import { BitObjectList } from './bit-object-list';
 import Ref from './ref';
 import logger from '../../logger/logger';
-import { concurrentIOLimit } from '../../utils/concurrency';
+import { concurrentIOLimit } from '@teambit/legacy.utils';
 import { ExportMetadata } from '../models';
 import { UnknownObjectType } from '../exceptions/unknown-object-type';
 

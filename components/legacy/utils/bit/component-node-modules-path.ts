@@ -1,10 +1,10 @@
 import * as path from 'path';
 import { ComponentID } from '@teambit/component-id';
-import { ExtensionDataList } from '../../consumer/config/extension-data';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { PathOsBasedRelative } from '../path';
-import componentIdToPackageName from './component-id-to-package-name';
+import { componentIdToPackageName } from './component-id-to-package-name';
 
-export default function getNodeModulesPathOfComponent({
+export function getNodeModulesPathOfComponent({
   bindingPrefix,
   id,
   defaultScope,

@@ -1,5 +1,5 @@
 import R from 'ramda';
-import { ResolvedPackageData } from '../../../../../utils/packages';
+import { ResolvedPackageData } from '@teambit/legacy.utils';
 import { DependencyDetector } from '../detector-hook';
 
 /**

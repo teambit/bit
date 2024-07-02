@@ -1,6 +1,6 @@
 import normalize from 'normalize-path';
 import format from 'string-format';
-import { sha1 } from '@teambit/legacy/dist/utils';
+import { sha1 } from '@teambit/legacy.utils';
 import fs from 'fs-extra';
 import { dirname, join, relative } from 'path';
 import pMapSeries from 'p-map-series';

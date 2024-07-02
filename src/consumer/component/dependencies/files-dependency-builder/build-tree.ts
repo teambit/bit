@@ -1,7 +1,7 @@
 import { set } from 'lodash';
 import path from 'path';
 import R from 'ramda';
-import { resolvePackageData } from '../../../../utils/packages';
+import { resolvePackageData } from '@teambit/legacy.utils';
 import generateTree, { MadgeTree } from './generate-tree-madge';
 import { FoundPackages, MissingGroupItem, MissingHandler } from './missing-handler';
 import { convertPathMapToRelativePaths, PathMapItem } from './path-map';

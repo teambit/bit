@@ -9,7 +9,7 @@ import { Lane } from '../../scope/models';
 import ModelComponent from '../../scope/models/model-component';
 import Scope from '../../scope/scope';
 import { fetchRemoteVersions } from '../../scope/scope-remotes';
-import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
+import { isBitIdMatchByWildcards } from '@teambit/legacy.utils';
 import { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
 import Component from '../component';
 import { InvalidComponent } from '../component/consumer-component';

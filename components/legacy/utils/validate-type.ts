@@ -1,9 +1,9 @@
 import { BitError } from '@teambit/bit-error';
-import ValidationError from '../error/validation-error';
+import ValidationError from '@teambit/legacy/dist/error/validation-error';
 
 type Value = 'string' | 'number' | 'array' | 'object' | 'boolean' | 'undefined';
 
-export default function validateType(message: string, value: any, fieldName: string, expectedType: Value) {
+export function validateType(message: string, value: any, fieldName: string, expectedType: Value) {
   validate(message, value, fieldName, expectedType, false);
 }
 

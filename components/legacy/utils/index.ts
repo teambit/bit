@@ -74,3 +74,42 @@ export {
   eol,
   isRelativeImport,
 };
+
+export {
+  PathLinux,
+  PathLinuxRelative,
+  PathOsBased,
+  PathOsBasedRelative,
+  PathOsBasedAbsolute,
+  PathAbsolute,
+  PathLinuxAbsolute,
+  PathRelative,
+  removeFileExtension,
+} from './path';
+export { validateType, validateUserInputType } from './validate-type';
+export { pMapPool } from './promise-with-concurrent';
+export { concurrentComponentsLimit, concurrentFetchLimit, concurrentIOLimit } from './concurrency';
+export { ChownOptions } from './fs-write-file';
+export { removeEmptyDir } from './fs/remove-empty-dir';
+export { componentIdToPackageName } from './bit/component-id-to-package-name';
+export { getBasicLog } from './bit/basic-log';
+export { isBitIdMatchByWildcards } from './bit/is-bit-id-match-by-wildcards';
+export {
+  getLastModifiedPathsTimestampMs,
+  getPathStatIfExist,
+  getLastModifiedComponentTimestampMs,
+} from './fs/last-modified';
+export { composeComponentPath } from './bit/compose-component-path';
+export { getNodeModulesPathOfComponent } from './bit/component-node-modules-path';
+export { resolvePackageData, ResolvedPackageData, resolvePackagePath, resolvePackageNameByPath } from './packages';
+export { getLatestVersion, getValidVersionOrReleaseType, validateVersion } from './semver-helper';
+export { removeFilesAndEmptyDirsRecursively } from './fs/remove-files-and-empty-dirs-recursively';
+export { replacePlaceHolderForPackageValue } from './bit/component-placeholders';
+export { parseScope } from './bit/parse-scope';
+export { replacePackageName } from './string/replace-package-name';
+export { hasWildcard } from './string/has-wildcard';
+export { getBitCloudUser } from './bit/get-cloud-user';
+export { getGitExecutablePath } from './git/git-executable';
+export { GitNotFound } from './git/exceptions/git-not-found';
+export { diffFiles } from './diff-files';
+export { BIT_IGNORE, getBitIgnoreFile, getGitIgnoreFile } from './ignore/ignore';

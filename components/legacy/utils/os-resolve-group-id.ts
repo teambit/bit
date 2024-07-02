@@ -1,7 +1,7 @@
 import uidNumber from 'uid-number';
 
 import { BitError } from '@teambit/bit-error';
-import logger from '../logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 
 export default async function resolveGroupId(groupName: string): Promise<number | null | undefined> {
   return new Promise((resolve, reject) => {

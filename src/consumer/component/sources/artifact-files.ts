@@ -8,7 +8,7 @@ import logger from '../../../logger/logger';
 import { Scope } from '../../../scope';
 import { Lane, Source } from '../../../scope/models';
 import { Ref } from '../../../scope/objects';
-import { pathNormalizeToLinux } from '../../../utils';
+import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { ExtensionDataList } from '../../config';
 import Component from '../consumer-component';
 import { ArtifactVinyl } from './artifact';

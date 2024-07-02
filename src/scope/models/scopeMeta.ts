@@ -1,4 +1,4 @@
-import { getStringifyArgs } from '../../utils';
+import { getStringifyArgs } from '@teambit/legacy.utils';
 import BitObject from '../objects/object';
 import Ref from '../objects/ref';
 

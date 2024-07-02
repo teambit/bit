@@ -1,6 +1,6 @@
 import firstline from 'firstline';
 
-import { AUTO_GENERATED_STAMP } from '../constants';
+import { AUTO_GENERATED_STAMP } from '@teambit/legacy/dist/constants';
 import { PathOsBased } from './path';
 
 /**

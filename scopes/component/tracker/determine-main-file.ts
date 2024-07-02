@@ -6,7 +6,7 @@ import {
   DEFAULT_INDEX_NAME,
   DEFAULT_SEPARATOR,
 } from '@teambit/legacy/dist/constants';
-import { pathJoinLinux, PathLinux, pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
+import { pathJoinLinux, PathLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { ComponentMap, MissingMainFile } from '@teambit/legacy.bit-map';
 import { AddedComponent } from './add-components';
 

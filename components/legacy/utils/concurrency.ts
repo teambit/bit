@@ -1,5 +1,5 @@
-import { getNumberFromConfig } from '../api/consumer/lib/global-config';
-import { CFG_CONCURRENCY_COMPONENTS, CFG_CONCURRENCY_FETCH, CFG_CONCURRENCY_IO } from '../constants';
+import { getNumberFromConfig } from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import { CFG_CONCURRENCY_COMPONENTS, CFG_CONCURRENCY_FETCH, CFG_CONCURRENCY_IO } from '@teambit/legacy/dist/constants';
 
 const CONCURRENT_IO_LIMIT = 100;
 const CONCURRENT_COMPONENTS_LIMIT = 50;

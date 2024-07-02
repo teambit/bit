@@ -1,4 +1,4 @@
-import { PathLinux } from '../utils/path';
+import { PathLinux } from '@teambit/legacy.utils';
 import { Example } from './example-tag-parser';
 
 export type Method = {

@@ -6,8 +6,12 @@ import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@te
 import { BIT_MAP } from '../../constants';
 import logger from '../../logger/logger';
 import { ModelComponent } from '../../scope/models';
-import { getLatestVersionNumber } from '../../utils';
-import { getLastModifiedPathsTimestampMs } from '../../utils/fs/last-modified';
+import {
+  getLatestVersionNumber,
+  getLastModifiedPathsTimestampMs,
+  concurrentComponentsLimit,
+  pMapPool,
+} from '@teambit/legacy.utils';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import Component, { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
@@ -15,8 +19,6 @@ import { ComponentFsCache } from './component-fs-cache';
 import { ComponentMap } from '@teambit/legacy.bit-map';
 import { VERSION_ZERO } from '../../scope/models/model-component';
 import loader from '../../cli/loader';
-import { concurrentComponentsLimit } from '../../utils/concurrency';
-import { pMapPool } from '../../utils/promise-with-concurrent';
 
 export type ComponentLoadOptions = {
   loadDocs?: boolean;

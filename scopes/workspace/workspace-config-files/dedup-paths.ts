@@ -1,6 +1,6 @@
 import { invertBy, uniq } from 'lodash';
 import { dirname } from 'path';
-import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
+import { PathLinuxRelative } from '@teambit/legacy.utils';
 import { CompPathExtendingHashMap, EnvCompsDirsMap } from './workspace-config-files.main.runtime';
 import { ExtendingConfigFilesMap } from './writers';
 

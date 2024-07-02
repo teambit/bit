@@ -1,9 +1,9 @@
 import fs from 'fs-extra';
 
-import logger from '../../logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import isDirEmpty from './is-dir-empty';
 
-export default async function removeEmptyDir(dirPath: string): Promise<boolean> {
+export async function removeEmptyDir(dirPath: string): Promise<boolean> {
   let isEmpty: boolean;
   try {
     isEmpty = await isDirEmpty(dirPath);

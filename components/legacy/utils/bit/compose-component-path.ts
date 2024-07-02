@@ -1,6 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import format from 'string-format';
-import { DEFAULT_COMPONENTS_DIR_PATH } from '../../constants';
+import { DEFAULT_COMPONENTS_DIR_PATH } from '@teambit/legacy/dist/constants';
 import { PathLinuxRelative } from '../path';
 import { parseScope } from './parse-scope';
 

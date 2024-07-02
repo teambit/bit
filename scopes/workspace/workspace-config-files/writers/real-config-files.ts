@@ -1,5 +1,5 @@
 import format from 'string-format';
-import { sha1 } from '@teambit/legacy/dist/utils';
+import { sha1 } from '@teambit/legacy.utils';
 import fs from 'fs-extra';
 import { join } from 'path';
 import pMapSeries from 'p-map-series';

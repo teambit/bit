@@ -1,5 +1,5 @@
-import { concurrentComponentsLimit } from '../../utils/concurrency';
-import { pMapPool } from '../../utils/promise-with-concurrent';
+import { concurrentComponentsLimit } from '@teambit/legacy.utils';
+import { pMapPool } from '@teambit/legacy.utils';
 import { ModelComponent } from '../models';
 import { SourceRepository } from '../repositories';
 import { ModelComponentMerger } from './model-components-merger';

@@ -19,14 +19,14 @@ import {
   BITMAP_PREFIX_MESSAGE,
 } from '@teambit/legacy/dist/constants';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { pathJoinLinux, pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import { pathJoinLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import {
   PathLinux,
   PathLinuxRelative,
   PathOsBased,
   PathOsBasedAbsolute,
   PathOsBasedRelative,
-} from '@teambit/legacy/dist/utils/path';
+} from '@teambit/legacy.utils';
 import {
   ComponentMap,
   ComponentMapFile,

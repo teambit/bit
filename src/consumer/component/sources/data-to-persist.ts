@@ -3,8 +3,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
-import { concurrentIOLimit } from '../../../utils/concurrency';
-import removeFilesAndEmptyDirsRecursively from '../../../utils/fs/remove-files-and-empty-dirs-recursively';
+import { concurrentIOLimit, removeFilesAndEmptyDirsRecursively } from '@teambit/legacy.utils';
 import AbstractVinyl from './abstract-vinyl';
 import RemovePath from './remove-path';
 

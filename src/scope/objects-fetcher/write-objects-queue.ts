@@ -1,5 +1,5 @@
 import PQueue from 'p-queue';
-import { concurrentIOLimit } from '../../utils/concurrency';
+import { concurrentIOLimit } from '@teambit/legacy.utils';
 
 export class WriteObjectsQueue {
   private queue: PQueue;

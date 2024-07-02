@@ -12,14 +12,19 @@ import {
   pathNormalizeToLinux,
   pathRelativeLinux,
   retrieveIgnoreList,
-} from '@teambit/legacy/dist/utils';
-import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
+  BIT_IGNORE,
+  getBitIgnoreFile,
+  getGitIgnoreFile,
+  PathLinux,
+  PathLinuxRelative,
+  PathOsBased,
+  PathOsBasedRelative,
+} from '@teambit/legacy.utils';
 import { removeInternalConfigFields } from '@teambit/legacy/dist/consumer/config/extension-data';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
 import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
 import { IgnoredDirectory } from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/ignored-directory';
-import { BIT_IGNORE, getBitIgnoreFile, getGitIgnoreFile } from '@teambit/legacy/dist/utils/ignore/ignore';
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
 

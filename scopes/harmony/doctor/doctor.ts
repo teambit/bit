@@ -14,7 +14,7 @@ import Diagnosis, { ExamineResult } from './diagnosis';
 import DoctorRegistrar from './doctor-registrar';
 import registerCoreAndExtensionsDiagnoses from './doctor-registrar-builder';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { getExt, getWithoutExt, removeChalkCharacters } from '@teambit/legacy/dist/utils';
+import { getExt, getWithoutExt, removeChalkCharacters } from '@teambit/legacy.utils';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import { getNpmVersion } from './core-diagnoses/validate-npm-exec';

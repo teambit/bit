@@ -9,7 +9,7 @@ import { BitObject, Repository } from '../objects';
 import { IndexType, LaneItem } from '../objects/scope-index';
 import { ScopeJson, TrackLane } from '../scope-json';
 import { LaneComponent, Log } from '../models/lane';
-import { pMapPool } from '../../utils/promise-with-concurrent';
+import { pMapPool } from '@teambit/legacy.utils';
 
 export default class Lanes {
   objects: Repository;

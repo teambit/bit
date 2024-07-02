@@ -11,7 +11,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
 import { ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
-import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
+import { getValidVersionOrReleaseType } from '@teambit/legacy.utils';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { LanesAspect, Lane, LanesMain } from '@teambit/lanes';

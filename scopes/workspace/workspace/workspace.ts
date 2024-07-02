@@ -39,13 +39,8 @@ import { GetBitMapComponentOptions, MissingBitMapComponent } from '@teambit/lega
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { pathIsInside } from '@teambit/legacy/dist/utils';
-import {
-  PathOsBased,
-  PathOsBasedRelative,
-  PathOsBasedAbsolute,
-  pathNormalizeToLinux,
-} from '@teambit/legacy/dist/utils/path';
+import { pathIsInside } from '@teambit/legacy.utils';
+import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact, uniqBy } from 'lodash';

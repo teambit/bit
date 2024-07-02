@@ -9,7 +9,7 @@ import ComponentsList from '@teambit/legacy/dist/consumer/component/components-l
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { Workspace } from '@teambit/workspace';
 import { compact } from 'lodash';
-import { getBitCloudUser } from '@teambit/legacy/dist/utils/bit/get-cloud-user';
+import { getBitCloudUser } from '@teambit/legacy.utils';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 
 const MAX_LANE_NAME_LENGTH = 800;

@@ -1,4 +1,4 @@
-import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathAbsolute } from '@teambit/legacy.utils';
 import pLimit from 'p-limit';
 
 import { PackageManager, PackageManagerResolveRemoteVersionOptions, ResolvedPackageVersion } from './package-manager';

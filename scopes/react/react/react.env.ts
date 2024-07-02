@@ -44,7 +44,7 @@ import {
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Linter, LinterContext } from '@teambit/linter';
 import { Formatter, FormatterContext } from '@teambit/formatter';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { ComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';

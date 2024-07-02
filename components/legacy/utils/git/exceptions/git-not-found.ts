@@ -1,6 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 
-export default class GitNotFound extends BitError {
+export class GitNotFound extends BitError {
   gitExecutablePath: string;
   err: Error;
   showDoctorMessage: boolean;

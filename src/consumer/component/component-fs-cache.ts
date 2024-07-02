@@ -2,7 +2,7 @@ import cacache, { GetCacheObject } from 'cacache';
 import path from 'path';
 import fs from 'fs-extra';
 import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '@teambit/harmony.modules.feature-toggle';
-import { PathOsBasedAbsolute } from '../../utils/path';
+import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import type { ComponentMapFile } from '@teambit/legacy.bit-map';
 import logger from '../../logger/logger';
 

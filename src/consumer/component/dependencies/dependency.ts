@@ -1,6 +1,6 @@
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
-import { PathLinux } from '../../../utils/path';
+import { PathLinux } from '@teambit/legacy.utils';
 import { ImportSpecifier } from './files-dependency-builder/types/dependency-tree-type';
 
 /**

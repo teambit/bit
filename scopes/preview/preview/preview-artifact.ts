@@ -1,5 +1,5 @@
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { uniq } from 'lodash';
 
 export class PreviewArtifact {

@@ -4,7 +4,7 @@ import {
   resolvePackageData,
   resolvePackageNameByPath,
   resolvePackagePath,
-} from '../../../../utils/packages';
+} from '@teambit/legacy.utils';
 import { processPath, Missing } from './generate-tree-madge';
 
 export type MissingGroupItem = { originFile: string; packages?: string[]; files?: string[] };

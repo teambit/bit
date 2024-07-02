@@ -16,7 +16,7 @@ const doubleQuotes = '"';
  * return str.replace(new RegExp(`${oldName}(['"/])`, 'g'), `${newName}$1`);
  * the only different is that it allows anything before the package-name, not only tilda.
  */
-export default function replacePackageName(str: string, oldName: string, newName: string): string {
+export function replacePackageName(str: string, oldName: string, newName: string): string {
   [singleQuote, doubleQuotes].forEach((quoteType) => {
     str = str.replace(new RegExp(`(${quoteType}~?)${oldName}(/|${quoteType})`, 'g'), `$1${newName}$2`);
   });

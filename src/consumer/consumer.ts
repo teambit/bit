@@ -22,15 +22,15 @@ import { ComponentNotFound, ScopeNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
-import { composeComponentPath } from '../utils/bit/compose-component-path';
 import {
   PathAbsolute,
   PathLinuxRelative,
+  composeComponentPath,
   PathOsBased,
   PathOsBasedAbsolute,
   PathOsBasedRelative,
   PathRelative,
-} from '../utils/path';
+} from '@teambit/legacy.utils';
 import { BitMap, NextVersion } from '@teambit/legacy.bit-map';
 import Component from './component';
 import ComponentLoader, { ComponentLoadOptions, LoadManyResult } from './component/component-loader';

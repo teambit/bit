@@ -13,9 +13,7 @@ import PackageJsonFile from '../consumer/component/package-json-file';
 import { getArtifactsFiles } from '../consumer/component/sources/artifact-files';
 import { componentOverridesForbiddenFields, nonPackageJsonFields } from '../consumer/config/component-overrides';
 import { ExtensionDataEntry, ExtensionDataList } from '../consumer/config/extension-data';
-import { isValidPath } from '../utils';
-import { PathLinux } from '../utils/path';
-import validateType from '../utils/validate-type';
+import { PathLinux, validateType, isValidPath } from '@teambit/legacy.utils';
 import VersionInvalid from './exceptions/version-invalid';
 import Version from './models/version';
 

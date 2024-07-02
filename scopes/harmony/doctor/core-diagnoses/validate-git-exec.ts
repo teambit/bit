@@ -1,5 +1,5 @@
 import execa from 'execa';
-import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable';
+import { getGitExecutablePath } from '@teambit/legacy.utils';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
 export const DIAGNOSIS_NAME_VALIDATE_GIT_EXEC = 'validate git exec';

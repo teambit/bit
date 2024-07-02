@@ -8,8 +8,8 @@ import stringifyPackage from 'stringify-package';
 
 import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '../../constants';
 import logger from '../../logger/logger';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
+import { componentIdToPackageName } from '@teambit/legacy.utils';
+import { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '@teambit/legacy.utils';
 import Component from './consumer-component';
 import { JsonVinyl } from './json-vinyl';
 

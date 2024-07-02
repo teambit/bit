@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { BitId } from '@teambit/legacy-bit-id';
 import { PACKAGE_JSON } from '../../constants';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import { componentIdToPackageName } from '@teambit/legacy.utils';
 import ConsumerComponent from '.';
 import logger from '../../logger/logger';
 

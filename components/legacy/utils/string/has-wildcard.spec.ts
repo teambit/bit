@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import hasWildcard from './has-wildcard';
+import { hasWildcard } from './has-wildcard';
 
 describe('hasWildcard', () => {
   describe('using string', () => {

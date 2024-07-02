@@ -1,14 +1,14 @@
 import execa from 'execa';
 
-import logger from '../logger/logger';
-import { PathOsBased } from '../utils/path';
-import GitNotFound from './git/exceptions/git-not-found';
-import getGitExecutablePath from './git/git-executable';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { PathOsBased } from '@teambit/legacy.utils';
+import { GitNotFound } from './git/exceptions/git-not-found';
+import { getGitExecutablePath } from './git/git-executable';
 
 /**
  * get diff between files using git diff command
  */
-export default async function diffFiles(fileA: PathOsBased, fileB: PathOsBased, colors = true): Promise<string> {
+export async function diffFiles(fileA: PathOsBased, fileB: PathOsBased, colors = true): Promise<string> {
   const params = ['diff'];
   params.push('--no-index'); // ignores the working tree (in case the project is managed by git)
   if (colors) params.push('--color');

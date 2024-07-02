@@ -9,7 +9,7 @@ import { Scope } from '..';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, PREVIOUS_DEFAULT_LANE } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
-import { getStringifyArgs, sha1 } from '../../utils';
+import { getStringifyArgs, sha1 } from '@teambit/legacy.utils';
 import { hasVersionByRef } from '../component-ops/traverse-versions';
 import { BitObject, Ref, Repository } from '../objects';
 import { Version } from '.';

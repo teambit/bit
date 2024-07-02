@@ -5,7 +5,7 @@ import { ComponentID } from '@teambit/component-id';
 import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { componentIdToPackageName } from '@teambit/legacy.utils';
 import { ComponentDependency, SerializedComponentDependency, TYPE } from './component-dependency';
 import { DependencyLifecycleType } from '../dependency';
 import { DependencyFactory } from '../dependency-factory';

@@ -2,7 +2,7 @@ import { LinkDetail } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { ComponentID } from '@teambit/component-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { componentIdToPackageName } from '@teambit/legacy.utils';
 import path from 'path';
 
 import { Capsule } from './capsule';

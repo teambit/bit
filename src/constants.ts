@@ -2,7 +2,7 @@ import cliSpinners from 'cli-spinners';
 import * as path from 'path';
 import { homedir, platform } from 'os';
 
-import { PathOsBased } from './utils/path';
+import { PathOsBased } from '@teambit/legacy.utils';
 import { getSync } from './api/consumer/lib/global-config';
 
 const packageFile = require('../package.json');

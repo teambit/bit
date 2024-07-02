@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { DEFAULT_SEPARATOR } from '../constants';
+import { DEFAULT_SEPARATOR } from '@teambit/legacy/dist/constants';
 import stripTrailingChar from './string/strip-trailing-char';
 
 export function pathIsInside(thePath: string, potentialParent: string): boolean {
