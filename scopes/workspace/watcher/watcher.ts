@@ -13,7 +13,7 @@ import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import { UNMERGED_FILENAME } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import chokidar, { FSWatcher } from '@teambit/chokidar';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import { ComponentMap } from '@teambit/legacy/bit-map';
 import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { CompilationInitiator } from '@teambit/compiler';
 import {

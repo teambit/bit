@@ -226,6 +226,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
+    "bit-map": {
+        "name": "bit-map",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit/legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/bit-map"
+    },
     "builder": {
         "name": "builder",
         "scope": "teambit.pipelines",

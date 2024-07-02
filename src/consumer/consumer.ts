@@ -31,8 +31,7 @@ import {
   PathOsBasedRelative,
   PathRelative,
 } from '../utils/path';
-import BitMap from './bit-map/bit-map';
-import { NextVersion } from './bit-map/component-map';
+import { BitMap, NextVersion } from '@teambit/legacy/bit-map';
 import Component from './component';
 import ComponentLoader, { ComponentLoadOptions, LoadManyResult } from './component/component-loader';
 import { Dependencies } from './component/dependencies';

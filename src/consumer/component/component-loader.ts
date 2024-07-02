@@ -12,7 +12,7 @@ import ComponentsPendingImport from '../component-ops/exceptions/components-pend
 import Component, { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
 import { ComponentFsCache } from './component-fs-cache';
-import ComponentMap from '../bit-map/component-map';
+import { ComponentMap } from '@teambit/legacy/bit-map';
 import { VERSION_ZERO } from '../../scope/models/model-component';
 import loader from '../../cli/loader';
 import { concurrentComponentsLimit } from '../../utils/concurrency';

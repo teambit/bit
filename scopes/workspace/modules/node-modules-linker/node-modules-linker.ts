@@ -4,7 +4,7 @@ import * as path from 'path';
 import { linkPkgsToBitRoots } from '@teambit/bit-roots';
 import { ComponentID } from '@teambit/component-id';
 import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy/dist/constants';
-import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import { BitMap } from '@teambit/legacy/bit-map';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';

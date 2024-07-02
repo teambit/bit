@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command } from '@teambit/cli';
-import { PathChangeResult } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import { PathChangeResult } from '@teambit/legacy/bit-map';
 import { MoverMain } from './mover.main.runtime';
 
 export class MoveCmd implements Command {

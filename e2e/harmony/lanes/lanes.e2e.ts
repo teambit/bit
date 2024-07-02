@@ -4,7 +4,7 @@ import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { InvalidScopeName } from '@teambit/legacy-bit-id';
 import path from 'path';
 import { AUTO_SNAPPED_MSG, IMPORT_PENDING_MSG } from '../../../src/constants';
-import { LANE_KEY } from '../../../src/consumer/bit-map/bit-map';
+import { LANE_KEY } from '@teambit/legacy/bit-map';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../../src/fixtures/fixtures';
 import { removeChalkCharacters } from '../../../src/utils';

@@ -26,7 +26,7 @@ import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
 import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
 import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { ConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
-import BitMap from '@teambit/legacy/dist/consumer/bit-map';
+import { BitMap } from '@teambit/legacy/bit-map';
 import { BitError } from '@teambit/bit-error';
 import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';

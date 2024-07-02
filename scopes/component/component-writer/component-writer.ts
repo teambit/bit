@@ -1,8 +1,7 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { PathLinuxRelative, pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
-import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import { BitMap, ComponentMap } from '@teambit/legacy/bit-map';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';

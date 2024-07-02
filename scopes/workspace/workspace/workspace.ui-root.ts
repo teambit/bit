@@ -1,7 +1,7 @@
 import { BundlerMain } from '@teambit/bundler';
 import { Component, ComponentID, ResolveAspectsOptions } from '@teambit/component';
 import { UIRoot } from '@teambit/ui';
-import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import { GetBitMapComponentOptions } from '@teambit/legacy/bit-map';
 import { PathOsBased } from '@teambit/legacy/dist/utils/path';
 
 import { Workspace } from './workspace';

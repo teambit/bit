@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import { ComponentIdList } from '@teambit/component-id';
 
 import Consumer from '../consumer/consumer';
-import { MissingBitMapComponent } from './bit-map/exceptions';
+import { MissingBitMapComponent } from '@teambit/legacy/bit-map';
 
 describe('Consumer', function () {
   // @ts-ignore
