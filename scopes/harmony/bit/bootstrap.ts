@@ -1,15 +1,14 @@
 import Bluebird from 'bluebird';
-import path from 'path';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import semver from 'semver';
-
+import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
 import { Analytics } from '@teambit/legacy.analytics';
-import { handleUnhandledRejection } from './cli/handle-errors';
-import { BIT_VERSION, GLOBAL_CONFIG, GLOBAL_LOGS } from './constants';
-import HooksManager from './hooks';
-import { printWarning, shouldDisableConsole, shouldDisableLoader } from './logger/logger';
-import loader from './cli/loader';
+import { handleUnhandledRejection } from '@teambit/cli';
+import { BIT_VERSION, GLOBAL_CONFIG, GLOBAL_LOGS } from '@teambit/legacy/dist/constants';
+import HooksManager from '@teambit/legacy/dist/hooks';
+import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambit/legacy/dist/logger/logger';
+import loader from '@teambit/legacy/dist/cli/loader';
 
 const RECOMMENDED_NODE_VERSIONS = '>=20.0.0 <21.0.0';
 const SUPPORTED_NODE_VERSIONS = '>=16.0.0 <21.0.0';
@@ -80,7 +79,7 @@ function warnIfRunningAsRoot() {
 function printBitVersionIfAsked() {
   if (process.argv[2]) {
     if (['-V', '-v', '--version'].includes(process.argv[2])) {
-      const harmonyVersion = getHarmonyVersion();
+      const harmonyVersion = getBitVersionGracefully();
       if (harmonyVersion) {
         console.log(harmonyVersion); // eslint-disable-line no-console
       } else {
@@ -124,23 +123,5 @@ function enableLoaderIfPossible() {
   if (safeCommandsForLoader.includes(process.argv[2]) && !shouldDisableConsole && !shouldDisableLoader) {
     loader.on();
     // loader.start('loading bit...');
-  }
-}
-
-export function getHarmonyVersion(showValidSemver = false) {
-  try {
-    const teambitBit = require.resolve('@teambit/bit');
-    // eslint-disable-next-line
-    const packageJson = require(path.join(teambitBit, '../..', 'package.json'));
-    if (packageJson.version) return packageJson.version;
-    // this is running locally
-    if (packageJson.componentId && packageJson.componentId.version) {
-      return showValidSemver ? packageJson.componentId.version : `last-tag ${packageJson.componentId.version}`;
-    }
-    if (showValidSemver) throw new Error(`unable to find Bit version`);
-    return null;
-  } catch (err: any) {
-    if (showValidSemver) throw err;
-    return null;
   }
 }

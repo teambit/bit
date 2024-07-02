@@ -1,7 +1,7 @@
 import logger, { shouldDisableLoader } from '@teambit/legacy/dist/logger/logger';
 import { CLIArgs, Command, Flags } from '@teambit/legacy/dist/cli/command';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
+import { handleErrorAndExit } from './handle-errors';
 import { TOKEN_FLAG_NAME } from '@teambit/legacy/dist/constants';
 import globalFlags from '@teambit/legacy/dist/cli/global-flags';
 import { Analytics } from '@teambit/legacy.analytics';
