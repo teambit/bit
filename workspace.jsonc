@@ -699,6 +699,9 @@
     },
     "components/bit": {
       "teambit.pkg/pkg": {}
+    },
+    "components/typescript-compiler": {
+      "teambit.pkg/pkg": {}
     }
   }
 }
