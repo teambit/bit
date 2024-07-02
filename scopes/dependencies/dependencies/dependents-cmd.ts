@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { dependents, DependentsResults } from './dependents';
-import { generateDependentsInfoTable } from '@teambit/legacy/dist/cli/templates/component-template';
+import { generateDependentsInfoTable } from './template';
 
 export class DependentsCmd implements Command {
   name = 'dependents <component-name>';

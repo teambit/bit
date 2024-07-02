@@ -10,7 +10,7 @@ import pMapSeries from 'p-map-series';
 import { Version } from '@teambit/legacy/dist/scope/models';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { getFilesDiff } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
+import { getFilesDiff } from '@teambit/legacy.component-diff';
 import chalk from 'chalk';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import { ComponentLogAspect } from './component-log.aspect';

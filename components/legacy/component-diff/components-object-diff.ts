@@ -8,8 +8,8 @@ import diff from 'object-diff';
 import R from 'ramda';
 import { compact } from 'lodash';
 import { lt, gt } from 'semver';
-import Component from '../component/consumer-component';
-import { ExtensionDataList } from '../config';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { DiffOptions, FieldsDiff, getOneFileDiff } from './components-diff';
 
 type ConfigDiff = {
