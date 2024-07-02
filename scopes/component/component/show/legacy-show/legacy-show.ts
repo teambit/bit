@@ -7,23 +7,14 @@ const BEFORE_SHOW_REMOTE = 'showing a component...';
 export async function show({
   id,
   json,
-  versions,
   remote,
   compare,
 }: {
   id: string;
   json: boolean;
-  versions: boolean | null | undefined;
   remote: boolean;
   compare: boolean;
 }) {
-  if (versions) {
-    const components = await getComponent(versions);
-    return {
-      components,
-      versions,
-    };
-  }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return getComponent().then(({ component, componentModel, dependentsInfo, dependenciesInfo }) => ({
     component,
