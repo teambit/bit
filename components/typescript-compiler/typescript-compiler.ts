@@ -1,5 +1,5 @@
 import { glob } from 'glob';
-import { BuildContext, BuiltTaskResult, ComponentResult, TaskResultsList } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
 import typescript from 'typescript';
 import { EnvContext, EnvHandler } from '@teambit/envs';
 import { Compiler, TranspileFileParams, TranspileFileOutput } from '@teambit/compiler';
@@ -332,12 +332,12 @@ export class TypescriptCompiler implements Compiler {
     const duplicatedFilenames = filenames.filter((filename, index) => filenames.indexOf(filename) !== index);
     if (!duplicatedFilenames.length) return;
     uniq(duplicatedFilenames).forEach((filename) => {
-      const fullPaths = this.options.types.filter((typePath) => path.basename(typePath) === filename);
+      const fullPaths = this.options.types!.filter((typePath) => path.basename(typePath) === filename);
       this.logger.consoleWarning(
         `typescript compiler: found duplicated types file "${filename}", keeping the last one\n${fullPaths.join('\n')}`
       );
       const pathsToRemove = fullPaths.slice(0, fullPaths.length - 1); // keep only the last one
-      this.options.types = this.options.types.filter((typePath) => !pathsToRemove.includes(typePath));
+      this.options.types = this.options.types!.filter((typePath) => !pathsToRemove.includes(typePath));
     });
     this.logger.consoleWarning(`the following files are written: ${this.options.types.join('\n')}
 It's recommended to fix the env (${envId}) configuration to have only one file per type.`);

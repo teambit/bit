@@ -1,7 +1,7 @@
 import { TsConfigJson } from 'get-tsconfig';
 import normalize from 'normalize-path';
 import { stringify, parse, assign } from 'comment-json';
-import { sha1 } from '@teambit/legacy/dist/utils';
+import { sha1 } from '@teambit/legacy.utils';
 import fs from 'fs-extra';
 import { ExecutionContext, EnvContext } from '@teambit/envs';
 import { basename, join, resolve, relative, isAbsolute } from 'path';
