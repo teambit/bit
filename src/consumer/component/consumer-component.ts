@@ -1,10 +1,10 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import fs from 'fs-extra';
-import { v4 } from 'uuid';
 import * as path from 'path';
 import R from 'ramda';
 import { IssuesList } from '@teambit/component-issues';
 import { BitId } from '@teambit/legacy-bit-id';
+import { generateSnap } from '@teambit/component-version';
 import { BitError } from '@teambit/bit-error';
 import { getCloudDomain, BIT_WORKSPACE_TMP_DIRNAME, BuildStatus, DEFAULT_LANGUAGE, Extensions } from '../../constants';
 import docsParser from '../../jsdoc/parser';
@@ -12,7 +12,7 @@ import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
 import { ScopeListItem } from '../../scope/models/model-component';
 import Version, { DepEdge, Log } from '../../scope/models/version';
-import { pathNormalizeToLinux, sha1 } from '../../utils';
+import { pathNormalizeToLinux } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedRelative } from '../../utils/path';
 import ComponentMap from '../bit-map/component-map';
 import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
@@ -267,7 +267,7 @@ export default class Component {
     this.peerDependencies = new Dependencies(peerDependencies);
   }
 
-  setNewVersion(version = sha1(v4())) {
+  setNewVersion(version = generateSnap()) {
     this.previouslyUsedVersion = this.id.hasVersion() ? this.version : undefined;
     this.version = version;
   }

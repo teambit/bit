@@ -1,7 +1,6 @@
 import mapSeries from 'p-map-series';
 import { isEmpty } from 'lodash';
 import { ReleaseType } from 'semver';
-import { v4 } from 'uuid';
 import { BitError } from '@teambit/bit-error';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -15,7 +14,6 @@ import { getBasicLog } from '@teambit/legacy/dist/utils/bit/basic-log';
 import { Component } from '@teambit/component';
 import { deleteComponentsFiles } from '@teambit/remove';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { sha1 } from '@teambit/legacy/dist/utils';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
 import { BuilderMain, OnTagOpts } from '@teambit/builder';
@@ -87,7 +85,7 @@ function updateDependenciesVersions(
 
 function setHashes(componentsToTag: ConsumerComponent[]): void {
   componentsToTag.forEach((componentToTag) => {
-    componentToTag.setNewVersion(sha1(v4()));
+    componentToTag.setNewVersion();
   });
 }
 
