@@ -1,16 +1,67 @@
 import c from 'chalk';
 import rightpad from 'pad-right';
 import { table } from 'table';
-import { ComponentID } from '@teambit/component-id';
-
-import {
-  componentToPrintableForDiff,
-  getDiffBetweenObjects,
-  prettifyFieldName,
-} from '../../consumer/component-ops/components-object-diff';
-import ConsumerComponent from '../../consumer/component/consumer-component';
-import { DependenciesInfo } from '../../scope/graph/scope-graph';
+import { componentToPrintableForDiff, getDiffBetweenObjects, prettifyFieldName } from '@teambit/legacy.component-diff';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { show } from './legacy-show';
 import paintDocumentation from './docs-template';
+
+export function actionLegacy(
+  [id]: [string],
+  {
+    json,
+    remote = false,
+    compare = false,
+  }: {
+    json?: boolean;
+    remote: boolean;
+    compare?: boolean;
+  }
+): Promise<any> {
+  return show({
+    id,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    json,
+    remote,
+    compare,
+  });
+}
+
+export function reportLegacy({
+  component,
+  componentModel,
+  json,
+}: {
+  component: ConsumerComponent;
+  componentModel?: ConsumerComponent;
+  json: boolean | null | undefined;
+}): string {
+  if (component.componentFromModel) {
+    component.scopesList = component.componentFromModel.scopesList;
+  }
+  if (json) {
+    const makeComponentReadable = (comp: ConsumerComponent) => {
+      if (!comp) return comp;
+      const componentObj = comp.toObject();
+      componentObj.files = comp.files.map((file) => file.toReadableString());
+
+      if (comp.componentMap) {
+        componentObj.componentDir = comp.componentMap.getComponentDir();
+      }
+
+      return componentObj;
+    };
+    const componentFromFileSystem = makeComponentReadable(component);
+    if (component.scopesList) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      componentFromFileSystem.scopesList = component.scopesList;
+    }
+    const componentFromModel = componentModel ? makeComponentReadable(componentModel) : undefined;
+    const jsonObject = componentFromModel ? { componentFromFileSystem, componentFromModel } : componentFromFileSystem;
+    return JSON.stringify(jsonObject, null, '  ');
+  }
+  return paintComponent(component, componentModel);
+}
 
 const COLUMN_WIDTH = 50;
 const tableColumnConfig = {
@@ -26,14 +77,7 @@ const tableColumnConfig = {
   },
 };
 
-export default function paintComponent(
-  component: ConsumerComponent,
-  componentModel: ConsumerComponent | undefined,
-  showRemoteVersion: boolean,
-  detailed: boolean,
-  dependenciesInfo: DependenciesInfo[],
-  dependentsInfo: DependenciesInfo[]
-) {
+function paintComponent(component: ConsumerComponent, componentModel: ConsumerComponent | undefined) {
   return componentModel ? paintWithCompare() : paintWithoutCompare();
 
   function paintWithoutCompare() {
@@ -68,16 +112,7 @@ export default function paintComponent(
       .filter((x) => x);
 
     const componentTable = table(rows, tableColumnConfig);
-    const dependenciesTableStr = showRemoteVersion ? generateDependenciesTable() : '';
-    const dependentsInfoTableStr = generateDependentsInfoTable(dependentsInfo, component.id);
-    const dependenciesInfoTableStr = generateDependenciesInfoTable(dependenciesInfo, component.id);
-    return (
-      componentTable +
-      dependenciesTableStr +
-      dependentsInfoTableStr +
-      dependenciesInfoTableStr +
-      paintDocumentation(component.docs)
-    );
+    return componentTable + paintDocumentation(component.docs);
   }
 
   function paintWithCompare() {
@@ -145,15 +180,6 @@ export default function paintComponent(
       'specs',
       'deprecated',
     ];
-    if (detailed) {
-      const extraFields = [
-        'overridesDependencies',
-        'overridesDevDependencies',
-        'overridesPeerDependencies',
-        'scopesList',
-      ];
-      fields.push(...extraFields);
-    }
     return fields;
   }
 
@@ -163,36 +189,14 @@ export default function paintComponent(
     }
 
     const dependencyHeader = [];
-    if (showRemoteVersion) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      dependencyHeader.push(['Dependency ID', 'Current Version', 'Local Version', 'Remote Version']);
-    } else {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      dependencyHeader.push(['Dependencies']);
-    }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    dependencyHeader.push(['Dependencies']);
     const getDependenciesRows = (dependencies, title?: string) => {
       const dependencyRows = [];
       dependencies.forEach((dependency) => {
-        let dependencyId = showRemoteVersion ? dependency.id.toStringWithoutVersion() : dependency.id.toString();
+        let dependencyId = dependency.id.toString();
         dependencyId = title ? `${dependencyId} (${title})` : dependencyId;
         const row = [dependencyId];
-        if (showRemoteVersion) {
-          const dependencyVersion = dependency.currentVersion;
-          const localVersion = dependency.localVersion;
-          const remoteVersion = dependency.remoteVersion ? dependency.remoteVersion : null;
-          // if all versions are equal, paint them with green. Otherwise, paint with red
-          const color =
-            (remoteVersion && remoteVersion === localVersion && remoteVersion === dependencyVersion) ||
-            (!remoteVersion && localVersion === dependencyVersion)
-              ? 'green'
-              : 'red';
-          row.push(c[color](dependencyVersion));
-          row.push(c[color](localVersion));
-          row.push(remoteVersion ? c[color](remoteVersion) : 'N/A');
-        }
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         dependencyRows.push(row);
       });
@@ -211,49 +215,4 @@ export default function paintComponent(
     const padRightCount = Math.ceil(str.length / columnWidth) * columnWidth;
     return str.length > columnWidth ? rightpad(str, padRightCount, ' ') : rightpad(str, columnWidth, ' ');
   }
-}
-
-function getAllDependenciesRows(dependenciesInfoArray: DependenciesInfo[], id: ComponentID): Array<string[]> {
-  return dependenciesInfoArray.map((dependency: DependenciesInfo) => {
-    const row: string[] = [];
-    row.push(dependency.id.toString());
-    row.push(dependency.depth.toString());
-    row.push(dependency.parent === id.toString() ? '<self>' : dependency.parent);
-    row.push(dependency.dependencyType);
-    return row;
-  });
-}
-
-export function generateDependenciesInfoTable(dependenciesInfo: DependenciesInfo[], id: ComponentID) {
-  if (!dependenciesInfo.length) {
-    return '';
-  }
-
-  const dependenciesHeader: string[][] = [];
-  dependenciesHeader.push([
-    c.cyan('Dependency ID'),
-    c.cyan('Depth'),
-    c.cyan('Immediate Dependent'),
-    c.cyan('Dependency type'),
-  ]);
-  const allDependenciesRows = getAllDependenciesRows(dependenciesInfo, id);
-
-  const dependenciesTable = table(dependenciesHeader.concat(allDependenciesRows));
-  return `\n${c.bold('Dependencies Details')}\n${dependenciesTable}`;
-}
-
-export function generateDependentsInfoTable(dependentsInfo: DependenciesInfo[], id: ComponentID) {
-  if (!dependentsInfo.length) {
-    return '';
-  }
-  const dependentsHeader: string[][] = [];
-  dependentsHeader.push([
-    c.cyan('Dependent ID'),
-    c.cyan('Depth'),
-    c.cyan('Immediate Dependency'),
-    c.cyan('Dependent type'),
-  ]);
-  const allDependenciesRows = getAllDependenciesRows(dependentsInfo, id);
-  const dependentsTable = table(dependentsHeader.concat(allDependenciesRows));
-  return `\n${c.bold('Dependents Details')}\n${dependentsTable}`;
 }

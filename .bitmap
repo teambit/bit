@@ -360,6 +360,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-descriptor"
     },
+    "component-diff": {
+        "name": "component-diff",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/component-diff"
+    },
     "component-issues": {
         "name": "component-issues",
         "scope": "teambit.component",
