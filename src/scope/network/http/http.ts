@@ -11,7 +11,6 @@ import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/ha
 import { LaneId } from '@teambit/lane-id';
 import { getAgent, AgentOptions } from '@teambit/toolbox.network.agent';
 import { Network } from '../network';
-import { getHarmonyVersion } from '../../../bootstrap';
 import Component from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import DependencyGraph from '../../graph/scope-graph';
@@ -55,6 +54,7 @@ import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
 import loader from '../../../cli/loader';
 import { UnexpectedNetworkError } from '../exceptions';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 
 const _fetch: typeof fetch = nodeFetch as unknown as typeof fetch;
 
@@ -644,7 +644,7 @@ export class Http implements Network {
   }
 
   private getClientVersion(): string {
-    return getHarmonyVersion(true);
+    return getBitVersion();
   }
 
   private addAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {

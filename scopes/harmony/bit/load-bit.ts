@@ -33,7 +33,7 @@ import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-conf
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { satisfies } from 'semver';
-import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { ClearCacheAspect } from '@teambit/clear-cache';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
@@ -268,7 +268,7 @@ function verifyEngine(bitConfig: BitConfig) {
   if (!bitConfig.engine) {
     return;
   }
-  const bitVersion = getHarmonyVersion(true);
+  const bitVersion = getBitVersion();
   if (satisfies(bitVersion, bitConfig.engine)) {
     return;
   }

@@ -3,7 +3,7 @@ import { Logger } from '@teambit/logger';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component';
 import { BuildStatus } from '@teambit/legacy/dist/constants';
-import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { SignMain } from './sign.main.runtime';
 
 export type SignOptions = {
@@ -38,7 +38,7 @@ export class SignCmd implements Command {
   constructor(private signMain: SignMain, private logger: Logger) {}
 
   async report([components = []]: [string[]], signOptions: SignOptions) {
-    const harmonyVersion = getHarmonyVersion();
+    const harmonyVersion = getBitVersion();
     this.logger.console(`signing using ${harmonyVersion} version`); // eslint-disable-line no-console
     const componentIds = components.map((c) => ComponentID.fromString(c));
     this.warnForMissingVersions(componentIds);

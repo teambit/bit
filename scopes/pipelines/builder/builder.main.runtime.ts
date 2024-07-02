@@ -13,7 +13,7 @@ import { AspectAspect } from '@teambit/aspect';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { UIAspect, UiMain, BundleUiTask } from '@teambit/ui';
@@ -103,7 +103,7 @@ export class BuilderMain {
       const aspectsData = buildPipelineResultList.getDataOfComponent(component.id);
       const pipelineReport = buildPipelineResultList.getPipelineReportOfComponent(component.id);
       const artifacts = buildPipelineResultList.getArtifactsDataOfComponent(component.id);
-      return { pipeline: pipelineReport, artifacts, aspectsData, bitVersion: getHarmonyVersion(true) };
+      return { pipeline: pipelineReport, artifacts, aspectsData, bitVersion: getBitVersion() };
     });
   }
 

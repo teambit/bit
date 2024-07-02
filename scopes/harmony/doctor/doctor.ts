@@ -5,7 +5,7 @@ import Stream from 'stream';
 import path from 'path';
 import tar from 'tar-stream';
 import tarFS from 'tar-fs';
-import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '@teambit/legacy/dist/constants';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
@@ -216,7 +216,7 @@ async function _getEnvMeta(): Promise<DoctorMetaData> {
     nodeVersion: process.version,
     runningTimestamp: runningTimeStamp || _getTimeStamp(),
     platform: os.platform(),
-    bitVersion: getHarmonyVersion(),
+    bitVersion: getBitVersion(),
     npmVersion: await getNpmVersion(),
     yarnVersion: await getYarnVersion(),
     userDetails: _getUserDetails(),
