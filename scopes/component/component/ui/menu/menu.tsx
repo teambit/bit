@@ -107,6 +107,10 @@ export function ComponentMenu({
     useComponent
   );
 
+  const { id, loading } = useComponentVersions({ initialLoad: true });
+
+  if (loading || !id) return null;
+
   const RightSide = (
     <div className={styles.rightSide}>
       {RightNode || (
@@ -117,7 +121,7 @@ export function ComponentMenu({
             componentId={componentId?.toString() || idFromLocation}
             useComponent={useComponentVersions}
             componentFilters={componentFilters}
-            // loading={loading}
+            loading={loading}
           />
           {rightSideItems.map(({ item }) => item)}
           <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
@@ -307,6 +311,8 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
 
   const methods = useConsumeMethods(consumeMethods, consumeMethodProps);
   const hasMethods = methods?.length > 0;
+
+  if (!loading && !id) return null;
 
   return (
     <>
