@@ -113,3 +113,4 @@ export { getGitExecutablePath } from './git/git-executable';
 export { GitNotFound } from './git/exceptions/git-not-found';
 export { diffFiles } from './diff-files';
 export { BIT_IGNORE, getBitIgnoreFile, getGitIgnoreFile } from './ignore/ignore';
+export { pipeOutput } from './child_process';

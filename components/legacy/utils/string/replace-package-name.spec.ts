@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import replacePackageName from './replace-package-name';
+import { replacePackageName } from './replace-package-name';
 
 describe('replacePackageName', () => {
   it('should replace package surrounded with single quotes', () => {

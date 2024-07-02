@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
-import { pipeOutput } from '@teambit/legacy/dist/utils/child_process';
+import { pipeOutput } from '@teambit/legacy.utils';
 import { createLinkOrSymlink } from '@teambit/toolbox.fs.link-or-symlink';
 import { EventEmitter } from 'events';
 import execa from 'execa';
