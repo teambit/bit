@@ -145,7 +145,7 @@ export class ComponentMap {
     return res;
   }
 
-  private configToObject() {
+  configToObject() {
     if (!this.config) return undefined;
     const config = {};
     Object.keys(this.config).forEach((aspectId) => {
