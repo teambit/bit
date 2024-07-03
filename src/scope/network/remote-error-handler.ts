@@ -1,10 +1,10 @@
+import { LaneNotFound } from '@teambit/legacy.scope-api';
 import CustomError from '../../error/custom-error';
 import { ComponentNotFound, MergeConflictOnRemote } from '../exceptions';
 import ActionNotFound from '../exceptions/action-not-found';
 import ClientIdInUse from '../exceptions/client-id-in-use';
 import ServerIsBusy from '../exceptions/server-is-busy';
 import { OldClientVersion, PermissionDenied, RemoteScopeNotFound, UnexpectedNetworkError } from './exceptions';
-import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
 // eslint-disable-next-line complexity
 export function remoteErrorHandler(code: number, parsedError: Record<string, any>, remotePath: string, err) {
   switch (code) {

@@ -461,6 +461,10 @@ this command marks the components as deleted, and after snap/tag and export they
 
 `bit dependents <component-name>`
 
+| **Arg**          |        **Description**         |
+| ---------------- | :----------------------------: |
+| `component-name` | component name or component id |
+
 ---
 
 ## deprecate
@@ -1416,10 +1420,13 @@ this command does the following:
 merge changes of the remote head into local when they are diverged. when on a lane, merge the remote head of the lane into the local  
 and creates snaps for merged components that have diverged, on the lane.  
 if no ids are specified, all pending-merge components will be merged. (run "bit status" to list them).  
-optionally use '--abort' to revert the last merge. to revert a lane merge, use "bit lane merge-abort" command.  
-you can use a pattern for multiple ids, such as bit merge "utils/\*". (wrap the pattern with quotes to avoid collision with shell commands)
+optionally use '--abort' to revert the last merge. to revert a lane merge, use "bit lane merge-abort" command.
 
-`bit merge [ids...]`
+`bit merge [component-pattern]`
+
+| **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
+| ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
 | **Option**                              | **Option alias** | **Description**                                                                                                         |
 | --------------------------------------- | :--------------: | ----------------------------------------------------------------------------------------------------------------------- |
@@ -1803,38 +1810,6 @@ optionally, provide [pattern] to limit the fork to specific components
 | -------------------------------- | :--------------: | --------------------------------------------------------- |
 | `--ast`                          |                  | EXPERIMENTAL. use ast to transform files instead of regex |
 | `--skip-dependency-installation` |       `-x`       | do not install packages of the imported components        |
-
----
-
-## scope-config
-
-**Description**: scope config management
-
-`bit scope-config`
-
-### scope-config set
-
-**Usage**: `scope-config set <key> <val>`
-
-**Description**: set a scope configuration
-
-### scope-config del
-
-**Usage**: `scope-config del <key>`
-
-**Description**: delete given key from global configuration
-
-### scope-config get
-
-**Usage**: `scope-config get <key>`
-
-**Description**: get a scope configuration
-
-### scope-config list
-
-**Usage**: `scope-config list`
-
-**Description**: list all scope configuration(s)
 
 ---
 

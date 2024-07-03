@@ -3,7 +3,7 @@ import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { ComponentCompareMain } from '@teambit/component-compare';
 import chalk from 'chalk';
-import { outputDiffResults } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
+import { outputDiffResults } from '@teambit/legacy.component-diff';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { LaneDiffGenerator } from './lane-diff-generator';
 

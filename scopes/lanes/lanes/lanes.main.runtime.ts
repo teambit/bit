@@ -11,8 +11,8 @@ import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import { MergeStrategy, MergeOptions } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { DiffOptions } from '@teambit/legacy.component-diff';
+import { MergeStrategy, MergeOptions, MergingMain, MergingAspect } from '@teambit/merging';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { HistoryItem } from '@teambit/legacy/dist/scope/models/lane-history';
 import { FetchCmd, ImporterAspect, ImporterMain } from '@teambit/importer';
@@ -30,13 +30,12 @@ import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { MergingMain, MergingAspect } from '@teambit/merging';
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
-import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,

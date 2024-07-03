@@ -9,6 +9,8 @@ import {
   ComponentMergeStatus,
   ApplyVersionResults,
   compIsAlreadyMergedMsg,
+  FileStatus,
+  MergeStrategy,
 } from '@teambit/merging';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { getBasicLog } from '@teambit/legacy/dist/utils/bit/basic-log';
@@ -16,7 +18,6 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
 import pMapSeries from 'p-map-series';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
-import { FileStatus, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { ConfigMergeResult } from '@teambit/config-merger';

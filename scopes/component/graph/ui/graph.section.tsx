@@ -8,12 +8,12 @@ export class GraphSection implements Section {
   constructor(private componentWidgetSlot: ComponentWidgetSlot) {}
 
   route = {
-    path: '~dependencies',
+    path: '~graph',
     element: <GraphPage componentWidgets={this.componentWidgetSlot} />,
   };
   navigationLink = {
-    href: '~dependencies',
-    children: 'Dependencies',
+    href: '~graph',
+    children: 'Graph',
   };
   order = 40;
 }

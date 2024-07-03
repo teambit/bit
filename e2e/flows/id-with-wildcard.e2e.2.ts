@@ -1,7 +1,7 @@
 import { NoIdMatchPattern } from '@teambit/scope';
 import { expect } from 'chai';
 
-import NoIdMatchWildcard from '../../src/api/consumer/lib/exceptions/no-id-match-wildcard';
+import { NoIdMatchWildcard } from '@teambit/lister';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('component id with wildcard', function () {

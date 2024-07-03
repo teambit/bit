@@ -7,10 +7,10 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpProxyAgent } from 'http-proxy-agent';
+import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { LaneId } from '@teambit/lane-id';
 import { getAgent, AgentOptions } from '@teambit/toolbox.network.agent';
 import { Network } from '../network';
-import { getHarmonyVersion } from '../../../bootstrap';
 import Component from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import DependencyGraph from '../../graph/scope-graph';
@@ -47,15 +47,14 @@ import {
 } from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
-import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
+import { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
 import { remoteErrorHandler } from '../remote-error-handler';
-import { PushOptions } from '../../../api/scope/lib/put';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
 import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
 import loader from '../../../cli/loader';
 import { UnexpectedNetworkError } from '../exceptions';
-import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '../../../api/consumer/lib/feature-toggle';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 
 const _fetch: typeof fetch = nodeFetch as unknown as typeof fetch;
 
@@ -645,7 +644,7 @@ export class Http implements Network {
   }
 
   private getClientVersion(): string {
-    return getHarmonyVersion(true);
+    return getBitVersion();
   }
 
   private addAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {

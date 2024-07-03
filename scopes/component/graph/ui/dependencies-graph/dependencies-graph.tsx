@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, useEffect } from 'react';
 import classnames from 'classnames';
 import ReactFlow, {
   Background,
@@ -11,6 +11,7 @@ import ReactFlow, {
   Position,
   ReactFlowProps,
   ReactFlowProvider,
+  useNodesState,
 } from 'reactflow';
 import { ComponentID } from '@teambit/component';
 import { ComponentWidgetSlot } from '../../graph.ui.runtime';
@@ -36,9 +37,10 @@ function ComponentNodeContainer(props: NodeProps) {
 
 export type DependenciesGraphProps = {
   rootNode: ComponentID;
-  graph: GraphModel<NodeModel, EdgeModel>;
+  graph?: GraphModel<NodeModel, EdgeModel>;
   componentWidgets: ComponentWidgetSlot;
   onLoad?: (instance: ReactFlowInstance) => void;
+  loadingGraphMetadata?: boolean;
 } & Omit<ReactFlowProps, 'elements'>;
 
 export function DependenciesGraph({
@@ -48,17 +50,24 @@ export function DependenciesGraph({
   className,
   onLoad,
   children,
+  loadingGraphMetadata,
   ...rest
 }: DependenciesGraphProps) {
   const nodeTypes: NodeTypes = React.useMemo(() => ({ ComponentNode: ComponentNodeContainer }), []);
   const graphRef = useRef<ReactFlowInstance>();
   const elements = calcElements(graph, { rootNode });
+  const [nodes, setNodes] = useNodesState(elements.nodes);
 
-  const context = useMemo(() => ({ componentWidgets }), [componentWidgets]);
+  useEffect(() => {
+    setNodes(elements.nodes);
+  }, [elements.nodes]);
+
+  const context = useMemo(() => ({ componentWidgets, loadingGraphMetadata }), [componentWidgets, loadingGraphMetadata]);
 
   const handleLoad = useCallback(
     (instance: ReactFlowInstance) => {
-      if ((graph?.nodes.length ?? 0) <= 3) {
+      graphRef.current = instance;
+      if ((elements?.nodes.length ?? 0) <= 3) {
         instance.fitView({
           padding: 2,
           maxZoom: 1,
@@ -78,13 +87,18 @@ export function DependenciesGraph({
 
   useEffect(() => {
     setTimeout(() => {
-      if (graph.nodes.length <= 3)
+      if (!elements?.nodes.length) return;
+      if ((elements?.nodes?.length ?? 0) <= 3) {
         return graphRef.current?.fitView({
           padding: 2,
+          maxZoom: 1,
         });
-      return graphRef.current?.fitView();
-    }, 0);
-  }, [graph]);
+      }
+      return graphRef.current?.fitView({
+        maxZoom: 1,
+      });
+    }, 100);
+  }, [elements?.nodes.length]);
 
   return (
     <ComponentGraphContext.Provider value={context}>
@@ -101,10 +115,15 @@ export function DependenciesGraph({
           minZoom={0}
           {...rest}
           className={classnames(styles.graph, className)}
-          defaultNodes={elements.nodes}
-          defaultEdges={elements.edges}
+          nodes={nodes}
+          edges={elements.edges}
           nodeTypes={nodeTypes}
           onInit={handleLoad}
+          fitView={true}
+          fitViewOptions={{
+            padding: (elements?.nodes.length ?? 0) <= 3 ? 2 : undefined,
+            maxZoom: 1,
+          }}
           proOptions={{
             hideAttribution: true,
           }}

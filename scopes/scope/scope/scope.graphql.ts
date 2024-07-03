@@ -1,8 +1,8 @@
 import { ComponentID } from '@teambit/component';
 import { gql } from 'graphql-tag';
-import { latestVersions } from '@teambit/legacy/dist/api/scope';
+import { latestVersions } from '@teambit/legacy.scope-api';
 import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
-import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { ScopeMain } from './scope.main.runtime';
 
 export function scopeSchema(scopeMain: ScopeMain) {
@@ -117,7 +117,7 @@ export function scopeSchema(scopeMain: ScopeMain) {
         },
 
         getBitVersion: () => {
-          return getHarmonyVersion(true);
+          return getBitVersion();
         },
         // delete: async (scope: ScopeMain, props: {  }) => {
 

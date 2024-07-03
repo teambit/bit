@@ -6,7 +6,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
-import { Analytics } from '../analytics/analytics';
+import { Analytics } from '@teambit/legacy.analytics';
 import {
   BIT_GIT_DIR,
   BIT_HIDDEN_DIR,
@@ -538,29 +538,6 @@ export default class Consumer {
   async cleanFromBitMap(componentsToRemoveFromFs: ComponentID[]) {
     logger.debug(`consumer.cleanFromBitMap, cleaning ${componentsToRemoveFromFs.length} comps from .bitmap`);
     this.bitMap.removeComponents(componentsToRemoveFromFs);
-  }
-
-  async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
-    logger.debug(`addRemoteAndLocalVersionsToDependencies for ${component.id.toString()}`);
-    Analytics.addBreadCrumb(
-      'addRemoteAndLocalVersionsToDependencies',
-      `addRemoteAndLocalVersionsToDependencies for ${Analytics.hashData(component.id.toString())}`
-    );
-    let modelDependencies = new Dependencies([]);
-    let modelDevDependencies = new Dependencies([]);
-    if (loadedFromFileSystem) {
-      // when loaded from file-system, the dependencies versions are fetched from bit.map.
-      // find the model version of the component and get the stored versions of the dependencies
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const mainComponentFromModel: Component = component.componentFromModel;
-      if (mainComponentFromModel) {
-        // otherwise, the component is probably on the file-system only and not on the model.
-        modelDependencies = mainComponentFromModel.dependencies;
-        modelDevDependencies = mainComponentFromModel.devDependencies;
-      }
-    }
-    await component.dependencies.addRemoteAndLocalVersions(this.scope, modelDependencies);
-    await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
   }
 
   async getIdsOfDefaultLane(): Promise<ComponentIdList> {

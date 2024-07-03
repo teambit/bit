@@ -2,7 +2,6 @@ import { compact } from 'lodash';
 import pFilter from 'p-filter';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import R from 'ramda';
-import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { LATEST } from '../../constants';
 import { SnapsDistance } from '../../scope/component-ops/snaps-distance';
 import { getDivergeData } from '../../scope/component-ops/get-diverge-data';
@@ -508,12 +507,5 @@ export default class ComponentsList {
 
   static getUniqueComponents(components: Component[]): Component[] {
     return R.uniqBy((component) => JSON.stringify(component.componentId), components);
-  }
-
-  listComponentsByIdsWithWildcard(idsWithWildcard: string[]): ComponentID[] {
-    const allIds = this.bitMap.getAllBitIds();
-    const matchedIds = ComponentsList.filterComponentsByWildcard(allIds, idsWithWildcard);
-    if (!matchedIds.length) throw new NoIdMatchWildcard(idsWithWildcard);
-    return matchedIds;
   }
 }

@@ -8,7 +8,7 @@ import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { LaneId } from '@teambit/lane-id';
-import { SUPPORT_LANE_HISTORY, addFeature, removeFeature } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { SUPPORT_LANE_HISTORY, addFeature, removeFeature } from '@teambit/harmony.modules.feature-toggle';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';

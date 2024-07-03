@@ -1,11 +1,10 @@
 import logger, { shouldDisableLoader } from '@teambit/legacy/dist/logger/logger';
 import { CLIArgs, Command, Flags } from '@teambit/legacy/dist/cli/command';
-import { parseCommandName } from '@teambit/legacy/dist/cli/command-registry';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
+import { handleErrorAndExit } from './handle-errors';
 import { TOKEN_FLAG_NAME } from '@teambit/legacy/dist/constants';
 import globalFlags from '@teambit/legacy/dist/cli/global-flags';
-import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
+import { Analytics } from '@teambit/legacy.analytics';
 import { OnCommandStartSlot } from './cli.main.runtime';
 import pMapSeries from 'p-map-series';
 
@@ -107,4 +106,9 @@ export class CommandRunner {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     return process.stdout.write(data, async () => logger.exitAfterFlush(exitCode, this.commandName, data));
   }
+}
+
+export function parseCommandName(commandName: string): string {
+  if (!commandName) return '';
+  return commandName.split(' ')[0];
 }

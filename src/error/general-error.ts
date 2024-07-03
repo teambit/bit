@@ -1,10 +1,10 @@
-import AbstractError from './abstract-error';
+import { BitError } from '@teambit/bit-error';
 
-export default class GeneralError extends AbstractError {
+export default class GeneralError extends BitError {
   msg: string;
 
   constructor(msg: string) {
-    super();
+    super(msg);
     this.msg = msg;
   }
 }

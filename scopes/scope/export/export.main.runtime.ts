@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { BitError } from '@teambit/bit-error';
-import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
+import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import loader from '@teambit/legacy/dist/cli/loader';
 import {
@@ -34,7 +34,7 @@ import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { EjectAspect, EjectMain, EjectResults } from '@teambit/eject';
-import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { ExportOrigin } from '@teambit/legacy/dist/scope/network/http/http';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';

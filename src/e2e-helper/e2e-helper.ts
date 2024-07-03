@@ -1,8 +1,7 @@
 import fs from 'fs-extra';
 import R from 'ramda';
-
+import { FileStatus } from '@teambit/merging';
 import { VERSION_DELIMITER } from '../constants';
-import { FileStatus } from '../consumer/versions-ops/merge-version';
 import { removeChalkCharacters } from '../utils';
 import WorkspaceJsoncHelper from './e2e-workspace-jsonc-helper';
 import BitMapHelper from './e2e-bitmap-helper';

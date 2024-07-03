@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { IS_WINDOWS } from '../../../src/constants';
 import Helper from '../../../src/e2e-helper/e2e-helper';
-import { LaneNotFound } from '../../../src/api/scope/lib/exceptions/lane-not-found';
+import { LaneNotFound } from '@teambit/legacy.scope-api';
 
 chai.use(require('chai-fs'));
 
