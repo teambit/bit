@@ -174,7 +174,7 @@ describe('bit lane command', function () {
       expect(() => helper.command.export()).to.not.throw();
     });
   });
-  describe('soft-remove main component when on a lane', () => {
+  describe('delete main component when on a lane', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
@@ -183,12 +183,19 @@ describe('bit lane command', function () {
       helper.command.createLane();
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
       helper.command.export();
-      helper.command.softRemoveOnLane('comp2');
     });
-    it('should remove the component from the workspace', () => {
-      const list = helper.command.listParsed();
-      expect(list).to.have.lengthOf(1);
-      expect(list[0].id).to.not.have.string('comp2');
+    it('should throw an error suggesting to switch to main or using --update-main flag', () => {
+      expect(() => helper.command.softRemoveOnLane('comp2')).to.throw('unable to delete');
+    });
+    describe('using --update-main flag', () => {
+      before(() => {
+        helper.command.softRemoveOnLane('comp2', '--update-main');
+      });
+      it('should remove the component from the workspace', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
+        expect(list[0].id).to.not.have.string('comp2');
+      });
     });
   });
   describe('soft remove on lane when a forked lane is merging this lane', () => {
