@@ -26,7 +26,7 @@ this command marks the components as deleted, and after snap/tag and export they
   alias = '';
   options = [
     ['', 'lane', 'when on a lane, delete the component from this lane only. avoid merging it to main or other lanes'],
-    ['', 'update-main', 'EXPERIMENTAL. delete component/s on the main lane after merging this lane into main'],
+    ['', 'update-main', 'delete component/s on the main lane after merging this lane into main'],
     [
       '',
       'range <string>',
