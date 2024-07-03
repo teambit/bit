@@ -490,9 +490,6 @@ jobs:
       - run:
           name: bbit install
           command: cd bit && bbit install
-      - run:
-          name: 'bit status'
-          command: cd bit && bbit status
       - save_cache:
           key: core-aspect-env-v0.0.39-v4
           paths:
