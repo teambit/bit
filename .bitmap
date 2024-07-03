@@ -231,7 +231,13 @@
         "scope": "teambit.legacy",
         "version": "0.0.4",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/bit-map"
+        "rootDir": "components/legacy/bit-map",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.1": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
     },
     "builder": {
         "name": "builder",
@@ -1968,7 +1974,13 @@
         "scope": "teambit.legacy",
         "version": "0.0.2",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/utils"
+        "rootDir": "components/legacy/utils",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.1": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
     },
     "utils/code-editor-options": {
         "name": "utils/code-editor-options",
