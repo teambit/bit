@@ -71,7 +71,7 @@ export class BitMap {
   _cacheIdsAllStrWithoutVersion: { [idStr: string]: ComponentID } | undefined;
   _cacheIdsAllStrWithoutScopeAndVersion: { [idStr: string]: ComponentID } | undefined;
   allTrackDirs: { [trackDir: string]: ComponentID } | null | undefined;
-  private updatedIds: { [oldIdStr: string]: ComponentMap } = {}; // needed for out-of-sync where the id is changed during the process
+  protected updatedIds: { [oldIdStr: string]: ComponentMap } = {}; // needed for out-of-sync where the id is changed during the process
   constructor(
     public projectRoot: string,
     public mapPath: PathOsBasedAbsolute,
