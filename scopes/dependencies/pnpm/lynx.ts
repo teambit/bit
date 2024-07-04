@@ -458,7 +458,7 @@ function readWorkspacePackageHook(pkg: PackageManifest): PackageManifest {
 }
 
 function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>, opts: { update?: boolean }) {
-  const pkgs = Object.entries(manifestsByPaths).map(([dir, manifest]) => ({ dir, manifest }));
+  const pkgs = Object.entries(manifestsByPaths).map(([rootDir, manifest]) => ({ rootDir: rootDir as ProjectRootDir, manifest }));
   const { graph } = createPkgGraph(pkgs);
   const chunks = sortPackages(graph as any);
 
