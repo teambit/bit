@@ -40,8 +40,8 @@
     "policy": {
       "dependencies": {
         "@teambit/mdx.ui.mdx-scope-context": "1.0.0",
-        "@teambit/react.react-env": "1.0.5",
-        "@teambit/typescript.typescript-compiler": "0.0.7"
+        "@teambit/react.react-env": "1.1.38",
+        "@teambit/typescript.typescript-compiler": "2.0.38"
       },
       "peerDependencies": {}
     },

@@ -1142,6 +1142,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/path/match-patterns"
     },
+    "path/path": {
+        "name": "path/path",
+        "scope": "teambit.toolbox",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/path/path"
+    },
     "path/to-windows-compatible-path": {
         "name": "path/to-windows-compatible-path",
         "scope": "teambit.toolbox",

@@ -21,7 +21,6 @@ import cleanObject from './object-clean';
 import objectToStringifiedTupleArray from './object-to-stringified-tuple-array';
 import resolveGroupId from './os-resolve-group-id';
 import resolveHomePath from './os-resolve-home-path';
-import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, pathResolveToLinux } from './path';
 import { pathIsInside } from './path-is-inside';
 import prependBang from './prepend-bang';
 import getLatestVersionNumber from './resolveLatestVersion';
@@ -63,10 +62,6 @@ export {
   getLatestVersionNumber,
   getWithoutExt,
   getExt,
-  pathNormalizeToLinux,
-  pathJoinLinux,
-  pathRelativeLinux,
-  pathResolveToLinux,
   retrieveIgnoreList,
   pathIsInside,
   isValidPath,
@@ -75,17 +70,6 @@ export {
   isRelativeImport,
 };
 
-export {
-  PathLinux,
-  PathLinuxRelative,
-  PathOsBased,
-  PathOsBasedRelative,
-  PathOsBasedAbsolute,
-  PathAbsolute,
-  PathLinuxAbsolute,
-  PathRelative,
-  removeFileExtension,
-} from './path';
 export { validateType, validateUserInputType } from './validate-type';
 export { pMapPool } from './promise-with-concurrent';
 export { concurrentComponentsLimit, concurrentFetchLimit, concurrentIOLimit } from './concurrency';
@@ -114,3 +98,18 @@ export { GitNotFound } from './git/exceptions/git-not-found';
 export { diffFiles } from './diff-files';
 export { BIT_IGNORE, getBitIgnoreFile, getGitIgnoreFile } from './ignore/ignore';
 export { pipeOutput } from './child_process';
+export {
+  PathLinux,
+  PathLinuxRelative,
+  PathOsBased,
+  PathOsBasedRelative,
+  PathOsBasedAbsolute,
+  PathAbsolute,
+  PathLinuxAbsolute,
+  PathRelative,
+  removeFileExtension,
+  pathJoinLinux,
+  pathNormalizeToLinux,
+  pathRelativeLinux,
+  pathResolveToLinux,
+} from '@teambit/toolbox.path.path';
