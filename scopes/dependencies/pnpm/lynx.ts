@@ -6,7 +6,7 @@ import { StoreController, WantedDependency } from '@pnpm/package-store';
 import { rebuild } from '@pnpm/plugin-commands-rebuild';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { sortPackages } from '@pnpm/sort-packages';
-import { type PeerDependencyRules } from '@pnpm/types';
+import { type PeerDependencyRules, type ProjectRootDir } from '@pnpm/types';
 import {
   ResolvedPackageVersion,
   Registries,
@@ -132,15 +132,12 @@ export async function getPeerDependencyIssues(
   } & Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir'>
 ): Promise<PeerDependencyIssuesByProjects> {
   const projects: ProjectOptions[] = [];
-  const workspacePackages = {};
   for (const [rootDir, manifest] of Object.entries(manifestsByPaths)) {
     projects.push({
       buildIndex: 0, // this is not used while searching for peer issues anyway
       manifest,
-      rootDir,
+      rootDir: rootDir as ProjectRootDir,
     });
-    workspacePackages[manifest.name] = workspacePackages[manifest.name] || {};
-    workspacePackages[manifest.name][manifest.version] = { dir: rootDir, manifest };
   }
   const registriesMap = getRegistriesMap(opts.registries);
   const storeController = await createStoreController({
@@ -153,7 +150,6 @@ export async function getPeerDependencyIssues(
     storeController: storeController.ctrl,
     storeDir: storeController.dir,
     overrides: opts.overrides,
-    workspacePackages,
     peersSuffixMaxLength: 1000,
     registries: registriesMap,
     virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
@@ -232,7 +228,7 @@ export async function install(
   if (options?.rootComponentsForCapsules) {
     readPackage.push(readPackageHookForCapsules as ReadPackageHook);
   }
-  const { allProjects, packagesToBuild, workspacePackages } = groupPkgs(manifestsByPaths, {
+  const { allProjects, packagesToBuild } = groupPkgs(manifestsByPaths, {
     update: options?.updateAll,
   });
   const registriesMap = getRegistriesMap(registries);
@@ -263,7 +259,6 @@ export async function install(
     dedupePeerDependents: true,
     dir: rootDir,
     storeController: storeController.ctrl,
-    workspacePackages,
     preferFrozenLockfile: true,
     pruneLockfileImporters: true,
     lockfileOnly: options.lockfileOnly ?? false,
@@ -480,7 +475,6 @@ function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>, opts: { up
   // This is the rational behind not deleting this completely, but need further check that it really works
   const packagesToBuild: MutatedProject[] = []; // @pnpm/core will use this to install the packages
   const allProjects: ProjectOptions[] = [];
-  const workspacePackages = {}; // @pnpm/core will use this to link packages to each other
 
   chunks.forEach((dirs, buildIndex) => {
     for (const rootDir of dirs) {
@@ -495,13 +489,9 @@ function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>, opts: { up
         mutation: 'install',
         update: opts.update,
       });
-      if (manifest.name) {
-        workspacePackages[manifest.name] = workspacePackages[manifest.name] || {};
-        workspacePackages[manifest.name][manifest.version] = { dir: rootDir, manifest };
-      }
     }
   });
-  return { packagesToBuild, allProjects, workspacePackages };
+  return { packagesToBuild, allProjects };
 }
 
 export async function resolveRemoteVersion(
