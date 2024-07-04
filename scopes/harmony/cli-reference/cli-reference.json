@@ -2563,7 +2563,7 @@
       [
         "",
         "update-main",
-        "EXPERIMENTAL. delete component/s on the main lane after merging this lane into main"
+        "delete component/s on the main lane after merging this lane into main"
       ],
       [
         "",
