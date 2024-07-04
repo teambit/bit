@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import { PathOsBased } from '../path';
+import { PathOsBased } from '@teambit/toolbox.path.path';
 
 /**
  * Recursively search for node package inside node_modules dir

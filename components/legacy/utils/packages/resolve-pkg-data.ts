@@ -4,7 +4,7 @@ import path from 'path';
 import readPkgUp from 'read-pkg-up';
 import { PACKAGE_JSON } from '@teambit/legacy/dist/constants';
 import PackageJson from '@teambit/legacy/dist/consumer/component/package-json';
-import { PathLinuxAbsolute, PathOsBased, PathOsBasedAbsolute } from '../path';
+import { PathLinuxAbsolute, PathOsBased, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import { resolvePackageNameByPath } from './resolve-pkg-name-by-path';
 
 export interface ResolvedPackageData {
