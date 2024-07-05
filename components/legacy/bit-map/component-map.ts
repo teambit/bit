@@ -6,7 +6,13 @@ import { ComponentID } from '@teambit/component-id';
 import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '@teambit/legacy/dist/constants';
 import ValidationError from '@teambit/legacy/dist/error/validation-error';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { isValidPath, retrieveIgnoreList, BIT_IGNORE, getBitIgnoreFile, getGitIgnoreFile } from '@teambit/legacy.utils';
+import { isValidPath } from '@teambit/legacy.utils';
+import {
+  retrieveIgnoreList,
+  BIT_IGNORE,
+  getBitIgnoreFile,
+  getGitIgnoreFile,
+} from '@teambit/git.modules.ignore-file-reader';
 import {
   PathLinux,
   PathLinuxRelative,

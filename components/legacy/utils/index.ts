@@ -3,7 +3,6 @@ import * as eol from './eol';
 import writeFile from './fs-write-file';
 import { checksum, checksumFile } from './checksum';
 import glob from './glob';
-import { retrieveIgnoreList } from './ignore/ignore';
 import immutableUnshift from './immutable-unshift';
 import isBitUrl from './is-bit-url';
 import isDir from './is-dir';
@@ -46,7 +45,6 @@ export {
   isDirEmptySync,
   immutableUnshift,
   getLatestVersionNumber,
-  retrieveIgnoreList,
   isValidPath,
   eol,
   isRelativeImport,
@@ -61,7 +59,6 @@ export { replacePlaceHolderForPackageValue } from './bit/component-placeholders'
 export { parseScope } from './bit/parse-scope';
 export { replacePackageName } from './string/replace-package-name';
 export { hasWildcard } from './string/has-wildcard';
-export { BIT_IGNORE, getBitIgnoreFile, getGitIgnoreFile } from './ignore/ignore';
 export { pipeOutput } from './child_process';
 export {
   PathLinux,
