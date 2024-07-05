@@ -2,8 +2,7 @@ import execa from 'execa';
 
 import logger from '@teambit/legacy/dist/logger/logger';
 import { PathOsBased } from '@teambit/toolbox.path.path';
-import { GitNotFound } from './git/exceptions/git-not-found';
-import { getGitExecutablePath } from './git/git-executable';
+import { GitNotFound, getGitExecutablePath } from '@teambit/legacy.utils';
 
 /**
  * get diff between files using git diff command
