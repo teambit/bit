@@ -57,7 +57,6 @@ export { ChownOptions } from './fs-write-file';
 export { isBitIdMatchByWildcards } from './bit/is-bit-id-match-by-wildcards';
 export { resolvePackageData, ResolvedPackageData, resolvePackagePath, resolvePackageNameByPath } from './packages';
 export { getLatestVersion, getValidVersionOrReleaseType, validateVersion } from './semver-helper';
-export { removeFilesAndEmptyDirsRecursively } from './fs/remove-files-and-empty-dirs-recursively';
 export { replacePlaceHolderForPackageValue } from './bit/component-placeholders';
 export { parseScope } from './bit/parse-scope';
 export { replacePackageName } from './string/replace-package-name';
