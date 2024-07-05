@@ -1,4 +1,5 @@
-import { concurrentComponentsLimit, pMapPool } from '@teambit/legacy.utils';
+import { pMapPool } from '@teambit/legacy.utils';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { ModelComponent } from '../models';
 import { SourceRepository } from '../repositories';
 import { ModelComponentMerger } from './model-components-merger';

@@ -16,7 +16,8 @@ import { PersistFailed } from '../exceptions/persist-failed';
 import { MergeResult } from '../repositories/sources';
 import { Ref } from '../objects';
 import { BitObjectList } from '../objects/bit-object-list';
-import { pMapPool, concurrentComponentsLimit } from '@teambit/legacy.utils';
+import { pMapPool } from '@teambit/legacy.utils';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 
 /**
  * ** Legacy and "bit sign" Only **

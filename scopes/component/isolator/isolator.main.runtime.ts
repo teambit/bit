@@ -42,7 +42,8 @@ import {
   getArtifactFilesExcludeExtension,
   importMultipleDistsArtifacts,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import { pathNormalizeToLinux, PathOsBasedAbsolute, concurrentComponentsLimit } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { Scope } from '@teambit/legacy/dist/scope';
 import fs, { copyFile } from 'fs-extra';

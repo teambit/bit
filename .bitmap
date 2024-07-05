@@ -934,6 +934,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-url"
     },
+    "modules/concurrency": {
+        "name": "modules/concurrency",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/modules/concurrency"
+    },
     "modules/config-mutator": {
         "name": "modules/config-mutator",
         "scope": "teambit.webpack",

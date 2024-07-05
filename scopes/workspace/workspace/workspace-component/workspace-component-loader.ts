@@ -1,5 +1,6 @@
 import pMap from 'p-map';
-import { concurrentComponentsLimit, getLatestVersionNumber, pMapPool } from '@teambit/legacy.utils';
+import { getLatestVersionNumber, pMapPool } from '@teambit/legacy.utils';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { Component, ComponentFS, Config, InvalidComponent, State, TagMap } from '@teambit/component';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import mapSeries from 'p-map-series';

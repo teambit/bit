@@ -23,7 +23,8 @@ import Repository from '../objects/repository';
 import Scope from '../scope';
 import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
-import { concurrentComponentsLimit, pathNormalizeToLinux, pMapPool } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux, pMapPool } from '@teambit/legacy.utils';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getDivergeData } from '../component-ops/get-diverge-data';
 
