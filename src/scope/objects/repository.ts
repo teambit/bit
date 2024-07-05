@@ -9,15 +9,8 @@ import * as path from 'path';
 import pMap from 'p-map';
 import { OBJECTS_DIR } from '../../constants';
 import logger from '../../logger/logger';
-import {
-  glob,
-  writeFile,
-  removeEmptyDir,
-  ChownOptions,
-  PathOsBasedAbsolute,
-  concurrentIOLimit,
-  pMapPool,
-} from '@teambit/legacy.utils';
+import { glob, writeFile, removeEmptyDir, ChownOptions, PathOsBasedAbsolute, pMapPool } from '@teambit/legacy.utils';
+import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import { HashNotFound, OutdatedIndexJson } from '../exceptions';
 import RemoteLanes from '../lanes/remote-lanes';
 import UnmergedComponents from '../lanes/unmerged-components';

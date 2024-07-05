@@ -1,5 +1,5 @@
 import PQueue from 'p-queue';
-import { concurrentIOLimit } from '@teambit/legacy.utils';
+import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 
 export class WriteObjectsQueue {
   private queue: PQueue;

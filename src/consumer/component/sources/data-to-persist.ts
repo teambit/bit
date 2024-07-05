@@ -3,7 +3,8 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
-import { concurrentIOLimit, removeFilesAndEmptyDirsRecursively } from '@teambit/legacy.utils';
+import { removeFilesAndEmptyDirsRecursively } from '@teambit/legacy.utils';
+import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import AbstractVinyl from './abstract-vinyl';
 import RemovePath from './remove-path';
 

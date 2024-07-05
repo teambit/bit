@@ -3,7 +3,7 @@ import pMap from 'p-map';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { concurrentIOLimit } from '../concurrency';
+import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import { removeEmptyDir } from './remove-empty-dir';
 
 /**
