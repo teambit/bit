@@ -642,6 +642,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/fs/linked-dependencies"
     },
+    "fs/remove-empty-dir": {
+        "name": "fs/remove-empty-dir",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/fs/remove-empty-dir"
+    },
     "generator": {
         "name": "generator",
         "scope": "teambit.generator",

@@ -54,7 +54,6 @@ export {
 
 export { pMapPool } from './promise-with-concurrent';
 export { ChownOptions } from './fs-write-file';
-export { removeEmptyDir } from './fs/remove-empty-dir';
 export { isBitIdMatchByWildcards } from './bit/is-bit-id-match-by-wildcards';
 export { resolvePackageData, ResolvedPackageData, resolvePackagePath, resolvePackageNameByPath } from './packages';
 export { getLatestVersion, getValidVersionOrReleaseType, validateVersion } from './semver-helper';

@@ -4,7 +4,7 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
-import { removeEmptyDir } from './remove-empty-dir';
+import { removeEmptyDir } from '@teambit/toolbox.fs.remove-empty-dir';
 
 /**
  * This function will remove the list of files from fs
