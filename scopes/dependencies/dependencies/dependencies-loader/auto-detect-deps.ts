@@ -17,8 +17,8 @@ import {
   PathLinuxRelative,
   PathOsBased,
   removeFileExtension,
-  ResolvedPackageData,
 } from '@teambit/legacy.utils';
+import { ResolvedPackageData } from '../resolve-pkg-data';
 import { ComponentMap } from '@teambit/legacy.bit-map';
 import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';

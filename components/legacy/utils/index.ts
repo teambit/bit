@@ -53,7 +53,7 @@ export {
 export { pMapPool } from './promise-with-concurrent';
 export { ChownOptions } from './fs-write-file';
 export { isBitIdMatchByWildcards } from './bit/is-bit-id-match-by-wildcards';
-export { resolvePackageData, ResolvedPackageData, resolvePackagePath, resolvePackageNameByPath } from './packages';
+export { resolvePackagePath, resolvePackageNameByPath } from './packages';
 export { getLatestVersion, getValidVersionOrReleaseType, validateVersion } from './semver-helper';
 export { replacePlaceHolderForPackageValue } from './bit/component-placeholders';
 export { parseScope } from './bit/parse-scope';

@@ -1,7 +1,7 @@
 import R from 'ramda';
-import { ResolvedPackageData } from '@teambit/legacy.utils';
-import { DependencyDetector } from '../detector-hook';
 import { ImportSpecifier } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
+import { ResolvedPackageData } from '../../resolve-pkg-data';
+import { DependencyDetector } from '../detector-hook';
 
 export type FileObject = {
   file: string;

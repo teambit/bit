@@ -1,10 +1,6 @@
 import R from 'ramda';
-import {
-  ResolvedPackageData,
-  resolvePackageData,
-  resolvePackageNameByPath,
-  resolvePackagePath,
-} from '@teambit/legacy.utils';
+import { resolvePackageNameByPath, resolvePackagePath } from '@teambit/legacy.utils';
+import { ResolvedPackageData, resolvePackageData } from '../resolve-pkg-data';
 import { processPath, Missing } from './generate-tree-madge';
 
 export type MissingGroupItem = { originFile: string; packages?: string[]; files?: string[] };
