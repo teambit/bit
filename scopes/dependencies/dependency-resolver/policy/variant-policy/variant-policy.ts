@@ -1,4 +1,4 @@
-import { sha1 } from '@teambit/toolbox.encryption.sha1';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { compact, sortBy, uniqWith } from 'lodash';
 import { snapToSemver } from '@teambit/component-package-version';
 import { DependenciesOverridesData } from '@teambit/legacy/dist/consumer/config/component-overrides';

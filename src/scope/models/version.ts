@@ -15,7 +15,7 @@ import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/ext
 import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
 import { getStringifyArgs, PathLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
-import { sha1 } from '@teambit/toolbox.encryption.sha1';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import VersionInvalid from '../exceptions/version-invalid';
 import { BitObject, Ref } from '../objects';
 import { ObjectItem } from '../objects/object-list';

@@ -2,7 +2,7 @@ import { inflateSync } from 'zlib';
 
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
 import { deflate, inflate } from '@teambit/legacy.utils';
-import { sha1 } from '@teambit/toolbox.encryption.sha1';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { typesObj as types } from '../object-registrar';
 import { ObjectItem } from './object-list';
 import Ref from './ref';

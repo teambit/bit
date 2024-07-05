@@ -10,7 +10,7 @@ import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, PREVIOUS_DEFAULT_LANE } from '..
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
 import { getStringifyArgs } from '@teambit/legacy.utils';
-import { sha1 } from '@teambit/toolbox.encryption.sha1';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { hasVersionByRef } from '../component-ops/traverse-versions';
 import { BitObject, Ref, Repository } from '../objects';
 import { Version } from '.';

@@ -16,7 +16,7 @@ import { deleteComponentsFiles } from '@teambit/remove';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { getValidVersionOrReleaseType } from '@teambit/legacy.utils';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
-import { sha1 } from '@teambit/toolbox.encryption.sha1';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { BuilderMain, OnTagOpts } from '@teambit/builder';
 import { Log } from '@teambit/legacy/dist/scope/models/version';

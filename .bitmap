@@ -449,6 +449,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
+    "crypto/sha1": {
+        "name": "crypto/sha1",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "components/crypto/sha1"
+    },
     "dependencies": {
         "name": "dependencies",
         "scope": "teambit.dependencies",
@@ -504,14 +512,6 @@
         "version": "1.0.325",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/eject"
-    },
-    "encryption/sha1": {
-        "name": "encryption/sha1",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.toolbox",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/encryption/sha1"
     },
     "entities/lane-diff": {
         "name": "entities/lane-diff",

@@ -2,7 +2,7 @@ import { BitError } from '@teambit/bit-error';
 import { Source, Version } from '@teambit/legacy/dist/scope/models';
 import { SourceFileModel } from '@teambit/legacy/dist/scope/models/version';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
-import { sha1 } from '@teambit/toolbox.encryption.sha1';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { eol, PathLinux, pathNormalizeToLinux, PathOsBased } from '@teambit/legacy.utils';
 import { mergeFiles, MergeFileParams, MergeFileResult } from '../merge-files';
 import Component from '@teambit/legacy/dist/consumer/component';
