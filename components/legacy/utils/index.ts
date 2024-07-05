@@ -65,7 +65,6 @@ export { concurrentComponentsLimit, concurrentFetchLimit, concurrentIOLimit } fr
 export { ChownOptions } from './fs-write-file';
 export { removeEmptyDir } from './fs/remove-empty-dir';
 export { componentIdToPackageName } from './bit/component-id-to-package-name';
-export { getBasicLog } from './bit/basic-log';
 export { isBitIdMatchByWildcards } from './bit/is-bit-id-match-by-wildcards';
 export {
   getLastModifiedPathsTimestampMs,

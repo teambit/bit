@@ -1,5 +1,6 @@
 import { v4 } from 'uuid';
-import { getStringifyArgs, getBasicLog } from '@teambit/legacy.utils';
+import { getStringifyArgs } from '@teambit/legacy.utils';
+import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import BitObject from '../objects/object';
 import { Lane } from '.';
 

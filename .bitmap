@@ -982,6 +982,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/modules/generate-style-loaders"
     },
+    "modules/get-basic-log": {
+        "name": "modules/get-basic-log",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/modules/get-basic-log"
+    },
     "modules/get-cloud-user": {
         "name": "modules/get-cloud-user",
         "scope": "",
