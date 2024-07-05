@@ -6,7 +6,8 @@ import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/con
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import { EnvsAspect } from '@teambit/envs';
-import { getPathStatIfExist, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
+import { getPathStatIfExist } from '@teambit/toolbox.fs.last-modified';
 
 export type MergeOptions = {
   mergeStrategy?: 'theirs' | 'ours' | 'manual';

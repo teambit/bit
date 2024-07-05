@@ -2,7 +2,7 @@ import path from 'path';
 import { uniq } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { getLastModifiedComponentTimestampMs } from '@teambit/legacy.utils';
+import { getLastModifiedComponentTimestampMs } from '@teambit/toolbox.fs.last-modified';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { DependencyLoaderOpts } from '@teambit/legacy/dist/consumer/component/component-loader';

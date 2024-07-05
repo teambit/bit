@@ -620,6 +620,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/fs/is-dir-empty"
     },
+    "fs/last-modified": {
+        "name": "fs/last-modified",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/fs/last-modified"
+    },
     "fs/link-or-symlink": {
         "name": "fs/link-or-symlink",
         "scope": "teambit.toolbox",

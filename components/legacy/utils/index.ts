@@ -56,11 +56,6 @@ export { pMapPool } from './promise-with-concurrent';
 export { ChownOptions } from './fs-write-file';
 export { removeEmptyDir } from './fs/remove-empty-dir';
 export { isBitIdMatchByWildcards } from './bit/is-bit-id-match-by-wildcards';
-export {
-  getLastModifiedPathsTimestampMs,
-  getPathStatIfExist,
-  getLastModifiedComponentTimestampMs,
-} from './fs/last-modified';
 export { resolvePackageData, ResolvedPackageData, resolvePackagePath, resolvePackageNameByPath } from './packages';
 export { getLatestVersion, getValidVersionOrReleaseType, validateVersion } from './semver-helper';
 export { removeFilesAndEmptyDirsRecursively } from './fs/remove-files-and-empty-dirs-recursively';
