@@ -919,13 +919,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/modules/babel-compiler"
     },
-    "modules/component-id-to-package-name": {
-        "name": "modules/component-id-to-package-name",
+    "modules/component-package-name": {
+        "name": "modules/component-package-name",
         "scope": "",
         "version": "",
         "defaultScope": "teambit.pkg",
         "mainFile": "index.ts",
-        "rootDir": "scopes/pkg/modules/component-id-to-package-name"
+        "rootDir": "components/modules/component-package-name"
     },
     "modules/component-url": {
         "name": "modules/component-url",

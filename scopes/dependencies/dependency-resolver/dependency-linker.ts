@@ -8,7 +8,7 @@ import { findCurrentBvmDir } from '@teambit/bvm.path';
 import { ComponentMap, Component, ComponentID, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/toolbox.path.path';
-import { componentIdToPackageName } from '@teambit/pkg.modules.component-id-to-package-name';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { BitError } from '@teambit/bit-error';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';

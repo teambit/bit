@@ -3,13 +3,8 @@ import { Workspace } from '@teambit/workspace';
 import { IssuesClasses, RelativeComponentsAuthoredEntry } from '@teambit/component-issues';
 import { Component } from '@teambit/component';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import {
-  pathJoinLinux,
-  pathNormalizeToLinux,
-  pathRelativeLinux,
-  componentIdToPackageName,
-  replacePackageName,
-} from '@teambit/legacy.utils';
+import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, replacePackageName } from '@teambit/legacy.utils';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';

@@ -11,12 +11,8 @@ import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
-import {
-  PathOsBasedAbsolute,
-  PathOsBasedRelative,
-  getNodeModulesPathOfComponent,
-  componentIdToPackageName,
-} from '@teambit/legacy.utils';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import { componentIdToPackageName, getNodeModulesPathOfComponent } from '@teambit/pkg.modules.component-package-name';
 import Symlink from '@teambit/legacy/dist/links/symlink';
 import { Workspace } from '@teambit/workspace';
 import { snapToSemver } from '@teambit/component-package-version';

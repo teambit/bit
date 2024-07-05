@@ -10,7 +10,7 @@ import { Logger } from '@teambit/logger';
 import { TrackerMain } from '@teambit/tracker';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { PathOsBasedRelative } from '@teambit/toolbox.path.path';
-import { componentIdToPackageName } from '@teambit/pkg.modules.component-id-to-package-name';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { NewComponentHelperMain } from '@teambit/new-component-helper';

@@ -71,7 +71,6 @@ export {
   getLastModifiedComponentTimestampMs,
 } from './fs/last-modified';
 export { composeComponentPath } from './bit/compose-component-path';
-export { getNodeModulesPathOfComponent } from './bit/component-node-modules-path';
 export { resolvePackageData, ResolvedPackageData, resolvePackagePath, resolvePackageNameByPath } from './packages';
 export { getLatestVersion, getValidVersionOrReleaseType, validateVersion } from './semver-helper';
 export { removeFilesAndEmptyDirsRecursively } from './fs/remove-files-and-empty-dirs-recursively';

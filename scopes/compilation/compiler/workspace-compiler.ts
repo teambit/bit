@@ -19,7 +19,8 @@ import {
 } from '@teambit/workspace.modules.node-modules-linker';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { componentIdToPackageName, PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy.utils';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { UiMain } from '@teambit/ui';
 import { readBitRootsDir } from '@teambit/bit-roots';

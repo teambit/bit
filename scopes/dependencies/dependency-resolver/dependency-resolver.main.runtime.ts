@@ -23,7 +23,7 @@ import {
   getCloudDomain,
 } from '@teambit/legacy/dist/constants';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { componentIdToPackageName } from '@teambit/pkg.modules.component-id-to-package-name';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 import { onTagIdTransformer } from '@teambit/snapping';
