@@ -2,7 +2,6 @@
 import * as eol from './eol';
 import writeFile from './fs-write-file';
 import { checksum, checksumFile } from './checksum';
-import isDirEmpty from './fs/is-dir-empty';
 import glob from './glob';
 import { retrieveIgnoreList } from './ignore/ignore';
 import immutableUnshift from './immutable-unshift';
@@ -44,7 +43,6 @@ export {
   isBitUrl,
   isDir,
   resolveHomePath,
-  isDirEmpty,
   isDirEmptySync,
   immutableUnshift,
   getLatestVersionNumber,

@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import isDirEmpty from './is-dir-empty';
+import { isDirEmpty } from '@teambit/toolbox.fs.is-dir-empty';
 
 export async function removeEmptyDir(dirPath: string): Promise<boolean> {
   let isEmpty: boolean;

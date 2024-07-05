@@ -612,6 +612,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/fs/hard-link-directory"
     },
+    "fs/is-dir-empty": {
+        "name": "fs/is-dir-empty",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/fs/is-dir-empty"
+    },
     "fs/link-or-symlink": {
         "name": "fs/link-or-symlink",
         "scope": "teambit.toolbox",
