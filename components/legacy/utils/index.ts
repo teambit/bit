@@ -17,7 +17,6 @@ import isValidPath from './is-valid-path';
 import isNumeric from './number/is-numeric';
 import cleanObject from './object-clean';
 import objectToStringifiedTupleArray from './object-to-stringified-tuple-array';
-import resolveGroupId from './os-resolve-group-id';
 import resolveHomePath from './os-resolve-home-path';
 import prependBang from './prepend-bang';
 import getLatestVersionNumber from './resolveLatestVersion';
@@ -31,7 +30,6 @@ import inflate from './zlib-inflate';
 
 export {
   objectToStringifiedTupleArray,
-  resolveGroupId,
   removeChalkCharacters,
   getStringifyArgs,
   isNumeric,
@@ -62,7 +60,6 @@ export {
   isRelativeImport,
 };
 
-export { validateType, validateUserInputType } from './validate-type';
 export { pMapPool } from './promise-with-concurrent';
 export { concurrentComponentsLimit, concurrentFetchLimit, concurrentIOLimit } from './concurrency';
 export { ChownOptions } from './fs-write-file';
