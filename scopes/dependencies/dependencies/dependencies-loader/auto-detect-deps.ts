@@ -23,17 +23,13 @@ import { ComponentMap } from '@teambit/legacy.bit-map';
 import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { RelativePath } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
-import { getDependencyTree } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder';
-import {
-  FileObject,
-  ImportSpecifier,
-  DependenciesTree,
-} from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
+import { RelativePath, ImportSpecifier } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
+import { getDependencyTree } from '../files-dependency-builder';
+import { FileObject, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
 import { DevFilesMain } from '@teambit/dev-files';
 import { Workspace } from '@teambit/workspace';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
-import { DependencyDetector } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
+import { DependencyDetector } from '../files-dependency-builder/detector-hook';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 import { DependenciesData } from './dependencies-data';
 import { AllDependencies, AllPackagesDependencies } from './apply-overrides';

@@ -1,26 +1,7 @@
 import R from 'ramda';
 import { ResolvedPackageData } from '@teambit/legacy.utils';
 import { DependencyDetector } from '../detector-hook';
-
-/**
- * Import Specifier data.
- * For example, `import foo from './bar' `, "foo" is the import-specifier and is default.
- * Conversely, `import { foo } from './bar' `, here, "foo" is non-default.
- */
-export type Specifier = {
-  isDefault: boolean;
-  name: string;
-  exported?: boolean;
-};
-
-/**
- * ImportSpecifier are used to generate links from component to its dependencies.
- * For example, a component might have a dependency: "import { foo } from './bar' ", when a link is generated, we use
- * the import-specifier name, which is "foo" to generate the link correctly.
- */
-export type ImportSpecifier = {
-  mainFile: Specifier;
-};
+import { ImportSpecifier } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
 
 export type FileObject = {
   file: string;
