@@ -16,7 +16,7 @@ describe('Mocha Tester', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
-      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env@0.0.8');
+      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env@0.0.41');
       helper.command.install();
     });
     describe('component without any test file', () => {
@@ -97,7 +97,7 @@ describe('Mocha Tester', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponentsTS(1);
-      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env@0.0.8');
+      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env@0.0.41');
       helper.command.install();
       helper.fs.outputFile(
         'comp1/foo.ts',
