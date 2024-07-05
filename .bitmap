@@ -1046,6 +1046,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/modules/get-cloud-user"
     },
+    "modules/git-executable": {
+        "name": "modules/git-executable",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.git",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/git/modules/git-executable"
+    },
     "modules/harmony-root-generator": {
         "name": "modules/harmony-root-generator",
         "scope": "teambit.harmony",

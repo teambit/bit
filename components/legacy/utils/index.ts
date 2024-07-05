@@ -61,8 +61,6 @@ export { replacePlaceHolderForPackageValue } from './bit/component-placeholders'
 export { parseScope } from './bit/parse-scope';
 export { replacePackageName } from './string/replace-package-name';
 export { hasWildcard } from './string/has-wildcard';
-export { getGitExecutablePath } from './git/git-executable';
-export { GitNotFound } from './git/exceptions/git-not-found';
 export { BIT_IGNORE, getBitIgnoreFile, getGitIgnoreFile } from './ignore/ignore';
 export { pipeOutput } from './child_process';
 export {

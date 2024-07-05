@@ -10,7 +10,7 @@ import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { ForkingAspect, ForkingMain } from '@teambit/forking';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
-import { getGitExecutablePath, GitNotFound } from '@teambit/legacy.utils';
+import { getGitExecutablePath, GitNotFound } from '@teambit/git.modules.git-executable';
 import { join } from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { GitAspect, GitMain } from '@teambit/git';
