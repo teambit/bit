@@ -7,7 +7,7 @@ import {
   getIdSetters,
   getIdentifiers,
 } from '@teambit/harmony.modules.harmony-root-generator';
-import { sha1 } from '@teambit/legacy.utils';
+import { sha1 } from '@teambit/toolbox.encryption.sha1';
 import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compatible-path';
 import webpack from 'webpack';
 import { promisify } from 'util';

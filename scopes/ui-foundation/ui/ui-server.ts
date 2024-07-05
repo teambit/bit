@@ -5,7 +5,7 @@ import { Logger } from '@teambit/logger';
 import express, { Express } from 'express';
 import fallback from 'express-history-api-fallback';
 import { Port } from '@teambit/toolbox.network.get-port';
-import { stripTrailingChar } from '@teambit/legacy.utils';
+import { stripTrailingChar } from '@teambit/toolbox.string.strip-trailing-char';
 import { Server } from 'http';
 import httpProxy from 'http-proxy';
 import { join } from 'path';

@@ -2,7 +2,7 @@ import { MainRuntime } from '@teambit/cli';
 import { ConfigAspect } from '@teambit/config';
 import type { ConfigMain } from '@teambit/config';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { PathLinuxRelative } from '@teambit/legacy.utils';
+import { PathLinuxRelative } from '@teambit/toolbox.path.path';
 import { assign } from 'comment-json';
 import { omit, forEach } from 'lodash';
 import {

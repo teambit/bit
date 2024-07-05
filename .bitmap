@@ -505,6 +505,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/eject"
     },
+    "encryption/sha1": {
+        "name": "encryption/sha1",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/encryption/sha1"
+    },
     "entities/lane-diff": {
         "name": "entities/lane-diff",
         "scope": "teambit.lanes",
@@ -973,6 +981,14 @@
         "version": "1.0.11",
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/modules/generate-style-loaders"
+    },
+    "modules/get-cloud-user": {
+        "name": "modules/get-cloud-user",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.cloud",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/cloud/modules/get-cloud-user"
     },
     "modules/harmony-root-generator": {
         "name": "modules/harmony-root-generator",

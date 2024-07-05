@@ -7,7 +7,7 @@ import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddle
 import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
 import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
 import { PubsubMain } from '@teambit/pubsub';
-import { pathNormalizeToLinux } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { WebpackConfigWithDevServer } from '../webpack.dev-server';
 import { fallbacks } from './webpack-fallbacks';
 

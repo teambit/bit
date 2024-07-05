@@ -6,20 +6,16 @@ import { ComponentID } from '@teambit/component-id';
 import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '@teambit/legacy/dist/constants';
 import ValidationError from '@teambit/legacy/dist/error/validation-error';
 import logger from '@teambit/legacy/dist/logger/logger';
+import { isValidPath, retrieveIgnoreList, BIT_IGNORE, getBitIgnoreFile, getGitIgnoreFile } from '@teambit/legacy.utils';
 import {
-  isValidPath,
-  pathJoinLinux,
-  pathNormalizeToLinux,
-  pathRelativeLinux,
-  retrieveIgnoreList,
-  BIT_IGNORE,
-  getBitIgnoreFile,
-  getGitIgnoreFile,
   PathLinux,
   PathLinuxRelative,
   PathOsBased,
   PathOsBasedRelative,
-} from '@teambit/legacy.utils';
+  pathJoinLinux,
+  pathNormalizeToLinux,
+  pathRelativeLinux,
+} from '@teambit/toolbox.path.path';
 import { removeInternalConfigFields } from '@teambit/legacy/dist/consumer/config/extension-data';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';

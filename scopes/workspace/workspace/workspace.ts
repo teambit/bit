@@ -40,12 +40,12 @@ import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@te
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import {
-  pathIsInside,
   PathOsBased,
   PathOsBasedRelative,
   PathOsBasedAbsolute,
   pathNormalizeToLinux,
-} from '@teambit/legacy.utils';
+} from '@teambit/toolbox.path.path';
+import { isPathInside } from '@teambit/toolbox.path.is-path-inside';
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact, uniqBy } from 'lodash';
@@ -1534,7 +1534,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   private isVendorComponentByComponentDir(relativeComponentDir: PathOsBasedRelative): boolean {
     const vendorDir = this.config.vendor?.directory || DEFAULT_VENDOR_DIR;
-    if (pathIsInside(relativeComponentDir, vendorDir)) {
+    if (isPathInside(relativeComponentDir, vendorDir)) {
       return true;
     }
     // TODO: implement

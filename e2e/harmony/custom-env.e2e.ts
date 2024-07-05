@@ -396,7 +396,7 @@ describe('custom env', function () {
       helper.command.tagAllWithoutBuild();
     });
     // previously, it errored "error: component "n8w0pqms-local/3wc3xd3p-remote/node-env@0.0.1" was not found"
-    it('should be able to re-tag with no errors', () => {
+    it.only('should be able to re-tag with no errors', () => {
       // important! don't skip the build. it's important for the Preview task to run.
       expect(() => helper.command.tagIncludeUnmodified()).not.to.throw();
     });

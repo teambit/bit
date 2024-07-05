@@ -27,7 +27,7 @@ import {
   PathOsBased,
   PathOsBasedAbsolute,
   PathOsBasedRelative,
-} from '@teambit/legacy.utils';
+} from '@teambit/toolbox.path.path';
 import {
   ComponentMap,
   ComponentMapFile,

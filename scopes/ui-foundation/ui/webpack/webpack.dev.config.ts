@@ -1,6 +1,6 @@
 import { ProvidePlugin } from 'webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
-import { pathNormalizeToLinux } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { fallbacksProvidePluginConfig, WebpackConfigWithDevServer, fallbacks } from '@teambit/webpack';
 
 import HtmlWebpackPlugin from 'html-webpack-plugin';

@@ -8,6 +8,6 @@ import * as crypto from 'crypto';
  * ```
  */
 // @ts-ignore todo: fix after deleting teambit.legacy
-export default function sha1(data: string | Buffer, encoding: crypto.BinaryToTextEncoding = 'hex'): string {
+export function sha1(data: string | Buffer, encoding: crypto.BinaryToTextEncoding = 'hex'): string {
   return crypto.createHash('sha1').update(data).digest(encoding);
 }

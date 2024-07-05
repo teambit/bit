@@ -1,5 +1,5 @@
 import logger from '../../logger/logger';
-import { PathOsBased } from '@teambit/legacy.utils';
+import { PathOsBased } from '@teambit/toolbox.path.path';
 import extractDataRegex from '../extract-data-regex';
 import { Doclet } from '../types';
 
