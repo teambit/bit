@@ -64,7 +64,6 @@ export { pMapPool } from './promise-with-concurrent';
 export { concurrentComponentsLimit, concurrentFetchLimit, concurrentIOLimit } from './concurrency';
 export { ChownOptions } from './fs-write-file';
 export { removeEmptyDir } from './fs/remove-empty-dir';
-export { componentIdToPackageName } from './bit/component-id-to-package-name';
 export { isBitIdMatchByWildcards } from './bit/is-bit-id-match-by-wildcards';
 export {
   getLastModifiedPathsTimestampMs,
