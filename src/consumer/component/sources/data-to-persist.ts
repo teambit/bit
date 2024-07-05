@@ -1,10 +1,10 @@
 import Bluebird from 'bluebird';
 import fs from 'fs-extra';
 import * as path from 'path';
+import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
-import { removeFilesAndEmptyDirsRecursively } from '@teambit/legacy.utils';
-import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
+import { removeFilesAndEmptyDirsRecursively } from './remove-files-and-empty-dirs-recursively';
 import AbstractVinyl from './abstract-vinyl';
 import RemovePath from './remove-path';
 
