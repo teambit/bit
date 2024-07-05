@@ -9,8 +9,8 @@ import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
+import { getExt } from '@teambit/toolbox.fs.extension-getter';
 import {
-  getExt,
   pathNormalizeToLinux,
   pathRelativeLinux,
   PathLinux,

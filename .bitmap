@@ -597,6 +597,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/formatter"
     },
+    "fs/extension-getter": {
+        "name": "fs/extension-getter",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/fs/extension-getter"
+    },
     "fs/hard-link-directory": {
         "name": "fs/hard-link-directory",
         "scope": "teambit.toolbox",

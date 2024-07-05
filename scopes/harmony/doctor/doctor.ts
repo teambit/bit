@@ -14,7 +14,8 @@ import Diagnosis, { ExamineResult } from './diagnosis';
 import DoctorRegistrar from './doctor-registrar';
 import registerCoreAndExtensionsDiagnoses from './doctor-registrar-builder';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { getExt, getWithoutExt, removeChalkCharacters } from '@teambit/legacy.utils';
+import { removeChalkCharacters } from '@teambit/legacy.utils';
+import { getExt } from '@teambit/toolbox.fs.extension-getter';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import { getNpmVersion } from './core-diagnoses/validate-npm-exec';
@@ -114,6 +115,15 @@ async function _saveExamineResultsToFile(
       // })
     });
   });
+}
+
+function getWithoutExt(filename: string): string {
+  const ext = getExt(filename);
+  // There is no extension just return the file name
+  if (ext === filename) {
+    return filename;
+  }
+  return filename.substring(0, filename.length - ext.length - 1); // -1 to remove the '.'
 }
 
 function _calculateFinalFileName(fileName: string): string {
