@@ -42,12 +42,14 @@ export interface InstallResult {
   storeDir: string;
 }
 
+type ReadConfigResult = Promise<{ config: Config; warnings: string[] }>;
+
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
   readonly modulesManifestCache: Map<string, Modules> = new Map();
   private username: string;
 
-  private _readConfig = async (dir?: string): Promise<{ config: Config; warnings: string[] }> => {
+  private _readConfig = async (dir?: string): ReadConfigResult => {
     const { config, warnings } = await readConfig(dir);
     if (config?.fetchRetries && config?.fetchRetries < 5) {
       config.fetchRetries = 5;
@@ -57,7 +59,7 @@ export class PnpmPackageManager implements PackageManager {
     return { config, warnings };
   };
 
-  public readConfig = memoize(this._readConfig);
+  public readConfig: (dir?: string) => ReadConfigResult = memoize(this._readConfig);
 
   constructor(private depResolver: DependencyResolverMain, private logger: Logger, private cloud: CloudMain) {}
 
