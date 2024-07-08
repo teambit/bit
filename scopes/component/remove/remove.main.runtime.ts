@@ -24,6 +24,7 @@ import { RecoverCmd, RecoverOptions } from './recover-cmd';
 import { DeleteCmd } from './delete-cmd';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { ListerAspect, ListerMain } from '@teambit/lister';
+import chalk from 'chalk';
 
 const BEFORE_REMOVE = 'removing components';
 
@@ -149,7 +150,18 @@ export class RemoveMain {
     if (currentLane && !updateMain && opts.range) {
       throw new BitError(`--range is not needed when deleting components from a lane, unless --update-main is used`);
     }
-
+    if (currentLane && !updateMain) {
+      const laneComp = currentLane.toComponentIds();
+      const compIdsNotOnLane = componentIds.filter((id) => !laneComp.hasWithoutVersion(id));
+      if (compIdsNotOnLane.length) {
+        throw new BitError(
+          `unable to delete the following component(s) because they are not part of the current lane.
+${chalk.bold(compIdsNotOnLane.map((id) => id.toString()).join('\n'))}
+to simply remove them from the workspace, use "bit remove".
+to delete them eventually from main, use "--update-main" flag and make sure to remove all occurrences from the code.`
+        );
+      }
+    }
     return this.markRemoveComps(componentIds, opts);
   }
 

@@ -15,7 +15,7 @@ import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { UIAspect, UiMain } from '@teambit/ui';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { Workspace, WorkspaceAspect, WorkspaceComponentLoadOptions } from '@teambit/workspace';
 import { CompilerAspect } from './compiler.aspect';
 import { CompileCmd } from './compiler.cmd';
 import { CompilerService } from './compiler.service';
@@ -46,9 +46,11 @@ export class CompilerMain {
    */
   compileOnWorkspace(
     componentsIds: string[] | ComponentID[] | ComponentID[] = [], // when empty, it compiles all
-    options: CompileOptions = { initiator: CompilationInitiator.ComponentAdded }
+    options: CompileOptions = { initiator: CompilationInitiator.ComponentAdded },
+    noThrow?: boolean,
+    componentLoadOptions: WorkspaceComponentLoadOptions = {}
   ) {
-    return this.workspaceCompiler.compileComponents(componentsIds, options);
+    return this.workspaceCompiler.compileComponents(componentsIds, options, noThrow, componentLoadOptions);
   }
   /**
    * API to create a new compiler task, it facilitates the usage of multiple compilers.
