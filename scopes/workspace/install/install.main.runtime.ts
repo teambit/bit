@@ -371,6 +371,11 @@ export class InstallMain {
           cacheCleared = true;
         }
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
+        // Right now we don't need to load extensions/execute load slot at this point
+        // await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install }, undefined, {
+        //   executeLoadSlot: true,
+        //   loadExtensions: true,
+        // });
         this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
       if (options?.writeConfigFiles ?? true) {
