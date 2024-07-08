@@ -1,7 +1,7 @@
-import R from 'ramda';
 import { ImportSpecifier } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
 import { ResolvedPackageData } from '../../resolve-pkg-data';
 import { DependencyDetector } from '../detector-hook';
+import { isEmpty } from 'lodash';
 
 export type FileObject = {
   file: string;
@@ -22,7 +22,7 @@ export class DependenciesTreeItem {
   isEmpty() {
     return (
       !this.files.length &&
-      R.isEmpty(this.packages) &&
+      isEmpty(this.packages) &&
       !this.unidentifiedPackages.length &&
       !this.components.length &&
       !this.error &&

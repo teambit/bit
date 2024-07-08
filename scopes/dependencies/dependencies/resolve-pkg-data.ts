@@ -1,4 +1,3 @@
-import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
 import path from 'path';
 import readPkgUp from 'read-pkg-up';
@@ -65,9 +64,9 @@ function enrichDataFromDependent(packageData: ResolvedPackageData, dependentDir:
 
   const packageName = resolvePackageNameByPath(packageRelativePath);
   const packageVersion =
-    R.path(['dependencies', packageName], dependentPackageJson) ||
-    R.path(['devDependencies', packageName], dependentPackageJson) ||
-    R.path(['peerDependencies', packageName], dependentPackageJson);
+    dependentPackageJson.dependencies?.packageName ||
+    dependentPackageJson.devDependencies?.packageName ||
+    dependentPackageJson.peerDependencies?.packageName;
   if (packageVersion) {
     packageData.dependentPackageJsonPath = packageJsonInfo.path;
     packageData.name = packageName;

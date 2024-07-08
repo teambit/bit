@@ -1,7 +1,7 @@
-import R from 'ramda';
 import { resolvePackageNameByPath, resolvePackagePath } from '@teambit/legacy.utils';
 import { ResolvedPackageData, resolvePackageData } from '../resolve-pkg-data';
 import { processPath, Missing } from './generate-tree-madge';
+import { groupBy } from 'lodash';
 
 export type MissingGroupItem = { originFile: string; packages?: string[]; files?: string[] };
 export type FoundPackages = {
@@ -68,11 +68,9 @@ export class MissingHandler {
    * @returns {Function} function which group the dependencies
    */
   private groupMissingByType(): MissingGroupItem[] {
-    const byPathType = R.groupBy((item) => {
-      return item.startsWith('.') ? 'files' : 'packages';
-    });
+    const byPathType = (item) => (item.startsWith('.') ? 'files' : 'packages');
     return Object.keys(this.missing).map((key) =>
-      Object.assign({ originFile: processPath(key, {}, this.componentDir) }, byPathType(this.missing[key]))
+      Object.assign({ originFile: processPath(key, {}, this.componentDir) }, groupBy(this.missing[key], byPathType))
     );
   }
 }

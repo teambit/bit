@@ -1,6 +1,5 @@
-import { set } from 'lodash';
+import { clone, isEmpty, set } from 'lodash';
 import path from 'path';
-import R from 'ramda';
 import { resolvePackageData } from '../resolve-pkg-data';
 import generateTree, { MadgeTree } from './generate-tree-madge';
 import { FoundPackages, MissingGroupItem, MissingHandler } from './missing-handler';
@@ -53,7 +52,7 @@ function groupDependencyList(dependenciesPaths: string[], componentDir: string):
 function MadgeTreeToDependenciesTree(tree: MadgeTree, componentDir: string): DependenciesTree {
   const result: DependenciesTree = {};
   Object.keys(tree).forEach((filePath) => {
-    if (tree[filePath] && !R.isEmpty(tree[filePath])) {
+    if (tree[filePath] && !isEmpty(tree[filePath])) {
       result[filePath] = groupDependencyList(tree[filePath], componentDir);
     } else {
       result[filePath] = new DependenciesTreeItem();
@@ -100,7 +99,7 @@ function mergeManuallyFoundPackagesToTree(
   missingGroups: MissingGroupItem[],
   tree: DependenciesTree
 ) {
-  if (R.isEmpty(foundPackages.components) && R.isEmpty(foundPackages.packages)) return;
+  if (isEmpty(foundPackages.components) && isEmpty(foundPackages.packages)) return;
   // Merge manually found packages (by groupMissing()) with the packages found by Madge (generate-tree-madge)
   Object.keys(foundPackages.packages).forEach((pkg) => {
     // locate package in groups(contains missing)
@@ -122,16 +121,16 @@ function mergeManuallyFoundPackagesToTree(
 }
 
 function mergeMissingToTree(missingGroups, tree: DependenciesTree) {
-  if (R.isEmpty(missingGroups)) return;
+  if (isEmpty(missingGroups)) return;
   missingGroups.forEach((missing) => {
-    const missingCloned = R.clone(missing);
+    const missingCloned = clone(missing);
     delete missingCloned.originFile;
     (tree[missing.originFile] ||= new DependenciesTreeItem()).missing = missingCloned;
   });
 }
 
 function mergeErrorsToTree(errors, tree: DependenciesTree) {
-  if (R.isEmpty(errors)) return;
+  if (isEmpty(errors)) return;
   Object.keys(errors).forEach((file) => {
     (tree[file] ||= new DependenciesTreeItem()).error = errors[file];
   });

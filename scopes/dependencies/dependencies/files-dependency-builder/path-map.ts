@@ -1,12 +1,11 @@
-// @flow
 /**
  * Path Map is the extra data about the files and the dependencies, such as ImportSpecifiers and
  * custom-resolve-modules used.
  * The data is retrieved by dependency-tree which collects them from the various detectives.
  * It is used to update the final tree.
  */
-import R from 'ramda';
 
+import { clone } from 'lodash';
 import { processPath } from './generate-tree-madge';
 import { Specifier } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
 
@@ -27,10 +26,10 @@ export type PathMapItem = {
 export function convertPathMapToRelativePaths(pathMap: PathMapItem[], baseDir: string): PathMapItem[] {
   const pathCache = {};
   return pathMap.map((file: PathMapItem) => {
-    const newFile = R.clone(file);
+    const newFile = clone(file);
     newFile.file = processPath(file.file, pathCache, baseDir);
     newFile.dependencies = file.dependencies.map((dependency) => {
-      const newDependency = R.clone(dependency);
+      const newDependency = clone(dependency);
       newDependency.resolvedDep = processPath(dependency.resolvedDep, pathCache, baseDir);
       return newDependency;
     });
