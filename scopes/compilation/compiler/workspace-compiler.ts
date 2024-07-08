@@ -4,6 +4,7 @@ import { Component } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
+import type { WorkspaceComponentLoadOptions } from '@teambit/workspace';
 import { WatcherMain, WatchOptions } from '@teambit/watcher';
 import path from 'path';
 import chalk from 'chalk';
@@ -323,14 +324,16 @@ export class WorkspaceCompiler {
   async compileComponents(
     componentsIds: string[] | ComponentID[] | ComponentID[], // when empty, it compiles new+modified (unless options.all is set),
     options: CompileOptions,
-    noThrow?: boolean
+    noThrow?: boolean,
+    componentLoadOptions: WorkspaceComponentLoadOptions = {}
   ): Promise<BuildResult[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const componentIds = await this.getIdsToCompile(componentsIds, options.changed);
     // In case the aspect failed to load, we want to compile it without try to re-load it again
-    const getManyOpts =
-      options.initiator === CompilationInitiator.AspectLoadFail ? { loadSeedersAsAspects: false } : undefined;
-    const components = await this.workspace.getMany(componentIds, getManyOpts);
+    if (options.initiator === CompilationInitiator.AspectLoadFail) {
+      componentLoadOptions.loadSeedersAsAspects = false;
+    }
+    const components = await this.workspace.getMany(componentIds, componentLoadOptions);
     const grouped = this.groupByIsEnv(components);
     const envsResults = grouped.envs ? await this.runCompileComponents(grouped.envs, options, noThrow) : [];
     const otherResults = grouped.other ? await this.runCompileComponents(grouped.other, options, noThrow) : [];
