@@ -164,7 +164,7 @@
         "@teambit/design.inputs.selectors.multi-select": "0.0.20",
         "@teambit/design.inputs.toggle-button": "0.0.9",
         "@teambit/design.navigation.content-tabs": "0.0.5",
-        "@teambit/design.navigation.responsive-navbar": "^0.0.7",
+        "@teambit/design.navigation.responsive-navbar": "^0.0.8",
         "@teambit/design.skeletons.base-skeleton": "^0.0.2",
         "@teambit/design.theme.icons-font": "2.0.29",
         "@teambit/design.themes.dark-theme": "1.91.4",
