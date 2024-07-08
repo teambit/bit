@@ -12,7 +12,7 @@ const UNIT_TEST_DIR = path.join(BIT_TEMP_ROOT, 'unit-test');
 const cabinetNonDefault = rewire('./');
 const cabinet = cabinetNonDefault.default;
 
-const fixtures = `${__dirname}/../../../../../../fixtures/filing-cabinet`;
+const fixtures = `${__dirname}/../fixtures/filing-cabinet`;
 
 // eslint-disable-next-line import/no-dynamic-require, global-require
 const mockedFiles = require(`${fixtures}/mockedJSFiles`);

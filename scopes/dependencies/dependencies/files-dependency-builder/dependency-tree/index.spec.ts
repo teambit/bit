@@ -13,7 +13,7 @@ const expect = require('chai').expect;
 
 const dependencyTreeRewired = rewire('./');
 const dependencyTree = dependencyTreeRewired.default;
-const fixtures = path.resolve(`${__dirname}/../../../../../../fixtures/dependency-tree`);
+const fixtures = path.resolve(`${__dirname}/../fixtures/dependency-tree`);
 
 function mockfs(obj: any) {
   Object.entries(obj).forEach(([key, value]) => {
