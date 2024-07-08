@@ -451,9 +451,8 @@
     },
     "crypto/sha1": {
         "name": "crypto/sha1",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.toolbox",
+        "scope": "teambit.toolbox",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "components/crypto/sha1"
     },
@@ -599,9 +598,8 @@
     },
     "fs/extension-getter": {
         "name": "fs/extension-getter",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.toolbox",
+        "scope": "teambit.toolbox",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/fs/extension-getter"
     },
@@ -614,17 +612,15 @@
     },
     "fs/is-dir-empty": {
         "name": "fs/is-dir-empty",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.toolbox",
+        "scope": "teambit.toolbox",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/fs/is-dir-empty"
     },
     "fs/last-modified": {
         "name": "fs/last-modified",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.toolbox",
+        "scope": "teambit.toolbox",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/fs/last-modified"
     },
@@ -644,9 +640,8 @@
     },
     "fs/remove-empty-dir": {
         "name": "fs/remove-empty-dir",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.toolbox",
+        "scope": "teambit.toolbox",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/fs/remove-empty-dir"
     },
@@ -953,9 +948,8 @@
     },
     "modules/component-package-name": {
         "name": "modules/component-package-name",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.pkg",
+        "scope": "teambit.pkg",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "components/modules/component-package-name"
     },
@@ -968,9 +962,8 @@
     },
     "modules/concurrency": {
         "name": "modules/concurrency",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.harmony",
+        "scope": "teambit.harmony",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/concurrency"
     },
@@ -1032,25 +1025,22 @@
     },
     "modules/get-basic-log": {
         "name": "modules/get-basic-log",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.harmony",
+        "scope": "teambit.harmony",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/get-basic-log"
     },
     "modules/get-cloud-user": {
         "name": "modules/get-cloud-user",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.cloud",
+        "scope": "teambit.cloud",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/modules/get-cloud-user"
     },
     "modules/git-executable": {
         "name": "modules/git-executable",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.git",
+        "scope": "teambit.git",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/git/modules/git-executable"
     },
@@ -1063,9 +1053,8 @@
     },
     "modules/ignore-file-reader": {
         "name": "modules/ignore-file-reader",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.git",
+        "scope": "teambit.git",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/git/modules/ignore-file-reader"
     },

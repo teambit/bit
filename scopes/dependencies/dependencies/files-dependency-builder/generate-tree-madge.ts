@@ -102,7 +102,7 @@ function convertTreePaths(depTree, pathCache, baseDir) {
 // all paths are normalized to Linux
 export type MadgeTree = { [relativePath: string]: PathLinuxRelative[] };
 
-// e.g. { '/tmp/workspace': ['lodash', 'ramda'] };
+// e.g. { '/tmp/workspace': ['lodash', 'underscore'] };
 export type Missing = { [absolutePath: string]: string[] };
 
 type GenerateTreeResults = {
