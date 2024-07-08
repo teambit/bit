@@ -224,8 +224,8 @@ describe('custom env', function () {
   });
 
   (supportNpmCiRegistryTesting ? describe : describe.skip)('custom env installed as a package', () => {
-    let envId;
-    let envName;
+    let envId: string;
+    let envName: string;
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
@@ -344,7 +344,27 @@ describe('custom env', function () {
         expect(isModified).to.be.true;
       });
     });
+    describe('snapping the env on the lane and then deleting it', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.createLane();
+        helper.command.importComponent(envName);
+        helper.command.setEnv('comp1', envId);
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.export();
 
+        helper.command.softRemoveOnLane(envId);
+      });
+      it('bit status should show the RemovedEnv issue', () => {
+        helper.command.expectStatusToHaveIssue(IssuesClasses.RemovedEnv.name);
+      });
+      it('replacing the env should fix the issue', () => {
+        helper.command.replaceEnv(envId, `${envId}@0.0.2`);
+        helper.command.expectStatusToNotHaveIssue(IssuesClasses.RemovedEnv.name);
+      });
+    });
     describe('missing modules in the env capsule', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
