@@ -327,6 +327,12 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     return Boolean(isRemoved);
   }
 
+  async isEnvByIdWithoutLoadingComponent(componentId: ComponentID): Promise<boolean> {
+    const versionObj = await this.workspace.scope.getBitObjectVersionById(componentId);
+    const envData = versionObj?.extensions.findCoreExtension('teambit.envs/envs');
+    return envData?.data.type === 'env';
+  }
+
   /**
    * get components that were soft-removed and tagged/snapped/merged but not exported yet.
    */
@@ -342,16 +348,27 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
 
   private async addRemovedDepIssue(component: Component) {
     const dependencies = this.depResolver.getComponentDependencies(component);
-    const removedWithUndefined = await Promise.all(
+    const removedDependencies: ComponentID[] = [];
+    let removedEnv: ComponentID | undefined;
+    await Promise.all(
       dependencies.map(async (dep) => {
         const isRemoved = await this.isRemovedByIdWithoutLoadingComponent(dep.componentId);
-        if (isRemoved) return dep.componentId;
-        return undefined;
+        if (!isRemoved) return;
+        const isEnv = await this.isEnvByIdWithoutLoadingComponent(dep.componentId);
+        if (isEnv) {
+          removedEnv = dep.componentId;
+        } else {
+          removedDependencies.push(dep.componentId);
+        }
       })
     );
-    const removed = compact(removedWithUndefined).map((id) => id.toString());
-    if (removed.length) {
-      component.state.issues.getOrCreate(IssuesClasses.RemovedDependencies).data = removed;
+    if (removedDependencies.length) {
+      component.state.issues.getOrCreate(IssuesClasses.RemovedDependencies).data = removedDependencies.map((r) =>
+        r.toString()
+      );
+    }
+    if (removedEnv) {
+      component.state.issues.getOrCreate(IssuesClasses.RemovedEnv).data = removedEnv.toString();
     }
   }
 

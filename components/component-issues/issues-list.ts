@@ -21,6 +21,7 @@ import { RemovedDependencies } from './removed-dependencies';
 import { SelfReference } from './self-reference';
 import { ImportFromDirectory } from './import-from-directory';
 import { DeprecatedDependencies } from './deprecated-dependencies';
+import { RemovedEnv } from './removed-env';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
@@ -42,6 +43,7 @@ export const IssuesClasses = {
   NonLoadedEnv,
   ExternalEnvWithoutVersion,
   RemovedDependencies,
+  RemovedEnv,
   DeprecatedDependencies,
   SelfReference,
   ImportFromDirectory,
