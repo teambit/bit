@@ -52,6 +52,7 @@
     "lint:html": "eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\" --format html -o eslint-report.html",
     "lint-circle": "eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\" --format junit -o junit/eslint-results.xml",
     "lint:fix": "eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\" --fix",
+    "lint-full": "./scripts/validate-import-named-aspects.sh && ./scripts/validate-no-ramda.sh && node scripts/validate-pkg-exist-in-pkg-json.js && npm run lint",
     "format": "prettier \"{src,e2e,scopes,components}/**/*.{ts,js,jsx,css,scss,tsx,md,mdx}\" --write",
     "prettier:check": "prettier --list-different \"{src,e2e,scopes,components}/**/*.{ts,js,jsx,css,scss,tsx,md,mdx}\"",
     "test": "mocha --require ./babel-register './src/**/*.spec.ts'",
