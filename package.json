@@ -125,6 +125,8 @@
     "@teambit/harmony.modules.concurrency": "~0.0.1",
     "@teambit/toolbox.fs.last-modified": "~0.0.1",
     "@teambit/toolbox.crypto.sha1": "~0.0.1",
+    "@teambit/toolbox.promise.map-pool": "~0.0.1",
+    "@teambit/toolbox.string.eol": "~0.0.1",
     "@teambit/pkg.modules.component-package-name": "~0.0.1",
     "@teambit/harmony.modules.get-basic-log": "~0.0.1",
     "@teambit/toolbox.fs.remove-empty-dir": "~0.0.1",

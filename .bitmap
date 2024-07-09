@@ -1710,9 +1710,8 @@
     },
     "promise/map-pool": {
         "name": "promise/map-pool",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.toolbox",
+        "scope": "teambit.toolbox",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/promise/map-pool"
     },
@@ -2077,9 +2076,8 @@
     },
     "string/eol": {
         "name": "string/eol",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.toolbox",
+        "scope": "teambit.toolbox",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/string/eol"
     },
