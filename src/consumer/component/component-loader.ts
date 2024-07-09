@@ -8,7 +8,7 @@ import logger from '../../logger/logger';
 import { ModelComponent } from '../../scope/models';
 import { getLatestVersionNumber } from '../../utils';
 import { getLastModifiedPathsTimestampMs } from '../../utils/fs/last-modified';
-import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
+import ComponentsPendingImport from '../exceptions/components-pending-import';
 import Component, { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
 import { ComponentFsCache } from './component-fs-cache';

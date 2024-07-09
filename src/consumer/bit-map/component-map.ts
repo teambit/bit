@@ -12,8 +12,8 @@ import { removeInternalConfigFields } from '../config/extension-data';
 import Consumer from '../consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
-import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
 import { BIT_IGNORE, getBitIgnoreFile, getGitIgnoreFile } from '../../utils/ignore/ignore';
+import { IgnoredDirectory } from '../component/exceptions/ignored-directory';
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
 
