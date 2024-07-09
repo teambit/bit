@@ -3,9 +3,9 @@ import { ComponentID } from '@teambit/component-id';
 import path from 'path';
 import readPkgUp from 'read-pkg-up';
 import { PACKAGE_JSON } from '../../constants';
-import PackageJson from '../../consumer/component/package-json';
 import { PathLinuxAbsolute, PathOsBased, PathOsBasedAbsolute } from '../path';
 import { resolvePackageNameByPath } from './resolve-pkg-name-by-path';
+import PackageJsonFile from '../../consumer/component/package-json-file';
 
 export interface ResolvedPackageData {
   fullPath: PathOsBasedAbsolute; // package path
@@ -84,8 +84,8 @@ function enrichDataFromDependency(packageData: ResolvedPackageData) {
   // if you have 2 authored component which one dependent on the other
   // we will look for the package.json on the dependency but won't find it
   // if we propagate we will take the version from the root's package json which has nothing with the component version
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const packageInfo = PackageJson.loadSync(packageDir);
+  const packageJsonFile = PackageJsonFile.loadSync(packageDir);
+  const packageInfo = packageJsonFile.packageJsonObject;
 
   // the version can be empty when creating the package.json for author, or when using custom-module-resolution
   // that's fine, we still need the component-id in this case.
