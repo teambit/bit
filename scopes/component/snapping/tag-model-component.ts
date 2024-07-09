@@ -14,7 +14,7 @@ import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { Component } from '@teambit/component';
 import { deleteComponentsFiles } from '@teambit/remove';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { getValidVersionOrReleaseType } from '@teambit/legacy.utils';
+import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';

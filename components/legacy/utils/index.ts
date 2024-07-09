@@ -51,7 +51,6 @@ export {
 export { ChownOptions } from './fs-write-file';
 export { isBitIdMatchByWildcards } from './bit/is-bit-id-match-by-wildcards';
 export { resolvePackagePath, resolvePackageNameByPath } from './packages';
-export { getLatestVersion, getValidVersionOrReleaseType, validateVersion } from './semver-helper';
 export { replacePlaceHolderForPackageValue } from './bit/component-placeholders';
 export { parseScope } from './bit/parse-scope';
 export { replacePackageName } from './string/replace-package-name';

@@ -1480,6 +1480,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/resolved-component"
     },
+    "modules/semver-helper": {
+        "name": "modules/semver-helper",
+        "scope": "teambit.pkg",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/pkg/modules/semver-helper"
+    },
     "modules/style-regexps": {
         "name": "modules/style-regexps",
         "scope": "teambit.webpack",

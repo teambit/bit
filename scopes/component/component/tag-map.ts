@@ -1,4 +1,4 @@
-import { getLatestVersion } from '@teambit/legacy.utils';
+import { getLatestVersion } from '@teambit/pkg.modules.semver-helper';
 import { SemVer, maxSatisfying } from 'semver';
 
 import { CouldNotFindLatest } from './exceptions';
