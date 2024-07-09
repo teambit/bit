@@ -1,3 +1,5 @@
+/* @bit-no-check */
+
 @import "foo.css";
 @import url("baz.css");
 @value a from 'bla.css';

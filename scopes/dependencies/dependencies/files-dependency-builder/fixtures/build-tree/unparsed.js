@@ -1,2 +1,2 @@
 // @bit-no-check
-// this should trigger parsing error
+this should trigger parsing error

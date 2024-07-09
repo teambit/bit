@@ -1,3 +1,4 @@
+// @bit-no-check
 module.exports = function(grunt) {
   grunt.initConfig({
     jshint: {

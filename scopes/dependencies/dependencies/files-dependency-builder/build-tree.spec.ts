@@ -5,7 +5,6 @@ import * as buildTree from './build-tree';
 
 const fixtures = `${__dirname}/fixtures`;
 const precinctFixtures = path.join(fixtures, 'precinct');
-console.log('🚀 ~ fixtures:', fixtures);
 const buildTreeFixtures = path.join(fixtures, 'build-tree');
 const fixturesInExpect = `scopes/dependencies/dependencies/files-dependency-builder/fixtures`;
 

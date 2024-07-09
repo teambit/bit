@@ -190,6 +190,13 @@ const normalizeDeps = (deps: BuiltinDeps, includeCore?: boolean): string[] => {
 const getDepsFromFile = (filename: string, options?: Options): string[] => {
   const normalizedOptions: Options = assign({ includeCore: true }, options || {});
   const fileInfo = getFileInfo(filename);
+  if (
+    typeof fileInfo.content === 'string' &&
+    (fileInfo.content.startsWith('// @bit-no-check') || fileInfo.content.startsWith('/* @bit-no-check'))
+  ) {
+    debug(`skipping file ${filename}, it has a @bit-no-check comment`);
+    return [];
+  }
 
   const detective = getDetector(fileInfo, normalizedOptions) || getJsDetector(fileInfo, normalizedOptions);
   if (!detective) {

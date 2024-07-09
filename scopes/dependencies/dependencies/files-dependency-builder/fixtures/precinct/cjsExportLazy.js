@@ -1,3 +1,4 @@
+// @bit-no-check
 module.exports = function({
   // Just requiring any files that exist
   amd = require('./amd'),
