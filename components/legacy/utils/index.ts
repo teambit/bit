@@ -1,5 +1,4 @@
 // @TODO refactor this file to include only exports
-import * as eol from './eol';
 import writeFile from './fs-write-file';
 import { checksum, checksumFile } from './checksum';
 import glob from './glob';
@@ -46,7 +45,6 @@ export {
   immutableUnshift,
   getLatestVersionNumber,
   isValidPath,
-  eol,
   isRelativeImport,
 };
 

@@ -2067,6 +2067,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/string/ellipsis"
     },
+    "string/eol": {
+        "name": "string/eol",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/string/eol"
+    },
     "string/get-initials": {
         "name": "string/get-initials",
         "scope": "teambit.toolbox",
