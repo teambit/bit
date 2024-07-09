@@ -6,7 +6,8 @@ import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@te
 import { BIT_MAP } from '../../constants';
 import logger from '../../logger/logger';
 import { ModelComponent } from '../../scope/models';
-import { getLatestVersionNumber, pMapPool } from '@teambit/legacy.utils';
+import { getLatestVersionNumber } from '@teambit/legacy.utils';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { getLastModifiedPathsTimestampMs } from '@teambit/toolbox.fs.last-modified';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';

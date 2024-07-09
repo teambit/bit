@@ -1708,6 +1708,14 @@
             }
         }
     },
+    "promise/map-pool": {
+        "name": "promise/map-pool",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/promise/map-pool"
+    },
     "pubsub": {
         "name": "pubsub",
         "scope": "teambit.harmony",

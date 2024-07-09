@@ -48,7 +48,6 @@ export {
   isRelativeImport,
 };
 
-export { pMapPool } from './promise-with-concurrent';
 export { ChownOptions } from './fs-write-file';
 export { isBitIdMatchByWildcards } from './bit/is-bit-id-match-by-wildcards';
 export { resolvePackagePath, resolvePackageNameByPath } from './packages';
@@ -57,7 +56,6 @@ export { replacePlaceHolderForPackageValue } from './bit/component-placeholders'
 export { parseScope } from './bit/parse-scope';
 export { replacePackageName } from './string/replace-package-name';
 export { hasWildcard } from './string/has-wildcard';
-export { pipeOutput } from './child_process';
 export {
   PathLinux,
   PathLinuxRelative,
