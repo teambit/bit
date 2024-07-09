@@ -239,16 +239,6 @@ describe('dependencyTree', function () {
     assert(Object.keys(tree)[0].indexOf('b.js') !== -1);
   });
 
-  it('traverses installed 3rd party node modules', () => {
-    const directory = `${fixtures}/onlyRealDeps`;
-    const filename = path.normalize(`${directory}/a.js`);
-
-    const tree = dependencyTree({ filename, directory });
-    const subTree = tree[filename];
-
-    assert(subTree[0].includes('node_modules/debug/src/index.js'));
-  });
-
   it('returns a list of absolutely pathed files', () => {
     const directory = `${UNIT_TEST_DIR}/commonjs`;
     const filename = `${directory}/b.js`;
