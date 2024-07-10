@@ -79,18 +79,19 @@ export class BuilderMain {
 
   private async storeArtifacts(tasksResults: TaskResults[]) {
     const artifacts = tasksResults.flatMap((t) => (t.artifacts ? [t.artifacts] : []));
-    const storeP = artifacts.map(async (artifactMap: ComponentMap<ArtifactList<FsArtifact>>) => {
-      return Promise.all(
-        artifactMap.toArray().map(async ([component, artifactList]) => {
-          try {
-            return await artifactList.store(component);
-          } catch (err: any) {
-            throw new ArtifactStorageError(err, component);
-          }
-        })
-      );
-    });
-    await Promise.all(storeP);
+    await Promise.all(
+      artifacts.map(async (artifactMap: ComponentMap<ArtifactList<FsArtifact>>) => {
+        await Promise.all(
+          artifactMap.toArray().map(async ([component, artifactList]) => {
+            try {
+              await artifactList.store(component);
+            } catch (err: any) {
+              throw new ArtifactStorageError(err, component.id.toString());
+            }
+          })
+        );
+      })
+    );
   }
 
   pipelineResultsToBuilderData(
