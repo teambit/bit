@@ -63,19 +63,23 @@ describe('node-precinct', () => {
   });
 
   it('grabs dependencies of es6 modules', () => {
-    const cjs = precinct(read('es6.js'));
+    const cjs = precinct(`import { square, diag } from 'lib';
+console.log(square(11)); // 121
+console.log(diag(4, 3)); // 5`);
     expect(cjs).to.have.property('lib');
     assert(Object.keys(cjs).length === 1);
   });
 
   it('grabs dependencies of es6 modules with embedded jsx', () => {
-    const cjs = precinct(read('jsx.js'));
+    const cjs = precinct(`import { square, diag } from 'lib';
+const tmpl = <jsx />;`);
     expect(cjs).to.have.property('lib');
     assert(Object.keys(cjs).length === 1);
   });
 
   it('grabs dependencies of es6 modules with embedded es7', () => {
-    const cjs = precinct(read('es7.js'));
+    const cjs = precinct(`import { square, diag } from 'lib';
+async function foo() {}`);
     expect(cjs).to.have.property('lib');
     assert(Object.keys(cjs).length === 1);
   });
@@ -146,12 +150,19 @@ console.log(diag(4, 3); // error, missing bracket
   });
 
   it('yields no dependencies for es6 modules with no imports', () => {
-    const cjs = precinct(read('es6NoImport.js'));
+    const cjs = precinct(`export const sqrt = Math.sqrt;
+export function square(x) {
+  return x * x;
+}
+export function diag(x, y) {
+  return sqrt(square(x) + square(y));
+}
+`);
     assert.equal(Object.keys(cjs).length, 0);
   });
 
   it('yields no dependencies for non-modules', () => {
-    const none = precinct(read('none.js'));
+    const none = precinct(`var a = new window.Foo();`);
     assert.equal(Object.keys(none).length, 0);
   });
 
