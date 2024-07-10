@@ -29,7 +29,8 @@ import {
   PipeServiceModifier,
   PipeServiceModifiersMap,
 } from '@teambit/envs';
-import { JestMain } from '@teambit/jest';
+import { JestTask, JestTester, jestWorkerPath } from '@teambit/defender.jest-tester';
+import type { JestWorker } from '@teambit/defender.jest-tester';
 import { PackageJsonProps, PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
 import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
@@ -72,6 +73,8 @@ import { templateWebpackConfigFactory } from './webpack/webpack.config.env.templ
 // webpack configs for components only
 import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
+import { WorkerMain } from '@teambit/worker/worker.main.runtime';
+import { DevFilesMain } from '@teambit/dev-files';
 
 export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
@@ -94,11 +97,6 @@ export class ReactEnv
 {
   constructor(
     /**
-     * jest extension
-     */
-    private jestAspect: JestMain,
-
-    /**
      * typescript extension.
      */
     protected tsAspect: TypescriptMain,
@@ -119,6 +117,11 @@ export class ReactEnv
     private workspace: Workspace,
 
     /**
+     * worker extension.
+     */
+    private worker: WorkerMain,
+
+    /**
      * pkg extension.
      */
     private pkg: PkgMain,
@@ -131,6 +134,8 @@ export class ReactEnv
     private config: ReactMainConfig,
 
     private dependencyResolver: DependencyResolverMain,
+
+    private devFiles: DevFilesMain,
 
     private logger: Logger,
 
@@ -162,7 +167,20 @@ export class ReactEnv
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
     const defaultConfig = join(pathToSource, './jest/jest.cjs.config.js');
     const config = jestConfigPath || defaultConfig;
-    return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
+    const worker = this.getJestWorker();
+    const tester = JestTester.create(
+      {
+        jest: jestModulePath || require.resolve('jest'),
+        config,
+      },
+      { logger: this.logger, worker }
+    );
+
+    return tester;
+  }
+
+  private getJestWorker() {
+    return this.worker.declareWorker<JestWorker>('jest', jestWorkerPath);
   }
 
   /**
@@ -182,14 +200,20 @@ export class ReactEnv
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
     const defaultConfig = join(pathToSource, './jest/jest.esm.config.js');
     const config = jestConfigPath || defaultConfig;
-    return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
+    const worker = this.getJestWorker();
+    return JestTester.create(
+      {
+        jest: jestModulePath || require.resolve('jest'),
+        config,
+      },
+      { logger: this.logger, worker }
+    );
   }
 
   /**
    * returns a component tester.
    */
   getTester(jestConfigPath: string, jestModulePath?: string): Tester {
-    // return this.createEsmJestTester(jestConfigPath, jestModulePath);
     return this.createCjsJestTester(jestConfigPath, jestModulePath);
   }
 
@@ -509,7 +533,14 @@ export class ReactEnv
    */
   getBuildPipe(modifiers: GetBuildPipeModifiers = {}): BuildTask[] {
     const transformers: Function[] = modifiers?.tsModifier?.transformers || [];
-    return [this.createCjsCompilerTask(transformers, modifiers?.tsModifier?.module || ts), this.tester.task];
+    const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
+    const jestConfig = join(pathToSource, './jest/jest.cjs.config.js');
+    const worker = this.getJestWorker();
+    const testerTask = JestTask.create(
+      { config: jestConfig, jest: require.resolve('jest') },
+      { logger: this.logger, worker, devFiles: this.devFiles }
+    );
+    return [this.createCjsCompilerTask(transformers, modifiers?.tsModifier?.module || ts), testerTask];
   }
 
   /**

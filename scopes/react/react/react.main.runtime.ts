@@ -1,3 +1,5 @@
+import type { DevFilesMain } from '@teambit/dev-files';
+import { DevFilesAspect } from '@teambit/dev-files';
 import { Harmony } from '@teambit/harmony';
 import { merge, omit } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
@@ -8,8 +10,6 @@ import { Component, ComponentID } from '@teambit/component';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment, EnvContext } from '@teambit/envs';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
-import type { JestMain } from '@teambit/jest';
-import { JestAspect } from '@teambit/jest';
 import type { PkgMain, PackageJsonProps } from '@teambit/pkg';
 import { SchemaMain, SchemaAspect } from '@teambit/schema';
 import { PkgAspect } from '@teambit/pkg';
@@ -43,7 +43,6 @@ import { PrettierConfigTransformer } from '@teambit/defender.prettier.config-mut
 
 type ReactDeps = [
   EnvsMain,
-  JestMain,
   TypescriptMain,
   CompilerMain,
   WebpackMain,
@@ -56,7 +55,8 @@ type ReactDeps = [
   DependencyResolverMain,
   LoggerMain,
   SchemaMain,
-  WorkerMain
+  WorkerMain,
+  DevFilesMain
 ];
 
 export type ReactMainConfig = {
@@ -400,7 +400,6 @@ export class ReactMain {
   static runtime = MainRuntime;
   static dependencies = [
     EnvsAspect,
-    JestAspect,
     TypescriptAspect,
     CompilerAspect,
     WebpackAspect,
@@ -414,12 +413,12 @@ export class ReactMain {
     LoggerAspect,
     SchemaAspect,
     WorkerAspect,
+    DevFilesAspect,
   ];
 
   static async provider(
     [
       envs,
-      jestAspect,
       tsAspect,
       compiler,
       webpack,
@@ -433,6 +432,7 @@ export class ReactMain {
       loggerMain,
       schemaMain,
       workerMain,
+      devFilesMain,
     ]: ReactDeps,
     config: ReactMainConfig,
     slots,
@@ -440,15 +440,16 @@ export class ReactMain {
   ) {
     const logger = loggerMain.createLogger(ReactAspect.id);
     const reactEnv = new ReactEnv(
-      jestAspect,
       tsAspect,
       compiler,
       webpack,
       workspace,
+      workerMain,
       pkg,
       tester,
       config,
       dependencyResolver,
+      devFilesMain,
       logger,
       CompilerAspect.id
     );
