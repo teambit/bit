@@ -15,14 +15,14 @@ import {
   ComponentMapFile,
   Config,
   getIgnoreListHarmony,
-} from '@teambit/legacy/dist/consumer/bit-map/component-map';
+  MissingMainFile,
+} from '@teambit/legacy.bit-map';
 import { DuplicateIds, EmptyDirectory, ExcludedMainFile, MainFileIsDir, NoFiles, PathsNotExist } from './exceptions';
 import { AddingIndividualFiles } from './exceptions/adding-individual-files';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
 import { ParentDirTracked } from './exceptions/parent-dir-tracked';
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
-import { MissingMainFile } from '@teambit/legacy.bit-map';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { BitError } from '@teambit/bit-error';
 import logger from '@teambit/legacy/dist/logger/logger';
