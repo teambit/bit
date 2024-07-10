@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { Logger } from '@teambit/logger';
 import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { Timer } from '@teambit/legacy/dist/toolbox/timer';
+import { Timer } from '@teambit/toolbox.time.timer';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import type { TesterMain } from './tester.main.runtime';
 
