@@ -58,7 +58,7 @@ import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile, DataToPersist, JsonVinyl } from '@teambit/component.sources';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane } from '@teambit/legacy/dist/scope/models';
@@ -67,8 +67,6 @@ import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/s
 import { isHash } from '@teambit/component-version';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { getAuthHeader, fetchWithAgent as fetch } from '@teambit/legacy/dist/scope/network/http/http';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import { JsonVinyl } from '@teambit/legacy/dist/consumer/component/json-vinyl';
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,

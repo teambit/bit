@@ -703,6 +703,9 @@
     },
     "components/typescript-compiler": {
       "teambit.pkg/pkg": {}
+    },
+    "scopes/component/sources": {
+      "teambit.pkg/pkg": {}
     }
   }
 }

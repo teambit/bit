@@ -2,7 +2,7 @@ import { Component, ComponentMap } from '@teambit/component';
 import type { ExecutionContext, Environment } from '@teambit/envs';
 import { PreviewDefinition } from '@teambit/preview';
 import { isFunction } from 'lodash';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 
 import { CompositionsMain } from './compositions.main.runtime';
 import { CompositionBrowserMetadataObject } from './composition';

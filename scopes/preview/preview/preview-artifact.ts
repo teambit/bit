@@ -1,4 +1,4 @@
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { uniq } from 'lodash';
 

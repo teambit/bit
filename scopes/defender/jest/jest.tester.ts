@@ -11,7 +11,7 @@ import { TestsFiles, TestResult, TestsResult } from '@teambit/tests-results';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
 import { Component, ComponentMap } from '@teambit/component';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 // import { Environment } from '@teambit/envs';
 // import { EnvPolicyConfigObject, PeersAutoDetectPolicy } from '@teambit/dependency-resolver';
 import { JestError } from './error';

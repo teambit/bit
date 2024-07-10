@@ -1,6 +1,6 @@
 import { isObject } from 'lodash';
 import mapSeries from 'p-map-series';
-import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
+import { PackageJsonFile } from '@teambit/component.sources';
 import { parseScope, replacePlaceHolderForPackageValue } from '@teambit/legacy.utils';
 import { Component } from '@teambit/component';
 

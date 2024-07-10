@@ -34,11 +34,7 @@ import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-compon
 import { isHash, isTag } from '@teambit/component-version';
 import { BitObject, Ref, Repository } from '@teambit/legacy/dist/scope/objects';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
-import {
-  ArtifactFiles,
-  ArtifactSource,
-  getArtifactsFiles,
-} from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFiles, ArtifactSource, getArtifactsFiles, SourceFile } from '@teambit/component.sources';
 import {
   VersionNotFound,
   ComponentNotFound,
@@ -47,7 +43,6 @@ import {
 } from '@teambit/legacy/dist/scope/exceptions';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { DependenciesAspect, DependenciesMain } from '@teambit/dependencies';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';

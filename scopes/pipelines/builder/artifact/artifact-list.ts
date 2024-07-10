@@ -1,9 +1,9 @@
 import { Component } from '@teambit/component';
 import pMapSeries from 'p-map-series';
-import type { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import type { ArtifactObject } from '@teambit/component.sources';
 import { ComponentID } from '@teambit/component-id';
 import { Scope } from '@teambit/legacy/dist/scope';
-import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
+import { ArtifactVinyl } from '@teambit/component.sources';
 import { FsArtifact } from './fs-artifact';
 import { Artifact } from './artifact';
 import {

@@ -2041,6 +2041,20 @@
             }
         }
     },
+    "sources": {
+        "name": "sources",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/sources",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.1": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
+    },
     "stash": {
         "name": "stash",
         "scope": "teambit.component",

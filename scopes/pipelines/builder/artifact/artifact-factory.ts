@@ -1,7 +1,7 @@
 import { join } from 'path';
 import globby from 'globby';
 import { flatten } from 'lodash';
-import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFiles } from '@teambit/component.sources';
 import { Component, ComponentMap } from '@teambit/component';
 import { pathNormalizeToLinux, PathLinux } from '@teambit/legacy.utils';
 import { ArtifactDefinition } from './artifact-definition';

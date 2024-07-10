@@ -4,7 +4,7 @@ import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
 import { diffFiles } from './diff-files';
 import { PathOsBased } from '@teambit/toolbox.path.path';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 
 export type DiffStatus = 'MODIFIED' | 'UNCHANGED' | 'NEW' | 'DELETED';
 
