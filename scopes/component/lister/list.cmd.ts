@@ -1,7 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { isEmpty } from 'lodash';
 import chalk from 'chalk';
-import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
+import { hasWildcard } from '@teambit/legacy.utils';
 import { listTemplate } from './list-template';
 import { ListerMain, ListScopeResult } from './lister.main.runtime';
 

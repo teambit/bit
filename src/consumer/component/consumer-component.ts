@@ -12,9 +12,9 @@ import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
 import { ScopeListItem } from '../../scope/models/model-component';
 import Version, { DepEdge, Log } from '../../scope/models/version';
-import { pathNormalizeToLinux, sha1 } from '../../utils';
-import { PathLinux, PathOsBased, PathOsBasedRelative } from '../../utils/path';
-import ComponentMap from '../bit-map/component-map';
+import { pathNormalizeToLinux, PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/legacy.utils';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
+import { ComponentMap } from '@teambit/legacy.bit-map';
 import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import { Dist, License, SourceFile } from '../component/sources';
@@ -592,6 +592,7 @@ async function getLoadedFiles(
     logger.error(`rethrowing an error of ${componentMap.noFilesError.message}`);
     throw componentMap.noFilesError;
   }
+  // @ts-ignore todo: remove after deleting teambit.legacy
   await componentMap.trackDirectoryChangesHarmony(consumer);
   const sourceFiles = componentMap.files.map((file) => {
     const filePath = path.join(bitDir, file.relativePath);

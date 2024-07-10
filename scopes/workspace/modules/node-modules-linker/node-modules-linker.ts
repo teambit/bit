@@ -4,17 +4,16 @@ import * as path from 'path';
 import { linkPkgsToBitRoots } from '@teambit/bit-roots';
 import { ComponentID } from '@teambit/component-id';
 import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy/dist/constants';
-import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import { BitMap } from '@teambit/legacy.bit-map';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
-import getNodeModulesPathOfComponent from '@teambit/legacy/dist/utils/bit/component-node-modules-path';
-import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import { componentIdToPackageName, getNodeModulesPathOfComponent } from '@teambit/pkg.modules.component-package-name';
 import Symlink from '@teambit/legacy/dist/links/symlink';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { Workspace } from '@teambit/workspace';
 import { snapToSemver } from '@teambit/component-package-version';
 import { Component } from '@teambit/component';
@@ -40,6 +39,7 @@ export default class NodeModuleLinker {
 
   constructor(private components: Component[], private workspace: Workspace) {
     this.consumer = this.workspace.consumer;
+    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = this.consumer.bitMap;
     this.dataToPersist = new DataToPersist();
     this.existingLinks = [];

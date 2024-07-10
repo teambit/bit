@@ -11,7 +11,7 @@ import {
 } from '@teambit/merging';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { immutableUnshift } from '@teambit/legacy/dist/utils';
+import { immutableUnshift } from '@teambit/legacy.utils';
 import { ImporterMain } from './importer.main.runtime';
 import { ImportOptions, ImportDetails, ImportStatus, ImportResult } from './import-components';
 

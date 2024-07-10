@@ -14,8 +14,8 @@ import { ComponentOverridesData } from '../../consumer/config/component-override
 import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/extension-data';
 import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
-import { getStringifyArgs, sha1 } from '../../utils';
-import { PathLinux, pathNormalizeToLinux } from '../../utils/path';
+import { getStringifyArgs, PathLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import VersionInvalid from '../exceptions/version-invalid';
 import { BitObject, Ref } from '../objects';
 import { ObjectItem } from '../objects/object-list';

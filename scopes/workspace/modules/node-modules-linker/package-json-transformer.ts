@@ -1,8 +1,7 @@
 import { isObject } from 'lodash';
 import mapSeries from 'p-map-series';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
-import { parseScope } from '@teambit/legacy/dist/utils/bit/parse-scope';
-import { replacePlaceHolderForPackageValue } from '@teambit/legacy/dist/utils/bit/component-placeholders';
+import { parseScope, replacePlaceHolderForPackageValue } from '@teambit/legacy.utils';
 import { Component } from '@teambit/component';
 
 type PackageJsonTransformers = Function[];
