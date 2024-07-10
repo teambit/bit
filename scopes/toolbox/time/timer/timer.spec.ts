@@ -1,8 +1,10 @@
 import { expect } from 'chai';
-
-import { sleep } from '../sleep';
 import { TimerAlreadyRunning, TimerNotStarted } from './exceptions';
 import { Timer } from './timer';
+
+async function sleep(time: number) {
+  await new Promise((resolve) => setTimeout(resolve, time));
+}
 
 describe('Timer', () => {
   it('should stop after 300ms', async () => {
