@@ -2163,7 +2163,7 @@
         "version": "",
         "defaultScope": "teambit.toolbox",
         "mainFile": "index.ts",
-        "rootDir": "components/time/timer"
+        "rootDir": "scopes/toolbox/time/timer"
     },
     "tracker": {
         "name": "tracker",
