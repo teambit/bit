@@ -1,9 +1,8 @@
 import { BitError } from '@teambit/bit-error';
-import { Component } from '@teambit/component';
 
 export class ArtifactStorageError extends BitError {
-  constructor(private originalError: Error, private component: Component) {
-    super(`failed to store artifacts for component ${component.id.toString()}.
+  constructor(originalError: Error, idStr: string) {
+    super(`failed to store artifacts for component ${idStr}.
 Error: ${originalError.message}`);
   }
 }
