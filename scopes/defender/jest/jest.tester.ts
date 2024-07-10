@@ -1,4 +1,4 @@
-import { resolve } from 'path';
+import { resolve, basename } from 'path';
 import { readFileSync } from 'fs-extra';
 import normalize from 'normalize-path';
 import minimatch from 'minimatch';
@@ -11,7 +11,6 @@ import { TestsFiles, TestResult, TestsResult } from '@teambit/tests-results';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
 import { Component, ComponentMap } from '@teambit/component';
-import { AbstractVinyl } from '@teambit/component.sources';
 // import { Environment } from '@teambit/envs';
 // import { EnvPolicyConfigObject, PeersAutoDetectPolicy } from '@teambit/dependency-resolver';
 import { JestError } from './error';
@@ -93,7 +92,6 @@ export class JestTester implements Tester {
       if (testsFiles?.length === 0) return undefined;
       const errors = this.getErrors(testsFiles);
       const tests = testsFiles.map((test) => {
-        const file = new AbstractVinyl({ path: test.testFilePath, contents: readFileSync(test.testFilePath) });
         const testResults = test.testResults.map((testResult) => {
           const error = formatResultsErrors([testResult], config, { noStackTrace: true }) || undefined;
           const isFailure = testResult.status === 'failed';
@@ -106,7 +104,7 @@ export class JestTester implements Tester {
             isFailure ? error : undefined
           );
         });
-        const filePath = file?.basename || test.testFilePath;
+        const filePath = basename(test.testFilePath);
         const getError = () => {
           if (!test.testExecError) return undefined;
           if (testerContext.watch) {
