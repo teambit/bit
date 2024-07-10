@@ -7,14 +7,15 @@ import tar from 'tar-stream';
 import tarFS from 'tar-fs';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '@teambit/legacy/dist/constants';
-import BitMap from '@teambit/legacy/dist/consumer/bit-map';
+import { BitMap } from '@teambit/legacy.bit-map';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { ConsumerInfo, getConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
 import Diagnosis, { ExamineResult } from './diagnosis';
 import DoctorRegistrar from './doctor-registrar';
 import registerCoreAndExtensionsDiagnoses from './doctor-registrar-builder';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { getExt, getWithoutExt, removeChalkCharacters } from '@teambit/legacy/dist/utils';
+import { removeChalkCharacters } from '@teambit/legacy.utils';
+import { getExt } from '@teambit/toolbox.fs.extension-getter';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import { getNpmVersion } from './core-diagnoses/validate-npm-exec';
@@ -114,6 +115,15 @@ async function _saveExamineResultsToFile(
       // })
     });
   });
+}
+
+function getWithoutExt(filename: string): string {
+  const ext = getExt(filename);
+  // There is no extension just return the file name
+  if (ext === filename) {
+    return filename;
+  }
+  return filename.substring(0, filename.length - ext.length - 1); // -1 to remove the '.'
 }
 
 function _calculateFinalFileName(fileName: string): string {

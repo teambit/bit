@@ -13,11 +13,12 @@ import {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
-import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path'
+import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { Logger } from '@teambit/logger';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
+import { Config } from '@pnpm/config';
 import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
 import {
   buildDependenciesHierarchy,
@@ -33,7 +34,7 @@ import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
 
-export type { RebuildFn }
+export type { RebuildFn };
 
 export interface InstallResult {
   dependenciesChanged: boolean;
@@ -41,12 +42,14 @@ export interface InstallResult {
   storeDir: string;
 }
 
+type ReadConfigResult = Promise<{ config: Config; warnings: string[] }>;
+
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
   readonly modulesManifestCache: Map<string, Modules> = new Map();
   private username: string;
 
-  private _readConfig = async (dir?: string) => {
+  private _readConfig = async (dir?: string): ReadConfigResult => {
     const { config, warnings } = await readConfig(dir);
     if (config?.fetchRetries && config?.fetchRetries < 5) {
       config.fetchRetries = 5;
@@ -56,7 +59,7 @@ export class PnpmPackageManager implements PackageManager {
     return { config, warnings };
   };
 
-  public readConfig = memoize(this._readConfig);
+  public readConfig: (dir?: string) => ReadConfigResult = memoize(this._readConfig);
 
   constructor(private depResolver: DependencyResolverMain, private logger: Logger, private cloud: CloudMain) {}
 

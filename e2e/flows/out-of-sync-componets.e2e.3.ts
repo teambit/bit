@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
-
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { IMPORT_PENDING_MSG } from '../../src/constants';
-import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import ComponentsPendingImport from '../../src/consumer/exceptions/components-pending-import';
 import Helper from '../../src/e2e-helper/e2e-helper';
 

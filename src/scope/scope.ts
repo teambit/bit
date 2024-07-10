@@ -27,7 +27,7 @@ import Component from '../consumer/component/consumer-component';
 import { ExtensionDataEntry } from '../consumer/config';
 import Consumer from '../consumer/consumer';
 import logger from '../logger/logger';
-import { PathOsBasedAbsolute } from '../utils/path';
+import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
 import ComponentVersion from './component-version';

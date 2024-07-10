@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
-import { fromBase64 } from '@teambit/legacy/dist/utils';
+import { fromBase64 } from '@teambit/legacy.utils';
 import { BitError } from '@teambit/bit-error';
 import { MergeFromScopeResult, MergeLanesMain } from './merge-lanes.main.runtime';
 

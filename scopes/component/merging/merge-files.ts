@@ -1,9 +1,8 @@
 import chalk from 'chalk';
 import execa from 'execa';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { PathLinux, PathOsBased } from '@teambit/legacy/dist/utils/path';
-import GitNotFound from '@teambit/legacy/dist/utils/git/exceptions/git-not-found';
-import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable';
+import { GitNotFound, getGitExecutablePath } from '@teambit/git.modules.git-executable';
+import { PathLinux, PathOsBased } from '@teambit/legacy.utils';
 
 export type MergeFileResult = {
   filePath: PathLinux;
