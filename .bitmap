@@ -2157,6 +2157,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/time/time-format"
     },
+    "time/timer": {
+        "name": "time/timer",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "components/time/timer"
+    },
     "tracker": {
         "name": "tracker",
         "scope": "teambit.component",
