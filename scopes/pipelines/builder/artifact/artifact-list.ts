@@ -105,18 +105,19 @@ export class ArtifactList<T extends Artifact> extends Array<T> {
    */
   async store(component: Component) {
     const byResolvers = this.groupByResolver();
-    const promises = Object.keys(byResolvers).map(async (key) => {
-      const artifacts = byResolvers[key];
-      if (!artifacts.length) return;
-      const storageResolver = artifacts[0].storageResolver;
-      const artifactList = ArtifactList.fromArray(artifacts);
-      const artifactPromises = artifactList.map(async (artifact) => {
-        return this.storeArtifact(storageResolver, artifact, component);
-      });
-      await Promise.all(artifactPromises);
-    });
-
-    return Promise.all(promises);
+    await Promise.all(
+      Object.keys(byResolvers).map(async (key) => {
+        const artifacts = byResolvers[key];
+        if (!artifacts.length) return;
+        const storageResolver = artifacts[0].storageResolver;
+        const artifactList = ArtifactList.fromArray(artifacts);
+        await Promise.all(
+          artifactList.map(async (artifact) => {
+            await this.storeArtifact(storageResolver, artifact, component);
+          })
+        );
+      })
+    );
   }
 
   private async storeArtifact(storageResolver: ArtifactStorageResolver, artifact: Artifact, component: Component) {
