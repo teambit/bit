@@ -19,7 +19,6 @@ import { FetchCmd, ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
-import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane, LaneHistory, Version } from '@teambit/legacy/dist/scope/models';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
@@ -34,8 +33,9 @@ import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
-import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
+import { removeLanes } from './remove-lanes';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,

@@ -3,7 +3,7 @@ import { ExtensionDataEntry, ExtensionDataList, ILegacyWorkspaceConfig } from '@
 import LegacyWorkspaceConfig, {
   WorkspaceConfigLoadFunction,
 } from '@teambit/legacy/dist/consumer/config/workspace-config';
-import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { MainRuntime } from '@teambit/cli';
 import { GlobalConfig, Harmony } from '@teambit/harmony';

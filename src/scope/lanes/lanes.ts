@@ -1,6 +1,7 @@
 import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { ComponentID } from '@teambit/component-id';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { Scope } from '..';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import logger from '../../logger/logger';
@@ -9,7 +10,6 @@ import { BitObject, Repository } from '../objects';
 import { IndexType, LaneItem } from '../objects/scope-index';
 import { ScopeJson, TrackLane } from '../scope-json';
 import { LaneComponent, Log } from '../models/lane';
-import { pMapPool } from '../../utils/promise-with-concurrent';
 
 export default class Lanes {
   objects: Repository;

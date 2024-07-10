@@ -1,7 +1,26 @@
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
-import { PathLinux } from '../../../utils/path';
-import { ImportSpecifier } from './files-dependency-builder/types/dependency-tree-type';
+import { PathLinux } from '@teambit/toolbox.path.path';
+
+/**
+ * Import Specifier data.
+ * For example, `import foo from './bar' `, "foo" is the import-specifier and is default.
+ * Conversely, `import { foo } from './bar' `, here, "foo" is non-default.
+ */
+export type Specifier = {
+  isDefault: boolean;
+  name: string;
+  exported?: boolean;
+};
+
+/**
+ * ImportSpecifier are used to generate links from component to its dependencies.
+ * For example, a component might have a dependency: "import { foo } from './bar' ", when a link is generated, we use
+ * the import-specifier name, which is "foo" to generate the link correctly.
+ */
+export type ImportSpecifier = {
+  mainFile: Specifier;
+};
 
 /**
  * a dependency component may have multiple files that are required from the parent component, each

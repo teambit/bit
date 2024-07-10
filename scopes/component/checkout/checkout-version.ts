@@ -3,7 +3,7 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ComponentID } from '@teambit/component-id';
 import Version from '@teambit/legacy/dist/scope/models/version';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
-import { pathNormalizeToLinux, PathOsBased } from '@teambit/legacy/dist/utils/path';
+import { pathNormalizeToLinux, PathOsBased } from '@teambit/legacy.utils';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
