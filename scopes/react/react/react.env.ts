@@ -73,8 +73,8 @@ import { templateWebpackConfigFactory } from './webpack/webpack.config.env.templ
 // webpack configs for components only
 import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
-import { WorkerMain } from '@teambit/worker/worker.main.runtime';
-import { DevFilesMain } from '@teambit/dev-files';
+import type { WorkerMain } from '@teambit/worker';
+import type { DevFilesMain } from '@teambit/dev-files';
 
 export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
