@@ -10,3 +10,4 @@ const analyticsPrompt = prompt(analyticsSchema);
 const errorReportingPrompt = prompt(errorReportingSchema);
 
 export { approveOperation, resolveConflictPrompt, analyticsPrompt, errorReportingPrompt };
+export { PromptCanceled } from './exceptions';

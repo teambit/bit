@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { join } from 'path';
 import globby from 'globby';
 import chalk from 'chalk';
-import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
+import { PromptCanceled } from '@teambit/legacy.cli.prompts';
 import pMapSeries from 'p-map-series';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import yesno from 'yesno';
