@@ -1,23 +1,17 @@
 import groupArray from 'group-array';
-import R from 'ramda';
 import { LaneId } from '@teambit/lane-id';
-import { Consumer } from '..';
-import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
-import { Remotes } from '../../remotes';
-import { getScopeRemotes } from '../../scope/scope-remotes';
-import { Http } from '../../scope/network/http';
-import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL } from '../../constants';
+import { Consumer } from '@teambit/legacy/dist/consumer';
+import enrichContextFromGlobal from '@teambit/legacy/dist/hooks/utils/enrich-context-from-global';
+import { Remotes } from '@teambit/legacy/dist/remotes';
+import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
+import { Http } from '@teambit/legacy/dist/scope/network/http';
+import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL } from '@teambit/legacy/dist/constants';
 
-export default async function removeLanes(
-  consumer: Consumer | undefined,
-  lanes: string[],
-  remote: boolean,
-  force: boolean
-) {
+export async function removeLanes(consumer: Consumer | undefined, lanes: string[], remote: boolean, force: boolean) {
   if (remote) {
     const remoteLaneIds = lanes.map((lane) => LaneId.parse(lane));
     const results = await removeRemoteLanes(consumer, remoteLaneIds, force);
-    const laneResults = R.flatten(results.map((r) => r.removedLanes));
+    const laneResults = results.map((r) => r.removedLanes).flat();
     return { laneResults };
   }
   if (!consumer) throw new Error('consumer must exist for local removal');
