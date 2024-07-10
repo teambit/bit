@@ -276,7 +276,7 @@
         "@teambit/scopes.scope-descriptor": "^0.0.24",
         "@teambit/scopes.scope-id": "^0.0.7",
         "@teambit/semantics.entities.semantic-schema": "^0.0.65",
-        "@teambit/tests-results": "^1.0.4",
+        "@teambit/tests-results": "^1.0.5",
         "@teambit/typescript.typescript-compiler": "^2.0.40",
         "@teambit/ui-foundation.ui.constants.z-indexes": "^0.0.504",
         "@teambit/ui-foundation.ui.corner": "^0.0.520",

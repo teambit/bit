@@ -15,7 +15,7 @@ export class JestMain {
    * @deprecated use jest tester from https://bit.cloud/teambit/defender/jest-tester
    */
   createTester(jestConfig: any, jestModulePath = require.resolve('jest'), opts?: JestTesterOptions) {
-    logger.consoleWarning(
+    this.logger.consoleWarning(
       `The 'Jest' aspect is deprecated. Please use the 'jest tester' component instead. For more details, visit: https://${getCloudDomain()}/teambit/defender/jest-tester`
     );
     return new JestTester(JestAspect.id, jestConfig, jestModulePath, this.jestWorker, this.logger, opts);
