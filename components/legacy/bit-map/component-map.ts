@@ -26,7 +26,7 @@ import { removeInternalConfigFields } from '@teambit/legacy/dist/consumer/config
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
 import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
-import { IgnoredDirectory } from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/ignored-directory';
+import { IgnoredDirectory } from '@teambit/legacy/dist/consumer/component/exceptions/ignored-directory';
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
 

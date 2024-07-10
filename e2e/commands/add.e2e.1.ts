@@ -5,12 +5,8 @@ import * as path from 'path';
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import { InvalidName } from '@teambit/legacy-bit-id';
 import { statusInvalidComponentsMsg } from '../../src/constants';
+import { MainFileIsDir, PathOutsideConsumer, VersionShouldBeRemoved } from '@teambit/tracker';
 import { MissingMainFile } from '@teambit/legacy.bit-map';
-import {
-  MainFileIsDir,
-  PathOutsideConsumer,
-  VersionShouldBeRemoved,
-} from '../../src/consumer/component-ops/add-components/exceptions';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));

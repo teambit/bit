@@ -17,23 +17,16 @@ import {
   getIgnoreListHarmony,
   MissingMainFile,
 } from '@teambit/legacy.bit-map';
+import { DuplicateIds, EmptyDirectory, ExcludedMainFile, MainFileIsDir, NoFiles, PathsNotExist } from './exceptions';
+import { AddingIndividualFiles } from './exceptions/adding-individual-files';
+import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
+import { ParentDirTracked } from './exceptions/parent-dir-tracked';
+import PathOutsideConsumer from './exceptions/path-outside-consumer';
+import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { BitError } from '@teambit/bit-error';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { glob, isDir, pathNormalizeToLinux, PathLinux, PathLinuxRelative, PathOsBased } from '@teambit/legacy.utils';
-import {
-  DuplicateIds,
-  EmptyDirectory,
-  ExcludedMainFile,
-  MainFileIsDir,
-  NoFiles,
-  PathsNotExist,
-} from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions';
-import { AddingIndividualFiles } from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/adding-individual-files';
-import MissingMainFileMultipleComponents from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/missing-main-file-multiple-components';
-import { ParentDirTracked } from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/parent-dir-tracked';
-import PathOutsideConsumer from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/path-outside-consumer';
-import VersionShouldBeRemoved from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/version-should-be-removed';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { Workspace } from '@teambit/workspace';
 import determineMainFile from './determine-main-file';

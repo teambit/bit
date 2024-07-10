@@ -18,7 +18,7 @@ import {
   MergeResultsThreeWay,
   FilesStatus,
 } from '@teambit/merging';
-import ComponentsPendingMerge from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-merge';
+import ComponentsPendingMerge from '@teambit/legacy/dist/consumer/exceptions/components-pending-merge';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import VersionDependencies, {
   multipleVersionDependenciesToConsumer,

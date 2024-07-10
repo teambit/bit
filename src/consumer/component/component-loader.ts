@@ -10,7 +10,7 @@ import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { getLastModifiedPathsTimestampMs } from '@teambit/toolbox.fs.last-modified';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
+import ComponentsPendingImport from '../exceptions/components-pending-import';
 import Component, { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
 import { ComponentFsCache } from './component-fs-cache';
