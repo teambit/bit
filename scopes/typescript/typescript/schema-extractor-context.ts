@@ -5,7 +5,7 @@ import { head, uniqBy } from 'lodash';
 // @ts-ignore david we should figure fix this.
 // eslint-disable-next-line import/no-unresolved
 import protocol from 'typescript/lib/protocol';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import { pathNormalizeToLinux, isRelativeImport } from '@teambit/legacy.utils';
 import { resolve, sep, relative, join, isAbsolute, extname } from 'path';
 import { Component, ComponentID } from '@teambit/component';
 import {
@@ -17,7 +17,6 @@ import {
   IgnoredSchema,
   TagSchema,
 } from '@teambit/semantics.entities.semantic-schema';
-import isRelativeImport from '@teambit/legacy/dist/utils/is-relative-import';
 import { ComponentDependency } from '@teambit/dependency-resolver';
 import { Formatter } from '@teambit/formatter';
 import pMapSeries from 'p-map-series';
@@ -572,7 +571,7 @@ export class SchemaExtractorContext {
     if (!compFilePath) {
       // @todo handle this better
       throw new Error(
-        `cannot find file in component \n source file path ${sourceFilePath}\n 
+        `cannot find file in component \n source file path ${sourceFilePath}\n
         identifier file path ${identifier.filePath}\nrelative dir ${relativeDir}\n
         absFilePath ${absFilePath}`
       );

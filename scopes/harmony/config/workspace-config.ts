@@ -5,7 +5,7 @@ import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-
 import { ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
 import LegacyWorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { currentDateAndTimeToFileName } from '@teambit/legacy/dist/consumer/consumer';
 import { assign, parse, stringify, CommentJSONValue } from 'comment-json';
 import * as fs from 'fs-extra';

@@ -1,6 +1,6 @@
 import { MemoryFS } from '@teambit/any-fs';
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import { auto } from '@teambit/legacy/dist/utils/eol';
+import * as eol from '@teambit/toolbox.string.eol';
 import path from 'path';
 import { matchPatterns, splitPatterns } from '@teambit/toolbox.path.match-patterns';
 
@@ -58,7 +58,7 @@ export default class ComponentFS extends MemoryFS {
       let dirPath = file.relativeDir;
       if (!dirPath.startsWith('/')) dirPath = path.join('/', dirPath);
       fs.mkdirpSync(dirPath);
-      fs.writeFileSync(`/${file.relative}`, auto(file.contents || ''));
+      fs.writeFileSync(`/${file.relative}`, eol.auto(file.contents || ''));
     });
 
     return fs;

@@ -12,7 +12,7 @@ import { connect } from '../scope/network';
 import { Network } from '../scope/network/network';
 import { ObjectItemsStream, ObjectList } from '../scope/objects/object-list';
 import RemovedObjects from '../scope/removed-components';
-import { isBitUrl } from '../utils';
+import { isBitUrl } from '@teambit/legacy.utils';
 import { InvalidRemote } from './exceptions';
 
 /**

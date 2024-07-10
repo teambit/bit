@@ -20,13 +20,13 @@ import {
 } from '@teambit/workspace.modules.node-modules-linker';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { UiMain } from '@teambit/ui';
 import { readBitRootsDir } from '@teambit/bit-roots';
 import { groupBy, uniq } from 'lodash';
 import type { PreStartOpts } from '@teambit/ui';
-import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { MultiCompiler } from '@teambit/multi-compiler';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent } from './events';

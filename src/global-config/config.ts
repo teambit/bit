@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import * as path from 'path';
 
 import { GLOBAL_CONFIG, GLOBAL_CONFIG_FILE } from '../constants';
-import { mapToObject } from '../utils';
 
 export function getGlobalConfigPath() {
   return path.join(GLOBAL_CONFIG, GLOBAL_CONFIG_FILE);
@@ -47,4 +46,24 @@ export default class Config extends Map<string, string> {
     const contents = await fs.readFile(configPath);
     return new Config(Object.entries(JSON.parse(contents.toString())));
   }
+}
+
+/**
+ * Cast a `Map` to a plain object.
+ * Keys are being casted by invoking `toString` on each key.
+ * @name mapToObject
+ * @param {Map} map to cast
+ * @returns {*} plain object
+ * @example
+ * ```js
+ *  mapToObject(new Map([['key', 'val'], ['foo', 'bar']]));
+ *  // => { key: 'val', foo: 'bar' }
+ * ```
+ */
+function mapToObject(map: Map<any, any>): { [key: string]: any } {
+  const object = {};
+  map.forEach((val, key) => {
+    object[key.toString()] = val;
+  });
+  return object;
 }

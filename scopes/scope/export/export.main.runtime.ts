@@ -17,12 +17,12 @@ import {
   PRE_EXPORT_HOOK,
 } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import { BitMap } from '@teambit/legacy.bit-map';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import HooksManager from '@teambit/legacy/dist/hooks';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { Lane, ModelComponent, Symlink, Version } from '@teambit/legacy/dist/scope/models';
-import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
+import { hasWildcard } from '@teambit/legacy.utils';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -202,6 +202,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const nonExistOnBitMap = exported.filter(
       (id) => !workspaceIds.hasWithoutVersion(id) && !removedIds.hasWithoutVersion(id)
     );
+    // @ts-ignore todo: remove after deleting teambit.legacy
     const updatedIds = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
     // re-generate the package.json, this way, it has the correct data in the componentId prop.
     await linkToNodeModulesByIds(this.workspace, updatedIds, true);
