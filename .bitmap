@@ -386,6 +386,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/tables/cli-table"
     },
+    "cli/prompts": {
+        "name": "cli/prompts",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/cli/prompts"
+    },
     "cli/webpack-events-listener": {
         "name": "cli/webpack-events-listener",
         "scope": "teambit.preview",

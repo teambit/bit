@@ -1,4 +1,4 @@
-import { BASE_COMMUNITY_DOMAIN } from '../../constants';
+import { BASE_COMMUNITY_DOMAIN } from '@teambit/legacy/dist/constants';
 
 /**
  * schema for analytics.
