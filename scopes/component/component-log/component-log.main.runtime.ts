@@ -8,7 +8,7 @@ import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/work
 import { compact } from 'lodash';
 import pMapSeries from 'p-map-series';
 import { Version } from '@teambit/legacy/dist/scope/models';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { getFilesDiff } from '@teambit/legacy.component-diff';
 import chalk from 'chalk';

@@ -2,8 +2,8 @@ import cacache, { GetCacheObject } from 'cacache';
 import path from 'path';
 import fs from 'fs-extra';
 import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '@teambit/harmony.modules.feature-toggle';
-import { PathOsBasedAbsolute } from '../../utils/path';
-import type { ComponentMapFile } from '../bit-map/component-map';
+import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { ComponentMapFile } from '@teambit/legacy.bit-map';
 import logger from '../../logger/logger';
 
 const WORKSPACE_CACHE = 'cache';

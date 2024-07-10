@@ -1,8 +1,8 @@
 import { v4 } from 'uuid';
-import getStringifyArgs from '../../utils/string/get-stringify-args';
+import { getStringifyArgs } from '@teambit/legacy.utils';
+import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import BitObject from '../objects/object';
 import { Lane } from '.';
-import { getBasicLog } from '../../utils/bit/basic-log';
 
 type Log = { date: string; username?: string; email?: string; message?: string };
 

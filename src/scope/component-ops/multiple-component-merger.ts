@@ -1,5 +1,5 @@
-import { concurrentComponentsLimit } from '../../utils/concurrency';
-import { pMapPool } from '../../utils/promise-with-concurrent';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { ModelComponent } from '../models';
 import { SourceRepository } from '../repositories';
 import { ModelComponentMerger } from './model-components-merger';

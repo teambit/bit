@@ -9,24 +9,27 @@ import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/legacy/dist/utils';
-import { PathLinux, PathLinuxRelative, PathOsBased, removeFileExtension } from '@teambit/legacy/dist/utils/path';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import { getExt } from '@teambit/toolbox.fs.extension-getter';
+import {
+  pathNormalizeToLinux,
+  pathRelativeLinux,
+  PathLinux,
+  PathLinuxRelative,
+  PathOsBased,
+  removeFileExtension,
+} from '@teambit/legacy.utils';
+import { ResolvedPackageData } from '../resolve-pkg-data';
+import { ComponentMap } from '@teambit/legacy.bit-map';
 import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { RelativePath } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
-import { getDependencyTree } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder';
-import {
-  FileObject,
-  ImportSpecifier,
-  DependenciesTree,
-} from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
+import { RelativePath, ImportSpecifier } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
+import { getDependencyTree } from '../files-dependency-builder';
+import { FileObject, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
 import { DevFilesMain } from '@teambit/dev-files';
 import { Workspace } from '@teambit/workspace';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
-import { ResolvedPackageData } from '@teambit/legacy/dist/utils/packages';
-import { DependencyDetector } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
+import { DependencyDetector } from '../files-dependency-builder/detector-hook';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 import { DependenciesData } from './dependencies-data';
 import { AllDependencies, AllPackagesDependencies } from './apply-overrides';

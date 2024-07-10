@@ -12,7 +12,7 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import defaultErrorHandler from '@teambit/legacy/dist/cli/default-error-handler';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';

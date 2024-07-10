@@ -35,17 +35,17 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName, BitId } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
-import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import { GetBitMapComponentOptions, MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { pathIsInside } from '@teambit/legacy/dist/utils';
 import {
   PathOsBased,
   PathOsBasedRelative,
   PathOsBasedAbsolute,
   pathNormalizeToLinux,
-} from '@teambit/legacy/dist/utils/path';
+} from '@teambit/toolbox.path.path';
+import { isPathInside } from '@teambit/toolbox.path.is-path-inside';
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact, uniqBy } from 'lodash';
@@ -60,7 +60,6 @@ import { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
-import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
@@ -255,6 +254,7 @@ export class Workspace implements ComponentFactory {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
     this.validateConfig();
+    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     // memoize this method to improve performance.
     this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized = memoize(
@@ -1534,7 +1534,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   private isVendorComponentByComponentDir(relativeComponentDir: PathOsBasedRelative): boolean {
     const vendorDir = this.config.vendor?.directory || DEFAULT_VENDOR_DIR;
-    if (pathIsInside(relativeComponentDir, vendorDir)) {
+    if (isPathInside(relativeComponentDir, vendorDir)) {
       return true;
     }
     // TODO: implement
@@ -1702,6 +1702,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   async _reloadConsumer() {
     this.consumer = await loadConsumer(this.path, true);
+    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     await this.clearCache();
   }

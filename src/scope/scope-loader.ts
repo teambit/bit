@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { resolveHomePath } from '../utils';
+import { resolveHomePath } from '@teambit/legacy.utils';
 import { ScopeNotFound } from './exceptions';
 import Scope from './scope';
 

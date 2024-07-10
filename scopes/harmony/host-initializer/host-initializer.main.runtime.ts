@@ -3,7 +3,7 @@ import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { Consumer, getConsumerInfo } from '@teambit/legacy/dist/consumer';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Repository } from '@teambit/legacy/dist/scope/objects';
-import { isDirEmpty } from '@teambit/legacy/dist/utils';
+import { isDirEmpty } from '@teambit/toolbox.fs.is-dir-empty';
 import { WorkspaceExtensionProps } from '@teambit/config';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ObjectsWithoutConsumer } from './objects-without-consumer';

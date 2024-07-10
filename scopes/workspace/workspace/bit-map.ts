@@ -1,15 +1,13 @@
 import { isEqual, merge } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
-import LegacyBitMap from '@teambit/legacy/dist/consumer/bit-map';
+import { BitMap as LegacyBitMap, ComponentMap, GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import { EnvsAspect } from '@teambit/envs';
-import { getPathStatIfExist } from '@teambit/legacy/dist/utils/fs/last-modified';
-import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
+import { getPathStatIfExist } from '@teambit/toolbox.fs.last-modified';
 
 export type MergeOptions = {
   mergeStrategy?: 'theirs' | 'ours' | 'manual';
@@ -221,7 +219,7 @@ export class BitMap {
         }
         if (aspectId === EnvsAspect.id) {
           const envConfig = config[aspectId];
-          if (envConfig !== REMOVE_EXTENSION_SPECIAL_SIGN && envConfig.env === sourceId.toString()) {
+          if (envConfig !== '-' && envConfig.env === sourceId.toString()) {
             envConfig.env = targetId.toString();
             this.markAsChanged();
           }

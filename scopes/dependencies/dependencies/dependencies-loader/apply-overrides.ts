@@ -5,13 +5,13 @@ import { IssuesList, IssuesClasses, MissingPackagesData } from '@teambit/compone
 import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy/dist/constants';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
-import { ResolvedPackageData, resolvePackageData, resolvePackagePath } from '@teambit/legacy/dist/utils/packages';
-import { PathLinux } from '@teambit/legacy/dist/utils/path';
+import { PathLinux, resolvePackagePath } from '@teambit/legacy.utils';
+import { ResolvedPackageData, resolvePackageData } from '../resolve-pkg-data';
 import { Workspace } from '@teambit/workspace';
 import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import { ComponentMap } from '@teambit/legacy.bit-map';
 import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';
 import { DebugDependencies, FileType } from './auto-detect-deps';

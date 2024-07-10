@@ -6,7 +6,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { compact } from 'lodash';
-import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
+import { hasWildcard } from '@teambit/legacy.utils';
 import { BitError } from '@teambit/bit-error';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { IssuesClasses } from '@teambit/component-issues';
