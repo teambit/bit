@@ -456,7 +456,7 @@ export class AutoDetectDeps {
       // some files such as scss/json are needed to be imported as non-main
       return;
     }
-    const pkgRootDir = dependencyPkgData.packageJsonContent?.componentRootFolder;
+    const pkgRootDir = dependencyPkgData.packageJsonPath && path.dirname(dependencyPkgData.packageJsonPath);
     if (pkgRootDir && !fs.existsSync(path.join(pkgRootDir, DEFAULT_DIST_DIRNAME))) {
       // the dependency wasn't compiled yet. the issue is probably because depMain points to the dist
       // and depFullPath is in the source.

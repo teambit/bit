@@ -182,12 +182,10 @@ export default class PackageJsonFile {
 
   addDependencies(dependencies: Record<string, any>) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.packageJsonObject.dependencies = Object.assign({}, this.packageJsonObject.dependencies, dependencies);
   }
 
   addDevDependencies(dependencies: Record<string, any>) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.packageJsonObject.devDependencies = Object.assign({}, this.packageJsonObject.devDependencies, dependencies);
   }
@@ -239,6 +237,19 @@ export default class PackageJsonFile {
   mergePackageJsonObject(packageJsonObject: Record<string, any> | null | undefined): void {
     if (!packageJsonObject || R.isEmpty(packageJsonObject)) return;
     this.packageJsonObject = Object.assign(this.packageJsonObject, packageJsonObject);
+  }
+
+  /*
+   * remove components from package.json dependencies
+   */
+  async removeComponentsFromDependencies(components: Component[]) {
+    if (!this.fileExist) return;
+    const deps = this.packageJsonObject.dependencies;
+    if (!deps) return;
+    components.forEach((c) => {
+      this.removeDependency(componentIdToPackageName(c));
+    });
+    await this.write();
   }
 
   clone(): PackageJsonFile {
