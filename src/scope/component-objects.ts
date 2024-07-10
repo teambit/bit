@@ -1,4 +1,4 @@
-import { toBase64ArrayBuffer } from '../utils';
+import { toBase64ArrayBuffer } from '@teambit/legacy.utils';
 import ModelComponent from './models/model-component';
 import BitObject from './objects/object';
 

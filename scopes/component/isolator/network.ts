@@ -1,5 +1,5 @@
 import { ComponentID } from '@teambit/component';
-import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { compact } from 'lodash';
 import CapsuleList from './capsule-list';
 

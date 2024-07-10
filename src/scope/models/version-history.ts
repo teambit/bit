@@ -2,7 +2,7 @@ import { Graph, Edge, Node } from '@teambit/graph.cleargraph';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { compact, difference, uniqBy } from 'lodash';
-import getStringifyArgs from '../../utils/string/get-stringify-args';
+import { getStringifyArgs } from '@teambit/legacy.utils';
 import Ref from '../objects/ref';
 import BitObject from '../objects/object';
 import type Version from './version';

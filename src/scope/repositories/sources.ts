@@ -23,11 +23,11 @@ import Repository from '../objects/repository';
 import Scope from '../scope';
 import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
-import { concurrentComponentsLimit } from '../../utils/concurrency';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import { pathNormalizeToLinux } from '../../utils';
 import { getDivergeData } from '../component-ops/get-diverge-data';
-import { pMapPool } from '../../utils/promise-with-concurrent';
 
 export type ComponentTree = {
   component: ModelComponent;
