@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
-import { resolveConflictPrompt } from '@teambit/legacy/dist/prompts';
+import { resolveConflictPrompt } from '@teambit/legacy.cli.prompts';
 
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };
