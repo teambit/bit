@@ -168,7 +168,6 @@
     "@types/normalize-path": "^3.0.0",
     "array-difference": "0.0.2",
     "async-mutex": "0.3.1",
-    "bluebird": "3.7.2",
     "cacache": "15.0.5",
     "chalk": "2.4.2",
     "checksum": "0.1.1",
