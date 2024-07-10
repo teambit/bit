@@ -282,11 +282,15 @@ export function diag(x, y) {
     describe('that sets mixedImports for es6', () => {
       describe('for a file identified as es6', () => {
         it('returns both the commonjs and es6 dependencies', () => {
-          const deps = precinct(read('es6MixedImport.js'), {
-            es6: {
-              mixedImports: true,
-            },
-          });
+          const deps = precinct(
+            `import foo from './foo';
+var bar = require('./bar');`,
+            {
+              es6: {
+                mixedImports: true,
+              },
+            }
+          );
 
           assert.equal(Object.keys(deps).length, 2);
         });
@@ -294,11 +298,15 @@ export function diag(x, y) {
 
       describe('for a file identified as cjs', () => {
         it('returns both the commonjs and es6 dependencies', () => {
-          const deps = precinct(read('cjsMixedImport.js'), {
-            es6: {
-              mixedImports: true,
-            },
-          });
+          const deps = precinct(
+            `var bar = require('./bar');
+import foo from './foo';`,
+            {
+              es6: {
+                mixedImports: true,
+              },
+            }
+          );
 
           assert.equal(Object.keys(deps).length, 2);
         });
