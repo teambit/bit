@@ -382,9 +382,8 @@
     },
     "component-list": {
         "name": "component-list",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.legacy",
+        "scope": "teambit.legacy",
+        "version": "0.0.2",
         "mainFile": "index.ts",
         "rootDir": "components/legacy/component-list"
     },

@@ -42,7 +42,7 @@ describe('ComponentList', function () {
       const results = await componentList.listAll(false, true);
       const result = results[0];
       expect(result).to.have.property('id');
-      expect(result.id).to.be.an.instanceOf(ComponentID);
+      expect(result.id.constructor.name).to.equal(ComponentID.name);
     });
   });
   describe('filterComponentsByWildcard', () => {
