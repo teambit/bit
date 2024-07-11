@@ -25,7 +25,7 @@ type HookFailures = {
  * Setting up block level variable to store class state
  * set's to null by default.
  */
-let instance = null;
+let instance: HooksManager | null;
 
 /**
  * A class which manage all the hooks
@@ -37,12 +37,10 @@ export default class HooksManager {
 
   constructor() {
     if (!instance) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       instance = this;
     }
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return instance;
   }
 
