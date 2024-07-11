@@ -37,7 +37,7 @@ import { BitMap, NextVersion } from '@teambit/legacy.bit-map';
 import Component from './component';
 import ComponentLoader, { ComponentLoadOptions, LoadManyResult } from './component/component-loader';
 import { Dependencies } from './component/dependencies';
-import PackageJsonFile from './component/package-json-file';
+import { PackageJsonFile } from '@teambit/component.sources';
 import { ILegacyWorkspaceConfig } from './config';
 import WorkspaceConfig from './config/workspace-config';
 import { getConsumerInfo } from './consumer-locator';

@@ -3,22 +3,21 @@ import detectIndent from 'detect-indent';
 import detectNewline from 'detect-newline';
 import fs from 'fs-extra';
 import * as path from 'path';
-import R from 'ramda';
 import stringifyPackage from 'stringify-package';
-
-import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '../../constants';
-import logger from '../../logger/logger';
+import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy/dist/constants';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import Component from './consumer-component';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { JsonVinyl } from './json-vinyl';
+import { cloneDeep, isEmpty } from 'lodash';
 
 /**
  * when a package.json file is loaded, we save the indentation and the type of newline it uses, so
  * then we could preserve it later on while writing the file. this is same process used by NPM when
  * writing the package.json file
  */
-export default class PackageJsonFile {
+export class PackageJsonFile {
   packageJsonObject: Record<string, any>;
   fileExist: boolean;
   filePath: PathOsBasedRelative;
@@ -162,7 +161,7 @@ export default class PackageJsonFile {
       peerDependencies: {
         ...component.peerPackageDependencies,
       },
-      license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`,
+      license: `SEE LICENSE IN ${!isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`,
     };
     // @ts-ignore
     if (addExportProperty) packageJsonObject.exported = component.id.hasScope();
@@ -235,7 +234,7 @@ export default class PackageJsonFile {
   }
 
   mergePackageJsonObject(packageJsonObject: Record<string, any> | null | undefined): void {
-    if (!packageJsonObject || R.isEmpty(packageJsonObject)) return;
+    if (!packageJsonObject || isEmpty(packageJsonObject)) return;
     this.packageJsonObject = Object.assign(this.packageJsonObject, packageJsonObject);
   }
 
@@ -255,7 +254,7 @@ export default class PackageJsonFile {
   clone(): PackageJsonFile {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const clone = new PackageJsonFile(this);
-    clone.packageJsonObject = R.clone(this.packageJsonObject);
+    clone.packageJsonObject = cloneDeep(this.packageJsonObject);
     return clone;
   }
 

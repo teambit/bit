@@ -1,7 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
 import { ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
 import LegacyWorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import logger from '@teambit/legacy/dist/logger/logger';

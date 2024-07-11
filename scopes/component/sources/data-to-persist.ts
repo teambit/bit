@@ -1,14 +1,14 @@
-import Bluebird from 'bluebird';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import fs from 'fs-extra';
 import * as path from 'path';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
-import Symlink from '../../../links/symlink';
-import logger from '../../../logger/logger';
+import Symlink from '@teambit/legacy/dist/links/symlink';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { removeFilesAndEmptyDirsRecursively } from './remove-files-and-empty-dirs-recursively';
 import AbstractVinyl from './abstract-vinyl';
-import RemovePath from './remove-path';
+import { RemovePath } from './remove-path';
 
-export default class DataToPersist {
+export class DataToPersist {
   files: AbstractVinyl[];
   symlinks: Symlink[];
   remove: RemovePath[];
@@ -163,11 +163,10 @@ export default class DataToPersist {
   }
   async _persistFilesToFS() {
     const concurrency = concurrentIOLimit();
-    return Bluebird.map(this.files, (file) => file.write(), { concurrency });
+    return pMapPool(this.files, (file) => file.write(), { concurrency });
   }
   async _persistSymlinksToFS() {
-    const concurrency = concurrentIOLimit();
-    return Bluebird.map(this.symlinks, (symlink) => symlink.write(), { concurrency });
+    this.symlinks.forEach((symlink) => symlink.write());
   }
   async _deletePathsFromFS() {
     const pathWithRemoveItsDirIfEmptyEnabled = this.remove.filter((p) => p.removeItsDirIfEmpty).map((p) => p.path);
@@ -176,7 +175,7 @@ export default class DataToPersist {
       await removeFilesAndEmptyDirsRecursively(pathWithRemoveItsDirIfEmptyEnabled);
     }
     const concurrency = concurrentIOLimit();
-    return Bluebird.map(restPaths, (removePath) => removePath.persistToFS(), { concurrency });
+    return pMapPool(restPaths, (removePath) => removePath.persistToFS(), { concurrency });
   }
   _validateAbsolute() {
     // it's important to make sure that all paths are absolute before writing them to the

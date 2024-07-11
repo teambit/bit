@@ -2,17 +2,16 @@ import fs from 'fs-extra';
 import { filter } from 'bluebird';
 import path from 'path';
 import { ComponentID } from '@teambit/component-id';
-import R from 'ramda';
 import { BitError } from '@teambit/bit-error';
-import logger from '../../../logger/logger';
-import { Scope } from '../../../scope';
-import { Lane, Source } from '../../../scope/models';
-import { Ref } from '../../../scope/objects';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { Scope } from '@teambit/legacy/dist/scope';
+import { Lane, Source } from '@teambit/legacy/dist/scope/models';
+import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
-import { ExtensionDataList } from '../../config';
-import Component from '../consumer-component';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { ArtifactVinyl } from './artifact';
-import { MissingObjects } from '../../../scope/exceptions/missing-objects';
+import { MissingObjects } from '@teambit/legacy/dist/scope/exceptions/missing-objects';
 
 export type ArtifactRef = { relativePath: string; ref: Ref; url?: string };
 export type ArtifactModel = { relativePath: string; file: string; url?: string };
@@ -264,7 +263,7 @@ export async function importAllArtifactsFromLane(scope: Scope, components: Compo
         groupHashesFallBack,
         `to get all artifacts for ${components.length} components from main`
       );
-    } catch (err) {
+    } catch (err: any) {
       logger.error('failed fetching the following hashes from both lane and main', {
         groupedHashes: groupedHashesOnLane,
         debugHashesOrigin,
@@ -297,7 +296,7 @@ export function refsToModelObjects(refs: ArtifactRef[]): ArtifactModel[] {
 export function getRefsFromExtensions(extensions: ExtensionDataList): Ref[] {
   const artifactsFiles = getArtifactsFiles(extensions);
   const refs = artifactsFiles.map((artifactFiles) => artifactFiles.refs.map((r) => r.ref));
-  return R.flatten(refs).filter((ref) => ref);
+  return refs.flat().filter((ref) => ref);
 }
 
 export function getArtifactFilesByExtension(extensions: ExtensionDataList, extensionName: string): ArtifactFiles[] {

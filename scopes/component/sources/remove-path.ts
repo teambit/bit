@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import { removeFilesAndEmptyDirsRecursively } from './remove-files-and-empty-dirs-recursively';
 
-export default class RemovePath {
+export class RemovePath {
   path: string;
   removeItsDirIfEmpty: boolean;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

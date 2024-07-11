@@ -5,7 +5,7 @@ import { Scope } from '@teambit/legacy/dist/scope';
 import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { ConfigMain, WorkspaceConfig, WorkspaceExtensionProps, WorkspaceConfigFileProps } from '@teambit/config';
-import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
+import { PackageJsonFile } from '@teambit/component.sources';
 import { pickBy } from 'lodash';
 
 export async function createConsumer(
