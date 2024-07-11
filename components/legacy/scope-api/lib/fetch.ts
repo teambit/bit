@@ -4,7 +4,7 @@ import { ComponentIdList } from '@teambit/component-id';
 import semver from 'semver';
 import { LaneId } from '@teambit/lane-id';
 import { LATEST_BIT_VERSION, POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '@teambit/legacy/dist/constants';
-import HooksManager from '@teambit/legacy/dist/hooks';
+import { HooksManager } from '@teambit/legacy.hooks';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { loadScope, Scope } from '@teambit/legacy/dist/scope';
 import { Ref } from '@teambit/legacy/dist/scope/objects';

@@ -1,7 +1,7 @@
 import R from 'ramda';
 import { inspect } from 'util';
-import { HOOKS_NAMES } from '../constants';
-import logger from '../logger/logger';
+import { HOOKS_NAMES } from '@teambit/legacy/dist/constants';
+import logger from '@teambit/legacy/dist/logger/logger';
 import * as errors from './exceptions';
 
 export type HookAction = {

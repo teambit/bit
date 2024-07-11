@@ -6,7 +6,7 @@ import { ComponentIdList } from '@teambit/component-id';
 import { compact, isEmpty } from 'lodash';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
-import enrichContextFromGlobal from '@teambit/legacy/dist/hooks/utils/enrich-context-from-global';
+import { enrichContextFromGlobal } from '@teambit/legacy.hooks';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import { Remotes } from '@teambit/legacy/dist/remotes';

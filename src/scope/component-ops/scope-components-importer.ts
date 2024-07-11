@@ -10,7 +10,7 @@ import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/ha
 import { compact, flatten, partition, uniq } from 'lodash';
 import { Scope } from '..';
 import ConsumerComponent from '../../consumer/component';
-import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
+import { enrichContextFromGlobal } from '@teambit/legacy.hooks';
 import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import ComponentVersion from '../component-version';

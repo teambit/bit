@@ -2,7 +2,7 @@ import gitconfig from 'gitconfig';
 // import fs from 'fs-extra';
 import yn from 'yn';
 
-import * as globalConfig from '../../api/consumer/lib/global-config';
+import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import {
   CFG_REPOSITORY_REPORTING_KEY,
   // CFG_SSH_KEY_FILE_KEY,
@@ -10,14 +10,14 @@ import {
   CFG_USER_NAME_KEY,
   CFG_USER_TOKEN_KEY,
   // DEFAULT_SSH_KEY_FILE,
-} from '../../constants';
-import logger from '../../logger/logger';
+} from '@teambit/legacy/dist/constants';
+import logger from '@teambit/legacy/dist/logger/logger';
 
 /**
  * Add more keys to the context which will be passed to hooks
  * @param {Object} context
  */
-export default function enrichContextFromGlobal(context: Record<string, any> = {}) {
+export function enrichContextFromGlobal(context: Record<string, any> = {}) {
   logger.debug('enrich context from global config');
   const getContextToEnrich = () => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

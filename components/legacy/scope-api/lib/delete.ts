@@ -1,6 +1,6 @@
 import { ComponentIdList } from '@teambit/component-id';
 import { POST_REMOVE_REMOTE, PRE_REMOVE_REMOTE } from '@teambit/legacy/dist/constants';
-import HooksManager from '@teambit/legacy/dist/hooks';
+import { HooksManager } from '@teambit/legacy.hooks';
 import { loadScope } from '@teambit/legacy/dist/scope';
 import RemovedObjects, { RemovedObjectSerialized } from '@teambit/legacy/dist/scope/removed-components';
 

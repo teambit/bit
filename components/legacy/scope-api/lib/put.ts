@@ -1,7 +1,7 @@
 import R from 'ramda';
 import { ComponentIdList } from '@teambit/component-id';
 import { POST_RECEIVE_OBJECTS, PRE_RECEIVE_OBJECTS } from '@teambit/legacy/dist/constants';
-import HooksManager from '@teambit/legacy/dist/hooks';
+import { HooksManager } from '@teambit/legacy.hooks';
 import { loadScope } from '@teambit/legacy/dist/scope';
 import { exportManyBareScope } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';

@@ -695,6 +695,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/harmony-ui-app/harmony-ui-app"
     },
+    "hooks": {
+        "name": "hooks",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/hooks"
+    },
     "hooks/use-api": {
         "name": "hooks/use-api",
         "scope": "teambit.api-reference",

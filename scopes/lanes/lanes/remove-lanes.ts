@@ -1,7 +1,7 @@
 import groupArray from 'group-array';
 import { LaneId } from '@teambit/lane-id';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import enrichContextFromGlobal from '@teambit/legacy/dist/hooks/utils/enrich-context-from-global';
+import { enrichContextFromGlobal } from '@teambit/legacy.hooks';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
