@@ -3,8 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
-import Helper from '../../src/e2e-helper/e2e-helper';
-import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
+import { Helper, DEFAULT_OWNER } from '@teambit/legacy.e2e-helper';
 import { ComponentNotFound } from '../../src/scope/exceptions';
 
 chai.use(require('chai-fs'));

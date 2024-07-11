@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
 import { glob } from 'glob';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('bit clear-cache', function () {
   this.timeout(0);
