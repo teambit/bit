@@ -20,7 +20,7 @@ import {
   CFG_USER_NAME_KEY,
   DEFAULT_BIT_ENV,
 } from '@teambit/legacy/dist/constants';
-import { analyticsPrompt, errorReportingPrompt } from '@teambit/legacy/dist/prompts';
+import { analyticsPrompt, errorReportingPrompt } from '@teambit/legacy.cli.prompts';
 
 const LEVEL = {
   DEBUG: 'debug',
