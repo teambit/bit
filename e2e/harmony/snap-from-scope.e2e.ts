@@ -511,6 +511,34 @@ export const BasicIdInput = () => {
         expect(updateDepsOutput).to.include('comp3 is not in the npm registry'); // not a mandatory test
       });
     });
+    describe('updating the dependent of the dependent', () => {
+      before(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteScope);
+        const bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+        const data = [
+          {
+            componentId: `${helper.scopes.remote}/comp1`,
+            message: 'msg',
+          },
+        ];
+        const flags = `--lane ${helper.scopes.remote}/dev --update-dependents --push`;
+        // console.log('data', JSON.stringify(data), 'flags', flags);
+        snapResult = helper.command.snapFromScopeParsed(bareTag.scopePath, data, flags);
+      });
+      it('should update successfully with dependencies from update-dependents and export it correctly', () => {
+        const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+        expect(lane).to.have.property('updateDependents');
+        expect(lane.updateDependents).to.have.lengthOf(2);
+
+        const comp1Str = lane.updateDependents.find((c) => c.includes('comp1'));
+        const comp2Str = lane.updateDependents.find((c) => c.includes('comp2'));
+        const comp2Ver = comp2Str.split('@')[1];
+        const comp1 = helper.command.catComponent(comp1Str, helper.scopes.remotePath);
+        expect(comp1.dependencies[0].id.name).to.equal('comp2');
+        expect(comp1.dependencies[0].id.version).to.equal(comp2Ver);
+      });
+    });
   });
   describe('updating packages (not components)', () => {
     before(() => {

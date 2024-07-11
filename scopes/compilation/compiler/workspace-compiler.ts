@@ -4,6 +4,7 @@ import { Component } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
+import type { WorkspaceComponentLoadOptions } from '@teambit/workspace';
 import { WatcherMain, WatchOptions } from '@teambit/watcher';
 import path from 'path';
 import chalk from 'chalk';
@@ -11,21 +12,19 @@ import { ComponentID } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
-import { AbstractVinyl, Dist } from '@teambit/legacy/dist/consumer/component/sources';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { AbstractVinyl, Dist, DataToPersist, RemovePath } from '@teambit/component.sources';
 import {
   linkToNodeModulesByComponents,
   removeLinksFromNodeModules,
 } from '@teambit/workspace.modules.node-modules-linker';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { UiMain } from '@teambit/ui';
 import { readBitRootsDir } from '@teambit/bit-roots';
 import { groupBy, uniq } from 'lodash';
 import type { PreStartOpts } from '@teambit/ui';
-import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { MultiCompiler } from '@teambit/multi-compiler';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent } from './events';
@@ -112,10 +111,6 @@ export class ComponentCompiler {
     dataToPersist.addManyFiles(this.dists);
     dataToPersist.addBasePath(this.workspace.path);
     await dataToPersist.persistAllToFS();
-    const linkComponents = options.linkComponents ?? true;
-    if (linkComponents) {
-      await linkToNodeModulesByComponents([this.component], this.workspace);
-    }
     const buildResults = this.dists.map((distFile) => distFile.path);
     if (this.component.state._consumer.compiler) loader.succeed();
 
@@ -327,17 +322,23 @@ export class WorkspaceCompiler {
   async compileComponents(
     componentsIds: string[] | ComponentID[] | ComponentID[], // when empty, it compiles new+modified (unless options.all is set),
     options: CompileOptions,
-    noThrow?: boolean
+    noThrow?: boolean,
+    componentLoadOptions: WorkspaceComponentLoadOptions = {}
   ): Promise<BuildResult[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const componentIds = await this.getIdsToCompile(componentsIds, options.changed);
     // In case the aspect failed to load, we want to compile it without try to re-load it again
-    const getManyOpts =
-      options.initiator === CompilationInitiator.AspectLoadFail ? { loadSeedersAsAspects: false } : undefined;
-    const components = await this.workspace.getMany(componentIds, getManyOpts);
+    if (options.initiator === CompilationInitiator.AspectLoadFail) {
+      componentLoadOptions.loadSeedersAsAspects = false;
+    }
+    const components = await this.workspace.getMany(componentIds, componentLoadOptions);
     const grouped = this.groupByIsEnv(components);
     const envsResults = grouped.envs ? await this.runCompileComponents(grouped.envs, options, noThrow) : [];
     const otherResults = grouped.other ? await this.runCompileComponents(grouped.other, options, noThrow) : [];
+    const linkComponents = options.linkComponents ?? true;
+    if (linkComponents) {
+      await linkToNodeModulesByComponents(components, this.workspace);
+    }
     return [...envsResults, ...otherResults];
   }
 

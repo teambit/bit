@@ -1,7 +1,7 @@
 import { ComponentID } from '@teambit/component-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import { ScopeMain } from '@teambit/scope';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';

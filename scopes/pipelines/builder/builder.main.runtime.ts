@@ -1,6 +1,5 @@
 import { cloneDeep } from 'lodash';
-import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
-import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactVinyl, ArtifactFiles, ArtifactObject } from '@teambit/component.sources';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentMap, IComponent, ComponentAspect, ComponentMain, ComponentID } from '@teambit/component';
@@ -13,7 +12,7 @@ import { AspectAspect } from '@teambit/aspect';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { UIAspect, UiMain, BundleUiTask } from '@teambit/ui';
@@ -80,18 +79,19 @@ export class BuilderMain {
 
   private async storeArtifacts(tasksResults: TaskResults[]) {
     const artifacts = tasksResults.flatMap((t) => (t.artifacts ? [t.artifacts] : []));
-    const storeP = artifacts.map(async (artifactMap: ComponentMap<ArtifactList<FsArtifact>>) => {
-      return Promise.all(
-        artifactMap.toArray().map(async ([component, artifactList]) => {
-          try {
-            return await artifactList.store(component);
-          } catch (err: any) {
-            throw new ArtifactStorageError(err, component);
-          }
-        })
-      );
-    });
-    await Promise.all(storeP);
+    await Promise.all(
+      artifacts.map(async (artifactMap: ComponentMap<ArtifactList<FsArtifact>>) => {
+        await Promise.all(
+          artifactMap.toArray().map(async ([component, artifactList]) => {
+            try {
+              await artifactList.store(component);
+            } catch (err: any) {
+              throw new ArtifactStorageError(err, component.id.toString());
+            }
+          })
+        );
+      })
+    );
   }
 
   pipelineResultsToBuilderData(
@@ -103,7 +103,7 @@ export class BuilderMain {
       const aspectsData = buildPipelineResultList.getDataOfComponent(component.id);
       const pipelineReport = buildPipelineResultList.getPipelineReportOfComponent(component.id);
       const artifacts = buildPipelineResultList.getArtifactsDataOfComponent(component.id);
-      return { pipeline: pipelineReport, artifacts, aspectsData, bitVersion: getHarmonyVersion(true) };
+      return { pipeline: pipelineReport, artifacts, aspectsData, bitVersion: getBitVersion() };
     });
   }
 

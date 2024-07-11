@@ -1,5 +1,4 @@
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
-import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
 import mapSeries from 'p-map-series';
 import path from 'path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -35,12 +34,11 @@ import { Scope } from '@teambit/legacy/dist/scope';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import chokidar from '@teambit/chokidar';
 import { Types } from '@teambit/legacy/dist/scope/object-registrar';
-import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
-import { remove } from '@teambit/legacy/dist/api/scope';
+import { remove, FETCH_OPTIONS, ExternalActions } from '@teambit/legacy.scope-api';
 import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
@@ -63,6 +61,11 @@ import { StagedConfig } from './staged-config';
 import { NoIdMatchPattern } from './exceptions/no-id-match-pattern';
 import { ScopeAspectsLoader, ScopeLoadAspectsOptions } from './scope-aspects-loader';
 import { ClearCacheAction } from './clear-cache-action';
+import { CatScopeCmd } from './debug-commands/cat-scope-cmd';
+import { CatComponentCmd } from './debug-commands/cat-component-cmd';
+import CatObjectCmd from './debug-commands/cat-object-cmd';
+import CatLaneCmd from './debug-commands/cat-lane-cmd';
+import { RunActionCmd } from './run-action/run-action.cmd';
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
@@ -92,6 +95,12 @@ export type LoadOptions = {
    * In case the component we are loading is env, whether to load it as env (in a scope aspects capsule)
    */
   loadEnvs?: boolean;
+
+  /**
+   * Should we load the components' aspects (this useful when you only want sometime to load the component itself
+   * as aspect but not its aspects)
+   */
+  loadCompAspects?: boolean;
 };
 
 export type ScopeConfig = {
@@ -794,7 +803,7 @@ export class ScopeMain implements ComponentFactory {
   async loadMany(
     ids: ComponentID[],
     lane?: Lane,
-    opts: LoadOptions = { loadApps: true, loadEnvs: true }
+    opts: LoadOptions = { loadApps: true, loadEnvs: true, loadCompAspects: true }
   ): Promise<Component[]> {
     const components = await mapSeries(ids, (id) => this.load(id, lane, opts));
     return compact(components);
@@ -1074,29 +1083,31 @@ export class ScopeMain implements ComponentFactory {
   async load(
     id: ComponentID,
     lane?: Lane,
-    opts: LoadOptions = { loadApps: true, loadEnvs: true }
+    opts: LoadOptions = { loadApps: true, loadEnvs: true, loadCompAspects: true }
   ): Promise<Component | undefined> {
     const component = await this.get(id);
     if (!component) return undefined;
-    return this.loadCompAspects(component, lane, opts);
+    const optsWithDefaults = { loadApps: true, loadEnvs: true, loadCompAspects: true, ...opts };
+    return this.loadCompAspects(component, lane, optsWithDefaults);
   }
 
   async loadCompAspects(
     component: Component,
     lane?: Lane,
-    opts: LoadOptions = { loadApps: true, loadEnvs: true }
+    opts: LoadOptions = { loadApps: true, loadEnvs: true, loadCompAspects: true }
   ): Promise<Component> {
-    const aspectIds = component.state.aspects.ids;
+    const optsWithDefaults = { loadApps: true, loadEnvs: true, loadCompAspects: true, ...opts };
+    const aspectIds = optsWithDefaults.loadCompAspects ? component.state.aspects.ids : [];
     // load components from type aspects as aspects.
     // important! previously, this was running for any aspect, not only apps. (the if statement was `this.aspectLoader.isAspectComponent(component)`)
     // Ran suggests changing it and if it breaks something, we'll document is and fix it.
-    if (opts.loadApps) {
+    if (optsWithDefaults.loadApps) {
       const appData = component.state.aspects.get('teambit.harmony/application');
       if (appData?.data?.appName) {
         aspectIds.push(component.id.toString());
       }
     }
-    if (opts.loadEnvs) {
+    if (optsWithDefaults.loadEnvs) {
       const envsData = component.state.aspects.get(EnvsAspect.id);
       if (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env') {
         aspectIds.push(component.id.toString());
@@ -1214,7 +1225,8 @@ export class ScopeMain implements ComponentFactory {
     harmony: Harmony
   ) {
     const bitConfig: any = harmony.config.get('teambit.harmony/bit');
-    cli.register(new ScopeCmd());
+    const debugCommands = [new CatScopeCmd(), new CatComponentCmd(), new CatObjectCmd(), new CatLaneCmd()];
+    cli.register(new ScopeCmd(), ...debugCommands, new RunActionCmd());
     const legacyScope = await loadScopeIfExist(bitConfig?.cwd);
     if (!legacyScope) {
       return undefined;

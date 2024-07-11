@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import * as path from 'path';
 import { BitError } from '@teambit/bit-error';
-import { PathLinux, PathOsBased } from '@teambit/legacy/dist/utils/path';
+import { PathLinux, PathOsBased } from '@teambit/legacy.utils';
 import { AddActionResults, Warnings } from './add-components';
 import { TrackerMain } from './tracker.main.runtime';
 

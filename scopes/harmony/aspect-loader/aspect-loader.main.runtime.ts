@@ -538,7 +538,7 @@ export class AspectLoaderMain {
     return !isEmpty(files);
   }
 
-  private searchDistFile(rootDir: string, relativePath: string) {
+  private searchDistFile(rootDir: string, relativePath: string, replaceNotFound = false) {
     const defaultDistDir = join(rootDir, 'dist');
     const fileExtension = extname(relativePath);
     const fileNames = ['ts', 'js', 'tsx', 'jsx'].map((ext) =>
@@ -546,15 +546,21 @@ export class AspectLoaderMain {
     );
     const defaultDistPath = fileNames.map((fileName) => join(defaultDistDir, fileName));
     const found = defaultDistPath.find((distPath) => existsSync(distPath));
-    return found;
+    if (found) return found;
+    if (!replaceNotFound) return null;
+    const jsFileName = relativePath.replace(new RegExp(`${fileExtension}$`), `.js`);
+    const finalPath = join(defaultDistDir, jsFileName);
+    return finalPath;
   }
 
   pluginFileResolver(component: Component, rootDir: string) {
     return (relativePath: string) => {
+      const replaceNotFound = relativePath.endsWith('.ts') || relativePath.endsWith('.tsx');
+
       try {
         const compiler = this.getCompiler(component);
         if (!compiler) {
-          const distFile = this.searchDistFile(rootDir, relativePath);
+          const distFile = this.searchDistFile(rootDir, relativePath, replaceNotFound);
           return distFile || join(rootDir, relativePath);
         }
 
@@ -565,7 +571,7 @@ export class AspectLoaderMain {
         this.logger.info(
           `pluginFileResolver: got an error during get compiler for component ${component.id.toString()}, probably the env is not loaded yet ${err}`
         );
-        const distFile = this.searchDistFile(rootDir, relativePath);
+        const distFile = this.searchDistFile(rootDir, relativePath, replaceNotFound);
         return distFile || join(rootDir, relativePath);
       }
     };

@@ -8,15 +8,14 @@ import { UIAspect, UiMain } from '@teambit/ui';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { ForkingAspect, ForkingMain } from '@teambit/forking';
-import { init } from '@teambit/legacy/dist/api/consumer';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
-import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable';
-import GitNotFound from '@teambit/legacy/dist/utils/git/exceptions/git-not-found';
+import { getGitExecutablePath, GitNotFound } from '@teambit/git.modules.git-executable';
 import { join } from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { GitAspect, GitMain } from '@teambit/git';
 import { InstallAspect, InstallMain } from '@teambit/install';
+import { HostInitializerMain } from '@teambit/host-initializer';
 import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 // import { ComponentGenerator } from './component-generator';
 import { WorkspaceTemplate, WorkspaceContext } from './workspace-template';
@@ -50,7 +49,18 @@ export class WorkspaceGenerator {
     try {
       process.chdir(this.workspacePath);
       await this.initGit();
-      await init(this.workspacePath, this.options.skipGit, false, false, false, false, false, false, false, {});
+      await HostInitializerMain.init(
+        this.workspacePath,
+        this.options.skipGit,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        {}
+      );
       await this.writeWorkspaceFiles();
       await this.reloadBitInWorkspaceDir();
       // Setting the workspace to be in install context to prevent errors during the workspace generation

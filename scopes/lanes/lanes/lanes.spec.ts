@@ -1,18 +1,20 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
+import { Harmony } from '@teambit/harmony';
 import { loadAspect, loadManyAspects } from '@teambit/harmony.testing.load-aspect';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { LaneId } from '@teambit/lane-id';
-import { SUPPORT_LANE_HISTORY, addFeature, removeFeature } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { SUPPORT_LANE_HISTORY, addFeature, removeFeature } from '@teambit/harmony.modules.feature-toggle';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { LanesAspect } from './lanes.aspect';
 import { LanesMain } from './lanes.main.runtime';
+import { MergeLanesAspect, MergeLanesMain } from '@teambit/merge-lanes';
 
 describe('LanesAspect', function () {
   this.timeout(0);
@@ -400,6 +402,63 @@ describe('LanesAspect', function () {
       expect(Object.keys(history).length).to.equal(3);
       const snapHistory = history[Object.keys(history)[2]];
       expect(snapHistory.deleted?.length).to.equal(1);
+    });
+  });
+
+  describe('create comps on a lane then switch to main with --head', () => {
+    let lanes: LanesMain;
+    let workspaceData: WorkspaceData;
+    let snapping: SnappingMain;
+    let laneId: LaneId;
+    let harmony: Harmony;
+    before(async () => {
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      await mockComponents(workspacePath);
+      harmony = await loadManyAspects(
+        [SnappingAspect, ExportAspect, RemoveAspect, WorkspaceAspect, LanesAspect],
+        workspaceData.workspacePath
+      );
+      lanes = harmony.get(LanesAspect.id);
+      await lanes.createLane('stage');
+
+      const currentLaneId = lanes.getCurrentLaneId();
+      if (!currentLaneId) throw new Error('unable to get the current lane-id');
+      laneId = currentLaneId;
+
+      snapping = harmony.get(SnappingAspect.id);
+      await snapping.snap({ build: false });
+      const exporter: ExportMain = harmony.get(ExportAspect.id);
+      await exporter.export();
+
+      // in another workspace, merge the lane into main.
+      const workspaceData2 = mockWorkspace({ bareScopeName: workspaceData.remoteScopeName });
+      const harmony2 = await loadManyAspects(
+        [SnappingAspect, ExportAspect, RemoveAspect, WorkspaceAspect, LanesAspect, MergeLanesAspect],
+        workspaceData2.workspacePath
+      );
+      const mergeLanes2 = harmony2.get<MergeLanesMain>(MergeLanesAspect.id);
+      const lanes2 = harmony2.get<LanesMain>(LanesAspect.id);
+      const currentLaneId2 = lanes2.getCurrentLaneId() as LaneId;
+      await mergeLanes2.mergeLane(laneId, currentLaneId2, {
+        mergeStrategy: 'manual',
+        skipDependencyInstallation: true,
+      });
+      const export2 = harmony2.get<ExportMain>(ExportAspect.id);
+      await export2.export();
+
+      // reload harmony, otherwise, the "lanes" aspect has the workspace of harmony2.
+      harmony = await loadManyAspects([LanesAspect], workspaceData.workspacePath);
+      lanes = harmony.get(LanesAspect.id);
+      await lanes.switchLanes('main', { head: true, skipDependencyInstallation: true });
+    });
+    after(async () => {
+      await destroyWorkspace(workspaceData);
+    });
+    it('the components should be available on main', () => {
+      const workspace: Workspace = harmony.get(WorkspaceAspect.id);
+      const ids = workspace.listIds();
+      expect(ids.length).to.equal(1);
     });
   });
 });

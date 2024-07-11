@@ -11,15 +11,15 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import HooksManager from '@teambit/legacy/dist/hooks';
 import pMapSeries from 'p-map-series';
-import { validateVersion } from '@teambit/legacy/dist/utils/semver-helper';
 import loader from '@teambit/legacy/dist/cli/loader';
-import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
+import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import pMap from 'p-map';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
-import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
+import { validateVersion } from '@teambit/pkg.modules.semver-helper';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
@@ -34,11 +34,7 @@ import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-compon
 import { isHash, isTag } from '@teambit/component-version';
 import { BitObject, Ref, Repository } from '@teambit/legacy/dist/scope/objects';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
-import {
-  ArtifactFiles,
-  ArtifactSource,
-  getArtifactsFiles,
-} from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFiles, ArtifactSource, getArtifactsFiles, SourceFile } from '@teambit/component.sources';
 import {
   VersionNotFound,
   ComponentNotFound,
@@ -47,7 +43,6 @@ import {
 } from '@teambit/legacy/dist/scope/exceptions';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { DependenciesAspect, DependenciesMain } from '@teambit/dependencies';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
@@ -405,7 +400,7 @@ if you're willing to lose the history from the head to the specified version, us
       this.scope.legacyScope.setCurrentLaneId(laneId);
       this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
     }
-    const laneCompIds = lane?.toComponentIds();
+    const laneCompIds = lane?.toComponentIdsIncludeUpdateDependents();
     const snapDataPerComp = snapDataPerCompRaw.map((snapData) => {
       return {
         componentId: ComponentID.fromString(snapData.componentId),

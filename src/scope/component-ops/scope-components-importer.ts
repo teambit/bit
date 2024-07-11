@@ -6,6 +6,7 @@ import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import groupArray from 'group-array';
 import R from 'ramda';
+import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { compact, flatten, partition, uniq } from 'lodash';
 import { Scope } from '..';
 import ConsumerComponent from '../../consumer/component';
@@ -22,14 +23,13 @@ import { getScopeRemotes } from '../scope-remotes';
 import VersionDependencies from '../version-dependencies';
 import { BitObjectList } from '../objects/bit-object-list';
 import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
-import { concurrentComponentsLimit } from '../../utils/concurrency';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { BuildStatus } from '../../constants';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
 import { getAllVersionHashes } from './traverse-versions';
-import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
-import { pMapPool } from '../../utils/promise-with-concurrent';
-import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
+import { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 
 type HashesPerRemote = { [remoteName: string]: string[] };
 

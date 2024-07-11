@@ -5,6 +5,7 @@ import ts, {
   ParameterDeclaration,
   SyntaxKind,
   ArrayBindingElement,
+  isComputedPropertyName,
 } from 'typescript';
 import {
   InferenceTypeSchema,
@@ -102,12 +103,19 @@ export class ParameterTransformer implements SchemaTransformer {
       const info = await context.getQuickInfo(elem.name);
       const parsed = info ? parseTypeFromQuickInfo(info) : elem.getText();
       const defaultValue = elem.initializer ? elem.initializer.getText() : undefined;
+      const alias =
+        elem.propertyName && isComputedPropertyName(elem.propertyName)
+          ? elem.propertyName?.expression.getText()
+          : undefined;
+
+      const name = elem.name.getText();
       return new InferenceTypeSchema(
         context.getLocation(elem.name),
         parsed,
-        elem.name.getText(),
+        name,
         defaultValue,
-        Boolean(elem.dotDotDotToken)
+        Boolean(elem.dotDotDotToken),
+        alias
       );
     });
   }

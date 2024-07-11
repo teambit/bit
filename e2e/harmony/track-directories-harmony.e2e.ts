@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/adding-individual-files';
+import { AddingIndividualFiles } from '@teambit/tracker';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 // track directories functionality = add/rename files to rootDir.

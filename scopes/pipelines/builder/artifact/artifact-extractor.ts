@@ -6,7 +6,7 @@ import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
 import minimatch from 'minimatch';
-import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFiles } from '@teambit/component.sources';
 import { BuilderMain } from '../builder.main.runtime';
 import { ArtifactsOpts } from './artifacts.cmd';
 import { ArtifactList } from './artifact-list';

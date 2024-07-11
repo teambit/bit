@@ -1,7 +1,7 @@
 import { pickBy } from 'lodash';
 import R from 'ramda';
 import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_PACKAGE_MANAGER } from '../../constants';
-import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
+import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import AbstractConfig from './abstract-config';
 import { InvalidPackageJson } from './exceptions';
 import InvalidPackageManager from './exceptions/invalid-package-manager';
@@ -17,15 +17,6 @@ export type WorkspaceConfigLoadFunction = (
   workspacePath: string | PathOsBased,
   scopePath: PathOsBasedAbsolute
 ) => Promise<ILegacyWorkspaceConfig | undefined>;
-
-export type WorkspaceConfigEnsureFunction = (
-  workspacePath: PathOsBasedAbsolute,
-  scopePath: PathOsBasedAbsolute,
-  standAlone: boolean,
-  workspaceConfigProps: WorkspaceConfigProps
-) => Promise<ILegacyWorkspaceConfig>;
-
-export type WorkspaceConfigResetFunction = (dirPath: PathOsBasedAbsolute, resetHard: boolean) => Promise<void>;
 
 export type WorkspaceConfigProps = {
   lang?: string;
@@ -52,14 +43,6 @@ export default class WorkspaceConfig extends AbstractConfig {
   static workspaceConfigLoadingRegistry: WorkspaceConfigLoadFunction;
   static registerOnWorkspaceConfigLoading(func: WorkspaceConfigLoadFunction) {
     this.workspaceConfigLoadingRegistry = func;
-  }
-  static workspaceConfigEnsuringRegistry: WorkspaceConfigEnsureFunction;
-  static registerOnWorkspaceConfigEnsuring(func: WorkspaceConfigEnsureFunction) {
-    this.workspaceConfigEnsuringRegistry = func;
-  }
-  static workspaceConfigResetRegistry: WorkspaceConfigResetFunction;
-  static registerOnWorkspaceConfigReset(func: WorkspaceConfigResetFunction) {
-    this.workspaceConfigResetRegistry = func;
   }
 
   constructor({
@@ -116,26 +99,6 @@ export default class WorkspaceConfig extends AbstractConfig {
 
   static create(workspaceConfigProps: WorkspaceConfigProps): WorkspaceConfig {
     return new WorkspaceConfig(workspaceConfigProps);
-  }
-
-  static async ensure(
-    workspacePath: PathOsBasedAbsolute,
-    scopePath: PathOsBasedAbsolute,
-    standAlone = false,
-    workspaceConfigProps: WorkspaceConfigProps = {} as any
-  ): Promise<ILegacyWorkspaceConfig> {
-    const ensureFunc = this.workspaceConfigEnsuringRegistry;
-    return ensureFunc(workspacePath, scopePath, standAlone, workspaceConfigProps);
-  }
-
-  static async reset(
-    workspacePath: PathOsBasedAbsolute,
-    scopePath: PathOsBasedAbsolute,
-    resetHard: boolean
-  ): Promise<void> {
-    const resetFunc = this.workspaceConfigResetRegistry;
-    await resetFunc(workspacePath, resetHard);
-    await WorkspaceConfig.ensure(workspacePath, scopePath);
   }
 
   static async loadIfExist(

@@ -2,7 +2,7 @@ import cliSpinners from 'cli-spinners';
 import * as path from 'path';
 import { homedir, platform } from 'os';
 
-import { PathOsBased } from './utils/path';
+import type { PathOsBased } from '@teambit/toolbox.path.path';
 import { getSync } from './api/consumer/lib/global-config';
 
 const packageFile = require('../package.json');
@@ -258,9 +258,6 @@ export const BITMAP_PREFIX_MESSAGE = `/**
  * If you want to delete components you can use the "bit remove <component-id>" command.
  * See the docs (${BASE_DOCS_DOMAIN}reference/components/removing-components) for more information, or use "bit remove --help".
  */\n\n`;
-
-export const BIT_DESCRIPTION =
-  'bit is a free and open source tool designed for easy use, maintenance and discovery of code components.';
 
 /**
  * bit commands

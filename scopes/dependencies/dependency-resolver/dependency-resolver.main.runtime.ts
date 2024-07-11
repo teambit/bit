@@ -23,15 +23,15 @@ import {
   getCloudDomain,
 } from '@teambit/legacy/dist/constants';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
+import { DetectorHook } from '@teambit/dependencies';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 import { onTagIdTransformer } from '@teambit/snapping';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import { ProjectManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';

@@ -1,6 +1,6 @@
-import AbstractError from './abstract-error';
+import { BitError } from '@teambit/bit-error';
 
-export default class ExternalError extends AbstractError {
+export default class ExternalError extends BitError {
   originalError: Error;
   constructor(originalError: Error) {
     super();

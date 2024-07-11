@@ -6,24 +6,24 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { compact } from 'lodash';
-import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
-import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/lib/list-scope';
+import { hasWildcard } from '@teambit/legacy.utils';
 import { BitError } from '@teambit/bit-error';
-import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { IssuesClasses } from '@teambit/component-issues';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
 import { NoHeadNoVersion } from '@teambit/legacy/dist/scope/exceptions/no-head-no-version';
 import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
-import { removeComponentsFromNodeModules } from '@teambit/legacy/dist/consumer/component/package-json-utils';
+import { deleteComponentsFiles } from './delete-component-files';
 import { RemoveCmd } from './remove-cmd';
-import { RemoveComponentsResult, removeComponents } from './remove-components';
+import { RemoveComponentsResult, removeComponents, removeComponentsFromNodeModules } from './remove-components';
 import { RemoveAspect } from './remove.aspect';
 import { RemoveFragment } from './remove.fragment';
 import { RecoverCmd, RecoverOptions } from './recover-cmd';
 import { DeleteCmd } from './delete-cmd';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import { ListerAspect, ListerMain } from '@teambit/lister';
+import chalk from 'chalk';
 
 const BEFORE_REMOVE = 'removing components';
 
@@ -47,7 +47,8 @@ export class RemoveMain {
     private scope: ScopeMain,
     public logger: Logger,
     private importer: ImporterMain,
-    private depResolver: DependencyResolverMain
+    private depResolver: DependencyResolverMain,
+    private lister: ListerMain
   ) {}
 
   async remove({
@@ -148,7 +149,18 @@ export class RemoveMain {
     if (currentLane && !updateMain && opts.range) {
       throw new BitError(`--range is not needed when deleting components from a lane, unless --update-main is used`);
     }
-
+    if (currentLane && !updateMain) {
+      const laneComp = currentLane.toComponentIds();
+      const compIdsNotOnLane = componentIds.filter((id) => !laneComp.hasWithoutVersion(id));
+      if (compIdsNotOnLane.length) {
+        throw new BitError(
+          `unable to delete the following component(s) because they are not part of the current lane.
+${chalk.bold(compIdsNotOnLane.map((id) => id.toString()).join('\n'))}
+to simply remove them from the workspace, use "bit remove".
+to delete them eventually from main, use "--update-main" flag and make sure to remove all occurrences from the code.`
+        );
+      }
+    }
     return this.markRemoveComps(componentIds, opts);
   }
 
@@ -314,6 +326,12 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     return Boolean(isRemoved);
   }
 
+  async isEnvByIdWithoutLoadingComponent(componentId: ComponentID): Promise<boolean> {
+    const versionObj = await this.workspace.scope.getBitObjectVersionById(componentId);
+    const envData = versionObj?.extensions.findCoreExtension('teambit.envs/envs');
+    return envData?.data.type === 'env';
+  }
+
   /**
    * get components that were soft-removed and tagged/snapped/merged but not exported yet.
    */
@@ -329,16 +347,27 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
 
   private async addRemovedDepIssue(component: Component) {
     const dependencies = this.depResolver.getComponentDependencies(component);
-    const removedWithUndefined = await Promise.all(
+    const removedDependencies: ComponentID[] = [];
+    let removedEnv: ComponentID | undefined;
+    await Promise.all(
       dependencies.map(async (dep) => {
         const isRemoved = await this.isRemovedByIdWithoutLoadingComponent(dep.componentId);
-        if (isRemoved) return dep.componentId;
-        return undefined;
+        if (!isRemoved) return;
+        const isEnv = await this.isEnvByIdWithoutLoadingComponent(dep.componentId);
+        if (isEnv) {
+          removedEnv = dep.componentId;
+        } else {
+          removedDependencies.push(dep.componentId);
+        }
       })
     );
-    const removed = compact(removedWithUndefined).map((id) => id.toString());
-    if (removed.length) {
-      component.state.issues.getOrCreate(IssuesClasses.RemovedDependencies).data = removed;
+    if (removedDependencies.length) {
+      component.state.issues.getOrCreate(IssuesClasses.RemovedDependencies).data = removedDependencies.map((r) =>
+        r.toString()
+      );
+    }
+    if (removedEnv) {
+      component.state.issues.getOrCreate(IssuesClasses.RemovedEnv).data = removedEnv.toString();
     }
   }
 
@@ -385,7 +414,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
 
   private async getRemoteBitIdsToRemove(componentsPattern: string): Promise<ComponentID[]> {
     if (hasWildcard(componentsPattern)) {
-      return getRemoteBitIdsByWildcards(componentsPattern);
+      return this.lister.getRemoteCompIdsByWildcards(componentsPattern);
     }
     return [ComponentID.fromString(componentsPattern)];
   }
@@ -400,10 +429,21 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     ImporterAspect,
     DependencyResolverAspect,
     IssuesAspect,
+    ListerAspect,
   ];
   static runtime = MainRuntime;
 
-  static async provider([workspace, scope, cli, loggerMain, componentAspect, importerMain, depResolver, issues]: [
+  static async provider([
+    workspace,
+    scope,
+    cli,
+    loggerMain,
+    componentAspect,
+    importerMain,
+    depResolver,
+    issues,
+    lister,
+  ]: [
     Workspace,
     ScopeMain,
     CLIMain,
@@ -411,10 +451,11 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     ComponentMain,
     ImporterMain,
     DependencyResolverMain,
-    IssuesMain
+    IssuesMain,
+    ListerMain
   ]) {
     const logger = loggerMain.createLogger(RemoveAspect.id);
-    const removeMain = new RemoveMain(workspace, scope, logger, importerMain, depResolver);
+    const removeMain = new RemoveMain(workspace, scope, logger, importerMain, depResolver, lister);
     issues.registerAddComponentsIssues(removeMain.addRemovedDependenciesIssues.bind(removeMain));
     componentAspect.registerShowFragments([new RemoveFragment(removeMain)]);
     cli.register(

@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { BitError } from '@teambit/bit-error';
-import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
+import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import loader from '@teambit/legacy/dist/cli/loader';
 import {
@@ -17,12 +17,12 @@ import {
   PRE_EXPORT_HOOK,
 } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import { BitMap } from '@teambit/legacy.bit-map';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import HooksManager from '@teambit/legacy/dist/hooks';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { Lane, ModelComponent, Symlink, Version } from '@teambit/legacy/dist/scope/models';
-import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
+import { hasWildcard } from '@teambit/legacy.utils';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -34,7 +34,7 @@ import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { EjectAspect, EjectMain, EjectResults } from '@teambit/eject';
-import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { ExportOrigin } from '@teambit/legacy/dist/scope/network/http/http';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
@@ -202,6 +202,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const nonExistOnBitMap = exported.filter(
       (id) => !workspaceIds.hasWithoutVersion(id) && !removedIds.hasWithoutVersion(id)
     );
+    // @ts-ignore todo: remove after deleting teambit.legacy
     const updatedIds = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
     // re-generate the package.json, this way, it has the correct data in the componentId prop.
     await linkToNodeModulesByIds(this.workspace, updatedIds, true);

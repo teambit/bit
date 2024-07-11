@@ -10,7 +10,11 @@ const dest = `${process.env.localappdata}\\${linkName}`;
 
 try {
   rmSync(dest, { recursive: true });
-} catch (err) {} // maybe doesn't exist
+} catch (err) {
+  if (err.code !== 'ENOENT') {
+    throw err; // it can be a permissions error for example. we want to know about it.
+  }
+}
 
 try {
   unlinkSync(dest);

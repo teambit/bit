@@ -1,5 +1,5 @@
 import { Route, Verb, Request, Response } from '@teambit/express';
-import { action } from '@teambit/legacy/dist/api/scope/lib/action';
+import { action } from '@teambit/legacy.scope-api';
 import { getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
 import { ScopeMain } from '../scope.main.runtime';
 

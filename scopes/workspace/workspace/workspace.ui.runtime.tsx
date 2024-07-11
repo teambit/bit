@@ -277,6 +277,8 @@ export class WorkspaceUI {
       },
     ]);
 
+    workspaceUI.registerMenuWidget([commandBarUI.CommandBarButton]);
+
     return workspaceUI;
   }
 }

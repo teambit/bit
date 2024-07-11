@@ -54,4 +54,5 @@ export enum TagName {
   return = 'return',
   deprecated = 'deprecated',
   exports = 'exports',
+  link = 'link',
 }

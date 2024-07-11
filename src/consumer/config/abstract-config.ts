@@ -4,7 +4,7 @@ import { pickBy } from 'lodash';
 import R from 'ramda';
 import { BitIds } from '@teambit/legacy-bit-id';
 import { DEFAULT_EXTENSIONS, DEFAULT_LANGUAGE, PACKAGE_JSON } from '../../constants';
-import { PathLinux, PathOsBased } from '../../utils/path';
+import { PathLinux, PathOsBased } from '@teambit/legacy.utils';
 import { ExtensionDataList } from './extension-data';
 
 export type EnvFile = {

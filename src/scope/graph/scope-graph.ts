@@ -6,7 +6,7 @@ import ComponentsList from '../../consumer/component/components-list';
 import Component from '../../consumer/component/consumer-component';
 import { DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
 import Consumer from '../../consumer/consumer';
-import { getLatestVersionNumber } from '../../utils';
+import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { getAllVersionsInfo } from '../component-ops/traverse-versions';
 import { IdNotFoundInGraph } from '../exceptions/id-not-found-in-graph';
 import { ModelComponent, Version } from '../models';

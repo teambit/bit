@@ -3,7 +3,7 @@ import * as path from 'path';
 
 import { GLOBAL_CONFIG, GLOBAL_REMOTES } from '../constants';
 import Remote from '../remotes/remote';
-import { writeFile } from '../utils';
+import { writeFile } from '@teambit/legacy.utils';
 
 export default class GlobalRemotes {
   remotes: { [key: string]: string };

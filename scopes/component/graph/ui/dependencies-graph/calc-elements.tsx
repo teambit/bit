@@ -28,7 +28,7 @@ export function calcElements(
         type: 'ComponentNode',
         data: {
           node: x,
-          type: rootNode && x.component.id.isEqual(rootNode, { ignoreVersion: true }) ? 'root' : undefined,
+          type: rootNode && x.componentId.isEqual(rootNode, { ignoreVersion: true }) ? 'root' : undefined,
         },
         position: positions.get(x.id) || { x: 0, y: 0 },
       };
@@ -49,5 +49,5 @@ export function calcElements(
     }));
 
     return { nodes, edges };
-  }, [graph]);
+  }, [graph?.nodes.length, graph?.edges.length, rootNode?.toString(), graph?.nodes.some((n) => n.component)]);
 }

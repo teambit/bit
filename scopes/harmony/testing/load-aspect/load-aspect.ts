@@ -130,7 +130,5 @@ function clearGlobalsIfNeeded() {
   // registerCoreExtensions() from @teambit/bit, which as far as I remember should not be a dependency of this aspect.
   // ExtensionDataList.coreExtensionsNames = new Map();
   // @ts-ignore
-  WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;
-  // @ts-ignore
   WorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
 }

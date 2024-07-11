@@ -14,4 +14,3 @@ export const BEFORE_EXPORTS = 'exporting components';
 export const BEFORE_LOADING_COMPONENTS = 'loading components';
 export const BEFORE_STATUS = 'fetching status';
 export const BEFORE_CHECKOUT = 'switching component version...';
-export const BEFORE_SHOW_REMOTE = 'showing a component...';

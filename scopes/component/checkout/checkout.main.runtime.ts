@@ -5,15 +5,16 @@ import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { ApplyVersionResults, FailedComponents } from '@teambit/merging';
+import {
+  ApplyVersionResults,
+  FailedComponents,
+  threeWayMerge,
+  getMergeStrategyInteractive,
+  MergeStrategy,
+} from '@teambit/merging';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import {
-  getMergeStrategyInteractive,
-  MergeStrategy,
-  threeWayMerge,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import mapSeries from 'p-map-series';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Version, ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
@@ -32,7 +33,7 @@ export type CheckoutProps = {
   latest?: boolean;
   main?: boolean; // relevant for "revert" only
   promptMergeOptions?: boolean;
-  mergeStrategy?: MergeStrategy | null; // strategy to use in case of conflicts
+  mergeStrategy?: MergeStrategy; // strategy to use in case of conflicts
   forceOurs?: boolean; // regardless of conflicts, use ours
   forceTheirs?: boolean; // regardless of conflicts, use theirs
   verbose?: boolean;
@@ -168,6 +169,7 @@ export class CheckoutMain {
         skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap || checkoutProps.revert,
         shouldUpdateWorkspaceConfig: true,
         reasonForBitmapChange: 'checkout',
+        mergeStrategy: checkoutProps.mergeStrategy,
       };
       componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
     }

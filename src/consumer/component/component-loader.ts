@@ -2,22 +2,21 @@ import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import * as path from 'path';
 import { ComponentIssue } from '@teambit/component-issues';
-import { createInMemoryCache } from '../../cache/cache-factory';
-import { getMaxSizeForComponents, InMemoryCache } from '../../cache/in-memory-cache';
+import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { BIT_MAP } from '../../constants';
 import logger from '../../logger/logger';
 import { ModelComponent } from '../../scope/models';
-import { getLatestVersionNumber } from '../../utils';
-import { getLastModifiedPathsTimestampMs } from '../../utils/fs/last-modified';
-import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
+import { getLatestVersionNumber } from '@teambit/legacy.utils';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { getLastModifiedPathsTimestampMs } from '@teambit/toolbox.fs.last-modified';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import ComponentsPendingImport from '../exceptions/components-pending-import';
 import Component, { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
 import { ComponentFsCache } from './component-fs-cache';
-import ComponentMap from '../bit-map/component-map';
+import { ComponentMap } from '@teambit/legacy.bit-map';
 import { VERSION_ZERO } from '../../scope/models/model-component';
 import loader from '../../cli/loader';
-import { concurrentComponentsLimit } from '../../utils/concurrency';
-import { pMapPool } from '../../utils/promise-with-concurrent';
 
 export type ComponentLoadOptions = {
   loadDocs?: boolean;
@@ -90,6 +89,8 @@ export default class ComponentLoader {
       const pathsToCheck = [
         path.join(this.consumer.getPath(), 'node_modules'),
         path.join(this.consumer.getPath(), 'package.json'),
+        path.join(this.consumer.getPath(), 'pnpm-lock.yaml'),
+        path.join(this.consumer.getPath(), 'yarn.lock'),
         path.join(this.consumer.getPath(), BIT_MAP),
         this.consumer.config.path,
       ];
@@ -151,8 +152,8 @@ export default class ComponentLoader {
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents, removedComponents };
     const storeInCache = loadOptsWithDefaults?.storeInCache ?? true;
     const allComponents: Component[] = [];
-    // await mapSeries(idsToProcess, async (id: BitId) => {
-    // await Promise.all(
+    const shouldRunInParallel = await this.shouldRunInParallel(idsToProcess);
+    logger.debug(`loading ${idsToProcess.length} components in parallel: ${shouldRunInParallel.toString()}`);
     await pMapPool(
       idsToProcess,
       async (id: ComponentID) => {
@@ -173,7 +174,7 @@ export default class ComponentLoader {
           allComponents.push(component);
         }
       },
-      { concurrency: concurrentComponentsLimit() }
+      { concurrency: shouldRunInParallel ? concurrentComponentsLimit() : 1 }
     );
 
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents, removedComponents };
@@ -238,7 +239,6 @@ export default class ComponentLoader {
     component.componentMap = this.consumer.bitMap.getComponent(updatedId);
 
     const loadDependencies = async () => {
-      await this.invalidateDependenciesCacheIfNeeded();
       await ComponentLoader.loadDeps(component, {
         cacheResolvedDependencies: this.cacheResolvedDependencies,
         cacheProjectAst: this.cacheProjectAst,
@@ -273,6 +273,27 @@ export default class ComponentLoader {
         component.issues.add(issue);
       });
     });
+  }
+
+  /**
+   * when multiple components don't have the dependencies cache, we have to parse lots of files to get the dependencies.
+   * in many cases, the same files are parsed for multiple components, so loading multiple components in parallel hurts
+   * the performance by making unnecessary fs calls.
+   * this function returns true only if the dependencies cache has all the components. or when only one component is missing.
+   */
+  private async shouldRunInParallel(ids: ComponentID[]): Promise<boolean> {
+    await this.invalidateDependenciesCacheIfNeeded();
+    if (ids.length < 2) {
+      return false;
+    }
+    const dependenciesCacheList = await this.componentFsCache.listDependenciesDataCache();
+    const depsInCache = Object.keys(dependenciesCacheList);
+    if (!depsInCache.length) {
+      return false;
+    }
+    const idsStr = ids.map((id) => id.toString());
+    const notInCache = idsStr.filter((id) => !depsInCache.includes(id));
+    return notInCache.length < 2;
   }
 
   private async _handleOutOfSyncScenarios(componentMap: ComponentMap): Promise<ComponentID | undefined> {

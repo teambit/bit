@@ -1,6 +1,5 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
-import { PushOptions } from '../../api/scope/lib/put';
+import { PushOptions, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import Component from '../../consumer/component';
 import { ListScopeResult } from '../../consumer/component/components-list';
 import DependencyGraph from '../graph/scope-graph';

@@ -20,8 +20,8 @@ import {
   FieldsDiff,
   FileDiff,
   getFilesDiff,
-} from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import { diffBetweenComponentsObjects } from '@teambit/legacy/dist/consumer/component-ops/components-object-diff';
+  diffBetweenComponentsObjects,
+} from '@teambit/legacy.component-diff';
 import { TesterMain, TesterAspect } from '@teambit/tester';
 import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
 import { componentCompareSchema } from './component-compare.graphql';

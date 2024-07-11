@@ -1,9 +1,9 @@
 import { Component } from '@teambit/component';
 import pMapSeries from 'p-map-series';
-import type { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import type { ArtifactObject } from '@teambit/component.sources';
 import { ComponentID } from '@teambit/component-id';
 import { Scope } from '@teambit/legacy/dist/scope';
-import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
+import { ArtifactVinyl } from '@teambit/component.sources';
 import { FsArtifact } from './fs-artifact';
 import { Artifact } from './artifact';
 import {
@@ -105,18 +105,19 @@ export class ArtifactList<T extends Artifact> extends Array<T> {
    */
   async store(component: Component) {
     const byResolvers = this.groupByResolver();
-    const promises = Object.keys(byResolvers).map(async (key) => {
-      const artifacts = byResolvers[key];
-      if (!artifacts.length) return;
-      const storageResolver = artifacts[0].storageResolver;
-      const artifactList = ArtifactList.fromArray(artifacts);
-      const artifactPromises = artifactList.map(async (artifact) => {
-        return this.storeArtifact(storageResolver, artifact, component);
-      });
-      await Promise.all(artifactPromises);
-    });
-
-    return Promise.all(promises);
+    await Promise.all(
+      Object.keys(byResolvers).map(async (key) => {
+        const artifacts = byResolvers[key];
+        if (!artifacts.length) return;
+        const storageResolver = artifacts[0].storageResolver;
+        const artifactList = ArtifactList.fromArray(artifacts);
+        await Promise.all(
+          artifactList.map(async (artifact) => {
+            await this.storeArtifact(storageResolver, artifact, component);
+          })
+        );
+      })
+    );
   }
 
   private async storeArtifact(storageResolver: ArtifactStorageResolver, artifact: Artifact, component: Component) {

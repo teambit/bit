@@ -1,7 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { isEmpty } from 'lodash';
 import chalk from 'chalk';
-import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
+import { hasWildcard } from '@teambit/legacy.utils';
 import { listTemplate } from './list-template';
 import { ListerMain, ListScopeResult } from './lister.main.runtime';
 
@@ -72,10 +72,10 @@ export class ListCmd implements Command {
       if (hasWildcard(namespace)) return namespace;
       return `${namespace}/*`;
     };
-    const namespaceWithWildcard = getNamespaceWithWildcard();
+    const namespacesUsingWildcards = getNamespaceWithWildcard();
 
     return scopeName
-      ? this.lister.remoteList(scopeName, namespaceWithWildcard)
-      : this.lister.localList(scope, outdated, namespaceWithWildcard);
+      ? this.lister.remoteList(scopeName, { namespacesUsingWildcards })
+      : this.lister.localList(scope, outdated, namespacesUsingWildcards);
   }
 }

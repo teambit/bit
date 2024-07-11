@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import { EOL } from 'os';
 import * as path from 'path';
 
-import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { NewerVersionFound } from '../../src/consumer/exceptions';
 import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
 import { Extensions, FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
@@ -580,7 +580,7 @@ describe('bit checkout command', function () {
   });
   describe('checkout head with deps having different versions than workspace.jsonc', () => {
     let beforeCheckout: string;
-    const initWsWithVer = (ver: string) => {
+    const initWsWithVer = (ver: string, checkoutFlags = '') => {
       helper.scopeHelper.getClonedLocalScope(beforeCheckout);
       helper.workspaceJsonc.addPolicyToDependencyResolver({
         dependencies: {
@@ -588,7 +588,7 @@ describe('bit checkout command', function () {
         },
       });
       helper.npm.addFakeNpmPackage('lodash.get', ver.replace('^', '').replace('~', ''));
-      helper.command.checkoutHead(undefined, '-x');
+      helper.command.checkoutHead(undefined, `-x ${checkoutFlags}`);
     };
 
     before(() => {
@@ -627,6 +627,18 @@ describe('bit checkout command', function () {
       expect(policy).to.have.string('"lodash.get": "4.4.1"');
       expect(policy).to.have.string('"lodash.get": "^4.4.2"');
       expect(policy).to.have.string('>>>>>>> theirs');
+    });
+
+    it('if the ws has a lower exact version, and merge strategy is "theirs" it should update according to the head', () => {
+      initWsWithVer('4.4.1', '--auto-merge-resolve theirs');
+      const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+      expect(policy.dependencies['lodash.get']).to.equal('^4.4.2');
+    });
+
+    it('if the ws has a lower exact version, and merge strategy is "ours" it should keep the workspace.jsonc intact', () => {
+      initWsWithVer('4.4.1', '--auto-merge-resolve ours');
+      const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+      expect(policy.dependencies['lodash.get']).to.equal('4.4.1');
     });
   });
   describe('checkout reset with changes in component.json', () => {

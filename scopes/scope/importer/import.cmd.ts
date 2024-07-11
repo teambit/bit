@@ -1,15 +1,17 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { compact, uniq } from 'lodash';
-import { installationErrorOutput, compilationErrorOutput, getWorkspaceConfigUpdateOutput } from '@teambit/merging';
 import {
+  installationErrorOutput,
+  compilationErrorOutput,
+  getWorkspaceConfigUpdateOutput,
   FileStatus,
   MergeOptions,
   MergeStrategy,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
+} from '@teambit/merging';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { immutableUnshift } from '@teambit/legacy/dist/utils';
+import { immutableUnshift } from '@teambit/legacy.utils';
 import { ImporterMain } from './importer.main.runtime';
 import { ImportOptions, ImportDetails, ImportStatus, ImportResult } from './import-components';
 
@@ -27,6 +29,7 @@ type ImportFlags = {
   filterEnvs?: string;
   saveInLane?: boolean;
   dependencies?: boolean;
+  dependenciesHead?: boolean;
   dependents?: boolean;
   dependentsDryRun?: boolean;
   dependentsVia?: string;
@@ -75,6 +78,7 @@ export class ImportCmd implements Command {
       'dependencies',
       'import all dependencies (bit components only) of imported components and write them to the workspace',
     ],
+    ['', 'dependencies-head', 'same as --dependencies, except it imports the dependencies with their head version'],
     [
       '',
       'dependents',
@@ -211,6 +215,7 @@ export class ImportCmd implements Command {
       filterEnvs,
       saveInLane = false,
       dependencies = false,
+      dependenciesHead = false,
       dependents = false,
       dependentsDryRun = false,
       silent,
@@ -233,6 +238,9 @@ export class ImportCmd implements Command {
     }
     if (!ids.length && dependencies) {
       throw new BitError('you have to specify ids to use "--dependencies" flag');
+    }
+    if (!ids.length && dependenciesHead) {
+      throw new BitError('you have to specify ids to use "--dependencies-head" flag');
     }
     if (!ids.length && dependents) {
       throw new BitError('you have to specify ids to use "--dependents" flag');
@@ -268,6 +276,7 @@ export class ImportCmd implements Command {
       writeConfigFiles: !skipWriteConfigFiles,
       saveInLane,
       importDependenciesDirectly: dependencies,
+      importHeadDependenciesDirectly: dependenciesHead,
       importDependents: dependents,
       dependentsVia,
       dependentsAll,

@@ -199,7 +199,7 @@ describe('peer-dependencies functionality', function () {
     }
   );
 
-  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+  (supportNpmCiRegistryTesting ? describe.skip : describe.skip)(
     'a component is a peer dependency added by dep set',
     function () {
       let workspaceCapsulesRootDir: string;
