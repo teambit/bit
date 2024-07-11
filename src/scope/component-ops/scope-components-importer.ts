@@ -10,7 +10,6 @@ import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/ha
 import { compact, flatten, partition, uniq } from 'lodash';
 import { Scope } from '..';
 import ConsumerComponent from '../../consumer/component';
-import { enrichContextFromGlobal } from '@teambit/legacy.hooks';
 import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import ComponentVersion from '../component-version';
@@ -821,7 +820,6 @@ export default class ScopeComponentsImporter {
       if (this.isIdLocal(id, includeUnexported))
         throw new Error(`getExternalMany expects to get external ids only, got ${id.toString()}`);
     });
-    enrichContextFromGlobal(Object.assign({}, { requestedBitIds: ids.map((id) => id.toString()) }));
     // avoid re-fetching the components with all deps if they're still un-built
     const onlyIfBuilt = ids.every((id) => this.sources.isUnBuiltInCache(id));
     await new ObjectFetcher(
@@ -909,7 +907,6 @@ export default class ScopeComponentsImporter {
     logger.debug(`getExternalManyWithoutDeps, ${left.length} left. Fetching them from a remote. ids: ${leftIdsStr}`);
     const context = { requestedBitIds: leftIds.map((id) => id.toString()) };
     lane = await this.getLaneForFetcher(lane);
-    enrichContextFromGlobal(context);
     const isUsingImporter = isFeatureEnabled(CLOUD_IMPORTER) || isFeatureEnabled(CLOUD_IMPORTER_V2);
     await new ObjectFetcher(
       this.repo,
