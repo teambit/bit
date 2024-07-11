@@ -15,6 +15,7 @@ type AbstractVinylProps = {
   contents: Buffer;
 };
 
+// @ts-ignore
 export default class AbstractVinyl extends (Vinyl as FileConstructor) {
   override = true;
   verbose = false;
