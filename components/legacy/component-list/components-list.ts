@@ -2,19 +2,19 @@ import { compact } from 'lodash';
 import pFilter from 'p-filter';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import R from 'ramda';
-import { LATEST } from '../../constants';
-import { SnapsDistance } from '../../scope/component-ops/snaps-distance';
-import { getDivergeData } from '../../scope/component-ops/get-diverge-data';
-import { Lane } from '../../scope/models';
-import ModelComponent from '../../scope/models/model-component';
-import Scope from '../../scope/scope';
-import { fetchRemoteVersions } from '../../scope/scope-remotes';
+import { LATEST } from '@teambit/legacy/dist/constants';
+import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
+import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
+import { Lane } from '@teambit/legacy/dist/scope/models';
+import ModelComponent from '@teambit/legacy/dist/scope/models/model-component';
+import Scope from '@teambit/legacy/dist/scope/scope';
+import { fetchRemoteVersions } from '@teambit/legacy/dist/scope/scope-remotes';
 import { isBitIdMatchByWildcards } from '@teambit/legacy.utils';
 import { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
-import Component from '../component';
-import { InvalidComponent } from '../component/consumer-component';
-import Consumer from '../consumer';
-import { ComponentLoadOptions } from './component-loader';
+import Component from '@teambit/legacy/dist/consumer/component';
+import { InvalidComponent } from '@teambit/legacy/dist/consumer/component/consumer-component';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 
 export type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
 export type ListScopeResult = {
@@ -29,7 +29,7 @@ export type ListScopeResult = {
 export type DivergedComponent = { id: ComponentID; diverge: SnapsDistance };
 export type OutdatedComponent = { id: ComponentID; headVersion: string; latestVersion?: string };
 
-export default class ComponentsList {
+export class ComponentsList {
   consumer: Consumer;
   scope: Scope;
   bitMap: BitMap;
