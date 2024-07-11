@@ -1,3 +1,5 @@
+// @bit-no-check
+// @ts-nocheck
 import { MdxEnv } from '@teambit/mdx.mdx-env';
 
 export class MyMdxEnv extends MdxEnv {

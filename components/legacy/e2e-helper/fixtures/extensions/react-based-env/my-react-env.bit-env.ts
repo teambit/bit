@@ -1,3 +1,5 @@
+// @bit-no-check
+// @ts-nocheck
 import { ReactEnv } from '@teambit/react.react-env';
 import type { ReactEnvInterface } from '@teambit/react.react-env';
 
