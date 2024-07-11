@@ -2,7 +2,7 @@ import { ComponentID, AspectList, AspectEntry, ResolveComponentIdFunc } from '@t
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
 import { ExtensionDataList, configEntryToDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
-import { JsonVinyl } from '@teambit/legacy/dist/consumer/component/json-vinyl';
+import { JsonVinyl } from '@teambit/component.sources';
 import detectIndent from 'detect-indent';
 import detectNewline from 'detect-newline';
 import fs from 'fs-extra';

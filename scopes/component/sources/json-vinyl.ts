@@ -2,10 +2,9 @@ import { dirname, basename } from 'path';
 import fs from 'fs-extra';
 import stringifyPackage from 'stringify-package';
 import writeFileAtomic from 'write-file-atomic';
-
-import ValidationError from '../../error/validation-error';
-import logger from '../../logger/logger';
-import AbstractVinyl from './sources/abstract-vinyl';
+import ValidationError from '@teambit/legacy/dist/error/validation-error';
+import logger from '@teambit/legacy/dist/logger/logger';
+import AbstractVinyl from './abstract-vinyl';
 
 /**
  * When writing the `package.json`, it uses the package `stringifyPackage` from the NPM guys, which

@@ -1,10 +1,10 @@
 import fs from 'fs-extra';
 
-import ValidationError from '../../../error/validation-error';
-import logger from '../../../logger/logger';
+import ValidationError from '@teambit/legacy/dist/error/validation-error';
+import logger from '@teambit/legacy/dist/logger/logger';
 import AbstractVinyl from './abstract-vinyl';
 
-export default class JSONFile extends AbstractVinyl {
+export class JSONFile extends AbstractVinyl {
   override = false;
 
   async write(): Promise<string> {

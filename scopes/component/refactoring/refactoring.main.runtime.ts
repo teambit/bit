@@ -5,7 +5,7 @@ import { compact } from 'lodash';
 import { replacePackageName } from '@teambit/legacy.utils';
 import { ComponentAspect, Component, ComponentID, ComponentMain } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import {

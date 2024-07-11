@@ -12,7 +12,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
-import { importAllArtifactsFromLane } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { importAllArtifactsFromLane } from '@teambit/component.sources';
 import { InstallAspect, InstallMain } from '@teambit/install';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';

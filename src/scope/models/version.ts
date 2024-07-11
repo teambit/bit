@@ -8,8 +8,7 @@ import { BuildStatus, DEFAULT_BUNDLE_FILENAME, Extensions } from '../../constant
 import ConsumerComponent from '../../consumer/component';
 import { isSchemaSupport, SchemaFeature, SchemaName } from '../../consumer/component/component-schema';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
-import { SourceFile } from '../../consumer/component/sources';
-import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
+import { getRefsFromExtensions, SourceFile } from '@teambit/component.sources';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/extension-data';
 import { Doclet } from '../../jsdoc/types';
@@ -353,6 +352,7 @@ export default class Version extends BitObject {
     }
     if (includeArtifacts) {
       const artifacts = getRefsFromExtensions(this.extensions);
+      // @ts-ignore todo: remove after deleting teambit.legacy
       allRefs.push(...artifacts);
     }
     if (this.flattenedEdgesRef) allRefs.push(this.flattenedEdgesRef);
@@ -754,6 +754,7 @@ export default class Version extends BitObject {
   }
 
   modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {
+    // @ts-ignore todo: remove after deleting teambit.legacy
     return Promise.all(this.files.map((file) => SourceFile.loadFromSourceFileModel(file, repository)));
   }
 
