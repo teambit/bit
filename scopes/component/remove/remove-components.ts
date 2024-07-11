@@ -11,7 +11,7 @@ import { Http } from '@teambit/legacy/dist/scope/network/http';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { deleteComponentsFiles } from './delete-component-files';
-import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import { ComponentsList } from '@teambit/legacy.component-list';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 import pMapSeries from 'p-map-series';

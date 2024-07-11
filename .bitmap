@@ -380,6 +380,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/component-issues"
     },
+    "component-list": {
+        "name": "component-list",
+        "scope": "teambit.legacy",
+        "version": "0.0.2",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/component-list"
+    },
     "component-log": {
         "name": "component-log",
         "scope": "teambit.component",

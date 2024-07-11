@@ -8,7 +8,7 @@ import { compact, difference, uniq } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Extensions, LATEST, BuildStatus } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import { ComponentsList } from '@teambit/legacy.component-list';
 import pMapSeries from 'p-map-series';
 import loader from '@teambit/legacy/dist/cli/loader';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
