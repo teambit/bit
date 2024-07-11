@@ -6,7 +6,6 @@ import { ComponentIdList } from '@teambit/component-id';
 import { compact, isEmpty } from 'lodash';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
-import enrichContextFromGlobal from '@teambit/legacy/dist/hooks/utils/enrich-context-from-global';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import { Remotes } from '@teambit/legacy/dist/remotes';
@@ -90,7 +89,6 @@ async function removeRemote(
     );
   }
   const context = {};
-  enrichContextFromGlobal(context);
   const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
     const resolvedRemote = await remotes.resolve(key, workspace?.scope.legacyScope);
     const idsStr = groupedBitsByScope[key].map((id) => id.toStringWithoutVersion());
