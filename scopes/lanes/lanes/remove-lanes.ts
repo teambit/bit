@@ -1,7 +1,6 @@
 import groupArray from 'group-array';
 import { LaneId } from '@teambit/lane-id';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import enrichContextFromGlobal from '@teambit/legacy/dist/hooks/utils/enrich-context-from-global';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
@@ -31,7 +30,6 @@ async function removeRemoteLanes(consumer: Consumer | undefined, lanes: LaneId[]
     );
   }
   const context = {};
-  enrichContextFromGlobal(context);
   const groupedLanesByScope = groupArray(lanes, 'scope');
   const removeP = Object.keys(groupedLanesByScope).map(async (key) => {
     const resolvedRemote = await remotes.resolve(key, consumer?.scope);
