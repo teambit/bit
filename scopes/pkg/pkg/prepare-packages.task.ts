@@ -3,7 +3,7 @@ import { Compiler } from '@teambit/compiler';
 import { Capsule } from '@teambit/isolator';
 import { EnvsMain } from '@teambit/envs';
 import { Logger } from '@teambit/logger';
-import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
+import { PackageJsonFile } from '@teambit/component.sources';
 import fs from 'fs-extra';
 import path from 'path';
 import { writeNpmIgnore } from './write-npm-ignore';

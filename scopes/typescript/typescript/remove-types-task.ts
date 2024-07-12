@@ -1,4 +1,4 @@
-import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
+import { PackageJsonFile } from '@teambit/component.sources';
 import { Network } from '@teambit/isolator';
 import { BuildContext, BuildTask, BuiltTaskResult } from '@teambit/builder';
 import { TypescriptAspect } from './typescript.aspect';
