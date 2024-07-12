@@ -1,4 +1,5 @@
 import { cloneDeep } from 'lodash';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { ArtifactVinyl, ArtifactFiles, ArtifactObject } from '@teambit/component.sources';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
@@ -16,6 +17,8 @@ import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { UIAspect, UiMain, BundleUiTask } from '@teambit/ui';
+import { IssuesAspect, IssuesMain } from '@teambit/issues';
+import { BitError } from '@teambit/bit-error';
 import { Artifact, ArtifactList, FsArtifact } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
@@ -31,6 +34,7 @@ import { TaskMetadata } from './types';
 import { ArtifactsCmd } from './artifact/artifacts.cmd';
 import { buildTaskTemplate } from './templates/build-task';
 import { BuilderRoute } from './builder.route';
+import { ComponentsHaveIssues } from './exceptions/components-have-issues';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
 export type OnTagResults = { builderDataMap: ComponentMap<RawBuilderData>; pipeResults: TaskResultsList[] };
@@ -74,7 +78,8 @@ export class BuilderMain {
     private buildTaskSlot: TaskSlot,
     private tagTaskSlot: TaskSlot,
     private snapTaskSlot: TaskSlot,
-    private logger: Logger
+    private logger: Logger,
+    private issues: IssuesMain
   ) {}
 
   private async storeArtifacts(tasksResults: TaskResults[]) {
@@ -366,8 +371,9 @@ export class BuilderMain {
     components: Component[],
     isolateOptions?: IsolateComponentsOptions,
     builderOptions?: BuilderServiceOptions,
-    extraOptions?: { includeTag?: boolean; includeSnap?: boolean }
+    extraOptions?: { includeTag?: boolean; includeSnap?: boolean; ignoreIssues?: string }
   ): Promise<TaskResultsList> {
+    await this.throwForVariousIssues(components, extraOptions?.ignoreIssues);
     const ids = components.map((c) => c.id);
     const capsulesBaseDir = this.buildService.getComponentsCapsulesBaseDir();
     const baseIsolateOpts = {
@@ -465,6 +471,34 @@ export class BuilderMain {
     return `/api/${componentId}/~aspect/builder/${taskId}/${path ? `${FILE_PATH_PARAM_DELIM}${path}` : ''}`;
   }
 
+  private async throwForVariousIssues(components: Component[], ignoreIssues?: string) {
+    const componentsToCheck = components.filter((c) => !c.isDeleted());
+    await this.throwForComponentIssues(componentsToCheck, ignoreIssues);
+  }
+
+  async throwForComponentIssues(components: Component[], ignoreIssues?: string) {
+    if (ignoreIssues === '*') {
+      // ignore all issues
+      return;
+    }
+    const issuesToIgnoreFromFlag = ignoreIssues?.split(',').map((issue) => issue.trim()) || [];
+    const issuesToIgnoreFromConfig = this.issues.getIssuesToIgnoreGlobally();
+    const issuesToIgnore = [...issuesToIgnoreFromFlag, ...issuesToIgnoreFromConfig];
+    await this.issues.triggerAddComponentIssues(components, issuesToIgnore);
+    this.issues.removeIgnoredIssuesFromComponents(components, issuesToIgnore);
+    const legacyComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
+    const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
+    if (componentsWithBlockingIssues.length) {
+      throw new ComponentsHaveIssues(componentsWithBlockingIssues);
+    }
+
+    const workspaceIssues = this.workspace.getWorkspaceIssues();
+    if (workspaceIssues.length) {
+      const issuesStr = workspaceIssues.map((issueErr) => issueErr.message).join('\n');
+      throw new BitError(`the workspace has the following issues:\n${issuesStr}`);
+    }
+  }
+
   static slots = [Slot.withType<BuildTask>(), Slot.withType<BuildTask>(), Slot.withType<BuildTask>()];
 
   static runtime = MainRuntime;
@@ -481,10 +515,25 @@ export class BuilderMain {
     ComponentAspect,
     UIAspect,
     GlobalConfigAspect,
+    IssuesAspect,
   ];
 
   static async provider(
-    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, generator, component, ui, globalConfig]: [
+    [
+      cli,
+      envs,
+      workspace,
+      scope,
+      isolator,
+      loggerExt,
+      aspectLoader,
+      graphql,
+      generator,
+      component,
+      ui,
+      globalConfig,
+      issues,
+    ]: [
       CLIMain,
       EnvsMain,
       Workspace,
@@ -496,7 +545,8 @@ export class BuilderMain {
       GeneratorMain,
       ComponentMain,
       UiMain,
-      GlobalConfigMain
+      GlobalConfigMain,
+      IssuesMain
     ],
     config,
     [buildTaskSlot, tagTaskSlot, snapTaskSlot]: [TaskSlot, TaskSlot, TaskSlot]
@@ -548,7 +598,8 @@ export class BuilderMain {
       buildTaskSlot,
       tagTaskSlot,
       snapTaskSlot,
-      logger
+      logger,
+      issues
     );
     builder.registerBuildTasks([new BundleUiTask(ui, logger)]);
     component.registerRoute([new BuilderRoute(builder, scope, logger)]);
