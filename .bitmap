@@ -231,7 +231,10 @@
         "scope": "teambit.legacy",
         "version": "0.0.5",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/bit-map"
+        "rootDir": "components/legacy/bit-map",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.10": {}
+        }
     },
     "builder": {
         "name": "builder",
@@ -385,7 +388,10 @@
         "scope": "teambit.legacy",
         "version": "0.0.2",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/component-list"
+        "rootDir": "components/legacy/component-list",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.10": {}
+        }
     },
     "component-log": {
         "name": "component-log",
@@ -1568,7 +1574,10 @@
         "scope": "teambit.component",
         "version": "0.0.1",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/sources"
+        "rootDir": "scopes/component/sources",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.10": {}
+        }
     },
     "stash": {
         "name": "stash",
@@ -2100,7 +2109,10 @@
         "scope": "teambit.legacy",
         "version": "0.0.3",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/utils"
+        "rootDir": "components/legacy/utils",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.10": {}
+        }
     },
     "utils/code-editor-options": {
         "name": "utils/code-editor-options",
