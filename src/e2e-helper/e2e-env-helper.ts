@@ -47,7 +47,7 @@ export default class EnvHelper {
   }
 
   rootCompDir(envName: string) {
-    return getRootComponentDir(this.scopes.localPath, envName);
+    return getRootComponentDir(path.join(this.scopes.localPath, 'node_modules/.bit_roots'), envName);
   }
 
   getTypeScriptSettingsForES5() {

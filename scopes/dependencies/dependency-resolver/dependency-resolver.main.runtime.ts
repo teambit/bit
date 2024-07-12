@@ -2,7 +2,7 @@ import multimatch from 'multimatch';
 import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import { getAllCoreAspectsIds } from '@teambit/bit';
-import { getRelativeRootComponentDir } from '@teambit/bit-roots';
+import { getRootComponentDir } from '@teambit/bit-roots';
 import { ComponentAspect, Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
@@ -506,12 +506,17 @@ export class DependencyResolverMain {
    * Returns the location where the component is installed with its peer dependencies
    * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
    */
-  getRuntimeModulePath(component: Component, isInWorkspace = false) {
+  getRuntimeModulePath(
+    component: Component,
+    isInWorkspace = false,
+    rootComponentsRelativePath = 'node_modules/.bit_roots'
+  ) {
     if (!this.hasRootComponents()) {
       const modulePath = this.getModulePath(component);
       return modulePath;
     }
     const pkgName = this.getPackageName(component);
+    const getRelativeRootComponentDir = getRootComponentDir.bind(null, isInWorkspace ? rootComponentsRelativePath : '');
     const selfRootDir = getRelativeRootComponentDir(
       !isInWorkspace ? component.id.toString() : component.id.toStringWithoutVersion()
     );

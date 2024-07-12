@@ -72,7 +72,10 @@ export default class NodeModuleLinker {
     }
 
     await linkPkgsToBitRoots(
-      workspacePath,
+      {
+        rootComponentsPath: this.workspace.rootComponentsPath,
+        workspacePath,
+      },
       this.components.map((comp) => componentIdToPackageName(comp.state._consumer))
     );
     return linksResults;

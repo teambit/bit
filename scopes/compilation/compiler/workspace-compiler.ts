@@ -150,7 +150,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     const injectedDirs = await this.workspace.getInjectedDirs(this.component);
     if (injectedDirs.length > 0) return injectedDirs;
 
-    const rootDirs = await readBitRootsDir(this.workspace.path);
+    const rootDirs = await readBitRootsDir(this.workspace.rootComponentsPath);
     return rootDirs.map((rootDir) => path.relative(this.workspace.path, path.join(rootDir, packageName)));
   }
 

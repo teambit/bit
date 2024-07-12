@@ -288,6 +288,13 @@ export class Workspace implements ComponentFactory {
     return this.consumer.getPath();
   }
 
+  /**
+   * Get the location of the bit roots folder
+   */
+  get rootComponentsPath() {
+    return this.config.rootComponentsDirectory ?? path.join(this.modulesPath, '.bit_roots');
+  }
+
   /** get the `node_modules` folder of this workspace */
   private get modulesPath() {
     return path.join(this.path, 'node_modules');
@@ -1708,8 +1715,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   async getComponentPackagePath(component: Component) {
-    const inInWs = await this.hasId(component.id);
-    const relativePath = this.dependencyResolver.getRuntimeModulePath(component, inInWs);
+    const inInWs = this.hasId(component.id);
+    const relativePath = this.dependencyResolver.getRuntimeModulePath(
+      component,
+      inInWs,
+      path.relative(this.path, this.rootComponentsPath)
+    );
     return path.join(this.path, relativePath);
   }
 
