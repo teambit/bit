@@ -20,7 +20,6 @@ import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { mockComponents } from '@teambit/component.testing.mock-components';
 import { SnappingMain } from './snapping.main.runtime';
 import { SnappingAspect } from './snapping.aspect';
-import { ComponentsHaveIssues } from './components-have-issues';
 import { SnapDataPerCompRaw } from './snap-from-scope.cmd';
 
 describe('Snapping aspect', function () {
@@ -44,7 +43,7 @@ describe('Snapping aspect', function () {
       try {
         await snapping.tag({ ids: ['comp1'] });
       } catch (err: any) {
-        expect(err.constructor.name).to.equal(ComponentsHaveIssues.name);
+        expect(err.constructor.name).to.equal('ComponentsHaveIssues');
       }
     });
     // @todo: this test fails during "bit build" for some reason. It passes on "bit test";
