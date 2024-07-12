@@ -12,6 +12,7 @@ export {
   ArtifactSource,
   ArtifactObject,
   ArtifactFiles,
+  ArtifactRef,
   getArtifactsFiles,
   getRefsFromExtensions,
   deserializeArtifactFiles,
