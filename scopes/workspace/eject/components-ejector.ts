@@ -14,8 +14,7 @@ import defaultErrorHandler from '@teambit/legacy/dist/cli/default-error-handler'
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
+import { DataToPersist, RemovePath } from '@teambit/component.sources';
 import { Logger } from '@teambit/logger';
 import { InstallMain } from '@teambit/install';
 import { removeComponentsFromNodeModules } from '@teambit/remove';

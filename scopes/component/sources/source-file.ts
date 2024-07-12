@@ -1,12 +1,11 @@
-import R from 'ramda';
 import vinylFile from 'vinyl-file';
-
-import logger from '../../../logger/logger';
-import { SourceFileModel } from '../../../scope/models/version';
-import { Repository } from '../../../scope/objects';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { SourceFileModel } from '@teambit/legacy/dist/scope/models/version';
+import { Repository } from '@teambit/legacy/dist/scope/objects';
 import { PathOsBased } from '@teambit/toolbox.path.path';
-import FileSourceNotFound from '../exceptions/file-source-not-found';
+import FileSourceNotFound from './file-source-not-found';
 import AbstractVinyl from './abstract-vinyl';
+import { forEach } from 'lodash';
 
 export default class SourceFile extends AbstractVinyl {
   static load(
@@ -19,7 +18,7 @@ export default class SourceFile extends AbstractVinyl {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const file = new SourceFile(vinylFile.readSync(filePath, { base, cwd: consumerPath }));
       const addToFile = (value, key) => (file[key] = value); /* eslint-disable-line no-return-assign */
-      R.forEachObjIndexed(addToFile, extendedProps);
+      forEach(extendedProps, addToFile);
       return file;
     } catch (err: any) {
       logger.errorAndAddBreadCrumb(

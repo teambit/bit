@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { ModelComponent } from '../../scope/models';
-import ComponentsList from './components-list';
+import { ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { ComponentsList } from './components-list';
 
 describe('ComponentList', function () {
   // @ts-ignore
@@ -42,7 +42,7 @@ describe('ComponentList', function () {
       const results = await componentList.listAll(false, true);
       const result = results[0];
       expect(result).to.have.property('id');
-      expect(result.id).to.be.an.instanceOf(ComponentID);
+      expect(result.id.constructor.name).to.equal(ComponentID.name);
     });
   });
   describe('filterComponentsByWildcard', () => {

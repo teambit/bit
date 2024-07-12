@@ -17,7 +17,7 @@ import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { ComponentMap } from '@teambit/legacy.bit-map';
 import { IgnoredDirectory } from './exceptions/ignored-directory';
 import ComponentsPendingImport from '../exceptions/components-pending-import';
-import { Dist, License, SourceFile } from '../component/sources';
+import { Dist, License, SourceFile, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
 import ComponentConfig, { ComponentConfigLoadOptions, ILegacyWorkspaceConfig } from '../config';
 import ComponentOverrides from '../config/component-overrides';
 import { ExtensionDataList } from '../config/extension-data';
@@ -28,8 +28,6 @@ import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './co
 import { Dependencies, Dependency } from './dependencies';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import MainFileRemoved from './exceptions/main-file-removed';
-import PackageJsonFile from './package-json-file';
-import DataToPersist from './sources/data-to-persist';
 import { ModelComponent } from '../../scope/models';
 import { ComponentLoadOptions } from './component-loader';
 import { getBindingPrefixByDefaultScope } from '../config/component-config';

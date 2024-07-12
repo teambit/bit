@@ -34,14 +34,18 @@ import {
   CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR,
 } from '@teambit/legacy/dist/constants';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import {
+  PackageJsonFile,
   ArtifactFiles,
   deserializeArtifactFiles,
   getArtifactFilesByExtension,
   getArtifactFilesExcludeExtension,
   importMultipleDistsArtifacts,
-} from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+  AbstractVinyl,
+  ArtifactVinyl,
+  DataToPersist,
+  RemovePath,
+} from '@teambit/component.sources';
 import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
@@ -49,11 +53,7 @@ import { Scope } from '@teambit/legacy/dist/scope';
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
 import path, { basename } from 'path';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import pMap from 'p-map';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';

@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.721",
+  "version": "1.0.722",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -118,6 +118,8 @@
     "@pnpm/node-fetch": "^1.0.0",
     "@teambit/defender.fs.global-bit-temp-dir": "0.0.1",
     "@teambit/legacy.analytics": "~0.0.1",
+    "@teambit/legacy.component-list": "~0.0.2",
+    "@teambit/component.sources": "~0.0.1",
     "@teambit/bit.get-bit-version": "~0.0.1",
     "@teambit/legacy.utils": "~0.0.2",
     "@teambit/legacy.bit-map": "~0.0.4",

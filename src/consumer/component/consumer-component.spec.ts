@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import Component from './consumer-component';
-import { SourceFile } from './sources';
+import { SourceFile } from '@teambit/component.sources';
 
 describe('ConsumerComponent', function () {
   // @ts-ignore
