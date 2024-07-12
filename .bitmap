@@ -527,7 +527,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/e2e-helper",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.0.1": {},
+            "teambit.node/envs/node-babel-mocha@0.0.10": {},
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             }
