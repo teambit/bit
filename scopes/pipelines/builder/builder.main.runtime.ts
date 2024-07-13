@@ -129,7 +129,8 @@ export class BuilderMain {
         ...builderOptions,
         // even when build is skipped (in case of tag-from-scope), the pre-build/post-build and teambit.harmony/aspect tasks are needed
         tasks: populateArtifactsFrom ? [AspectAspect.id] : undefined,
-      }
+      },
+      { ignoreIssues: '*' }
     );
     if (throwOnError && !forceDeploy) buildEnvsExecutionResults.throwErrorsIfExist();
     allTasksResults.push(...buildEnvsExecutionResults.tasksResults);
