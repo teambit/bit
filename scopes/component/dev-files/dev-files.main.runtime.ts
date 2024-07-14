@@ -1,4 +1,4 @@
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import { MainRuntime } from '@teambit/cli';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { flatten, isFunction } from 'lodash';

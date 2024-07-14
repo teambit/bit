@@ -31,7 +31,7 @@ import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import { ProjectManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';

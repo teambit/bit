@@ -6,7 +6,7 @@ import { ComponentID } from '@teambit/component-id';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { Remote } from '@teambit/legacy/dist/remotes';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
-import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import { ComponentsList } from '@teambit/legacy.component-list';
 import { BitError } from '@teambit/bit-error';
 import { ListCmd } from './list.cmd';
 import { ListerAspect } from './lister.aspect';

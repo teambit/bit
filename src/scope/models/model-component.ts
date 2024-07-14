@@ -12,7 +12,7 @@ import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { BitId } from '@teambit/legacy-bit-id';
 import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
-import { License, SourceFile } from '../../consumer/component/sources';
+import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
@@ -42,7 +42,6 @@ import Source from './source';
 import Version from './version';
 import VersionHistory, { VersionParents } from './version-history';
 import { ObjectItem } from '../objects/object-list';
-import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
 import { SchemaName } from '../../consumer/component/component-schema';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { errorIsTypeOfMissingObject } from '../component-ops/scope-components-importer';
@@ -831,8 +830,8 @@ export default class Component extends BitObject {
       const refs = versionObject.refsWithOptions(false, false);
       refsWithoutArtifacts.push(...refs);
       const refsFromExtensions = getRefsFromExtensions(versionObject.extensions);
-      locallyChangedHashes.includes(versionObject.hash().toString())
-        ? artifactsRefs.push(...refsFromExtensions)
+      locallyChangedHashes.includes(versionObject.hash().toString()) // @ts-ignore todo: remove after deleting teambit.legacy
+        ? artifactsRefs.push(...refsFromExtensions) // @ts-ignore todo: remove after deleting teambit.legacy
         : artifactsRefsFromExportedVersions.push(...refsFromExtensions);
     });
     const loadedRefs: ObjectItem[] = [];

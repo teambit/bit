@@ -3,12 +3,10 @@ import Queue from 'p-queue';
 import { ComponentIdList } from '@teambit/component-id';
 import semver from 'semver';
 import { LaneId } from '@teambit/lane-id';
-import { LATEST_BIT_VERSION, POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '@teambit/legacy/dist/constants';
-import HooksManager from '@teambit/legacy/dist/hooks';
+import { LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { loadScope, Scope } from '@teambit/legacy/dist/scope';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import {
   ComponentWithCollectOptions,
   ObjectsReadableGenerator,
@@ -77,8 +75,6 @@ export type FETCH_OPTIONS = {
 
 export const CURRENT_FETCH_SCHEMA = '0.0.3';
 
-const HooksManagerInstance = HooksManager.getInstance();
-
 const openConnections: number[] = [];
 const openConnectionsMetadata: { [connectionId: string]: Record<string, any> } = {};
 let fetchCounter = 0;
@@ -141,12 +137,6 @@ fetchOptions`,
   if (fetchOptions.returnNothingIfGivenVersionExists) {
     fetchOptions.type = 'component-delta';
   }
-  const args = { path, ids, ...fetchOptions };
-  // This might be undefined in case of fork process like during bit test command
-  if (HooksManagerInstance) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    HooksManagerInstance?.triggerHook(PRE_SEND_OBJECTS, args, headers);
-  }
   const fetchSchema = fetchOptions.fetchSchema || '0.0.1';
   const clientSupportsVersionHistory = semver.gte(fetchSchema, '0.0.2');
 
@@ -156,7 +146,6 @@ fetchOptions`,
   // memory consumption it causes as it caches many objects in-memory.
   const useCachedScope = true;
   const scope: Scope = await loadScope(path, useCachedScope);
-  const objectList = new ObjectList();
   const finishLog = (err?: Error) => {
     const duration = new Date().getTime() - startTime;
     openConnections.splice(openConnections.indexOf(currentFetch), 1);
@@ -174,20 +163,6 @@ took: ${duration} ms.`);
   } catch (err: any) {
     finishLog(err);
     throw err;
-  }
-
-  if (HooksManagerInstance) {
-    await HooksManagerInstance?.triggerHook(
-      POST_SEND_OBJECTS,
-      {
-        objectList,
-        scopePath: path,
-        ids,
-        scopeName: scope.scopeJson.name,
-      },
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      headers
-    );
   }
   logger.debug('scope.fetch returns readable');
   return objectsReadableGenerator.readable;

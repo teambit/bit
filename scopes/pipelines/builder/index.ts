@@ -1,6 +1,6 @@
 import { BuilderAspect } from './builder.aspect';
 
-export { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
+export { ArtifactVinyl } from '@teambit/component.sources';
 export { BuildPipe } from './build-pipe';
 export type { TaskResults } from './build-pipe';
 export type { ComponentResult, TaskMetadata } from './types';

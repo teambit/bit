@@ -7,7 +7,7 @@ import { PathLinux, pathNormalizeToLinux, PathOsBased } from '@teambit/toolbox.p
 import * as eol from '@teambit/toolbox.string.eol';
 import { mergeFiles, MergeFileParams, MergeFileResult } from '../merge-files';
 import Component from '@teambit/legacy/dist/consumer/component';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { isEmpty } from 'lodash';
 

@@ -29,7 +29,7 @@ import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFiles } from '@teambit/component.sources';
 import { WatcherAspect, WatcherMain } from '@teambit/watcher';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';

@@ -1,6 +1,6 @@
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { ExecutionContext } from '@teambit/envs';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 import { TestsResult } from '@teambit/tests-results';
 
 export class Tests {

@@ -10,16 +10,10 @@ import {
   BEFORE_EXPORTS,
   BEFORE_LOADING_COMPONENTS,
 } from '@teambit/legacy/dist/cli/loader/loader-messages';
-import {
-  CENTRAL_BIT_HUB_NAME,
-  CENTRAL_BIT_HUB_URL,
-  POST_EXPORT_HOOK,
-  PRE_EXPORT_HOOK,
-} from '@teambit/legacy/dist/constants';
+import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { BitMap } from '@teambit/legacy.bit-map';
-import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
-import HooksManager from '@teambit/legacy/dist/hooks';
+import { ComponentsList } from '@teambit/legacy.component-list';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { Lane, ModelComponent, Symlink, Version } from '@teambit/legacy/dist/scope/models';
 import { hasWildcard } from '@teambit/legacy.utils';
@@ -50,8 +44,6 @@ import { getAllVersionHashes } from '@teambit/legacy/dist/scope/component-ops/tr
 import { ExportAspect } from './export.aspect';
 import { ExportCmd } from './export-cmd';
 import { ResumeExportCmd } from './resume-export-cmd';
-
-const HooksManagerInstance = HooksManager.getInstance();
 
 export type OnExportIdTransformer = (id: ComponentID) => ComponentID;
 
@@ -100,7 +92,6 @@ export class ExportMain {
   ) {}
 
   async export(params: ExportParams = {}): Promise<ExportResult> {
-    HooksManagerInstance?.triggerHook(PRE_EXPORT_HOOK, params);
     const { nonExistOnBitMap, missingScope, exported, removedIds, exportedLanes, rippleJobs } =
       await this.exportComponents(params);
     let ejectResults: EjectResults | undefined;
@@ -115,7 +106,6 @@ export class ExportMain {
       exportedLanes,
       rippleJobs,
     };
-    HooksManagerInstance?.triggerHook(POST_EXPORT_HOOK, exportResults);
     if (Scope.onPostExport) {
       await Scope.onPostExport(exported, exportedLanes).catch((err) => {
         this.logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);

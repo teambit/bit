@@ -2,8 +2,8 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import Vinyl from 'vinyl';
 
-import logger from '../../../logger/logger';
-import Source from '../../../scope/models/source';
+import logger from '@teambit/legacy/dist/logger/logger';
+import Source from '@teambit/legacy/dist/scope/models/source';
 import { PathOsBased } from '@teambit/toolbox.path.path';
 import * as eol from '@teambit/toolbox.string.eol';
 import { FileConstructor } from './vinyl-types';
@@ -15,6 +15,7 @@ type AbstractVinylProps = {
   contents: Buffer;
 };
 
+// @ts-ignore
 export default class AbstractVinyl extends (Vinyl as FileConstructor) {
   override = true;
   verbose = false;

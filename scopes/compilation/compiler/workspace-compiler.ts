@@ -12,8 +12,7 @@ import { ComponentID } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
-import { AbstractVinyl, Dist } from '@teambit/legacy/dist/consumer/component/sources';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { AbstractVinyl, Dist, DataToPersist, RemovePath } from '@teambit/component.sources';
 import {
   linkToNodeModulesByComponents,
   removeLinksFromNodeModules,
@@ -22,7 +21,6 @@ import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { UiMain } from '@teambit/ui';
 import { readBitRootsDir } from '@teambit/bit-roots';
 import { groupBy, uniq } from 'lodash';
