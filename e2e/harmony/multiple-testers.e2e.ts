@@ -68,7 +68,7 @@ describe('multi testers', function () {
       before(() => {
         output = helper.command.build(compName, undefined, true);
       });
-      it('bit test should run spec files in separate runs', () => {
+      it('test task should run spec files in separate runs', () => {
         const matches = Array.from(output.matchAll(/Test Suites: 1 passed/g));
         const numOfTestSuites = matches.length;
         expect(numOfTestSuites).to.equal(2);
