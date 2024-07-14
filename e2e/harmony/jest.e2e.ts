@@ -212,12 +212,3 @@ function specFileErroringFixture() {
 });
 `;
 }
-
-function invalidJestConfigFixture() {
-  return `module.exports = {
-    transformIgnorePatterns: [
-      someUndefinedFunc(),
-    ],
-  };
-  `;
-}
