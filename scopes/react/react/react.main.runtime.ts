@@ -312,8 +312,11 @@ export class ReactMain {
    * @param jestModulePath absolute path to jest
    */
   overrideJestConfig(jestConfigPath: string, jestModulePath?: string) {
+    const buildTransformers = [() => jestConfigPath];
     return this.envs.override({
       getTester: () => this.reactEnv.getTester(jestConfigPath, jestModulePath),
+      getBuildPipe: () =>
+        this.reactEnv.getBuildPipe({ jestModifier: { transformers: buildTransformers, module: jestModulePath } }),
     });
   }
 

@@ -87,6 +87,7 @@ type CompilerMode = 'build' | 'dev';
 
 type GetBuildPipeModifiers = PipeServiceModifiersMap & {
   tsModifier?: PipeServiceModifier;
+  jestModifier?: PipeServiceModifier;
 };
 
 /**
@@ -534,10 +535,12 @@ export class ReactEnv
   getBuildPipe(modifiers: GetBuildPipeModifiers = {}): BuildTask[] {
     const transformers: Function[] = modifiers?.tsModifier?.transformers || [];
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
-    const jestConfig = join(pathToSource, './jest/jest.cjs.config.js');
+    const jestConfigPath =
+      modifiers?.jestModifier?.transformers?.[0]() || join(pathToSource, './jest/jest.cjs.config.js');
+    const jestPath = modifiers?.jestModifier?.module || require.resolve('jest');
     const worker = this.getJestWorker();
     const testerTask = JestTask.create(
-      { config: jestConfig, jest: require.resolve('jest') },
+      { config: jestConfigPath, jest: jestPath },
       { logger: this.logger, worker, devFiles: this.devFiles }
     );
     return [this.createCjsCompilerTask(transformers, modifiers?.tsModifier?.module || ts), testerTask];
