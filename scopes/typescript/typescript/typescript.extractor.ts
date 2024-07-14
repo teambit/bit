@@ -12,7 +12,7 @@ import {
   IgnoredSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 import { EnvContext } from '@teambit/envs';
 import { Formatter } from '@teambit/formatter';
 import { Logger } from '@teambit/logger';

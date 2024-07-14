@@ -1,5 +1,5 @@
 import { MemoryFS } from '@teambit/any-fs';
-import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import type { AbstractVinyl } from '@teambit/component.sources';
 import * as eol from '@teambit/toolbox.string.eol';
 import path from 'path';
 import { matchPatterns, splitPatterns } from '@teambit/toolbox.path.match-patterns';

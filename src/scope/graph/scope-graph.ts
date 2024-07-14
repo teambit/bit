@@ -2,7 +2,7 @@ import GraphLib, { Graph } from 'graphlib';
 import pMapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { VERSION_DELIMITER } from '../../constants';
-import ComponentsList from '../../consumer/component/components-list';
+import { ComponentsList } from '@teambit/legacy.component-list';
 import Component from '../../consumer/component/consumer-component';
 import { DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
 import Consumer from '../../consumer/consumer';
@@ -135,7 +135,9 @@ export default class DependencyGraph {
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest = false, reverse = false): Promise<Graph> {
+    // @ts-ignore todo: remove after deleting teambit.legacy
     const componentsList = new ComponentsList(consumer);
+    // @ts-ignore todo: remove after deleting teambit.legacy
     const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
     const graph = new Graph();
     const allModelComponents: ModelComponent[] = await consumer.scope.list();
@@ -170,7 +172,9 @@ export default class DependencyGraph {
    * returns a graph that each node is a ComponentID object.
    */
   static async buildGraphFromCurrentlyUsedComponents(consumer: Consumer): Promise<Graph> {
+    // @ts-ignore todo: remove after deleting teambit.legacy
     const componentsList = new ComponentsList(consumer);
+    // @ts-ignore todo: remove after deleting teambit.legacy
     const workspaceComponents: Component[] = await componentsList.getComponentsFromFS();
     const graph = new Graph();
     workspaceComponents.forEach((component: Component) => {

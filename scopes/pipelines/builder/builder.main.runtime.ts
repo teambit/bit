@@ -1,6 +1,5 @@
 import { cloneDeep } from 'lodash';
-import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
-import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactVinyl, ArtifactFiles, ArtifactObject } from '@teambit/component.sources';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentMap, IComponent, ComponentAspect, ComponentMain, ComponentID } from '@teambit/component';

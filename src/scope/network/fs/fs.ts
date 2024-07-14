@@ -1,6 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import { fetch, put, remove, action, FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
-import ComponentsList, { ListScopeResult } from '../../../consumer/component/components-list';
+import { ComponentsList, ListScopeResult } from '@teambit/legacy.component-list';
 import Component from '../../../consumer/component/consumer-component';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
@@ -65,6 +65,7 @@ export default class Fs implements Network {
   }
 
   list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
+    // @ts-ignore todo: remove after deleting teambit.legacy
     return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards);
   }
 

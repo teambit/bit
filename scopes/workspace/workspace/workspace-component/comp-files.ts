@@ -1,5 +1,5 @@
 import { ComponentID } from '@teambit/component-id';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import { SourceFileModel } from '@teambit/legacy/dist/scope/models/version';
 import { Repository } from '@teambit/legacy/dist/scope/objects';
 

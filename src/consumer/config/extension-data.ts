@@ -7,7 +7,7 @@ import {
   convertBuildArtifactsFromModelObject,
   convertBuildArtifactsToModelObject,
   reStructureBuildArtifacts,
-} from '../component/sources/artifact-files';
+} from '@teambit/component.sources';
 
 type ExtensionConfig = { [extName: string]: any } | RemoveExtensionSpecialSign;
 type ConfigOnlyEntry = {

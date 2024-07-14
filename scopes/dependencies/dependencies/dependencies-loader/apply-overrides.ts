@@ -4,7 +4,7 @@ import { cloneDeep, difference, forEach, isEmpty, pick, pickBy, uniq } from 'lod
 import { IssuesList, IssuesClasses, MissingPackagesData } from '@teambit/component-issues';
 import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy/dist/constants';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
-import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
+import { PackageJsonFile } from '@teambit/component.sources';
 import { PathLinux, resolvePackagePath } from '@teambit/legacy.utils';
 import { ResolvedPackageData, resolvePackageData } from '../resolve-pkg-data';
 import { Workspace } from '@teambit/workspace';
