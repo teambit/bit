@@ -46,7 +46,6 @@ import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/m
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
-import { ComponentsHaveIssues } from './components-have-issues';
 import ResetCmd from './reset-cmd';
 import { tagModelComponent, updateComponentsVersions, BasicTagParams, BasicTagSnapParams } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
@@ -767,7 +766,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     const componentsToCheck = components.filter((c) => !c.isDeleted());
     const consumerComponents = componentsToCheck.map((c) => c.state._consumer) as ConsumerComponent[];
     await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
-    await this.throwForComponentIssues(componentsToCheck, ignoreIssues);
+    await this.builder.throwForComponentIssues(componentsToCheck, ignoreIssues);
     this.throwForPendingImport(consumerComponents);
   }
 
@@ -1026,29 +1025,6 @@ another option, in case this dependency is not in main yet is to remove all refe
     }
 
     return this.workspace.getMany(ids.map((id) => id.changeVersion(undefined)));
-  }
-
-  private async throwForComponentIssues(components: Component[], ignoreIssues?: string) {
-    if (ignoreIssues === '*') {
-      // ignore all issues
-      return;
-    }
-    const issuesToIgnoreFromFlag = ignoreIssues?.split(',').map((issue) => issue.trim()) || [];
-    const issuesToIgnoreFromConfig = this.issues.getIssuesToIgnoreGlobally();
-    const issuesToIgnore = [...issuesToIgnoreFromFlag, ...issuesToIgnoreFromConfig];
-    await this.issues.triggerAddComponentIssues(components, issuesToIgnore);
-    this.issues.removeIgnoredIssuesFromComponents(components, issuesToIgnore);
-    const legacyComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
-    const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
-    if (componentsWithBlockingIssues.length) {
-      throw new ComponentsHaveIssues(componentsWithBlockingIssues);
-    }
-
-    const workspaceIssues = this.workspace.getWorkspaceIssues();
-    if (workspaceIssues.length) {
-      const issuesStr = workspaceIssues.map((issueErr) => issueErr.message).join('\n');
-      throw new BitError(`the workspace has the following issues:\n${issuesStr}`);
-    }
   }
 
   private throwForPendingImport(components: ConsumerComponent[]) {

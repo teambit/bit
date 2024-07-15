@@ -17,7 +17,7 @@ ${issuesColored}
 to get the list of component-issues names and suggestions how to resolve them, run "bit component-issues".
 
 while highly not recommended, it's possible to ignore issues in two ways:
-1) temporarily ignore for this tag/snap command by entering "--ignore-issues" flag, e.g. \`bit tag --ignore-issues "${allIssueNames.join(
+1) temporarily ignore for this tag/snap/build command by entering "--ignore-issues" flag, e.g. \`bit tag --ignore-issues "${allIssueNames.join(
       ', '
     )}" \`
 2) ignore the issue completely by configuring it in the workspace.jsonc file. e.g:
