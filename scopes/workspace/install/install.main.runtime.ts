@@ -1,6 +1,6 @@
 import fs, { pathExists } from 'fs-extra';
 import path from 'path';
-import { getRootComponentDir, linkPkgsToBitRoots } from '@teambit/bit-roots';
+import { getRootComponentDir, linkPkgsToBitRoots } from '@teambit/workspace.root-components.location';
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';

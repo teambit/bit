@@ -22,7 +22,7 @@ import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { UiMain } from '@teambit/ui';
-import { readBitRootsDir } from '@teambit/bit-roots';
+import { readBitRootsDir } from '@teambit/workspace.root-components.location';
 import { groupBy, uniq } from 'lodash';
 import type { PreStartOpts } from '@teambit/ui';
 import { MultiCompiler } from '@teambit/multi-compiler';

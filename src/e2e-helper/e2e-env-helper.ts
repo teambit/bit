@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { getRootComponentDir } from '@teambit/bit-roots';
+import { getRootComponentDir } from '@teambit/workspace.root-components.location';
 import CommandHelper from './e2e-command-helper';
 import ExtensionsHelper from './e2e-extensions-helper';
 import FixtureHelper, { GenerateEnvJsoncOptions } from './e2e-fixtures-helper';
