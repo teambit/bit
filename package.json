@@ -137,7 +137,7 @@
     "@teambit/harmony.modules.feature-toggle": "~0.0.4",
     "@teambit/legacy.scope-api": "~0.0.1",
     "@teambit/bit-error": "~0.0.404",
-    "@teambit/bit-roots": "~0.0.133",
+    "@teambit/bit-roots": "npm:@teambit/workspace.root-components.location@0.0.0-9b0f5005af4304c35e6bc6b2bf2c207b9e59981f",
     "@teambit/lane-id": "~0.0.311",
     "@teambit/component-version": "^1.0.3",
     "@teambit/toolbox.network.agent": "~0.0.554",
