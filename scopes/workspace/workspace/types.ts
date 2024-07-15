@@ -25,6 +25,7 @@ export interface WorkspaceExtConfig {
 
   /**
    * sets the location of the root components directory.
+   * The location is a relative path to the workspace root and should use linux path separators (/).
    */
   rootComponentsDirectory?: string;
 
