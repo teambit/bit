@@ -50,7 +50,7 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
    */
   getTester(jestConfigPath: string, jestModulePath?: string): Tester {
     const config = jestConfigPath || require.resolve('./jest/jest.config');
-    return this.reactAspect.reactEnv.getCjsJestTester(config, jestModulePath);
+    return this.reactAspect.reactEnv.createCjsJestTester(config, jestModulePath);
   }
 
   getPreviewConfig() {

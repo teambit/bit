@@ -232,9 +232,9 @@ describe('tag components on Harmony', function () {
       beforeTagScope = helper.scopeHelper.cloneLocalScope();
     });
     it('should fail without --skip-tests', () => {
-      expect(() => helper.command.tagAllComponents()).to.throw(
-        'Failed task 1: "teambit.defender/tester:TestComponents" of env "teambit.harmony/node"'
-      );
+      const cmd = () => helper.command.tagAllComponents();
+      const error = new Error('Failed task 1: "teambit.defender/tester:JestTest" of env "teambit.harmony/node"');
+      helper.general.expectToThrow(cmd, error);
       const stagedConfigPath = helper.general.getStagedConfigPath();
       expect(stagedConfigPath).to.not.be.a.path();
     });
